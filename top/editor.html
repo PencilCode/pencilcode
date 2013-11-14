@@ -1,0 +1,2683 @@
+<!doctype html>
+<html>
+<head>
+<title>Pencil Code Editor</title>
+<meta charset="utf-8">
+<style>
+@import url("http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500");
+* {box-sizing:border-box;}
+body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
+#overlay{position:absolute;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.1);display:none;z-index:2}
+#overlay .login{position:absolute;right:12px;top:68px;
+  border:none;background-color:white;box-shadow:0 0 7px black;color:black;
+  border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
+  padding:12px;font-weight:300;text-align:center;width:320px;overflow:hidden;}
+#overlay .prompt{padding:8px;font-weight:700;}
+#overlay .info{padding:3px;color:red;}
+#overlay .content{display:inline-block;padding:3px;}
+#overlay .field{text-align:right;padding:3px;white-space:nowrap;}
+.username{text-transform:lowercase;}
+#overlay .fieldlink {display:block;text-align:left;
+  font-size:70%;line-height:100%;}
+#overlay .switchuser {text-decoration:none;}
+#overlay .switchuser:hover {text-decoration:underline;}
+#overflow{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
+#notification{position:absolute;top:12px;left:0;display:none;
+  z-index:1;background-color:gold;
+  box-shadow:0 0 7px gray;color:black;border-radius:8px;font-family:inherit;
+  padding:3px 32px;font-weight:300;}
+#notification a {font-weight:700;}
+#notification a:active {font-weight:700;outline:2px dotted red;}
+#top{position:absolute;top:0;left:0;right:0;width:100%;height:56px;
+  table-layout:auto;overflow:hidden;max-height:56px;border-spacing:0}
+#topleft,#topright{padding:0 12px;height:56px;vertical-align:middle;
+  overflow:hidden;}
+#topright{text-align:right;width:1%;}
+#topright button,#overlay button{border:none;background-color:white;
+  -moz-appearance: none !important;
+  box-shadow:0 0 7px gray;color:black;
+  border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
+  font-weight:300;vertical-align:middle;height:28px;
+  padding:2px 8px;margin:5px;display:inline-block;}
+#topright button[disabled],#overlay button[disabled] {
+  box-shadow:0 0 7px lightgray;color:lightgray;}
+#topright button:not([disabled]):hover,#overlay button:not([disabled]):hover {
+  box-shadow:0 0 7px black}
+#filename[contentEditable]:hover {box-shadow:0 0 3px sienna;}
+#owner,#filename,#icon{display:inline-block;vertical-align:middle;
+  color:saddlebrown;max-width:90%;max-height:56px;overflow:hidden;
+  word-break:break-all;white-space:normal;}
+#owner{color:black;}
+#icon {margin:0 12px;}
+.helplink { cursor: help; }
+.helplink:hover { text-decoration: underline; color: blue; }
+.panetitle{position:absolute;top:56px;height:28px;background:dodgerblue;
+  padding:0 12px;color:skyblue;letter-spacing:2px;
+  border-left:1px solid white;border-right:1px solid white;}
+.panetitle a {text-decoration:none;color:inherit;}
+.panetitle a:hover {text-decoration:underline;color:white;}
+.panetitle a:hover:after { width:10px;height:10px;
+  display:inline-block;content:'';
+  margin:5px;
+  background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);}
+.pane{position:absolute;top:84px;bottom:0;background:whitesmoke;
+  border-left:1px solid white;border-right:1px solid white;z-index:0;}
+.back{left:-50%;width:50%;}
+.left{left:0;width:50%;}
+.right{left:50%;width:50%;}
+.ace_search.right{left:auto;width:60%;max-width:400px;}
+#middle{z-index:1;display:none;}
+#middle,.vcenter{position:absolute;left:50%;top:50%}
+.hcenter{margin:-50% -50%;}
+#run {border:0;background-color:rgba(255,255,255,0.7);opacity:0.7;
+  box-shadow:0 0 7px gray;color:dodgerblue;
+  border-radius:20px;font-family:inherit;font-size:60px;line-height:60px;
+  padding:10px 10px 10px 15px;margin:0;display:inline-block;}
+#run:hover {box-shadow:0 0 7px black;opacity:1}
+#run .triangle {width:0;height:0;font-size:0;line-height:0;
+  border-bottom:20px solid transparent;border-top:20px solid transparent;
+  border-left:36px solid dodgerblue;}
+.panetitle,#owner{user-select:none;-webkit-user-select:none;
+  -moz-user-select:none;cursor:default;}
+#owner:hover{text-decoration:underline;}
+#icon:hover{border-radius:3px;box-shadow:0 0 6px black;}
+.editor{position:absolute:top:0;height:100%;left:0;width:100%;
+  background-color:white;font:24px "Source Code Pro"}
+.preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
+  background-position:center;}
+.preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}
+.directory{height:100%;overflow:auto;}
+.directory .column{display:inline-block;float:left;margin-top:12px;}
+.directory .item{display:inline-block;float:left;clear:left;
+  text-decoration:none;
+  padding:0 28px 0 12px;min-height:28px;color:blue;cursor:pointer}
+.directory .create {color:dodgerblue;}
+.directory .create:hover {text-decoration:underline;}
+.directory .item:hover{text-decoration:underline;}
+.loading,#notification.loading{padding:0;box-shadow:0 0 7px gray;width:32px;height:32px;border-radius:16px;background-position:center;background-repeat:no-repeat;opacity:0.7;background-color:white;background-image:url(data:image/gif;base64,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);}
+</style>
+<link rel="stylesheet" type="text/css" href="//pencilcode.net/lib/tooltipster/css/tooltipster.css">
+</head>
+<body>
+<div id="overflow">
+<div id="overlay"></div>
+<div id="notification"><div><div></div></div></div>
+<div id="middle"><div></div></div>
+<table id="top" width="100%"><tr><td id="topleft"><nobr><span id="owner" title="Top directory."><script>
+document.write(location.host.replace(/\.[^.]*.{7}$/, ''));
+</script></span><img id="icon" title="Parent directory." src="/pencil_32.png"
+height="32" width="32"
+><script>
+function htmlEscape(s){return s.replace(/[<>&]/g,function(c){return
+c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
+document.write('<span id="filename" title="Edit to move or rename.">' +
+htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
+'</span>');
+</script></nobr></td>
+<td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
+<div id="alphatitle" class="back panetitle"></div>
+<div id="alpha" class="back pane"></div>
+<div id="bravotitle" class="left panetitle" style="width:100%"></div>
+<div id="bravo" class="left pane" style="width:100%"
+><div class="vcenter"><div class="hcenter"
+><div class="loading"></div></div></div></div>
+<div id="charlietitle" class="right panetitle" style="left:100%"></div>
+<div id="charlie" class="right pane" style="left:100%"></div>
+</div><!-- end clip -->
+
+<script src="http://pencilcode.net/jquery.js"></script>
+<script src="http://pencilcode.net/seedrandom.js"></script>
+<script src="http://pencilcode.net/see.js"></script>
+<script src="/lib/ace/ace.js"></script><!-- local URL for same-origin -->
+<script type="text/javascript" src="http://pencilcode.net/lib/tooltipster/js/jquery.tooltipster.min.js"></script>
+<script>
+
+window.pencilcode = {};
+
+///////////////////////////////////////////////////////////////////////////
+// VIEW SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+(function() {
+
+// The view has three panes, #left, #right, and #back (the offscreen pane).
+//
+// Any of the three panes can show:
+// - an editor
+//    Exposes set/get "current text", "editchange" event, "isdirty".
+//   on('editchange')
+// - a directory listing
+//    Exposes "clicked on link" event (up, new, file, directory)
+//   on('linkclick')
+//    Exposes "hovered on link" event (for possible preview)
+//   on('linkhover')
+// - an iframe run of a URL or of HTML text
+//   rotateRight / rotateLeft
+//
+// Preview management
+//   Method showPreview(on/off).
+// - "isPreviewShown"
+//   on('previewtoggle')
+//
+// The top-button bar
+// - Method showButtons([{html:, id:, enabled:}])
+//   Method blinkButton(id)
+//   Method enableButton(id, true/false)
+//   on(id)
+//
+// The renaming widget
+//   on('namechange')
+//   getNameText
+//   setNameText
+//
+// The middle run button
+//   showRunButton(true/false)
+//   on('run')
+//   showLoadingProgress
+
+// Private view state
+var state = {
+  nameText: $('#filename').text(),
+  previewMode: true,
+  callbacks: {},
+  depth: window.history.state && window.history.state.depth || 0,
+  aborting: false,
+  pane: {
+    alpha: initialPaneState(),
+    bravo: initialPaneState(),
+    charlie: initialPaneState()
+  },
+}
+
+window.pencilcode.view = {
+  // Listens to events
+  on: function(tag, cb) { state.callbacks[tag] = cb; },
+  // Sets up the text-editor in the view.
+  paneid: paneid,
+  panepos: panepos,
+  setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
+  clearPane: clearPane,
+  setPaneEditorText: setPaneEditorText,
+  getPaneEditorText: getPaneEditorText,
+  notePaneEditorCleanText: notePaneEditorCleanText,
+  noteNewFilename: noteNewFilename,
+  setPaneEditorReadOnly: setPaneEditorReadOnly,
+  isPaneEditorDirty: isPaneEditorDirty,
+  setPaneLinkText: setPaneLinkText,
+  setPaneRunText: setPaneRunText,
+  setPrimaryFocus: setPrimaryFocus,
+  // setPaneRunUrl: setPaneRunUrl,
+  // Mananges panes and preview mode
+  setPreviewMode: setPreviewMode,
+  getPreviewMode: function() { return state.previewMode; },
+  rotateRight: rotateRight,
+  rotateLeft: rotateLeft,
+  // Sets buttons.
+  showButtons: showButtons,
+  isChecked: function(id) { return $('#' + id).is(':checked'); },
+  setChecked: function(id, c) { return $('#' + id).prop('checked', c); },
+  enableButton: enableButton,
+  // Notifications
+  flashNotification: flashNotification,
+  dismissNotification: dismissNotification,
+  flashButton: flashButton,
+  // Show login (or create account) dialog.
+  showLoginDialog: showLoginDialog,
+  // The run button
+  showMiddleButton: showMiddleButton,
+  // Sets editable name.
+  setNameText: function(s) {
+    state.nameText = s; $('#filename').text(s);
+    var title = s.replace(/\/$/, '').replace(/^.*\//, '');
+    if (!title) title = 'Pencil Code Editor';
+    document.title = title;
+  },
+  getNameText: function() { return state.nameText; },
+  setNameTextReadOnly: function(b) {
+    if (!b) { $('#filename').attr('contentEditable', 'true'); }
+    else { $('#filename').removeAttr('contentEditable'); }
+  },
+  // Sets visible URL without navigating.
+  setVisibleUrl: setVisibleUrl
+};
+
+function paneid(position) {
+  return $('.' + position).filter('.pane').attr('id');
+}
+
+function panepos(id) {
+  return $('#' + id).attr('class').replace(/\s|pane/g, '');
+}
+
+function initialPaneState() {
+  return {
+    editor: null,
+    cleanText: null,
+    mimeType: null,
+    dirtied: false,
+    links: null,
+    running: false
+  };
+}
+
+function setOnCallback(tag, cb) {
+  state.callbacks[tag] = cb;
+}
+
+function fireEvent(tag, args) {
+  // if (window.console) {
+  //   window.console.log('fired', tag, args);
+  // }
+  if (tag in state.callbacks) {
+    var cb = state.callbacks[tag];
+    if (cb) {
+      cb.apply(null, args);
+    }
+  }
+}
+
+function setVisibleUrl(targetUrl, addToHistory) {
+  var currentDepth = history.state && history.state.depth || 0;
+  var currentUrl = history.state && history.state.current || null;
+  var previousUrl = history.state && history.state.previous || null;
+  if (addToHistory) {
+    if (window.history.pushState) {
+      window.history.pushState(
+          {depth: currentDepth + 1,
+           previous: currentUrl,
+           current: targetUrl}, document.title, targetUrl);
+      state.depth = currentDepth + 1;
+    }
+  } else {
+    if (window.history.replaceState) {
+      window.history.replaceState(
+          {depth: currentDepth,
+           previous: previousUrl,
+           current: targetUrl}, document.title, targetUrl);
+      state.depth = currentDepth;
+    }
+  }
+}
+
+$(window).on('popstate', function(e) {
+  var newDepth = window.history.state && window.history.state.depth || 0;
+  var undo = null;
+  if (Math.abs(newDepth - state.depth) == 1) {
+    if (newDepth > state.depth) {
+      undo = function() { state.aborting = true; window.history.back(); }
+    } else {
+      undo = function() { state.aborting = true; window.history.forward(); }
+    }
+  }
+  state.depth = newDepth;
+  if (state.aborting) {
+    state.aborting = false;
+    return;
+  }
+  fireEvent('popstate', [undo]);
+});
+
+///////////////////////////////////////////////////////////////////////////
+// NOTIFICATIONS
+///////////////////////////////////////////////////////////////////////////
+
+$('#notification').on('click', 'a', function(e) {
+  if (e.target.id) {
+    fireEvent(e.target.id, []);
+    $(e.target).css('outline', '3px dotted blue');
+    $('body').off('.flashNotification');
+    $('#notification').delay(200).fadeOut();
+    return false;
+  }
+});
+
+function flashNotification(text, loading) {
+  var marker = Math.random();
+  var hidefunc = function(e) {
+    if ($('#notification').data('marker') == marker) {
+      dismissNotification();
+    }
+  };
+  // Centering with script.
+  if (loading) {
+    $('#notification').addClass('loading');
+  } else {
+    $('#notification').removeClass();
+  }
+  $('#notification').html(text).data('marker', marker).finish()
+      .css({opacity: 0,display: 'inline-block'})
+      .css({left:($(window).width() - $('#notification').outerWidth()) / 2})
+      .animate({opacity:1}, 200)
+      .queue(function(n) {
+    $('body').off('.flashNotification');
+    $(window).off('.flashNotification');
+    $('body').on('blur.flashNotification ' +
+        'mousedown.flashNotification keydown.flashNotification', hidefunc);
+    $(window).on('resize.flashNotification ' + 
+        'popstate.flashNotification', hidefunc);
+    n();
+  });
+}
+
+function dismissNotification() {
+  if ($('#notification').is(':visible')) {
+    $('#notification').removeData('marker');
+    $('body').off('.flashNotification');
+    $('#notification').delay(200).fadeOut();
+  }
+}
+
+function flashButton(id) {
+  var button = $('#' + id).closest('button'),
+      bg = button.css('backgroundColor'),
+      j;
+  for (j = 0; j < 2; ++j) {
+    button.animate({opacity:1},
+      function(n){$(this).css({backgroundColor: 'red'});})
+          .animate({opacity:1},
+      function(n){$(this).css({backgroundColor: bg});});
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// FILENAME AND RENAMING
+///////////////////////////////////////////////////////////////////////////
+
+function selectEndOf(contentEditableElement)
+{
+  var range,selection;
+  if (document.createRange) {
+    range = document.createRange();
+    range.selectNodeContents(contentEditableElement);
+    range.collapse(false);
+    selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else if (document.selection) {
+    range = document.body.createTextRange();
+    range.moveToElementText(contentEditableElement);
+    range.collapse(false);
+    range.select();
+  }
+}
+
+function setRangeStart(range, node, charsFromBegin) {
+  if (node.firstChild) {
+    var count = 0;
+    for (var child = node.firstChild; child; child = child.nextSibling) {
+      var chars = child.textContent.length;
+      if (chars > charsFromBegin) {
+        setRangeStart(range, child, charsFromBegin);
+        return;
+      }
+      charsFromBegin -= chars;
+      count += 1;
+    }
+    range.setStart(node, count);
+  } else {
+    var chars = node.textContent.length;
+    range.setStart(node, Math.min(chars, charsFromBegin));
+  }
+}
+
+function setRangeEnd(range, node, charsFromEnd) {
+  if (node.lastChild) {
+    var count = 0;
+    for (var child = node.lastChild; child; child = child.lastSibling) {
+      var chars = child.textContent.length;
+      if (chars > charsFromEnd) {
+        setRangeEnd(range, child, charsFromEnd);
+        return;
+      }
+      charsFromEnd -= chars;
+      count += 1;
+    }
+    range.setStart(node, count);
+  } else {
+    var chars = node.textContent.length;
+    range.setStart(node, chars - Math.min(chars, charsFromEnd));
+  }
+}
+
+function selectContentsOf(contentEditableElement, beginOffset, endOffset) {
+  var range,selection;
+  if (document.createRange) {
+    range = document.createRange();
+    range.selectNodeContents(contentEditableElement);
+    if ((beginOffset || endOffset) && contentEditableElement.textContent) {
+      if (beginOffset) {
+        setRangeStart(range, contentEditableElement, beginOffset);
+      }
+      if (endOffset) {
+        setRangeStart(range, contentEditableElement, endOffset);
+      }
+    }
+    selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else if (document.selection) {
+    range = document.body.createTextRange();
+    range.moveToElementText(contentEditableElement);
+    range.select();
+  }
+}
+
+$('#filename').on('keypress keydown keyup input', function(e) {
+  if (e.charCode === '\r'.charCodeAt(0) || e.charCode === '\n'.charCodeAt(0)) {
+    $('#filename').blur();
+    return false;
+  }
+  if (e.charCode >= 20 && e.charCode <= 127 && !/[\w\/.-]/.test(
+        String.fromCharCode(e.charCode))) {
+    return false;
+  }
+  var sel = $('#filename');
+  var text = sel.text();
+  if (sel.children().length || (text != '\xa0' && /\s|\xa0/.test(text))) {
+    sel.text(text.replace(/\s|\xa0/g, ''));
+    selectEndOf(sel[0]);
+  }
+  if (text == '') { sel.html('&nbsp;'); }
+});
+
+$('#filename').on('blur', function() {
+  var sel = $('#filename');
+  var enteredtext = sel.text();
+  var fixedtext = enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
+      .replace(/^\/*/, '').replace(/\/\/+/g, '/');
+  if (!fixedtext) {
+    fixedtext = state.nameText;
+  }
+  if (fixedtext != enteredtext) {
+    sel.text(fixedtext);
+    selectEndOf(sel[0]);
+  }
+  if (fixedtext != state.nameText) {
+    state.nameText = fixedtext;
+    fireEvent('rename', [fixedtext]);
+  }
+});
+
+///////////////////////////////////////////////////////////////////////////
+// BUTTONS
+///////////////////////////////////////////////////////////////////////////
+
+$('#owner').on('click', function() {
+  fireEvent('root', []);
+});
+
+$('#icon').on('click', function() {
+  fireEvent('done', []);
+});
+
+$('#buttonbar,#middle').on('click', 'button', function(e) {
+  if (this.id) {
+    fireEvent(this.id, []);
+  }
+});
+$('#buttonbar').on('change', 'input[type=checkbox]', function(e) {
+  if (e.target.id) {
+    fireEvent(e.target.id, [e.target.checked]);
+  }
+});
+
+// buttonlist should be
+// [{label:, id:, callback:, checkbox:, checked:, disabled:}]
+function showButtons(buttonlist) {
+  var bar = $('#buttonbar');
+  var html = '';
+  for (var j = 0; j < buttonlist.length; ++j) {
+    if (buttonlist[j].checkbox) {
+      html += '<button' +
+        (buttonlist[j].disabled ? ' disabled' : '') +
+        '><label><input type="checkbox"' +
+        (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
+        (buttonlist[j].checked ? ' checked' : '') +
+        (buttonlist[j].disabled ? ' disabled' : '') +
+        '>' + buttonlist[j].label + '</label></button>';
+    } else {
+      html += '<button' +
+        (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
+        (buttonlist[j].disabled ? ' disabled' : '') +
+        '>' + buttonlist[j].label + '</button>';
+    }
+  }
+  bar.html(html);
+}
+
+function enableButton(id, enable) {
+  if (enable) {
+    var inp = $('#' + id).removeAttr('disabled');
+    inp.closest('button').removeAttr('disabled');
+  } else {
+    var inp = $('#' + id).attr('disabled', true);
+    inp.closest('button').attr('disabled', true);
+  }
+}
+
+function centerMiddle() {
+  var m = $('#middle');
+  m.css({left:($(window).width() - m.outerWidth()) / 2});
+}
+
+$(window).on('resize.middlebutton', centerMiddle);
+
+function showMiddleButton(which) {
+  if (which == 'run') {
+    $('#middle').find('div').eq(0).html(
+      '<button id="run"><div class="triangle"></div></button>');
+    if (state.previewMode) {
+      $('#middle').show();
+      centerMiddle();
+    }
+  } else if (which == 'edit' && state.previewMode) {
+    $('#middle').find('div').eq(0).html(
+      '<button id="edit">&#x25c1;</button>');
+    if (state.previewMode) {
+      $('#middle').show();
+      centerMiddle();
+    }
+  } else if (which == 'loading') {
+    $('#middle').find('div').eq(0).html(
+      '<div class="loading"></div>').show();
+    centerMiddle();
+  } else {
+    $('#middle').hide().find('div').eq(0).html('');
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// LOGIN DIALOG
+///////////////////////////////////////////////////////////////////////////
+
+function showLoginDialog(opts) {
+  var overlay = $('#overlay').show();
+  if (!opts) { opts = {}; }
+  overlay.html('');
+  var dialog = $('<div class="login"><div class="prompt">' +
+    (opts.prompt ? opts.prompt : '') +
+    '</div><div class="content">' +
+    '<div class="field">Username:<div style="display:inline-table">' + 
+    '<input class="username"' +
+    (opts.username ? ' value="' + opts.username + '" disabled' : '') +
+    '>' +
+    (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
+     '<a href="//pencilcode.net/" class="switchuser">Not me?</a></div>' : '') +
+    '</div></div>' +
+    (opts.setpass ?
+    '<div class="field">Old password:<input type="password" class="password"></div>' +
+    '<div class="field">New password:<input type="password" class="newpass"></div>' :
+    '<div class="field">Password:<input type="password" class="password"></div>') +
+    '</div><br>' +
+    '<button type="submit" class="ok">OK</button>' +
+    '<button class="cancel">Cancel</button>' +
+    '<div class="info">' +
+    (opts.info ? opts.info : '') +
+    '</div></div>').appendTo(overlay);
+  function update(up) {
+    if (!up) return;
+    if (up.cancel) {
+      dialog.remove();
+      overlay.hide();
+      return;
+    }
+    for (attr in up) {
+      if (attr == 'disable') {
+        if (up.disable) {
+          dialog.find('button.ok').attr('disabled', true);
+        } else {
+          dialog.find('button.ok').removeAttr('disabled');
+        }
+      } else if (/^(?:username|password)$/.test(attr)) {
+        dialog.find('.' + attr).val(up[attr]);
+      } else if (/^(?:info|prompt)$/.test(attr)) {
+        dialog.find('.' + attr).html(up[attr]);
+      }
+    }
+  }
+  function state() {
+    return {
+      username: dialog.find('.username').val(),
+      checkbox: dialog.find('.agreetoterms').prop('checked'),
+      password: dialog.find('.password').val(),
+      newpass: dialog.find('.newpass').val(),
+      update: update
+    };
+  }
+  function validate(e) {
+    if (e && ($(e.target).attr('target') == '_blank' ||
+              $(e.target).attr('type') == 'checkbox' ||
+              $(e.target).is('label'))) {
+      // Don't validate on mousedown of a new-window hyperlink
+      // Or a checkbox or checkbox label.
+      return true;
+    }
+    if (opts.validate) {
+      update(opts.validate(state()));
+    }
+  }
+  dialog.on('keyup mousedown change', validate);
+  dialog.find('button.ok').on('click', function() {
+    validate();
+    if (!dialog.find('button.ok').is(':disabled') &&
+        opts.done) {
+      opts.done(state());
+    }
+  });
+  overlay.on('click', function(e) {
+    if ($(e.target).hasClass('cancel') || overlay.is(e.target)) {
+      update({cancel:true});
+    }
+    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
+      opts.switchuser();
+      return false;
+    }
+  });
+  dialog.find('.username').on('keypress', function(e) {
+    if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
+          String.fromCharCode(e.which))) {
+      return false;
+    }
+  });
+  dialog.on('keydown', function(e) {
+    if (e.which == 27) {
+      update({cancel:true});
+      return;
+    }
+    if (e.which == 13) {
+      if (dialog.find('.username').is(':focus')) {
+        dialog.find('.password').focus();
+      } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
+        opts.done(state());
+      }
+    }
+  });
+  dialog.find('input:not([disabled])').eq(0).focus();
+  if (opts.init) {
+    opts.init(state());
+  }
+  validate();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// PANE MANAGEMENT
+///////////////////////////////////////////////////////////////////////////
+
+function setPreviewMode(shown, instant) {
+  var duration = instant ? 0 : 400;
+  if (shown) {
+    $('#middle').show();
+    $('.right').css({left: '50%', width: '50%'});
+    $('.left').css({width: '50%'});
+    $('.back').css({left: '-50%', width: '50%'});
+  } else {
+    $('#middle').hide();
+    $('.right').css({left: '100%', width: '100%'});
+    $('.left').css({width: '100%'});
+    $('.back').css({left: '-100%', width: '100%'});
+    clearPane(paneid('right'));
+  }
+  state.previewMode = shown;
+}
+
+function rotateLeft() {
+  var idb = paneid('back');
+  var idl = paneid('left');
+  var idr = paneid('right');
+  $('.back').finish().css({left:'100%'});
+  $('.left').finish().animate({left: '-50%'});
+  $('.right').finish().animate({left: 0});
+  $('.back').animate({left: '50%'});
+  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('right');
+  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('left');
+  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('back');
+  setPrimaryFocus();
+}
+
+function rotateRight() {
+  var idb = paneid('back');
+  var idl = paneid('left');
+  var idr = paneid('right');
+  $('.back').finish().css({left:'-50%'});
+  $('.right').finish().animate({left: '100%'});
+  $('.left').finish().animate({left: '50%'});
+  $('.back').animate({left: 0});
+  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('left');
+  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('back');
+  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('right');
+  setPrimaryFocus();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// RUN PREVIEW PANE
+///////////////////////////////////////////////////////////////////////////
+
+function wrapTurtle(text) {
+  return (
+'<!doctype html>\n<html>\n<head>\n<script src="http://pencilcode.net/turtlebits.js"><\057script>\n' +
+'</head>\n<body>\n<script type="text/coffeescript">\neval $.turtle()\n\n' +
+text + '\n<\057script>\n</body>\n</html>\n');
+}
+
+function modifyForPreview(text, filename, targetUrl) {
+  var mimeType = mimeForFilename(filename);
+  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
+    text = wrapTurtle(text);
+    mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
+  }
+  if (!text) return '';
+  if (mimeType && !/^text\/html/.test(mimeType)) {
+    return '<PLAINTEXT>' + text;
+  }
+  if (targetUrl && !/<base/i.exec(text)) {
+    // Insert a <base href="target_url" /> in a good location.
+    var firstLink = text.match(
+          /(?:<link|<script|<style|<body|<img|<iframe|<frame|<meta|<a)\b/i),
+        insertLocation = [
+          text.match(/(?:<head)\b[^>]*>\n?/i),
+          text.match(/<html\b[^>]*>\n?/i),
+          text.match(/<\!doctype\b[^>]*>\n?/i)
+        ],
+        insertAt = 0, j, match;
+    for (j = 0; j < insertLocation.length; ++j) {
+      match = insertLocation[j];
+      if (match && (!firstLink || match.index < firstLink.index)) {
+        insertAt = match.index + match[0].length;
+        break;
+      }
+    }
+    return text.substring(0, insertAt) +
+             '<base href="' + targetUrl + '" />\n' +
+             text.substring(insertAt);
+  }
+  return text;
+}
+
+function setPaneRunText(pane, text, filename, targetUrl) {
+  clearPane(pane);
+  var paneState = state.pane[pane];
+  paneState.running = true;
+  paneState.filename = filename;
+  updatePaneTitle(pane);
+  // Assemble text and insert <base>, <plaintext>, etc., as appropriate.
+  var code = modifyForPreview(text, filename, targetUrl);
+  var preview = $('#' + pane + ' .preview');
+  if (!preview.length) {
+    preview = $('<div class="preview"></div>').appendTo('#' + pane);
+  }
+  var session = Math.random();
+  preview.data('session', session);
+  $('#' + pane).queue(function() {
+    var p = $(this).find('.preview');
+    if (p.data('session') == session) {
+      p.html('');
+      var iframe = $('<iframe></iframe>').appendTo(p);
+      // Destroy and create new iframe.
+      iframe.attr('src', 'about:blank');
+      var framewin = iframe[0].contentWindow;
+      var framedoc = framewin.document;
+      framedoc.open();
+      // Fake out /home URL instead of /edit URL if possible.
+      try {
+        if (framewin.history.replaceState) {
+          framewin.history.replaceState(null, targetUrl, targetUrl);
+        }
+      } catch (e) {
+        if (window.console) {
+          window.console.warn(e)
+        }
+      }
+      framedoc.write(code);
+      framedoc.close();
+    }
+    $(this).dequeue();
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////
+// DIRECTORY LISTING
+///////////////////////////////////////////////////////////////////////////
+
+var getScrollbarWidth = function() {
+  var div, width = getScrollbarWidth.width;
+  if (width === undefined) {
+    div = document.createElement('div');
+    div.innerHTML = '<div style="width:50px;height:50px;position:absolute;left:-50px;top:-50px;overflow:auto;"><div style="width:1px;height:100px;"></div></div>';
+    div = div.firstChild;
+    document.body.appendChild(div);
+    width = getScrollbarWidth.width = div.offsetWidth - div.clientWidth;
+    document.body.removeChild(div);
+  }
+  return width;
+};
+
+function setPaneLinkText(pane, links, filename) {
+  clearPane(pane);
+  var paneState = state.pane[pane];
+  paneState.links = links;
+  paneState.filename = filename;
+  updatePaneLinks(pane);
+  updatePaneTitle(pane);
+}
+
+$(window).on('resize.listing', function() {
+  var panes = [paneid('left'), paneid('right')];
+  for (var j = 0; j < panes.length; j++) {
+    var pane = panes[j];
+    var paneState = state.pane[pane];
+    if (paneState.links) {
+      updatePaneLinks(pane);
+    }
+  }
+});
+
+function updatePaneLinks(pane) {
+  var j, col, items, width, maxwidth, colcount, colsize, colnum,
+      tightwidth, item, directory, tag, colsdone, list;
+  list = state.pane[pane].links;
+  if (!list) { return; }
+  $('#' + pane).html('');
+  directory = $('<div class="directory"></div>').appendTo('#' + pane);
+  width = $('#' + pane).outerWidth() - getScrollbarWidth();
+  col = $('<div class="column"></div>').appendTo(directory);
+  for (j = 0; j < list.length; j++) {
+    tag = list[j].href ? 'a' : 'div';
+    item = $('<' + tag + ' class="item"'
+        + (list[j].href ? ' href="' + list[j].href + '" ' : '')
+        + '>' + list[j].html + '</' + tag + '>')
+        .appendTo(col);
+    if (list[j].link) {
+      item.data('link', list[j].link);
+    }
+  }
+  items = directory.find('.item');
+  maxwidth = 0;
+  for (j = 0; j < items.length; j++) {
+    maxwidth = Math.max(maxwidth, items.eq(j).outerWidth());
+  }
+  colcount = Math.min(items.length, Math.floor(width / Math.max(1, maxwidth)));
+  colsize = items.length;
+  while (colcount < items.length) {
+    // Attempt shorter columns from colcount + 1 (or colsize - 1 if shorter).
+    colsize = Math.min(colsize - 1, Math.ceil(items.length / (colcount + 1)));
+    tightwidth = 0;
+    colsdone = 0;
+    j = 0;
+    for (colnum = 0; j < items.length; colnum++) {
+      maxwidth = 0;
+      for (j = colnum * colsize;
+           j < items.length && j < (colnum + 1) * colsize; j++) {
+        maxwidth = Math.max(maxwidth, items.eq(j).outerWidth());
+      }
+      tightwidth += maxwidth;
+      colsdone += 1;
+      if (tightwidth > width) { break; }
+    }
+    if (tightwidth > width) { break; }
+    colcount = colsdone;
+    if (colsize <= 1) { break; }
+  }
+  colsize = Math.ceil(items.length / colcount);
+  for (colnum = 1; colnum * colsize < items.length; colnum++) {
+    col = $('<div class="column"></div>').appendTo(directory);
+    for (j = colnum * colsize;
+         j < items.length && j < (colnum + 1) * colsize; j++) {
+      items.eq(j).appendTo(col);
+    }
+  }
+  directory.on('click', '.item', function(e) {
+    if (!e.shiftKey && !e.ctrlKey & !e.metaKey && !e.altKey) {
+      var link = $(this).data('link');
+      var pane = $(this).closest('.pane').attr('id');
+      if (link) {
+        fireEvent('link', [pane, link]);
+        return false;
+      }
+    }
+  });
+  var lingerElement = null;
+  var lingerTimer = null;
+  directory.on('mouseleave', '.item', function(e) {
+    clearTimeout(lingerTimer);
+    lingerElement = null;
+    lingerTimer = null;
+  });
+  directory.on('mouseenter', '.item', function(e) {
+    clearTimeout(lingerTimer);
+    lingerElement = this;
+    lingerTimer = setTimeout(function() {
+      var link = $(lingerElement).data('link');
+      var pane = $(lingerElement).closest('.pane').attr('id');
+      lingerTimer = null;
+      lingerElement = null;
+      if (link) {
+        fireEvent('linger', [pane, link]);
+      }
+    }, 600);
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////
+// ACE EDITOR SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+function clearPane(pane, loading) {
+  var paneState = state.pane[pane];
+  if (paneState.editor) {
+    paneState.editor.destroy();
+  }
+  paneState.editor = null;
+  paneState.filename = null;
+  paneState.cleanText = null;
+  paneState.mimeType = null;
+  paneState.dirtied = false;
+  paneState.links = null;
+  paneState.running = false;
+  $('#' + pane).html(loading ? '<div class="vcenter">' +
+      '<div class="hcenter"><div class="loading"></div></div></div>' : '');
+  $('#' + pane + 'title').html('');
+}
+
+function modeForMimeType(mimeType) {
+  if (!mimeType) {
+    return 'ace/mode/text';
+  }
+  mimeType = mimeType.replace(/;.*$/, '')
+  var result = {
+    'text/x-pencilcode': 'coffee',
+    'text/coffeescript': 'coffee',
+    'text/html': 'html',
+    'text/css': 'css',
+    'text/javascript': 'javascript',
+    'text/plain': 'text',
+    'text/xml': 'xml',
+  }[mimeType];
+  if (!result) {
+    result = 'text';
+  }
+  return 'ace/mode/' + result;
+}
+
+function uniqueId(name) {
+  return name + '_' + ('' + Math.random()).substr(2);
+}
+
+function updatePaneTitle(pane) {
+  var paneState = state.pane[pane];
+  var prefix = '', suffix = '';
+  if (paneState.editor) {
+    if (/^text\/plain/.test(paneState.mimeType)) {
+      suffix = ' text';
+    } else if (/^text\/xml/.test(paneState.mimeType) ||
+        /^application\/json/.test(paneState.mimeType)) {
+      suffix = ' data';
+    } else {
+      suffix = ' code';
+    }
+  } else if (paneState.links) {
+    suffix = ' directory';
+  } else if (paneState.running) {
+    prefix = '<a target="_blank" href="/home/' + paneState.filename + '">';
+    suffix = ' preview</a>';
+  }
+  var shortened = paneState.filename || '';
+  shortened = shortened.replace(/^.*\//, '');
+  $('#' + pane + 'title').html(prefix + shortened + suffix);
+}
+
+function setPaneEditorText(pane, text, filename) {
+  clearPane(pane);
+  var id = uniqueId('editor');
+  var paneState = state.pane[pane];
+  paneState.filename = filename;
+  paneState.mimeType = mimeForFilename(filename);
+  paneState.cleanText = text;
+  paneState.dirtied = false;
+  $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var editor = paneState.editor = ace.edit(id);
+  updatePaneTitle(pane);
+  editor.setTheme("ace/theme/chrome");
+  editor.setBehavioursEnabled(false);
+  editor.setHighlightActiveLine(false);
+  editor.getSession().setFoldStyle('markbeginend');
+  editor.getSession().setUseWrapMode(true);
+  editor.getSession().setTabSize(2);
+  editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+  editor.setValue(text);
+  var um = editor.getSession().getUndoManager();
+  um.reset();
+  editor.getSession().setUndoManager(um);
+  editor.getSession().on('change', function() {
+    ensureEmptyLastLine(editor);
+    if (editor.getFontSize() > 15) {
+      if (editor.getSession().getLength() *
+          editor.getFontSize() * 1.4 > $('#' + pane).height()) {
+        editor.setFontSize(15);
+      }
+    }
+    if (!paneState.dirtied) {
+      fireEvent('dirty', [pane]);
+    }
+  });
+  var lines = editor.getSession().getLength();
+  if (lines * 24 * 1.4 <= $('#' + pane).height()) {
+    editor.setFontSize(24);
+    editor.gotoLine(lines, editor.getSession().getLine(lines - 1).length);
+  } else {
+    editor.setFontSize(15);
+    editor.gotoLine(0);
+  }
+  setPrimaryFocus();
+  editor.on('focus', function() {
+    fireEvent('editfocus', [pane]);
+  });
+}
+
+// Kids often have trouble figuring out how to add empty lines at the end.
+// So ensure there is always one empty line at the end of the document.
+function ensureEmptyLastLine(editor) {
+  var session = editor.getSession(),
+      lines = session.getLength(),
+      lastline = lines ? session.getLine(lines - 1) : '',
+      curpos = editor.getCursorPosition(),
+      newpos;
+  if (lastline.length > 0) {
+    session.insert(
+        {row: Math.max(0, lines - 1), column: lastline.length},
+        session.getDocument().getNewLineCharacter());
+    newpos = editor.getCursorPosition();
+    if (newpos.row !== curpos.row || newpos.column !== curpos.column) {
+      editor.moveCursorToPosition(curpos);
+    }
+  }
+}
+
+function setPrimaryFocus() {
+  var pane = paneid('left');
+  var paneState = state.pane[pane];
+  if (paneState.editor) {
+    var untitled = /(?:^|\/)untitled[\d]*$/.exec(paneState.filename);
+    if (untitled) {
+      var elt = $('#filename').focus()[0];
+      console.log(untitled);
+      setTimeout(function() {
+        selectContentsOf(elt, untitled.index ? untitled.index + 1 : 0);
+      }, 0);
+    } else {
+      paneState.editor.focus();
+    }
+  }
+}
+
+function setPaneEditorReadOnly(pane, ro) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) { return; }
+  paneState.editor.setReadOnly(ro);
+  $(paneState.editor.container).find('.ace_content').css({
+    backgroundColor: ro ? 'gainsboro' : 'transparent'
+  });
+  paneState.editor.blur();
+}
+
+function isPaneEditorDirty(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) { return false; }
+  if (paneState.dirtied) {
+    return true;
+  }
+  var text = paneState.editor.getSession().getValue();
+  if (text != paneState.cleanText) {
+    paneState.dirtied = true;
+    return true;
+  }
+  return false;
+}
+
+function getPaneEditorText(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) {
+    return null;
+  }
+  var text = paneState.editor.getSession().getValue();
+  // TODO: pick the right mime type
+  return {text: text, mime: paneState.mimeType };
+}
+
+function notePaneEditorCleanText(pane, text) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) {
+    return;
+  }
+  var editortext = paneState.editor.getSession().getValue();
+  paneState.cleanText = text;
+  if ((text == editortext) == (paneState.dirtied)) {
+    paneState.dirtied = (text != editortext);
+    fireEvent('dirty', [pane]);
+  }
+}
+
+function mimeForFilename(filename) {
+  var result = filename && {
+    'jpg'  : 'image/jpeg',
+    'jpeg' : 'image/jpeg',
+    'gif'  : 'image/gif',
+    'png'  : 'image/png',
+    'bmp'  : 'image/x-ms-bmp',
+    'ico'  : 'image/x-icon',
+    'htm'  : 'text/html',
+    'html' : 'text/html',
+    'txt'  : 'text/plain',
+    'text' : 'text/plain',
+    'css'  : 'text/css',
+    'coffee' : 'text/coffeescript',
+    'js'   : 'text/javascript',
+    'xml'  : 'text/xml'
+  }[filename.replace(/^.*\./, '')]
+  if (!result) {
+    result = 'text/x-pencilcode';
+  }
+  return result;
+}
+
+function noteNewFilename(pane, filename) {
+  var paneState = state.pane[pane];
+  paneState.filename = filename;
+  if (paneState.editor) {
+    paneState.mimeType = mimeForFilename(filename);
+    paneState.editor.getSession().clearAnnotations();
+    paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+  }
+  updatePaneTitle(pane);
+}
+
+eval(see.scope('view'));
+
+})();
+
+///////////////////////////////////////////////////////////////////////////
+// STORAGE AND CACHE SERVICE
+///////////////////////////////////////////////////////////////////////////
+
+(function() {
+
+eval(see.scope('storage'));
+function hasBackup(filename) {
+  if (!window.localStorage) return false;
+  return ('backup:' + filename) in window.localStorage;
+}
+
+function loadBackup(filename, annotation) {
+  try {
+    var result = JSON.parse(window.localStorage['backup:' + filename]);
+    if (annotation) {
+      $.extend(result, annotation);
+    }
+    return result;
+  } catch(e) {
+    return { error: 'Backup load failed.', down: true };
+  }
+}
+
+function saveBackup(filename, msg) {
+  if (!window.localStorage) return;
+  try {
+    window.localStorage['backup:' + filename] = JSON.stringify(msg);
+  } catch(e) {
+  }
+}
+
+function deleteBackup(filename) {
+  if (!window.localStorage) return;
+  try {
+    delete window.localStorage['backup:' + filename];
+  } catch(e) {
+  }
+}
+
+function deleteBackupPrefix(filename) {
+  if (!window.localStorage) return;
+  try {
+    var prefix = 'backup:' + filename;
+    delete window.localStorage[prefix];
+    if (filename.length > 0 &&
+        filename.substring(filename.length - 1) != '/') { prefix += '/'; }
+    var toDelete = [];
+    for (var j = 0; j < localStorage.length; j++) {
+      if (localStorage.key(j).indexOf(prefix) === 0) {
+        toDelete.push(localStorage.key(j));
+      }
+    }
+    for (var j = 0; j < toDelete.length; j++) {
+      delete window.localStorage[toDelete[j]];
+    }
+  } catch(e) {
+  }
+}
+
+function isBackupPreferred(filename, m, preferUnsaved) {
+  if (!window.localStorage) return false;
+  try {
+    var result = JSON.parse(window.localStorage['backup:' + filename]);
+    // If backup is empty, then don't prefer the backup.
+    if (/\s*/.test(result.data)) {
+      return false;
+    }
+    // If backup is identical to net file (ignoring extra blank lines),
+    // then don't prefer the backup.
+    if (result.data.replace(/\s*($|\n)/g, '$1') ===
+        m.data.replace(/\s*($|\n)/g, '$1')) {
+      return false;
+    }
+    if (preferUnsaved && result.unsaved) { return true; }
+    if (result.mtime && mtime && result.mtime > m.mtime) { return true; }
+  } catch(e) {
+  }
+  return false;
+}
+
+window.pencilcode.storage = {
+  loadUserList: function(cb) {
+    $.getJSON('http://pencilcode.net/load/?callback=?', function(m) {
+      if (m && m.directory && m.list) {
+        var result = [];
+        for (var j = 0; j < m.list.length; ++j) {
+          var reserved = (m.list[j].mode.indexOf('d') < 0);
+          result.push({ name: m.list[j].name, reserved: reserved});
+        }
+        cb(result);
+        return;
+      }
+      cb(null);
+    });
+  },
+  // Given a filename (no owner, leading, or trailing slash),
+  // attempts to load the file (or directory) and then calls callback
+  // with the message.  Also automatically caches things in the backup store.
+  loadFile: function(ownername, filename, ignoreBackup, callback) {
+    if (!ownername && filename.indexOf('/') >= 0) {
+      setTimeout(function() {
+        callback({error: "Cannot load."});
+      }, 0);
+      return;
+    }
+    if (!ignoreBackup && false === window.navigator.onLine &&
+        hasBackup(filename)) {
+      // If the user is offline, then the cached backup is returned
+      // marked with {offline:true}.
+      setTimeout(function() {
+        callback(loadBackup(filename, {offline:true}));
+      }, 0);
+      return;
+    }
+    $.getJSON((ownername ? '//' + ownername + '.pencilcode.net' : '') +
+        '/load/' + filename + '?callback=?', function(m) {
+      // If there is no owner, we are not allowed to load directories
+      if (!ownername && filename && m.directory) {
+        callback({error: "Cannot load."});
+      }
+      if (m.error) {
+        if (!ignoreBackup & hasBackup(filename)) {
+          // If something failed in the load, fall back to the cached
+          // backup {offline:true}.
+          callback(loadBackup(filename, {offline:true}));
+        }
+        // If there was a failure without a cached backup, return the
+        // error without caching it.
+        callback(m);
+        return;
+      }
+      if (!ignoreBackup && isBackupPreferred(filename, m, true)) {
+        // If the backup is preferred (newer or unsaved), then return it
+        // and mark it as a backup.
+        callback(loadBackup(filename, {backup:true,offline:false}));
+      } else {
+        // Otherwise, return the network loaded file.  Note that we only
+        // back up this loaded file if ignoreBackup is false.
+        if (!ignoreBackup) {
+          saveBackup(filename, m);
+        }
+        callback(m);
+      }
+    }).error(function() {
+      if (!ignoreBackup & hasBackup(filename)) {
+        // If something failed in the load, fall back to the cached
+        // backup {offline:true}.
+        callback(loadBackup(filename, {offline:true}));
+      } else {
+        // Unless there is no cached backup; then report a generic network
+        // down error message.
+        callback({error:"Network down.", down:true});
+      }
+    });
+  },
+  // Given the filename (no owner, leading, or trailing slash),
+  // attempts to save the file and then calls callback with the success code.
+  // 2. Otherwise we're online and the network save is attempted, conditional
+  //    on not overwriting a file newer than the given overwriteMtime (if set).
+  // 3. If the network save failed with newer:newtime or needauth:key,
+  //    or some other reason, a backup is made with unsaved:true set, and
+  //    the error message is returned.
+  // 4. If the network save succeeded, the file is saved as a backup (without
+  //    unsaved set) and success:true, mtime:mtime is the status.
+  saveFile: function(ownername,
+      filename, data, force, key, backupOnly, callback) {
+    // Always stick the data in the backup immediately, marked as unsaved.
+    var msg = $.extend({}, data);
+    msg.unsaved = true;
+    delete msg.offline;
+    if (data == '' || data == '\n') {
+      // If saving an empty file, delete the backup.
+      deleteBackup(filename);
+    } else {
+      saveBackup(filename, msg);
+    }
+    if (backupOnly || (false === window.navigator.onLine)) {
+      // If the user is offline or the backupOnly flag is set, then we're done.
+      // The return status is backup:true if backupOnly and offline:true
+      // otherwise.
+      setTimeout(function() { callback && callback(
+        backupOnly ? {backup:true} : {offline:true}); }, 0);
+      return;
+    }
+    // Attempt the network save: set up the conditional argument and the
+    // weak authentication key.
+    var payload = { data: msg.data };
+    if (msg.mtime && !force) {
+      payload.conditional = msg.mtime;
+    }
+    if (key) {
+      payload.key = key;
+    }
+    var domain = (ownername ? ownername + '.' : '') + 'pencilcode.net';
+    var crossdomain = (window.location.hostname != domain);
+    $.ajax({
+      url: (ownername ? '//' + domain : '') +
+          '/save/' + filename + '?callback=?',
+      data: payload,
+      dataType: 'json',
+      type: crossdomain ? 'GET' : 'POST',
+      success: function(m) {
+        var check;
+        if (m.error) {
+          // Pass errors on to calback.  Backup already done.
+        } else if (m.deleted) {
+          // On a successful delete, also delete the backup
+          // (if nothing new has since been entered in backup).
+          check = loadBackup(filename);
+          if (check && check.data === msg.data) {
+            deleteBackup(filename);
+          }
+        } else {
+          // On a successful save, re-commit the backup with the new
+          // mtime and without the unsaved bit (if nothing new has since
+          // been entered in the backup).
+          check = loadBackup(filename);
+          if (check && check.data === msg.data) {
+            // Commit backup if it is still unchanged.
+            delete msg.unsaved;
+            delete msg.offline;
+            if (m.mtime) { msg.mtime = m.mtime; }
+            saveBackup(filename, msg);
+          }
+        }
+        callback && callback(m);
+      },
+      error: function() {
+        callback && callback({error: 'Network error', offline:true});
+      }
+    });
+  },
+  moveFile: function(ownername, sourcefile, filename, key, copy, callback) {
+    var payload = {
+      source: ownername + '/' + sourcefile
+    };
+    if (!copy) { payload.mode = 'mv'; }
+    if (key) { payload.key = key; }
+    $.post('//' + ownername + '.pencilcode.net/save/' +
+        filename + '?callback=?', payload, function(m) {
+      var check;
+      if (m.error) {
+        // Pass errors on to calback.  Don't affect backup.
+      } else {
+        // On a successful move, just delete the backup of everything
+        // in the source area.  TODO: move the backup tree instead.
+        deleteBackupPrefix(sourcefile);
+      }
+      callback && callback(m);
+    }, 'json').error(function() {
+      callback && callback({error: 'Network error', offline:true});
+    });
+  },
+  setPassKey: function(ownername, key, oldkey, callback) {
+    $.post('//' + ownername + '.pencilcode.net/save/?callback=?',
+        $.extend({ mode: 'setkey', data: key}, oldkey ? { key: oldkey } : {}),
+        function(m) {
+      callback && callback(m);
+    }, 'json').error(function() {
+      callback && callback({error: 'Network error', offline:true});
+    });
+  },
+  deleteBackup: deleteBackup,
+  deleteAllBackup: function() {
+    deleteBackupPrefix('');
+  },
+  // TODO: cache-refreshing crawl.
+  recrawlCache: function() {
+    // Load dirtree URL
+    // Then backup all directories
+    // Then (breadthfirst) compare all file entry mtimes to backup mtimes.
+  }
+};
+
+})();
+
+
+///////////////////////////////////////////////////////////////////////////
+// MODEL, CONTROLLER SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+(function() {
+eval(see.scope('controller'));
+
+var view = window.pencilcode.view;
+var storage = window.pencilcode.storage;
+var model = {
+  // Owner name of this file or directory.
+  ownername: null,
+  // True if /edit/ url.
+  editmode: false,
+  // Contents of the three panes.
+  pane: {
+    alpha: {
+      filename: null,
+      isdir: false,
+      data: null,
+      bydate: false,
+      loading: 0
+    },
+    bravo: {
+      filename: null,
+      isdir: false,
+      data: null,
+      bydate: false,
+      loading: 0
+    },
+    charlie: {
+      filename: null,
+      isdir: false,
+      data: null,
+      bydate: false,
+      loading: 0
+    }
+  },
+  // Logged in username, or null if not logged in.
+  username: null,
+  // Three digit passkey, hashed from password.
+  passkey: null,
+};
+
+function modelatpos(pos) {
+  return model.pane[view.paneid(pos)];
+}
+
+function paneatpos(pos) {
+  return view.paneid(pos);
+}
+
+function posofpane(pane) {
+  return view.panepos(pane);
+}
+
+function specialowner() {
+  return (!model.ownername || model.ownername === 'guide' ||
+          model.ownername === 'event');
+}
+
+function updateTopControls(addHistory) {
+  var m = modelatpos('left');
+  // Update visible URL and main title name.
+  view.setNameText(m.filename);
+  var slashed = m.filename;
+  if (m.isdir && slashed.length) { slashed += '/'; }
+  view.setVisibleUrl((model.editmode ? '/edit/' : '/home/') +
+      slashed, addHistory)
+  // Update top buttons.
+  var buttons = [];
+  if (!model.editmode) {
+    buttons.push({id: 'editmode', label: 'Edit'});
+  } else {
+    if (m.data && m.data.file) {
+      buttons.push(
+        {id: 'save', label: 'Save',
+         disabled: !specialowner() &&
+                   !view.isPaneEditorDirty(paneatpos('left')) });
+    }
+    if (!specialowner()) {
+      if (model.username) {
+        buttons.push({id: 'logout', label: 'Log out'});
+      } else {
+        buttons.push({id: 'login', label: 'Log in'});
+      }
+    } else {
+      if (m.isdir) {
+        if (m.bydate) {
+          buttons.push({id: 'byname', label: 'Alphabetize'});
+        } else {
+          buttons.push({id: 'bydate', label: 'Sort by Date'});
+        }
+      }
+    }
+    buttons.push(
+        {id: 'help', label: '<span class=helplink>?</span>' });
+    if (m.data && m.data.file) {
+      buttons.push(
+        {id: 'guide', label: '<span class=helplink>Guide</span>' });
+    }
+  }
+  // buttons.push({id: 'done', label: 'Done'});
+  view.showButtons(buttons);
+  // Update middle button.
+  if (m.data && m.data.file ||
+      (modelatpos('right').data && modelatpos('right').data.file)) {
+    view.showMiddleButton('run');
+  } else {
+    view.showMiddleButton('');
+  }
+  // Also if we're runnable, show an empty runner in the right.
+  // Is this helpful or confusing?
+  if (m.data && m.data.file) {
+    if (!modelatpos('right').running) {
+      runCodeAtPosition('right', '', m.filename);
+    }
+  }
+  // Update editability.
+  view.setNameTextReadOnly(!model.editmode);
+  view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
+  view.setPaneEditorReadOnly(paneatpos('right'), true);
+  view.setPaneEditorReadOnly(paneatpos('back'), true);
+}
+
+view.on('help', function() {
+  view.flashNotification('<a href="http://pencilcode.net/group" target="_blank">Ask a question.</a>' +
+    (getEditTextIfAny() ?
+        '&emsp; <a id="clip" href="#clip">Copy as url.</a>' : '') +
+    (model.username ?
+        '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
+  );
+});
+
+view.on('tour', function() {
+  // view.flashNotification('Tour coming soon.');
+  setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
+});
+
+view.on('clip', function() {
+  var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
+  if (!shortfilename) { shortfilename = 'clip'; }
+  var code = getEditTextIfAny() || '';
+  shortenUrl('http://pencilcode.net/edit/' + shortfilename + '#text=' +
+      encodeURIComponent(code).replace(/%20/g, '+'), function(shortened) {
+    if (shortened) {
+      prompt('URL to copy this code:', shortened);
+    }
+  });
+});
+
+view.on('bydate', function() {
+  if (modelatpos('left').isdir) {
+    modelatpos('left').bydate = true;
+    setDefaultDirSortingByDate(true);
+    renderDirectory('left');
+  }
+});
+
+view.on('byname', function() {
+  if (modelatpos('left').isdir) {
+    modelatpos('left').bydate = false;
+    setDefaultDirSortingByDate(false);
+    renderDirectory('left');
+  }
+});
+
+view.on('dirty', function(pane) {
+  if (posofpane(pane) == 'left') {
+    view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
+  }
+});
+
+view.on('editfocus', function(pane) {
+  if (posofpane(pane) == 'right') {
+    rotateModelLeft(true);
+  }
+});
+
+view.on('run', function() {
+  var mimetext = view.getPaneEditorText(paneatpos('left'));
+  if (!mimetext) {
+    mimetext = view.getPaneEditorText(paneatpos('right'));
+    if (!mimetext) { return; }
+    cancelAndClearPosition('back');
+    rotateModelLeft(true);
+  }
+  var runtext = mimetext && mimetext.text;
+  var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  if (!specialowner()) {
+    // Save file (backup only)
+    storage.saveFile(model.ownername,
+        modelatpos('left').filename, newdata, false, null, true);
+  }
+  runCodeAtPosition('right', runtext, modelatpos('left').filename);
+  if (!specialowner()) {
+    cookie('recent', window.location.href,
+        { expires: 7, path: '/', domain: 'pencilcode.net' });
+  }
+});
+
+$(window).on('beforeunload', function() {
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    view.flashButton('save');
+    return "There are unsaved changes."
+  }
+});
+
+
+view.on('logout', function() {
+  model.username = null;
+  model.passkey = null;
+  cookie('login', '', { expires: -1, path: '/' });
+  cookie('recent', '',
+      { expires: -1, path: '/', domain: 'pencilcode.net' });
+  updateTopControls(false);
+  view.flashNotification('Logged out.');
+});
+
+view.on('login', function() {
+  view.showLoginDialog({
+    prompt: 'Log in.',
+    username: model.ownername,
+    validate: function(state) { return {}; },
+    done: function(state) {
+      model.username = model.ownername;
+      model.passkey = keyFromPassword(model.username, state.password);
+      state.update({info: 'Logging in...', disable: true});
+      storage.setPassKey(
+          model.username, model.passkey, model.passkey,
+      function(m) {
+        if (m.needauth) {
+          state.update({info: 'Wrong password.', disable: false});
+          model.username = null;
+          model.passkey = null;
+          return;
+        } else if (m.error) {
+          state.update({info: 'Could not log in.', disable: false});
+          model.username = null;
+          model.passkey = null;
+          return;
+        }
+        state.update({cancel: true});
+        cookie('login', model.username + ':' + model.passkey,
+            { expires: 1, path: '/' });
+        if (!specialowner()) {
+          cookie('recent', window.location.href,
+              { expires: 7, path: '/', domain: 'pencilcode.net' });
+        }
+        updateTopControls();
+        view.flashNotification('Logged in as ' + model.username + '.');
+      });
+    }
+  });
+});
+
+view.on('setpass', function() {
+  view.showLoginDialog({
+    prompt: 'Change password.',
+    username: model.ownername,
+    setpass: true,
+    validate: function(state) {
+      if (state.password === state.newpass) {
+        return { disable: true };
+      } else {
+        return { disable: false };
+      }
+    },
+    done: function(state) {
+      var oldpasskey = keyFromPassword(model.ownername, state.password);
+      var newpasskey = keyFromPassword(model.ownername, state.newpass);
+      state.update({info: 'Changing password...', disable: true});
+      storage.setPassKey(model.ownername, newpasskey, oldpasskey,
+      function(m) {
+        if (m.needauth) {
+          state.update({info: 'Wrong password.', disable: false});
+          return;
+        } else if (m.error) {
+          state.update({info: 'Could not change password.', disable: false});
+          return;
+        }
+        state.update({cancel: true});
+        model.username = model.ownername;
+        model.passkey = newpasskey;
+        cookie('login', model.username + ':' + model.passkey,
+            { expires: 1, path: '/' });
+        if (!specialowner()) {
+          cookie('recent', window.location.href,
+              { expires: 7, path: '/', domain: 'pencilcode.net' });
+        }
+        updateTopControls();
+        view.flashNotification('Changed password for ' + model.username + '.');
+      });
+    }
+  });
+});
+
+view.on('save', function() { saveAction(false); });
+view.on('overwrite', function() { saveAction(true); });
+view.on('guide', function() {
+  window.open('http://guide.pencilcode.net/home/'); });
+
+function saveAction(forceOverwrite) {
+  if (specialowner()) {
+    signUpAndSave();
+    return;
+  }
+  var mimetext = view.getPaneEditorText(paneatpos('left'));
+  var runtext = mimetext && mimetext.text;
+  var filename = modelatpos('left').filename;
+  if (!runtext && runtext !== '') {
+    // TODO: error message or something - or is this a deletion?
+    return;
+  }
+  // TODO: pick the right mime type here.
+  var newdata = $.extend({},
+      modelatpos('left').data, { data: runtext, mime: mimetext.mime });
+  // After a successful save, mark the file as clean and update mtime.
+  function noteclean(mtime) {
+    view.flashNotification('Saved.');
+    view.notePaneEditorCleanText(
+        paneatpos('left'), newdata.data);
+    if (modelatpos('left').filename == filename) {
+      var oldmtime = modelatpos('left').data.mtime || 0;
+      if (mtime) {
+        modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
+      }
+    }
+    updateTopControls();
+  }
+  if (newdata.auth && model.ownername != model.username) {
+    // If we know auth is required and the user isn't logged in,
+    // prompt for a login.
+    logInAndSave(filename, newdata, forceOverwrite, noteclean);
+    return;
+  }
+  // Attempt to save.
+  view.flashNotification('', true);
+  storage.saveFile(
+      model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
+  function(status) {
+    if (status.needauth) {
+      logInAndSave(filename, newdata, forceOverwrite, noteclean);
+    } else if (status.newer) {
+      view.flashNotification('Newer copy on network. ' +
+          '<a href="#overwrite" id="overwrite">Overwrite</a>?');
+    } else if (status.transient) {
+      view.flashNotification('Network down.  Local backup made.');
+    } else if (status.error) {
+      view.flashNotification(status.error);
+    } else if (status.deleted) {
+      view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
+      if (modelatpos('left').filename == filename) {
+        cancelAndClearPosition('left');
+        var parentdir = '';
+        if (filename.indexOf('/') >= 0) {
+          parentdir = filename.replace(/\/[^\/]+\/?$/, '');
+        }
+        loadFileIntoPosition('back', parentdir, true, true);
+        rotateModelRight(true);
+      }
+    } else {
+      noteclean(status.mtime);
+      if (!specialowner()) {
+        cookie('recent', window.location.href,
+            { expires: 7, path: '/', domain: 'pencilcode.net' });
+      }
+    }
+  });
+}
+
+function newrandom() {
+  var p = Math.random,
+      r = { seed: Math.seedrandom.apply(0, arguments), random: Math.random };
+  Math.random = p;
+  return r;
+}
+
+function keyFromPassword(username, p) {
+  if (!p) { return ''; }
+  if (/^[0-9]{3}$/.test(p)) { return p; }
+  var key = '';
+  var prng = newrandom('turtlebits:' + username + ':' + p + '.').random;
+  for (var j = 0; j < 3; j++) {
+    key += Math.floor(prng() * 10);
+  }
+  return key;
+}
+
+function signUpAndSave() {
+  var mimetext = view.getPaneEditorText(paneatpos('left'));
+  var mp = modelatpos('left');
+  var runtext = mimetext && mimetext.text;
+  var shouldCreateAccount = true;
+  if (!runtext) {
+    return;
+  }
+  var userList = [];
+  storage.loadUserList(function(list) {
+    if (list) {
+      userList = list;
+    }
+  });
+  view.showLoginDialog({
+    prompt: 'Choose a username to save.',
+    info: 'Accounts on pencilcode are free.',
+    validate: function(state) {
+      var username = state.username.toLowerCase();
+      shouldCreateAccount = true;
+      for (var j = 0; j < userList.length; ++j) {
+        if (userList[j].name.toLowerCase() == username) {
+          if (userList[j].reserved) {
+            return {
+              disable: true,
+              info: 'Name "' + username + '" reserved.'
+            };
+          } else {
+            shouldCreateAccount = false;
+            return {
+              disable: false,
+              info: 'Will log in as "' + username + '" and save.'
+            };
+          }
+        }
+      }
+      if (username && !/^[a-z]/.test(username)) {
+        return {
+          disable: true,
+          info: 'Username must start with a letter.'
+        };
+      }
+      if (username && !/^[a-z][a-z0-9]*$/.test(username)) {
+        return {
+          disable: true,
+          info: 'Invalid username.'
+        };
+      }
+      if (state.username.length < 3) {
+        return {
+          disable: true,
+          info: 'Real names are <a target=_blank ' +
+             'href="/privacy.html">not allowed</a>.' +
+             '<br>When using a Pencil Code account,' +
+             '<br><label>' +
+             'I agree to <a target=_blank ' +
+             'href="/terms.html">the terms of service<label></a>.'
+        };
+      }
+      return {
+        disable: false,
+        info: 'Will create ' + state.username.toLowerCase() +
+            '.pencilcode.net.' +
+             '<br>When using a Pencil Code account,' +
+             '<br>I agree to <a target=_blank ' +
+             'href="/terms.html">the terms of service</a>.'
+      };
+    },
+    done: function(state) {
+      var username = state.username.toLowerCase();
+      if (username != model.ownername) {
+        view.clearPane(paneatpos('right'), true);
+      }
+      var forceOverwrite = (username != model.ownername) || specialowner();
+      var key = keyFromPassword(username, state.password);
+      var step2 = function() {
+        storage.saveFile(
+            username, mp.filename, {data: runtext, mtime: 1},
+            forceOverwrite, key, false,
+            function(status) {
+          console.log('status was', status);
+          if (status.needauth) {
+            state.update({
+              disable: false,
+              info: 'Wrong password.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.newer) {
+            state.update({
+              disable: false,
+              info: 'Did not overwrite newer file.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.transient) {
+            state.update({
+              disable: false,
+              info: 'Network down.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.error) {
+            state.update({
+              disable: false,
+              info: status.error
+            });
+            view.clearPane(paneatpos('right'));
+          } else {
+            view.notePaneEditorCleanText(paneatpos('left'), runtext);
+            storage.deleteBackup(mp.filename);
+            state.update({cancel: true});
+            window.location.href =
+                'http://' + username + '.pencilcode.net/edit/' + mp.filename +
+                '#login=' + username + ':' + (key ? key : '');
+          }
+        });
+      }
+      if (key && shouldCreateAccount) {
+        storage.setPassKey(username, key, null, function(m) {
+          if (m.error) {
+            state.update({info: 'Could not create account.<br>' +
+                htmlEscape(m.error) });
+            view.clearPane(paneatpos('right'), false);
+            return;
+          }
+          step2();
+        });
+      } else {
+        step2();
+      }
+    }
+  });
+}
+
+function logInAndSave(filename, newdata, forceOverwrite, noteclean) {
+  if (!filename || !newdata) {
+    return;
+  }
+  view.showLoginDialog({
+    prompt: 'Log in to save.',
+    username: model.ownername,
+    switchuser: signUpAndSave,
+    validate: function(state) { return {}; },
+    done: function(state) {
+      model.username = model.ownername;
+      model.passkey = keyFromPassword(model.username, state.password);
+      state.update({info: 'Saving....', disable: true});
+      storage.saveFile(
+          model.username, filename, newdata, forceOverwrite,
+          model.passkey, false,
+      function(m) {
+        if (m.needauth) {
+          state.update({info: 'Wrong password.', disable: false});
+          return;
+        }
+        state.update({cancel: true});
+        if (m.newer) {
+          view.flashNotification('Newer copy on network. ' +
+              '<a href="#overwrite" id="overwrite">Overwrite</a>?');
+        } else if (m.transient) {
+          view.flashNotification('Network down.  Local backup made.');
+        } else if (m.error) {
+          view.flashNotification(m.error);
+        } else if (m.deleted) {
+          view.flashNotification(
+              'Deleted ' + filename.replace(/^.*\//, '') + '.');
+          cookie('login', model.username + ':' + model.passkey,
+              { expires: 1, path: '/' });
+          if (model.ownername) {
+             cookie('recent', window.location.href,
+                { expires: 7, path: '/', domain: 'pencilcode.net' });
+          }
+          if (modelatpos('left').filename == filename) {
+            cancelAndClearPosition('left');
+            var parentdir = '';
+            if (filename.indexOf('/') >= 0) {
+              parentdir = filename.replace(/\/[^\/]+\/?$/, '');
+            }
+            loadFileIntoPosition('back', parentdir, true, true);
+            rotateModelRight(true);
+          }
+        } else {
+          noteclean(m.mtime);
+          cookie('login', model.username + ':' + model.passkey,
+              { expires: 1, path: '/' });
+          if (model.ownername) {
+            cookie('recent', window.location.href,
+                { expires: 7, path: '/', domain: 'pencilcode.net' });
+          }
+        }
+      });
+    }
+  });
+}
+
+function chooseNewFilename(dirlist) {
+  if (!dirlist) { return 'untitled'; }
+  if (dirlist.length === 0) { return 'first';}
+  var maxNum = -1;
+  for (var j = 0; j < dirlist.length; ++j) {
+    var m = /^untitled(\d*)$/.exec(dirlist[j].name);
+    if (m) {
+      maxNum = Math.max(maxNum, m[1].length && parseInt(m[1]));
+    }
+  }
+  if (maxNum < 0) { return 'untitled'; }
+  if (maxNum == 0) { maxNum = 1; }
+  return 'untitled' + (maxNum + 1);
+}
+
+view.on('link', function(pane, linkname) {
+  var base = model.pane[pane].filename;
+  if (base === null) { return; }
+  if (base.length) { base += '/'; }
+  if (posofpane(pane) == 'right') {
+    cancelAndClearPosition('back');
+    rotateModelLeft(true);
+  }
+  cancelAndClearPosition('back');
+  if (linkname == '#new') {
+    if (!model.pane[pane].data) { return; }
+    var untitled = chooseNewFilename(model.pane[pane].data.list);
+    createNewFileIntoPosition('right', base + untitled);
+    rotateModelLeft(true);
+    return;
+  }
+  var openfile = base + linkname.replace(/\/$/, '');
+  var isdir = /\/$/.test(linkname);
+  loadFileIntoPosition('right', openfile, isdir, isdir,
+    function() { rotateModelLeft(true); });
+});
+
+view.on('linger', function(pane, linkname) {
+  if (pane !== paneatpos('left')) { return; }
+  var base = model.pane[pane].filename;
+  if (base === null) { return; }
+  if (base.length) { base += '/'; }
+  if (linkname == '#new') {
+    return;
+  }
+  var openfile = base + linkname.replace(/\/$/, '');
+  var isdir = /\/$/.test(linkname);
+  loadFileIntoPosition('right', openfile, isdir, isdir);
+});
+
+view.on('root', function() {
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    view.flashButton('save');
+    if (!window.confirm(
+        "There are unsaved changes.\n\n" +
+        "Are you sure you want to leave this page?")) {
+       return;
+    }
+  }
+  if (!model.ownername) {
+    window.location.href = '/';
+    return;
+  }
+  if (modelatpos('left').filename === '') {
+    loadFileIntoPosition('left', '', true, true);
+  } else {
+    var needToClear = modelatpos('left').filename &&
+        modelatpos('left').filename.indexOf('/') >= 0;
+    var pl = paneatpos('left');
+    loadFileIntoPosition('back', '', true, true, function() {
+      if (needToClear) {
+        view.clearPane(pl)
+      }
+    });
+    rotateModelRight(needToClear);
+  }
+});
+
+view.on('editmode', function() {
+  if (!model.editmode) {
+    // Fake out updateTopControls to switch url to /edit/
+    model.editmode = true;
+    updateTopControls(true);
+    // Then go back and readNewUrl to make it process as if the URL had
+    // been changed by hand.
+    model.editmode = false;
+    readNewUrl();
+  }
+});
+
+view.on('done', function() {
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    view.flashButton('save');
+    if (!window.confirm(
+        "There are unsaved changes.\n\n" +
+        "Are you sure you want to leave this page?")) {
+       return;
+    }
+  }
+  doneWithFile(modelatpos('left').filename);
+});
+
+function doneWithFile(filename) {
+  if (!filename || !model.ownername) {
+    if (window.location.href == 'http://pencilcode.net/edit/') {
+      window.location.href = 'http://pencilcode.net/';
+    } else {
+      window.location.href = 'http://pencilcode.net/edit/';
+    }
+  } else {
+    if (filename.indexOf('/') >= 0) {
+      filename = filename.replace(/\/[^\/]+\/?$/, '');
+    } else {
+      filename = '';
+    }
+    var newUrl = (model.editmode ? '/edit/' : '/home/') + filename;
+    // A trick: if 'back' would be the same as going to the parent,
+    // then just do a 'back'.
+    if (history.state && history.state.depth > 0 &&
+        history.state.previous == newUrl) {
+      history.back();
+    } else {
+      loadFileIntoPosition('back', filename, true, true);
+      rotateModelRight(true);
+    }
+  }
+}
+
+view.on('rename', function(newname) {
+  var pp = paneatpos('left');
+  var mp = modelatpos('left');
+  if (mp.filename === newname) {
+    // Nothing to do
+    return;
+  }
+  // Error cases: go back to original name.
+  // Can't rename the root (for now).
+  // TODO: check for:
+  // - moving directory inside itself
+  // etc.
+  if (!mp.filename) {
+    view.setNameText(mp.filename);
+    return;
+  }
+  function completeRename(newfile) {
+    view.flashNotification(
+        (newfile ? 'Using name ' : 'Moved to ') + newname + '.');
+    mp.filename = newname;
+    view.noteNewFilename(pp, newname);
+    updateTopControls(false);
+    view.setPrimaryFocus();
+  }
+  var payload = {
+    source: model.ownername + '/' + mp.filename,
+    mode: 'mv'
+  };
+  if (model.passkey) {
+    payload.key = model.passkey;
+  }
+  // Don't attempt to rename files without an owner on disk.
+  // Otherwise, if the file is a directory or it is has an mtime,
+  // it exists on disk and so we first rename it on disk.
+  if (model.ownername && (mp.data.directory || mp.data.mtime)) {
+    if (mp.data.auth && !model.username) {
+      view.setNameText(mp.filename);
+      logInAndMove(mp.filename, newname, completeRename);
+    } else {
+      storage.moveFile(
+          model.ownername, mp.filename, newname, model.passkey, false,
+      function(m) {
+        if (m.needauth) {
+          view.setNameText(mp.filename);
+          logInAndMove(mp.filename, newname, completeRename);
+          return;
+        }
+        if (m.error) {
+          // Abort if there is an error.
+          view.flashNotification(m.error);
+          view.setNameText(mp.filename);
+        } else {
+          completeRename();
+        }
+      });
+    }
+  } else {
+    // No mtime means it's purely local - just rename in memory.
+    storage.deleteBackup(mp.filename);
+    completeRename(true);
+  }
+});
+
+view.on('popstate', readNewUrl);
+
+function logInAndMove(filename, newfilename, completeRename) {
+  if (!filename || !newfilename) {
+    return;
+  }
+  view.showLoginDialog({
+    prompt: 'Log in to rename.',
+    username: model.ownername,
+    validate: function(state) { return {}; },
+    done: function(state) {
+      model.username = model.ownername;
+      model.passkey = keyFromPassword(model.username, state.password);
+      state.update({info: 'Renaming....', disable: true});
+      storage.moveFile(
+          model.ownername, filename, newfilename, model.passkey, false,
+      function(m) {
+        if (m.needauth) {
+          state.update({info: 'Wrong password.', disable: false});
+          return;
+        }
+        state.update({cancel: true});
+        if (m.error) {
+          view.flashNotification(m.error);
+        } else {
+          cookie('login', model.username + ':' + model.passkey,
+              { expires: 1, path: '/' });
+          if (model.ownername) {
+            cookie('recent', window.location.href,
+                { expires: 7, path: '/', domain: 'pencilcode.net' });
+          }
+          completeRename();
+        }
+      });
+    }
+  });
+}
+
+function noteIfUnsaved(position) {
+  var m = modelatpos(position).data;
+  if (m && m.unsaved) {
+    if (position === 'left') {
+      view.flashNotification('Showing unsaved backup.' +
+          (m.offline ? '' :
+          ' <a href="#netload" id="netload">Load last saved version.</a>'));
+    }
+    view.notePaneEditorCleanText(paneatpos(position), '');
+  }
+}
+
+function rotateModelLeft(addHistory) {
+  view.rotateLeft();
+  if (modelatpos('back').running) {
+    runCodeAtPosition('back', '', null);
+  }
+  noteIfUnsaved('left');
+  updateTopControls(addHistory);
+}
+
+function rotateModelRight(addHistory) {
+  view.rotateRight();
+  if (modelatpos('back').running) {
+    runCodeAtPosition('back', '', null);
+  }
+  updateTopControls(addHistory);
+}
+
+function isFileWithin(base, candidate) {
+  if (base.length && !/\/%/.test(base)) { base += '/'; }
+  return candidate.length > base.length &&
+      candidate.indexOf(base) === 0;
+}
+
+function readNewUrl(undo) {
+  // True if this is the first url load.
+  var firsturl = (model.ownername === null),
+  // Owner comes from domain name.
+      ownername = window.location.hostname.replace(
+          /(?:(.*)\.)?[^.]*.{7}$/, '$1'),
+  // Filename comes from URL minus first directory part.
+      filename = window.location.pathname.replace(
+          /^\/[^\/]+\//, '').replace(/\/+$/, ''),
+  // Expect directory if the pathname ends with slash.
+      isdir = /\/$/.test(window.location.pathname),
+  // Extract login from hash if present.
+      login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(window.location.hash),
+  // Extract text from hash if present.
+      text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
+  // Extract edit mode
+      editmode = /^\/edit\//.test(window.location.pathname);
+  // Give the user a chance to abort navigation.
+  if (undo && view.isPaneEditorDirty(paneatpos('left'))) {
+    view.flashButton('save');
+    if (!window.confirm(
+      "There are unsaved changes.\n\n" +
+      "Are you sure you want to leave this page?")) {
+      undo();
+      return;
+    }
+  }
+  if (!login) {
+    var savedlogin = cookie('login');
+    login = savedlogin && /\b^([^:]*)(?::(\w+))?$/.exec(cookie('login'));
+  } else if (ownername) {
+    cookie('login', login, { expires: 1, path: '/' });
+  }
+  if (login) {
+    model.username = login[1] || null;
+    model.passkey = login[2] || null;
+  }
+  // Clean up the hash if present, and absorb the new auth information.
+  if (window.location.hash.length) {
+    window.location.replace('#');
+    view.setVisibleUrl(window.location.pathname);
+  }
+  // Update global model state.
+  var forceRefresh = false;
+  if (model.ownername !== ownername || model.editmode !== editmode) {
+    model.ownername = ownername;
+    model.editmode = editmode;
+    forceRefresh = true;
+  }
+  // If the new url is replacing an existing one, animate it in.
+  if (!firsturl && modelatpos('left').filename !== null) {
+    if (isFileWithin(modelatpos('left').filename, filename)) {
+      cancelAndClearPosition('back');
+      if (forceRefresh) {
+        cancelAndClearPosition('right');
+      }
+      loadFileIntoPosition('right', filename, isdir, isdir, rotateModelLeft);
+      return;
+    } else if (isFileWithin(filename, modelatpos('left').filename)) {
+      if (forceRefresh) {
+        cancelAndClearPosition('back');
+      }
+      loadFileIntoPosition('back', filename, isdir, isdir);
+      rotateModelRight(false);
+      return;
+    }
+    if (!forceRefresh && filename == modelatpos('left').filename) {
+      // if (window.console) {
+      //   window.console.log('same filename; nothing done');
+      // }
+      return;
+    }
+  }
+  // Remove the preview pane if just browsing, or if browsing users.
+  view.setPreviewMode(
+      model.editmode && (model.ownername !== "" || filename !== ""), firsturl);
+  // Preload text if specified.
+  if (text) {
+    createNewFileIntoPosition('left', filename,
+       decodeURIComponent(text[1].replace(/\+/g, ' ')) + '\n');
+    updateTopControls(false);
+    return;
+  }
+  // Regular startup: load the file.
+  if (forceRefresh) {
+    cancelAndClearPosition('left');
+  }
+  loadFileIntoPosition('left', filename, isdir, isdir);
+}
+
+function directNetLoad() {
+  var pos = 'left';
+  var filename = modelatpos(pos).filename;
+  if (modelatpos(pos).data) {
+    loadFileIntoPosition(pos, filename, false, true);
+  }
+}
+
+view.on('netload', directNetLoad);
+
+var loadNumber = 0;
+
+function nextLoadNumber() {
+  return ++loadNumber;
+}
+
+function cancelAndClearPosition(pos) {
+  view.clearPane(paneatpos(pos), false);
+  modelatpos(pos).loading = 0;
+  modelatpos(pos).filename = null;
+  modelatpos(pos).isdir = false;
+  modelatpos(pos).data = null;
+  modelatpos(pos).bydate = false;
+  modelatpos(pos).running = false;
+}
+
+function runCodeAtPosition(position, code, filename) {
+  var m = modelatpos(position);
+  if (!m.running) {
+    cancelAndClearPosition(position);
+  }
+  m.running = true;
+  m.filename = filename;
+  var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
+          'pencilcode.net/home/' + filename;
+  view.setPaneRunText(paneatpos(position), code, filename, baseUrl);
+  if (code) {
+    $.get('/log/' + filename + '?run=' +
+        encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, ';')
+        .replace(/%2C/g, ','));
+  }
+}
+
+function defaultDirSortingByDate() {
+  if (!window.localStorage) return false;
+  if (!specialowner()) return false;
+  try {
+    return window.localStorage.dirsort === 'bydate';
+  } catch(e) {
+    return false;
+  }
+}
+
+function setDefaultDirSortingByDate(f) {
+  try {
+    if (f) {
+      window.localStorage.dirsort = 'bydate';
+    } else {
+      delete window.localStorage['dirsort'];
+    }
+  } catch(e) {
+  }
+}
+
+function createNewFileIntoPosition(position, filename, text) {
+  var pane = paneatpos(position);
+  var mpp = model.pane[pane];
+  if (!text) { text = ''; }
+  view.clearPane(pane, false);
+  mpp.loading = 0;
+  mpp.filename = filename;
+  mpp.isdir = false;
+  mpp.bydate = false;
+  mpp.data = {
+    file: filename,
+    data: text,
+    mtime: 0
+  };
+  view.setPaneEditorText(pane, text, filename);
+  view.notePaneEditorCleanText(pane, '');
+  mpp.running = false;
+}
+
+
+function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
+  var pane = paneatpos(position);
+  var mpp = model.pane[pane];
+  var loadNum = nextLoadNumber();
+  // Now if the file or owner are different from what is currently shown,
+  // update the model and execute the load.
+  if (mpp.filename === filename && !forcenet) {
+    cb && cb();
+  } else {
+    view.clearPane(pane, true); // show loading animation.
+    mpp.filename = filename;
+    mpp.isdir = isdir;
+    mpp.bydate = isdir && defaultDirSortingByDate();
+    mpp.loading = loadNum;
+    mpp.data = null;
+    mpp.running = false;
+    storage.loadFile(model.ownername, filename, forcenet, function(m) {
+      if (mpp.loading != loadNum) {
+        if (window.console) {
+          window.console.log('aborted: loading is ' + mpp.loading + ' instead of ' + loadNum);
+        }
+        return;
+      }
+      mpp.loading = 0;
+      if (model.ownername === '' && filename === '') {
+        mpp.isdir = true;
+        mpp.data = m;
+        renderDirectory(posofpane(pane));
+        cb && cb();
+      } else if (m.directory && m.list) {
+        // Directory listing.
+        mpp.isdir = true;
+        mpp.data = m;
+        renderDirectory(posofpane(pane));
+        cb && cb();
+      } else if (!m.data && m.newfile) {
+        // In the nofile case, create an empty file.
+        createNewFileIntoPosition('left', filename);
+        updateTopControls(false);
+        view.flashNotification('New file ' + filename + '.');
+        cb && cb();
+      } else {
+        // The single file case.
+        // TODO:
+        // 2. in the offline case, notify the user that we are working offline.
+        // 3. in the unsaved case, notify the user that we loaded a backup and
+        //    give a link to load from network.
+        mpp.isdir = false;
+        mpp.data = m;
+        view.setPaneEditorText(pane, m.data, filename);
+        noteIfUnsaved(posofpane(pane));
+        updateTopControls(false);
+        cb && cb();
+      }
+    });
+  }
+};
+
+function sortByDate(a, b) {
+  return b.mtime - a.mtime;
+}
+
+function renderDirectory(position) {
+  var pane = paneatpos(position);
+  var mpp = model.pane[pane];
+  console.log(pane, position, mpp);
+  var m = mpp.data;
+  var filename = mpp.filename;
+  var filenameslash = filename.length ? filename + '/' : '';
+  // TODO: fix up visible URL to ensure slash.
+  var links = [];
+  for (var j = 0; j < m.list.length; ++j) {
+    var label = m.list[j].name;
+    if (model.ownername === '' && filename === '') {
+      if (m.list[j].mode.indexOf('d') < 0) { continue; }
+      var href = 'http://' + label + '.pencilcode.net/edit/';
+      links.push({html:label, href:href, mtime:m.list[j].mtime});
+    } else {
+      if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
+      var href = '/home/' + filenameslash + label;
+      links.push({html:label, link:label, href:href, mtime:m.list[j].mtime});
+    }
+  }
+  if (mpp.bydate) {
+    links.sort(sortByDate);
+  }
+  if (model.ownername !== '') {
+    links.push({html:''});
+    links.push({html:'<span class="create">Create new file</span>',
+        link:'#new'});
+  }
+  view.setPaneLinkText(pane, links, filename);
+  updateTopControls(false);
+}
+
+function getEditTextIfAny() {
+  var m = modelatpos('left');
+  if (m.filename && m.data && m.data.file) {
+    var text = view.getPaneEditorText(paneatpos('left'));
+    return (text && text.text && text.text.trim())
+  }
+  return null;
+}
+
+function shortenUrl(url, cb) {
+  $.getJSON('http://call.jsonlib.com/fetch', {
+    dataType: 'json',
+    // type: 'POST',
+    url: 'https://www.googleapis.com/urlshortener/v1/url?' +
+         'key=AIzaSyCSnpkwynMDLa7h_lkx4r7QDb2sjqdrFTo',
+    header: 'Content-Type: application/json',
+    data: JSON.stringify({longUrl: url})},
+  function(m) {
+    if (!m.content) { cb(null); return; }
+    var content;
+    try {
+      content = JSON.parse(m.content);
+    } catch(e) {
+      cb(null); return;
+    }
+    cb(content.id);
+  }).error(function() { cb(null) });
+}
+
+function cookie(key, value, options) {
+  // write
+  if (value !== undefined) {
+    options = $.extend({}, options);
+
+    if (typeof options.expires === 'number') {
+      var days = options.expires, t = options.expires = new Date();
+      t.setDate(t.getDate() + days);
+    }
+
+    return (document.cookie = [
+      encodeURIComponent(key),
+      '=',
+      encodeURIComponent(value),
+      options.expires ? '; expires=' + options.expires.toUTCString() : '',
+      options.path    ? '; path=' + options.path : '',
+      options.domain  ? '; domain=' + options.domain : '',
+      options.secure  ? '; secure' : ''
+    ].join(''));
+  }
+
+  // read
+  var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
+  var converted = function(s) {
+    if (s.indexOf('"') === 0) {
+      s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    return s;
+  }
+  var cookies = document.cookie.split('; ');
+  var result = key ? undefined : {};
+  for (var i = 0, l = cookies.length; i < l; i++) {
+    var parts = cookies[i].split('=');
+    var name = decode(parts.shift());
+    var cookie = decode(parts.join('='));
+    if (key && key === name) {
+      result = converted(cookie);
+      break;
+    }
+    if (!key && parts.length) {
+      result[name] = converted(cookie);
+    }
+  }
+  return result;
+};
+
+readNewUrl();
+$('#owner,#filename,#icon').tooltipster();
+
+})();
+
+</script>
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-45359764-1', 'pencilcode.net');
+ga('send', 'pageview');
+</script>
+</body>
+</html>
+
+

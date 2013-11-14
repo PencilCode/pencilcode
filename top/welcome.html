@@ -1,0 +1,348 @@
+<!doctype html>
+<html>
+<head>
+<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500' rel='stylesheet' type='text/css'>
+<script src="/turtlebits.js"></script>
+<style>
+body {
+  font-family: Lato;
+  font-weight: 400;
+}
+h1, h2 {
+  font-weight: 300;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  margin: 15px;
+  text-shadow:0 0 6px white;
+  box-shadow: 0 0 16px 16px rgba(255, 255, 255, .6);
+}
+#overlay {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  background: rgba(0, 0, 0, 0.1);
+  left: 0;
+  top: 0;
+  margin: 0;
+  z-index: 1;
+  overflow: auto;
+}
+.about {
+  left: 0;
+  position: absolute;
+  width: 70%;
+  margin-left: 15%;
+  border: 3px solid blue;
+  border-radius: 8px;
+  background: white;
+  text-align: left;
+  padding: 20px;
+  top: 30px;
+  box-sizing: border-box;
+  display: none;
+}
+#intro {
+  display: block;
+}
+.about h1 {
+  margin: 0;
+  padding: 0;
+}
+.about code {
+  font-weight: bold;
+  background: gainsboro;
+  color: saddlebrown;
+}
+.about pre {
+  font-weight: bold;
+  display: inline-block;
+  padding: 5px 10px;
+  margin: 0;
+  background: gainsboro;
+  color: saddlebrown;
+}
+.about b {
+  text-transform: capitalize;
+  text-decoration: underline;
+}
+#what {
+  font-size: 16px;
+  line-height: 16px;
+  color: gray;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
+}
+#what:hover {
+  color: blue;
+  text-decoration: underline;
+  background: white;
+  box-shadow: 0 0 16px 16px white;
+}
+.corners {
+  display: inline-block;
+}
+.choices {
+  display: inline-table;
+  border-spacing: 30px;
+}
+.choices a {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  width: 160px;
+  height: 160px;
+  padding: 8px;
+  font-weight: 400;
+  background: rgba(30,144,255,0.9);
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
+}
+.choices a:hover {
+  background: blue;
+}
+.em, .nw {
+  white-space: nowrap;
+}
+.glow {
+  font-size: 125%;
+  font-weight: 700;
+  text-shadow:0 0 10px white;
+}
+.fixedpage {
+  position:fixed;
+  top: 0;
+  left: 0;
+  display:inline-table;
+  width:100%;
+  height:100%;
+}
+.vcenter {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div id="overlay">
+<div class="about" id="intro">
+<h1>Pencil Code</h1>
+<p>Pencil Code is a collaborative programming site for drawing
+art, playing music, and creating games.  Pencil Code is also
+a place to experiment with mathematical functions, geometry,
+graphing, webpages, simulations, and algorithms.  Programs are
+open for all to see and copy.
+<div id="video"><p><a id="clickvideo" target="_blank"
+href="http://www.youtube.com/watch?v=JJzFD4EdeuY">Watch a video</a></p></div>
+<p>The main language is Coffeescript.  Professional software engineers
+use Coffeescript to build complex websites, but Coffeescript code can
+also be very simple.  Play three notes:
+<a style="text-decoration:none" href="http://goo.gl/iYnZIj"
+target="_blank">
+<pre>
+play 'CDE'
+</pre>
+</a>
+<p>Draw a gold star:
+<a style="text-decoration:none" href="http://goo.gl/985CPX"
+target="_blank">
+<pre>
+pen gold
+for x in [1..5]
+  fd 100
+  rt 144
+</pre>
+</a>
+
+<p>Programs preload the pencilcode library to use
+functions such as <code>pen</code> (sets the turtle's pen color),
+<code>fd</code> (moves the turtle forward), and <code>play</code>
+(plays musical notes).  Once you set up an account on pencilcode.net
+you can also create a website with .html, .js, and .css files.
+Hang out on the
+<a href="/group" target="_blank">Pencil Code discussion forum</a>
+or check out
+<a href="http://guide.pencilcode.net/" target="_blank">the online guide</a>
+to find out more.
+<p>Anybody can save programs, but read the
+<a href="/terms.html" target="_blank">Terms of Service</a> and the
+<a href="/privacy.html" target="_blank">Privacy Policy</a> first.
+Two rules:
+<p><u>Be Nice.</u> Do not mess up other peoples' work.
+<strong>Do not post content that detracts from education on the site.</strong>
+This a learning space that is not locked down
+(for example, passwords are optional). So feel free to explore, create, 
+and link, but also please be considerate.
+<p><u>Be Careful.</u> Do not depend on Pencil Code to keep your data safe.
+Data posted here is public, and data is not secured from loss.
+<strong>Do not post private or personally identifiable
+information.</strong>  Passwords on Pencil Code
+do not prevent malicious interference.
+</div>
+</div>
+
+<div class="fixedpage">
+<div class="vcenter">
+<div class="corners">
+<h1>Pencil Code</h1>
+<br>
+<a href="#" id="what">What's this?</a>
+<br>
+<div class="choices">
+<a href="http://pencilcode.net/edit/first">I'm new here.
+<span class="em">Let's play.</span></a>
+<a href="http://guide.pencilcode.net/">Try examples.
+<span class="nw">See the guide.</span></a>
+<script>
+function cookie(key) {
+  // read
+  var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
+  var converted = function(s) {
+    if (s.indexOf('"') === 0) {
+      s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    return s;
+  }
+  var cookies = document.cookie.split('; ');
+  var result = key ? undefined : {};
+  for (var i = 0, l = cookies.length; i < l; i++) {
+    var parts = cookies[i].split('=');
+    var name = decode(parts.shift());
+    var cookie = decode(parts.join('='));
+    if (key && key === name) {
+      result = converted(cookie);
+      break;
+    }
+    if (!key && parts.length) {
+      result[name] = converted(cookie);
+    }
+  }
+  return result;
+};
+
+var olduser = false;
+if (cookie('recent')) {
+  document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
+      cookie('recent').replace(/^http:\/\//, '').
+      replace(/\.pencilcode\.net\/edit\//, '&nbsp;/ ').
+      replace(/\//g, '<wbr>/') +
+      '.</a>');
+  olduser = true;
+}
+if (!olduser) {
+  $('.em').addClass('glow');
+}
+$('#clickvideo').click(function() {
+  $('#video').html('<iframe type="text/html" width="640" height="390" ' +
+    'src="http://www.youtube.com/embed/JJzFD4EdeuY?autoplay=1&' +
+    'origin=http://pencilcode.net" frameborder="0"></iframe>');
+  return false;
+});
+
+function clearCookie() {
+  document.cookie = 'recent=0;expires=' + (new Date(0)).toUTCString() + ';domain=' + location.hostname + ';';
+}
+</script>
+<a href="/edit/">Browse users.</a>
+</div>
+<br>
+<h2>A Modern Sandbox<br>
+For Little Programs</h2>
+</div>
+</div>
+</div>
+
+<script type="text/coffeescript">
+$.turtle({panel: false});
+
+# -edit-below-
+
+distance = (p1, p2) ->
+  dx = p1.pageX - p2.pageX
+  dy = p1.pageY - p2.pageY
+  return Math.sqrt(dx * dx + dy * dy)
+
+heading = (p1, p2) ->
+  dx = p2.pageX - p1.pageX
+  dy = p2.pageY - p1.pageY
+  return Math.atan2(dx, -dy) * 180 / Math.PI
+
+go = (who, dest) ->
+  who.plan ->
+    d = distance(@pagexy(), dest)
+    h = heading(@pagexy(), dest)
+    @rt h - @direction()
+    @fd d
+
+lastwander = 0
+wandergap = 0
+
+wander = (who) ->
+  hovered = $('a:hover,div.choices')
+  if hovered.length is 2
+    elem = random hovered
+  else
+    elem = random $('div.corners>a,div.corners,div.choices')
+  offset = $(elem).offset()
+  height = $(elem).outerHeight()
+  width = $(elem).outerWidth()
+  ypos = [offset.top, offset.top + height]
+  xpos = [offset.left , offset.left + width]
+  pos = {pageX: random(xpos), pageY: random(ypos)}
+  if random(2) is 0 and lastmousemove and
+     lastmousemove.timeStamp > $.now() - 2000
+    pos = lastmousemove
+  if random(6) is 0
+    color = if random 2 then 'none' else random [
+        'pink', 'peachpuff', 'yellow', 'palegreen', 'lightblue', 'thistle']
+    who.pen color
+  pos.pageX += 20 * random 'normal'
+  pos.pageY += 20 * random 'normal'
+  go who, pos
+  who.plan ->
+    @css { border: '2px dotted blue' }
+  pageVisibility = (document.visibilityState or
+    document.webkitVisibilityState or document.mozVisibilityState)
+  if pageVisibility is 'visible' and random(3) > 1 and $('#intro').hidden()
+    who.play {volume: 0.01}, random('CEFGAcefga'.split('')) + '//'
+  who.plan ->
+    @css { border: 'none' }
+  thiswander = (new Date).getTime()
+  pause = lastwander + wandergap - thiswander
+  lastwander = thiswander
+  if pause > 0 then who.delay pause
+  who.plan -> wander(@)
+
+turtle.remove()
+
+crowd = hatch(5).hide()
+wandergap = 2000 / crowd.length
+crowd.plan (j) ->
+  @delay(3000 + wandergap * j)
+  @plan ->
+    if lastmousemove then @moveto lastmousemove
+  @fadeIn()
+  wander(@)
+
+$('#what, #overlay').click (e) ->
+  if $(e.target).closest('pre').length or $(e.target).attr('target')
+    return
+  $('#overlay').toggle(400)
+  false
+
+</script>
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-45359764-1', 'pencilcode.net');
+ga('send', 'pageview');
+</script>
+</body>
+</html>
