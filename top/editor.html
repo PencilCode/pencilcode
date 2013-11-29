@@ -4,7 +4,7 @@
 <title>Pencil Code Editor</title>
 <meta charset="utf-8">
 <style>
-@import url("http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500");
+@import url("http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500");
 * {box-sizing:border-box;}
 body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #overlay{position:absolute;top:0;left:0;width:100%;height:100%;
@@ -13,7 +13,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   border:none;background-color:white;box-shadow:0 0 7px black;color:black;
   border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
   padding:12px;font-weight:300;text-align:center;width:320px;overflow:hidden;}
-#overlay .prompt{padding:8px;font-weight:700;}
+#overlay .prompt{padding:8px;font-weight:900;}
 #overlay .info{padding:3px;color:red;}
 #overlay .content{display:inline-block;padding:3px;}
 #overlay .field{text-align:right;padding:3px;white-space:nowrap;}
@@ -27,9 +27,10 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   z-index:1;background-color:gold;
   box-shadow:0 0 7px gray;color:black;border-radius:8px;font-family:inherit;
   padding:3px 32px;font-weight:300;}
-#notification a {font-weight:700;}
-#notification a:active {font-weight:700;outline:2px dotted red;}
+#notification a {font-weight:900;}
+#notification a:active {font-weight:900;outline:2px dotted red;}
 #top{position:absolute;top:0;left:0;right:0;width:100%;height:56px;
+  font-weight:900;
   table-layout:auto;overflow:hidden;max-height:56px;border-spacing:0}
 #topleft,#topright{padding:0 12px;height:56px;vertical-align:middle;
   overflow:hidden;}
@@ -53,6 +54,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 .helplink { cursor: help; }
 .helplink:hover { text-decoration: underline; color: blue; }
 .panetitle{position:absolute;top:56px;height:28px;background:dodgerblue;
+  font-weight:900;
   padding:0 12px;color:skyblue;letter-spacing:2px;
   border-left:1px solid white;border-right:1px solid white;}
 .panetitle a {text-decoration:none;color:inherit;}
@@ -598,7 +600,7 @@ function showLoginDialog(opts) {
   var dialog = $('<div class="login"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
     '</div><div class="content">' +
-    '<div class="field">Username:<div style="display:inline-table">' + 
+    '<div class="field">Name:<div style="display:inline-table">' + 
     '<input class="username"' +
     (opts.username ? ' value="' + opts.username + '" disabled' : '') +
     '>' +
@@ -1026,8 +1028,13 @@ function updatePaneTitle(pane) {
   $('#' + pane + 'title').html(prefix + shortened + suffix);
 }
 
+function normalizeCarriageReturns(text) {
+  return text.replace(/\r\n|\r/g, "\n");
+}
+
 function setPaneEditorText(pane, text, filename) {
   clearPane(pane);
+  text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
   var paneState = state.pane[pane];
   paneState.filename = filename;
@@ -1140,11 +1147,13 @@ function getPaneEditorText(pane) {
     return null;
   }
   var text = paneState.editor.getSession().getValue();
+  text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
   return {text: text, mime: paneState.mimeType };
 }
 
 function notePaneEditorCleanText(pane, text) {
+  text = normalizeCarriageReturns(text);
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -1877,7 +1886,7 @@ function signUpAndSave() {
     }
   });
   view.showLoginDialog({
-    prompt: 'Choose a username to save.',
+    prompt: 'Choose an account name to save.',
     info: 'Accounts on pencilcode are free.',
     validate: function(state) {
       var username = state.username.toLowerCase();
@@ -2108,11 +2117,6 @@ view.on('linger', function(pane, linkname) {
 view.on('root', function() {
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     view.flashButton('save');
-    if (!window.confirm(
-        "There are unsaved changes.\n\n" +
-        "Are you sure you want to leave this page?")) {
-       return;
-    }
   }
   if (!model.ownername) {
     window.location.href = '/';
@@ -2148,11 +2152,6 @@ view.on('editmode', function() {
 view.on('done', function() {
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     view.flashButton('save');
-    if (!window.confirm(
-        "There are unsaved changes.\n\n" +
-        "Are you sure you want to leave this page?")) {
-       return;
-    }
   }
   doneWithFile(modelatpos('left').filename);
 });
@@ -2447,7 +2446,7 @@ function runCodeAtPosition(position, code, filename) {
   view.setPaneRunText(paneatpos(position), code, filename, baseUrl);
   if (code) {
     $.get('/log/' + filename + '?run=' +
-        encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, ';')
+        encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, '|')
         .replace(/%2C/g, ','));
   }
 }

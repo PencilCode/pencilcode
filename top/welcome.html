@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
 <head>
+<title>Pencil Code</title>
+<meta name="description" content="Pencil Code is a collaborative programming site for drawing art, playing music, and creating games. Pencil Code is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
+
 <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500' rel='stylesheet' type='text/css'>
 <script src="/turtlebits.js"></script>
 <style>
@@ -41,7 +44,6 @@ h1, h2 {
   padding: 20px;
   top: 30px;
   box-sizing: border-box;
-  display: none;
 }
 #intro {
   display: block;
@@ -63,11 +65,14 @@ h1, h2 {
   background: gainsboro;
   color: saddlebrown;
 }
+.about pre:hover {
+  background: lightgray;
+}
 .about b {
   text-transform: capitalize;
   text-decoration: underline;
 }
-#what {
+#what,.info {
   font-size: 16px;
   line-height: 16px;
   color: gray;
@@ -75,7 +80,7 @@ h1, h2 {
   background: rgba(255, 255, 255, 0.6);
   box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
 }
-#what:hover {
+#what:hover,.info:hover {
   color: blue;
   text-decoration: underline;
   background: white;
@@ -131,6 +136,9 @@ h1, h2 {
 
 <div id="overlay">
 <div class="about" id="intro">
+<img src="//pencilcode.net/pencil_32.png"
+style="border:0;float:left;padding-right:10px;margin-top:3px;"
+title="pencilcode.net">
 <h1>Pencil Code</h1>
 <p>Pencil Code is a collaborative programming site for drawing
 art, playing music, and creating games.  Pencil Code is also
@@ -138,17 +146,21 @@ a place to experiment with mathematical functions, geometry,
 graphing, webpages, simulations, and algorithms.  Programs are
 open for all to see and copy.
 <div id="video"><p><a id="clickvideo" target="_blank"
-href="http://www.youtube.com/watch?v=JJzFD4EdeuY">Watch a video</a></p></div>
+href="http://www.youtube.com/watch?v=JJzFD4EdeuY"
+data-href2="http://player.vimeo.com/video/79743491"
+>Watch a video</a></p></div>
 <p>The main language is Coffeescript.  Professional software engineers
 use Coffeescript to build complex websites, but Coffeescript code can
-also be very simple.  Play three notes:
+also be very simple.
+<p><table width=100%><tr><td width=30% valign=top>Play three notes:</p>
 <a style="text-decoration:none" href="http://goo.gl/iYnZIj"
 target="_blank">
 <pre>
 play 'CDE'
 </pre>
 </a>
-<p>Draw a gold star:
+</td><td width=30% valign=top>
+Draw a gold star:</p>
 <a style="text-decoration:none" href="http://goo.gl/985CPX"
 target="_blank">
 <pre>
@@ -158,18 +170,34 @@ for x in [1..5]
   rt 144
 </pre>
 </a>
+</td><td width=30% valign=top>
+Follow the mouse:</p>
+<a style="text-decoration:none" href="http://goo.gl/MtbKxd"
+target="_blank">
+<pre>
+speed Infinity
+tick 3, ->
+  turnto lastmousemove
+  fd 15
+  dot green
+</pre>
+</a>
+</td></tr></table>
 
 <p>Programs preload the pencilcode library to use
 functions such as <code>pen</code> (sets the turtle's pen color),
 <code>fd</code> (moves the turtle forward), and <code>play</code>
-(plays musical notes).  Once you set up an account on pencilcode.net
-you can also create a website with .html, .js, and .css files.
-Hang out on the
-<a href="/group" target="_blank">Pencil Code discussion forum</a>
-or check out
+(plays musical notes).
+Pencil Code is all <a href="/license.html" target="_blank">open source</a>.
+Hang out on the <a href="/group" target="_blank">Pencil Code
+discussion forum</a> or check out 
+<a href="http://pencilcode.net/material/reference.pdf" target="_blank"
+>the quick reference</a>
+or
 <a href="http://guide.pencilcode.net/" target="_blank">the online guide</a>
-to find out more.
-<p>Anybody can save programs, but read the
+to find out more.  There is also an illustrated
+<a href="http://pencilcode.net/book" target="_blank">Pencil Code book</a> with more than 100 small projects.
+<p>Anybody can save programs and web pages, but read the
 <a href="/terms.html" target="_blank">Terms of Service</a> and the
 <a href="/privacy.html" target="_blank">Privacy Policy</a> first.
 Two rules:
@@ -183,6 +211,12 @@ Data posted here is public, and data is not secured from loss.
 <strong>Do not post private or personally identifiable
 information.</strong>  Passwords on Pencil Code
 do not prevent malicious interference.
+<p style="color:darkgray;margin-bottom:0;"
+>The Pencil Code Foundation, Inc., is devoted to advancing computer
+science education by making programming as simple and as
+powerful as using a pencil&nbsp;&mdash;
+<a href="mailto:info@pencilcode.net" style="color:darkgray;text-decoration:none"
+>info@pencilcode.net</a>.
 </div>
 </div>
 
@@ -194,11 +228,37 @@ do not prevent malicious interference.
 <a href="#" id="what">What's this?</a>
 <br>
 <div class="choices">
-<a href="http://pencilcode.net/edit/first">I'm new here.
+<a href="http://pencilcode.net/edit/first" id="randfirst">I'm new here.
 <span class="em">Let's play.</span></a>
 <a href="http://guide.pencilcode.net/">Try examples.
 <span class="nw">See the guide.</span></a>
 <script>
+$('#randfirst').mousedown(function() {
+  var choices = [
+    'http://pencilcode.net/edit/first',
+    'http://goo.gl/Vgyc2H', // dandelion
+    'http://goo.gl/MWCLbh', // rainbow
+    'http://goo.gl/r5HBap', // sailboat
+    'http://goo.gl/YOYBI3', // house
+    'http://goo.gl/qXymPP', // function square
+    'http://goo.gl/B69YQn', // violet
+    'http://goo.gl/4mL0Jj', // polygon
+    'http://goo.gl/NfnVaQ', // movedraw
+    'http://goo.gl/ppi8HB', // euclid
+    'http://goo.gl/9EKvEL', // polygonread
+    'http://goo.gl/ftJy69', // guessmynumber
+    'http://goo.gl/KSYXOt'  // infinity
+  ];
+  $('#randfirst').attr('href',
+      choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
+});
+var ytpresent = new Image();
+ytpresent.onerror = function(){
+  ytpresent = false;
+};
+ytpresent.src = "http://youtube.com/favicon.ico";
+
+
 function cookie(key) {
   // read
   var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
@@ -238,9 +298,14 @@ if (!olduser) {
   $('.em').addClass('glow');
 }
 $('#clickvideo').click(function() {
-  $('#video').html('<iframe type="text/html" width="640" height="390" ' +
+  var vimeoFrame = '<iframe src="//player.vimeo.com/video/79743491?autoplay=1" ' +
+    'width="640" height="390" frameborder="0" webkitallowfullscreen ' +
+    'mozallowfullscreen allowfullscreen></iframe>'
+  var youtubeFrame = '<iframe type="text/html" width="640" height="390" ' +
     'src="http://www.youtube.com/embed/JJzFD4EdeuY?autoplay=1&' +
-    'origin=http://pencilcode.net" frameborder="0"></iframe>');
+    'origin=http://pencilcode.net" frameborder="0" webkitallowfullscreen ' +
+    'mozallowfullscreen allowfullscreen></iframe>';
+  $('#video').html(ytpresent ? youtubeFrame : vimeoFrame);
   return false;
 });
 
@@ -253,10 +318,17 @@ function clearCookie() {
 <br>
 <h2>A Modern Sandbox<br>
 For Little Programs</h2>
+<center>
+<a href="#" class="info">By the Pencil Code Foundation</a> - 
+<a href="mailto:info@pencilcode.net" style="color:gray;text-decoration:none"
+target="_top">info@pencilcode.net</a></center>
 </div>
 </div>
 </div>
 
+<script>
+$('#about').hide();
+</script>
 <script type="text/coffeescript">
 $.turtle({panel: false});
 
@@ -272,12 +344,23 @@ heading = (p1, p2) ->
   dy = p2.pageY - p1.pageY
   return Math.atan2(dx, -dy) * 180 / Math.PI
 
+touchbeep = ->
+  v = (document.visibilityState or document.mozVisibilityState or
+    document.webkitVisibilityState)
+  if (not v or v is 'visible') and @touches lastmousemove
+    @css { border: '2px dotted blue' }
+    @play {volume: 0.01}, random('CEFGAcefga'.split('')) + '//'
+    @plan ->
+      @css { border: 'none' }
+
 go = (who, dest) ->
   who.plan ->
     d = distance(@pagexy(), dest)
     h = heading(@pagexy(), dest)
     @rt h - @direction()
+    @plan touchbeep
     @fd d
+    @plan touchbeep
 
 lastwander = 0
 wandergap = 0
@@ -294,6 +377,7 @@ wander = (who) ->
   ypos = [offset.top, offset.top + height]
   xpos = [offset.left , offset.left + width]
   pos = {pageX: random(xpos), pageY: random(ypos)}
+  noisy = false
   if random(2) is 0 and lastmousemove and
      lastmousemove.timeStamp > $.now() - 2000
     pos = lastmousemove
@@ -304,14 +388,6 @@ wander = (who) ->
   pos.pageX += 20 * random 'normal'
   pos.pageY += 20 * random 'normal'
   go who, pos
-  who.plan ->
-    @css { border: '2px dotted blue' }
-  pageVisibility = (document.visibilityState or
-    document.webkitVisibilityState or document.mozVisibilityState)
-  if pageVisibility is 'visible' and random(3) > 1 and $('#intro').hidden()
-    who.play {volume: 0.01}, random('CEFGAcefga'.split('')) + '//'
-  who.plan ->
-    @css { border: 'none' }
   thiswander = (new Date).getTime()
   pause = lastwander + wandergap - thiswander
   lastwander = thiswander
@@ -329,7 +405,7 @@ crowd.plan (j) ->
   @fadeIn()
   wander(@)
 
-$('#what, #overlay').click (e) ->
+$('#what, #overlay, .info').click (e) ->
   if $(e.target).closest('pre').length or $(e.target).attr('target')
     return
   $('#overlay').toggle(400)

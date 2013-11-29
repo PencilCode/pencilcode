@@ -1,6 +1,9 @@
 {
   "uwsgi": {
     "uid": "davidbau",
+    "gid": "davidbau",
+    "umask": "022",
+    "chmod-socket": "666",
     "http-socket": ":8001",
     "master": true,
     "workers": 3,

@@ -833,6 +833,8 @@ function getPageGbcr(elem) {
         $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9) {
     return makeGbcrLTWH(0, 0, dw(), dh());
+  } else if (!('getBoundingClientRect' in elem)) {
+    return makeGbcrLTWH(0, 0, 0, 0);
   }
   return readPageGbcr.apply(elem);
 }
@@ -2483,6 +2485,9 @@ var turtlefn = {
    "<u>rt(degrees, radius)</u> Right arc. Pivots with a turning radius: " +
       "<mark>rt 90, 50</mark>"],
   function rt(degrees, radius) {
+    if (degrees === undefined || degrees === null) {
+      degrees = 90;  // zero-argument default.
+    }
     if (!radius) {
       return this.plan(function(j, elem) {
         this.animate({turtleRotation: '+=' + cssNum(degrees || 0) + 'deg'},
@@ -2506,6 +2511,9 @@ var turtlefn = {
    "<u>lt(degrees, radius)</u> Left arc. Pivots with a turning radius: " +
       "<mark>lt 90, 50</mark>"],
   function lt(degrees, radius) {
+    if (degrees === undefined || degrees === null) {
+      degrees = 90;  // zero-argument default.
+    }
     if (!radius) {
       return this.plan(function(j, elem) {
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
@@ -2527,6 +2535,9 @@ var turtlefn = {
   ["<u>fd(pixels)</u> Forward. Moves ahead by some pixels: " +
       "<mark>fd 100</mark>"],
   function fd(amount) {
+    if (amount === undefined || amount === null) {
+      amount = 100;  // zero-argument default.
+    }
     var elem, q, doqueue, atime;
     if (this.length == 1 &&
         ((atime = animTime(elem = this[0])) === 0 ||
@@ -2556,12 +2567,19 @@ var turtlefn = {
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"],
   function bk(amount) {
+    if (amount === undefined || amount === null) {
+      amount = 100;  // zero-argument default.
+    }
     return this.fd(-amount);
   }),
   slide: wraphelp(
   ["<u>slide(x, y)</u> Slides right x and forward y pixels without turning: " +
       "<mark>slide 50, 100</mark>"],
   function slide(x, y) {
+    if ($.isArray(x)) {
+      y = x[1];
+      x = x[0];
+    }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
     return this.plan(function(j, elem) {
@@ -4619,7 +4637,7 @@ var linestyle = 'position:relative;display:block;font-family:monospace;' +
 var logdepth = 5;
 var autoscroll = false;
 var logelement = 'body';
-var panel = true;
+var panel = (window.self !== window.top);  // show panel by default if framed.
 var see;  // defined below.
 var paneltitle = '';
 var logconsole = null;
