@@ -1799,12 +1799,16 @@ function fillDot(position, diameter, style) {
   var ctx = getTurtleDrawingCtx();
   ctx.save();
   applyPenStyle(ctx, style);
-  ctx.beginPath();
-  ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
-  ctx.closePath();
-  ctx.fill();
-  if (style.strokeStyle) {
-    ctx.stroke();
+  if (diameter === Infinity && drawing.canvas) {
+    ctx.fillRect(0, 0, drawing.canvas.width, drawing.canvas.height);
+  } else {
+    ctx.beginPath();
+    ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
+    ctx.closePath();
+    ctx.fill();
+    if (style.strokeStyle) {
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
