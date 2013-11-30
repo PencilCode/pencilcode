@@ -4300,7 +4300,7 @@ function input(name, callback, numeric) {
     if (callback) { callback.call(thisval, val); }
   }
   function validate() {
-    if (!numeric) return true;
+    if (numeric <= 0) return true;
     var val = textbox.val(),
         nval = val.replace(/[^0-9\.]/g, '');
     if (val != nval || !$.isNumeric(nval)) {
