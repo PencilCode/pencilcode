@@ -1335,7 +1335,7 @@ function writeTurtleTransform(ts) {
 }
 
 function radiansToDegrees(r) {
-  d = r * 180 / Math.PI;
+  var d = r * 180 / Math.PI;
   if (d > 180) { d -= 360; }
   return d;
 }
@@ -2458,6 +2458,39 @@ function globalhelp(obj) {
           'word-break:keep-all;white-space:nowrap;cursor:pointer;" ' +
           'onclick="see.enter($(this).text())">'));
     }
+    return helpok;
+  }
+  if (typeof obj == 'number') {
+    helpwrite('Equal to the number ' + obj + '.');
+    return helpok;
+  }
+  if (typeof obj == 'boolean') {
+    helpwrite('Equal to the boolean value ' + obj + '.');
+    return helpok;
+  }
+  if (obj === null) {
+    helpwrite('The special null value represents the absence of a value.');
+    return helpok;
+  }
+  if (obj === undefined) {
+    helpwrite('This is an unassigned value.');
+    return helpok;
+  }
+  if (obj === window) {
+    helpwrite('The global window object represents the browser window.');
+    return helpok;
+  }
+  if (obj === document) {
+    helpwrite('The HTML document running the program.');
+    return helpok;
+  }
+  if (obj === jQuery) {
+    helpwrite('The jQuery function.  Read about it at ' +
+        '<a href="http://learn.jquery.com/" target="_blank">jquery.com</a>.');
+    return helpok;
+  }
+  if (obj && obj != globalhelp) {
+    helpwrite('No help available for ' + obj);
     return helpok;
   }
   helplist = [];
@@ -3709,6 +3742,19 @@ var colors = [
   dollar_turtle_methods.E = Math.E;
   extrahelp.colors = {helptext:
       ["Defined colors: " + colors.join(" ")]};
+  extrahelp.see = {helptext:
+      ["<u>see(v)</u> Shows the value of v in the test panel: " +
+      "<mark>see document</mark>"]};
+  extrahelp.if = extrahelp.else = extrahelp.then = {helptext:
+      ["<u>if</u> <u>then</u> <u>else</u> Tests a condition: " +
+      "<mark>if 1 <= (new Date).getDay() <= 5 then " +
+      "write 'Working hard!' else write 'Happy weekend!'</mark>"]};
+  extrahelp.await = extrahelp.defer = {helptext:
+      ["<u>await</u> <u>defer</u> Waits for results from an " +
+       "asynchronous event; from " +
+       '<a href="http://maxtaco.github.io/coffee-script/" target="_blank"' +
+       ">Iced CoffeeScript</a>: " +
+       "<mark>await readnum defer n</mark>"]};
 })();
 
 $.turtle = function turtle(id, options) {
@@ -3789,7 +3835,7 @@ $.turtle = function turtle(id, options) {
   if (!options.hasOwnProperty('panel') || options.panel) {
     var retval = null,
         seeopt = {
-      title: 'turtle test panel (type help for help)',
+      title: 'test panel (type help for help)',
       abbreviate: [undefined, helpok],
       consolehook: seehelphook
     };

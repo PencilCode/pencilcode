@@ -109,6 +109,22 @@ h1, h2 {
 .choices a:hover {
   background: blue;
 }
+.resetbutton {
+  display:none;
+}
+.choices a:hover .resetbutton {
+  display: block;
+  position:absolute;
+  bottom: 0;
+  width: 100%;
+  margin: 3px -5px;
+  text-align: center;
+  color: dodgerblue;
+}
+.choices a:hover .resetbutton:hover {
+  text-decoration: underline;
+  color: white;
+}
 .em, .nw {
   white-space: nowrap;
 }
@@ -288,11 +304,11 @@ function cookie(key) {
 
 var olduser = false;
 if (cookie('recent')) {
-  document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
+  document.write('<a href="' + cookie('recent') + '" style="position:relative">Go back to<br>' +
       cookie('recent').replace(/^http:\/\//, '').
       replace(/\.pencilcode\.net\/edit\//, '&nbsp;/ ').
       replace(/\//g, '<wbr>/') +
-      '.</a>');
+      '.  <span class="resetbutton">reset this</span></a>');
   olduser = true;
 }
 if (!olduser) {
@@ -313,6 +329,12 @@ $('#clickvideo').click(function() {
 function clearCookie() {
   document.cookie = 'recent=0;expires=' + (new Date(0)).toUTCString() + ';domain=' + location.hostname + ';';
 }
+
+$('.resetbutton').click(function(e) {
+  e.preventDefault();
+  clearCookie();
+  window.location.reload();
+});
 </script>
 <a href="/edit/">Browse users.</a>
 </div>
@@ -333,84 +355,38 @@ $('#about').hide();
 <script type="text/coffeescript">
 $.turtle({panel: false});
 
-# -edit-below-
-
-distance = (p1, p2) ->
-  dx = p1.pageX - p2.pageX
-  dy = p1.pageY - p2.pageY
-  return Math.sqrt(dx * dx + dy * dy)
-
-heading = (p1, p2) ->
-  dx = p2.pageX - p1.pageX
-  dy = p2.pageY - p1.pageY
-  return Math.atan2(dx, -dy) * 180 / Math.PI
-
-touchbeep = ->
-  v = (document.visibilityState or document.mozVisibilityState or
-    document.webkitVisibilityState)
-  if (not v or v is 'visible') and @touches lastmousemove
-    @css { border: '2px dotted blue' }
-    @play {volume: 0.01}, random('CEFGAcefga'.split('')) + '//'
-    @plan ->
-      @css { border: 'none' }
-
-go = (who, dest) ->
-  who.plan ->
-    d = distance(@pagexy(), dest)
-    h = heading(@pagexy(), dest)
-    @rt h - @direction()
-    @plan touchbeep
-    @fd d
-    @plan touchbeep
-
-lastwander = 0
-wandergap = 0
-
-wander = (who) ->
-  hovered = $('a:hover,div.choices')
-  if hovered.length is 2
-    elem = random hovered
-  else
-    elem = random $('div.corners>a,div.corners,div.choices')
-  offset = $(elem).offset()
-  height = $(elem).outerHeight()
-  width = $(elem).outerWidth()
-  ypos = [offset.top, offset.top + height]
-  xpos = [offset.left , offset.left + width]
-  pos = {pageX: random(xpos), pageY: random(ypos)}
-  noisy = false
-  if random(2) is 0 and lastmousemove and
-     lastmousemove.timeStamp > $.now() - 2000
-    pos = lastmousemove
-  if random(6) is 0
-    color = if random 2 then 'none' else random [
-        'pink', 'peachpuff', 'yellow', 'palegreen', 'lightblue', 'thistle']
-    who.pen color
-  pos.pageX += 20 * random 'normal'
-  pos.pageY += 20 * random 'normal'
-  go who, pos
-  thiswander = (new Date).getTime()
-  pause = lastwander + wandergap - thiswander
-  lastwander = thiswander
-  if pause > 0 then who.delay pause
-  who.plan -> wander(@)
-
-turtle.remove()
-
-crowd = hatch(5).hide()
-wandergap = 2000 / crowd.length
-crowd.plan (j) ->
-  @delay(3000 + wandergap * j)
-  @plan ->
-    if lastmousemove then @moveto lastmousemove
-  @fadeIn()
-  wander(@)
-
 $('#what, #overlay, .info').click (e) ->
   if $(e.target).closest('pre').length or $(e.target).attr('target')
     return
   $('#overlay').toggle(400)
   false
+
+ht()
+while not lastmousemove?.pageY
+  pause 3
+  await done defer()
+hatch(3).plan (i) ->
+  note = ["c'/4", "e'/3", "g'/2"][i]
+  steps = 0
+  @pen lightgray
+  while true
+    await @done defer()
+    if @touches lastmousemove
+      if t
+        @wear random color
+        if not $('#overlay').is(':visible')
+          @play {volume: 0.01}, note
+        t = null
+      @pause random()
+    else
+      @pause random()
+      t = lastmousemove
+      if random [0..1]
+        @turnto 90 + @direction t
+        @lt 135, 0.5 * @distance t
+      else
+        @turnto -90 + @direction t
+        @rt 135, 0.5 * @distance t
 
 </script>
 <script>
