@@ -161,10 +161,15 @@ art, playing music, and creating games.  Pencil Code is also
 a place to experiment with mathematical functions, geometry,
 graphing, webpages, simulations, and algorithms.  Programs are
 open for all to see and copy.
-<div id="video"><p><a id="clickvideo" target="_blank"
+<p><a target="_blank"
 href="http://www.youtube.com/watch?v=JJzFD4EdeuY"
-data-href2="http://player.vimeo.com/video/79743491"
->Watch a video</a></p></div>
+data-vimeo="79743491"
+>Watch a video overview</a> or
+<a href="http://www.youtube.com/watch?v=edN07wcbj2w"
+data-vimeo="79743492" target="_blank"
+>watch a video tutorial</a>.
+</p>
+<div id="video"></div>
 <p>The main language is Coffeescript.  Professional software engineers
 use Coffeescript to build complex websites, but Coffeescript code can
 also be very simple.
@@ -269,13 +274,6 @@ $('#randfirst').mousedown(function() {
   $('#randfirst').attr('href',
       choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
 });
-var ytpresent = new Image();
-ytpresent.onerror = function(){
-  ytpresent = false;
-};
-ytpresent.src = "http://youtube.com/favicon.ico";
-
-
 function cookie(key) {
   // read
   var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
@@ -314,6 +312,52 @@ if (cookie('recent')) {
 if (!olduser) {
   $('.em').addClass('glow');
 }
+// Detect if youtube is blocked.
+var ytpresent = new Image();
+ytpresent.onerror = function(){
+  ytpresent = false;
+};
+ytpresent.src = "http://youtube.com/favicon.ico";
+$('a[data-vimeo]').click(function(e) {
+  if (ytpresent) {
+    var href = $(this).attr('href');
+    var match = /youtube.com.*v=([^&">]*)/.exec(href);
+    if (match && match[1]) {
+      if ($('#video iframe').attr('src') &&
+          $('#video iframe').attr('src').indexOf(match[1]) >= 0) {
+        $('#video').html('');
+        return false;
+      } else {
+        $('#video').html(
+          '<iframe type="text/html" width="640" height="390" ' +
+          'src="http://www.youtube.com/embed/' + match[1] +
+          '?autoplay=1&origin=http://guide.pencilcode.net" ' +
+          'frameborder="0"></iframe>');
+        return false;
+      }
+    }
+  } else {
+    var vimeo = $(this).data('vimeo');
+    if (vimeo) {
+      if ($('#video iframe').attr('src') &&
+          $('#video iframe').attr('src').indexOf(vimeo) >= 0) {
+        $('#video').html('');
+        return false;
+      } else {
+        $('#video').html(
+          '<iframe type="text/html" width="640" height="390" ' +
+          'src="//player.vimeo.com/video/' + vimeo +
+          '?autoplay=1" ' +
+          'frameborder="0"></iframe>');
+        return false;
+      }
+    }
+  }
+  return true;
+});
+
+
+
 $('#clickvideo').click(function() {
   var vimeoFrame = '<iframe src="//player.vimeo.com/video/79743491?autoplay=1" ' +
     'width="640" height="390" frameborder="0" webkitallowfullscreen ' +
@@ -358,6 +402,7 @@ $.turtle({panel: false});
 $('#what, #overlay, .info').click (e) ->
   if $(e.target).closest('pre').length or $(e.target).attr('target')
     return
+  $('#video').html('');
   $('#overlay').toggle(400)
   false
 

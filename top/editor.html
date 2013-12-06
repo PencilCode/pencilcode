@@ -48,7 +48,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #filename[contentEditable]:hover {box-shadow:0 0 3px sienna;}
 #owner,#filename,#icon{display:inline-block;vertical-align:middle;
   color:saddlebrown;max-width:90%;max-height:56px;overflow:hidden;
-  word-break:break-all;white-space:normal;}
+  word-break:break-all;white-space:normal;border:0;}
 #owner{color:black;}
 #icon {margin:0 12px;}
 .helplink { cursor: help; }
@@ -106,11 +106,20 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 <div id="overlay"></div>
 <div id="notification"><div><div></div></div></div>
 <div id="middle"><div></div></div>
-<table id="top" width="100%"><tr><td id="topleft"><nobr><span id="owner" title="Top directory."><script>
-document.write(location.host.replace(/\.[^.]*.{7}$/, ''));
-</script></span><img id="icon" title="Parent directory." src="/pencil_32.png"
+<table id="top" width="100%"><tr><td id="topleft"><nobr><a href="/edit/"><span id="owner" title="Top directory."><script>
+(function() {
+// Fast fixup: framebust and url-based title.
+if (top != self) { top.location.replace(self.location.href); }
+var owner = location.host.replace(/\.[^.]*.{7}$/, '');
+document.write(owner);
+owner = owner.replace(/\..*/, '');
+var title = location.pathname.replace(/\/$/, '').replace(/^\/edit(.*\/)?/, '');
+if (!title) { title = owner; } else { title += ' (' + owner + ')'; }
+if (title) { document.title = title; }
+})();
+</script></span></a><a href="../"><img id="icon" title="Parent directory." src="/pencil_32.png"
 height="32" width="32"
-><script>
+></a><script>
 function htmlEscape(s){return s.replace(/[<>&]/g,function(c){return
 c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
 document.write('<span id="filename" title="Edit to move or rename.">' +
@@ -230,8 +239,11 @@ window.pencilcode.view = {
   showMiddleButton: showMiddleButton,
   // Sets editable name.
   setNameText: function(s) {
-    state.nameText = s; $('#filename').text(s);
+    state.nameText = s;
+    $('#filename').text(s);
     var title = s.replace(/\/$/, '').replace(/^.*\//, '');
+    var domain = window.location.hostname.replace(/\..*$/, '');
+    if (!title) { title = domain; } else { title += ' (' + domain + ')'; }
     if (!title) title = 'Pencil Code Editor';
     document.title = title;
   },
@@ -505,12 +517,39 @@ $('#filename').on('blur', function() {
 // BUTTONS
 ///////////////////////////////////////////////////////////////////////////
 
-$('#owner').on('click', function() {
-  fireEvent('root', []);
+$('#owner').on('click', function(e) {
+  if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    fireEvent('root', []);
+    e.preventDefault();
+  }
 });
 
-$('#icon').on('click', function() {
-  fireEvent('done', []);
+function fixParentLink(elt) {
+  var filename = window.location.pathname;
+  if (filename.indexOf('/') >= 0) {
+    filename = filename.replace(/\/[^\/]+\/?$/, '');
+  } else {
+     filename = '';
+  }
+  if (!filename) {
+    filename = 'http://pencilcode.net/edit/';
+  } else {
+    filename += '/';
+  }
+  $(elt).closest('a').attr('href', filename);
+}
+
+$('#icon').on('mousemove', function(e) {
+  fixParentLink(this);
+});
+
+$('#icon').on('click', function(e) {
+  if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    fireEvent('done', []);
+    e.preventDefault();
+  } else {
+    fixParentLink(this);
+  }
 });
 
 $('#buttonbar,#middle').on('click', 'button', function(e) {
@@ -1681,6 +1720,7 @@ view.on('run', function() {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: 'pencilcode.net' });
   }
+  view.setPrimaryFocus();
 });
 
 $(window).on('beforeunload', function() {
@@ -2539,6 +2579,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         // 2. in the offline case, notify the user that we are working offline.
         // 3. in the unsaved case, notify the user that we loaded a backup and
         //    give a link to load from network.
+        if (!m.data) { m.data = ''; }
         mpp.isdir = false;
         mpp.data = m;
         view.setPaneEditorText(pane, m.data, filename);

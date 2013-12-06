@@ -1531,6 +1531,7 @@ function resizecanvas() {
 // turtlePenStyle style syntax
 function parsePenStyle(text, defaultProp) {
   if (!text) { return null; }
+  text = String(text);
   if (text.trim) { text = text.trim(); }
   if (!text || text === 'none') { return null; }
   if (text === 'path' || text === 'fill') {
@@ -3446,10 +3447,18 @@ var dollar_turtle_methods = {
     });
     sync = null;
   }),
+  append: wraphelp(
+  ["<u>append(html)</u> Appends text to the document without a new line. " +
+      "<mark>append 'try this twice...'</mark>"],
+  function append(html) {
+    $.fn.append.apply($('body'), arguments);
+  }),
   write: wraphelp(
-  ["<u>write(html)</u> Writes text output. Arbitrary HTML may be written: " +
+  ["<u>write(html)</u> Writes a line of text. Arbitrary HTML may be written: " +
       "<mark>write 'Hello, world!'</mark>"],
-  function write(html) { return output(html, 'div'); }),
+  function write(html) {
+    return output(Array.prototype.join.call(arguments, ' '), 'div');
+  }),
   read: wraphelp(
   ["<u>read(fn)</u> Reads text or numeric input. " +
       "Calls fn once: " +
