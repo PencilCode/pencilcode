@@ -1620,7 +1620,7 @@ function updateTopControls(addHistory) {
     if (m.data && m.data.file) {
       buttons.push(
         {id: 'save', label: 'Save',
-         disabled: !specialowner() &&
+         disabled: !specialowner() && model.username &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
     }
     if (!specialowner()) {
