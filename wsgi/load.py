@@ -264,7 +264,7 @@ def application(env, start_response):
       return []
     start_response('200 OK', [
        ('Cache-Control', 'no-cache'),
-       ('Content-Type', 'text/html;charset=utf-8'),
+       ('Content-Type', 'text/html;charset=utf-8')
     ])
     result = []
     result.append('<title>%s</title>\n' % (request_uri))
@@ -308,7 +308,7 @@ def application(env, start_response):
   else:
     start_response('200 OK', [
        ('Cache-Control', 'no-cache'),
-       ('Content-Type', 'text/html;charset=utf-8'),
+       ('Content-Type', 'text/html;charset=utf-8')
     ])
     result = []
     result.append('<pre>\n')

@@ -1324,9 +1324,20 @@ function isBackupPreferred(filename, m, preferUnsaved) {
   return false;
 }
 
+// When there is a problem posting cross-domain, display a link
+// to the domain so that users can bring up firewall UI for an expln.
+function networkErrorMessage(domain) {
+  if (domain != window.location.hostname) {
+    return 'Test your connection to <a href="//' + domain +
+        '/" target="_blank">' + domain + '</a>.';
+  } else {
+    return 'Network error.';
+  }
+}
+
 window.pencilcode.storage = {
   loadUserList: function(cb) {
-    $.getJSON('http://pencilcode.net/load/?callback=?', function(m) {
+    $.getJSON('http://pencilcode.net/load/', function(m) {
       if (m && m.directory && m.list) {
         var result = [];
         for (var j = 0; j < m.list.length; ++j) {
@@ -1359,7 +1370,7 @@ window.pencilcode.storage = {
       return;
     }
     $.getJSON((ownername ? '//' + ownername + '.pencilcode.net' : '') +
-        '/load/' + filename + '?callback=?', function(m) {
+        '/load/' + filename, function(m) {
       // If there is no owner, we are not allowed to load directories
       if (!ownername && filename && m.directory) {
         callback({error: "Cannot load."});
@@ -1441,7 +1452,7 @@ window.pencilcode.storage = {
     var crossdomain = (window.location.hostname != domain);
     $.ajax({
       url: (ownername ? '//' + domain : '') +
-          '/save/' + filename + '?callback=?',
+          '/save/' + filename,
       data: payload,
       dataType: 'json',
       type: crossdomain ? 'GET' : 'POST',
@@ -1449,6 +1460,7 @@ window.pencilcode.storage = {
         var check;
         if (m.error) {
           // Pass errors on to calback.  Backup already done.
+          console.log('got error ' + m.error);
         } else if (m.deleted) {
           // On a successful delete, also delete the backup
           // (if nothing new has since been entered in backup).
@@ -1470,10 +1482,13 @@ window.pencilcode.storage = {
           }
         }
         callback && callback(m);
-      },
-      error: function() {
-        callback && callback({error: 'Network error', offline:true});
       }
+    }).error(function() {
+      console.log('got error ' + domain);
+      callback && callback({
+        error: networkErrorMessage(domain),
+        offline:true
+      });
     });
   },
   moveFile: function(ownername, sourcefile, filename, key, copy, callback) {
@@ -1483,7 +1498,7 @@ window.pencilcode.storage = {
     if (!copy) { payload.mode = 'mv'; }
     if (key) { payload.key = key; }
     $.post('//' + ownername + '.pencilcode.net/save/' +
-        filename + '?callback=?', payload, function(m) {
+        filename, payload, function(m) {
       var check;
       if (m.error) {
         // Pass errors on to calback.  Don't affect backup.
@@ -1494,16 +1509,23 @@ window.pencilcode.storage = {
       }
       callback && callback(m);
     }, 'json').error(function() {
-      callback && callback({error: 'Network error', offline:true});
+      callback && callback({
+        error: networkErrorMessage(ownername + '.pencilcode.net'),
+        offline:true
+      });
     });
   },
   setPassKey: function(ownername, key, oldkey, callback) {
-    $.post('//' + ownername + '.pencilcode.net/save/?callback=?',
+    $.post('//' + ownername + '.pencilcode.net/save/',
         $.extend({ mode: 'setkey', data: key}, oldkey ? { key: oldkey } : {}),
         function(m) {
       callback && callback(m);
     }, 'json').error(function() {
-      callback && callback({error: 'Network error', offline:true});
+      console.log('got error here');
+      callback && callback({
+         error: networkErrorMessage(ownername + '.pencilcode.net'),
+         offline:true
+      });
     });
   },
   deleteBackup: deleteBackup,
@@ -2029,8 +2051,9 @@ function signUpAndSave() {
       if (key && shouldCreateAccount) {
         storage.setPassKey(username, key, null, function(m) {
           if (m.error) {
+            console.log('got error');
             state.update({info: 'Could not create account.<br>' +
-                htmlEscape(m.error) });
+                m.error });
             view.clearPane(paneatpos('right'), false);
             return;
           }
