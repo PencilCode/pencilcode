@@ -377,7 +377,21 @@ THE SOFTWARE.
 // Establish support for transforms in this browser.
 //////////////////////////////////////////////////////////////////////////
 
-var undefined = {}.undefined;
+var undefined = void 0,
+    __hasProp = {}.hasOwnProperty,
+    rootjQuery = jQuery(function() {}),
+    Selector, Turtle;
+
+function __extends(child, parent) {
+  for (var key in parent) {
+    if (__hasProp.call(parent, key)) child[key] = parent[key];
+  }
+  function ctor() { this.constructor = child; }
+  ctor.prototype = parent.prototype;
+  child.prototype = new ctor();
+  child.__super__ = parent.prototype;
+  return child;
+};
 
 if (!$.cssHooks) {
   throw("jQuery 1.4.3+ is needed for jQuery-turtle to work");
@@ -2386,6 +2400,53 @@ function withinOrNot(obj, within, distance, x, y) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// JQUERY SUBCLASSING
+// Classes to allow jQuery to be subclassed.
+//////////////////////////////////////////////////////////////////////////
+
+// A class to wrap jQuery
+Selector = (function(_super) {
+  __extends(Selector, _super);
+
+  function Selector(selector, context) {
+    this.constructor = jQuery;
+    this.constructor.prototype = Object.getPrototypeOf(this);
+    if ('function' !== typeof selector) {
+      jQuery.fn.init.call(this, selector, context, rootjQuery);
+    }
+  }
+
+  Selector.prototype.pushStack = function() {
+    var count, ret, same;
+    ret = jQuery.fn.pushStack.apply(this, arguments);
+    count = ret.length;
+    same = count === this.length;
+    while (same && count--) {
+      same = same && this[count] === ret[count];
+    }
+    if (same) {
+      return this;
+    } else {
+      return ret;
+    }
+  };
+
+  return Selector;
+
+})(jQuery.fn.init);
+
+Turtle = (function(_super) {
+  __extends(Turtle, _super);
+
+  function Turtle(arg, context) {
+    Turtle.__super__.constructor.call(this, hatchone(arg, context));
+  }
+
+  return Turtle;
+
+})(Selector);
+
+//////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
 // Register all our hooks.
 //////////////////////////////////////////////////////////////////////////
@@ -2960,9 +3021,7 @@ var turtlefn = {
       }
     });
   },
-  hatch: wraphelp(
-  ["<u>hatch(count, color)</u> Hatches any number of new turtles. Optional " +
-      "color name. <mark>g = hatch 5; g.plan -> this.fd random 500</mark>"],
+  hatch: 
   function(count, spec) {
     if (!this.length) return;
     if (spec === undefined && !$.isNumeric(count)) {
@@ -2990,7 +3049,7 @@ var turtlefn = {
       }
       return $(result);
     }
-  }),
+  },
   pagexy: wraphelp(
   ["<u>pagexy()</u> Page coordinates {pageX:, pageY}, top-left based: " +
       "<mark>c = pagexy(); fd 500; moveto c</mark>"],
@@ -3485,12 +3544,10 @@ var dollar_turtle_methods = {
    "<u>random('color')</u> Random color: " +
       "<mark>pen random 'color'</mark>"],
   random),
-  hatch: wraphelp(
-  ["<u>hatch(count, color)</u> Hatches any number of new turtles. Optional " +
-      "color name. <mark>g = hatch 5; g.plan -> this.fd random 500</mark>"],
+  hatch:
   function hatch(count, spec) {
     return $(document).hatch(count, spec);
-  }),
+  },
   button: wraphelp(
   ["<u>button(text, fn)</u> Writes a button. Calls " +
       "fn whenever the button is clicked: " +
@@ -3667,6 +3724,10 @@ var dollar_turtle_methods = {
   min: wraphelp(
   ["<u>min(x, y, ...)</u> The minimum of a set of values. " +
       "<mark>see min 2, -5, 1</mark>"], Math.min),
+  Turtle: wraphelp(
+  ["<u>new Turtle(color)</u> Make a new turtle. " +
+      "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
+  Selector: Selector,
 
   help: globalhelp
 };
@@ -3820,7 +3881,7 @@ $.turtle = function turtle(id, options) {
   if (id) {
     selector = $('#' + id);
     if (!selector.length) {
-      selector = dollar_turtle_methods.hatch(id);
+      selector = new Turtle(id);
     }
   }
   if (selector && !selector.length) { selector = null; }
@@ -3839,6 +3900,9 @@ $.turtle = function turtle(id, options) {
   // Set up global objects by id.
   if (!options.hasOwnProperty('ids') || options.ids) {
     turtleids(options.idprefix);
+    if (selector && id) {
+      window[id] = selector;
+    }
   }
   // Set up test console.
   if (!options.hasOwnProperty('panel') || options.panel) {
