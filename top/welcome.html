@@ -313,11 +313,12 @@ if (!olduser) {
   $('.em').addClass('glow');
 }
 // Detect if youtube is blocked.
-var ytpresent = new Image();
-ytpresent.onerror = function(){
+var ytpresent = true;
+var ytprobe = new Image();
+ytprobe.onerror = function(){
   ytpresent = false;
 };
-ytpresent.src = "http://youtube.com/favicon.ico";
+ytprobe.src = "http://youtube.com/favicon.ico?r=" + Math.random();
 $('a[data-vimeo]').click(function(e) {
   if (ytpresent) {
     var href = $(this).attr('href');

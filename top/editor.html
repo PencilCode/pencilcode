@@ -4,7 +4,7 @@
 <title>Pencil Code Editor</title>
 <meta charset="utf-8">
 <style>
-@import url("http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500");
+@import url("http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500,600");
 * {box-sizing:border-box;}
 body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #overlay{position:absolute;top:0;left:0;width:100%;height:100%;
@@ -85,7 +85,12 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #owner:hover{text-decoration:underline;}
 #icon:hover{border-radius:3px;box-shadow:0 0 6px black;}
 .editor{position:absolute:top:0;height:100%;left:0;width:100%;
-  background-color:white;font:24px "Source Code Pro"}
+  background-color:white;font:24px "Source Code Pro";font-weight:600;}
+#pencilcode .ace_editor {
+  font-family: "Source Code Pro";
+  font-weight: 600;
+  line-height: 121%;
+}
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}
@@ -101,7 +106,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 </style>
 <link rel="stylesheet" type="text/css" href="//pencilcode.net/lib/tooltipster/css/tooltipster.css">
 </head>
-<body>
+<body id="pencilcode">
 <div id="overflow">
 <div id="overlay"></div>
 <div id="notification"><div><div></div></div></div>
@@ -1090,6 +1095,15 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+  var lines = text.split('\n').length;
+  var long = (lines * 24 * 1.4 > $('#' + pane).height());
+  if (long) {
+    $('.editor').css({fontWeight: 500, lineHeight: '129%'});
+    editor.setFontSize(15);
+  } else {
+    $('.editor').css({fontWeight: 600, lineHeight: '121%'});
+    editor.setFontSize(24);
+  }
   editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
@@ -1100,19 +1114,17 @@ function setPaneEditorText(pane, text, filename) {
       if (editor.getSession().getLength() *
           editor.getFontSize() * 1.4 > $('#' + pane).height()) {
         editor.setFontSize(15);
+        $('.editor').css({fontWeight: 500, lineHeight: '129%'});
       }
     }
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
   });
-  var lines = editor.getSession().getLength();
-  if (lines * 24 * 1.4 <= $('#' + pane).height()) {
-    editor.setFontSize(24);
-    editor.gotoLine(lines, editor.getSession().getLine(lines - 1).length);
-  } else {
-    editor.setFontSize(15);
+  if (long) {
     editor.gotoLine(0);
+  } else {
+    editor.gotoLine(lines, editor.getSession().getLine(lines - 1).length);
   }
   setPrimaryFocus();
   editor.on('focus', function() {
