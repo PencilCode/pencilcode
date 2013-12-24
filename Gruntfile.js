@@ -32,7 +32,7 @@ module.exports = function(grunt) {
     uglify: {
       all: {
         files: {
-          "site/top/turtlebits.min.js": [
+          "site/top/turtlebits.js": [
             "site/top/iced-coffee-script.js",
             "site/top/jquery.js",
             "site/top/jquery-turtle.js",
