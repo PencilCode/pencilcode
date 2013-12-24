@@ -1,0 +1,27 @@
+{
+  "name": "pencilcode-site",
+  "version": "0.0.1",
+  "description": "Website code and config for pencilcode.net.",
+  "scripts": {
+    "test": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PenciCode/pencilcode-site.git"
+  },
+  "author": "Pencil Code",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PencilCode/pencilcode-site/issues"
+  },
+  "homepage": "https://github.com/PencilCode/pencilcode-site",
+  "devDependencies": {
+    "grunt": "0.4.2",
+    "grunt-bowercopy": "0.4.1",
+    "grunt-cli": "0.1.11",
+    "grunt-contrib-uglify": "0.2.7",
+    "grunt-contrib-qunit": "0.3.0",
+    "grunt-release": "0.6.0",
+    "phantomjs": "1.9.2-6"
+  }
+}
