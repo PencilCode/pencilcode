@@ -105,14 +105,15 @@ h1, h2 {
   color: white;
   border-radius: 5px;
   text-decoration: none;
+  position: relative;
 }
 .choices a:hover {
   background: blue;
 }
-.resetbutton {
+.extrabutton {
   display:none;
 }
-.choices a:hover .resetbutton {
+.choices a:hover .extrabutton {
   display: block;
   position:absolute;
   bottom: 0;
@@ -121,7 +122,7 @@ h1, h2 {
   text-align: center;
   color: dodgerblue;
 }
-.choices a:hover .resetbutton:hover {
+.choices a:hover .extrabutton:hover {
   text-decoration: underline;
   color: white;
 }
@@ -250,11 +251,13 @@ powerful as using a pencil&nbsp;&mdash;
 <br>
 <div class="choices">
 <a href="http://pencilcode.net/edit/first" id="randfirst">I'm new here.
-<span class="em">Let's play.</span></a>
+<span class="em">Let's play.</span>
+<span class="extrabutton" id="blank" href="/edit/untitled">start blank</span>
+</a>
 <a href="http://guide.pencilcode.net/">Try examples.
 <span class="nw">See the guide.</span></a>
 <script>
-$('#randfirst').mousedown(function() {
+$('#randfirst').mouseenter(function() {
   var choices = [
     'http://pencilcode.net/edit/first',
     'http://goo.gl/Vgyc2H', // dandelion
@@ -274,6 +277,10 @@ $('#randfirst').mousedown(function() {
   $('#randfirst').attr('href',
       choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
 });
+$('#blank').click(function() {
+  $('#randfirst').attr('href', '/edit/untitled');
+});
+
 function cookie(key) {
   // read
   var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
@@ -302,11 +309,11 @@ function cookie(key) {
 
 var olduser = false;
 if (cookie('recent')) {
-  document.write('<a href="' + cookie('recent') + '" style="position:relative">Go back to<br>' +
+  document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
       cookie('recent').replace(/^http:\/\//, '').
       replace(/\.pencilcode\.net\/edit\//, '&nbsp;/ ').
       replace(/\//g, '<wbr>/') +
-      '.  <span class="resetbutton">reset this</span></a>');
+      '.  <span class="extrabutton" id="reset">reset this</span></a>');
   olduser = true;
 }
 if (!olduser) {
@@ -375,11 +382,12 @@ function clearCookie() {
   document.cookie = 'recent=0;expires=' + (new Date(0)).toUTCString() + ';domain=' + location.hostname + ';';
 }
 
-$('.resetbutton').click(function(e) {
+$('#reset').click(function(e) {
   e.preventDefault();
   clearCookie();
   window.location.reload();
 });
+
 </script>
 <a href="/edit/">Browse users.</a>
 </div>

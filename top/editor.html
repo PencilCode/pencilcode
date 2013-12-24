@@ -91,6 +91,10 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   font-weight: 600;
   line-height: 121%;
 }
+body#pencilcode #diigolet-csm {
+  /* Disable the diigo csm popup, which gets in the way of the editor. */
+  display: none!important;
+}
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}
@@ -1158,7 +1162,6 @@ function setPrimaryFocus() {
     var untitled = /(?:^|\/)untitled[\d]*$/.exec(paneState.filename);
     if (untitled) {
       var elt = $('#filename').focus()[0];
-      console.log(untitled);
       setTimeout(function() {
         selectContentsOf(elt, untitled.index ? untitled.index + 1 : 0);
       }, 0);
@@ -1749,12 +1752,12 @@ view.on('run', function() {
     storage.saveFile(model.ownername,
         modelatpos('left').filename, newdata, false, null, true);
   }
+  view.setPrimaryFocus();
   runCodeAtPosition('right', runtext, modelatpos('left').filename);
   if (!specialowner()) {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: 'pencilcode.net' });
   }
-  view.setPrimaryFocus();
 });
 
 $(window).on('beforeunload', function() {
@@ -2518,7 +2521,13 @@ function runCodeAtPosition(position, code, filename) {
   m.filename = filename;
   var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
           'pencilcode.net/home/' + filename;
-  view.setPaneRunText(paneatpos(position), code, filename, baseUrl);
+  var pane = paneatpos(position);
+  // Delay allows the run program to grab focus _after_ the ace editor
+  // grabs focus.  TODO: investigate editor.focus() within on('run') and
+  // remove this setTimeout if we can make editor.focus() work without delay.
+  setTimeout(function() {
+    view.setPaneRunText(pane, code, filename, baseUrl);
+  }, 0);
   if (code) {
     $.get('/log/' + filename + '?run=' +
         encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, '|')
