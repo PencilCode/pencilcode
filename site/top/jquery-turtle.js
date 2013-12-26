@@ -364,7 +364,7 @@ THE SOFTWARE.
 var undefined = void 0,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
-    Selector, Turtle;
+    Pencil, Turtle;
 
 function __extends(child, parent) {
   for (var key in parent) {
@@ -2389,10 +2389,10 @@ function withinOrNot(obj, within, distance, x, y) {
 //////////////////////////////////////////////////////////////////////////
 
 // A class to wrap jQuery
-Selector = (function(_super) {
-  __extends(Selector, _super);
+Pencil = (function(_super) {
+  __extends(Pencil, _super);
 
-  function Selector(selector, context) {
+  function Pencil(selector, context) {
     this.constructor = jQuery;
     this.constructor.prototype = Object.getPrototypeOf(this);
     if ('function' !== typeof selector) {
@@ -2400,7 +2400,7 @@ Selector = (function(_super) {
     }
   }
 
-  Selector.prototype.pushStack = function() {
+  Pencil.prototype.pushStack = function() {
     var count, ret, same;
     ret = jQuery.fn.pushStack.apply(this, arguments);
     count = ret.length;
@@ -2415,7 +2415,7 @@ Selector = (function(_super) {
     }
   };
 
-  return Selector;
+  return Pencil;
 
 })(jQuery.fn.init);
 
@@ -2428,7 +2428,7 @@ Turtle = (function(_super) {
 
   return Turtle;
 
-})(Selector);
+})(Pencil);
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
@@ -3711,7 +3711,7 @@ var dollar_turtle_methods = {
   Turtle: wraphelp(
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
-  Selector: Selector,
+  Pencil: Pencil,
 
   help: globalhelp
 };
