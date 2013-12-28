@@ -2401,7 +2401,7 @@ function readNewUrl(undo) {
   var firsturl = (model.ownername === null),
   // Owner comes from domain name.
       ownername = window.location.hostname.replace(
-          /(?:(.*)\.)?[^.]*.{7}$/, '$1'),
+          /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
   // Filename comes from URL minus first directory part.
       filename = window.location.pathname.replace(
           /^\/[^\/]+\//, '').replace(/\/+$/, ''),

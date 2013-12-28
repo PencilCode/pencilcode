@@ -1,3 +1,5 @@
+var os=require('os');
+
 module.exports = function(grunt) {
   "use strict";
 
@@ -62,6 +64,25 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-release');
+
+  grunt.registerTask('devserver', 'Start a dev web server', function() {
+    var port = 8008;
+    var ifaces = os.networkInterfaces();
+    grunt.log.writeln('Running dev server on port ' + port + '.');
+    grunt.log.writeln(
+      'Point your browser proxy autoconfig to one of these, and then use\n' +
+      'the dev server by visiting http://pencilcode.net.dev/');
+    for (var dev in ifaces) {
+      ifaces[dev].forEach(function(details) {
+        if (details.family == 'IPv4') {
+          grunt.log.writeln(
+            'http://' + details.address + ':' + port + '/proxy.pac');
+        }
+      });
+    }
+    // The server never closes, so this async tasks never completes.
+    require('./dev/server.js').listen(port).once('close', this.async());
+  });
 
   grunt.registerTask("default", ["uglify", "qunit"]);
 };
