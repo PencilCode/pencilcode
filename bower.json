@@ -7,6 +7,6 @@
     "jquery": "http://code.jquery.com/jquery-1.11.0-beta3.js",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "qunit": "latest",
-    "underscore": "latest"
+    "lodash": "latest"
   }
 }

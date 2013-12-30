@@ -27,7 +27,7 @@ module.exports = function(grunt) {
           "jquery.js" : "jquery/index.js",
           "iced-coffee-script.js": "iced-coffee-script/extras/coffee-script.js",
           "jquery-turtle.js": "jquery-turtle/jquery-turtle.js",
-          "underscore.js": "underscore/underscore.js"
+          "lodash.js": "lodash/dist/lodash.js"
         }
       }
     },
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
             "site/top/iced-coffee-script.js",
             "site/top/jquery.js",
             "site/top/jquery-turtle.js",
-            "site/top/unerscore.js"
+            "site/top/lodash.js"
           ]
         },
         options: {
