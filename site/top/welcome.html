@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-<title>Pencil Code</title>
-<meta name="description" content="Pencil Code is a collaborative programming site for drawing art, playing music, and creating games. Pencil Code is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
+<title>Pencil</title>
+<meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
 
 <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500' rel='stylesheet' type='text/css'>
 <script src="/turtlebits.js"></script>
@@ -156,9 +156,9 @@ h1, h2 {
 <img src="//pencilcode.net/pencil_32.png"
 style="border:0;float:left;padding-right:10px;margin-top:3px;"
 title="pencilcode.net">
-<h1>Pencil Code</h1>
-<p>Pencil Code is a collaborative programming site for drawing
-art, playing music, and creating games.  Pencil Code is also
+<h1>Pencil</h1>
+<p>Pencil is a collaborative programming site for drawing
+art, playing music, and creating games.  Pencil is also
 a place to experiment with mathematical functions, geometry,
 graphing, webpages, simulations, and algorithms.  Programs are
 open for all to see and copy.
@@ -210,8 +210,8 @@ tick 3, ->
 functions such as <code>pen</code> (sets the turtle's pen color),
 <code>fd</code> (moves the turtle forward), and <code>play</code>
 (plays musical notes).
-Pencil Code is all <a href="/license.html" target="_blank">open source</a>.
-Hang out on the <a href="/group" target="_blank">Pencil Code
+Pencil is all <a href="/license.html" target="_blank">open source</a>.
+Hang out on the <a href="/group" target="_blank">Pencil
 discussion forum</a> or check out 
 <a href="http://pencilcode.net/material/reference.pdf" target="_blank"
 >the quick reference</a>
@@ -228,10 +228,10 @@ Two rules:
 This a learning space that is not locked down
 (for example, passwords are optional). So feel free to explore, create, 
 and link, but also please be considerate.
-<p><u>Be Careful.</u> Do not depend on Pencil Code to keep your data safe.
+<p><u>Be Careful.</u> Do not depend on Pencil to keep your data safe.
 Data posted here is public, and data is not secured from loss.
 <strong>Do not post private or personally identifiable
-information.</strong>  Passwords on Pencil Code
+information.</strong>  Passwords on Pencil
 do not prevent malicious interference.
 <p style="color:darkgray;margin-bottom:0;"
 >The Pencil Code Foundation, Inc., is devoted to advancing computer
@@ -245,7 +245,7 @@ powerful as using a pencil&nbsp;&mdash;
 <div class="fixedpage">
 <div class="vcenter">
 <div class="corners">
-<h1>Pencil Code</h1>
+<h1>Pencil</h1>
 <br>
 <a href="#" id="what">What's this?</a>
 <br>
@@ -254,8 +254,10 @@ powerful as using a pencil&nbsp;&mdash;
 <span class="em">Let's play.</span>
 <span class="extrabutton" id="blank" href="/edit/untitled">start blank</span>
 </a>
+<!--
 <a href="http://guide.pencilcode.net/">Try examples.
 <span class="nw">See the guide.</span></a>
+-->
 <script>
 $('#randfirst').mouseenter(function() {
   var choices = [
@@ -277,8 +279,11 @@ $('#randfirst').mouseenter(function() {
   $('#randfirst').attr('href',
       choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
 });
-$('#blank').click(function() {
-  $('#randfirst').attr('href', '/edit/untitled');
+
+$(function() {
+  $('#guide,#blank').click(function() {
+    $(this).closest('a').attr('href', $(this).attr('href'));
+  });
 });
 
 function cookie(key) {
@@ -389,7 +394,9 @@ $('#reset').click(function(e) {
 });
 
 </script>
-<a href="/edit/">Browse users.</a>
+<a href="/edit/">Browse users.
+<span class="extrabutton" id="guide" href="//guide.pencilcode.net/home/">see the guide</span>
+</a>
 </div>
 <br>
 <h2>A Modern Sandbox<br>
