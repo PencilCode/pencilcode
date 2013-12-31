@@ -64,7 +64,7 @@ function isBackupPreferred(filename, m, preferUnsaved) {
   try {
     var result = JSON.parse(window.localStorage['backup:' + filename]);
     // If backup is empty, then don't prefer the backup.
-    if (/\s*/.test(result.data)) {
+    if (/^\s*$/.test(result.data)) {
       return false;
     }
     // If backup is identical to net file (ignoring extra blank lines),
@@ -74,7 +74,7 @@ function isBackupPreferred(filename, m, preferUnsaved) {
       return false;
     }
     if (preferUnsaved && result.unsaved) { return true; }
-    if (result.mtime && mtime && result.mtime > m.mtime) { return true; }
+    if (result.mtime && m.mtime && result.mtime > m.mtime) { return true; }
   } catch(e) {
   }
   return false;

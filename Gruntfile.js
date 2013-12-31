@@ -130,6 +130,6 @@ module.exports = function(grunt) {
     server.listen(port).once('close', this.async());
   });
 
-  grunt.registerTask("default", ["uglify", "qunit"]);
+  grunt.registerTask("default", ["requirejs", "uglify", "qunit"]);
 };
 
