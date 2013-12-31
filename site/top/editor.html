@@ -4,33 +4,41 @@
 <title>Pencil Code Editor</title>
 <meta charset="utf-8">
 <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500,600">
-<link rel="stylesheet" type="text/css" href="/editor.css">
-<link rel="stylesheet" type="text/css" href="/lib/tooltipster/css/tooltipster.css">
+<script>
+// Fast fixup: framebust and url-based title.
+if (top != self) { top.location.replace(self.location.href); }
+window.pencilcode = {
+  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
+  owner: location.host.replace(/\.[^.]*.{8}$/, '')
+};
+document.write(
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/editor.css">' +
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">');
+</script>
 </head>
 <body id="pencilcode">
 <div id="overflow">
 <div id="overlay"></div>
 <div id="notification"><div><div></div></div></div>
 <div id="middle"><div></div></div>
-<table id="top" width="100%"><tr><td id="topleft"><nobr><a href="/edit/"><span id="owner" title="Top directory."><script>
-(function() {
-// Fast fixup: framebust and url-based title.
-if (top != self) { top.location.replace(self.location.href); }
-var owner = location.host.replace(/\.[^.]*.{8}$/, '');
-document.write(owner);
-owner = owner.replace(/\..*/, '');
-var title = location.pathname.replace(/\/$/, '').replace(/^\/edit(.*\/)?/, '');
-if (!title) { title = owner; } else { title += ' (' + owner + ')'; }
-if (title) { document.title = title; }
+<table id="top" width="100%"><tr><td id="topleft"><nobr>
+<script>
+(function(){
+function htmlEscape(s){return s.replace(
+  /[<>&]/g,function(c){return c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
+document.write([
+'<a href="/edit/"><span id="owner" title="Top directory.">',
+pencilcode.owner,
+'</span></a><a href="../"><img id="icon" title="Parent directory." src="//',
+pencilcode.domain,
+'/pencil_32.png',
+'" height="32" width="32"></a>',
+'<span id="filename" title="Edit to move or rename.">',
+htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
+'</span>'].join(''));
 })();
-</script></span></a><a href="../"><img id="icon" title="Parent directory." src="/pencil_32.png"
-height="32" width="32"
-></a><script>
-function htmlEscape(s){return s.replace(/[<>&]/g,function(c){return
-c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
-document.write('<span id="filename" title="Edit to move or rename.">' +
-htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
-'</span>');
 </script></nobr></td>
 <td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
 <div id="alphatitle" class="back panetitle"></div>
@@ -42,11 +50,6 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
 <div id="charlietitle" class="right panetitle" style="left:100%"></div>
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div><!-- end clip -->
-<script>
-window.pencilcode = {
-  domain: window.location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2')
-};
-</script>
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
 <script>document.write('<script src="//' + window.pencilcode.domain + '/editor.js"></' + 'script>');</script>
 <script>

@@ -1,10 +1,12 @@
-// seedrandom.js version 2.1.
+// seedrandom.js version 2.3.1
 // Author: David Bau
-// Date: 2013 Mar 16
+// Date: 2013 Dec 23
 //
 // Defines a method Math.seedrandom() that, when called, substitutes
 // an explicitly seeded RC4-based algorithm for Math.random().  Also
 // supports automatic seeding from local or network sources of entropy.
+// Can be used as a node.js or AMD module.  Can be called with "new"
+// to create a local PRNG without changing Math.random.
 //
 // http://davidbau.com/encode/seedrandom.js
 // http://davidbau.com/encode/seedrandom-min.js
@@ -25,24 +27,37 @@
 //                             Seeds using the given explicit seed mixed
 //                             together with accumulated entropy.
 //
+//   var myrng = new Math.seedrandom('yay.');
+//   var n = myrng();          Using "new" creates a local prng without
+//                             altering Math.random.
+//
 //   <script src="https://jsonlib.appspot.com/urandom?callback=Math.seedrandom">
 //   </script>                 Seeds using urandom bits from a server.
 //
-// More advanced examples:
-//
-//   Math.seedrandom("hello.");           // Use "hello." as the seed.
+//   Math.seedrandom("hello.");           // Behavior is the same everywhere:
 //   document.write(Math.random());       // Always 0.9282578795792454
 //   document.write(Math.random());       // Always 0.3752569768646784
-//   var rng1 = Math.random;              // Remember the current prng.
 //
-//   var autoseed = Math.seedrandom();    // New prng with an automatic seed.
+// When used as a module, also returns local PRNG instances:
+//
+//   // With node.js:
+//   var seedrandom = require('./seedrandom.js');
+//   var rng = seedrandom('predictable.');
+//   console.log(rng());                  // always 0.6646563869134212
+//
+//   // With require.js or other AMD loader:
+//   require(['seedrandom'], function(seedrandom) {
+//     var rng = seedrandom('predictable.');
+//     console.log(rng());                // always 0.6646563869134212
+//   });
+//
+// More examples:
+//
+//   var seed = Math.seedrandom();        // Use prng with an automatic seed.
 //   document.write(Math.random());       // Pretty much unpredictable x.
 //
-//   Math.random = rng1;                  // Continue "hello." prng sequence.
-//   document.write(Math.random());       // Always 0.7316977468919549
-//
-//   Math.seedrandom(autoseed);           // Restart at the previous seed.
-//   document.write(Math.random());       // Repeat the 'unpredictable' x.
+//   var rng = new Math.seedrandom(seed); // A new prng with the same seed.
+//   document.write(rng());               // Repeat the 'unpredictable' x.
 //
 //   function reseed(event, count) {      // Define a custom entropy collector.
 //     var t = [];
@@ -56,11 +71,22 @@
 //   }
 //   reseed('mousemove', 100);            // Reseed after 100 mouse moves.
 //
+//   The callback third arg can be used to get both the prng and the seed.
+//   The following returns both an autoseeded prng and the seed as an object,
+//   without mutating Math.random:
+//
+//   var obj = Math.seedrandom(null, false, function(prng, seed) {
+//      return { random: prng, seed: seed };
+//   });
+//
 // Version notes:
 //
 // The random number sequence is the same as version 1.0 for string seeds.
 // Version 2.0 changed the sequence for non-string seeds.
 // Version 2.1 speeds seeding and uses window.crypto to autoseed if present.
+// Version 2.2 alters non-crypto autoseeding to sweep up entropy from plugins.
+// Version 2.3 adds support for "new", module loading, and a null seed arg.
+// Version 2.3.1 adds a build environment, module packaging, and tests.
 //
 // The standard ARC4 key scheduler cycles short keys, which means that
 // seedrandom('ab') is equivalent to seedrandom('abab') and 'ababab'.
@@ -70,8 +96,8 @@
 // non-string seeds, so seeding with the number 111 is the same as seeding
 // with '111\0'.
 //
-// When seedrandom() is called with zero args, it uses a seed
-// drawn from the browser crypto object if present.  If there is no
+// When seedrandom() is called with zero args or a null seed, it uses a
+// seed drawn from the browser crypto object if present.  If there is no
 // crypto support, seedrandom() uses the current time, the native rng,
 // and a walk of several DOM objects to collect a few bits of entropy.
 //
@@ -79,8 +105,8 @@
 // entropy from the passed seed is accumulated in a pool to help generate
 // future seeds for the zero- and two-argument forms of seedrandom.
 //
-// On speed - This javascript implementation of Math.random() is about
-// 3-10x slower than the built-in Math.random() because it is not native
+// On speed - This javascript implementation of Math.random() is several
+// times slower than the built-in Math.random() because it is not native
 // code, but that is typically fast enough.  Some details (timings on
 // Chrome 25 on a 2010 vintage macbook):
 //
@@ -88,12 +114,11 @@
 // seedrandom('explicit.')       - avg less than 0.2 milliseconds per call
 // seedrandom('explicit.', true) - avg less than 0.2 milliseconds per call
 // seedrandom() with crypto      - avg less than 0.2 milliseconds per call
-// seedrandom() without crypto   - avg about 12 milliseconds per call
 //
-// On a 2012 windows 7 1.5ghz i5 laptop, Chrome, Firefox 19, IE 10, and
-// Opera have similarly fast timings.  Slowest numbers are on Opera, with
-// about 0.0005 milliseconds per seeded Math.random() and 15 milliseconds
-// for autoseeding.
+// Autoseeding without crypto is somewhat slower, about 20-30 milliseconds on
+// a 2012 windows 7 1.5ghz i5 laptop, as seen on Firefox 19, IE 10, and Opera.
+// Seeded rng calls themselves are fast across these browsers, with slowest
+// numbers on Opera at about 0.0005 ms per seeded Math.random().
 //
 // LICENSE (BSD):
 //
@@ -129,7 +154,7 @@
  * All code is in an anonymous closure to keep the global namespace clean.
  */
 (function (
-    global, pool, math, width, chunks, digits) {
+    global, pool, math, width, chunks, digits, module, define, rngname) {
 
 //
 // The following constants are related to IEEE 754 limits.
@@ -137,19 +162,19 @@
 var startdenom = math.pow(width, chunks),
     significance = math.pow(2, digits),
     overflow = significance * 2,
-    mask = width - 1;
+    mask = width - 1,
 
 //
 // seedrandom()
 // This is the seedrandom function described above.
 //
-math['seedrandom'] = function(seed, use_entropy) {
+impl = math['seed' + rngname] = function(seed, use_entropy, callback) {
   var key = [];
 
   // Flatten the seed string or build one from local entropy if needed.
   var shortseed = mixkey(flatten(
     use_entropy ? [seed, tostring(pool)] :
-    0 in arguments ? seed : autoseed(), 3), key);
+    (seed === null || seed === undefined) ? autoseed() : seed, 3), key);
 
   // Use the seed to initialize an ARC4 generator.
   var arc4 = new ARC4(key);
@@ -157,12 +182,19 @@ math['seedrandom'] = function(seed, use_entropy) {
   // Mix the randomness into accumulated entropy.
   mixkey(tostring(arc4.S), pool);
 
-  // Override Math.random
+  // Calling convention: what to return as a function of prng, seed, is_math.
+  return (callback ||
+      // If called as a method of Math (Math.seedrandom()), mutate Math.random
+      // because that is how seedrandom.js has worked since v1.0.  Otherwise,
+      // it is a newer calling convention, so return the prng directly.
+      function(prng, seed, is_math_call) {
+        if (is_math_call) { math[rngname] = prng; return seed; }
+        else return prng;
+      })(
 
   // This function returns a random double in [0, 1) that contains
   // randomness in every bit of the mantissa of the IEEE 754 value.
-
-  math['random'] = function() {         // Closure to return a random double:
+  function() {
     var n = arc4.g(chunks),             // Start with a numerator n < 2 ^ 48
         d = startdenom,                 //   and denominator d = 2 ^ 48.
         x = 0;                          //   and no 'extra last byte'.
@@ -177,10 +209,7 @@ math['seedrandom'] = function(seed, use_entropy) {
       x >>>= 1;                         //   we have exactly the desired bits.
     }
     return (n + x) / d;                 // Form the number within [0, 1).
-  };
-
-  // Return the seed that was used
-  return shortseed;
+  }, shortseed, this == math);
 };
 
 //
@@ -234,9 +263,7 @@ function flatten(obj, depth) {
   var result = [], typ = (typeof obj)[0], prop;
   if (depth && typ == 'o') {
     for (prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-        try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
-      }
+      try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
     }
   }
   return (result.length ? result : typ == 's' ? obj : obj + '\0');
@@ -260,14 +287,14 @@ function mixkey(seed, key) {
 // autoseed()
 // Returns an object for autoseeding, using window.crypto if available.
 //
-/** @param {Uint8Array=} seed */
+/** @param {Uint8Array|Navigator=} seed */
 function autoseed(seed) {
   try {
     global.crypto.getRandomValues(seed = new Uint8Array(width));
     return tostring(seed);
   } catch (e) {
-    return [+new Date, global.document, global.history,
-            global.navigator, global.screen, tostring(pool)];
+    return [+new Date, global, (seed = global.navigator) && seed.plugins,
+            global.screen, tostring(pool)];
   }
 }
 
@@ -286,7 +313,17 @@ function tostring(a) {
 // seedrandom will not call math.random on its own again after
 // initialization.
 //
-mixkey(math.random(), pool);
+mixkey(math[rngname](), pool);
+
+//
+// Nodejs and AMD support: export the implemenation as a module using
+// either convention.
+//
+if (module && module.exports) {
+  module.exports = impl;
+} else if (define && define.amd) {
+  define(function() { return impl; });
+}
 
 // End anonymous scope, and pass initial values.
 })(
@@ -295,5 +332,8 @@ mixkey(math.random(), pool);
   Math,   // math: package containing random, pow, and seedrandom
   256,    // width: each RC4 output is 0 <= x < 256
   6,      // chunks: at least six RC4 outputs for each double
-  52      // digits: there are 52 significant digits in a double
+  52,     // digits: there are 52 significant digits in a double
+  (typeof module)[0] == 'o' && module,  // present in node.js
+  (typeof define)[0] == 'f' && define,  // present with an AMD loader
+  'random'// rngname: name for Math.random and Math.seedrandom
 );

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "ace-builds": "~1.1.1",
-    "almond": "~0.2.7"
+    "almond": "~0.2.7",
+    "seedrandom": "~2.3.1"
   }
 }

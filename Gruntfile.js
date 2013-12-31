@@ -27,7 +27,8 @@ module.exports = function(grunt) {
           "jquery.js" : "jquery/index.js",
           "iced-coffee-script.js": "iced-coffee-script/extras/coffee-script.js",
           "jquery-turtle.js": "jquery-turtle/jquery-turtle.js",
-          "lodash.js": "lodash/dist/lodash.js"
+          "lodash.js": "lodash/dist/lodash.js",
+          "seedrandom.js": "seedrandom/seedrandom.js"
         }
       },
       lib: {
