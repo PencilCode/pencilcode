@@ -56,9 +56,11 @@ function proxyPacGenerator(req, res, next) {
   }
 }
 
-app.configure(function() {
-  app.set('port', process.env.PORT || 8088);
+app.setup = function(options) {
   app.use(rewriteRules);
+  if (!options.compiled) {
+    app.use(express.static(path.join(__dirname, '../site/top/src')));
+  }
   app.use(express.static(path.join(__dirname, '../site/top')));
   app.use(proxyRules);
   app.use(proxyPacGenerator);
@@ -66,5 +68,5 @@ app.configure(function() {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('404 - ' + req.url);
   });
-});
+};
 

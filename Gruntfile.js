@@ -29,6 +29,53 @@ module.exports = function(grunt) {
           "jquery-turtle.js": "jquery-turtle/jquery-turtle.js",
           "lodash.js": "lodash/dist/lodash.js"
         }
+      },
+      lib: {
+        options: {
+          destPrefix: "site/top/lib"
+        },
+        files: {
+          "ace" : "ace-builds/src-min-noconflict"
+        }
+      },
+      src: {
+        options: {
+          destPrefix: "site/top/src"
+        },
+        files: {
+          "require.js": "requirejs/require.js",
+          "almond.js": "almond/almond.js"
+        }
+      }
+    },
+    requirejs: {
+      compile: {
+        options: {
+          baseUrl: "site/top",
+          deps: ["src/editor-main"],
+          name: 'src/almond',
+          out: "site/top/editor.js",
+          mainConfigFile: "site/top/src/editor-main.js",
+          preserveLicenseComments: false
+        }
+      }
+    },
+    replace: {
+      dist: {
+        options: {
+          patterns: [ {
+           match: /<script data-main=".*\/([^\/"-]*)-main" src=".*require.js">/,
+           replacement: "<script>document.write('<script src=\"//' + " +
+                        "window.pencilcode.domain + '/$1.js\"></' + " +
+                        "'script>');"
+          } ]
+        },
+        files: [ {
+          expand: true,
+          flatten: true,
+          src: [ "site/top/src/editor.html" ],
+          dest: "site/top"
+        } ]
       }
     },
     uglify: {
@@ -52,20 +99,17 @@ module.exports = function(grunt) {
     },
     qunit: {
       all: ["test/*.html"]
-    },
-    release: {
-      options: {
-        bump: false
-      }
     }
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-qunit');
-  grunt.loadNpmTasks('grunt-release');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-replace');
 
   grunt.registerTask('devserver', 'Start a dev web server', function() {
+    var compiled = grunt.option("compiled") || false;
     var port = 8008;
     var ifaces = os.networkInterfaces();
     grunt.log.writeln('Running dev server on port ' + port + '.');
@@ -81,7 +125,9 @@ module.exports = function(grunt) {
       });
     }
     // The server never closes, so this async tasks never completes.
-    require('./dev/server.js').listen(port).once('close', this.async());
+    var server = require('./dev/server.js');
+    server.setup({compiled: compiled});
+    server.listen(port).once('close', this.async());
   });
 
   grunt.registerTask("default", ["uglify", "qunit"]);

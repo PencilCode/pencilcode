@@ -7,6 +7,11 @@
     "jquery": "http://code.jquery.com/jquery-1.11.0-beta3.js",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "qunit": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "requirejs": "latest"
+  },
+  "dependencies": {
+    "ace-builds": "~1.1.1",
+    "almond": "~0.2.7"
   }
 }

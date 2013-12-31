@@ -48,7 +48,7 @@ window.pencilcode = {
 };
 </script>
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
-<script>document.write('<script src="//' + window.pencilcode.domain + '/editor.js"></' + 'script>');</script>
+<script data-main="/src/editor-main" src="/src/require.js"></script>
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
