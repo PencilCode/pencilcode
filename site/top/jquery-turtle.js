@@ -4509,7 +4509,7 @@ function table(height, width, cellCss, tableCss) {
 var ABCtoken = /\s+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\d*\/\d+|\d+|\/+|[xzXZ]|./g;
 var audioTop = null;
 function isAudioPresent() {
-  return !!(window.audioContext || window.webkitAudioContext);
+  return !!(window.AudioContext || window.webkitAudioContext);
 }
 function getAudioTop() {
   if (!audioTop) {
@@ -4683,7 +4683,7 @@ function playABC(elem, args) {
     for (i = 0; i < notes.length; i++) {
       t = notes[i].time;
       if (notes[i].frequency.length > 0) {
-        g = atop.ac.createGainNode();
+        g = atop.ac.createGain();
         stime = t * beatsecs + time;
         atime = Math.min(t, venv.a) * beatsecs + time;
         rtime = Math.max(0, t + venv.r) * beatsecs + time;
@@ -4714,8 +4714,8 @@ function playABC(elem, args) {
             o.stop(rtime);
           } else {
             // Early draft web audio spec.
-            o.noteOn(time);
-            o.noteOff(rtime);
+            o.start(time);
+            o.stop(rtime);
           }
         }
       }
