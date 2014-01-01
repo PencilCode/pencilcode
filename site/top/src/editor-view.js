@@ -412,9 +412,20 @@ $('#icon').on('click', function(e) {
   }
 });
 
+// These buttons avoid taking focus when you click on them.
+$('#buttonbar,#middle').on('mousedown', 'button', function(e) {
+  if (this.id) {
+    e.preventDefault();
+  }
+});
+
 $('#buttonbar,#middle').on('click', 'button', function(e) {
   if (this.id) {
+    if (e.type == 'mousedown') {
+      e.preventDefault(); // using a mouse down avoids grabbing focus
+    }
     fireEvent(this.id, []);
+    return false;
   }
 });
 $('#buttonbar').on('change', 'input[type=checkbox]', function(e) {

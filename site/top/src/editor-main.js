@@ -213,7 +213,6 @@ view.on('run', function() {
     storage.saveFile(model.ownername,
         modelatpos('left').filename, newdata, false, null, true);
   }
-  view.setPrimaryFocus();
   runCodeAtPosition('right', runtext, modelatpos('left').filename);
   if (!specialowner()) {
     cookie('recent', window.location.href,
