@@ -3826,21 +3826,21 @@ $.turtle = function turtle(id, options) {
   clearGlobalTurtle();
   // Expand any <script type="text/html"> unless htmlscript is false.
   // This is to simplify literal HTML editing within templated editors.
-  if (!options.hasOwnProperty('htmlscript') || options.htmlscript) {
+  if (!('htmlscript' in options) || options.htmlscript) {
     $('script[type="text/html"]').each(function() {
         $(this).replaceWith(
             $(this).html().replace(/^\x3c!\[CDATA\[\n?|\]\]\x3e$/g, ''));
     });
   }
-  if (!drawing.ctx && options.hasOwnProperty('subpixel')) {
+  if (!drawing.ctx && ('subpixel' in options)) {
     drawing.subpixel = parseInt(options.subpixel);
   }
   // Set up global events.
-  if (!options.hasOwnProperty('events') || options.events) {
+  if (!('events' in options) || options.events) {
     turtleevents(options.eventprefix);
   }
   // Set up global log function.
-  if (!options.hasOwnProperty('see') || options.see) {
+  if (!('see' in options) || options.see) {
     exportsee();
     exportedsee = true;
     if (window.addEventListener) {
@@ -3850,11 +3850,13 @@ $.turtle = function turtle(id, options) {
     }
   }
   // Copy $.turtle.* functions into global namespace.
-  if (!options.hasOwnProperty('functions') || options.functions) {
+  if (!('functions' in options) || options.functions) {
+    window.printpage = window.print;
+    window.print = null;
     $.extend(window, dollar_turtle_methods);
   }
   // Set default turtle speed
-  globaldefaultspeed(options.hasOwnProperty('defaultspeed') ?
+  globaldefaultspeed(('defaultspeed' in options) ?
       options.defaultspeed : 1);
   // Initialize audio context (avoids delay in first notes).
   try {
@@ -3877,7 +3879,7 @@ $.turtle = function turtle(id, options) {
   if (selector && !selector.length) { selector = null; }
   // Globalize selected jQuery methods of a singleton turtle.
   if (selector && selector.length === 1 &&
-      (!options.hasOwnProperty('global') || options.global)) {
+      (!('global' in options) || options.global)) {
     var extraturtlefn = {
       css:1, fadeIn:1, fadeOut:1, fadeTo:1, fadeToggle:1,
       animate:1, stop:1, toggle:1, finish:1, promise:1, direct:1 };
@@ -3888,14 +3890,14 @@ $.turtle = function turtle(id, options) {
     $(document).on('DOMNodeRemoved.turtle', onDOMNodeRemoved);
   }
   // Set up global objects by id.
-  if (!options.hasOwnProperty('ids') || options.ids) {
+  if (!('ids' in options) || options.ids) {
     turtleids(options.idprefix);
     if (selector && id) {
       window[id] = selector;
     }
   }
   // Set up test console.
-  if (!options.hasOwnProperty('panel') || options.panel) {
+  if (!('panel' in options) || options.panel) {
     var retval = null,
         seeopt = {
       title: 'test panel (type help for help)',
@@ -4783,22 +4785,22 @@ function init(options) {
   } else if (arguments.length == 1 && typeof arguments[0] == 'function') {
     options = {'eval': arguments[0]};
   }
-  if (options.hasOwnProperty('jQuery')) { $ = options.jQuery; }
-  if (options.hasOwnProperty('eval')) { scopes[''].e = options['eval']; }
-  if (options.hasOwnProperty('this')) { scopes[''].t = options['this']; }
-  if (options.hasOwnProperty('element')) { logelement = options.element; }
-  if (options.hasOwnProperty('autoscroll')) { autoscroll = options.autoscroll; }
-  if (options.hasOwnProperty('linestyle')) { linestyle = options.linestyle; }
-  if (options.hasOwnProperty('depth')) { logdepth = options.depth; }
-  if (options.hasOwnProperty('panel')) { panel = options.panel; }
-  if (options.hasOwnProperty('height')) { panelheight = options.height; }
-  if (options.hasOwnProperty('title')) { paneltitle = options.title; }
-  if (options.hasOwnProperty('console')) { logconsole = options.console; }
-  if (options.hasOwnProperty('history')) { uselocalstorage = options.history; }
-  if (options.hasOwnProperty('coffee')) { coffeescript = options.coffee; }
-  if (options.hasOwnProperty('abbreviate')) { abbreviate = options.abbreviate; }
-  if (options.hasOwnProperty('consolehook')) { consolehook = options.consolehook; }
-  if (options.hasOwnProperty('noconflict')) { noconflict(options.noconflict); }
+  if ('jQuery' in options) { $ = options.jQuery; }
+  if ('eval' in options) { scopes[''].e = options['eval']; }
+  if ('this' in options) { scopes[''].t = options['this']; }
+  if ('element' in options) { logelement = options.element; }
+  if ('autoscroll' in options) { autoscroll = options.autoscroll; }
+  if ('linestyle' in options) { linestyle = options.linestyle; }
+  if ('depth' in options) { logdepth = options.depth; }
+  if ('panel' in options) { panel = options.panel; }
+  if ('height' in options) { panelheight = options.height; }
+  if ('title' in options) { paneltitle = options.title; }
+  if ('console' in options) { logconsole = options.console; }
+  if ('history' in options) { uselocalstorage = options.history; }
+  if ('coffee' in options) { coffeescript = options.coffee; }
+  if ('abbreviate' in options) { abbreviate = options.abbreviate; }
+  if ('consolehook' in options) { consolehook = options.consolehook; }
+  if ('noconflict' in options) { noconflict(options.noconflict); }
   if (panel) {
     // panel overrides element and autoscroll.
     logelement = '#_testlog';
@@ -5357,7 +5359,7 @@ function flushqueue() {
     temp.innerHTML = queue.join('');
     queue.length = 0;
     var complete = stickscroll();
-    while ((child = temp.firstChild)) {
+    while (child = temp.firstChild) {
       elt.appendChild(child);
     }
     complete();
