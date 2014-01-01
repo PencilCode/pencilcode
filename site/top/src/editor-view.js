@@ -956,7 +956,7 @@ function setPaneEditorText(pane, text, filename) {
   var long = (lines * 24 * 1.4 > $('#' + pane).height());
   if (long) {
     $('.editor').css({fontWeight: 500, lineHeight: '129%'});
-    editor.setFontSize(15);
+    editor.setFontSize(16);
   } else {
     $('.editor').css({fontWeight: 600, lineHeight: '121%'});
     editor.setFontSize(24);
@@ -967,11 +967,11 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
-    if (editor.getFontSize() > 15) {
+    if (editor.getFontSize() > 16) {
       if (editor.getSession().getLength() *
           editor.getFontSize() * 1.4 > $('#' + pane).height()) {
-        editor.setFontSize(15);
-        $('.editor').css({fontWeight: 500, lineHeight: '129%'});
+        editor.setFontSize(16);
+        $('.editor').css({fontWeight: 500, lineHeight: '119%'});
       }
     }
     if (!paneState.dirtied) {
