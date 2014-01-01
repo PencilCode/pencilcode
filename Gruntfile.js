@@ -3,6 +3,10 @@ var os=require('os');
 module.exports = function(grunt) {
   "use strict";
 
+  grunt.option.init({
+    port: 8008
+  });
+
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
     bowercopy: {
@@ -98,6 +102,31 @@ module.exports = function(grunt) {
         }
       }
     },
+    express: {
+      options: {
+        script: "dev/server.js",
+        background: true,
+        port: grunt.option('port')
+      },
+      dev: {
+        node_env: 'development'
+      },
+      comp: {
+        node_env: 'compiled'
+      }
+    },
+    watch: {
+      dev: {
+        files: ["dev/server.js"],
+        tasks: ['express:dev'],
+        options: { atBegin: true, spawn: false }
+      },
+      comp: {
+        files: ["dev/server.js"],
+        tasks: ['express:comp'],
+        options: { atBegin: true, spawn: false }
+      }
+    },
     qunit: {
       all: ["test/*.html"]
     }
@@ -108,12 +137,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-replace');
+  grunt.loadNpmTasks('grunt-express-server');
+  grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.registerTask('devserver', 'Start a dev web server', function() {
-    var compiled = grunt.option("compiled") || false;
-    var port = 8008;
+  grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
+    var port = grunt.option('port');
     var ifaces = os.networkInterfaces();
-    grunt.log.writeln('Running dev server on port ' + port + '.');
     grunt.log.writeln(
       'Point your browser proxy autoconfig to one of these, and then use\n' +
       'the dev server by visiting http://pencilcode.net.dev/');
@@ -125,12 +154,10 @@ module.exports = function(grunt) {
         }
       });
     }
-    // The server never closes, so this async tasks never completes.
-    var server = require('./dev/server.js');
-    server.setup({compiled: compiled});
-    server.listen(port).once('close', this.async());
   });
 
+  grunt.registerTask('devserver', ["proxymessage", "watch:dev"]);
+  grunt.registerTask('compserver', ["proxymessage", "watch:comp"]);
   grunt.registerTask("default", ["requirejs", "uglify", "qunit"]);
 };
 

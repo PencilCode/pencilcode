@@ -38,8 +38,8 @@ function proxyPacGenerator(req, res, next) {
   if (u.pathname == '/proxy.pac') {
     var hostHeader = req.get('host'),
         hostMatch = /^([^:]+)(?::(\d*))?$/.exec(hostHeader || ''),
-        hostDomain = hostMatch[1] || 'localhost',
-        hostPort = hostMatch[2] || app.get('port');
+        hostDomain = (hostMatch && hostMatch[1]) || 'localhost',
+        hostPort = (hostMatch && hostMatch[2]) || process.env.PORT;
     res.writeHead(200, {
         'Content-Type': 'application/x-javascript-config'
     });
@@ -56,17 +56,19 @@ function proxyPacGenerator(req, res, next) {
   }
 }
 
-app.setup = function(options) {
-  app.use(rewriteRules);
-  if (!options.compiled) {
-    app.use(express.static(path.join(__dirname, '../site/top/src')));
-  }
-  app.use(express.static(path.join(__dirname, '../site/top')));
-  app.use(proxyRules);
-  app.use(proxyPacGenerator);
-  app.get('*', function(req, res) {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('404 - ' + req.url);
-  });
-};
+app.use(rewriteRules);
+app.configure('development', function() {
+  console.log('using development mode');
+  app.use(express.static(path.join(__dirname, '../site/top/src')));
+});
+app.use(express.static(path.join(__dirname, '../site/top')));
+app.use(proxyRules);
+app.use(proxyPacGenerator);
+app.get('*', function(req, res) {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('404 - ' + req.url);
+});
 
+app.listen(process.env.PORT, function() {
+  console.log('Express server listening on ' + process.env.PORT);
+});
