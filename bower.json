@@ -11,7 +11,7 @@
     "requirejs": "latest"
   },
   "dependencies": {
-    "ace-builds": "~1.1.1",
+    "ace-builds": "PencilCode/pencilcode-ace-builds#master",
     "almond": "~0.2.7",
     "seedrandom": "~2.3.1"
   }
