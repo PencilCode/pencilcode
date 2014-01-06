@@ -17,6 +17,15 @@ your own frontend HTML and Javascript:
 4. build the dev server: "grunt devserver" - this will keep a server
    running until you ctrl-C.
 
+<pre>
+sudo apt-get install git
+sudo apt-get install nodejs
+git clone https://github.com/PencilCode/pencilcode-site.git
+cd pencilcode-site
+npm install
+grunt devserver
+</pre>
+
 Then, to use it with clean HTTP "Host" headers:
 5. Take the proxy.pac it prints out (like http://127.0.0.1:8008/proxy.pac)
    and put this into your browser's proxy autoconfig.
