@@ -20,6 +20,7 @@ your own frontend HTML and Javascript:
 <pre>
 sudo apt-get install git
 sudo apt-get install nodejs
+sudo npm install -g grunt-cli
 git clone https://github.com/PencilCode/pencilcode-site.git
 cd pencilcode-site
 npm install
