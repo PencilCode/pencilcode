@@ -416,14 +416,21 @@ $('#icon').on('click', function(e) {
 $('#buttonbar,#middle').on('mousedown', 'button', function(e) {
   if (this.id) {
     e.preventDefault();
+    $(this).addClass('pressed');
+  }
+});
+
+$('#buttonbar,#middle').on('mousemove', 'button', function(e) {
+  if (this.id) {
+    if (!e.which) {
+      $(this).removeClass('pressed');
+    }
   }
 });
 
 $('#buttonbar,#middle').on('click', 'button', function(e) {
   if (this.id) {
-    if (e.type == 'mousedown') {
-      e.preventDefault(); // using a mouse down avoids grabbing focus
-    }
+    $(this).removeClass('pressed');
     fireEvent(this.id, []);
     return false;
   }

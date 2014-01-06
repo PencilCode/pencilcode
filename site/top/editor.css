@@ -78,7 +78,8 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   box-shadow:0 0 7px gray;color:dodgerblue;
   border-radius:20px;font-family:inherit;font-size:60px;line-height:60px;
   padding:10px 10px 10px 15px;margin:0;display:inline-block;}
-#run:hover {box-shadow:0 0 7px black;opacity:1}
+#run:hover {box-shadow:0 0 7px black;opacity:0.9}
+#run.pressed:hover { box-shadow: 0 0 14px black; opacity: 1; }
 #run .triangle {width:0;height:0;font-size:0;line-height:0;
   border-bottom:20px solid transparent;border-top:20px solid transparent;
   border-left:36px solid dodgerblue;}
