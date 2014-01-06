@@ -158,6 +158,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('devserver', ["proxymessage", "watch:dev"]);
   grunt.registerTask('compserver', ["proxymessage", "watch:comp"]);
-  grunt.registerTask("default", ["requirejs", "uglify", "qunit"]);
+  grunt.registerTask("default", ["requirejs", "replace", "uglify", "qunit"]);
 };
 
