@@ -13,16 +13,6 @@ module.exports = function(grunt) {
       options: {
         clean: true
       },
-      test: {
-        options: {
-          destPrefix: "test/lib"
-        },
-        files: {
-          "qunit.js" : "qunit/qunit/qunit.js",
-          "qunit.css" : "qunit/qunit/qunit.css",
-          "jquery.js" : "jquery/index.js",
-        }
-      },
       top: {
         options: {
           destPrefix: "site/top"
@@ -105,14 +95,24 @@ module.exports = function(grunt) {
     express: {
       options: {
         script: "dev/server.js",
-        background: true,
-        port: grunt.option('port')
+        port: grunt.option('port'),
+        output: 'listening'
       },
       dev: {
-        node_env: 'development'
+        options: {
+          node_env: 'development'
+        }
       },
       comp: {
-        node_env: 'compiled'
+        options: {
+          node_env: 'compiled'
+        }
+      },
+      test: {
+        options: {
+          node_env: 'compiled',
+          port: 8193
+        }
       }
     },
     watch: {
@@ -127,18 +127,25 @@ module.exports = function(grunt) {
         options: { atBegin: true, spawn: false }
       }
     },
-    qunit: {
-      all: ["test/*.html"]
+    mochaTest: {
+      test: {
+        src: ["test/*.js"],
+        options: {
+          timeout: 100000,
+          reporter: 'list',
+          colors: false 
+        }
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-mocha-test');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -158,6 +165,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('devserver', ["proxymessage", "watch:dev"]);
   grunt.registerTask('compserver', ["proxymessage", "watch:comp"]);
-  grunt.registerTask("default", ["requirejs", "replace", "uglify", "qunit"]);
+  grunt.registerTask('test', ["express:test", "mochaTest"]);
+  grunt.registerTask("default", ["requirejs", "replace", "uglify", "test"]);
 };
 

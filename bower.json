@@ -2,15 +2,12 @@
   "name": "pencilcode-site",
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
-  "devDependencies": {
+  "dependencies": {
     "iced-coffee-script": "maxtaco/coffee-script#iced2",
     "jquery": "http://code.jquery.com/jquery-1.11.0-beta3.js",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
-    "qunit": "latest",
     "lodash": "latest",
     "requirejs": "latest"
-  },
-  "dependencies": {
     "ace-builds": "PencilCode/pencilcode-ace-builds#master",
     "almond": "~0.2.7",
     "seedrandom": "~2.3.1"

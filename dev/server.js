@@ -41,7 +41,7 @@ function proxyPacGenerator(req, res, next) {
         hostDomain = (hostMatch && hostMatch[1]) || 'localhost',
         hostPort = (hostMatch && hostMatch[2]) || process.env.PORT;
     res.writeHead(200, {
-        'Content-Type': 'application/x-javascript-config'
+        'Content-Type': 'text/plain'
     });
     res.end(
         'function FindProxyForURL(url, host) {\n' +
@@ -57,8 +57,8 @@ function proxyPacGenerator(req, res, next) {
 }
 
 app.use(rewriteRules);
+console.log('using', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
 app.configure('development', function() {
-  console.log('using development mode');
   app.use(express.static(path.join(__dirname, '../site/top/src')));
 });
 app.use(express.static(path.join(__dirname, '../site/top')));
