@@ -185,11 +185,17 @@ module.exports = function(grunt) {
     }
   });
 
+  // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
+  // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
+  // "test" tests the compiled editor code.
   grunt.registerTask('test', ['express:test', 'mochaTest']);
+  // "devtest" tests the uncompiled source code.
   grunt.registerTask('devtest', ['express:devtest', 'mochaTest']);
+  // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
+  // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
 

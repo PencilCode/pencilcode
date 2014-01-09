@@ -70,7 +70,7 @@ describe('code editor', function() {
       assert.ifError(err);
       assert.equal(status, 'success');
       _page.evaluate(function() {
-        document.cookie='login; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
         localStorage.clear();
       }, function(err) {
         assert.ifError(err);
@@ -206,13 +206,13 @@ describe('code editor', function() {
     }, function() {
       try {
         // Wait for the notifcation butter bar to show
-        if (!$('#notification').is(':visible'))
-          return { poll: true, text: $('#notification').text(), fn: $('#filename').text() };
+        if (!$('#notification').is(':visible')) return;
         var lefttitle = $('.panetitle').filter(
             function() { return $(this).position().left == 0; });
         return {
           notification: $('#notification').text(),
-          lefttitle: lefttitle.text()
+          lefttitle: lefttitle.text(),
+          url: window.location.href
         };
       }
       catch(e) {
@@ -223,15 +223,16 @@ describe('code editor', function() {
       assert.ifError(result.error);
       assert.equal(result.notification, 'Using name ' + name + '.');
       assert.equal(result.lefttitle, name + ' code');
+      assert.equal(result.url,
+          'http://livetest.pencilcode.net.dev/edit/' + name);
       done();
     });
   });
-  /* Test in progress...
   it('should show login prompt when saving', function(done) {
     asyncTest(_page, 5000, null, function() {
       $('#save').click();
     }, function() {
-      if (!$('.login').is(':visible')) return { poll: true, lv: $('.login').length };
+      if (!$('.login').is(':visible')) return;
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),
@@ -247,5 +248,84 @@ describe('code editor', function() {
       done();
     });
   });
-  */
+  it('should reject the wrong password', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      $('.password').val('wrong');
+      $('.ok').click();
+    }, function() {
+      if (!$('.info').is(':visible')) return;
+      if ($('.info').text().match(/\.\.\./)) return;
+      return {
+        infotext: $('.info').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal('Wrong password.', result.infotext);
+      done();
+    });
+  });
+  it('should accept the right password', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      $('.password').val('test');
+      $('.ok').click();
+    }, function() {
+      if ($('#overlay').is(':visible')) return;
+      return {
+        notifytext: $('#notification').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal('Saved.', result.notifytext);
+      done();
+    });
+  });
+  it('should reload using the cookie when refreshed', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      $('body').hide();
+      window.location.reload();
+    }, function() {
+      if (!$('.editor').is(':visible')) return;
+      var ace_editor = ace.edit($('.editor').attr('id'));
+      if (!ace_editor.getValue()) return;
+      return {
+        loaded: ace_editor.getValue()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal("speed 10\npen blue\nrt 180, 100\n", result.loaded);
+      done();
+    });
+  });
+  it('should delete when empty is saved', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      var ace_editor = ace.edit($('.editor').attr('id'));
+      ace_editor.getSession().setValue('');
+      $('#save').mousedown();
+      $('#save').click();
+    }, function() {
+      if (!$('#notification').is(':visible')) return;
+      if ($('#notification').hasClass('loading')) return;
+      return {
+        notifytext: $('#notification').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal("Deleted " + name + ".", result.notifytext);
+      done();
+    });
+  });
+  it('is done', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      localStorage.clear();
+      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    }, function() {
+      return {
+        cookie: document.cookie
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(!/login=/.test(result.cookie));
+      done();
+    });
+  });
 });

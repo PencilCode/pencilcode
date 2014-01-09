@@ -11,6 +11,13 @@ function hasBackup(filename) {
   return ('backup:' + filename) in window.localStorage;
 }
 
+function isOnline() {
+  // PhantomJS (headless testing) gets this wrong.
+  // https://github.com/ariya/phantomjs/issues/10647
+  return window.navigator.onLine ||
+         null != window.navigator.userAgent.match(/PhantomJS/);
+}
+
 function loadBackup(filename, annotation) {
   try {
     var result = JSON.parse(window.localStorage['backup:' + filename]);
@@ -27,16 +34,14 @@ function saveBackup(filename, msg) {
   if (!window.localStorage) return;
   try {
     window.localStorage['backup:' + filename] = JSON.stringify(msg);
-  } catch(e) {
-  }
+  } catch(e) { }
 }
 
 function deleteBackup(filename) {
   if (!window.localStorage) return;
   try {
     delete window.localStorage['backup:' + filename];
-  } catch(e) {
-  }
+  } catch(e) { }
 }
 
 function deleteBackupPrefix(filename) {
@@ -116,8 +121,7 @@ window.pencilcode.storage = {
       }, 0);
       return;
     }
-    if (!ignoreBackup && false === window.navigator.onLine &&
-        hasBackup(filename)) {
+    if (!ignoreBackup && !isOnline() && hasBackup(filename)) {
       // If the user is offline, then the cached backup is returned
       // marked with {offline:true}.
       setTimeout(function() {
@@ -188,7 +192,7 @@ window.pencilcode.storage = {
     } else {
       saveBackup(filename, msg);
     }
-    if (backupOnly || (false === window.navigator.onLine)) {
+    if (backupOnly || !isOnline()) {
       // If the user is offline or the backupOnly flag is set, then we're done.
       // The return status is backup:true if backupOnly and offline:true
       // otherwise.

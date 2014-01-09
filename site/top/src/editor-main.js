@@ -367,6 +367,8 @@ function saveAction(forceOverwrite) {
           '<a href="#overwrite" id="overwrite">Overwrite</a>?');
     } else if (status.transient) {
       view.flashNotification('Network down.  Local backup made.');
+    } else if (status.offline) {
+      view.flashNotification('Offline.  Local backup made.');
     } else if (status.error) {
       view.flashNotification(status.error);
     } else if (status.deleted) {
