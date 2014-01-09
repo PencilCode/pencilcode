@@ -132,6 +132,12 @@ def application(env, start_response):
       badwords = f.read().splitlines()
     if any(word in badwords for word in [normalized, normalizedi, normalizedl]):
       errorexit('Username is reserved.')
+    with open(os.path.join(progpath, 'bad-substrings.txt')) as f:
+      badsubstrings = f.read().splitlines()
+    if any(substring in word
+         for word in [normalized, normalizedi, normalizedl]
+         for substring in badsubstrings):
+      errorexit('Username is reserved.')
     return
 
   try:
