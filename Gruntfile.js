@@ -1,56 +1,56 @@
 var os=require('os');
 
 module.exports = function(grunt) {
-  "use strict";
+  'use strict';
 
   grunt.option.init({
     port: 8008
   });
 
   grunt.initConfig({
-    pkg: grunt.file.readJSON("package.json"),
+    pkg: grunt.file.readJSON('package.json'),
     bowercopy: {
       options: {
         clean: true
       },
       top: {
         options: {
-          destPrefix: "site/top"
+          destPrefix: 'site/top'
         },
         files: {
-          "jquery.js" : "jquery/index.js",
-          "iced-coffee-script.js": "iced-coffee-script/extras/coffee-script.js",
-          "jquery-turtle.js": "jquery-turtle/jquery-turtle.js",
-          "lodash.js": "lodash/dist/lodash.js",
-          "seedrandom.js": "seedrandom/seedrandom.js"
+          'jquery.js' : 'jquery/index.js',
+          'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
+          'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
+          'lodash.js': 'lodash/dist/lodash.js',
+          'seedrandom.js': 'seedrandom/seedrandom.js'
         }
       },
       lib: {
         options: {
-          destPrefix: "site/top/lib"
+          destPrefix: 'site/top/lib'
         },
         files: {
-          "ace" : "ace-builds/src-min-noconflict"
+          'ace' : 'ace-builds/src-min-noconflict'
         }
       },
       src: {
         options: {
-          destPrefix: "site/top/src"
+          destPrefix: 'site/top/src'
         },
         files: {
-          "require.js": "requirejs/require.js",
-          "almond.js": "almond/almond.js"
+          'require.js': 'requirejs/require.js',
+          'almond.js': 'almond/almond.js'
         }
       }
     },
     requirejs: {
       compile: {
         options: {
-          baseUrl: "site/top",
-          deps: ["src/editor-main"],
+          baseUrl: 'site/top',
+          deps: ['src/editor-main'],
           name: 'src/almond',
-          out: "site/top/editor.js",
-          mainConfigFile: "site/top/src/editor-main.js",
+          out: 'site/top/editor.js',
+          mainConfigFile: 'site/top/src/editor-main.js',
           preserveLicenseComments: false
         }
       }
@@ -68,24 +68,24 @@ module.exports = function(grunt) {
         files: [ {
           expand: true,
           flatten: true,
-          src: [ "site/top/src/editor.html" ],
-          dest: "site/top"
+          src: [ 'site/top/src/editor.html' ],
+          dest: 'site/top'
         } ]
       }
     },
     uglify: {
       all: {
         files: {
-          "site/top/turtlebits.js": [
-            "site/top/iced-coffee-script.js",
-            "site/top/jquery.js",
-            "site/top/jquery-turtle.js",
-            "site/top/lodash.js"
+          'site/top/turtlebits.js': [
+            'site/top/iced-coffee-script.js',
+            'site/top/jquery.js',
+            'site/top/jquery-turtle.js',
+            'site/top/lodash.js'
           ]
         },
         options: {
           preserveComments: false,
-          report: "min",
+          report: 'min',
           beautify: {
             ascii_only: true
           }
@@ -94,7 +94,7 @@ module.exports = function(grunt) {
     },
     express: {
       options: {
-        script: "dev/server.js",
+        script: 'dev/server.js',
         port: grunt.option('port'),
         output: 'listening'
       },
@@ -117,23 +117,23 @@ module.exports = function(grunt) {
     },
     watch: {
       dev: {
-        files: ["dev/server.js"],
+        files: ['dev/server.js'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ["dev/server.js"],
+        files: ['dev/server.js'],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }
     },
     mochaTest: {
       test: {
-        src: ["test/*.js"],
+        src: ['test/*.js'],
         options: {
           timeout: 100000,
           reporter: 'list',
-          colors: false 
+          colors: false
         }
       }
     }
@@ -151,8 +151,9 @@ module.exports = function(grunt) {
     var port = grunt.option('port');
     var ifaces = os.networkInterfaces();
     grunt.log.writeln(
-      'Point your browser proxy autoconfig to one of these, and then use\n' +
-      'the dev server by visiting http://pencilcode.net.dev/');
+      'Point your browser proxy autoconfig to one of these (or download\n' +
+      'a local copy of one of these proxy.pacs).  Then the dev server\n' +
+      'can be used at http://pencilcode.net.dev/');
     for (var dev in ifaces) {
       ifaces[dev].forEach(function(details) {
         if (details.family == 'IPv4') {
@@ -163,9 +164,9 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('devserver', ["proxymessage", "watch:dev"]);
-  grunt.registerTask('compserver', ["proxymessage", "watch:comp"]);
-  grunt.registerTask('test', ["express:test", "mochaTest"]);
-  grunt.registerTask("default", ["requirejs", "replace", "uglify", "test"]);
+  grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
+  grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
+  grunt.registerTask('test', ['express:test', 'mochaTest']);
+  grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
 

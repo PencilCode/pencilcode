@@ -81,7 +81,7 @@ describe('top edit directory', function() {
       return dirs.join(' ');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(!/ abc123 .* cody .* david .* guide .* piper .* zog /
+      assert.ok(/ david .* abc123 /
           .test(result));
       done();
     });

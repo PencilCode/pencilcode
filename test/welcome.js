@@ -11,7 +11,7 @@ describe('dev server', function() {
       _ph = ph;
       _ph.createPage(function(err,page) {
         _page = page;
-        page.open('http://localhost:8193', function(err, status){
+        page.open('about:blank', function(err, status){
           assert.ifError(err);
           assert.equal(status,'success');
           done();
