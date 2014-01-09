@@ -79,8 +79,6 @@ window.pencilcode.view = {
   rotateLeft: rotateLeft,
   // Sets buttons.
   showButtons: showButtons,
-  isChecked: function(id) { return $('#' + id).is(':checked'); },
-  setChecked: function(id, c) { return $('#' + id).prop('checked', c); },
   enableButton: enableButton,
   // Notifications
   flashNotification: flashNotification,
@@ -228,7 +226,7 @@ function flashNotification(text, loading) {
     $(window).off('.flashNotification');
     $('body').on('blur.flashNotification ' +
         'mousedown.flashNotification keydown.flashNotification', hidefunc);
-    $(window).on('resize.flashNotification ' + 
+    $(window).on('resize.flashNotification ' +
         'popstate.flashNotification', hidefunc);
     n();
   });

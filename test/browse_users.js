@@ -19,7 +19,7 @@ function pollPage(page, timeout, predicate, callback) {
   })();
 }
 
-describe('top edit directory', function() {
+describe('browse users in edit mode', function() {
   var _ph, _page;
   before(function(done) {
     phantom.create(function(error, ph) {
@@ -41,14 +41,14 @@ describe('top edit directory', function() {
   after(function() {
     _ph.exit();
   });
-  it('should visit the browse-users page', function(done) {
+  it('can open', function(done) {
     _page.open('http://pencilcode.net.dev/edit/', function(err, status){
       assert.ifError(err);
       assert.equal(status, 'success');
       done();
     });
   });
-  it('should show lots of users', function(done) {
+  it('should have lots of users', function(done) {
     pollPage(_page, 5000, function() {
       if (!$('.directory').length) return;
       var dirs = [];
@@ -60,7 +60,7 @@ describe('top edit directory', function() {
       done();
     });
   });
-  it('should show users in alpha order', function(done) {
+  it('should list users in alpha order', function(done) {
     pollPage(_page, 5000, function() {
       var dirs = [];
       $('#byname').click();
@@ -73,7 +73,7 @@ describe('top edit directory', function() {
       done();
     });
   });
-  it('should show users in date order', function(done) {
+  it('should list users in date order', function(done) {
     pollPage(_page, 5000, function() {
       var dirs = [];
       $('#bydate').click();

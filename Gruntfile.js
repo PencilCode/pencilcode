@@ -92,6 +92,20 @@ module.exports = function(grunt) {
         }
       }
     },
+    concat: {
+      all: {
+        src: [
+          'site/top/iced-coffee-script.js',
+          'site/top/jquery.js',
+          'site/top/jquery-turtle.js',
+          'site/top/lodash.js'
+        ],
+        dest: 'site/top/turtlebits.js'
+      },
+      options: {
+        separator: ';'
+      }
+    },
     express: {
       options: {
         script: 'dev/server.js',
@@ -106,6 +120,12 @@ module.exports = function(grunt) {
       comp: {
         options: {
           node_env: 'compiled'
+        }
+      },
+      devtest: {
+        options: {
+          node_env: 'development',
+          port: 8193
         }
       },
       test: {
@@ -140,6 +160,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-replace');
@@ -167,6 +188,8 @@ module.exports = function(grunt) {
   grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   grunt.registerTask('test', ['express:test', 'mochaTest']);
+  grunt.registerTask('devtest', ['express:devtest', 'mochaTest']);
+  grunt.registerTask('debug', ['concat', 'devtest']);
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
 
