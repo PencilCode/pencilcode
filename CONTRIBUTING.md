@@ -11,8 +11,9 @@ grunt
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
-The prerequisites are a standard node.js development environment:
-git, nodejs, and grunt, and they are pretty easy to install.
+The prerequisites are a standard node.js development environment,
+which is very widely used.  They are pretty easy to install,
+and if you have trouble, there is a lot of advice on the net.
 
 For example, on Ubuntu, to get the prereqs, just:
 
@@ -22,6 +23,9 @@ sudo apt-get install nodejs
 sudo npm install -g grunt-cli
 </pre>
 
+On debian, get node.js by building it as described here:
+https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
+
 On the Mac, git comes from Apple (just agree to their license),
 and node.js can be installed from http://nodejs.org/download/.
 
@@ -30,7 +34,8 @@ http://git-scm.com/download/win and node.js can be installed
 from here: http://nodejs.org/download/.
 
 Because node.js does not work on cygwin, when I work with node.js
-on a Windows box, I just run debian under https://www.virtualbox.org/.
+on a Windows box, I just run it with debian under a vbox instance
+https://www.virtualbox.org/.
 
 
 How To Experiment with PencilCode
@@ -119,3 +124,37 @@ The PencilCode editor is broken into three main pieces:
 
 The view and the main logic are a bit large and probably should
 be refactored into further smaller pieces.
+
+Roadmap
+=======
+
+Improvements we'd like to make in PencilCode are in several basic
+directions:
+
+1. Better Debugging.  That means highlighting lines as they run,
+   ultimately giving kids the ability to stop and step programs,
+   and visualize their program state (their variables).
+2. A Block Language.  That means something like blockly, or maybe
+   something new.  The goal is to make it easy to use on the tablet
+   while also making it easy for beginners to quickly build
+   programs by multiple-choice.
+3. Richer Libraries.  The turtle is fun, but we want to point the
+   way for students to do many other things: 3d, math, games,
+   presentations, music, and so on.
+4. A Learning Framework.  Students should be given more guidance
+   on which concepts to learn next.  This could be in the form of
+   automatic tips, better editor warning messages, exercises, or
+   just better (e.g., more visual) navigation throught he site.
+5. Community Tools.  The site has grown to more than 1000 users
+   pretty quickly.  There should be ways to leave comments on
+   on other peoples' sites.  The UI for creating URLs to share
+   your work should be easier.  And it should be easier to do basic
+   things like change your website name, or find your site once
+   you have forgotten its name.
+6. Better UI.  Lots of little examples.  Here is one: instead of
+   navigating projects by name only, it should be possible to
+   navigate them visually.  After you run a project, we should
+   capture a bitmap of the drawing and serve thumbnails.
+
+We are always looking for more ideas too.
+
