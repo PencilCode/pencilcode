@@ -3323,31 +3323,46 @@ var turtlefn = {
     // further animations, they are inserted at the same location,
     // so that the callback can expand into several animations,
     // just as an ordinary function call expands into its subcalls.
-    function enqueue(elem, index) {
-       var animation = (function() {
-            var saved = $.queue(this, qname),
-                subst = [], inserted;
-            if (saved[0] === 'inprogress') {
-              subst.unshift(saved.shift());
-            }
-            $.queue(elem, qname, subst);
-            action();
-            // The Array.prototype.push is faster.
-            // $.merge($.queue(elem, qname), saved);
-            Array.prototype.push.apply($.queue(elem, qname), saved);
-            $.dequeue(elem, qname);
-          }),
-          action = animation.finish = (args ?
-          (function() { callback.apply($(elem), args); }) :
-          (function() { callback.call($(elem), index, elem); }));
-      $.queue(elem, qname, animation);
+    function enqueue(elem, index, elemqueue) {
+      var action = (args ?
+            (function() { callback.apply($(elem), args); }) :
+            (function() { callback.call($(elem), index, elem); })),
+          lastanim = elemqueue.length && elemqueue[elemqueue.length - 1],
+          animation;
+      if (lastanim && lastanim.plan && lastanim.plan.length < 128) {
+        // If the last animation was a plan object, then add the
+        // action to the internal queue of the plan object instead
+        // of the fx queue.  This lets us batch up 128 plans at a time.
+        lastanim.plan.push(action);
+      } else {
+        animation = (function() {
+          var saved = $.queue(this, qname),
+              subst = [], inserted;
+          if (saved[0] === 'inprogress') {
+            subst.unshift(saved.shift());
+          }
+          $.queue(elem, qname, subst);
+          while (animation.plan.length) {
+            (animation.plan.shift())();
+          }
+          // The Array.prototype.push is faster.
+          // $.merge($.queue(elem, qname), saved);
+          Array.prototype.push.apply($.queue(elem, qname), saved);
+          // Insert a timeout after executing a batch of plans,
+          // to avoid deep recursion.
+          setTimeout(function() { $.dequeue(elem, qname); }, 0);
+        });
+        animation.plan = [action];
+        $.queue(elem, qname, animation);
+      }
     }
     var elem, sel, length = this.length, j = 0;
     for (; j < length; ++j) {
       elem = this[j];
       // Queue an animation if there is a queue.
-      if ($.queue(elem, qname).length) {
-        enqueue(elem, j);
+      var elemqueue = $.queue(elem, qname);
+      if (elemqueue.length) {
+        enqueue(elem, j, elemqueue);
       } else if (args) {
         callback.apply($(elem), args);
       } else {
