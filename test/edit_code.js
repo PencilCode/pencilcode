@@ -146,7 +146,8 @@ describe('code editor', function() {
       assert.equal("", result.text);
       assert.equal("filename", result.activeid);
       assert.equal(1, result.preview);
-      assert.ok(result.login + result.logout == 1);
+      assert.ok(result.login);
+      assert.ok(!result.logout);
       assert.equal(!result.login, result.saved);
       done();
     });
@@ -299,13 +300,15 @@ describe('code editor', function() {
         if (!ace_editor.getValue()) return;
         return {
           url: window.location.href,
-          loaded: ace_editor.getValue()
+          loaded: ace_editor.getValue(),
+          cookie: document.cookie
         };
       }, function(err, result) {
         assert.ifError(err);
         assert.equal(result.url,
             'http://livetest.pencilcode.net.dev/edit/' + name);
         assert.equal("speed 10\npen blue\nrt 180, 100\n", result.loaded);
+        assert.ok(/login=/.test(result.cookie));
         done();
       });
     });
@@ -320,11 +323,34 @@ describe('code editor', function() {
       if (!$('#notification').is(':visible')) return;
       if ($('#notification').hasClass('loading')) return;
       return {
-        notifytext: $('#notification').text()
+        notifytext: $('#notification').text(),
+        login: $('#login').is(':visible'),
+        logout: $('#logout').is(':visible')
       };
     }, function(err, result) {
       assert.ifError(err);
       assert.equal("Deleted " + name + ".", result.notifytext);
+      assert.ok(!result.login);
+      assert.ok(result.logout);
+      done();
+    });
+  });
+  it('should log out when logout is pressed', function(done) {
+    asyncTest(_page, 5000, null, function() {
+      $('#logout').mousedown();
+      $('#logout').click();
+    }, function() {
+      if (!$('#notification').is(':visible')) return;
+      return {
+        notifytext: $('#notification').text(),
+        login: $('#login').is(':visible'),
+        cookie: document.cookie
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal("Logged out.", result.notifytext);
+      assert.ok(result.login);
+      assert.ok(!/login=/.test(result.cookie));
       done();
     });
   });
