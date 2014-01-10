@@ -12,26 +12,37 @@ grunt
 
 Development can be done on Linux, Mac, or Windows.
 The prerequisites are a standard node.js development environment,
-which is very widely used.  They are pretty easy to install,
-and if you have trouble, there is a lot of advice on the net.
+which is very widely used.
 
-For example, on Ubuntu, to get the prereqs, just:
+First, git.  On Linux, just "sudo apt-get install git" or
+"sudo yum install git-core" if you don't have it.
+
+The Ubuntu and Debian packages for node.js are pretty old, so don't
+just apt-get install the packages.  Get and build the latest "node" and
+"npm" and "grunt" binaries as follows:
 
 <pre>
-sudo apt-get install git
-sudo apt-get install nodejs
-sudo npm install -g grunt-cli
+mkdir -p /tmp/nodejs && cd /tmp/nodejs
+wget -N http://nodejs.org/dist/node-latest.tar.gz
+tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
+./configure --prefix=$HOME/local
+make install
+echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.bashrc
+source ~/.bashrc
+npm install -g grunt-cli
 </pre>
 
-On debian, get node.js by building it as described here:
-https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager
+The above drops all the built binaries into ~/local/bin so you
+don't need root.
 
 On the Mac, git comes from Apple (just agree to their license),
 and node.js can be installed from http://nodejs.org/download/.
+You will need to "sudo npm install -g grunt-cli".
 
 On Windows, git can be installed from here:
 http://git-scm.com/download/win and node.js can be installed
-from here: http://nodejs.org/download/.
+from here: http://nodejs.org/download/.  Windows development
+is untested.
 
 Because node.js does not work on cygwin, when I work with node.js
 on a Windows box, I just run it with debian under a vbox instance
