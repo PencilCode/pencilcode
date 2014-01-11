@@ -991,28 +991,26 @@ function getCenterInPageCoordinates(elem) {
   } else if (elem.nodeType === 9 || elem == document.body) {
     return getRoundedCenterLTWH(0, 0, dw(), dh());
   }
-  var state = getTurtleData(elem),
-      // Doing this check is 40% of the cost of drawing at speed Infinity
-      // and in most cases it could be skipped.  Should it be removed?
-      totalParentTransform = totalTransform2x2(elem.parentElement),
-      simple = isone2x2(totalParentTransform);
-  if (false && state && state.quickpagexy && simple) {
+  var state = getTurtleData(elem);
+  if (state && state.quickpagexy && state.down) {
     return state.quickpagexy;
   }
   var tr = getElementTranslation(elem),
-      inverseParent = inverse2x2(totalParentTransform),
+      totalParentTransform = totalTransform2x2(elem.parentElement),
+      simple = isone2x2(totalParentTransform),
+      inverseParent = simple ? null : inverse2x2(totalParentTransform),
       hidden = ($.css(elem, 'display') === 'none'),
       swapout = hidden ?
         { position: "absolute", visibility: "hidden", display: "block" } : {},
-      st = swapout[transform] = (inverseParent ?
-          'matrix(' + $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
+      st = swapout[transform] = (!inverseParent ? 'none' :
+          'matrix(' + $.map(inverseParent, cssNum).join(', ') + ', 0, 0)'),
       saved = elem.style[transform],
       gbcr = cleanSwap(elem, swapout, readPageGbcr),
       middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
       origin = addVector([gbcr.left, gbcr.top], middle),
       pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
       result = { pageX: pos[0], pageY: pos[1] };
-  if (simple) {
+  if (state && simple && state.down) {
     state.quickpagexy = result;
   }
   return result;
@@ -1671,9 +1669,13 @@ function makePenDownHook() {
     set: function(elem, value) {
       var style = parsePenDown(value);
       if (style === undefined) return;
-      getTurtleData(elem).down = style;
-      elem.style.turtlePenDown = writePenDown(style);
-      flushPenState(elem);
+      var state = getTurtleData(elem);
+      if (style != state.down) {
+        state.down = style;
+        state.quickpagexy = null;
+        elem.style.turtlePenDown = writePenDown(style);
+        flushPenState(elem);
+      }
     }
   };
 }
@@ -2212,12 +2214,6 @@ function maybeArcRotation(end, elem, ts, opt) {
   r1r = convertToRadians(end);
   dx = dc[0] - Math.cos(r1r) * radius;
   dy = dc[1] - Math.sin(r1r) * radius;
-  if (state && (qpxy = state.quickpagexy)) {
-    state.quickpagexy = {
-      pageX: qpxy.pageX + dx,
-      pageY: qpxy.pageY + dy
-    };
-  }
   ts.tx += dx;
   ts.ty += dy;
   opt.displace = true;
@@ -2620,6 +2616,14 @@ function globalhelp(obj) {
 }
 globalhelp.helptext = [];
 
+function canMoveInstantly(sel) {
+  var atime, elem;
+  // True if the selector names a single element with no animtation
+  // queue and currently moving at speed Infinity.
+  return (sel.length == 1 && $.queue(elem = sel[0]).length == 0 &&
+        ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0)) && elem;
+}
+
 var turtlefn = {
   rt: wraphelp(
   ["<u>rt(degrees)</u> Right turn. Pivots clockwise by some degrees: " +
@@ -2630,24 +2634,11 @@ var turtlefn = {
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
-    var elem, q, doqueue, atime;
-    if (this.length == 1 &&
-        ((atime = animTime(elem = this[0])) === 0 ||
-          $.fx.speeds[atime] === 0) &&
-         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      q = $.queue(elem);
-      doqueue = (q.length > 0);
-      function dorotate() {
-        fixOriginIfWatching(elem);
-        doQuickRotate(elem, degrees);
-        if (doqueue) { $.dequeue(elem); }
-      }
-      if (doqueue) {
-        domove.finish = domove;
-        q.push(domove);
-      } else {
-        dorotate();
-      }
+    var elem;
+    if ((elem = canMoveInstantly(this)) &&
+        (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      fixOriginIfWatching(elem);
+      doQuickRotate(elem, degrees);
       return this;
     }
     if (radius == null) {
@@ -2676,23 +2667,11 @@ var turtlefn = {
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
-    if (this.length == 1 &&
-        ((atime = animTime(elem = this[0])) === 0 ||
-          $.fx.speeds[atime] === 0) &&
-         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      q = $.queue(elem);
-      doqueue = (q.length > 0);
-      function dorotate() {
-        fixOriginIfWatching(elem);
-        doQuickRotate(elem, -degrees);
-        if (doqueue) { $.dequeue(elem); }
-      }
-      if (doqueue) {
-        domove.finish = domove;
-        q.push(domove);
-      } else {
-        dorotate();
-      }
+    var elem;
+    if ((elem = canMoveInstantly(this)) &&
+        (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      fixOriginIfWatching(elem);
+      doQuickRotate(elem, -degrees);
       return this;
     }
     if (radius == null) {
@@ -2719,23 +2698,10 @@ var turtlefn = {
     if (amount == null) {
       amount = 100;  // zero-argument default.
     }
-    var elem, q, doqueue, atime;
-    if (this.length == 1 &&
-        ((atime = animTime(elem = this[0])) === 0 ||
-          $.fx.speeds[atime] === 0)) {
-      q = $.queue(elem);
-      doqueue = (q.length > 0);
-      function domove() {
-        fixOriginIfWatching(elem);
-        doQuickMove(elem, amount, 0);
-        if (doqueue) { $.dequeue(elem); }
-      }
-      if (doqueue) {
-        domove.finish = domove;
-        q.push(domove);
-      } else {
-        domove();
-      }
+    var elem;
+    if ((elem = canMoveInstantly(this))) {
+      fixOriginIfWatching(elem);
+      doQuickMove(elem, amount, 0);
       return this;
     }
     return this.plan(function(j, elem) {
@@ -2861,14 +2827,16 @@ var turtlefn = {
     return this.plan(function(j, elem) {
       if ($.isWindow(elem) || elem.nodeType === 9) return;
       // turnto bearing: just use the given absolute.
-      var limit = null, ts, r,
+      var limit = null, ts, r, centerpos,
           targetpos = null, nlocalxy = null;
       if ($.isNumeric(bearing)) {
         r = convertToRadians(bearing);
         fixOriginIfWatching(elem);
-        targetpos = getCenterInPageCoordinates(elem);
-        targetpos.pageX += Math.sin(r) * 1024;
-        targetpos.pageY -= Math.cos(r) * 1024;
+        centerpos = getCenterInPageCoordinates(elem);
+        targetpos = {
+          pageX: centerpos.pageX + Math.sin(r) * 1024,
+          pageY: centerpos.pageY - Math.cos(r) * 1024
+        };
         limit = y;
       } else if ($.isArray(bearing)) {
         nlocalxy = computePositionAsLocalOffset(elem);
@@ -3138,7 +3106,8 @@ var turtlefn = {
   function pagexy() {
     if (!this.length) return;
     fixOriginIfWatching(this[0]);
-    return getCenterInPageCoordinates(this[0]);
+    var internal = getCenterInPageCoordinates(this[0]);
+    return { pageX: internal.pageX, pageY: internal.pageY };
   }),
   getxy: wraphelp(
   ["<u>getxy()</u> Graphing coordinates [x, y], center-based: " +
@@ -5263,7 +5232,7 @@ function summary(obj, maxlen) {
   }
   var pieces = [];
   if (vt == 'Array' && obj.length < maxlen) {
-    var identical = (obj.length > 1);
+    var identical = (obj.length >= 5);
     var firstobj = identical && obj[0];
     for (var j = 0; j < obj.length; ++j) {
       if (identical && obj[j] !== firstobj) { identical = false; }
