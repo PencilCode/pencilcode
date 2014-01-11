@@ -1,17 +1,8 @@
-<!doctype html>
-<html>
-<head>
-<title>Pencil Code Editor</title>
-<meta charset="utf-8">
-<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500,600">
-<link rel="stylesheet" href="editor.css">
-
-<style>
 * {box-sizing:border-box;}
 body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #overlay{position:absolute;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.1);display:none;z-index:2}
-#overlay .login{position:absolute;right:12px;top:68px;
+#overlay .logindialog{position:absolute;right:12px;top:68px;
   border:none;background-color:white;box-shadow:0 0 7px black;color:black;
   border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
   padding:12px;font-weight:300;text-align:center;width:320px;overflow:hidden;}
@@ -52,11 +43,11 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #topright button:not([disabled]):hover,#overlay button:not([disabled]):hover {
   box-shadow:0 0 7px black}
 #filename[contentEditable]:hover {box-shadow:0 0 3px sienna;}
-#owner,#filename,#icon{display:inline-block;vertical-align:middle;
+#owner,#filename,#folder{display:inline-block;vertical-align:middle;
   color:saddlebrown;max-width:90%;max-height:56px;overflow:hidden;
   word-break:break-all;white-space:normal;border:0;}
 #owner{color:black;}
-#icon {margin:0 12px;}
+#folder{margin:0 12px;}
 .helplink { cursor: help; }
 .helplink:hover { text-decoration: underline; color: blue; }
 .panetitle{position:absolute;top:56px;height:28px;background:dodgerblue;
@@ -90,7 +81,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 .panetitle,#owner{user-select:none;-webkit-user-select:none;
   -moz-user-select:none;cursor:default;}
 #owner:hover{text-decoration:underline;}
-#icon:hover{border-radius:3px;box-shadow:0 0 6px black;}
+#folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
 .editor{position:absolute:top:0;height:100%;left:0;width:100%;
   background-color:white;font:24px "Source Code Pro";font-weight:600;}
 #pencilcode .ace_editor {
@@ -114,84 +105,3 @@ body#pencilcode #diigolet-csm {
 .directory .create:hover {text-decoration:underline;}
 .directory .item:hover{text-decoration:underline;}
 .loading,#notification.loading{padding:0;box-shadow:0 0 7px gray;width:32px;height:32px;border-radius:16px;background-position:center;background-repeat:no-repeat;opacity:0.7;background-color:white;background-image:url(data:image/gif;base64,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);}
-</style>
-<link rel="stylesheet" type="text/css" href="/lib/tooltipster/css/tooltipster.css">
-</head>
-<body id="pencilcode">
-<div id="overflow">
-<div id="overlay"></div>
-<div id="notification"><div><div></div></div></div>
-<div id="middle"><div></div></div>
-<table id="top" width="100%"><tr><td id="topleft"><nobr><a href="/edit/"><span id="owner" title="Top directory."><script>
-(function() {
-// Fast fixup: framebust and url-based title.
-if (top != self) { top.location.replace(self.location.href); }
-var owner = location.host.replace(/\.[^.]*.{7}$/, '');
-document.write(owner);
-owner = owner.replace(/\..*/, '');
-var title = location.pathname.replace(/\/$/, '').replace(/^\/edit(.*\/)?/, '');
-if (!title) { title = owner; } else { title += ' (' + owner + ')'; }
-if (title) { document.title = title; }
-})();
-</script></span></a><a href="../"><img id="icon" title="Parent directory." src="/pencil_32.png"
-height="32" width="32"
-></a><script>
-function htmlEscape(s){return s.replace(/[<>&]/g,function(c){return
-c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
-document.write('<span id="filename" title="Edit to move or rename.">' +
-htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
-'</span>');
-</script></nobr></td>
-<td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
-<div id="alphatitle" class="back panetitle"></div>
-<div id="alpha" class="back pane"></div>
-<div id="bravotitle" class="left panetitle" style="width:100%"></div>
-<div id="bravo" class="left pane" style="width:100%"
-><div class="vcenter"><div class="hcenter"
-><div class="loading"></div></div></div></div>
-<div id="charlietitle" class="right panetitle" style="left:100%"></div>
-<div id="charlie" class="right pane" style="left:100%"></div>
-</div><!-- end clip -->
-<script>
-window.pencilcode = {
-  domain: window.location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2')
-};
-// These script urls are constructed so that we can direct to the owner domain
-// that has a nicely cached copy of the script rather than relying on
-// an HTTP 302 redirect, which requires an extra round-trip.
-(function() {
-  var scripts = [
-    '//' + window.pencilcode.domain + '/jquery.js',
-    '//' + window.pencilcode.domain + '/seedrandom.js',
-    '//' + window.pencilcode.domain + '/see.js',
-    '/lib/ace/ace.js', // local URL for same-origin due to web-worker
-    '//' + window.pencilcode.domain +
-        '/lib/tooltipster/js/jquery.tooltipster.min.js'
-  ];
-  for (var j = 0; j < scripts.length; ++j) {
-    document.write(
-        '<script type="text/javascript" src="' + scripts[j] + '"></' +
-        'script>');
-  }
-})();
-</script>
-<script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
-<script src="/jquery.js"></script>
-<script src="/lib/tooltipster/js/jquery.tooltipster.min.js"></script>
-<script src="/seedrandom.js"></script>
-<script src="/see.js"></script>
-<script src="/lib/editor-view.js"></script>
-<script src="/lib/editor-storage.js"></script>
-<script src="/lib/editor-control.js"></script>
-<script>
-$('#owner,#filename,#icon').tooltipster();
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-45359764-1', window.pencilcode.domain);
-ga('send', 'pageview');
-</script>
-</body>
-</html>
-
