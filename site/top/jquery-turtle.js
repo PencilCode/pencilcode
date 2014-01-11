@@ -364,7 +364,8 @@ THE SOFTWARE.
 var undefined = void 0,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
-    Pencil, Turtle;
+    Pencil, Turtle,
+    global_plan_counter = 0;
 
 function __extends(child, parent) {
   for (var key in parent) {
@@ -990,8 +991,15 @@ function getCenterInPageCoordinates(elem) {
   } else if (elem.nodeType === 9 || elem == document.body) {
     return getRoundedCenterLTWH(0, 0, dw(), dh());
   }
-  var tr = getElementTranslation(elem),
+  var state = getTurtleData(elem),
+      // Doing this check is 40% of the cost of drawing at speed Infinity
+      // and in most cases it could be skipped.  Should it be removed?
       totalParentTransform = totalTransform2x2(elem.parentElement),
+      simple = isone2x2(totalParentTransform);
+  if (false && state && state.quickpagexy && simple) {
+    return state.quickpagexy;
+  }
+  var tr = getElementTranslation(elem),
       inverseParent = inverse2x2(totalParentTransform),
       hidden = ($.css(elem, 'display') === 'none'),
       swapout = hidden ?
@@ -1002,11 +1010,12 @@ function getCenterInPageCoordinates(elem) {
       gbcr = cleanSwap(elem, swapout, readPageGbcr),
       middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
       origin = addVector([gbcr.left, gbcr.top], middle),
-      pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin);
-  return {
-    pageX: pos[0],
-    pageY: pos[1]
-  };
+      pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
+      result = { pageX: pos[0], pageY: pos[1] };
+  if (simple) {
+    state.quickpagexy = result;
+  }
+  return result;
 }
 
 function polyToVectorsOffset(poly, offset) {
@@ -1597,6 +1606,7 @@ function getTurtleData(elem) {
       speed: 'turtle',
       easing: 'swing',
       turningRadius: 0,
+      quickpagexy: null,
       // Below: support for image loading without messing up origin.
       lastSeenOrigin: null,
       lastSeenOriginTime: null,
@@ -1717,7 +1727,7 @@ function drawAndClearPath(path, style, scale) {
   // Scale up lineWidth by sx.  (TODO: consider parent transforms.)
   applyPenStyle(ctx, style, scale);
   while (j--) {
-    if (path[j].length) {
+    if (path[j].length > 1) {
       segment = path[j];
       isClosed = segment.length > 2 && isPointNearby(
           segment[0], segment[segment.length - 1]);
@@ -1969,16 +1979,31 @@ function doQuickMove(elem, distance, sideways) {
       scaledDistance = ts && (distance * ts.sy),
       scaledSideways = ts && ((sideways || 0) * ts.sy),
       dy = -Math.cos(r) * scaledDistance,
-      dx = Math.sin(r) * scaledDistance;
+      dx = Math.sin(r) * scaledDistance,
+      state = $.data(elem, 'turtleData'),
+      qpxy;
   if (!ts) { return; }
   if (sideways) {
     dy += Math.sin(r) * scaledSideways;
     dx += Math.cos(r) * scaledSideways;
   }
+  if (state && (qpxy = state.quickpagexy)) {
+    state.quickpagexy = {
+      pageX: qpxy.pageX + dx,
+      pageY: qpxy.pageY + dy
+    };
+  }
   ts.tx += dx;
   ts.ty += dy;
   elem.style[transform] = writeTurtleTransform(ts);
   flushPenState(elem);
+}
+
+function doQuickRotate(elem, degrees) {
+  var ts = readTurtleTransform(elem, true);
+  if (!ts) { return; }
+  ts.rot += degrees;
+  elem.style[transform] = writeTurtleTransform(ts);
 }
 
 function displacedPosition(elem, distance, sideways) {
@@ -2070,9 +2095,19 @@ function makeTurtleForwardHook() {
           r = convertToRadians(ts.rot),
           c = Math.cos(r),
           s = Math.sin(r),
-          p = (ts.tx + middle[0]) * c + (ts.ty + middle[1]) * s;
-      ts.tx = p * c + v * s - middle[0];
-      ts.ty = p * s - v * c - middle[1];
+          p = (ts.tx + middle[0]) * c + (ts.ty + middle[1]) * s,
+          ntx = p * c + v * s - middle[0],
+          nty = p * s - v * c - middle[1],
+          state = $.data(elem, 'turtleData'),
+          qpxy;
+      if (state && (qpxy = state.quickpagexy)) {
+        state.quickpagexy = {
+          pageX: qpxy.pageX + (ntx - ts.tx),
+          pageY: qpxy.pageY + (nty - ts.ty)
+        };
+      }
+      ts.tx = ntx;
+      ts.ty = nty;
       elem.style[transform] = writeTurtleTransform(ts);
       flushPenState(elem);
     }
@@ -2091,10 +2126,18 @@ function makeTurtleHook(prop, normalize, unit, displace) {
       if (displace) fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, true) ||
           {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
-          opt = { displace: displace };
+          opt = { displace: displace },
+          state = $.data(elem, 'turtleData'),
+          otx = ts.tx, oty = ts.ty, qpxy;
       ts[prop] = normalize(value, elem, ts, opt);
       elem.style[transform] = writeTurtleTransform(ts);
       if (opt.displace) {
+        if (state && (qpxy = state.quickpagexy)) {
+          state.quickpagexy = {
+            pageX: qpxy.pageX + (ts.tx - otx),
+            pageY: qpxy.pageY + (ts.ty - oty)
+          };
+        }
         flushPenState(elem);
       }
     }
@@ -2116,7 +2159,7 @@ function maybeArcRotation(end, elem, ts, opt) {
       delta = normalizeRotationDelta(end - r0),
       radius = (delta > 0 ? tradius : -tradius) * ts.sy,
       dc = [Math.cos(r0r) * radius, Math.sin(r0r) * radius],
-      splits, splita, absang,
+      splits, splita, absang, dx, dy, qpxy,
       path, totalParentTransform, start, relative, points;
   if (tracing) {
     // Decompose an arc into equal arcs, all 45 degrees or less.
@@ -2167,8 +2210,16 @@ function maybeArcRotation(end, elem, ts, opt) {
   // Now move turtle to its final position: in local coordinates,
   // translate to the turning center plus the vector to the arc end.
   r1r = convertToRadians(end);
-  ts.tx += dc[0] - Math.cos(r1r) * radius;
-  ts.ty += dc[1] - Math.sin(r1r) * radius;
+  dx = dc[0] - Math.cos(r1r) * radius;
+  dy = dc[1] - Math.sin(r1r) * radius;
+  if (state && (qpxy = state.quickpagexy)) {
+    state.quickpagexy = {
+      pageX: qpxy.pageX + dx,
+      pageY: qpxy.pageY + dy
+    };
+  }
+  ts.tx += dx;
+  ts.ty += dy;
   opt.displace = true;
   return end;
 }
@@ -2226,8 +2277,10 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
     set: function(elem, value, extra) {
       fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, true) ||
-              {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
-      var parts = (typeof(value) == 'string' ? value.split(/\s+/) : [value]);
+              {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
+          parts = (typeof(value) == 'string' ? value.split(/\s+/) : [value]),
+          state = $.data(elem, 'turtleData'),
+          otx = ts.tx, oty = ts.ty, qpxy;
       if (parts.length < 1 || parts.length > 2) { return; }
       if (parts.length >= 1) { ts[propx] = parts[0]; }
       if (parts.length >= 2) { ts[propy] = parts[1]; }
@@ -2235,6 +2288,12 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
       else { ts[propy] = 0; }
       elem.style[transform] = writeTurtleTransform(ts);
       if (displace) {
+        if (state && (qpxy = state.quickpagexy)) {
+          state.quickpagexy = {
+            pageX: qpxy.pageX + (ts.tx - otx),
+            pageY: qpxy.pageY + (ts.ty - oty)
+          };
+        }
         flushPenState(elem);
       }
     }
@@ -2568,10 +2627,30 @@ var turtlefn = {
    "<u>rt(degrees, radius)</u> Right arc. Pivots with a turning radius: " +
       "<mark>rt 90, 50</mark>"],
   function rt(degrees, radius) {
-    if (degrees === undefined || degrees === null) {
+    if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
-    if (radius === undefined || radius === null) {
+    var elem, q, doqueue, atime;
+    if (this.length == 1 &&
+        ((atime = animTime(elem = this[0])) === 0 ||
+          $.fx.speeds[atime] === 0) &&
+         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      q = $.queue(elem);
+      doqueue = (q.length > 0);
+      function dorotate() {
+        fixOriginIfWatching(elem);
+        doQuickRotate(elem, degrees);
+        if (doqueue) { $.dequeue(elem); }
+      }
+      if (doqueue) {
+        domove.finish = domove;
+        q.push(domove);
+      } else {
+        dorotate();
+      }
+      return this;
+    }
+    if (radius == null) {
       return this.plan(function(j, elem) {
         this.animate({turtleRotation: '+=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem));
@@ -2594,10 +2673,29 @@ var turtlefn = {
    "<u>lt(degrees, radius)</u> Left arc. Pivots with a turning radius: " +
       "<mark>lt 90, 50</mark>"],
   function lt(degrees, radius) {
-    if (degrees === undefined || degrees === null) {
+    if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
-    if (radius === undefined || radius === null) {
+    if (this.length == 1 &&
+        ((atime = animTime(elem = this[0])) === 0 ||
+          $.fx.speeds[atime] === 0) &&
+         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      q = $.queue(elem);
+      doqueue = (q.length > 0);
+      function dorotate() {
+        fixOriginIfWatching(elem);
+        doQuickRotate(elem, -degrees);
+        if (doqueue) { $.dequeue(elem); }
+      }
+      if (doqueue) {
+        domove.finish = domove;
+        q.push(domove);
+      } else {
+        dorotate();
+      }
+      return this;
+    }
+    if (radius == null) {
       return this.plan(function(j, elem) {
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem));
@@ -2618,7 +2716,7 @@ var turtlefn = {
   ["<u>fd(pixels)</u> Forward. Moves ahead by some pixels: " +
       "<mark>fd 100</mark>"],
   function fd(amount) {
-    if (amount === undefined || amount === null) {
+    if (amount == null) {
       amount = 100;  // zero-argument default.
     }
     var elem, q, doqueue, atime;
@@ -2650,7 +2748,7 @@ var turtlefn = {
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"],
   function bk(amount) {
-    if (amount === undefined || amount === null) {
+    if (amount == null) {
       amount = 100;  // zero-argument default.
     }
     return this.fd(-amount);
@@ -3005,7 +3103,7 @@ var turtlefn = {
       }
     });
   },
-  hatch: 
+  hatch:
   function(count, spec) {
     if (!this.length) return;
     if (spec === undefined && !$.isNumeric(count)) {
@@ -3328,33 +3426,27 @@ var turtlefn = {
             (function() { callback.apply($(elem), args); }) :
             (function() { callback.call($(elem), index, elem); })),
           lastanim = elemqueue.length && elemqueue[elemqueue.length - 1],
-          animation;
-      if (lastanim && lastanim.plan && lastanim.plan.length < 128) {
-        // If the last animation was a plan object, then add the
-        // action to the internal queue of the plan object instead
-        // of the fx queue.  This lets us batch up 128 plans at a time.
-        lastanim.plan.push(action);
-      } else {
-        animation = (function() {
+          animation = (function() {
           var saved = $.queue(this, qname),
               subst = [], inserted;
           if (saved[0] === 'inprogress') {
             subst.unshift(saved.shift());
           }
           $.queue(elem, qname, subst);
-          while (animation.plan.length) {
-            (animation.plan.shift())();
-          }
+          action();
           // The Array.prototype.push is faster.
           // $.merge($.queue(elem, qname), saved);
           Array.prototype.push.apply($.queue(elem, qname), saved);
-          // Insert a timeout after executing a batch of plans,
-          // to avoid deep recursion.
-          setTimeout(function() { $.dequeue(elem, qname); }, 0);
+          if (global_plan_counter++ % 64) {
+            $.dequeue(elem, qname);
+          } else {
+            // Insert a timeout after executing a batch of plans,
+            // to avoid deep recursion.
+            setTimeout(function() { $.dequeue(elem, qname); }, 0);
+          }
         });
-        animation.plan = [action];
-        $.queue(elem, qname, animation);
-      }
+      animation.finish = action;
+      $.queue(elem, qname, animation);
     }
     var elem, sel, length = this.length, j = 0;
     for (; j < length; ++j) {
