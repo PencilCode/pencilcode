@@ -3328,23 +3328,14 @@ var turtlefn = {
             (function() { callback.apply($(elem), args); }) :
             (function() { callback.call($(elem), index, elem); })),
           lastanim = elemqueue.length && elemqueue[elemqueue.length - 1],
-          animation;
-      if (lastanim && lastanim.plan && lastanim.plan.length < 128) {
-        // If the last animation was a plan object, then add the
-        // action to the internal queue of the plan object instead
-        // of the fx queue.  This lets us batch up 128 plans at a time.
-        lastanim.plan.push(action);
-      } else {
-        animation = (function() {
+          animation = (function() {
           var saved = $.queue(this, qname),
               subst = [], inserted;
           if (saved[0] === 'inprogress') {
             subst.unshift(saved.shift());
           }
           $.queue(elem, qname, subst);
-          while (animation.plan.length) {
-            (animation.plan.shift())();
-          }
+          action();
           // The Array.prototype.push is faster.
           // $.merge($.queue(elem, qname), saved);
           Array.prototype.push.apply($.queue(elem, qname), saved);
@@ -3352,9 +3343,8 @@ var turtlefn = {
           // to avoid deep recursion.
           setTimeout(function() { $.dequeue(elem, qname); }, 0);
         });
-        animation.plan = [action];
-        $.queue(elem, qname, animation);
-      }
+      animation.finish = action;
+      $.queue(elem, qname, animation);
     }
     var elem, sel, length = this.length, j = 0;
     for (; j < length; ++j) {
