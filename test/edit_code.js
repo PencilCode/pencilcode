@@ -2,6 +2,14 @@ var phantom = require('node-phantom-simple'),
     phantomjs = require('phantomjs'),
     assert = require('assert');
 
+function refreshThen(page, callback) {
+  page.reload(function(err) {
+    assert.ifError(err);
+    // Wait a little time before interacting with the page after a refresh.
+    setTimeout(callback, 100);
+  });
+}
+
 function asyncTest(page, timeout, params, action, predicate, callback) {
   var startTime = +(new Date), evalTime = startTime,
       rt_args, ac_args;
@@ -10,6 +18,9 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
     if (err || (result != null && !result.poll)) {
       callback(err, result);
     } else if (evalTime - startTime > timeout) {
+      // Note that timeout is measured not from the time
+      // of the callback, but the time of the call-in.
+      // After a slow callback, we can try one more time.
       throw (new Error('timeout'));
     } else {
       if (result) { console.log(result); }
@@ -280,20 +291,23 @@ describe('code editor', function() {
     });
   });
   it('should reload using the cookie when refreshed', function(done) {
-    asyncTest(_page, 5000, null, function() {
-      $('body').hide();
-      window.location.reload();
-    }, function() {
-      if (!$('.editor').is(':visible')) return;
-      var ace_editor = ace.edit($('.editor').attr('id'));
-      if (!ace_editor.getValue()) return;
-      return {
-        loaded: ace_editor.getValue()
-      };
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.equal("speed 10\npen blue\nrt 180, 100\n", result.loaded);
-      done();
+    refreshThen(_page, function() {
+      asyncTest(_page, 5000, null, null, function() {
+        if (!window.$) return;
+        if (!$('.editor').is(':visible')) return;
+        var ace_editor = ace.edit($('.editor').attr('id'));
+        if (!ace_editor.getValue()) return;
+        return {
+          url: window.location.href,
+          loaded: ace_editor.getValue()
+        };
+      }, function(err, result) {
+        assert.ifError(err);
+        assert.equal(result.url,
+            'http://livetest.pencilcode.net.dev/edit/' + name);
+        assert.equal("speed 10\npen blue\nrt 180, 100\n", result.loaded);
+        done();
+      });
     });
   });
   it('should delete when empty is saved', function(done) {
