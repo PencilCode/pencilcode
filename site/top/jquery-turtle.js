@@ -775,19 +775,27 @@ function cleanedStyle(trans) {
   return result;
 }
 
-function cleanSwap(elem, options, callback) {
-  var ret, name, old = {};
-  // Remember the old values, and insert the new ones
-  for (name in options) {
+function getTurtleOrigin(elem, inverseParent, corners) {
+  var hidden = ($.css(elem, 'display') === 'none'),
+      swapout = hidden ?
+        { position: "absolute", visibility: "hidden", display: "block" } : {},
+      substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
+          $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
+      old = {}, name, gbcr;
+  for (name in swapout) {
     old[name] = elem.style[name];
-    elem.style[name] = options[name];
+    elem.style[name] = swapout[name];
   }
-  ret = callback.apply(elem);
-  // Revert the old values
-  for (name in options) {
+  gbcr = getPageGbcr(elem);
+  for (name in swapout) {
     elem.style[name] = cleanedStyle(old[name]);
   }
-  return ret;
+  if (corners) {
+    corners.gbcr = gbcr;
+  }
+  return addVector(
+      [gbcr.left, gbcr.top],
+      readTransformOrigin(elem, [gbcr.width, gbcr.height]));
 }
 
 function unattached(elt) {
@@ -901,14 +909,7 @@ function readPageGbcr() {
 function computeTargetAsTurtlePosition(elem, target, limit, localx, localy) {
   var totalParentTransform = totalTransform2x2(elem.parentElement),
       inverseParent = inverse2x2(totalParentTransform),
-      hidden = ($.css(elem, 'display') === 'none'),
-      swapout = hidden ?
-        { position: "absolute", visibility: "hidden", display: "block" } : {},
-      substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
-          $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      gbcr = cleanSwap(elem, swapout, readPageGbcr),
-      middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
-      origin = addVector([gbcr.left, gbcr.top], middle),
+      origin = getTurtleOrigin(elem, inverseParent),
       pos, current, tr, localTarget;
   if (!inverseParent) { return; }
   if ($.isNumeric(limit)) {
@@ -948,14 +949,7 @@ function computePositionAsLocalOffset(elem, home) {
   }
   var totalParentTransform = totalTransform2x2(elem.parentElement),
       inverseParent = inverse2x2(totalParentTransform),
-      hidden = ($.css(elem, 'display') === 'none'),
-      swapout = hidden ?
-        { position: "absolute", visibility: "hidden", display: "block" } : {},
-      substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
-          $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      gbcr = cleanSwap(elem, swapout, readPageGbcr),
-      middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
-      origin = addVector([gbcr.left, gbcr.top], middle),
+      origin = getTurtleOrigin(elem, inverseParent),
       ts = readTurtleTransform(elem, true),
       localHome = inverseParent && matrixVectorProduct(inverseParent,
           subtractVector([home.pageX, home.pageY], origin)),
@@ -999,15 +993,7 @@ function getCenterInPageCoordinates(elem) {
       totalParentTransform = totalTransform2x2(elem.parentElement),
       simple = isone2x2(totalParentTransform),
       inverseParent = simple ? null : inverse2x2(totalParentTransform),
-      hidden = ($.css(elem, 'display') === 'none'),
-      swapout = hidden ?
-        { position: "absolute", visibility: "hidden", display: "block" } : {},
-      st = swapout[transform] = (!inverseParent ? 'none' :
-          'matrix(' + $.map(inverseParent, cssNum).join(', ') + ', 0, 0)'),
-      saved = elem.style[transform],
-      gbcr = cleanSwap(elem, swapout, readPageGbcr),
-      middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
-      origin = addVector([gbcr.left, gbcr.top], middle),
+      origin = getTurtleOrigin(elem, inverseParent),
       pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
       result = { pageX: pos[0], pageY: pos[1] };
   if (state && simple && state.down) {
@@ -1038,14 +1024,9 @@ function getCornersInPageCoordinates(elem, untransformed) {
       totalParentTransform = totalTransform2x2(elem.parentElement),
       totalTransform = matrixProduct(totalParentTransform, currentTransform),
       inverseParent = inverse2x2(totalParentTransform),
-      hidden = ($.css(elem, 'display') === 'none'),
-      swapout = hidden ?
-        { position: "absolute", visibility: "hidden", display: "block" } : {},
-      substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
-          $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      gbcr = cleanSwap(elem, swapout, readPageGbcr),
-      middle = readTransformOrigin(elem, [gbcr.width, gbcr.height]),
-      origin = addVector([gbcr.left, gbcr.top], middle),
+      out = {},
+      origin = getTurtleOrigin(elem, inverseParent),
+      gbcr = out.gbcr,
       hull = polyToVectorsOffset(getTurtleData(elem).hull, origin) || [
         [gbcr.left, gbcr.top],
         [gbcr.left, gbcr.bottom],

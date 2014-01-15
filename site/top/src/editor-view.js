@@ -397,11 +397,11 @@ function fixParentLink(elt) {
   $(elt).closest('a').attr('href', filename);
 }
 
-$('#icon').on('mousemove', function(e) {
+$('#folder').on('mousemove', function(e) {
   fixParentLink(this);
 });
 
-$('#icon').on('click', function(e) {
+$('#folder').on('click', function(e) {
   if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
     fireEvent('done', []);
     e.preventDefault();
@@ -512,7 +512,7 @@ function showLoginDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="login"><div class="prompt">' +
+  var dialog = $('<div class="logindialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
     '</div><div class="content">' +
     '<div class="field">Name:<div style="display:inline-table">' + 
@@ -1125,7 +1125,7 @@ function noteNewFilename(pane, filename) {
 
 eval(see.scope('view'));
 
-$('#owner,#filename,#icon').tooltipster();
+$('#owner,#filename,#folder').tooltipster();
 
 return window.pencilcode.view;
 
