@@ -72,7 +72,7 @@ h1, h2 {
   text-transform: capitalize;
   text-decoration: underline;
 }
-#what,.info {
+#what,.whiteback {
   font-size: 16px;
   line-height: 16px;
   color: gray;
@@ -80,9 +80,15 @@ h1, h2 {
   background: rgba(255, 255, 255, 0.6);
   box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
 }
-#what:hover,.info:hover {
+.info,.link {
+  color: gray;
+  text-decoration: none;
+}
+#what:hover,.info:hover,.link:hover {
   color: blue;
   text-decoration: underline;
+}
+#what:hover,.whiteback:hover {
   background: white;
   box-shadow: 0 0 16px 16px white;
 }
@@ -246,8 +252,9 @@ do not prevent malicious interference.
 science education by making programming as simple and as
 powerful as using a pencil.
 Contribute to the development of Pencil Code at
-<a href="https://github.com/PencilCode" target="_blank"
->https://github.com/PencilCode</a>
+<a href="http://develop.pencilcode.net/" target="_blank"
+>develop.pencilcode.net</a> or
+<a href="https://github.com/PencilCode">github</a>.
 &nbsp;&mdash;
 <a href="mailto:info@pencilcode.net" target="_top"
 >info@pencilcode.net</a>.
@@ -413,10 +420,14 @@ $('#reset').click(function(e) {
 <br>
 <h2>A Modern Sandbox<br>
 For Little Programs</h2>
-<center>
+<p align="center" class="whiteback">
 <a href="#" class="info">By the Pencil Code Foundation</a> - 
-<a href="mailto:info@pencilcode.net" style="color:gray;text-decoration:none"
-target="_top">info@pencilcode.net</a></center>
+<a href="mailto:info@pencilcode.net" class="link"
+target="_top">info@pencilcode.net</a>
+</p>
+<p align="center"><a href="http://develop.pencilcode.net/" class="link"
+>Want to improve Pencil Code?
+Participate in our first open-source Codeathon.</a></p>
 </div>
 </div>
 </div>
