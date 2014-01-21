@@ -183,6 +183,14 @@ $(window).on('popstate', function(e) {
   fireEvent('popstate', [undo]);
 });
 
+// Global hotkeys for this application.  Ctrl- (or Command-) key functions.
+var hotkeys = {
+  '\r': function() { fireEvent('run'); return false; },
+  'S': function() { fireEvent('save'); return false; },
+  'H': forwardCommandToEditor,
+  'F': forwardCommandToEditor
+};
+
 // Capture global keyboard shortcuts.
 // TODO(davibau): This is only a start at preventing the browser from
 // bringing up its unhelpful Save and Find dialogs when Ctrl-S or Ctrl-F.
@@ -191,30 +199,27 @@ $(window).on('popstate', function(e) {
 // capture those cases as well, but that is not yet done.
 $('body').on('keydown', function(e) {
   if (e.ctrlKey || e.metaKey) {
-    // Ctrl-Enter or Command-Enter are equivalent to the triangle play button.
-    if (e.keyCode == '\r'.charCodeAt(0)) {
-      fireEvent('run');
-    // Ctrl-S is the "save" command (not the browser's save).
-    } else if (e.keyCode == 'S'.charCodeAt(0)) {
-      fireEvent('save');
-      return false;
-    // Ctrl-F and Ctrl-H are routed to the editor if present
-    // (not the browser's find).
-    } else if (e.which == 'H'.charCodeAt(0) ||
-               e.which == 'F'.charCodeAt(0)) {
-      if (!$(document.activeElement).closest('.editor').length) {
-        var pane = paneid('left');
-        var paneState = state.pane[pane];
-        if (paneState.editor) {
-          var editor = paneState.editor;
-          editor.focus();
-          editor.onCommandKey(editor, 1, e.which);
-          return false;
-        }
-      }
+    var handler = hotkeys[String.fromCharCode(e.which)];
+    if (handler) {
+      return handler(e);
     }
   }
 });
+
+function forwardCommandToEditor(keydown_event) {
+  // Only forward the command if an editor is present and it
+  // does not already have focus.
+  if (!$(document.activeElement).closest('.editor').length) {
+    var pane = paneid('left');
+    var paneState = state.pane[pane];
+    if (paneState.editor) {
+      var editor = paneState.editor;
+      editor.focus();
+      editor.onCommandKey(editor, 1, keydown_event.which);
+      return false;
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // NOTIFICATIONS
