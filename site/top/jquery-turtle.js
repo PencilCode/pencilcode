@@ -1585,12 +1585,7 @@ function getTurtleData(elem) {
       speed: 'turtle',
       easing: 'swing',
       turningRadius: 0,
-      quickpagexy: null,
-      // Below: support for image loading without messing up origin.
-      lastSeenOrigin: null,
-      lastSeenOriginTime: null,
-      lastSeenOriginTimer: null,
-      lastSeenOriginEvent: null
+      quickpagexy: null
     });
   }
   return state;
@@ -1763,11 +1758,7 @@ function flushPenState(elem) {
     }
     return;
   }
-  if (state.lastSeenOrigin) { fixOriginIfWatching(elem); }
   var center = getCenterInPageCoordinates(elem);
-  // Once the pen is down, the origin needs to be stable when the image
-  // loads.
-  watchImageToFixOriginOnLoad(elem);
   if (!state.path[0].length ||
       !isPointNearby(center, state.path[0][state.path[0].length - 1])) {
     state.path[0].push(center);
@@ -1932,17 +1923,7 @@ function touchesPixel(elem, color) {
 
 function applyImg(sel, img) {
   if (sel[0].tagName == 'IMG') {
-    // Set the image to a 1x1 transparent GIF before next switching it
-    // to the image of interest.
-    sel[0].src = 'data:image/gif;base64,R0lGODlhAQABAIAAA' +
-                 'AAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    sel.css({
-      backgroundImage: 'none',
-      height: 'auto',
-      width: 'auto'
-    });
-    sel[0].src = img.url;
-    sel.css(img.css);
+    setImageWithStableOrigin(sel[0], img.url, img.css);
   } else {
     var props = {
       backgroundImage: 'url(' + img.url + ')',
@@ -1978,6 +1959,23 @@ function doQuickMove(elem, distance, sideways) {
   }
   ts.tx += dx;
   ts.ty += dy;
+  elem.style[transform] = writeTurtleTransform(ts);
+  flushPenState(elem);
+}
+
+function doQuickMoveXY(elem, dx, dy) {
+  var ts = readTurtleTransform(elem, true),
+      state = $.data(elem, 'turtleData'),
+      qpxy;
+  if (!ts) { return; }
+  if (state && (qpxy = state.quickpagexy)) {
+    state.quickpagexy = {
+      pageX: qpxy.pageX + dx,
+      pageY: qpxy.pageY - dy
+    };
+  }
+  ts.tx += dx;
+  ts.ty -= dy;
   elem.style[transform] = writeTurtleTransform(ts);
   flushPenState(elem);
 }
@@ -2101,12 +2099,10 @@ function makeTurtleForwardHook() {
 function makeTurtleHook(prop, normalize, unit, displace) {
   return {
     get: function(elem, computed, extra) {
-      if (displace) fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, computed);
       if (ts) { return ts[prop] + unit; }
     },
     set: function(elem, value) {
-      if (displace) fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, true) ||
           {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
           opt = { displace: displace },
@@ -2240,7 +2236,6 @@ var XY = ['X', 'Y'];
 function makeTurtleXYHook(publicname, propx, propy, displace) {
   return {
     get: function(elem, computed, extra) {
-      fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, computed);
       if (ts) {
         if (displace || ts[propx] != ts[propy]) {
@@ -2252,7 +2247,6 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
       }
     },
     set: function(elem, value, extra) {
-      fixOriginIfWatching(elem);
       var ts = readTurtleTransform(elem, true) ||
               {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
           parts = (typeof(value) == 'string' ? value.split(/\s+/) : [value]),
@@ -2277,84 +2271,115 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
   };
 }
 
-function fixOriginIfWatching(elem) {
-  // A function to reposition an image turtle each time its origin
-  // changes from the last seen origin, to keep the origin in the
-  // same location on the page.
-  var state = $.data(elem, 'turtleData');
-  if (state && state.lastSeenOrigin) {
-    var oldOrigin = state.lastSeenOrigin,
-        newOrigin = readTransformOrigin(elem),
-        now = $.now();
-    if (state.lastSeenOriginEvent && elem.complete) {
-      $.event.remove(elem, 'load.turtle', state.lastSeenOriginEvent);
-      state.lastSeenOriginEvent = null;
-      state.lastSeenOriginTime = now;
-    }
-    if (newOrigin[0] != oldOrigin[0] || newOrigin[1] != oldOrigin[1]) {
-      var ts = readTurtleTransform(elem, true);
-      ts.tx += oldOrigin[0] - newOrigin[0];
-      ts.ty += oldOrigin[1] - newOrigin[1];
-      state.lastSeenOrigin = newOrigin;
-      state.lastSeenOriginTime = now;
-      elem.style[transform] = writeTurtleTransform(ts);
-    } else if (elem.tagName == 'IMG' && !elem.complete) {
-      state.lastSeenOriginTime = now;
-      if (!state.lastSeenOriginEvent) {
-        state.lastSeenOriginEvent = (function() { fixOriginIfWatching(elem); });
-        $.event.add(elem, 'load.turtle', state.lastSeenOriginEvent);
-      }
-    } else if (!state.lastSeenOriginEvent &&
-        now - state.lastSeenOriginTime > 1000) {
-      // Watch for an additional second after anything interesting;
-      // then clear the watcher.
-      clearInterval(state.lastSeenOriginTimer);
-      state.lastSeenOriginTimer = null;
-      state.lastSeenOriginTime = null;
-      state.lastSeenOrigin = null;
-    }
-  }
-}
+// A map of url to {img: Image, queue: [{elem: elem, css: css, cb: cb}]}.
+var stablyLoadedImages = {};
 
-function queueWaitForImageLoad(sel) {
-  if (sel[0] && sel[0].tagName == 'IMG' && !sel[0].complete &&
-      ((!sel[0].style.width && !sel[0].getAttribute('width'))
-       || (!sel[0].style.height && !sel[0].getAttribute('height')))) {
-    sel.queue(function() {
-      var interval = null;
-      function checkIfLoaded() {
-        if (sel[0].complete) {
-          clearInterval(interval);
-          // fixOriginIfWatching(sel[0]);
-          sel.dequeue();
+// setImageWithStableOrigin
+//
+// Changes the src of an <img> while keeping its transformOrigin
+// at the same screen postition (by adjusting the transform).
+// Because loading an image from a remote URL is an async operation
+// that will move the center of an image at an indeterminate moment,
+// this function loads the image in an off-screen objects first, and
+// then once the image is loaded, it uses the loaded image to
+// determine the natural dimensions; and then it sets these
+// dimensions at the same time as setting the <img> src, and
+// adjusts the transform according to any change in transformOrigin.
+//
+// @param elem is the <img> element whose src is to be set.
+// @param url is the desried value of the src attribute.
+// @param css is a dictionary of css props to set when the image is loaded.
+// @param cb is an optional callback, called after the loading is done.
+function setImageWithStableOrigin(elem, url, css, cb) {
+  var record;
+  // The data-loading attr will always reflect the last URL requested.
+  elem.setAttribute('data-loading', url);
+  if (url in stablyLoadedImages) {
+    // Already requested this image?
+    record = stablyLoadedImages[url];
+    if (record.img.complete) {
+      // If already complete, then flip the image right away.
+      finishSet(record.img, elem, css, cb);
+    } else {
+      // If not yet complete, then add the target element to the queue.
+      record.queue.push({elem: elem, css: css, cb: cb});
+    }
+  } else {
+    // Set up a new image load.
+    stablyLoadedImages[url] = record = {
+      img: new Image(),
+      queue: [{elem: elem, css: css, cb: cb}]
+    };
+    // First set up the onload callback, then start loading.
+    record.img.addEventListener('load', poll);
+    record.img.addEventListener('error', poll);
+    record.img.src = url;
+    function poll() {
+      if (!record.img.complete) {
+        // Guard against browsers that may fire onload too early or never.
+        setTimeout(poll, 100);
+        return;
+      }
+      record.img.removeEventListener('load', poll);
+      record.img.removeEventListener('error', poll);
+      // TODO: compute the convex hull of the image.
+      var j, queue = record.queue;
+      record.queue = null;
+      if (queue) {
+        // Finish every element that hasn't yet been finished.
+        for (j = 0; j < queue.length; ++j) {
+          finishSet(record.img, queue[j].elem, queue[j].css, queue[j].cb);
         }
       }
-      interval = setInterval(checkIfLoaded, 100);
-    });
+    }
+    // Start polling immediatey, because some browser may never fire onload.
+    poll();
+  }
+  // This is the second step, done after the async load is complete:
+  // the parameter "loaded" contains the fully loaded Image.
+  function finishSet(loaded, elem, css, cb) {
+    // Only flip the src if the last requested image is the same as
+    // the one we have now finished loading: otherwise, there has been
+    // some subsequent load that has now superceded ours.
+    if (elem.getAttribute('data-loading') == loaded.src) {
+      elem.removeAttribute('data-loading');
+      // Read the element's origin before setting the image src.
+      var oldOrigin = readTransformOrigin(elem);
+      // Set the image to a 1x1 transparent GIF, and clear the transform origin.
+      // (This "reset" code was original added in an effort to avoid browser
+      // bugs, but it is not clear if it is still needed.)
+      elem.src = 'data:image/gif;base64,R0lGODlhAQABAIAAA' +
+                 'AAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      var sel = $(elem);
+      sel.css({
+        backgroundImage: 'none',
+        height: '',
+        width: '',
+        transformOrigin: ''
+      });
+      // Now set the source, and then apply any css requested.
+      sel[0].width = loaded.width;
+      sel[0].height = loaded.height;
+      sel[0].src = loaded.src;
+      if (css) {
+        sel.css(css);
+      }
+      var newOrigin = readTransformOrigin(elem);
+      // If there was a change, then translate the element to keep the origin
+      // in the same location on the screen.
+      if (newOrigin[0] != oldOrigin[0] || newOrigin[1] != oldOrigin[1]) {
+        var ts = readTurtleTransform(elem, true);
+        ts.tx += oldOrigin[0] - newOrigin[0];
+        ts.ty += oldOrigin[1] - newOrigin[1];
+        elem.style[transform] = writeTurtleTransform(ts);
+      }
+    }
+    // Call the callback, if any.
+    if (cb) {
+      cb();
+    }
   }
 }
-
-function watchImageToFixOriginOnLoad(elem, force) {
-  if (!elem || elem.tagName !== 'IMG' ||
-      (!force && elem.complete) ||
-      $(elem).css('position') != 'absolute') {
-    return;
-  }
-  var state = getTurtleData(elem),
-      now = $.now();
-  if (state.lastSeenOrigin) {
-    // Already tracking: let it continue.
-    fixOriginIfWatching(elem);
-    return;
-  }
-  state.lastSeenOrigin = readTransformOrigin(elem);
-  state.lastSeenOriginTimer = setInterval(function() {
-    fixOriginIfWatching(elem);
-  }, 200);
-  state.lastSeenOriginTime = $.now();
-  fixOriginIfWatching(elem);
-}
-
 
 function withinOrNot(obj, within, distance, x, y) {
   var sel, elem, gbcr, pos, d2;
@@ -2411,7 +2436,6 @@ function withinOrNot(obj, within, distance, x, y) {
     var gbcr = getPageGbcr(this);
     if (isGbcrOutside(pos, d2, gbcr)) { return !within; }
     if (isGbcrInside(pos, d2, gbcr)) { return within; }
-    fixOriginIfWatching(this);
     var thispos = getCenterInPageCoordinates(this),
         dx = pos.pageX - thispos.pageX,
         dy = pos.pageY - thispos.pageY;
@@ -2618,7 +2642,6 @@ var turtlefn = {
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      fixOriginIfWatching(elem);
       doQuickRotate(elem, degrees);
       return this;
     }
@@ -2651,7 +2674,6 @@ var turtlefn = {
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      fixOriginIfWatching(elem);
       doQuickRotate(elem, -degrees);
       return this;
     }
@@ -2681,12 +2703,10 @@ var turtlefn = {
     }
     var elem;
     if ((elem = canMoveInstantly(this))) {
-      fixOriginIfWatching(elem);
       doQuickMove(elem, amount, 0);
       return this;
     }
     return this.plan(function(j, elem) {
-      fixOriginIfWatching(elem);
       this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
           animTime(elem), animEasing(elem));
     });
@@ -2713,6 +2733,28 @@ var turtlefn = {
     return this.plan(function(j, elem) {
       this.animate({turtlePosition:
           displacedPosition(elem, y, x)}, animTime(elem), animEasing(elem));
+    });
+  }),
+  movexy: wraphelp(
+  ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
+      "<mark>movexy 50, 100</mark>"],
+  function movexy(x, y) {
+    if ($.isArray(x)) {
+      y = x[1];
+      x = x[0];
+    }
+    if (!y) { y = 0; }
+    if (!x) { x = 0; }
+    var elem;
+    if ((elem = canMoveInstantly(this))) {
+      doQuickMoveXY(elem, x, y);
+      return this;
+    }
+    return this.plan(function(j, elem) {
+      var tr = getElementTranslation(elem);
+      this.animate(
+        { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
+        animTime(elem), animEasing(elem));
     });
   }),
   moveto: wraphelp(
@@ -2812,7 +2854,6 @@ var turtlefn = {
           targetpos = null, nlocalxy = null;
       if ($.isNumeric(bearing)) {
         r = convertToRadians(bearing);
-        fixOriginIfWatching(elem);
         centerpos = getCenterInPageCoordinates(elem);
         targetpos = {
           pageX: centerpos.pageX + Math.sin(r) * 1024,
@@ -2934,8 +2975,6 @@ var turtlefn = {
           extraDiam = (ps.eraseMode ? 2 : 0);
       // Scale by sx.  (TODO: consider parent transforms.)
       fillDot(c, diameter * ts.sx + extraDiam, ps);
-      // Once drawing begins, origin must be stable.
-      watchImageToFixOriginOnLoad(elem);
     });
   }),
   pause: wraphelp(
@@ -3002,17 +3041,13 @@ var turtlefn = {
     var img = nameToImg(name);
     if (!img) return this;
     return this.plan(function(j, elem) {
-      // Bug workaround - if backgroudnImg isn't cleared early enough,
+      // Bug workaround - if background isn't cleared early enough,
       // the turtle image doesn't update.  (Even though this is done
       // later in applyImg.)
       this.css({
         backgroundImage: 'none',
       });
-      // Keep the position of the origin unchanged even if the image resizes.
-      watchImageToFixOriginOnLoad(elem, true);
       applyImg(this, img);
-      queueWaitForImageLoad(this);
-      fixOriginIfWatching(elem);
     });
   }),
   label: wraphelp(
@@ -3086,7 +3121,6 @@ var turtlefn = {
       "<mark>c = pagexy(); fd 500; moveto c</mark>"],
   function pagexy() {
     if (!this.length) return;
-    fixOriginIfWatching(this[0]);
     var internal = getCenterInPageCoordinates(this[0]);
     return { pageX: internal.pageX, pageY: internal.pageY };
   }),
@@ -3324,7 +3358,6 @@ var turtlefn = {
     for (j = 0; j < this.length; j++) {
       gbcr = getPageGbcr(this[j]);
       if (!result.length || !isGbcrOutside(pos, mind2, gbcr)) {
-        fixOriginIfWatching(this[j]);
         var thispos = getCenterInPageCoordinates(this[j]),
             dx = pos.pageX - thispos.pageX,
             dy = pos.pageY - thispos.pageY,
@@ -3483,7 +3516,7 @@ $.fn.extend(turtlefn);
 // * Sets up a global "hatch" function to make a new turtle.
 //////////////////////////////////////////////////////////////////////////
 
-var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPEDAAFsOACSRTCuSAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJZAADACwAAAAAKAAwAAACzpyPqcvtByJ49EWBRaw8gZxNXfeB4ciVpoZWqim2zhfUNivP9h7EOQPg9VqSDVDocwUyQ8UFlrS8mobIciXoRRtBULGLBWm/EudVHA6fxVFw+v2mQtbwundhteuz2yp9z/cVMAPIhvIC2EdYiKHIxdhIBIkzgrjnCDSJiacpCbnp1HkoWklKYqo0KUfhxjhWBmQ5ibFaJTsbGYob1nb2+kdbVLNS++Lz5JVEBguhEmQW/GOcSUl09sxZffj1qP2zCPo9QBMuXVMubSS+/lAAACH5BAVkAAMALAEAAQAmAC4AAALNnI9pwKAP4wKiCiZzpLY6DR5c54XhSH5mhnbqugnBTF8wS+fBez+AvuvhdDxEA3NqXYqDnyXIcpIqu5fU8zlqr9OntgPlPrtk2TQcKKvXMpWSDYcu0vB6NVE90uskOY6fsvIGxxQDaFEIMciW6HOIKPhYYrK41qhQqXaZkFm2aSRpQxn6KUIaKVnatHfoZ6TF2sokFopY1PmIZFrryRkrk0dLpef1usXDMKXb5CIk5TqwY+s8idncw1EoPYxdjanVLSqk4aTqPGOOvaxRAAA7";
+var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7"
 
 var eventfn = { click:1, mouseup:1, mousedown:1, mousemove:1,
     keydown:1, keypress:1, keyup:1 };
@@ -4186,7 +4219,7 @@ function nameToImg(name) {
       height: 24,
       turtleHull: "-8 -5 -8 6 0 -13 8 6 8 -5 0 9",
       transformOrigin: '10px 13px',
-      opacity: 0.5,
+      opacity: 0.67,
       backgroundImage: 'url(' + turtleGIFUrl + ')',
       backgroundSize: 'contain'
     }
@@ -4252,7 +4285,6 @@ function hatchone(name, container, clonepos) {
   if (img) {
     result = $('<img>');
     applyImg(result, img);
-    queueWaitForImageLoad(result);
   } else if (isTag) {
     result = $(name);
   } else {
