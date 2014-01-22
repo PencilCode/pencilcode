@@ -84,6 +84,12 @@ On Linux:
 alias devchrome="google-chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome"
 </pre>
 
+On Windows:
+
+Start up devchrome and then open up the browser connection settings.  Set
+the checkbox for 'Use automatic configuration script'.  And then set the 
+Address to point to 'http://localhost:8008/proxy.pac'.  
+
 When running devchrome, any URL with a hostname that ends with ".dev"
 will be routed to the development server.  Visit http://pencilcode.net.dev/
 to browse your local copy of the website.
