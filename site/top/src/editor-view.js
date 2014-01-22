@@ -183,12 +183,43 @@ $(window).on('popstate', function(e) {
   fireEvent('popstate', [undo]);
 });
 
+// Global hotkeys for this application.  Ctrl- (or Command-) key functions.
+var hotkeys = {
+  '\r': function() { fireEvent('run'); return false; },
+  'S': function() { fireEvent('save'); return false; },
+  'H': forwardCommandToEditor,
+  'F': forwardCommandToEditor
+};
+
+// Capture global keyboard shortcuts.
+// TODO(davibau): This is only a start at preventing the browser from
+// bringing up its unhelpful Save and Find dialogs when Ctrl-S or Ctrl-F.
+// Other keyboard traps include Backspace (for browser "back"), and
+// also, all these keys when the focus is on the nested frame.  We should
+// capture those cases as well, but that is not yet done.
 $('body').on('keydown', function(e) {
-  // Ctrl-Enter or meta-enter are equivalent to the triangle play button.
-  if (e.keyCode == 13 && (e.ctrlKey || e.metaKey)) {
-    fireEvent('run');
+  if (e.ctrlKey || e.metaKey) {
+    var handler = hotkeys[String.fromCharCode(e.which)];
+    if (handler) {
+      return handler(e);
+    }
   }
 });
+
+function forwardCommandToEditor(keydown_event) {
+  // Only forward the command if an editor is present and it
+  // does not already have focus.
+  if (!$(document.activeElement).closest('.editor').length) {
+    var pane = paneid('left');
+    var paneState = state.pane[pane];
+    if (paneState.editor) {
+      var editor = paneState.editor;
+      editor.focus();
+      editor.onCommandKey(editor, 1, keydown_event.which);
+      return false;
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // NOTIFICATIONS
@@ -949,6 +980,77 @@ function normalizeCarriageReturns(text) {
   return text.replace(/\r\n|\r/g, "\n");
 }
 
+// The ACE editor's default keybinding for repeated Ctrl-F is dangerous
+// and not good for kids: it toggles between find and replace.
+// This function hacks the binding of repeated Ctrl-F so that it does
+// the safe and logical thing: it does repeated searches.
+function fixRepeatedCtrlFCommand(editor) {
+  // ModifiedSearch creates and shows a SearchBox with a modified
+  // when-open-keybinding.
+  // * Repeated Ctrl-F while the search box is open will just findNext,
+  //   and it will select the search input so that it can be retyped.
+  //   If in replace mode, Ctrl-F will just skip to the next match
+  //   without replacing it.
+  // * Ctrl-H (or Command-Option-F) while the search box is open will
+  //   switch a non-replace searchbox into replace mode.  If replace-mode
+  //   is already open, it focuses on the replace box (if not yet focused),
+  //   or if the replace box already has focus, it executes a replacement.
+  // As you can see, it takes committment (Ctrl-H) to execute a replacement
+  // by keyboard, so it is less likely to happen by accident.
+  function ModifiedSearch(searchbox, isReplace) {
+    var sb = editor.searchBox || new searchbox.SearchBox(editor);
+    sb.$searchBarKb.bindKeys({
+      "Ctrl-F|Command-F": function(sb) {
+        sb.findNext();
+        if (sb.activeInput == sb.searchInput) {
+          sb.searchInput.select();
+        }
+      },
+      "Ctrl-H|Command-Option-F": function(sb) {
+        if (!sb.isReplace) {
+          sb.isReplace = true;
+          sb.replaceBox.style.display = "";
+          sb.replaceInput.focus();
+        } else if (sb.activeInput == sb.replaceInput) {
+          sb.replace();
+          sb.findNext();
+        } else {
+          sb.replaceInput.focus();
+        }
+      }
+    });
+    sb.show(editor.session.getTextRange(), isReplace);
+  }
+  // The when not-open keybindings for Ctrl-F and Ctrl-H create our
+  // modified SearchBox instead of the ACE editor default SearchBox.
+  editor.commands.addCommands([{
+    name: "find",
+    bindKey: { win: "Ctrl-F", mac: "Command-F" },
+    exec: function(editor, line) {
+      ace.require('./config').loadModule(
+        "ace/ext/searchbox",
+        function(module) { ModifiedSearch(module, false); }
+      );
+    },
+    readOnly: true
+  }, {
+    name: "replace",
+    bindKey: { win: "Ctrl-H", mac: "Command-Option-F" },
+    exec: function(editor, line) {
+      ace.require('./config').loadModule(
+        "ace/ext/searchbox",
+        function(module) { ModifiedSearch(module, true); }
+      );
+    },
+    readOnly: true
+  }])
+}
+
+// Initializes an (ACE) editor into a pane, using the given text and the
+// given filename.
+// @param pane the id of a pane - alpha, bravo or charlie.
+// @param text the initial text to edit.
+// @param filename the filename to use.
 function setPaneEditorText(pane, text, filename) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
@@ -960,6 +1062,7 @@ function setPaneEditorText(pane, text, filename) {
   paneState.dirtied = false;
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
   var editor = paneState.editor = ace.edit(id);
+  fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
   editor.setTheme("ace/theme/chrome");
   editor.setBehavioursEnabled(false);
