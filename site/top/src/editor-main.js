@@ -3,7 +3,8 @@ require.config({
   paths: {
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
-    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster'
+    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
+    'sourcemap': 'src/sourcemap'
   },
   shim: {
     'tooltipster': {
@@ -21,8 +22,8 @@ require.config({
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-require(['jquery', 'editor-view', 'editor-storage', 'seedrandom', 'see'],
-function($, view, storage, seedrandom, see) {
+require(['jquery', 'editor-view', 'editor-storage', 'seedrandom', 'see', 'sourcemap/source-map-consumer'],
+function($, view, storage, seedrandom, see, sourcemap) {
 
 eval(see.scope('controller'));
 
