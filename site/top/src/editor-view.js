@@ -64,6 +64,8 @@ window.pencilcode.view = {
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
+  markPaneEditorLine: markPaneEditorLine,
+  clearPaneEditorMarks: clearPaneEditorMarks,
   notePaneEditorCleanText: notePaneEditorCleanText,
   noteNewFilename: noteNewFilename,
   setPaneEditorReadOnly: setPaneEditorReadOnly,
@@ -119,6 +121,7 @@ function initialPaneState() {
   return {
     editor: null,
     cleanText: null,
+    marked: {},
     mimeType: null,
     dirtied: false,
     links: null,
@@ -920,6 +923,7 @@ function clearPane(pane, loading) {
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
+  paneState.marked = {};
   paneState.mimeType = null;
   paneState.dirtied = false;
   paneState.links = null;
@@ -1086,6 +1090,7 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
+    clearPaneEditorMarks(pane);
     if (editor.getFontSize() > 16) {
       if (editor.getSession().getLength() *
           editor.getFontSize() * 1.4 > $('#' + pane).height()) {
@@ -1176,6 +1181,51 @@ function getPaneEditorText(pane) {
   text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
   return {text: text, mime: paneState.mimeType };
+}
+
+// Marks a line of the editor using the given CSS class
+// (using 1-based line numbering).
+// Marks are cumulative.  To clear all marks of a given class,
+// call clearPaneEditorMarks.
+function markPaneEditorLine(pane, line, markclass) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) {
+    return;
+  }
+  // ACE uses zero-based line numbering.
+  var zline = line - 1;
+  // Add the marker.
+  var r = paneState.editor.session.highlightLines(zline, zline, markclass);
+  // Save the mark ID so that it can be cleared later.
+  if (!paneState.marked[markclass]) {
+    paneState.marked[markclass] = [];
+  }
+  paneState.marked[markclass].push(r.id);
+}
+
+// Clears all marks of the given class.
+// If no markclass is passed, clears all marks of all classes.
+function clearPaneEditorMarks(pane, markclass) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) {
+    return;
+  }
+  if (!markclass) {
+    for (markclass in paneState.marked) {
+      if (markclass) {
+        clearPaneEditorMarks(pane, markclass);
+      }
+    }
+    return;
+  }
+  var list = paneState.marked[markclass];
+  var session = paneState.editor.session;
+  delete paneState.marked[markclass];
+  if (list) {
+    for (var j = 0; j < list.length; ++j) {
+      session.removeMarker(list[j]);
+    }
+  }
 }
 
 function notePaneEditorCleanText(pane, text) {

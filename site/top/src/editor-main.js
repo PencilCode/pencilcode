@@ -3,7 +3,9 @@ require.config({
   paths: {
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
-    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster'
+    'editor-debug': 'src/editor-debug',
+    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
+    'sourcemap': 'src/sourcemap'
   },
   shim: {
     'tooltipster': {
@@ -21,10 +23,17 @@ require.config({
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-require(['jquery', 'editor-view', 'editor-storage', 'seedrandom', 'see'],
-function($, view, storage, seedrandom, see) {
+require([
+  'jquery',
+  'editor-view',
+  'editor-storage',
+  'editor-debug',
+  'seedrandom',
+  'see'],
+function($, view, storage, debug, seedrandom, see) {
 
 eval(see.scope('controller'));
+debug.init();
 
 var model = {
   // Owner name of this file or directory.
@@ -208,6 +217,7 @@ view.on('run', function() {
   }
   var runtext = mimetext && mimetext.text;
   var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  view.clearPaneEditorMarks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
     storage.saveFile(model.ownername,
