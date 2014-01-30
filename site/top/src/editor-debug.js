@@ -15,7 +15,7 @@ eval(see.scope('debug'));
 // as the top frame's "ide" global variable:
 var debug = {
   init: function init() { window.ide = debug; },
-  bind: bindToWindow,
+  bindframe: bindToWindow,
   highlight: highlight
 };
 
