@@ -4826,10 +4826,28 @@ function playABC(elem, args) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+// DEBUGGING SUPPORT
+//////////////////////////////////////////////////////////////////////////
+var debug = {
+  init: function initdebug() {
+    if (parent && parent.ide) {
+      this.ide = parent.ide;
+      this.ide.bindframe(window);
+    }
+  },
+  showerror: function showerror(e) {
+    if (this.ide) { this.ide.highlight(e, 'debugerror'); }
+  },
+  ide: null
+};
+
+debug.init();
 
 //////////////////////////////////////////////////////////////////////////
 // SEE LOGGING SUPPORT
 // A copy of see.js here.
+// TODO: figure out how to move this into the IDE.
 //////////////////////////////////////////////////////////////////////////
 
 // see.js version 0.2
@@ -5046,6 +5064,10 @@ see = function see() {
       queue.push(htmlescape(obj));
     } else {
       queue.push(repr(obj, logdepth, queue));
+    }
+    if (obj instanceof Error || obj instanceof ErrorEvent) {
+      // Logging an error event will highlight the error line if in an ide.
+      debug.showerror(obj);
     }
     if (args.length) { queue.push(' '); }
   }
