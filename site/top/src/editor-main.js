@@ -745,7 +745,7 @@ view.on('rename', function(newname) {
   }
   function completeRename(newfile) {
     view.flashNotification(
-        (newfile ? 'Using name ' : 'Moved to ') + newname + '.');
+        (newfile ? 'Using name ' : 'Renamed to ') + newname + '.');
     mp.filename = newname;
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
