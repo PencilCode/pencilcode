@@ -1,8 +1,6 @@
-[![Build Status](https://travis-ci.org/PencilCode/pencilcode-site.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode-site)
-
 How To Build and Test PencilCode
 ================================
-
+[![Build Status](https://travis-ci.org/PencilCode/pencilcode-site.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode-site)
 First install the prerequisites: git, nodejs, and grunt.  Then:
 
 <pre>
