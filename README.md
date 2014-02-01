@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/PencilCode/pencilcode-site.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode-site)
+
 How To Build and Test PencilCode
 ================================
 
