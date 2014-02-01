@@ -106,7 +106,10 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl
+  setVisibleUrl: setVisibleUrl,
+
+  // Focus the editor
+  focusEditor:focusEditor
 };
 
 function paneid(position) {
@@ -1274,6 +1277,13 @@ function noteNewFilename(pane, filename) {
     paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
   }
   updatePaneTitle(pane);
+}
+
+function focusEditor(pane) {
+  var paneState = state.pane[pane];
+  if (paneState.editor) {
+    paneState.editor.focus();
+  }
 }
 
 eval(see.scope('view'));

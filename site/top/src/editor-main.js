@@ -357,6 +357,7 @@ function saveAction(forceOverwrite) {
         modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
       }
     }
+    view.focusEditor(paneatpos('left'));
     updateTopControls();
   }
   if (newdata.auth && model.ownername != model.username) {
