@@ -107,9 +107,6 @@ window.pencilcode.view = {
   },
   // Sets visible URL without navigating.
   setVisibleUrl: setVisibleUrl,
-
-  // Focus the editor
-  focusEditor:focusEditor
 };
 
 function paneid(position) {
@@ -1158,7 +1155,10 @@ function setPaneEditorReadOnly(pane, ro) {
   $(paneState.editor.container).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
-  paneState.editor.blur();
+  // Only if the editor is read only do we want to blur it.
+  if (ro) {
+    paneState.editor.blur();
+  }
 }
 
 function isPaneEditorDirty(pane) {
@@ -1277,13 +1277,6 @@ function noteNewFilename(pane, filename) {
     paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
   }
   updatePaneTitle(pane);
-}
-
-function focusEditor(pane) {
-  var paneState = state.pane[pane];
-  if (paneState.editor) {
-    paneState.editor.focus();
-  }
 }
 
 eval(see.scope('view'));
