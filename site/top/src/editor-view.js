@@ -1155,7 +1155,10 @@ function setPaneEditorReadOnly(pane, ro) {
   $(paneState.editor.container).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
-  paneState.editor.blur();
+  // Only if the editor is read only do we want to blur it.
+  if (ro) {
+    paneState.editor.blur();
+  }
 }
 
 function isPaneEditorDirty(pane) {
