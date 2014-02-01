@@ -106,7 +106,7 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl,
+  setVisibleUrl: setVisibleUrl
 };
 
 function paneid(position) {
