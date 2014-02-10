@@ -102,7 +102,7 @@ function updateTopControls(addHistory) {
   } else {
     if (m.data && m.data.file) {
       buttons.push(
-        {id: 'save', label: 'Save',
+        {id: 'save', title: 'Ctrl+S', label: 'Save',
          disabled: !specialowner() && model.username &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
     }
@@ -128,7 +128,7 @@ function updateTopControls(addHistory) {
         {id: 'guide', label: '<span class=helplink>Guide</span>' });
     }
   }
-  // buttons.push({id: 'done', label: 'Done'});
+  // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
   // Update middle button.
   if (m.data && m.data.file ||

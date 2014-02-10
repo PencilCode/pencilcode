@@ -474,7 +474,7 @@ $('#buttonbar').on('change', 'input[type=checkbox]', function(e) {
 });
 
 // buttonlist should be
-// [{label:, id:, callback:, checkbox:, checked:, disabled:}]
+// [{label:, id:, callback:, checkbox:, checked:, disabled:, title:}]
 function showButtons(buttonlist) {
   var bar = $('#buttonbar');
   var html = '';
@@ -486,15 +486,21 @@ function showButtons(buttonlist) {
         (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
         (buttonlist[j].checked ? ' checked' : '') +
         (buttonlist[j].disabled ? ' disabled' : '') +
+        (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
         '>' + buttonlist[j].label + '</label></button>';
     } else {
       html += '<button' +
         (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
-        (buttonlist[j].disabled ? ' disabled' : '') +
+        (buttonlist[j].disabled ? ' disabled' : '') + 
+        (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
         '>' + buttonlist[j].label + '</button>';
     }
   }
   bar.html(html);
+  
+  // set tooltip for the save button after the buttons are
+  // registered with the buttonbar
+  $('#save').tooltipster();
 }
 
 function enableButton(id, enable) {
@@ -517,11 +523,13 @@ $(window).on('resize.middlebutton', centerMiddle);
 function showMiddleButton(which) {
   if (which == 'run') {
     $('#middle').find('div').eq(0).html(
-      '<button id="run"><div class="triangle"></div></button>');
+      '<button id="run" title="Ctrl+Enter"><div class="triangle"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
     }
+    // set tooltip for the run button
+    $('#run').tooltipster();
   } else if (which == 'edit' && state.previewMode) {
     $('#middle').find('div').eq(0).html(
       '<button id="edit">&#x25c1;</button>');
