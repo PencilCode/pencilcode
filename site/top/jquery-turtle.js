@@ -4839,7 +4839,10 @@ var debug = {
   showerror: function showerror(e) {
     if (this.ide) { this.ide.highlight(e, 'debugerror'); }
   },
-  ide: null
+  ide: null,
+  reportEvent: function(name, args) {
+    if (this.ide) { this.ide.reportEvent(name, args); }
+  }
 };
 
 debug.init();
