@@ -2629,6 +2629,68 @@ function canMoveInstantly(sel) {
         ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0)) && elem;
 }
 
+function doNothing() {}
+
+// When using continuation-passing-style (or await-defer), the
+// common design pattern is for the last argument of a function
+// to be a "continuation" function that is invoked exactly once when
+// the aync action requested by the function is completed.  For example,
+// the last argument of "lt 90, fn" is a function that is called when
+// the turtle has finished animating left by 90 degrees.
+// This function returns that last argument if it is a function and
+// if the argument list is longer than argcount, or null otherwise.
+function continuationArg(args, argcount) {
+  if (!argcount) { argcount = 0; }
+  if (args.length <= argcount || typeof(args[args.length - 1]) != 'function') {
+    return null;
+  }
+  return args[args.length - 1];
+}
+
+// This function helps implement the continuation-passing-style
+// design pattern for turtle animation functions.  It examines the "this"
+// jQuery object and the argument list.  If a continuation callback
+// function is present, then it returns an object that provides:
+//    args: the argument list without the callback function.
+//    resolve: a callback function to be called this.length times,
+//        as each of the elements' animations completes.  The last time
+//        it is called, it will trigger the continuation callback, if any.
+//    resolver: same as resolve, but null if there is actually no callback.
+//    start: a function to be called once to enable triggering of the callback.
+// the last argument in an argument list if it is a function, and if the
+// argument list is longer than "argcount" in length.
+function setupContinuation(thissel, args, argcount) {
+  var done = continuationArg(args, argcount),
+      countdown = thissel.length + 1,
+      sync = true;
+  if (!done) {
+    return { args: args, resolver: null, resolve: doNothing, start: doNothing };
+  }
+  function resolve() {
+    if ((--countdown) == 0) {
+      // A subtlety: if we still have not yet finished setting things up
+      // when the callback is triggered, it means that we are synchronous
+      // to the original call.  For execution-order consistency, we never
+      // want to trigger the users' callback synchronously. So we use a
+      // timeout in this case.
+      if (sync) {
+        setTimeout(done, 0);
+      } else {
+        done();
+      }
+    }
+  }
+  return {
+    args: Array.prototype.slice.call(args, 0, args.length - 1),
+    resolver: resolve,
+    resolve: resolve,
+    start: function start() {
+      resolve();
+      sync = false;
+    }
+  };
+}
+
 var turtlefn = {
   rt: wraphelp(
   ["<u>rt(degrees)</u> Right turn. Pivots clockwise by some degrees: " +
@@ -2636,6 +2698,10 @@ var turtlefn = {
    "<u>rt(degrees, radius)</u> Right arc. Pivots with a turning radius: " +
       "<mark>rt 90, 50</mark>"],
   function rt(degrees, radius) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      radius = cc.args[1];
+    }
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
@@ -2643,23 +2709,30 @@ var turtlefn = {
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
       doQuickRotate(elem, degrees);
+      cc.resolve();
+      cc.start();
       return this;
     }
     if (radius == null) {
-      return this.plan(function(j, elem) {
+      this.plan(function(j, elem) {
         this.animate({turtleRotation: '+=' + cssNum(degrees || 0) + 'deg'},
-            animTime(elem), animEasing(elem));
+            animTime(elem), animEasing(elem), cc.resolver);
       });
+      cc.start();
+      return this;
     } else {
-      return this.plan(function(j, elem) {
+      this.plan(function(j, elem) {
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '+=' + cssNum(degrees) + 'deg'},
             animTime(elem), animEasing(elem));
         this.plan(function() {
           this.css({turtleTurningRadius: oldRadius});
+          cc.resolve();
         });
       });
+      cc.start();
+      return this;
     }
   }),
   lt: wraphelp(
@@ -2668,6 +2741,10 @@ var turtlefn = {
    "<u>lt(degrees, radius)</u> Left arc. Pivots with a turning radius: " +
       "<mark>lt 90, 50</mark>"],
   function lt(degrees, radius) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      radius = cc.args[1];
+    }
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
@@ -2675,70 +2752,105 @@ var turtlefn = {
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
       doQuickRotate(elem, -degrees);
+      cc.resolve();
+      cc.start();
       return this;
     }
     if (radius == null) {
-      return this.plan(function(j, elem) {
+      this.plan(function(j, elem) {
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
-            animTime(elem), animEasing(elem));
+            animTime(elem), animEasing(elem), cc.resolver);
       });
+      cc.start();
+      return this;
     } else {
-      return this.plan(function(j, elem) {
+      this.plan(function(j, elem) {
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '-=' + cssNum(degrees) + 'deg'},
             animTime(elem), animEasing(elem));
         this.plan(function() {
           this.css({turtleTurningRadius: oldRadius});
+          cc.resolve();
         });
       });
+      cc.start();
+      return this;
     }
   }),
   fd: wraphelp(
   ["<u>fd(pixels)</u> Forward. Moves ahead by some pixels: " +
       "<mark>fd 100</mark>"],
   function fd(amount) {
+    var cc = setupContinuation(this, arguments, 1);
     if (amount == null) {
       amount = 100;  // zero-argument default.
     }
     var elem;
     if ((elem = canMoveInstantly(this))) {
       doQuickMove(elem, amount, 0);
+      cc.resolve();
+      cc.start();
       return this;
     }
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
-          animTime(elem), animEasing(elem));
+          animTime(elem), animEasing(elem), cc.resolver);
     });
+    cc.start();
+    return this;
   }),
   bk: wraphelp(
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"],
   function bk(amount) {
+    var cc = setupContinuation(this, arguments, 1);
     if (amount == null) {
       amount = 100;  // zero-argument default.
     }
-    return this.fd(-amount);
+    var elem;
+    if ((elem = canMoveInstantly(this))) {
+      doQuickMove(elem, -amount, 0);
+      cc.resolve();
+      cc.start();
+      return this;
+    }
+    this.plan(function(j, elem) {
+      this.animate({turtleForward: '-=' + cssNum(amount || 0) + 'px'},
+          animTime(elem), animEasing(elem), cc.resolver);
+    });
+    cc.start();
+    return this;
   }),
   slide: wraphelp(
   ["<u>slide(x, y)</u> Slides right x and forward y pixels without turning: " +
       "<mark>slide 50, 100</mark>"],
   function slide(x, y) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      y = cc.args[1];
+    }
     if ($.isArray(x)) {
       y = x[1];
       x = x[0];
     }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
-    return this.plan(function(j, elem) {
-      this.animate({turtlePosition:
-          displacedPosition(elem, y, x)}, animTime(elem), animEasing(elem));
+    this.plan(function(j, elem) {
+      this.animate({turtlePosition: displacedPosition(elem, y, x)},
+          animTime(elem), animEasing(elem), cc.resolver);
     });
+    cc.start();
+    return this;
   }),
   movexy: wraphelp(
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
       "<mark>movexy 50, 100</mark>"],
   function movexy(x, y) {
+    var cc = setupContinuation(this, arguments, 2);
+    if (cc.resolver) {
+      y = cc.args[1];
+    }
     if ($.isArray(x)) {
       y = x[1];
       x = x[0];
@@ -2748,14 +2860,18 @@ var turtlefn = {
     var elem;
     if ((elem = canMoveInstantly(this))) {
       doQuickMoveXY(elem, x, y);
+      cc.resolve();
+      cc.start();
       return this;
     }
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       var tr = getElementTranslation(elem);
       this.animate(
         { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-        animTime(elem), animEasing(elem));
+        animTime(elem), animEasing(elem), cc.resolver);
     });
+    cc.start();
+    return this;
   }),
   moveto: wraphelp(
   ["<u>moveto(x, y)</u> Move to graphing coordinates (see <u>getxy</u>): " +
@@ -2764,6 +2880,10 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"],
   function moveto(x, y) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      y = cc.args[1];
+    }
     var position = x, localx = 0, localy = 0, limit = null;
     if ($.isNumeric(position) && $.isNumeric(y)) {
       // moveto x, y: use local coordinates.
@@ -2782,7 +2902,7 @@ var turtlefn = {
       limit = y;
     }
     // Otherwise moveto {pos}, limit: absolute motion with optional limit.
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       var pos = position;
       if (pos === null) {
         pos = $(homeContainer(elem)).pagexy();
@@ -2803,36 +2923,44 @@ var turtlefn = {
       }
       this.animate({turtlePosition:
           computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
-          animTime(elem), animEasing(elem));
+          animTime(elem), animEasing(elem), cc.resolver);
     });
+    cc.start();
+    return this;
   }),
   jump: wraphelp(
   ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
       "<mark>jump 0, 50</mark>"],
   function jump(x, y) {
-    var args = arguments;
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 1);
+    this.plan(function(j, elem) {
       var down = this.css('turtlePenDown');
       this.css({turtlePenDown: 'up'});
-      this.slide.apply(this, args);
+      this.slide.apply(this, cc.args);
       this.plan(function() {
         this.css({turtlePenDown: down});
+        cc.resolve();
       });
     });
+    cc.start();
+    return this;
   }),
   jumpto: wraphelp(
   ["<u>jumpto(x, y)</u> Move without drawing (compare to <u>moveto</u>): " +
       "<mark>jumpto 50, 100</mark>"],
   function jumpto(x, y) {
-    var args = arguments;
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 1);
+    this.plan(function(j, elem) {
       var down = this.css('turtlePenDown');
       this.css({turtlePenDown: 'up'});
-      this.moveto.apply(this, args);
+      this.moveto.apply(this, cc.args);
       this.plan(function() {
         this.css({turtlePenDown: down});
+        cc.resolve();
       });
     });
+    cc.start();
+    return this;
   }),
   turnto: wraphelp(
   ["<u>turnto(degrees)</u> Turn to a direction. " +
@@ -2842,12 +2970,16 @@ var turtlefn = {
    "<u>turnto(obj)</u> Turn to page coordinates or an object on the page: " +
       "<mark>turnto lastmousemove</mark>"],
   function turnto(bearing, y) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      y = cc.args[1];
+    }
     if ($.isNumeric(y) && $.isNumeric(bearing)) {
       // turnto x, y: convert to turnto [x, y].
       bearing = [bearing, y];
       y = null;
     }
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       if ($.isWindow(elem) || elem.nodeType === 9) return;
       // turnto bearing: just use the given absolute.
       var limit = null, ts, r, centerpos,
@@ -2870,6 +3002,7 @@ var turtlefn = {
         try {
           targetpos = $(bearing).pagexy();
         } catch(e) {
+          cc.resolve();
           return;
         }
       }
@@ -2883,14 +3016,18 @@ var turtlefn = {
         dir = limitRotation(ts.rot, dir, limit === null ? 360 : limit);
       }
       dir = ts.rot + normalizeRotation(dir - ts.rot);
-      this.animate({turtleRotation: dir}, animTime(elem), animEasing(elem));
+      this.animate({turtleRotation: dir},
+          animTime(elem), animEasing(elem), cc.resolver);
     });
+    cc.start();
+    return this;
   }),
   home: wraphelp(
   ["<u>home()</u> Goes home. " +
       "Jumps to the center without drawing: <mark>do home</mark>"],
   function home(container) {
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 0);
+    this.plan(function(j, elem) {
       var down = this.css('turtlePenDown'),
           radius = this.css('turtleTurningRadius'),
           hc = container || homeContainer(elem);
@@ -2901,7 +3038,10 @@ var turtlefn = {
               elem, $(hc).pagexy(), null, 0, 0),
         turtleRotation: 0});
       this.css({turtlePenDown: down, turtleTurningRadius: radius });
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   pen: wraphelp(
   ["<u>pen(color, size)</u> Selects a pen. " +
@@ -2914,6 +3054,10 @@ var turtlefn = {
       "<mark>pen off</mark>; <mark>pen on</mark>."
   ],
   function pen(penstyle, lineWidth) {
+    var cc = setupContinuation(this, arguments, 1);
+    if (cc.resolver) {
+      lineWidth = cc.args[1];
+    }
     if (penstyle && (typeof(penstyle) == "function") && penstyle.name) {
       // Deal with "tan" and "fill".
       penstyle = penstyle.name;
@@ -2932,7 +3076,7 @@ var turtlefn = {
     } else if (penstyle === null) {
       penstyle = 'none';
     }
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       if (penstyle === false || penstyle === true ||
           penstyle == 'down' || penstyle == 'up') {
         this.css('turtlePenDown', penstyle);
@@ -2942,31 +3086,43 @@ var turtlefn = {
         }
         this.css('turtlePenStyle', penstyle);
       }
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   fill: wraphelp(
   ["<u>fill(color)</u> Fills a path traced using " +
       "<u>pen path</u>: " +
       "<mark>pen path; rt 100, 90; fill blue</mark>"],
   function fill(style) {
+    var cc = setupContinuation(this, arguments, 0);
     if (!style) { style = 'black'; }
     var ps = parsePenStyle(style, 'fillStyle');
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       endAndFillPenPath(elem, ps);
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   dot: wraphelp(
   ["<u>dot(color, diameter)</u> Draws a dot. " +
       "Color and diameter are optional: " +
       "<mark>dot blue</mark>"],
   function dot(style, diameter) {
+    var cc = setupContinuation(this, arguments, 0);
+    if (cc.resolver) {
+      style = cc.args[0];
+      diameter = cc.args[1];
+    }
     if ($.isNumeric(style)) {
       // Allow for parameters in either order.
       var t = style;
       style = diameter;
       diameter = t;
     }
-    if (diameter === undefined) { diameter = 8.8; }
+    if (diameter == null) { diameter = 8.8; }
     if (!style) { style = 'black'; }
     var ps = parsePenStyle(style, 'fillStyle');
     return this.plan(function(j, elem) {
@@ -2976,40 +3132,62 @@ var turtlefn = {
       // Scale by sx.  (TODO: consider parent transforms.)
       fillDot(c, diameter * ts.sx + extraDiam, ps);
     });
+    cc.start();
+    return this;
   }),
   pause: wraphelp(
   ["<u>pause(seconds)</u> Pauses some seconds before proceeding. " +
       "<mark>fd 100; pause 2.5; bk 100</mark>"],
   function pause(seconds) {
-    return this.delay(seconds * 1000);
+    var cc = setupContinuation(this, arguments, 1);
+    this.delay(seconds * 1000);
+    if (cc.resolver) {
+      this.plan(function() {
+        cc.resolve();
+      });
+      cc.start();
+    }
+    return this;
   }),
   st: wraphelp(
   ["<u>st()</u> Show turtle. The reverse of " +
       "<u>ht()</u>. <mark>do st</mark>"],
   function st() {
-    return this.plan(function() { this.show(); });
+    var cc = setupContinuation(this, arguments, 0);
+    this.plan(function() {
+      this.show();
+      cc.resolve();
+    });
+    cc.start();
+    return this;
   }),
   ht: wraphelp(
   ["<u>ht()</u> Hide turtle. The turtle can be shown again with " +
       "<u>st()</u>. <mark>do ht</mark>"],
   function ht() {
-    return this.plan(function() { this.hide(); });
+    var cc = setupContinuation(this, arguments, 0);
+    return this.plan(function() {
+      this.hide();
+      cc.resolve();
+    });
+    cc.start();
+    return this;
   }),
   pu:
   function pu() {
-    return this.pen(false);
+    return this.pen(false, continuationArg(arguments, 0));
   },
   pd:
   function pd() {
-    return this.pen(true);
+    return this.pen(true, continuationArg(arguments, 0));
   },
   pe:
   function pe() {
-    return this.pen('erase');
+    return this.pen('erase', continuationArg(arguments, 0));
   },
   pf:
   function pf() {
-    return this.pen('path');
+    return this.pen('path', continuationArg(arguments, 0));
   },
   play: wraphelp(
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
@@ -3017,19 +3195,24 @@ var turtlefn = {
       "ABC notation</a>.  " +
       "<mark>play \"de[dBFA]2[cGEC]4\"</mark>"],
   function play(notes) {
-    var args = arguments;
-    return this.queue(function() {
-      // playABC will call $(this).dequeue() when song is done.
-      playABC(this, args);
+    var cc = setupContinuation(this, arguments, 1);
+    this.queue(function() {
+      playABC(function() { cc.resolve(); $(this).dequeue(); }, cc.args);
     });
+    cc.start();
+    return this;
   }),
   speed: wraphelp(
   ["<u>speed(persec)</u> Set one turtle's speed in moves per second: " +
       "<mark>turtle.speed 60</mark>"],
   function speed(mps) {
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 1);
+    this.plan(function(j, elem) {
       this.css('turtleSpeed', mps);
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   wear: wraphelp(
   ["<u>wear(color)</u> Sets the turtle shell color: " +
@@ -3038,9 +3221,10 @@ var turtlefn = {
    "<u>wear(url)</u> Sets the turtle image url: " +
       "<mark>wear 'http://bit.ly/1bgrQ0p'</mark>"],
   function wear(name) {
+    var cc = setupContinuation(this, arguments, 1);
     var img = nameToImg(name);
     if (!img) return this;
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       // Bug workaround - if background isn't cleared early enough,
       // the turtle image doesn't update.  (Even though this is done
       // later in applyImg.)
@@ -3048,7 +3232,10 @@ var turtlefn = {
         backgroundImage: 'none',
       });
       applyImg(this, img);
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   label: wraphelp(
   ["<u>label(text)</u> Labels the current position with HTML: " +
@@ -3074,10 +3261,12 @@ var turtlefn = {
     });
   }),
   reload: function reload() {
+    var cc = setupContinuation(this, arguments, 0);
     // Used to reload images to cycle animated gifs.
-    return this.plan(function(j, elem) {
+    this.plan(function(j, elem) {
       if ($.isWindow(elem) || elem.nodeType === 9) {
         window.location.reload();
+        cc.resolve();
         return;
       }
       if (elem.src) {
@@ -3085,7 +3274,10 @@ var turtlefn = {
         elem.src = '';
         elem.src = src;
       }
+      cc.resolve();
     });
+    cc.start();
+    return this;
   },
   hatch:
   function(count, spec) {
@@ -3186,14 +3378,18 @@ var turtlefn = {
           p = c[0] * (c.length > 1 ? c[1] : c[0]);
       return (p < 0);
     }
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 1);
+    this.plan(function(j, elem) {
       var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
       if (c.length === 1) { c.push(c[0]); }
       if ((c[0] * c[1] < 0) === (!val)) {
         c[0] = -c[0];
         this.css('turtleScale', c.join(' '));
       }
+      cc.resolve();
     });
+    cc.start();
+    return this;
   },
   twist: wraphelp(
   ["<u>twist(degrees)</u> Set the primary direction of the turtle. Allows " +
@@ -3203,26 +3399,34 @@ var turtlefn = {
     if (val === undefined) {
       return parseFloat(this.css('turtleTwist'));
     }
-    return this.plan(function(j, elem) {
+    var cc = setupContinuation(this, arguments, 1);
+    this.plan(function(j, elem) {
       if ($.isWindow(elem) || elem.nodeType === 9) return;
       this.css('turtleTwist', val);
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   scale: wraphelp(
   ["<u>scale(factor)</u> Scales all motion up or down by a factor. " +
       "To double all drawing: <mark>scale(2)</mark>"],
   function scale(valx, valy) {
+    var cc = setupContinuation(this, arguments, 1);
     if (valy === undefined) { valy = valx; }
     // Disallow scaling to zero using this method.
-    if (!valx || !valy) { return this; }
-    return this.plan(function(j, elem) {
+    if (!valx || !valy) { valx = valy = 1; }
+    this.plan(function(j, elem) {
       if ($.isWindow(elem) || elem.nodeType === 9) return;
       var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
       if (c.length === 1) { c.push(c[0]); }
       c[0] *= valx;
       c[1] *= valy;
       this.css('turtleScale', $.map(c, cssNum).join(' '));
+      cc.resolve();
     });
+    cc.start();
+    return this;
   }),
   cell: wraphelp(
   ["<u>cell(r, c)</u> Row r and column c in a table. " +
@@ -3445,16 +3649,6 @@ var turtlefn = {
       }
     }
     return this;
-  }),
-  loadscript: wraphelp(
-  ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
-       "the given URL, calling callback when done."],
-  function loadscript(url, callback) {
-    if (window.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
-      CoffeeScript.load(url, callback);
-    } else {
-      $.getScript(url, callback);
-    }
   })
 };
 
@@ -3528,15 +3722,24 @@ var dollar_turtle_methods = {
   cs: wraphelp(
   ["<u>cs()</u> Clear screen. Erases both graphics canvas and " +
       "body text: <mark>do cs</mark>"],
-  function cs() { planIfGlobal(function() { clearField() }); }),
+  function cs() {
+    var cc = setupContinuation(this, arguments, 0);
+    planIfGlobal(function() { clearField(); cc.resolve(); });
+  }),
   cg: wraphelp(
   ["<u>cg()</u> Clear graphics. Does not alter body text: " +
       "<mark>do cg</mark>"],
-  function cg() { planIfGlobal(function() {clearField('canvas turtles') });}),
+  function cg() {
+    var cc = setupContinuation(this, arguments, 0);
+    planIfGlobal(function() {clearField('canvas turtles'); cc.resolve(); });
+  }),
   ct: wraphelp(
   ["<u>ct()</u> Clear text. Does not alter graphics canvas: " +
       "<mark>do ct</mark>"],
-  function ct() { planIfGlobal(function() { clearField('text') }); }),
+  function ct() {
+    var cc = setupContinuation(this, arguments, 0);
+    planIfGlobal(function() { clearField('text'); cc.resolve(); });
+  }),
   tick: wraphelp(
   ["<u>tick(fps, fn)</u> Calls fn fps times per second until " +
       "<u>tick</u> is called again: " +
@@ -3548,7 +3751,8 @@ var dollar_turtle_methods = {
   ["<u>speed(mps)</u> Sets default turtle speed in moves per second: " +
       "<mark>speed Infinity</mark>"],
   function globalspeed(mps) {
-    planIfGlobal(function() { globaldefaultspeed(mps); });
+    var cc = setupContinuation(this, arguments, 0);
+    planIfGlobal(function() { globaldefaultspeed(mps); cc.resolve(); });
   }),
   play: wraphelp(
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
@@ -3560,7 +3764,8 @@ var dollar_turtle_methods = {
       var sel = $(global_turtle);
       sel.play.apply(sel, arguments);
     } else {
-      playABC(null, arguments);
+      var cc = setupContinuation(this, arguments, 0);
+      playABC(function() { cc.resolve(); }, arguments);
     }
   }),
   done: wraphelp(
@@ -3802,6 +4007,16 @@ var dollar_turtle_methods = {
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
   Pencil: Pencil,
+  loadscript: wraphelp(
+  ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
+       "the given URL, calling callback when done."],
+  function loadscript(url, callback) {
+    if (window.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
+      CoffeeScript.load(url, callback);
+    } else {
+      $.getScript(url, callback);
+    }
+  }),
 
   help: globalhelp
 };
@@ -4720,9 +4935,9 @@ function durationToTime(duration) {
   }
   return i + (n / d);
 }
-function playABC(elem, args) {
+function playABC(done, args) {
   if (!isAudioPresent()) {
-    if (elem) { $(elem).dequeue(); }
+    if (done) { done(); }
     return;
   }
   var atop = getAudioTop(),
@@ -4818,10 +5033,10 @@ function playABC(elem, args) {
     if (atop.ac.currentTime < end_time) {
       setTimeout(callDequeueWhenDone, (end_time - atop.ac.currentTime) * 1000);
     } else {
-      $(elem).dequeue();
+      if (done) { done(); }
     }
   }
-  if (elem) {
+  if (done) {
     callDequeueWhenDone();
   }
 }
