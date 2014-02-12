@@ -1,10 +1,10 @@
 How To Build and Test PencilCode
 ================================
-[![Build Status](https://travis-ci.org/PencilCode/pencilcode-site.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode-site)
+[![Build Status](https://travis-ci.org/jamessynge/pencilcode-site.png?branch=master)](https://travis-ci.org/jamessynge/pencilcode-site)
 First install the prerequisites: git, nodejs, and grunt.  Then:
 
 <pre>
-git clone https://github.com/PencilCode/pencilcode-site.git
+git clone https://github.com/jamessynge/pencilcode-site.git
 cd pencilcode-site
 npm install
 grunt
