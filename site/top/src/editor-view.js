@@ -72,6 +72,7 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
+  showPaneRunProtractor: showPaneRunProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   // Mananges panes and preview mode
@@ -786,6 +787,20 @@ function setPaneRunText(pane, text, filename, targetUrl) {
     }
     $(this).dequeue();
   });
+}
+
+function showPaneRunProtractor(pane, x, y, direction) {
+  var paneState = state.pane[pane];
+  if (!paneState.running) {
+    console.log('NOT RUNNING, no protractor for you!');
+    return;
+  }
+  var preview = $('#' + pane + ' .preview');
+  var protractor = preview.find('.protractor');
+  if (!protractor) {
+    protractor = $('<canvas class=protractor>').appendTo(preview);
+  }
+  renderProtractor(protractor, x, y, direction);
 }
 
 ///////////////////////////////////////////////////////////////////////////

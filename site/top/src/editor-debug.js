@@ -14,15 +14,26 @@ eval(see.scope('debug'));
 // Exported functions from the edit-debug module are exposed
 // as the top frame's "ide" global variable:
 var debug = {
-  init: function init() { window.ide = debug; },
+  init: function init() {
+    window.ide = debug;
+    $(debug).on('clickturtle', debugClickTurtle);
+  },
   bindframe: bindToWindow,
-  highlight: highlight
+  highlight: highlight,
+  reportEvent: function(name, args) {
+    console.log('reportEvent("' + name + '")');
+    $(debug).triggerHandler(name, args);
+  }
 };
 
 var scope = null;
 
 function bindToWindow(w) {
   scope = w;
+}
+
+function debugClickTurtle(localEvent, remoteEvent) {
+  console.log('debugClickTurtle');
 }
 
 var highlighted = { };
