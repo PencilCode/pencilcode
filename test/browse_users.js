@@ -78,7 +78,9 @@ describe('browse users in edit mode', function() {
       var dirs = [];
       $('#bydate').click();
       $('.directory a').each(function() { dirs.push($(this).text()); });
-      return dirs.join(' ');
+      var r = dirs.join(' ');
+      if (!/ david .* abc123 /.test(r)) return null;
+      return r;
     }, function(err, result) {
       assert.ifError(err);
       assert.ok(/ david .* abc123 /
