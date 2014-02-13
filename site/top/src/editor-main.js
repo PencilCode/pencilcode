@@ -61,10 +61,25 @@ var model = {
   passkey: null,
 };
 
+//
+// Retrieve model.pane object given position.  It will be one of 
+// the alpha, bravo or charlie objects from above.  
+//
+// Parameters:
+//    pos: Position is one of 'left', 'back' or 'right', which maps
+//         to a class name of the element in the html
+//
 function modelatpos(pos) {
-  return model.pane[view.paneid(pos)];
+  return model.pane[paneatpos(pos)];
 }
 
+//
+// Retrieve pane ID corresponding to given position.
+//
+// Parameters:
+//    pos: Position is one of 'left', 'back' or 'right', which maps
+//         to a class name of the element in the html
+//
 function paneatpos(pos) {
   return view.paneid(pos);
 }
@@ -73,6 +88,12 @@ function posofpane(pane) {
   return view.panepos(pane);
 }
 
+//
+// Special owner is defined as one of:
+//   Nobody is the owner of this file/directory OR
+//   it's the guide who's logged in OR
+//   it's the event who's logged in. 
+//
 function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
           model.ownername === 'event');
@@ -88,23 +109,53 @@ function updateTopControls(addHistory) {
       slashed, addHistory)
   // Update top buttons.
   var buttons = [];
+
+  //
+  // If we're not in edit-mode, then push button to enter edit mode
+  //
+
   if (!model.editmode) {
     buttons.push({id: 'editmode', label: 'Edit'});
   } else {
+    //
+    // Otherwise check if we have a data file
+    //
+
     if (m.data && m.data.file) {
+      //
+      // If so, then insert save button
+      //
       buttons.push(
         {id: 'save', label: 'Save',
          disabled: !specialowner() && model.username &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
+
+      // Also insert share button
+      buttons.push({id: 'share', label: 'Share'});
     }
+
+    //
+    // If this directory is owned by some person (i.e. not specialowner)
+    //
+
     if (!specialowner()) {
+      //
+      // Then insert logout/login buttons depending on if someone
+      // is already logged in
+      //
       if (model.username) {
         buttons.push({id: 'logout', label: 'Log out'});
       } else {
         buttons.push({id: 'login', label: 'Log in'});
       }
     } else {
+      // We're either in some file or directory
       if (m.isdir) {
+	//
+	// If it's a directory then allow browsing by date
+	// or by alphabetical
+	//
+
         if (m.bydate) {
           buttons.push({id: 'byname', label: 'Alphabetize'});
         } else {
@@ -142,7 +193,26 @@ function updateTopControls(addHistory) {
   view.setPaneEditorReadOnly(paneatpos('back'), true);
 }
 
-view.on('help', function() {
+//
+// Now setup event handlers.  Each event handler corresponds to 
+// an ID (as specified in updateTopControls() above) and
+// an event handler function
+//
+
+var commandhandlers = {
+ 'help' : onhelp,
+ 'tour' : ontour,
+ 'clip' : onclip,
+ 'share' : onshare
+}
+
+for (var item in commandhandlers) {
+  if (commandhandlers[item] != null)
+    view.on(item, commandhandlers[item]);
+}
+
+
+function onhelp() {
   view.flashNotification('<a href="http://' +
      window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
     (getEditTextIfAny() ?
@@ -150,14 +220,43 @@ view.on('help', function() {
     (model.username ?
         '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
   );
-});
+}
 
-view.on('tour', function() {
+function onshare() {
+  var email = prompt('Please enter email address you want to share your program with:');
+  
+  // If the email is invalid or if we're offline then we're done
+  if (!isEmailValid(email) || !storage.isOnline())
+    return;
+
+  var msg = 'Check out this program I created on pencilcode.\r\n\r\n'
+    + window.location.href;
+
+  var payload = {
+    'email' : email,
+    'msg' : msg
+  }
+  $.post('http://' + window.pencilcode.domain + '/sendemail', 
+	 payload,
+	 function(m) { },
+	 'json').error(function() { });
+}
+
+function isEmailValid(email)
+{
+  if (email == null || email == '')
+    return false;
+
+  if (email.indexOf('@') == -1)
+    return false;
+}
+
+function ontour() {
   // view.flashNotification('Tour coming soon.');
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
-});
+}
 
-view.on('clip', function() {
+function onclip() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
@@ -168,7 +267,7 @@ view.on('clip', function() {
       prompt('URL to copy this code:', shortened);
     }
   });
-});
+}
 
 view.on('bydate', function() {
   if (modelatpos('left').isdir) {
