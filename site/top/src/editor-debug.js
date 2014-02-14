@@ -18,11 +18,17 @@ var debug = {
   bindframe: bindToWindow,
   highlight: highlight,
   history: [],
+  inFlashback: false,
   scope: null,
   resetHistory: function() {
-    debug.history = [];
+    if (! debug.inFlashback) {
+	debug.history = [];
+    }
   },
   reportEvent: function(name, data) {
+    if (debug.inFlashback) {
+	return;
+    }
     var debugId = data[0];
     var line = debugIdToLine[debugId];
     if (line == null) {
