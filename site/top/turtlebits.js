@@ -13011,8 +13011,7 @@ function setupContinuation(thissel, args, argcount) {
     }
   }
   function appear() {
-    debug.reportEvent("appear", [debugId].concat(
-        Array.prototype.slice.call(arguments)));
+    debug.reportEvent("appear", [debugId].concat(Array.prototype.slice.call(arguments)));
   }
   return {
     args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
@@ -13419,7 +13418,6 @@ var turtlefn = {
     }
     // SAFF: where?
     var turtleState = this.captureState();
-    cc.appear(turtleState, 'pen', penstyle, lineWidth);
     if (penstyle && (typeof(penstyle) == "function") && penstyle.name) {
       // Deal with "tan" and "fill".
       penstyle = penstyle.name;
@@ -13438,8 +13436,9 @@ var turtlefn = {
     } else if (penstyle === null) {
       penstyle = 'none';
     }
+    var turtleState = this.captureState();
     this.plan(function(j, elem) {
-      cc.appear();
+      cc.appear(turtleState, 'pen', penstyle, lineWidth);
       if (penstyle === false || penstyle === true ||
           penstyle == 'down' || penstyle == 'up') {
         this.css('turtlePenDown', penstyle);
