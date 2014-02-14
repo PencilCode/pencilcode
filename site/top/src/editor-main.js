@@ -130,6 +130,21 @@ function updateTopControls(addHistory) {
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
+  $('#_stupidslider').on('keydown', function(e) {
+      PAGE_UP = 33;
+      PAGE_DOWN = 34;
+      if (e.which == PAGE_UP || e.which == PAGE_DOWN) {
+	  var currentVal = $(this).val();
+	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
+	  if (e.which == PAGE_UP) {
+	      var newVal = Math.max(currentNum - 1, 0);
+	  } else {
+	      var newVal = Math.min(currentNum + 1, 100);
+	  }
+	  $(this).val(newVal + '%');
+	  setFlashbackHistoryPercent(newVal);
+      }
+  });
   // Update middle button.
   if (m.data && m.data.file ||
       (modelatpos('right').data && modelatpos('right').data.file)) {
@@ -207,7 +222,50 @@ view.on('editfocus', function(pane) {
   }
 });
 
+view.on('step', function() {
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  // view.showMiddleButton('running');
+  var queues = debug.resumeQueues;
+  for (var q = 0; q < queues.length; q++) {
+    var queue = queues[q];
+    var turtle = scopedJQ(queue[0]);
+    queue = queue[1];
+    turtle.queue(queue.shift());
+  }
+});
+
+view.on('resume', function() {
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  view.showMiddleButton('running');
+  var queues = debug.resumeQueues;
+  for (var q = 0; q < queues.length; q++) {
+    var queue = queues[q];
+    var turtle = scopedJQ(queue[0]);
+    queue = queue[1];
+    for (var i = 0; i < queue.length; i++) {
+      turtle.queue(queue[i]);
+    }
+  }
+});
+
+view.on('pause', function() {
+  var m = modelatpos('right');
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  var queues = [];
+  for (var i = 0; i < turtles.length; i++) {
+    var turtle = turtles[i];
+    queues.push([turtle, scopedJQ.queue(turtle).slice(1)]);
+    scopedJQ(turtle).clearQueue();
+  }
+  debug.resumeQueues = queues;
+  view.showMiddleButton('paused');
+});
+
 view.on('run', function() {
+  view.showMiddleButton('running');
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   if (!mimetext) {
     mimetext = view.getPaneEditorText(paneatpos('right'));
@@ -989,6 +1047,8 @@ function runCodeAtPosition(position, code, filename) {
   var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
           window.pencilcode.domain + '/home/' + filename;
   var pane = paneatpos(position);
+  // Reset the debugger history.
+  debug.resetHistory();
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1101,6 +1161,40 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     });
   }
 };
+
+function setFlashbackHistoryPercent(percent) {
+    history = debug.history;
+    console.log("history: " + history);
+    if (history.length > 0) {
+	numberOfEvents = Math.round((history.length / 100.0) * percent);
+	
+	console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
+	debug.inFlashback = true;
+	codeToRun = "speed Infinity\n";
+	for (var i = 0; i < numberOfEvents; i++) {
+	    console.log(history[i]);
+	    codeToRun += history[i].slice(2).join(' ') + "\n";
+	}
+	console.log("codeToRun: " + codeToRun);
+	runCodeAtPosition('right', codeToRun, '');
+	// SAFF: how to turn off debug.inFlashback eventually?
+    }
+}
+
+// SAFF: camel case
+function publishnewslidervalue(newVal) {
+    $("#_stupidslider").val(newVal + '%');
+    history = debug.getHistory();
+    console.log("history: " + history);
+    if (history.length > 0) {
+	numberOfEvents = Math.round((history.length / 100.0) * newVal);
+	
+	console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
+	for (var i = 0; i < numberOfEvents; i++) {
+	    console.log(history[i]);
+	}
+    }
+}
 
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
