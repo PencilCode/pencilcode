@@ -351,7 +351,7 @@ function displayProtractorForTurtle(turtlePos) {
    
    // Given non-null turtle object, pop up protractor seeded with current distance, direction
    
-	view.showPaneRunProtractor(
+	view.toggleProtractor(
 			paneatpos('right'), turtlePos.x, turtlePos.y, turtlePos.direction);
 }
 

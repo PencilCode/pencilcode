@@ -72,7 +72,7 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
-  showPaneRunProtractor: showPaneRunProtractor,
+  toggleProtractor: toggleProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   // Mananges panes and preview mode
@@ -797,7 +797,7 @@ function setPaneRunText(pane, text, filename, targetUrl) {
   });
 }
 
-function showPaneRunProtractor(pane, x, y, direction) {
+function toggleProtractor(pane, x, y, direction) {
   var paneState = state.pane[pane];
   if (!paneState.running) {
     console.log('NOT RUNNING, no protractor for you!');
@@ -805,9 +805,11 @@ function showPaneRunProtractor(pane, x, y, direction) {
   }
   var preview = $('#' + pane + ' .preview');
   var protractor = preview.find('.protractor');
-  if (!protractor.length) {
-    protractor = $('<canvas class=protractor>').appendTo(preview);
+  if (protractor.length) {
+    protractor.remove();
+    return;
   }
+  protractor = $('<canvas class=protractor>').appendTo(preview);
 	protractor.css({
 		"position": "absolute",
 		"top": "0",
