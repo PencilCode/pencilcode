@@ -16,7 +16,23 @@ eval(see.scope('debug'));
 var debug = {
   init: function init() { window.ide = debug; },
   bindframe: bindToWindow,
-  highlight: highlight
+  highlight: highlight,
+  reportEvent: function(name, data) {
+    var debugId = data[0];
+    var line = debugIdToLine[debugId];
+    if (line == null) {
+      line = editorLineNumberForError(Error());
+      debugIdToLine[debugId] = line;
+    }
+    if (name == 'appear') {
+      highlightLine(line, 'debugerror');
+    } else if (name == 'resolve') {
+      // A little memory cleanup.
+      debugIdToLine[debugId] = null;
+      // If we decide to clear the highlighted line here:
+      // highlightLine(null, 'debugerror');
+    }
+  }
 };
 
 var scope = null;
@@ -25,12 +41,17 @@ function bindToWindow(w) {
   scope = w;
 }
 
-var highlighted = { };
+var debugIdToLine = { };
 
-function highlight(err, reason) {
+function highlight(err, cssClass) {
   var line = editorLineNumberForError(err);
-  if (line) {
-    view.markPaneEditorLine(view.paneid('left'), line, reason);
+  highlightLine(line, cssClass);
+}
+
+function highlightLine(line, cssClass) {
+  view.clearPaneEditorMarks(view.paneid('left'), cssClass);
+  if (line != null) {
+    view.markPaneEditorLine(view.paneid('left'), line, cssClass);
   }
 }
 
@@ -82,8 +103,8 @@ function parsestack(err) {
         column: locationmatch[3] && parseInt(locationmatch[3])
       });
     }
-    return parsed;
   }
+  return parsed;
 }
 
 // Returns the (1-based) line number for an error object, if any;
@@ -92,6 +113,7 @@ function editorLineNumberForError(error) {
   if (!error) return null;
   var parsed = parsestack(error);
   if (!parsed) return null;
+
   if (!scope || !scope.CoffeeScript || !scope.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
