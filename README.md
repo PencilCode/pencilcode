@@ -11,8 +11,9 @@ grunt
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
-The prerequisites are a standard node.js development environment,
-which is very widely used.
+The prerequisites are a standard node.js development environment
+which is very widely used, plus grunt (you'll need to
+`npm install -g grunt-cli`).
 
 Prerequisites
 -------------
