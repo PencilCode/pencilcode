@@ -2783,8 +2783,8 @@ var turtlefn = {
       return this;
     }
     if (radius == null) {
-      cc.appear(turtleState, 'lt', degrees, radius);
       this.plan(function(j, elem) {
+        cc.appear(turtleState, 'lt', degrees, radius);
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem), cc.resolver);
       });
