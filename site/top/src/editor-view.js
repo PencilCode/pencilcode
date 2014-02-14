@@ -807,6 +807,7 @@ function toggleProtractor(pane, x, y, direction) {
   var protractor = preview.find('.protractor');
   if (protractor.length) {
     protractor.remove();
+    preview.find('.protractor-label').remove();
     return;
   }
   protractor = $('<canvas class=protractor>').appendTo(preview);
@@ -846,6 +847,35 @@ function updateProtractor(event) {
     event.data.centerY,
     event.data.direction,
     radius);
+
+  var preview = event.data.protractor.parent();
+  var label = preview.find('.protractor-label');
+  if (!label.length) {
+    label = $('<div class=protractor-label>').insertBefore(event.data.protractor);
+  }
+  label.html('dir<br>fd ' + Math.round(dist));
+  var css = {
+    position: 'absolute',
+    display: 'inline-block',
+    top: '',
+    left: '',
+  };
+  var height = label.height();
+  var smallRadius = radius < 200;
+  if ((event.data.centerX >= event.offsetX) == smallRadius) {
+    css.left = (event.offsetX - label.width()) + 'px';
+  } else {
+    css.left = (event.offsetX) + 'px';
+  }
+  if ((event.data.centerY >= event.offsetY) == smallRadius) {
+    css.top = (event.offsetY - label.height()) + 'px';
+  } else {
+    css.top = (event.offsetY) + 'px';
+  }
+  label.css(css);
+
+
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////
