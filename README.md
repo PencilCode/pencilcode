@@ -11,8 +11,9 @@ grunt
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
-The prerequisites are a standard node.js development environment,
-which is very widely used.
+The prerequisites are a standard node.js development environment
+which is very widely used, plus grunt (you'll need to
+`npm install -g grunt-cli`).
 
 Prerequisites
 -------------
@@ -75,13 +76,13 @@ on OSX, add the following to your .bashrc:
 
 <pre>
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
-alias devchrome="chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome"
+alias devchrome="chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
 </pre>
 
 On Linux:
 
 <pre>
-alias devchrome="google-chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome"
+alias devchrome="google-chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
 </pre>
 
 On Windows:
