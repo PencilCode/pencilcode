@@ -5835,6 +5835,10 @@ function updatelocalstorage(state) {
 function wheight() {
   return window.innerHeight || $(window).height();
 }
+function publishnewslidervalue(newVal) {
+    $("#_stupidslider").val(newVal + '%');
+    // Actually handle the new value?
+}
 function tryinitpanel() {
   if (addedpanel) {
     if (paneltitle) {
@@ -5864,6 +5868,7 @@ function tryinitpanel() {
           '<samp id="_testdrag" style="' +
               'cursor:row-resize;height:6px;width:100%;' +
               'display:block;background:lightgray"></samp>' +
+	  '<input id="_stupidslider" style="height:40px;width:100%" value="0%"></input>' +
           '<samp id="_testscroll" style="overflow-y:scroll;overflow-x:hidden;' +
              'display:block;width:100%;height:' + (state.height - 6) + 'px;">' +
             '<samp id="_testlog" style="display:block">' +
@@ -5880,7 +5885,18 @@ function tryinitpanel() {
       var historyindex = 0;
       var historyedited = {};
       $('#_testinput').on('keydown', function(e) {
-        if (e.which == 13) {
+	PAGE_UP = 33;
+	PAGE_DOWN = 34;
+	if (e.which == PAGE_UP || e.which == PAGE_DOWN) {
+	  var currentVal = $('#_stupidslider').val();
+	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
+	  if (e.which == PAGE_UP) {
+	    var newVal = Math.max(currentNum - 1, 0);
+	  } else {
+	    var newVal = Math.min(currentNum + 1, 100);
+	  }
+	  publishnewslidervalue(newVal);
+	} else if (e.which == 13) {
           // Handle the Enter key.
           var text = $(this).val();
           $(this).val('');
