@@ -39,12 +39,16 @@ var debug = {
       debug.history.push(data);
       highlightLine(line, 'debugtrace');
     } else if (name == 'resolve') {
-      // A little memory cleanup.
-      debugIdToLine[debugId] = null;
       // If we decide to clear the highlighted line here:
       // highlightLine(null, 'debugerror');
     } else if (name == 'done') {
       view.showMiddleButton('run');
+    }
+  },
+  highlightEventId: function(debugId) {
+    var line = debugIdToLine[debugId];
+    if (line != null) {
+	highlightLine(line, 'debugtrace');
     }
   }
 };

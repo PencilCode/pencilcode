@@ -137,9 +137,9 @@ function updateTopControls(addHistory) {
 	  var currentVal = $(this).val();
 	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
 	  if (e.which == PAGE_UP) {
-	      var newVal = Math.max(currentNum - 1, 0);
+	      var newVal = Math.max(currentNum - 5, 0);
 	  } else {
-	      var newVal = Math.min(currentNum + 1, 100);
+	      var newVal = Math.min(currentNum + 5, 100);
 	  }
 	  $(this).val(newVal + '%');
 	  setFlashbackHistoryPercent(newVal);
@@ -1176,6 +1176,9 @@ function setFlashbackHistoryPercent(percent) {
 	    codeToRun += history[i].slice(2).join(' ') + "\n";
 	}
 	console.log("codeToRun: " + codeToRun);
+	if (numberOfEvents > 0) {
+	    debug.highlightEventId(history[numberOfEvents - 1][0]);
+	}
 	runCodeAtPosition('right', codeToRun, '');
 	// SAFF: how to turn off debug.inFlashback eventually?
     }
