@@ -130,6 +130,21 @@ function updateTopControls(addHistory) {
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
+  $('#_stupidslider').on('keydown', function(e) {
+      PAGE_UP = 33;
+      PAGE_DOWN = 34;
+      if (e.which == PAGE_UP || e.which == PAGE_DOWN) {
+	  var currentVal = $(this).val();
+	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
+	  if (e.which == PAGE_UP) {
+	      var newVal = Math.max(currentNum - 1, 0);
+	  } else {
+	      var newVal = Math.min(currentNum + 1, 100);
+	  }
+	  $(this).val(newVal + '%');
+	  setFlashbackHistoryPercent(newVal);
+      }
+  });
   // Update middle button.
   if (m.data && m.data.file ||
       (modelatpos('right').data && modelatpos('right').data.file)) {
@@ -1103,6 +1118,40 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     });
   }
 };
+
+function setFlashbackHistoryPercent(percent) {
+    history = debug.history;
+    console.log("history: " + history);
+    if (history.length > 0) {
+	numberOfEvents = Math.round((history.length / 100.0) * percent);
+	
+	console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
+	debug.inFlashback = true;
+	codeToRun = "speed Infinity\n";
+	for (var i = 0; i < numberOfEvents; i++) {
+	    console.log(history[i]);
+	    codeToRun += history[i].slice(2).join(' ') + "\n";
+	}
+	console.log("codeToRun: " + codeToRun);
+	runCodeAtPosition('right', codeToRun, '');
+	// SAFF: how to turn off debug.inFlashback eventually?
+    }
+}
+
+// SAFF: camel case
+function publishnewslidervalue(newVal) {
+    $("#_stupidslider").val(newVal + '%');
+    history = debug.getHistory();
+    console.log("history: " + history);
+    if (history.length > 0) {
+	numberOfEvents = Math.round((history.length / 100.0) * newVal);
+	
+	console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
+	for (var i = 0; i < numberOfEvents; i++) {
+	    console.log(history[i]);
+	}
+    }
+}
 
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
