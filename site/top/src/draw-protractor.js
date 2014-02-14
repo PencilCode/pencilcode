@@ -2,6 +2,12 @@
 // Author: James Synge
 // See: http://jsfiddle.net/jamessynge/QQ43x/
 
+define([
+  'jquery', 'see'],
+function($, see) {
+
+eval(see.scope('drawProtractor'));
+
 function to360(v) {
     while (v < 0) {
         v = 7200 - Math.abs(v);
@@ -148,4 +154,10 @@ function drawProtractor(ctx, radius, zeroAngle) {
 
     ctx.restore();
 }
+
+return { drawProtractor: drawProtractor };
+
+});
+
+
 

@@ -100,7 +100,7 @@ function updateTopControls(addHistory) {
   // Update top buttons.
   var buttons = [];
   if (!m.isdir) {
-//    buttons.push({id: 'protractor', label: 'Measure'});
+    buttons.push({id: 'protractor', label: 'Measure'});
   }
   if (!model.editmode) {
     buttons.push({id: 'editmode', label: 'Edit'});
