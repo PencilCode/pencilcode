@@ -207,13 +207,31 @@ view.on('editfocus', function(pane) {
   }
 });
 
+view.on('step', function() {
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  // view.showMiddleButton('running');
+  var queues = debug.resumeQueues;
+  for (var q = 0; q < queues.length; q++) {
+    var queue = queues[q];
+    var turtle = scopedJQ(queue[0]);
+    queue = queue[1];
+    turtle.queue(queue.shift());
+  }
+});
+
 view.on('resume', function() {
   var scopedJQ = debug.scope.$;
   var turtles = scopedJQ(scopedJQ.find('.turtle'));
   view.showMiddleButton('running');
-  var queue = debug.resumeQueue;
-  for (var i = 0; i < queue.length; i++) {
-    turtles.queue(queue[i]);
+  var queues = debug.resumeQueues;
+  for (var q = 0; q < queues.length; q++) {
+    var queue = queues[q];
+    var turtle = scopedJQ(queue[0]);
+    queue = queue[1];
+    for (var i = 0; i < queue.length; i++) {
+      turtle.queue(queue[i]);
+    }
   }
 });
 
@@ -221,10 +239,13 @@ view.on('pause', function() {
   var m = modelatpos('right');
   var scopedJQ = debug.scope.$;
   var turtles = scopedJQ(scopedJQ.find('.turtle'));
-  var queue = scopedJQ.queue(turtles[0]).slice(1);
-  turtles.clearQueue();
-  console.log(queue);
-  debug.resumeQueue = queue;
+  var queues = [];
+  for (var i = 0; i < turtles.length; i++) {
+    var turtle = turtles[i];
+    queues.push([turtle, scopedJQ.queue(turtle).slice(1)]);
+    scopedJQ(turtle).clearQueue();
+  }
+  debug.resumeQueues = queues;
   view.showMiddleButton('paused');
 });
 

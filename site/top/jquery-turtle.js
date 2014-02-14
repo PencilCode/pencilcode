@@ -3117,6 +3117,7 @@ var turtlefn = {
       penstyle = 'none';
     }
     this.plan(function(j, elem) {
+      cc.appear();
       if (penstyle === false || penstyle === true ||
           penstyle == 'down' || penstyle == 'up') {
         this.css('turtlePenDown', penstyle);

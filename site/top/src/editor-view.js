@@ -538,7 +538,8 @@ function showMiddleButton(which) {
   } else if (which == 'paused') {
     $('#middle').find('div').eq(0).html(
       '<button id="run" class="middle-button" title="Ctrl+Enter"><div class="triangle"></div></button>' +
-      '<button id="resume" class="middle-button" title="Ctrl+Enter"><div>c</div></button>');
+      '<button id="resume" class="middle-button" title="Ctrl+Enter"><div>c</div></button>' +
+      '<button id="step" class="middle-button" title="Ctrl+Enter"><div>s</div></button>');
     centerMiddle();
   } else if (which == 'edit' && state.previewMode) {
     $('#middle').find('div').eq(0).html(
