@@ -818,17 +818,32 @@ function showPaneRunProtractor(pane, x, y, direction) {
 	protractor[0].width = protractor.width();
 	protractor[0].height = protractor.height();
   renderProtractor(protractor, x, y, direction);
+  protractor.mousemove({protractor:protractor, centerX:x, centerY:y, direction:direction},
+                       updateProtractor);
 }
 
-function renderProtractor(canvas, x, y, direction) {
+function renderProtractor(canvas, x, y, direction, radius) {
 	var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
 	ctx.clearRect(0, 0, canvas.width(), canvas.height());
 
 	ctx.save();
 	ctx.translate(x, y);
-	drawProtractor.drawProtractor(ctx, 200, direction - 90);
+	drawProtractor.drawProtractor(ctx, radius||200, direction - 90);
 	ctx.restore();
+}
+
+function updateProtractor(event) {
+  var dx = Math.abs(event.data.centerX - event.offsetX);
+  var dy = Math.abs(event.data.centerY - event.offsetY);
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  var radius = Math.max(50, dist);
+  renderProtractor(
+    event.data.protractor,
+    event.data.centerX,
+    event.data.centerY,
+    event.data.direction,
+    radius);
 }
 
 ///////////////////////////////////////////////////////////////////////////
