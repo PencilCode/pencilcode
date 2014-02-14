@@ -2795,7 +2795,10 @@ var turtlefn = {
     }
     this.plan(function(j, elem) {
       this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
-          animTime(elem), animEasing(elem), cc.resolver);
+          animTime(elem), animEasing(elem),
+          function() {
+            cc.resolve();
+          });
     });
     cc.start();
     return this;
@@ -5049,6 +5052,7 @@ var debug = {
     if (parent && parent.ide) {
       this.ide = parent.ide;
       this.ide.bindframe(window);
+			this.ide.findTurtle = this.findTurtle;
     }
   },
   showerror: function showerror(e) {
@@ -5057,7 +5061,16 @@ var debug = {
   ide: null,
   reportEvent: function(name, args) {
     if (this.ide) { this.ide.reportEvent(name, args); }
-  }
+  },
+	findTurtle: function(callback) {
+		var position = window.turtle.pagexy.call(window.turtle);
+		var data = {
+			x: position.pageX,
+			y: position.pageY,
+			direction: window.turtle.direction.call(window.turtle)
+		};
+		callback(data);
+	}
 };
 
 debug.init();
