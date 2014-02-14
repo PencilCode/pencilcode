@@ -22,12 +22,12 @@ var debug = {
   scope: null,
   resetHistory: function() {
     if (! debug.inFlashback) {
-	debug.history = [];
+      debug.history = [];
     }
   },
   reportEvent: function(name, data) {
     if (debug.inFlashback) {
-	return;
+      return;
     }
     var debugId = data[0];
     var line = debugIdToLine[debugId];

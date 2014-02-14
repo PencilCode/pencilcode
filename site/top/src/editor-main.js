@@ -225,6 +225,7 @@ view.on('editfocus', function(pane) {
 view.on('step', function() {
   var scopedJQ = debug.scope.$;
   var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  if (turtles.queue().length > 0) return;
   // view.showMiddleButton('running');
   var queues = debug.resumeQueues;
   for (var q = 0; q < queues.length; q++) {
@@ -1163,22 +1164,21 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
 };
 
 function setFlashbackHistoryPercent(percent) {
-    history = debug.history;
-    console.log("history: " + history);
-    if (history.length > 0) {
-	numberOfEvents = Math.round((history.length / 100.0) * percent);
-	
-	console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
-	debug.inFlashback = true;
-	codeToRun = "speed Infinity\n";
-	for (var i = 0; i < numberOfEvents; i++) {
-	    console.log(history[i]);
-	    codeToRun += history[i].slice(2).join(' ') + "\n";
-	}
-	console.log("codeToRun: " + codeToRun);
-	runCodeAtPosition('right', codeToRun, '');
-	// SAFF: how to turn off debug.inFlashback eventually?
+  history = debug.history;
+  console.log("history: " + history);
+  if (history.length > 0) {
+    numberOfEvents = Math.round((history.length / 100.0) * percent);
+    console.log("Showing " + numberOfEvents + " of " + history.length + " events.");
+    debug.inFlashback = true;
+    codeToRun = "speed Infinity\n";
+    for (var i = 0; i < numberOfEvents; i++) {
+        console.log(history[i]);
+        codeToRun += history[i].slice(2).join(' ') + "\n";
     }
+    console.log("codeToRun: " + codeToRun);
+    runCodeAtPosition('right', codeToRun, '');
+    // SAFF: how to turn off debug.inFlashback eventually?
+  }
 }
 
 // SAFF: camel case

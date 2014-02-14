@@ -2673,10 +2673,9 @@ function setupContinuation(thissel, args, argcount) {
       start: doNothing
     };
   }
-  var rawargs = Array.prototype.slice.call(arguments);
   function resolve() {
     function reportAndDone() {
-      debug.reportEvent("resolve", [debugId].concat(rawargs));
+      debug.reportEvent("resolve", [debugId]);
       done && done();
     }
     if ((--countdown) == 0) {
@@ -2693,7 +2692,7 @@ function setupContinuation(thissel, args, argcount) {
     }
   }
   function appear() {
-    debug.reportEvent("appear", [debugId].concat(rawargs));
+    debug.reportEvent("appear", [debugId].concat(Array.prototype.slice.call(arguments)));
   }
   return {
     args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
@@ -2703,7 +2702,7 @@ function setupContinuation(thissel, args, argcount) {
     // Invoked
     start: function start() {
       if (debug.attached) {
-        debug.reportEvent("start", [debugId].concat(rawargs));
+        debug.reportEvent("start", [debugId]);
       }
       resolve();
       sync = false;
