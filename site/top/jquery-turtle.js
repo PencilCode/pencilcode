@@ -2953,7 +2953,9 @@ var turtlefn = {
       }
       if (!pos || !isPageCoordinate(pos)) return;
       if ($.isWindow(elem)) {
+        cc.appear();
         scrollWindowToDocumentPosition(pos, limit);
+        cc.resolve();
         return;
       } else if (elem.nodeType === 9) {
         return;

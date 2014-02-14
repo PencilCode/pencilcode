@@ -119,7 +119,6 @@ function editorLineNumberForError(error) {
   if (!error) return null;
   var parsed = parsestack(error);
   if (!parsed) return null;
-
   if (!debug.scope || !debug.scope.CoffeeScript || !debug.scope.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
@@ -132,11 +131,21 @@ function editorLineNumberForError(error) {
   var map = debug.scope.CoffeeScript.code[frame.file].map;
   if (!map) return null;
   var smc = new sourcemap.SourceMapConsumer(map);
-  var mapped = smc.originalPositionFor(frame);
-  if (!mapped) return null;
-  if (!mapped.line || mapped.line < 4) return null;
+
+  // The CoffeeScript source code mappings are empirically a bit inaccurate,
+  // but it seems if we look for the maximum original line number for any
+  // column in the generated line, that seems to be fairly accurate.
+  var line = null;
+  for (var col = 0; col < 80; col++) {
+    var mapped = smc.originalPositionFor({line: frame.line, column: col});
+    if (mapped && mapped.line) {
+      line = line == null ? mapped.line : Math.max(line, mapped.line);
+    }
+  }
+
+  if (!line || line < 4) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return mapped.line - 3;
+  return line - 3;
 }
 
 return debug;
