@@ -13011,7 +13011,8 @@ function setupContinuation(thissel, args, argcount) {
     }
   }
   function appear() {
-    debug.reportEvent("appear", [debugId].concat(Array.prototype.slice.call(arguments)));
+    debug.reportEvent("appear", [debugId].concat(
+        Array.prototype.slice.call(arguments)));
   }
   return {
     args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
@@ -13271,7 +13272,9 @@ var turtlefn = {
       }
       if (!pos || !isPageCoordinate(pos)) return;
       if ($.isWindow(elem)) {
+        cc.appear();
         scrollWindowToDocumentPosition(pos, limit);
+        cc.resolve();
         return;
       } else if (elem.nodeType === 9) {
         return;
@@ -13436,6 +13439,7 @@ var turtlefn = {
       penstyle = 'none';
     }
     this.plan(function(j, elem) {
+      cc.appear();
       if (penstyle === false || penstyle === true ||
           penstyle == 'down' || penstyle == 'up') {
         this.css('turtlePenDown', penstyle);
@@ -13672,6 +13676,7 @@ var turtlefn = {
   function captureState() {
     return {
       pagexy: this.pagexy(),
+      pen: this.css('turtlePenStyle'),
       xy: this.getxy(),
       direction: this.direction()
     };
@@ -15428,12 +15433,6 @@ var debug = {
   reportEvent: function reportEvent(name, args) {
     if (this.ide) { this.ide.reportEvent(name, args); }
   },
-  setFlashbackHistoryPercent: function setFlashbackHistoryPercent(percent) {
-      if (this.ide) { this.ide.setFlashbackHistoryPercent(percent); }
-  },
-  setFlashbackHandler: function setFlashbackHandler(handler) {
-      if (this.ide) { this.ide.setFlashbackHandler(handler); }
-  },
   eventCounter: 0,
   nextId: function nextId() {
     return debug.eventCounter++;
@@ -16161,10 +16160,6 @@ function updatelocalstorage(state) {
 function wheight() {
   return window.innerHeight || $(window).height();
 }
-function publishnewslidervalue(newVal) {
-    $("#_stupidslider").val(newVal + '%');
-    debug.setFlashbackHistoryPercent(newVal);
-}
 function tryinitpanel() {
   if (addedpanel) {
     if (paneltitle) {
@@ -16210,18 +16205,7 @@ function tryinitpanel() {
       var historyindex = 0;
       var historyedited = {};
       $('#_testinput').on('keydown', function(e) {
-	PAGE_UP = 33;
-	PAGE_DOWN = 34;
-	if (e.which == PAGE_UP || e.which == PAGE_DOWN) {
-	  var currentVal = $('#_stupidslider').val();
-	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
-	  if (e.which == PAGE_UP) {
-	    var newVal = Math.max(currentNum - 1, 0);
-	  } else {
-	    var newVal = Math.min(currentNum + 1, 100);
-	  }
-	  publishnewslidervalue(newVal);
-	} else if (e.which == 13) {
+	if (e.which == 13) {
           // Handle the Enter key.
           var text = $(this).val();
           $(this).val('');

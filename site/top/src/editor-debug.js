@@ -19,6 +19,7 @@ var debug = {
   highlight: highlight,
   history: [],
   inFlashback: false,
+  scope: null,
   resetHistory: function() {
     if (! debug.inFlashback) {
 	debug.history = [];
@@ -36,20 +37,20 @@ var debug = {
     }
     if (name == 'appear') {
       debug.history.push(data);
-      highlightLine(line, 'debugerror');
+      highlightLine(line, 'debugtrace');
     } else if (name == 'resolve') {
       // A little memory cleanup.
       debugIdToLine[debugId] = null;
       // If we decide to clear the highlighted line here:
       // highlightLine(null, 'debugerror');
+    } else if (name == 'done') {
+      view.showMiddleButton('run');
     }
   }
 };
 
-var scope = null;
-
 function bindToWindow(w) {
-  scope = w;
+  debug.scope = w;
 }
 
 var debugIdToLine = { };
@@ -79,7 +80,7 @@ function highlightLine(line, cssClass) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof scope.Error) && err.error) {
+  if (!(err instanceof debug.scope.Error) && err.error) {
     // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
     // contain an "error" property.  This test allows such objects
     // (and any objects with an error property) to be passed and unwrapped.
@@ -124,24 +125,33 @@ function editorLineNumberForError(error) {
   if (!error) return null;
   var parsed = parsestack(error);
   if (!parsed) return null;
-
-  if (!scope || !scope.CoffeeScript || !scope.CoffeeScript.code) return null;
+  if (!debug.scope || !debug.scope.CoffeeScript || !debug.scope.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
-    if (parsed[j].file in scope.CoffeeScript.code) {
+    if (parsed[j].file in debug.scope.CoffeeScript.code) {
       frame = parsed[j];
     }
   }
   if (!frame) return null;
-  var map = scope.CoffeeScript.code[frame.file].map;
+  var map = debug.scope.CoffeeScript.code[frame.file].map;
   if (!map) return null;
   var smc = new sourcemap.SourceMapConsumer(map);
-  var mapped = smc.originalPositionFor(frame);
-  if (!mapped) return null;
-  if (!mapped.line || mapped.line < 4) return null;
+
+  // The CoffeeScript source code mappings are empirically a bit inaccurate,
+  // but it seems if we look for the maximum original line number for any
+  // column in the generated line, that seems to be fairly accurate.
+  var line = null;
+  for (var col = 0; col < 80; col++) {
+    var mapped = smc.originalPositionFor({line: frame.line, column: col});
+    if (mapped && mapped.line) {
+      line = line == null ? mapped.line : Math.max(line, mapped.line);
+    }
+  }
+
+  if (!line || line < 4) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return mapped.line - 3;
+  return line - 3;
 }
 
 return debug;
