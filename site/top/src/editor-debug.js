@@ -31,7 +31,7 @@ var debug = {
     }
     if (name == 'appear') {
       debug.history.push(data);
-      highlightLine(line, 'debugerror');
+      highlightLine(line, 'debugtrace');
     } else if (name == 'resolve') {
       // A little memory cleanup.
       debugIdToLine[debugId] = null;
