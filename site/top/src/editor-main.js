@@ -345,22 +345,14 @@ function displayProtractor() {
   
 }
 
-function findTurtle(callback) {
-  // Get the first turtle we find for now.  If turtle not on screen, pass on
-  // now.
-  // TODO: if multiple turtles, prompt user to select one.
-
-  // Call the callback.
-  callback({x:200,y:300,direction:150});
-}
-
-function displayProtractorForTurtle(turtle) {
+function displayProtractorForTurtle(turtlePos) {
    // If turtle object is null, bail.
-   if (!turtle) return;
+   if (!turtlePos) return;
    
    // Given non-null turtle object, pop up protractor seeded with current distance, direction
    
-   window.console.log(turtle);
+	view.showPaneRunProtractor(
+			paneatpos('right'), turtlePos.x, turtlePos.y, turtlePos.direction);
 }
 
 

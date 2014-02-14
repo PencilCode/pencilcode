@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see'],
-function($, tooltipster, see) {
+define(['jquery', 'tooltipster', 'see', 'draw-protractor'],
+function($, tooltipster, see, drawProtractor) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -805,10 +805,30 @@ function showPaneRunProtractor(pane, x, y, direction) {
   }
   var preview = $('#' + pane + ' .preview');
   var protractor = preview.find('.protractor');
-  if (!protractor) {
+  if (!protractor.length) {
     protractor = $('<canvas class=protractor>').appendTo(preview);
   }
+	protractor.css({
+		"position": "absolute",
+		"top": "0",
+		"left": "0",
+    "width": "100vw",
+    "height": "100vh",
+	});
+	protractor[0].width = protractor.width();
+	protractor[0].height = protractor.height();
   renderProtractor(protractor, x, y, direction);
+}
+
+function renderProtractor(canvas, x, y, direction) {
+	var ctx = canvas[0].getContext('2d');
+  ctx.resetTransform();
+	ctx.clearRect(0, 0, canvas.width(), canvas.height());
+
+	ctx.save();
+	ctx.translate(x, y);
+	drawProtractor.drawProtractor(ctx, 200, direction - 90);
+	ctx.restore();
 }
 
 ///////////////////////////////////////////////////////////////////////////
