@@ -29,10 +29,10 @@ require([
   'editor-view',
   'editor-storage',
   'editor-debug',
-  'draw-protractor',
   'seedrandom',
-  'see'],
-function($, view, storage, debug, seedrandom, see) {
+  'see',
+  'draw-protractor'],
+function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 debug.init();
@@ -100,7 +100,7 @@ function updateTopControls(addHistory) {
   // Update top buttons.
   var buttons = [];
   if (!m.isdir) {
-    buttons.push({id: 'protractor', label: 'Measure'});
+//    buttons.push({id: 'protractor', label: 'Measure'});
   }
   if (!model.editmode) {
     buttons.push({id: 'editmode', label: 'Edit'});
