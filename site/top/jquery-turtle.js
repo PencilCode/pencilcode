@@ -2692,7 +2692,7 @@ function setupContinuation(thissel, args, argcount) {
     }
   }
   function appear() {
-    debug.reportEvent("appear", [debugId]);
+    debug.reportEvent("appear", [debugId].concat(Array.prototype.slice.call(arguments)));
   }
   return {
     args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
@@ -2724,10 +2724,11 @@ var turtlefn = {
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
+    var turtleState = this.captureState();
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      cc.appear();
+      cc.appear(turtleState, 'rt', degrees, radius);
       doQuickRotate(elem, degrees);
       cc.resolve();
       cc.start();
@@ -2735,7 +2736,7 @@ var turtlefn = {
     }
     if (radius == null) {
       this.plan(function(j, elem) {
-        cc.appear();
+        cc.appear(turtleState, 'rt', degrees, radius);
         this.animate({turtleRotation: '+=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem), cc.resolver);
       });
@@ -2743,7 +2744,7 @@ var turtlefn = {
       return this;
     } else {
       this.plan(function(j, elem) {
-        cc.appear();
+        cc.appear(turtleState, 'rt', degrees, radius);
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '+=' + cssNum(degrees) + 'deg'},
@@ -2770,17 +2771,18 @@ var turtlefn = {
     if (degrees == null) {
       degrees = 90;  // zero-argument default.
     }
+    var turtleState = this.captureState();
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
-      cc.appear();
+      cc.appear(turtleState, 'lt', degrees, radius);
       doQuickRotate(elem, -degrees);
       cc.resolve();
       cc.start();
       return this;
     }
     if (radius == null) {
-      cc.appear();
+      cc.appear(turtleState, 'lt', degrees, radius);
       this.plan(function(j, elem) {
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem), cc.resolver);
@@ -2789,7 +2791,7 @@ var turtlefn = {
       return this;
     } else {
       this.plan(function(j, elem) {
-        cc.appear();
+        cc.appear(turtleState, 'lt', degrees, radius);
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '-=' + cssNum(degrees) + 'deg'},
@@ -2811,16 +2813,17 @@ var turtlefn = {
     if (amount == null) {
       amount = 100;  // zero-argument default.
     }
+    var turtleState = this.captureState();
     var elem;
     if ((elem = canMoveInstantly(this))) {
-      cc.appear(elem);
+      cc.appear(turtleState, 'fd', amount);
       doQuickMove(elem, amount, 0);
       cc.resolve();
       cc.start();
       return this;
     }
     this.plan(function(j, elem) {
-      cc.appear(elem);
+      cc.appear(turtleState, 'fd', amount);
       this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
           animTime(elem), animEasing(elem), cc.resolver);
     });
@@ -2835,16 +2838,17 @@ var turtlefn = {
     if (amount == null) {
       amount = 100;  // zero-argument default.
     }
+    var turtleState = this.captureState();
     var elem;
     if ((elem = canMoveInstantly(this))) {
-      cc.appear();
+      cc.appear(turtleState, 'bk', amount);
       doQuickMove(elem, -amount, 0);
       cc.resolve();
       cc.start();
       return this;
     }
     this.plan(function(j, elem) {
-      cc.appear();
+      cc.appear(turtleState, 'bk', amount);
       this.animate({turtleForward: '-=' + cssNum(amount || 0) + 'px'},
           animTime(elem), animEasing(elem), cc.resolver);
     });
@@ -2865,7 +2869,7 @@ var turtlefn = {
     }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
-    cc.appear();
+    cc.appear(this.captureState(), 'slide', x, y);
     this.plan(function(j, elem) {
       this.animate({turtlePosition: displacedPosition(elem, y, x)},
           animTime(elem), animEasing(elem), cc.resolver);
@@ -3341,6 +3345,15 @@ var turtlefn = {
       return $(result);
     }
   },
+  captureState: wraphelp(
+  ["<u>captureState()</u> Captures the state of the turtle."],
+  function captureState() {
+    return {
+      pagexy: this.pagexy(),
+      xy: this.getxy(),
+      direction: this.direction()
+    };
+  }),
   pagexy: wraphelp(
   ["<u>pagexy()</u> Page coordinates {pageX:, pageY}, top-left based: " +
       "<mark>c = pagexy(); fd 500; moveto c</mark>"],

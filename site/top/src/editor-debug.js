@@ -17,6 +17,10 @@ var debug = {
   init: function init() { window.ide = debug; },
   bindframe: bindToWindow,
   highlight: highlight,
+  history: [],
+  resetHistory: function() {
+    debug.history = [];
+  },
   reportEvent: function(name, data) {
     var debugId = data[0];
     var line = debugIdToLine[debugId];
@@ -25,6 +29,7 @@ var debug = {
       debugIdToLine[debugId] = line;
     }
     if (name == 'appear') {
+      debug.history.push(data);
       highlightLine(line, 'debugerror');
     } else if (name == 'resolve') {
       // A little memory cleanup.

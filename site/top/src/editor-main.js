@@ -989,6 +989,8 @@ function runCodeAtPosition(position, code, filename) {
   var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
           window.pencilcode.domain + '/home/' + filename;
   var pane = paneatpos(position);
+  // Reset the debugger history.
+  debug.resetHistory();
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
