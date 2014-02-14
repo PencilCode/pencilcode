@@ -2692,7 +2692,8 @@ function setupContinuation(thissel, args, argcount) {
     }
   }
   function appear() {
-    debug.reportEvent("appear", [debugId].concat(Array.prototype.slice.call(arguments)));
+    debug.reportEvent("appear", [debugId].concat(
+        Array.prototype.slice.call(arguments)));
   }
   return {
     args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
@@ -3350,6 +3351,7 @@ var turtlefn = {
   function captureState() {
     return {
       pagexy: this.pagexy(),
+      pen: this.css('turtlePenStyle'),
       xy: this.getxy(),
       direction: this.direction()
     };

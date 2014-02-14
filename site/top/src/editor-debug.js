@@ -18,6 +18,7 @@ var debug = {
   bindframe: bindToWindow,
   highlight: highlight,
   history: [],
+  scope: null,
   resetHistory: function() {
     debug.history = [];
   },
@@ -40,10 +41,8 @@ var debug = {
   }
 };
 
-var scope = null;
-
 function bindToWindow(w) {
-  scope = w;
+  debug.scope = w;
 }
 
 var debugIdToLine = { };
@@ -73,7 +72,7 @@ function highlightLine(line, cssClass) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof scope.Error) && err.error) {
+  if (!(err instanceof debug.scope.Error) && err.error) {
     // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
     // contain an "error" property.  This test allows such objects
     // (and any objects with an error property) to be passed and unwrapped.
@@ -119,16 +118,16 @@ function editorLineNumberForError(error) {
   var parsed = parsestack(error);
   if (!parsed) return null;
 
-  if (!scope || !scope.CoffeeScript || !scope.CoffeeScript.code) return null;
+  if (!debug.scope || !debug.scope.CoffeeScript || !debug.scope.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
-    if (parsed[j].file in scope.CoffeeScript.code) {
+    if (parsed[j].file in debug.scope.CoffeeScript.code) {
       frame = parsed[j];
     }
   }
   if (!frame) return null;
-  var map = scope.CoffeeScript.code[frame.file].map;
+  var map = debug.scope.CoffeeScript.code[frame.file].map;
   if (!map) return null;
   var smc = new sourcemap.SourceMapConsumer(map);
   var mapped = smc.originalPositionFor(frame);

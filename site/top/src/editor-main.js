@@ -207,7 +207,29 @@ view.on('editfocus', function(pane) {
   }
 });
 
+view.on('resume', function() {
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  view.showMiddleButton('running');
+  var queue = debug.resumeQueue.slice(1);
+  for (var i = 0; i < queue.length; i++) {
+    turtles.queue(queue[i]);
+  }
+});
+
+view.on('pause', function() {
+  var m = modelatpos('right');
+  var scopedJQ = debug.scope.$;
+  var turtles = scopedJQ(scopedJQ.find('.turtle'));
+  var queue = scopedJQ.queue(turtles[0]);
+  turtles.clearQueue();
+  console.log(queue);
+  debug.resumeQueue = queue;
+  view.showMiddleButton('paused');
+});
+
 view.on('run', function() {
+  view.showMiddleButton('running');
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   if (!mimetext) {
     mimetext = view.getPaneEditorText(paneatpos('right'));
