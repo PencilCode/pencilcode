@@ -30,6 +30,7 @@ var debug = {
       debugIdToLine[debugId] = line;
     }
     if (name == 'appear') {
+      console.log('Pushing', data);
       debug.history.push(data);
       highlightLine(line, 'debugtrace');
     } else if (name == 'resolve') {
