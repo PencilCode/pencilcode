@@ -13014,7 +13014,7 @@ function setupContinuation(thissel, args, argcount) {
     debug.reportEvent("appear", [debugId]);
   }
   return {
-    args: Array.prototype.slice.call(args, 0, args.length - 1),
+    args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
     resolver: resolve,
     appear: appear,
     resolve: resolve,
@@ -13038,6 +13038,7 @@ var turtlefn = {
   function rt(degrees, radius) {
     var cc = setupContinuation(this, arguments, 1);
     if (cc.resolver) {
+      debugger
       radius = cc.args[1];
     }
     if (degrees == null) {

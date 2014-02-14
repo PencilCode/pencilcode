@@ -2695,7 +2695,7 @@ function setupContinuation(thissel, args, argcount) {
     debug.reportEvent("appear", [debugId]);
   }
   return {
-    args: Array.prototype.slice.call(args, 0, args.length - 1),
+    args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
     resolver: resolve,
     appear: appear,
     resolve: resolve,
