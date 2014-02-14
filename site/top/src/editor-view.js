@@ -836,9 +836,13 @@ function renderProtractor(canvas, x, y, direction, radius) {
 	ctx.restore();
 }
 
+function to360(d) {
+  return (720 + d) % 360;
+}
+
 function updateProtractor(event) {
-  var dx = Math.abs(event.data.centerX - event.offsetX);
-  var dy = Math.abs(event.data.centerY - event.offsetY);
+  var dx = event.data.centerX - event.offsetX;
+  var dy = event.data.centerY - event.offsetY;
   var dist = Math.sqrt(dx*dx + dy*dy);
   var radius = Math.max(50, dist);
   renderProtractor(
@@ -853,22 +857,28 @@ function updateProtractor(event) {
   if (!label.length) {
     label = $('<div class=protractor-label>').insertBefore(event.data.protractor);
   }
-  label.html('dir<br>fd ' + Math.round(dist));
+  var protractorDir = to360(270 + Math.atan2(dy, dx) * 180 / Math.PI);
+  var turnMagnitude = Math.round(to360(protractorDir - event.data.direction));
+  var turnDir = "rt ";
+  if (turnMagnitude > 180) {
+    turnDir = "lt ";
+    turnMagnitude = 360 - turnMagnitude;
+  }
+  label.html(turnDir + turnMagnitude +  '<br>fd ' + Math.round(dist));
   var css = {
     position: 'absolute',
     display: 'inline-block',
     top: '',
     left: '',
   };
-  var height = label.height();
-  var smallRadius = radius < 200;
+  var smallRadius = radius < 150;
   if ((event.data.centerX >= event.offsetX) == smallRadius) {
-    css.left = (event.offsetX - label.width()) + 'px';
+    css.left = (event.offsetX - label.outerWidth()) + 'px';
   } else {
     css.left = (event.offsetX) + 'px';
   }
   if ((event.data.centerY >= event.offsetY) == smallRadius) {
-    css.top = (event.offsetY - label.height()) + 'px';
+    css.top = (event.offsetY - label.outerHeight()) + 'px';
   } else {
     css.top = (event.offsetY) + 'px';
   }
