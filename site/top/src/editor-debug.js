@@ -37,6 +37,8 @@ var debug = {
       debugIdToLine[debugId] = null;
       // If we decide to clear the highlighted line here:
       // highlightLine(null, 'debugerror');
+    } else if (name == 'done') {
+      view.showMiddleButton('run');
     }
   }
 };
