@@ -100,7 +100,7 @@ function updateTopControls(addHistory) {
   // Update top buttons.
   var buttons = [];
   if (!m.isdir) {
-//    buttons.push({id: 'protractor', label: 'Measure'});
+    buttons.push({id: 'protractor', label: 'Measure'});
   }
   if (!model.editmode) {
     buttons.push({id: 'editmode', label: 'Edit'});
@@ -341,7 +341,7 @@ view.on('protractor', function() {displayProtractor();  });
 
 function displayProtractor() {
   // call find turtle.  Pass a callback
-  findTurtle (displayProtractorForTurtle);
+  window.ide.findTurtle(displayProtractorForTurtle);
   
 }
 
@@ -360,7 +360,7 @@ function displayProtractorForTurtle(turtle) {
    
    // Given non-null turtle object, pop up protractor seeded with current distance, direction
    
-   alert('turtle found');
+   window.console.log(turtle);
 }
 
 
