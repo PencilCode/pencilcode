@@ -5887,15 +5887,12 @@ function tryinitpanel() {
 	PAGE_DOWN = 34;
 	if (e.which == PAGE_UP || e.which == PAGE_DOWN) {
 	  var currentVal = $('#_stupidslider').val();
-	  console.log('val: ' + currentVal);
 	  var currentNum = Number(currentVal.substring(0, currentVal.length - 1));
-	  console.log(currentNum);
 	  if (e.which == PAGE_UP) {
 	    var newVal = Math.max(currentNum - 1, 0);
 	  } else {
 	    var newVal = Math.min(currentNum + 1, 100);
 	  }
-	  console.log('newVal: ' + newVal);
 	  publishnewslidervalue(newVal);
 	} else if (e.which == 13) {
           // Handle the Enter key.
