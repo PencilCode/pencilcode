@@ -145,6 +145,11 @@ function updateTopControls(addHistory) {
 	  setFlashbackHistoryPercent(newVal);
       }
   });
+  $('#_smartslider').on('input change', function() {
+      console.log('input change!');
+      $('#_stupidslider').val($(this).val() + '%');
+      setFlashbackHistoryPercent($(this).val());
+  });
   // Update middle button.
   if (m.data && m.data.file ||
       (modelatpos('right').data && modelatpos('right').data.file)) {
@@ -265,6 +270,7 @@ view.on('pause', function() {
 });
 
 view.on('run', function() {
+  debug.inFlashback = false;
   view.showMiddleButton('running');
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   if (!mimetext) {
