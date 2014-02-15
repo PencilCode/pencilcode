@@ -72,25 +72,23 @@ h1, h2 {
   text-transform: capitalize;
   text-decoration: underline;
 }
-#what,.whiteback {
+#what,#guide,.whiteback {
   font-size: 16px;
   line-height: 16px;
   color: gray;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
 }
 .info,.link {
   color: gray;
   text-decoration: none;
 }
-#what:hover,.info:hover,.link:hover {
+#what:hover,#guide:hover,.info:hover,.link:hover {
   color: blue;
   text-decoration: underline;
 }
-#what:hover,.whiteback:hover {
+#what:hover,#guide:hover,.whiteback:hover {
   background: white;
-  box-shadow: 0 0 16px 16px white;
 }
 .corners {
   display: inline-block;
@@ -268,6 +266,8 @@ Contribute to the development of Pencil Code at
 <br>
 <a href="#" id="what">What's this?</a>
 <br>
+<a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
+<br>
 <div class="choices">
 <a href="http://pencilcode.net/edit/first" id="randfirst">I'm new here.
 <span class="em">Let's play.</span>
@@ -297,16 +297,6 @@ $('#randfirst').mouseenter(function() {
   ];
   $('#randfirst').attr('href',
       choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
-});
-
-$(function() {
-  $('#guide,#blank').mouseenter(function() {
-    $(this).data('saved', $(this).closest('a').attr('href'));
-    $(this).closest('a').attr('href', $(this).attr('href'));
-  });
-  $('#guide,#blank').mouseleave(function() {
-    $(this).closest('a').attr('href', $(this).data('saved'));
-  });
 });
 
 function cookie(key) {
@@ -417,9 +407,7 @@ $('#reset').click(function(e) {
 });
 
 </script>
-<a href="/edit/">Browse users.
-<span class="extrabutton" id="guide" href="//guide.pencilcode.net/home/">see the guide</span>
-</a>
+<a href="/edit/">Browse users.</a>
 </div>
 <br>
 <h2>A Modern Sandbox<br>
