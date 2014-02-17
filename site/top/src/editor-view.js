@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see'],
-function($, tooltipster, see) {
+define(['jquery', 'tooltipster', 'see', 'draw-protractor'],
+function($, tooltipster, see, drawProtractor) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -72,6 +72,7 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
+  toggleProtractor: toggleProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   // Mananges panes and preview mode
@@ -794,6 +795,97 @@ function setPaneRunText(pane, text, filename, targetUrl) {
     }
     $(this).dequeue();
   });
+}
+
+function toggleProtractor(pane, x, y, direction) {
+  var paneState = state.pane[pane];
+  if (!paneState.running) {
+    console.log('NOT RUNNING, no protractor for you!');
+    return;
+  }
+  var preview = $('#' + pane + ' .preview');
+  var protractor = preview.find('.protractor');
+  if (protractor.length) {
+    protractor.remove();
+    preview.find('.protractor-label').remove();
+    return;
+  }
+  protractor = $('<canvas class=protractor>').appendTo(preview);
+	protractor.css({
+		"position": "absolute",
+		"top": "0",
+		"left": "0",
+    "width": "100vw",
+    "height": "100vh",
+	});
+	protractor[0].width = protractor.width();
+	protractor[0].height = protractor.height();
+  renderProtractor(protractor, x, y, direction);
+  protractor.mousemove({protractor:protractor, centerX:x, centerY:y, direction:direction},
+                       updateProtractor);
+}
+
+function renderProtractor(canvas, x, y, direction, radius) {
+	var ctx = canvas[0].getContext('2d');
+  ctx.resetTransform();
+	ctx.clearRect(0, 0, canvas.width(), canvas.height());
+
+	ctx.save();
+	ctx.translate(x, y);
+	drawProtractor.drawProtractor(ctx, radius||200, direction - 90);
+	ctx.restore();
+}
+
+function to360(d) {
+  return (720 + d) % 360;
+}
+
+function updateProtractor(event) {
+  var dx = event.data.centerX - event.offsetX;
+  var dy = event.data.centerY - event.offsetY;
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  var radius = Math.max(50, dist);
+  renderProtractor(
+    event.data.protractor,
+    event.data.centerX,
+    event.data.centerY,
+    event.data.direction,
+    radius);
+
+  var preview = event.data.protractor.parent();
+  var label = preview.find('.protractor-label');
+  if (!label.length) {
+    label = $('<div class=protractor-label>').insertBefore(event.data.protractor);
+  }
+  var protractorDir = to360(270 + Math.atan2(dy, dx) * 180 / Math.PI);
+  var turnMagnitude = Math.round(to360(protractorDir - event.data.direction));
+  var turnDir = "rt ";
+  if (turnMagnitude > 180) {
+    turnDir = "lt ";
+    turnMagnitude = 360 - turnMagnitude;
+  }
+  label.html(turnDir + turnMagnitude +  '<br>fd ' + Math.round(dist));
+  var css = {
+    position: 'absolute',
+    display: 'inline-block',
+    top: '',
+    left: '',
+  };
+  var smallRadius = radius < 150;
+  if ((event.data.centerX >= event.offsetX) == smallRadius) {
+    css.left = (event.offsetX - label.outerWidth()) + 'px';
+  } else {
+    css.left = (event.offsetX) + 'px';
+  }
+  if ((event.data.centerY >= event.offsetY) == smallRadius) {
+    css.top = (event.offsetY - label.outerHeight()) + 'px';
+  } else {
+    css.top = (event.offsetY) + 'px';
+  }
+  label.css(css);
+
+
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////

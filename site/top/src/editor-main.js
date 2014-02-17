@@ -5,7 +5,8 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'sourcemap': 'src/sourcemap'
+    'sourcemap': 'src/sourcemap',
+    'draw-protractor': 'src/draw-protractor'
   },
   shim: {
     'tooltipster': {
@@ -29,8 +30,9 @@ require([
   'editor-storage',
   'editor-debug',
   'seedrandom',
-  'see'],
-function($, view, storage, debug, seedrandom, see) {
+  'see',
+  'draw-protractor'],
+function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 debug.init();
@@ -97,6 +99,9 @@ function updateTopControls(addHistory) {
       slashed, addHistory)
   // Update top buttons.
   var buttons = [];
+  if (!m.isdir) {
+    buttons.push({id: 'protractor', label: 'Measure'});
+  }
   if (!model.editmode) {
     buttons.push({id: 'editmode', label: 'Edit'});
   } else {
@@ -330,6 +335,26 @@ view.on('save', function() { saveAction(false); });
 view.on('overwrite', function() { saveAction(true); });
 view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
+
+
+view.on('protractor', function() {displayProtractor();  });
+
+function displayProtractor() {
+  // call find turtle.  Pass a callback
+  window.ide.findTurtle(displayProtractorForTurtle);
+  
+}
+
+function displayProtractorForTurtle(turtlePos) {
+   // If turtle object is null, bail.
+   if (!turtlePos) return;
+   
+   // Given non-null turtle object, pop up protractor seeded with current distance, direction
+   
+	view.toggleProtractor(
+			paneatpos('right'), turtlePos.x, turtlePos.y, turtlePos.direction);
+}
+
 
 function saveAction(forceOverwrite) {
   if (specialowner()) {
