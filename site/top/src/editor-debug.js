@@ -16,7 +16,23 @@ eval(see.scope('debug'));
 var debug = {
   init: function init() { window.ide = debug; },
   bindframe: bindToWindow,
-  highlight: highlight
+  highlight: highlight,
+  reportEvent: function(name, data) {
+    var debugId = data[0];
+    var line = debugIdToLine[debugId];
+    if (line == null) {
+      line = editorLineNumberForError(Error());
+      debugIdToLine[debugId] = line;
+    }
+    if (name == 'appear') {
+      highlightLine(line, 'debugerror');
+    } else if (name == 'resolve') {
+      // A little memory cleanup.
+      debugIdToLine[debugId] = null;
+      // If we decide to clear the highlighted line here:
+      // highlightLine(null, 'debugerror');
+    }
+  }
 };
 
 var scope = null;
@@ -25,12 +41,17 @@ function bindToWindow(w) {
   scope = w;
 }
 
-var highlighted = { };
+var debugIdToLine = { };
 
-function highlight(err, reason) {
+function highlight(err, cssClass) {
   var line = editorLineNumberForError(err);
-  if (line) {
-    view.markPaneEditorLine(view.paneid('left'), line, reason);
+  highlightLine(line, cssClass);
+}
+
+function highlightLine(line, cssClass) {
+  view.clearPaneEditorMarks(view.paneid('left'), cssClass);
+  if (line != null) {
+    view.markPaneEditorLine(view.paneid('left'), line, cssClass);
   }
 }
 
@@ -82,8 +103,8 @@ function parsestack(err) {
         column: locationmatch[3] && parseInt(locationmatch[3])
       });
     }
-    return parsed;
   }
+  return parsed;
 }
 
 // Returns the (1-based) line number for an error object, if any;
@@ -104,11 +125,21 @@ function editorLineNumberForError(error) {
   var map = scope.CoffeeScript.code[frame.file].map;
   if (!map) return null;
   var smc = new sourcemap.SourceMapConsumer(map);
-  var mapped = smc.originalPositionFor(frame);
-  if (!mapped) return null;
-  if (!mapped.line || mapped.line < 4) return null;
+
+  // The CoffeeScript source code mappings are empirically a bit inaccurate,
+  // but it seems if we look for the maximum original line number for any
+  // column in the generated line, that seems to be fairly accurate.
+  var line = null;
+  for (var col = 0; col < 80; col++) {
+    var mapped = smc.originalPositionFor({line: frame.line, column: col});
+    if (mapped && mapped.line) {
+      line = line == null ? mapped.line : Math.max(line, mapped.line);
+    }
+  }
+
+  if (!line || line < 4) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return mapped.line - 3;
+  return line - 3;
 }
 
 return debug;

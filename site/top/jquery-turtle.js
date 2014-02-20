@@ -2640,7 +2640,7 @@ function doNothing() {}
 // This function returns that last argument if it is a function and
 // if the argument list is longer than argcount, or null otherwise.
 function continuationArg(args, argcount) {
-  if (!argcount) { argcount = 0; }
+  argcount = argcount || 0;
   if (args.length <= argcount || typeof(args[args.length - 1]) != 'function') {
     return null;
   }
@@ -2662,11 +2662,22 @@ function continuationArg(args, argcount) {
 function setupContinuation(thissel, args, argcount) {
   var done = continuationArg(args, argcount),
       countdown = thissel.length + 1,
-      sync = true;
-  if (!done) {
-    return { args: args, resolver: null, resolve: doNothing, start: doNothing };
+      sync = true,
+      debugId = debug.nextId();
+  if (!done && !debug.attached) {
+    return {
+      args: args,
+      appear: doNothing,
+      resolver: null,
+      resolve: doNothing,
+      start: doNothing
+    };
   }
   function resolve() {
+    function reportAndDone() {
+      debug.reportEvent("resolve", [debugId]);
+      done && done();
+    }
     if ((--countdown) == 0) {
       // A subtlety: if we still have not yet finished setting things up
       // when the callback is triggered, it means that we are synchronous
@@ -2674,17 +2685,25 @@ function setupContinuation(thissel, args, argcount) {
       // want to trigger the users' callback synchronously. So we use a
       // timeout in this case.
       if (sync) {
-        setTimeout(done, 0);
+        setTimeout(reportAndDone, 0);
       } else {
-        done();
+        reportAndDone();
       }
     }
   }
+  function appear() {
+    debug.reportEvent("appear", [debugId]);
+  }
   return {
-    args: Array.prototype.slice.call(args, 0, args.length - 1),
+    args: !done ? args : Array.prototype.slice.call(args, 0, args.length - 1),
     resolver: resolve,
+    appear: appear,
     resolve: resolve,
+    // Invoked
     start: function start() {
+      if (debug.attached) {
+        debug.reportEvent("start", [debugId]);
+      }
       resolve();
       sync = false;
     }
@@ -2708,6 +2727,7 @@ var turtlefn = {
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      cc.appear();
       doQuickRotate(elem, degrees);
       cc.resolve();
       cc.start();
@@ -2715,6 +2735,7 @@ var turtlefn = {
     }
     if (radius == null) {
       this.plan(function(j, elem) {
+        cc.appear();
         this.animate({turtleRotation: '+=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem), cc.resolver);
       });
@@ -2722,6 +2743,7 @@ var turtlefn = {
       return this;
     } else {
       this.plan(function(j, elem) {
+        cc.appear();
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '+=' + cssNum(degrees) + 'deg'},
@@ -2751,12 +2773,14 @@ var turtlefn = {
     var elem;
     if ((elem = canMoveInstantly(this)) &&
         (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
+      cc.appear();
       doQuickRotate(elem, -degrees);
       cc.resolve();
       cc.start();
       return this;
     }
     if (radius == null) {
+      cc.appear();
       this.plan(function(j, elem) {
         this.animate({turtleRotation: '-=' + cssNum(degrees || 0) + 'deg'},
             animTime(elem), animEasing(elem), cc.resolver);
@@ -2765,6 +2789,7 @@ var turtlefn = {
       return this;
     } else {
       this.plan(function(j, elem) {
+        cc.appear();
         var oldRadius = this.css('turtleTurningRadius');
         this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
         this.animate({turtleRotation: '-=' + cssNum(degrees) + 'deg'},
@@ -2788,12 +2813,14 @@ var turtlefn = {
     }
     var elem;
     if ((elem = canMoveInstantly(this))) {
+      cc.appear(elem);
       doQuickMove(elem, amount, 0);
       cc.resolve();
       cc.start();
       return this;
     }
     this.plan(function(j, elem) {
+      cc.appear(elem);
       this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
           animTime(elem), animEasing(elem), cc.resolver);
     });
@@ -2810,12 +2837,14 @@ var turtlefn = {
     }
     var elem;
     if ((elem = canMoveInstantly(this))) {
+      cc.appear();
       doQuickMove(elem, -amount, 0);
       cc.resolve();
       cc.start();
       return this;
     }
     this.plan(function(j, elem) {
+      cc.appear();
       this.animate({turtleForward: '-=' + cssNum(amount || 0) + 'px'},
           animTime(elem), animEasing(elem), cc.resolver);
     });
@@ -2836,6 +2865,7 @@ var turtlefn = {
     }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
+    cc.appear();
     this.plan(function(j, elem) {
       this.animate({turtlePosition: displacedPosition(elem, y, x)},
           animTime(elem), animEasing(elem), cc.resolver);
@@ -2859,12 +2889,14 @@ var turtlefn = {
     if (!x) { x = 0; }
     var elem;
     if ((elem = canMoveInstantly(this))) {
+      cc.appear();
       doQuickMoveXY(elem, x, y);
       cc.resolve();
       cc.start();
       return this;
     }
     this.plan(function(j, elem) {
+      cc.appear();
       var tr = getElementTranslation(elem);
       this.animate(
         { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
@@ -2916,11 +2948,14 @@ var turtlefn = {
       }
       if (!pos || !isPageCoordinate(pos)) return;
       if ($.isWindow(elem)) {
+        cc.appear();
         scrollWindowToDocumentPosition(pos, limit);
+        cc.resolve();
         return;
       } else if (elem.nodeType === 9) {
         return;
       }
+      cc.appear();
       this.animate({turtlePosition:
           computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
           animTime(elem), animEasing(elem), cc.resolver);
@@ -5049,14 +5084,20 @@ var debug = {
     if (parent && parent.ide) {
       this.ide = parent.ide;
       this.ide.bindframe(window);
+      this.attached = true;
     }
   },
   showerror: function showerror(e) {
     if (this.ide) { this.ide.highlight(e, 'debugerror'); }
   },
+  attached: false,
   ide: null,
-  reportEvent: function(name, args) {
+  reportEvent: function reportEvent(name, args) {
     if (this.ide) { this.ide.reportEvent(name, args); }
+  },
+  eventCounter: 0,
+  nextId: function nextId() {
+    return debug.eventCounter++;
   }
 };
 
