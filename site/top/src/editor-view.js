@@ -65,6 +65,7 @@ window.pencilcode.view = {
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
   markPaneEditorLine: markPaneEditorLine,
+  clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
   notePaneEditorCleanText: notePaneEditorCleanText,
   noteNewFilename: noteNewFilename,
@@ -1206,12 +1207,36 @@ function markPaneEditorLine(pane, line, markclass) {
   // ACE uses zero-based line numbering.
   var zline = line - 1;
   // Add the marker.
+  if (!paneState.marked[markclass]) {
+    paneState.marked[markclass] = {};
+  }
+  var idMap = paneState.marked[markclass];
+  if (zline in idMap) {
+    return;
+  }
   var r = paneState.editor.session.highlightLines(zline, zline, markclass);
   // Save the mark ID so that it can be cleared later.
-  if (!paneState.marked[markclass]) {
-    paneState.marked[markclass] = [];
+  idMap[zline] = r.id;
+}
+
+function clearPaneEditorLine(pane, line, markclass) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) {
+    return;
   }
-  paneState.marked[markclass].push(r.id);
+  // ACE uses zero-based line numbering.
+  var zline = line - 1;
+  var idMap = paneState.marked[markclass];
+  if (!idMap) {
+    return;
+  }
+  var id = idMap[zline];
+  if (id == null) {
+    return;
+  }
+  var session = paneState.editor.session;
+  session.removeMarker(id);
+  delete idMap[zline];
 }
 
 // Clears all marks of the given class.
@@ -1229,12 +1254,12 @@ function clearPaneEditorMarks(pane, markclass) {
     }
     return;
   }
-  var list = paneState.marked[markclass];
+  var idMap = paneState.marked[markclass];
   var session = paneState.editor.session;
   delete paneState.marked[markclass];
-  if (list) {
-    for (var j = 0; j < list.length; ++j) {
-      session.removeMarker(list[j]);
+  if (idMap) {
+    for (var zline in idMap) {
+      session.removeMarker(idMap[zline]);
     }
   }
 }
