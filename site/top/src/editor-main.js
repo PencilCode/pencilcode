@@ -5,7 +5,8 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'sourcemap': 'src/sourcemap'
+    'sourcemap': 'src/sourcemap',
+    'draw-protractor': 'src/draw-protractor'
   },
   shim: {
     'tooltipster': {
@@ -29,8 +30,9 @@ require([
   'editor-storage',
   'editor-debug',
   'seedrandom',
-  'see'],
-function($, view, storage, debug, seedrandom, see) {
+  'see',
+  'draw-protractor'],
+function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 debug.init();

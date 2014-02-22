@@ -29,15 +29,8 @@ var debug = {
   },
   bindframe: bindToWindow,
   highlight: highlight,
-  reportEvent: function(name, data) {
-    // console.log(name, data);
-    if (name == 'start') {
-      debugStart.apply(null, data);
-    } else if (name == 'appear') {
-      debugAppear.apply(null, data);
-    } else if (name == 'resolve') {
-      debugResolve.apply(null, data);
-    }
+  reportEvent: function(name, args) {
+    $(debug).triggerHandler(name, args);
   },
 };
 
@@ -51,11 +44,12 @@ function bindToWindow(w) {
   firstSessionId = nextDebugId;
 }
 
-function debugStart(method, debugId, length, args) {
+$(debug).on('start', function debugStart(e, method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
   record.started = true;
   updateLine(record);
-}
+});
+
 
 function getDebugRecord(method, debugId, length, args) {
   if (debugId in debugIdRecord) {
@@ -120,7 +114,8 @@ function collectCoords(elem) {
   }
 }
 
-function debugAppear(method, debugId, length, index, elem, args) {
+$(debug).on('appear',
+function debugAppear(e, method, debugId, length, index, elem, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) {
     return;
@@ -128,9 +123,10 @@ function debugAppear(method, debugId, length, index, elem, args) {
   record.appearCount += 1;
   record.startCoords[index] = collectCoords(elem);
   updateLine(record);
-}
+});
 
-function debugResolve(method, debugId, length, index, elem) {
+$(debug).on('resolve',
+function debugResolve(e, method, debugId, length, index, elem) {
   var record = debugIdRecord[debugId];
   if (record == null) {
     console.trace('Error: got a resolve event without a corresponding start');
@@ -145,7 +141,7 @@ function debugResolve(method, debugId, length, index, elem) {
     console.trace('Error: too many resolve events', record);
   }
   updateLine(record);
-}
+});
 
 var scope = null;
 
