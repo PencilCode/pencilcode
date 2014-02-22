@@ -11,49 +11,219 @@ function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
+var scope = null;           // window object of the frame being debugged.
+var nextDebugId = 1;        // a never-decreasing sequence of debug event ids.
+var firstSessionId = 1;     // the first id of the current running session.
+var debugIdException = {};  // map debug ids -> exception objects.
+var debugIdRecord = {};     // map debug ids -> line execution records.
+var lineRecord = {};        // map line numbers -> line execution records.
+var everyRecord = [];       // a sequence of all records from the run.
+var cachedSourceMaps = {};  // parsed source maps for currently-running code.
+var cachedParsedStack = {}; // parsed stack traces for currently-running code.
+
 // Exported functions from the edit-debug module are exposed
-// as the top frame's "ide" global variable:
-var debug = {
-  init: function init() { window.ide = debug; },
-  bindframe: bindToWindow,
-  highlight: highlight,
+// as the top frame's "ide" global variable.
+var debug = window.ide = {
+  nextId: function() {
+    debugIdException[nextDebugId] = createError();
+    return nextDebugId++;
+  },
+  bindframe: bindframe,
   reportEvent: function(name, data) {
-    var debugId = data[0];
-    var line = debugIdToLine[debugId];
-    if (line == null) {
-      line = editorLineNumberForError(Error());
-      debugIdToLine[debugId] = line;
+    if (!scope) {
+      return;
     }
-    if (name == 'appear') {
-      highlightLine(line, 'debugerror');
-    } else if (name == 'resolve') {
-      // A little memory cleanup.
-      debugIdToLine[debugId] = null;
-      // If we decide to clear the highlighted line here:
-      // highlightLine(null, 'debugerror');
-    }
-  }
+    $(debug).trigger(name, data);
+  },
 };
 
-var scope = null;
-
-function bindToWindow(w) {
+// Resets the debugger state:
+// remembers
+function bindframe(w) {
   scope = w;
+  debugIdException = {};
+  debugIdRecord = {};
+  lineRecord = {};
+  everyRecord = [];
+  cachedSourceMaps = {};
+  cachedParseStack = {};
+  view.clearPaneEditorMarks(view.paneid('left'));
+  firstSessionId = nextDebugId;
 }
 
-var debugIdToLine = { };
+// The enter event is triggered the inside the call to a turtle command.
+// There is exactly one enter event for each debugId, and each corresponds
+// to exactly one call of the turtle method (with method and args as passed).
+// Enter is the first event triggered, and it is always matched by one exit.
+// Appear and resolve will appear between enter and exit if the action is
+// synchronous.  The "length" parameter indicates the number of appear
+// (and matching resolve) events to expect for this debugId.
+$(debug).on('enter',
+function debugEnter(event, method, debugId, length, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  updateLine(record);
+});
 
-function highlight(err, cssClass) {
+// The exit event is triggered when the call to the turtle command is done.
+$(debug).on('exit',
+function debugExit(event, method, debugId, length, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  record.exited = true;
+  updateLine(record);
+});
+
+// The appear event is triggered when the visible animation for a turtle
+// command begins.  If the animation happens asynchronously, appear is
+// triggered after exit; but if the animation happens synchronously,
+// it can precede exit.  Arguments are the same as for start, except
+// the "index" and "element" arguments indicate the element which is
+// being animated, and its index in the list of animated elements.
+$(debug).on('appear',
+function debugAppear(event, method, debugId, length, index, elem, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  record.appearCount += 1;
+  record.startCoords[index] = collectCoords(elem);
+  updateLine(record);
+});
+
+// The resolve event is triggered when the visible animation for a turtle
+// command ends.  It always happens after the corresponding "appear"
+// event, but may occur before or after "start".
+$(debug).on('resolve',
+function debugResolve(event, method, debugId, length, index, elem) {
+  var record = debugIdRecord[debugId];
+  if (!record) { return; }
+  record.resolveCount += 1;
+  record.endCoords[index] = collectCoords(elem);
+  if (record.resolveCount > record.appearCount) {
+    console.trace('Error: more resolve than appear events');
+  }
+  if (record.resolveCount > record.totalCount) {
+    console.trace('Error: too many resolve events', record);
+  }
+  updateLine(record);
+});
+
+// The error event is triggered when an uncaught exception occurs.
+// The err object is an exception or an Event object corresponding
+// to the error.
+$(debug).on('error',
+function debugError(event, err) {
   var line = editorLineNumberForError(err);
-  highlightLine(line, cssClass);
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugerror');
+  view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
+});
+
+// Retrieves (or creates if necessary) the debug record corresponding
+// to the given debugId.  A debug record tracks everything needed for
+// rendering information about a snapshot in time in the debugger:
+// which function was called, the location of the elements being
+// affected, and so on.  This function only deals with the table
+// debugIdRecord.
+function getDebugRecord(method, debugId, length, args) {
+  if (debugId in debugIdRecord) {
+    return debugIdRecord[debugId];
+  }
+  if (debugId < firstSessionId) {
+    return null;
+  }
+  var record = debugIdRecord[debugId] = {
+    method: method,
+    traced: false,
+    exited: false,
+    exception: debugIdException[debugId],
+    line: null,
+    debugId: debugId,
+    totalCount: length,
+    appearCount: 0,
+    resolveCount: 0,
+    startCoords: [],
+    endCoords: [],
+    args: args
+  };
+  return record;
 }
 
-function highlightLine(line, cssClass) {
-  view.clearPaneEditorMarks(view.paneid('left'), cssClass);
-  if (line != null) {
-    view.markPaneEditorLine(view.paneid('left'), line, cssClass);
+// After a debug record has been created or updated, updateLine
+// determines whether the corresponding line of source code should
+// be highlighted or unhighlighted, and if so, it does the highlighting.
+// This function maintains the record.traced bit and the lineRecord map.
+function updateLine(record) {
+  if (!record || record.debugId < firstSessionId) {
+    return;
+  }
+  // Optimization: only compute line number when there is a visible
+  // async animation.
+  if (record.line == null && record.exception && record.exited &&
+      record.appearCount > record.resolveCount) {
+    record.line = editorLineNumberForError(record.exception);
+  }
+  if (record.line != null) {
+    var oldRecord = lineRecord[record.line];
+    if (record.appearCount > record.resolveCount) {
+      lineRecord[record.line] = record;
+      if (!oldRecord || !oldRecord.traced) {
+        traceLine(record.line);
+      }
+      record.traced = true;
+    } else {
+      if (!oldRecord || !oldRecord.appearCount || oldRecord === record) {
+        lineRecord[record.line] = record;
+        if (oldRecord && oldRecord.traced) {
+          untraceLine(record.line);
+        }
+      }
+      record.traced = false;
+    }
+  }
+  // Should we garbage-collect?  Here we do:
+  if (record.resolveCount >= record.totalCount &&
+      record.resolveCount >= record.appearCount &&
+      record.exited) {
+    delete debugIdRecord[record.debugId];
   }
 }
+
+// Used while logging animations (during the 'appear' and 'resolve'
+// events) to grab information off an element that allows us to later
+// compute the coordinates.
+function collectCoords(elem) {
+  try {
+    // TODO: when the element is not a turtle with the standard
+    // parent element positioning, we should do a slower operation to
+    // grab the absolute position and direction.
+    return {
+      transform: elem.style[scope.jQuery.support.transform]
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Creates an error object in order to collect a stack trace.
+function createError() {
+  try {
+    Error.stackTraceLimit = 20;
+    (null)();
+  } catch(e) {
+    return e;
+  }
+  return new Error();
+}
+
+// Highlights the given line number as a line being traced.
+function traceLine(line) {
+  view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+}
+
+// Unhighlights the given line number as a line no longer being traced.
+function untraceLine(line) {
+  view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+}
+
 
 // parsestack converts an Error or ErrorEvent object into the following
 // JSON structure.  Starting from the deepest call, it returns an array
@@ -79,6 +249,10 @@ function parsestack(err) {
   // This code currently only works on Chrome.
   // TODO: add support for parsing other browsers' call stacks.
   if (err.stack) {
+    var cached = cachedParseStack[err.stack];
+    if (cached) {
+      return cached;
+    }
     lines = err.stack.split('\n');
     for (j = 0; j < lines.length; ++j) {
       line = lines[j];
@@ -103,8 +277,23 @@ function parsestack(err) {
         column: locationmatch[3] && parseInt(locationmatch[3])
       });
     }
+    cachedParseStack[err.stack] = parsed;
   }
   return parsed;
+}
+
+// Constructs a SourceMapConsumer object that can map from
+// Javascript (stack trace) line numbers to CoffeeScript (user code)
+// line numbers.  Since it takes some time to parse and construct
+// this mapping, the results are cached.
+function sourceMapConsumerForFile(file) {
+  var result = cachedSourceMaps[file];
+  if (!result) {
+    var map = scope.CoffeeScript.code[file].map;
+    if (!map) return null;
+    result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
+  }
+  return result;
 }
 
 // Returns the (1-based) line number for an error object, if any;
@@ -119,21 +308,34 @@ function editorLineNumberForError(error) {
   for (var j = 0; j < parsed.length; ++j) {
     if (parsed[j].file in scope.CoffeeScript.code) {
       frame = parsed[j];
+      break;
     }
   }
+  // For debugging:
+  // console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
   if (!frame) return null;
-  var map = scope.CoffeeScript.code[frame.file].map;
-  if (!map) return null;
-  var smc = new sourcemap.SourceMapConsumer(map);
+  var smc = sourceMapConsumerForFile(frame.file);
+  /* For debugging:
+  var lines = scope.CoffeeScript.code[frame.file].js.split('\n');
+  for (var j = 0; j < lines.length; ++j) {
+    console.log(j + 2, lines[j]);
+  }
+  smc.eachMapping(function(m) {
+    console.log(JSON.stringify(m));
+  });
+  */
 
   // The CoffeeScript source code mappings are empirically a bit inaccurate,
-  // but it seems if we look for the maximum original line number for any
-  // column in the generated line, that seems to be fairly accurate.
+  // but it seems if we scan forward to find a line number that isn't pinned
+  // to the starting boilerplate, we can get a line number that seems
+  // to be fairly accurate.
   var line = null;
-  for (var col = 0; col < 80; col++) {
+  for (var col = Math.max(frame.column - 1, 0);
+       col < Math.max(frame.column + 80, 80); col++) {
     var mapped = smc.originalPositionFor({line: frame.line, column: col});
-    if (mapped && mapped.line) {
-      line = line == null ? mapped.line : Math.max(line, mapped.line);
+    if (mapped && mapped.line && mapped.line >= 4) {
+      line = mapped.line;
+      break;
     }
   }
 
