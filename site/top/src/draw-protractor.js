@@ -27,7 +27,7 @@ function drawTicks(ctx, startDegrees, stepDegrees,
                    innerRadius, outerRadius,
                    skipMod, skipOffset) {
     var d, v;
-	ctx.beginPath();
+    ctx.beginPath();
     if (skipMod) {
         skipOffset = skipOffset || 0;
         for (d = startDegrees; d < 360; d += stepDegrees) {
@@ -42,7 +42,7 @@ function drawTicks(ctx, startDegrees, stepDegrees,
             drawTick(ctx, innerRadius, outerRadius, d * Math.PI / 180.0, 1);
         }
     }
-	ctx.stroke();
+    ctx.stroke();
 }
 
 function drawAxes(ctx, radius) {
@@ -109,7 +109,8 @@ function drawProtractor(ctx, radius, zeroAngle) {
 
     // Draw transparent circle under the ticks.
     ctx.lineWidth = 8;
-    ctx.strokeStyle = 'rgba(128, 128, 128, 0.2)';
+    // ctx.strokeStyle = 'rgba(128, 128, 128, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
     ctx.beginPath();
     ctx.arc(0, 0, radius - 4, 0, 2 * Math.PI, false);
     ctx.stroke();
@@ -138,6 +139,12 @@ function drawProtractor(ctx, radius, zeroAngle) {
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(255, 128, 128, 0.66)';
     drawTicks(ctx, 0, 90, radius - 8, radius);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+    drawTicks(ctx, 0, 360, radius - 10, radius + 6);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+    drawTicks(ctx, 0, 360, radius - 10, radius);
 
     if (radius > 50) {
         drawOuterLabel(ctx, radius, 'lt(90)', -90, zeroAngle);

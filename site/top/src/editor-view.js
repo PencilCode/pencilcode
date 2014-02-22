@@ -73,7 +73,8 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
-  toggleProtractor: toggleProtractor,
+  showProtractor: showProtractor,
+  hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   // Mananges panes and preview mode
@@ -136,9 +137,9 @@ function setOnCallback(tag, cb) {
 }
 
 function fireEvent(tag, args) {
-  // if (window.console) {
-  //   window.console.log('fired', tag, args);
-  // }
+  if (window.console) {
+    window.console.log('fired', tag, args);
+  }
   if (tag in state.callbacks) {
     var cb = state.callbacks[tag];
     if (cb) {
@@ -798,12 +799,8 @@ function setPaneRunText(pane, text, filename, targetUrl) {
   });
 }
 
-function toggleProtractor(pane, x, y, direction) {
+function hideProtractor(pane) {
   var paneState = state.pane[pane];
-  if (!paneState.running) {
-    console.log('NOT RUNNING, no protractor for you!');
-    return;
-  }
   var preview = $('#' + pane + ' .preview');
   var protractor = preview.find('.protractor');
   if (protractor.length) {
@@ -811,30 +808,39 @@ function toggleProtractor(pane, x, y, direction) {
     preview.find('.protractor-label').remove();
     return;
   }
-  protractor = $('<canvas class=protractor>').appendTo(preview);
-	protractor.css({
-		"position": "absolute",
-		"top": "0",
-		"left": "0",
+}
+
+function showProtractor(pane, x, y, direction, radius) {
+  var paneState = state.pane[pane];
+  if (!paneState.running) {
+    console.log('NOT RUNNING, no protractor for you!');
+    return;
+  }
+  var preview = $('#' + pane + ' .preview');
+  var protractor = $('<canvas class=protractor>').appendTo(preview);
+  protractor.css({
+    "position": "absolute",
+    "top": "0",
+    "left": "0",
     "width": "100vw",
     "height": "100vh",
-	});
-	protractor[0].width = protractor.width();
-	protractor[0].height = protractor.height();
-  renderProtractor(protractor, x, y, direction);
+  });
+  protractor[0].width = protractor.width();
+  protractor[0].height = protractor.height();
+  renderProtractor(protractor, x, y, direction, radius);
   protractor.mousemove({protractor:protractor, centerX:x, centerY:y, direction:direction},
                        updateProtractor);
 }
 
 function renderProtractor(canvas, x, y, direction, radius) {
-	var ctx = canvas[0].getContext('2d');
+  var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
-	ctx.clearRect(0, 0, canvas.width(), canvas.height());
+  ctx.clearRect(0, 0, canvas.width(), canvas.height());
 
-	ctx.save();
-	ctx.translate(x, y);
-	drawProtractor.drawProtractor(ctx, radius||200, direction - 90);
-	ctx.restore();
+  ctx.save();
+  ctx.translate(x, y);
+  drawProtractor.drawProtractor(ctx, radius||200, direction - 90);
+  ctx.restore();
 }
 
 function to360(d) {
@@ -884,10 +890,8 @@ function updateProtractor(event) {
     css.top = (event.offsetY) + 'px';
   }
   label.css(css);
-
-
-  
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // DIRECTORY LISTING
@@ -1211,6 +1215,16 @@ function setPaneEditorText(pane, text, filename) {
   setPrimaryFocus();
   editor.on('focus', function() {
     fireEvent('editfocus', [pane]);
+  });
+  var gutter = $('#' + id + ' .ace_gutter');
+  gutter.on('mouseenter', '.ace_gutter-cell', function() {
+    fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('mouseleave', '.ace_gutter-cell', function() {
+    fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('click', '.ace_gutter-cell', function() {
+    fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
 }
 

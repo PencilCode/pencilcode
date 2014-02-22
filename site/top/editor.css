@@ -91,6 +91,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 }
 .debugerror{position:absolute;background:red;}
 .debugtrace{position:absolute;background:paleturquoise;}
+.debugfocus{position:absolute;background:yellow;}
 body#pencilcode #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;

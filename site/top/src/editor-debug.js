@@ -106,6 +106,7 @@ function updateLine(record) {
 
 function collectCoords(elem) {
   try {
+    // TODO: verify correctness here.
     return {
       transform: elem.style[scope.jQuery.support.transform]
     };
@@ -282,6 +283,59 @@ function editorLineNumberForError(error) {
   if (!line || line < 4) return null;
   // Subtract a few lines of boilerplate from the top of the script.
   return line - 3;
+}
+
+//////////////////////////////////////////////////////////////////////
+// GUTTER HIGHLIGHTING SUPPORT
+//////////////////////////////////////////////////////////////////////
+view.on('entergutter', function(pane, lineno) {
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(lineRecord[lineno]);
+});
+
+view.on('leavegutter', function(pane, lineno) {
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.hideProtractor(view.paneid('right'));
+});
+
+function displayProtractorForRecord(record) {
+  if (record.startCoords.length <= 0) return;
+  var coords = record.endCoords[record.startCoords.length - 1];
+  if (!coords || !coords.transform) return;
+  var parsed = parseTurtleTransform(coords.transform);
+  if (!parsed) return;
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = scope.jQuery('#field').offset();
+  if (!origin) return;
+  view.showProtractor(view.paneid('right'),
+     origin.left + parsed.tx,
+     origin.top + parsed.ty,
+     parsed.rot,
+     30);
+}
+
+// The canonical 2D transforms written by this plugin have the form:
+// translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
+// (with each component optional).
+// This function quickly parses this form into a canonicalized object.
+function parseTurtleTransform(transform) {
+  if (transform === 'none') {
+    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+  }
+  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
+  // and FF put them in there; so allow them.
+  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
+  if (!e) { return null; }
+  var tx = e[1] ? parseFloat(e[1]) : 0,
+      ty = e[2] ? parseFloat(e[2]) : 0,
+      rot = e[3] ? parseFloat(e[3]) : 0,
+      sx = e[4] ? parseFloat(e[4]) : 1,
+      sy = e[5] ? parseFloat(e[5]) : sx,
+      twi = e[6] ? parseFloat(e[6]) : 0;
+  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
 }
 
 return debug;
