@@ -1025,7 +1025,7 @@ function getCornersInPageCoordinates(elem, untransformed) {
       totalTransform = matrixProduct(totalParentTransform, currentTransform),
       inverseParent = inverse2x2(totalParentTransform),
       out = {},
-      origin = getTurtleOrigin(elem, inverseParent),
+      origin = getTurtleOrigin(elem, inverseParent, out),
       gbcr = out.gbcr,
       hull = polyToVectorsOffset(getTurtleData(elem).hull, origin) || [
         [gbcr.left, gbcr.top],
@@ -3196,8 +3196,9 @@ var turtlefn = {
       "<mark>play \"de[dBFA]2[cGEC]4\"</mark>"],
   function play(notes) {
     var cc = setupContinuation(this, arguments, 1);
+    var self = this;
     this.queue(function() {
-      playABC(function() { cc.resolve(); $(this).dequeue(); }, cc.args);
+      playABC(function() { cc.resolve(); $(self).dequeue(); }, cc.args);
     });
     cc.start();
     return this;
@@ -3239,15 +3240,42 @@ var turtlefn = {
   }),
   label: wraphelp(
   ["<u>label(text)</u> Labels the current position with HTML: " +
-      "<mark>label 'remember'</mark>"],
-  function label(html, fn) {
+      "<mark>label 'remember'</mark>",
+   "<u>label(text, styles)</u> Apply CSS styles to the label: " +
+      "<mark>label 'big', { fontSize: 100 }</mark>"],
+
+  function label(html, styles, fn) {
+    if (!fn && $.isFunction(styles)) {
+      fn = styles;
+      styles = null;
+    }
+    if ($.isNumeric(styles)) {
+      styles = { fontSize: styles };
+    }
     return this.plan(function() {
-      var out = output(html, 'label').css({
+      var applyStyles = {}, currentStyles = this.prop('style');
+      // For defaults, copy inline styles of the turtle itself except for
+      // properties in the following list (these are the properties used to
+      // make the turtle look like a turtle).
+      for (var j = 0; j < currentStyles.length; ++j) {
+        var styleProperty = currentStyles[j];
+        if (/^(?:width|height|opacity|background-image|background-size)$/.test(
+          styleProperty) || /transform/.test(styleProperty)) {
+          continue;
+        }
+        applyStyles[$.camelCase(styleProperty)] = currentStyles[styleProperty];
+      }
+      // And then override turtle styles with absolute positioning; and
+      // finally override all styles with any explicity provided styles.
+      $.extend(applyStyles, {
         position: 'absolute',
         display: 'table',
         top: 0,
         left: 0
-      }).addClass('turtle').appendTo(getTurtleField());
+      }, styles);
+      // Place the label on the screen using the figured styles.
+      var out = output(html, 'label').css(applyStyles)
+          .addClass('turtle').appendTo(getTurtleField());
       // Mimic the current position and rotation and scale of the turtle.
       out.css({
         turtlePosition: computeTargetAsTurtlePosition(
