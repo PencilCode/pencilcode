@@ -89,7 +89,9 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   font-weight: 600;
   line-height: 121%;
 }
+/* Code line highlighting for errors */
 .debugerror{position:absolute;background:red;}
+/* Code line highlighting for currently-running code */
 .debugtrace{position:absolute;background:paleturquoise;}
 body#pencilcode #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */

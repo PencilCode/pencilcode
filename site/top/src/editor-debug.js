@@ -11,7 +11,7 @@ function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
-var scope = null;           // window object of the frame being debugged.
+var targetWindow = null;    // window object of the frame being debugged.
 var nextDebugId = 1;        // a never-decreasing sequence of debug event ids.
 var firstSessionId = 1;     // the first id of the current running session.
 var debugIdException = {};  // map debug ids -> exception objects.
@@ -21,26 +21,12 @@ var everyRecord = [];       // a sequence of all records from the run.
 var cachedSourceMaps = {};  // parsed source maps for currently-running code.
 var cachedParsedStack = {}; // parsed stack traces for currently-running code.
 
-// Exported functions from the edit-debug module are exposed
-// as the top frame's "ide" global variable.
-var debug = window.ide = {
-  nextId: function() {
-    debugIdException[nextDebugId] = createError();
-    return nextDebugId++;
-  },
-  bindframe: bindframe,
-  reportEvent: function(name, data) {
-    if (!scope) {
-      return;
-    }
-    $(debug).trigger(name, data);
-  },
-};
-
 // Resets the debugger state:
-// remembers
+// Remembers the targetWindow, and clears all logged debug records.
+// Calling bindframe also resets firstSessionId, so that callbacks
+// having to do with previous sessions are ignored.
 function bindframe(w) {
-  scope = w;
+  targetWindow = w;
   debugIdException = {};
   debugIdRecord = {};
   lineRecord = {};
@@ -51,7 +37,23 @@ function bindframe(w) {
   firstSessionId = nextDebugId;
 }
 
-// The enter event is triggered the inside the call to a turtle command.
+// Exported functions from the edit-debug module are exposed
+// as the top frame's "ide" global variable.
+var debug = window.ide = {
+  nextId: function() {
+    debugIdException[nextDebugId] = createError();
+    return nextDebugId++;
+  },
+  bindframe: bindframe,
+  reportEvent: function(name, data) {
+    if (!targetWindow) {
+      return;
+    }
+    $(debug).trigger(name, data);
+  },
+};
+
+// The "enter" event is triggered inside the call to a turtle command.
 // There is exactly one enter event for each debugId, and each corresponds
 // to exactly one call of the turtle method (with method and args as passed).
 // Enter is the first event triggered, and it is always matched by one exit.
@@ -196,7 +198,7 @@ function collectCoords(elem) {
     // parent element positioning, we should do a slower operation to
     // grab the absolute position and direction.
     return {
-      transform: elem.style[scope.jQuery.support.transform]
+      transform: elem.style[targetWindow.jQuery.support.transform]
     };
   } catch (e) {
     return null;
@@ -238,7 +240,7 @@ function untraceLine(line) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof scope.Error) && err.error) {
+  if (!(err instanceof targetWindow.Error) && err.error) {
     // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
     // contain an "error" property.  This test allows such objects
     // (and any objects with an error property) to be passed and unwrapped.
@@ -289,7 +291,7 @@ function parsestack(err) {
 function sourceMapConsumerForFile(file) {
   var result = cachedSourceMaps[file];
   if (!result) {
-    var map = scope.CoffeeScript.code[file].map;
+    var map = targetWindow.CoffeeScript.code[file].map;
     if (!map) return null;
     result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
   }
@@ -302,11 +304,12 @@ function editorLineNumberForError(error) {
   if (!error) return null;
   var parsed = parsestack(error);
   if (!parsed) return null;
-  if (!scope || !scope.CoffeeScript || !scope.CoffeeScript.code) return null;
+  if (!targetWindow || !targetWindow.CoffeeScript ||
+      !targetWindow.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
-    if (parsed[j].file in scope.CoffeeScript.code) {
+    if (parsed[j].file in targetWindow.CoffeeScript.code) {
       frame = parsed[j];
       break;
     }
@@ -316,7 +319,7 @@ function editorLineNumberForError(error) {
   if (!frame) return null;
   var smc = sourceMapConsumerForFile(frame.file);
   /* For debugging:
-  var lines = scope.CoffeeScript.code[frame.file].js.split('\n');
+  var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
   for (var j = 0; j < lines.length; ++j) {
     console.log(j + 2, lines[j]);
   }
