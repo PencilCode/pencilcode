@@ -3,7 +3,9 @@ require.config({
   paths: {
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
-    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster'
+    'editor-debug': 'src/editor-debug',
+    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
+    'sourcemap': 'src/sourcemap'
   },
   shim: {
     'tooltipster': {
@@ -21,10 +23,17 @@ require.config({
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-require(['jquery', 'editor-view', 'editor-storage', 'seedrandom', 'see'],
-function($, view, storage, seedrandom, see) {
+require([
+  'jquery',
+  'editor-view',
+  'editor-storage',
+  'editor-debug',
+  'seedrandom',
+  'see'],
+function($, view, storage, debug, seedrandom, see) {
 
 eval(see.scope('controller'));
+debug.init();
 
 var model = {
   // Owner name of this file or directory.
@@ -126,7 +135,7 @@ function updateTopControls(addHistory) {
       // If so, then insert save button
       //
       buttons.push(
-        {id: 'save', label: 'Save',
+        {id: 'save', title: 'Ctrl+S', label: 'Save',
          disabled: !specialowner() && model.username &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
 
@@ -170,7 +179,7 @@ function updateTopControls(addHistory) {
         {id: 'guide', label: '<span class=helplink>Guide</span>' });
     }
   }
-  // buttons.push({id: 'done', label: 'Done'});
+  // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
   // Update middle button.
   if (m.data && m.data.file ||
@@ -288,6 +297,7 @@ view.on('run', function() {
   }
   var runtext = mimetext && mimetext.text;
   var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  view.clearPaneEditorMarks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
     storage.saveFile(model.ownername,
@@ -815,7 +825,7 @@ view.on('rename', function(newname) {
   }
   function completeRename(newfile) {
     view.flashNotification(
-        (newfile ? 'Using name ' : 'Moved to ') + newname + '.');
+        (newfile ? 'Using name ' : 'Renamed to ') + newname + '.');
     mp.filename = newname;
     view.noteNewFilename(pp, newname);
     updateTopControls(false);

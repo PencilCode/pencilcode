@@ -1,6 +1,6 @@
-// seedrandom.js version 2.3.1
+// seedrandom.js version 2.3.3
 // Author: David Bau
-// Date: 2013 Dec 23
+// Date: 2014 Feb 4
 //
 // Defines a method Math.seedrandom() that, when called, substitutes
 // an explicitly seeded RC4-based algorithm for Math.random().  Also
@@ -8,47 +8,48 @@
 // Can be used as a node.js or AMD module.  Can be called with "new"
 // to create a local PRNG without changing Math.random.
 //
-// http://davidbau.com/encode/seedrandom.js
-// http://davidbau.com/encode/seedrandom-min.js
+// Basic usage:
 //
-// Usage:
+//   <script src=http://davidbau.com/encode/seedrandom.min.js></script>
 //
-//   <script src=http://davidbau.com/encode/seedrandom-min.js></script>
+//   Math.seedrandom('yay.');  // Sets Math.random to a function that is
+//                             // initialized using the given explicit seed.
 //
-//   Math.seedrandom('yay.');  Sets Math.random to a function that is
-//                             initialized using the given explicit seed.
-//
-//   Math.seedrandom();        Sets Math.random to a function that is
-//                             seeded using the current time, dom state,
-//                             and other accumulated local entropy.
-//                             The generated seed string is returned.
+//   Math.seedrandom();        // Sets Math.random to a function that is
+//                             // seeded using the current time, dom state,
+//                             // and other accumulated local entropy.
+//                             // The generated seed string is returned.
 //
 //   Math.seedrandom('yowza.', true);
-//                             Seeds using the given explicit seed mixed
-//                             together with accumulated entropy.
-//
-//   var myrng = new Math.seedrandom('yay.');
-//   var n = myrng();          Using "new" creates a local prng without
-//                             altering Math.random.
+//                             // Seeds using the given explicit seed mixed
+//                             // together with accumulated entropy.
 //
 //   <script src="https://jsonlib.appspot.com/urandom?callback=Math.seedrandom">
-//   </script>                 Seeds using urandom bits from a server.
+//   </script>                 <!-- Seeds using urandom bits from a server. -->
 //
 //   Math.seedrandom("hello.");           // Behavior is the same everywhere:
 //   document.write(Math.random());       // Always 0.9282578795792454
 //   document.write(Math.random());       // Always 0.3752569768646784
 //
-// When used as a module, also returns local PRNG instances:
+// Math.seedrandom can be used as a constructor to return a seeded PRNG
+// that is independent of Math.random:
 //
-//   // With node.js:
-//   var seedrandom = require('./seedrandom.js');
-//   var rng = seedrandom('predictable.');
-//   console.log(rng());                  // always 0.6646563869134212
+//   var myrng = new Math.seedrandom('yay.');
+//   var n = myrng();          // Using "new" creates a local prng without
+//                             // altering Math.random.
+//
+// When used as a module, seedrandom is a function that returns a seeded
+// PRNG instance without altering Math.random:
+//
+//   // With node.js (after "npm install seedrandom"):
+//   var seedrandom = require('seedrandom');
+//   var rng = seedrandom('hello.');
+//   console.log(rng());                  // always 0.9282578795792454
 //
 //   // With require.js or other AMD loader:
 //   require(['seedrandom'], function(seedrandom) {
-//     var rng = seedrandom('predictable.');
-//     console.log(rng());                // always 0.6646563869134212
+//     var rng = seedrandom('hello.');
+//     console.log(rng());                // always 0.9282578795792454
 //   });
 //
 // More examples:
@@ -71,22 +72,23 @@
 //   }
 //   reseed('mousemove', 100);            // Reseed after 100 mouse moves.
 //
-//   The callback third arg can be used to get both the prng and the seed.
-//   The following returns both an autoseeded prng and the seed as an object,
-//   without mutating Math.random:
+// The callback third arg can be used to get both the prng and the seed.
+// The following returns both an autoseeded prng and the seed as an object,
+// without mutating Math.random:
 //
 //   var obj = Math.seedrandom(null, false, function(prng, seed) {
-//      return { random: prng, seed: seed };
+//     return { random: prng, seed: seed };
 //   });
 //
 // Version notes:
 //
 // The random number sequence is the same as version 1.0 for string seeds.
-// Version 2.0 changed the sequence for non-string seeds.
-// Version 2.1 speeds seeding and uses window.crypto to autoseed if present.
-// Version 2.2 alters non-crypto autoseeding to sweep up entropy from plugins.
-// Version 2.3 adds support for "new", module loading, and a null seed arg.
-// Version 2.3.1 adds a build environment, module packaging, and tests.
+// * Version 2.0 changed the sequence for non-string seeds.
+// * Version 2.1 speeds seeding and uses window.crypto to autoseed if present.
+// * Version 2.2 alters non-crypto autoseeding to sweep up entropy from plugins.
+// * Version 2.3 adds support for "new", module loading, and a null seed arg.
+// * Version 2.3.1 adds a build environment, module packaging, and tests.
+// * Version 2.3.3 fixes bugs on IE8, and switches to MIT license.
 //
 // The standard ARC4 key scheduler cycles short keys, which means that
 // seedrandom('ab') is equivalent to seedrandom('abab') and 'ababab'.
@@ -150,6 +152,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+
 /**
  * All code is in an anonymous closure to keep the global namespace clean.
  */
@@ -174,7 +177,7 @@ impl = math['seed' + rngname] = function(seed, use_entropy, callback) {
   // Flatten the seed string or build one from local entropy if needed.
   var shortseed = mixkey(flatten(
     use_entropy ? [seed, tostring(pool)] :
-    (seed === null || seed === undefined) ? autoseed() : seed, 3), key);
+    (seed == null) ? autoseed() : seed, 3), key);
 
   // Use the seed to initialize an ARC4 generator.
   var arc4 = new ARC4(key);
@@ -260,13 +263,13 @@ function ARC4(key) {
 // Converts an object tree to nested arrays of strings.
 //
 function flatten(obj, depth) {
-  var result = [], typ = (typeof obj)[0], prop;
-  if (depth && typ == 'o') {
+  var result = [], typ = (typeof obj), prop;
+  if (depth && typ == 'object') {
     for (prop in obj) {
       try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
     }
   }
-  return (result.length ? result : typ == 's' ? obj : obj + '\0');
+  return (result.length ? result : typ == 'string' ? obj : obj + '\0');
 }
 
 //
@@ -333,7 +336,7 @@ if (module && module.exports) {
   256,    // width: each RC4 output is 0 <= x < 256
   6,      // chunks: at least six RC4 outputs for each double
   52,     // digits: there are 52 significant digits in a double
-  (typeof module)[0] == 'o' && module,  // present in node.js
-  (typeof define)[0] == 'f' && define,  // present with an AMD loader
+  (typeof module) == 'object' && module,    // present in node.js
+  (typeof define) == 'function' && define,  // present with an AMD loader
   'random'// rngname: name for Math.random and Math.seedrandom
 );

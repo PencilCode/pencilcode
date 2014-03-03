@@ -72,24 +72,28 @@ h1, h2 {
   text-transform: capitalize;
   text-decoration: underline;
 }
-#what,.whiteback {
+#what,#guide,.whiteback {
   font-size: 16px;
   line-height: 16px;
   color: gray;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.6);
+}
+.whiteback {
   box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
 }
 .info,.link {
   color: gray;
   text-decoration: none;
 }
-#what:hover,.info:hover,.link:hover {
+#what:hover,#guide:hover,.info:hover,.link:hover {
   color: blue;
   text-decoration: underline;
 }
-#what:hover,.whiteback:hover {
+#what:hover,#guide:hover,.whiteback:hover {
   background: white;
+}
+.whiteback:hover {
   box-shadow: 0 0 16px 16px white;
 }
 .corners {
@@ -226,7 +230,7 @@ functions such as <code>pen</code> (sets the turtle's pen color),
 (plays musical notes).
 Pencil is all <a href="/license.html" target="_blank">open source</a>.
 Hang out on the <a href="/group" target="_blank">Pencil
-discussion forum</a> or check out 
+discussion forum</a> or check out
 <a href="http://pencilcode.net/material/reference.pdf" target="_blank"
 >the quick reference</a>
 or
@@ -240,7 +244,7 @@ Two rules:
 <p><u>Be Nice.</u> Do not mess up other peoples' work.
 <strong>Do not post content that detracts from education on the site.</strong>
 This a learning space that is not locked down
-(for example, passwords are optional). So feel free to explore, create, 
+(for example, passwords are optional). So feel free to explore, create,
 and link, but also please be considerate.
 <p><u>Be Careful.</u> Do not depend on Pencil to keep your data safe.
 Data posted here is public, and data is not secured from loss.
@@ -268,6 +272,8 @@ Contribute to the development of Pencil Code at
 <br>
 <a href="#" id="what">What's this?</a>
 <br>
+<a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
+<br>
 <div class="choices">
 <a href="http://pencilcode.net/edit/first" id="randfirst">I'm new here.
 <span class="em">Let's play.</span>
@@ -280,29 +286,23 @@ Contribute to the development of Pencil Code at
 <script>
 $('#randfirst').mouseenter(function() {
   var choices = [
-    'http://pencilcode.net/edit/first',
-    'http://goo.gl/Vgyc2H', // dandelion
-    'http://goo.gl/MWCLbh', // rainbow
-    'http://goo.gl/r5HBap', // sailboat
-    'http://goo.gl/YOYBI3', // house
-    'http://goo.gl/qXymPP', // function square
-    'http://goo.gl/B69YQn', // violet
-    'http://goo.gl/4mL0Jj', // polygon
-    'http://goo.gl/NfnVaQ', // movedraw
-    'http://goo.gl/ppi8HB', // euclid
-    'http://goo.gl/9EKvEL', // polygonread
-    'http://goo.gl/ftJy69', // guessmynumber
-    'http://goo.gl/7cVwlf', // hi
-    'http://goo.gl/KSYXOt'  // infinity
+    '/edit/first',
+    '/edit/dandelion',
+    '/edit/rainbow',
+    '/edit/sailboat',
+    '/edit/house',
+    '/edit/square',
+    '/edit/violet',
+    '/edit/polygon',
+    '/edit/movedraw',
+    '/edit/euclidsmethod',
+    '/edit/polygonread',
+    '/edit/guessmynumber',
+    '/edit/hi',
+    '/edit/infinity'
   ];
   $('#randfirst').attr('href',
       choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
-});
-
-$(function() {
-  $('#guide,#blank').click(function() {
-    $(this).closest('a').attr('href', $(this).attr('href'));
-  });
 });
 
 function cookie(key) {
@@ -413,21 +413,19 @@ $('#reset').click(function(e) {
 });
 
 </script>
-<a href="/edit/">Browse users.
-<span class="extrabutton" id="guide" href="//guide.pencilcode.net/home/">see the guide</span>
-</a>
+<a href="/edit/">Browse users.</a>
 </div>
 <br>
 <h2>A Modern Sandbox<br>
 For Little Programs</h2>
 <p align="center" class="whiteback">
-<a href="#" class="info">By the Pencil Code Foundation</a> - 
+<a href="#" class="info">By the Pencil Code Foundation</a> -
 <a href="mailto:info@pencilcode.net" class="link"
 target="_top">info@pencilcode.net</a>
 </p>
 <p align="center"><a href="http://dev.pencilcode.net/" class="link"
 >Want to improve Pencil Code?
-Participate in our first open-source Codeathon.</a></p>
+Participate in an open-source Hackathon.</a></p>
 </div>
 </div>
 </div>

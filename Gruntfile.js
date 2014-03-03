@@ -41,6 +41,19 @@ module.exports = function(grunt) {
           'require.js': 'requirejs/require.js',
           'almond.js': 'almond/almond.js'
         }
+      },
+      sourcemap: {
+        options: {
+          destPrefix: 'site/top/src/sourcemap'
+        },
+        files: {
+          'array-set.js': 'source-map/lib/source-map/array-set.js',
+          'base64.js': 'source-map/lib/source-map/base64.js',
+          'base64-vlq.js': 'source-map/lib/source-map/base64-vlq.js',
+          'binary-search.js': 'source-map/lib/source-map/binary-search.js',
+          'source-map-consumer.js': 'source-map/lib/source-map/source-map-consumer.js',
+          'util.js': 'source-map/lib/source-map/util.js'
+        }
       }
     },
     requirejs: {
