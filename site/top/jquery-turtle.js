@@ -2687,25 +2687,29 @@ function visiblePause(elem, seconds) {
   } else {
     ms = seconds * 1000;
   }
+  var thissel = $(elem);
   if (ms) {
-    var thissel = $(elem);
-    // Generic indication of taking some time for an action
-    // A visual indicator of a pen color change.
-    var circle = new Turtle('gray radius');
-    circle.css({
-      zIndex: 1,
-      turtlePosition: thissel.css('turtlePosition'),
-      turtleRotation: thissel.css('turtleRotation')
-    });
-    circle.animate({
-      turtleRotation: '+=360'
-    }, ms);
-    thissel.queue(function(next) {
-      circle.done(function() {
-        circle.remove();
-        next();
+    if (thissel.is(':visible')) {
+      // Generic indication of taking some time for an action
+      // A visual indicator of a pen color change.
+      var circle = new Turtle('gray radius');
+      circle.css({
+        zIndex: 1,
+        turtlePosition: thissel.css('turtlePosition'),
+        turtleRotation: thissel.css('turtleRotation')
       });
-    });
+      circle.animate({
+        turtleRotation: '+=360'
+      }, ms, 'linear');
+      thissel.queue(function(next) {
+        circle.done(function() {
+          circle.remove();
+          next();
+        });
+      });
+    } else {
+      thissel.delay(ms);
+    }
   }
 }
 
@@ -2842,9 +2846,6 @@ function wrapglobalcommand(name, helptext, fn) {
       thissel.plan(function(j, elem) {
         cc.appear(j);
         fn.apply(null, args);
-        if (!canMoveInstantly(this)) {
-          visiblePause(elem);
-        }
         this.plan(cc.resolver(j));
       });
       cc.exit();
@@ -3192,7 +3193,7 @@ var turtlefn = {
     }
     this.plan(function(j, elem) {
       cc.appear(j);
-      var animate = !canMoveInstantly(this),
+      var animate = !canMoveInstantly(this) && this.is(':visible'),
           oldstyle = animate && parsePenStyle(this.css('turtlePenStyle')),
           olddown = animate && this.css('turtlePenDown'),
           moved = false;
@@ -3436,9 +3437,6 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.css('turtleSpeed', mps);
-      if (!canMoveInstantly(this)) {
-        visiblePause(elem);
-      }
       this.plan(function() {
         cc.resolve(j);
       });
@@ -3883,8 +3881,8 @@ function checkPredicate(fname, sel) {
     if (see.visible()) {
       see.html('<span style="color:red">Warning: ' + fname +
       ' may not return useful results when motion is queued. ' +
-      'Try <b style="background:yellow">speed Infinity</b></span> or' +
-      '<b style="background:yellow">await done defer()></b> first.');
+      'Try <b style="background:yellow">speed Infinity</b></span> or ' +
+      '<b style="background:yellow">await done defer()</b> first.');
     } else {
       console.warn(fname + ' may not return useful results when motion ' +
       'is queued.  Try "speed Infinity" or "await done defer()".');

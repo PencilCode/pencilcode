@@ -10,7 +10,7 @@
     "requirejs": "latest",
     "ace-builds": "PencilCode/pencilcode-ace-builds#master",
     "almond": "~0.2.7",
-    "seedrandom": "~2.3.1",
+    "seedrandom": "~2.3.3",
     "source-map": "mozilla/source-map#master"
   }
 }
