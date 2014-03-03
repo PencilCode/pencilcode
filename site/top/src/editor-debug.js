@@ -11,46 +11,120 @@ function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
-var debugIdRecord = {};
-var lineRecord = {};
-var nextDebugId = 1;
-var firstSessionId = 1;
-var cachedSourceMaps = {};
-var cachedParsedStack = {};
+var targetWindow = null;    // window object of the frame being debugged.
+var nextDebugId = 1;        // a never-decreasing sequence of debug event ids.
+var firstSessionId = 1;     // the first id of the current running session.
+var debugIdException = {};  // map debug ids -> exception objects.
+var debugIdRecord = {};     // map debug ids -> line execution records.
+var lineRecord = {};        // map line numbers -> line execution records.
+var everyRecord = [];       // a sequence of all records from the run.
+var cachedSourceMaps = {};  // parsed source maps for currently-running code.
+var cachedParsedStack = {}; // parsed stack traces for currently-running code.
 
-// Exported functions from the edit-debug module are exposed
-// as the top frame's "ide" global variable:
-var debug = {
-  init: function init() {
-    window.ide = debug;
-  },
-  nextId: function() {
-    return nextDebugId++;
-  },
-  bindframe: bindToWindow,
-  highlight: highlight,
-  reportEvent: function(name, args) {
-    $(debug).triggerHandler(name, args);
-  },
-};
-
-function bindToWindow(w) {
-  scope = w;
+// Resets the debugger state:
+// Remembers the targetWindow, and clears all logged debug records.
+// Calling bindframe also resets firstSessionId, so that callbacks
+// having to do with previous sessions are ignored.
+function bindframe(w) {
+  targetWindow = w;
+  debugIdException = {};
   debugIdRecord = {};
   lineRecord = {};
+  everyRecord = [];
   cachedSourceMaps = {};
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   firstSessionId = nextDebugId;
 }
 
-$(debug).on('start', function debugStart(e, method, debugId, length, args) {
+// Exported functions from the edit-debug module are exposed
+// as the top frame's "ide" global variable.
+var debug = window.ide = {
+  nextId: function() {
+    debugIdException[nextDebugId] = createError();
+    return nextDebugId++;
+  },
+  bindframe: bindframe,
+  reportEvent: function(name, data) {
+    if (!targetWindow) {
+      return;
+    }
+    $(debug).trigger(name, data);
+  },
+};
+
+// The "enter" event is triggered inside the call to a turtle command.
+// There is exactly one enter event for each debugId, and each corresponds
+// to exactly one call of the turtle method (with method and args as passed).
+// Enter is the first event triggered, and it is always matched by one exit.
+// Appear and resolve will appear between enter and exit if the action is
+// synchronous.  The "length" parameter indicates the number of appear
+// (and matching resolve) events to expect for this debugId.
+$(debug).on('enter',
+function debugEnter(event, method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
-  record.started = true;
+  if (!record) { return; }
   updateLine(record);
 });
 
+// The exit event is triggered when the call to the turtle command is done.
+$(debug).on('exit',
+function debugExit(event, method, debugId, length, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  record.exited = true;
+  updateLine(record);
+});
 
+// The appear event is triggered when the visible animation for a turtle
+// command begins.  If the animation happens asynchronously, appear is
+// triggered after exit; but if the animation happens synchronously,
+// it can precede exit.  Arguments are the same as for start, except
+// the "index" and "element" arguments indicate the element which is
+// being animated, and its index in the list of animated elements.
+$(debug).on('appear',
+function debugAppear(event, method, debugId, length, index, elem, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  record.appearCount += 1;
+  record.startCoords[index] = collectCoords(elem);
+  updateLine(record);
+});
+
+// The resolve event is triggered when the visible animation for a turtle
+// command ends.  It always happens after the corresponding "appear"
+// event, but may occur before or after "start".
+$(debug).on('resolve',
+function debugResolve(event, method, debugId, length, index, elem) {
+  var record = debugIdRecord[debugId];
+  if (!record) { return; }
+  record.resolveCount += 1;
+  record.endCoords[index] = collectCoords(elem);
+  if (record.resolveCount > record.appearCount) {
+    console.trace('Error: more resolve than appear events');
+  }
+  if (record.resolveCount > record.totalCount) {
+    console.trace('Error: too many resolve events', record);
+  }
+  updateLine(record);
+});
+
+// The error event is triggered when an uncaught exception occurs.
+// The err object is an exception or an Event object corresponding
+// to the error.
+$(debug).on('error',
+function debugError(event, err) {
+  var line = editorLineNumberForError(err);
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugerror');
+  view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
+});
+
+// Retrieves (or creates if necessary) the debug record corresponding
+// to the given debugId.  A debug record tracks everything needed for
+// rendering information about a snapshot in time in the debugger:
+// which function was called, the location of the elements being
+// affected, and so on.  This function only deals with the table
+// debugIdRecord.
 function getDebugRecord(method, debugId, length, args) {
   if (debugId in debugIdRecord) {
     return debugIdRecord[debugId];
@@ -61,8 +135,9 @@ function getDebugRecord(method, debugId, length, args) {
   var record = debugIdRecord[debugId] = {
     method: method,
     traced: false,
-    started: false,
-    line: editorLineNumberForError(createError()),
+    exited: false,
+    exception: debugIdException[debugId],
+    line: null,
     debugId: debugId,
     totalCount: length,
     appearCount: 0,
@@ -74,9 +149,19 @@ function getDebugRecord(method, debugId, length, args) {
   return record;
 }
 
+// After a debug record has been created or updated, updateLine
+// determines whether the corresponding line of source code should
+// be highlighted or unhighlighted, and if so, it does the highlighting.
+// This function maintains the record.traced bit and the lineRecord map.
 function updateLine(record) {
   if (!record || record.debugId < firstSessionId) {
     return;
+  }
+  // Optimization: only compute line number when there is a visible
+  // async animation.
+  if (record.line == null && record.exception && record.exited &&
+      record.appearCount > record.resolveCount) {
+    record.line = editorLineNumberForError(record.exception);
   }
   if (record.line != null) {
     var oldRecord = lineRecord[record.line];
@@ -99,53 +184,28 @@ function updateLine(record) {
   // Should we garbage-collect?  Here we do:
   if (record.resolveCount >= record.totalCount &&
       record.resolveCount >= record.appearCount &&
-      record.started) {
+      record.exited) {
     delete debugIdRecord[record.debugId];
   }
 }
 
+// Used while logging animations (during the 'appear' and 'resolve'
+// events) to grab information off an element that allows us to later
+// compute the coordinates.
 function collectCoords(elem) {
   try {
-    // TODO: verify correctness here.
+    // TODO: when the element is not a turtle with the standard
+    // parent element positioning, we should do a slower operation to
+    // grab the absolute position and direction.
     return {
-      transform: elem.style[scope.jQuery.support.transform]
+      transform: elem.style[targetWindow.jQuery.support.transform]
     };
   } catch (e) {
     return null;
   }
 }
 
-$(debug).on('appear',
-function debugAppear(e, method, debugId, length, index, elem, args) {
-  var record = getDebugRecord(method, debugId, length, args);
-  if (!record) {
-    return;
-  }
-  record.appearCount += 1;
-  record.startCoords[index] = collectCoords(elem);
-  updateLine(record);
-});
-
-$(debug).on('resolve',
-function debugResolve(e, method, debugId, length, index, elem) {
-  var record = debugIdRecord[debugId];
-  if (record == null) {
-    console.trace('Error: got a resolve event without a corresponding start');
-    return;
-  }
-  record.resolveCount += 1;
-  record.endCoords[index] = collectCoords(elem);
-  if (record.resolveCount > record.appearCount) {
-    console.trace('Error: more resolve than appear events');
-  }
-  if (record.resolveCount > record.totalCount) {
-    console.trace('Error: too many resolve events', record);
-  }
-  updateLine(record);
-});
-
-var scope = null;
-
+// Creates an error object in order to collect a stack trace.
 function createError() {
   try {
     Error.stackTraceLimit = 20;
@@ -156,16 +216,12 @@ function createError() {
   return new Error();
 }
 
-function highlight(err, cssClass) {
-  var line = editorLineNumberForError(err);
-  view.clearPaneEditorMarks(view.paneid('left'), cssClass);
-  view.markPaneEditorLine(view.paneid('left'), line, cssClass);
-}
-
+// Highlights the given line number as a line being traced.
 function traceLine(line) {
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 
+// Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
@@ -184,7 +240,7 @@ function untraceLine(line) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof scope.Error) && err.error) {
+  if (!(err instanceof targetWindow.Error) && err.error) {
     // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
     // contain an "error" property.  This test allows such objects
     // (and any objects with an error property) to be passed and unwrapped.
@@ -228,10 +284,14 @@ function parsestack(err) {
   return parsed;
 }
 
+// Constructs a SourceMapConsumer object that can map from
+// Javascript (stack trace) line numbers to CoffeeScript (user code)
+// line numbers.  Since it takes some time to parse and construct
+// this mapping, the results are cached.
 function sourceMapConsumerForFile(file) {
   var result = cachedSourceMaps[file];
   if (!result) {
-    var map = scope.CoffeeScript.code[file].map;
+    var map = targetWindow.CoffeeScript.code[file].map;
     if (!map) return null;
     result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
   }
@@ -244,20 +304,22 @@ function editorLineNumberForError(error) {
   if (!error) return null;
   var parsed = parsestack(error);
   if (!parsed) return null;
-  if (!scope || !scope.CoffeeScript || !scope.CoffeeScript.code) return null;
+  if (!targetWindow || !targetWindow.CoffeeScript ||
+      !targetWindow.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript.
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
-    if (parsed[j].file in scope.CoffeeScript.code) {
+    if (parsed[j].file in targetWindow.CoffeeScript.code) {
       frame = parsed[j];
       break;
     }
   }
+  // For debugging:
   // console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
   if (!frame) return null;
   var smc = sourceMapConsumerForFile(frame.file);
-  /*
-  var lines = scope.CoffeeScript.code[frame.file].js.split('\n');
+  /* For debugging:
+  var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
   for (var j = 0; j < lines.length; ++j) {
     console.log(j + 2, lines[j]);
   }
