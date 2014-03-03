@@ -246,7 +246,7 @@ describe('code editor', function() {
       $('#login').click();
     }, function() {
       // Wait for the login dialog to be visible.
-      if (!$('.logindialog').is(':visible')) return;
+      if (!$('.dialog').is(':visible')) return;
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),
@@ -420,7 +420,7 @@ describe('code editor', function() {
       $('#save').click();
     }, function() {
       // Wait for the login dialog to pop up.
-      if (!$('.logindialog').is(':visible')) return;
+      if (!$('.dialog').is(':visible')) return;
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),
@@ -540,6 +540,23 @@ describe('code editor', function() {
       assert.ok(result.logout);
       // And the file should not be shown: instead the parent directory.
       assert.equal("directory", result.title.trim());
+      done();
+    });
+  });
+  it('should open share dialog when share is pressed', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click the share button
+      $('#share').mousedown();
+      $('#share').click();
+    }, function() {
+      // Wait for the share dialog to pop up.
+      if (!$('.dialog').is(':visible')) return;
+      return {
+        sharehref: $('#sharehlink').href
+      };  
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal('livetest', result.sharehref);
       done();
     });
   });

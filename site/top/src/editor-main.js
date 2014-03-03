@@ -223,32 +223,13 @@ function onhelp() {
 }
 
 function onshare() {
-  var email = prompt('Please enter email address you want to share your program with:');
-  
-  // If the email is invalid or if we're offline then we're done
-  if (!isEmailValid(email) || !storage.isOnline())
-    return;
+  opts = new Object();
+  opts.shareRunURL = "http://" + document.domain + '/home/' + 
+    modelatpos('left').filename;
+  opts.shareEditURL = window.location.href;
+  opts.title = modelatpos('left').filename;
 
-  var msg = 'Check out this program I created on pencilcode.\r\n\r\n'
-    + window.location.href;
-
-  var payload = {
-    'email' : email,
-    'msg' : msg
-  }
-  $.post('http://' + window.pencilcode.domain + '/sendemail', 
-	 payload,
-	 function(m) { },
-	 'json').error(function() { });
-}
-
-function isEmailValid(email)
-{
-  if (email == null || email == '')
-    return false;
-
-  if (email.indexOf('@') == -1)
-    return false;
+  view.showShareDialog(opts);
 }
 
 function ontour() {

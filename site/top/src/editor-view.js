@@ -86,6 +86,9 @@ window.pencilcode.view = {
   flashButton: flashButton,
   // Show login (or create account) dialog.
   showLoginDialog: showLoginDialog,
+  // Show share dialog.
+  showShareDialog: showShareDialog,
+  showDialog: showDialog,
   // The run button
   showMiddleButton: showMiddleButton,
   // Sets editable name.
@@ -536,34 +539,60 @@ function showMiddleButton(which) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// LOGIN DIALOG
+// SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
 
-function showLoginDialog(opts) {
+function showShareDialog(opts) {
+  if (!opts) {
+    opts = new Object();
+  }
+
+  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
+  bodyText = bodyText + 'Running program: ' + opts.shareRunURL + '\r\n\r\n';
+  bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
+
+  subjectText = 'Pencilcode program: ' + opts.title;
+
+  // Need to escape the text since it will go into a url link
+  bodyText = escape(bodyText);
+  subjectText = escape(subjectText);
+  
+  opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
+  opts.content = (opts.content) ? opts.content : 
+      '<div class="field">' + 
+        '<div style="display:inline-table">' +
+          '<div><a id="sharehlink" target="_blank" href="mailto:?body='+bodyText+'&subject='+subjectText+'">Share program via email</a></div>' +
+        '</div>' +
+      '</div>';
+  opts.showSubmitBtn = false;
+
+  showDialog(opts);
+}
+
+function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="logindialog"><div class="prompt">' +
+  var dialog = $('<div class="dialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
     '</div><div class="content">' +
-    '<div class="field">Name:<div style="display:inline-table">' + 
-    '<input class="username"' +
-    (opts.username ? ' value="' + opts.username + '" disabled' : '') +
-    '>' +
-    (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
-     '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
-     'Not me?</a></div>' : '') +
-    '</div></div>' +
-    (opts.setpass ?
-    '<div class="field">Old password:<input type="password" class="password"></div>' +
-    '<div class="field">New password:<input type="password" class="newpass"></div>' :
-    '<div class="field">Password:<input type="password" class="password"></div>') +
+    (opts.content ? opts.content : '') + 
     '</div><br>' +
-    '<button type="submit" class="ok">OK</button>' +
+    (opts.showSubmitBtn ?'<button type="submit" class="ok">OK</button>' : '') +
     '<button class="cancel">Cancel</button>' +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
     '</div></div>').appendTo(overlay);
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // function: update
+  //
+  // Called from event handlers inside the dialog.  The parameter 
+  // is an anonymous object that contains information on what do do:
+  // up.cancel --> Close out the dialog
+  //
+  ////////////////////////////////////////////////////////////////
   function update(up) {
     if (!up) return;
     if (up.cancel) {
@@ -647,6 +676,33 @@ function showLoginDialog(opts) {
     opts.init(state());
   }
   validate();
+}
+  
+
+////////////////////////////////////////////////////////////////////////////
+// LOGIN DIALOG
+///////////////////////////////////////////////////////////////////////////
+
+function showLoginDialog(opts) {
+  if (!opts)
+    opts = new object();
+
+  opts.content = 
+    '<div class="field">Name:<div style="display:inline-table">'+ 
+      '<input class="username"' +
+      (opts.username ? ' value="' + opts.username + '" disabled' : '') +
+      '>' +
+      (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
+       '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
+       'Not me?</a></div>' : '') +
+    '</div></div>' +
+      (opts.setpass ?
+      '<div class="field">Old password:<input type="password" class="password"></div>' +
+      '<div class="field">New password:<input type="password" class="newpass"></div>' :
+      '<div class="field">Password:<input type="password" class="password"></div>');
+  opts.showSubmitBtn = true;
+
+  showDialog(opts);
 }
 
 ///////////////////////////////////////////////////////////////////////////
