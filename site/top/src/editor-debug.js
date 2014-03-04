@@ -59,7 +59,7 @@ var debug = window.ide = {
 // Enter is the first event triggered, and it is always matched by one exit.
 // Appear and resolve will appear between enter and exit if the action is
 // synchronous.  The "length" parameter indicates the number of appear
-// (and matching resolve) events to expect for this debugId.
+// (and matching resolve) events that will be issued for this debugId.
 $(debug).on('enter',
 function debugEnter(event, method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
@@ -93,7 +93,7 @@ function debugAppear(event, method, debugId, length, index, elem, args) {
 
 // The resolve event is triggered when the visible animation for a turtle
 // command ends.  It always happens after the corresponding "appear"
-// event, but may occur before or after "start".
+// event, but may occur before or after "exit".
 $(debug).on('resolve',
 function debugResolve(event, method, debugId, length, index, elem) {
   var record = debugIdRecord[debugId];
@@ -115,7 +115,6 @@ function debugResolve(event, method, debugId, length, index, elem) {
 $(debug).on('error',
 function debugError(event, err) {
   var line = editorLineNumberForError(err);
-  view.clearPaneEditorMarks(view.paneid('left'), 'debugerror');
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
 });
 
@@ -182,6 +181,12 @@ function updateLine(record) {
     }
   }
   // Should we garbage-collect?  Here we do:
+  // The idea is this: we will only need to look up records by debugId
+  // in the future when there is a future event pending.  If all the
+  // expected "resolves" have occurred and all the expected "appears"
+  // have matching "resolves", and there has been an "exit" (matching
+  // the initial "enter", then there should be no further events for
+  // this debugId.
   if (record.resolveCount >= record.totalCount &&
       record.resolveCount >= record.appearCount &&
       record.exited) {

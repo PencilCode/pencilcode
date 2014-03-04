@@ -122,13 +122,13 @@ function panepos(id) {
 
 function initialPaneState() {
   return {
-    editor: null,
-    cleanText: null,
-    marked: {},
-    mimeType: null,
-    dirtied: false,
-    links: null,
-    running: false
+    editor: null,       // The ace editor instance.
+    cleanText: null,    // The last-saved copy of the text.
+    marked: {},         // Tracks highlighted lines (see markPaneEditorLine)
+    mimeType: null,     // The current mime type.
+    dirtied: false,     // Set if known to be dirty.
+    links: null,        // Unused in this mode.
+    running: false      // Unused in this mode.
   };
 }
 
@@ -789,7 +789,7 @@ function setPaneRunText(pane, text, filename, targetUrl) {
         }
       } catch (e) {
         if (window.console) {
-          window.console.warn(e)
+          window.console.warn('https://bugzilla.mozilla.org/777526', e)
         }
       }
       framedoc.write(code);
@@ -1305,6 +1305,17 @@ function getPaneEditorText(pane) {
 // (using 1-based line numbering).
 // Marks are cumulative.  To clear all marks of a given class,
 // call clearPaneEditorMarks.
+// The ACE editor uses an ID number to identify each highlighted line,
+// so to allow unhighlighting, we track the ID of every highlighted.
+// line inside the paneState marked data structure.  The structure
+// is organized as follows:
+// paneState.marked = {
+//   mark-css-class-name: {
+//     zero-based-line-number: ACE-highlighting-id,
+//     ... (one for each highlighted line)
+//   },
+//   (one for each CSS class used for highlighting)
+// }
 function markPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -1316,15 +1327,18 @@ function markPaneEditorLine(pane, line, markclass) {
   if (!paneState.marked[markclass]) {
     paneState.marked[markclass] = {};
   }
+  // Grab the map of line numbers for this highlight class.
   var idMap = paneState.marked[markclass];
   if (zline in idMap) {
-    return;
+    return;  // Nothing to do if already highlighted.
   }
   var r = paneState.editor.session.highlightLines(zline, zline, markclass);
   // Save the mark ID so that it can be cleared later.
   idMap[zline] = r.id;
 }
 
+// The inverse of markPaneEditorLine: clears a marked line by
+// looking up the ACE marked-line ID and unmarking it.
 function clearPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {

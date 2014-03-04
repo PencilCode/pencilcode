@@ -616,8 +616,25 @@ function readTransformMatrix(elem) {
 
 // Reads out the css transformOrigin property, if present.
 function readTransformOrigin(elem, wh) {
+  var hidden = ($.css(elem, 'display') === 'none'),
+      swapout, old, name, gcs, origin;
+  if (hidden) {
+    // IE GetComputedStyle doesn't give pixel values for transformOrigin
+    // unless the element is unhidden.
+    swapout = { position: "absolute", visibility: "hidden", display: "block" };
+    old = {};
+    for (name in swapout) {
+      old[name] = elem.style[name];
+      elem.style[name] = swapout[name];
+    }
+  }
   var gcs = (window.getComputedStyle ?  window.getComputedStyle(elem) : null),
       origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
+  if (hidden) {
+    for (name in swapout) {
+      elem.style[name] = old[name];
+    }
+  }
   if (origin && origin.indexOf('%') < 0) {
     return $.map(origin.split(' '), parseFloat);
   }
@@ -2322,9 +2339,6 @@ function setImageWithStableOrigin(elem, url, css, cb) {
     // Pop the element to the right dimensions early if possible.
     resizeEarlyIfPossible(url, elem, css);
     // First set up the onload callback, then start loading.
-    record.img.addEventListener('load', poll);
-    record.img.addEventListener('error', poll);
-    record.img.src = url;
     function poll() {
       if (!record.img.complete) {
         // Guard against browsers that may fire onload too early or never.
@@ -2343,6 +2357,9 @@ function setImageWithStableOrigin(elem, url, css, cb) {
         }
       }
     }
+    record.img.addEventListener('load', poll);
+    record.img.addEventListener('error', poll);
+    record.img.src = url;
     // Start polling immediately, because some browser may never fire onload.
     poll();
   }
@@ -3865,6 +3882,8 @@ var turtlefn = {
   })
 };
 
+var warning_shown = {};
+
 // It is unreasonable (and a common error) to queue up motions to try to
 // change the value of a predicate.  The problem is that queuing will not
 // do anything immediately.  This check prints a warning and flushes the
@@ -3878,28 +3897,30 @@ function checkPredicate(fname, sel) {
     }
   }
   if (!ok) {
-    if (see.visible()) {
-      see.html('<span style="color:red">Warning: ' + fname +
-      ' may not return useful results when motion is queued. ' +
-      'Try <b style="background:yellow">speed Infinity</b></span> or ' +
-      '<b style="background:yellow">await done defer()</b> first.');
-    } else {
-      console.warn(fname + ' may not return useful results when motion ' +
-      'is queued.  Try "speed Infinity" or "await done defer()".');
+    if (!warning_shown[fname]) {
+      warning_shown[fname] = 1;
+      if (see.visible()) {
+        see.html('<span style="color:red">Warning: ' + fname +
+        ' may not return useful results when motion is queued. ' +
+        'Try <b style="background:yellow">speed Infinity</b></span> or ' +
+        '<b style="background:yellow">await done defer()</b> first.');
+      } else {
+        console.warn(fname + ' may not return useful results when motion ' +
+        'is queued.  Try "speed Infinity" or "await done defer()".');
+      }
     }
     sel.finish();
   }
 }
 
 // LEGACY NAMES
-deprecation_shown = {}
 
 function deprecate(map, oldname, newname) {
   map[oldname] = function() {
-    if (!(oldname in deprecation_shown)) {
+    if (!(oldname in warning_shown)) {
       see.html('<span style="color:red;">' + oldname + ' deprecated.  Use ' +
           newname + '.</span>');
-      deprecation_shown[oldname] = 1;
+      warning_shown[oldname] = 1;
     }
     // map[oldname] = map[newname];
     return map[newname].apply(this, arguments);
@@ -5651,7 +5672,9 @@ see = function see() {
     } else {
       queue.push(repr(obj, logdepth, queue));
     }
-    if (obj instanceof Error || obj instanceof ErrorEvent) {
+    if (obj instanceof Error ||
+        (window.ErrorEvent && obj instanceof ErrorEvent) ||
+        (obj instanceof Event && obj.error)) {
       // Logging an error event will highlight the error line if in an ide.
       debug.reportEvent('error', [obj]);
     }

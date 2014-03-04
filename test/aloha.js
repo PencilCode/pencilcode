@@ -36,7 +36,7 @@ describe('dev server', function() {
         assert.ifError(err);
         assert.equal(result.h1, "Pencil");
         assert.equal(result.a0, "I'm new here. Let's play. start blank ");
-        assert.equal(result.a1, "Browse users. see the guide ");
+        assert.equal(result.a1, "Browse users.");
         done();
       });
     });
