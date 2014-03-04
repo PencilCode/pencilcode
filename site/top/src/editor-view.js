@@ -787,7 +787,7 @@ function setPaneRunText(pane, text, filename, targetUrl) {
         }
       } catch (e) {
         if (window.console) {
-          window.console.warn(e)
+          window.console.warn('https://bugzilla.mozilla.org/777526', e)
         }
       }
       framedoc.write(code);
