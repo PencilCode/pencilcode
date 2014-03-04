@@ -245,13 +245,6 @@ function untraceLine(line) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof targetWindow.Error) && err.error) {
-    // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
-    // contain an "error" property.  This test allows such objects
-    // (and any objects with an error property) to be passed and unwrapped.
-    // http://html5.org/tools/web-apps-tracker?from=8085&to=8086
-    err = err.error;
-  }
   var parsed = [], lines, j, line;
   // This code currently only works on Chrome.
   // TODO: add support for parsing other browsers' call stacks.
@@ -296,7 +289,8 @@ function parsestack(err) {
 function sourceMapConsumerForFile(file) {
   var result = cachedSourceMaps[file];
   if (!result) {
-    var map = targetWindow.CoffeeScript.code[file].map;
+    var map = targetWindow.CoffeeScript &&
+        targetWindow.CoffeeScript.code[file].map;
     if (!map) return null;
     result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
   }
@@ -306,7 +300,26 @@ function sourceMapConsumerForFile(file) {
 // Returns the (1-based) line number for an error object, if any;
 // or returns null if none can be figured out.
 function editorLineNumberForError(error) {
-  if (!error) return null;
+  if (!error || !targetWindow) return null;
+  if (!(error instanceof targetWindow.Error)) {
+    // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
+    // contain an "error" property.  This test allows such objects
+    // (and any objects with an error property) to be passed and unwrapped.
+    // http://html5.org/tools/web-apps-tracker?from=8085&to=8086
+    if (error.error) {
+      error = error.error;
+    }
+    // If we have a syntax error that doesn't get passed through the
+    // event object, then try to pull it from the CoffeeScript.
+    if (targetWindow.CoffeeScript && targetWindow.CoffeeScript.code) {
+      for (var anyfile in targetWindow.CoffeeScript.code) {
+        if (targetWindow.CoffeeScript.code[anyfile].syntaxError) {
+          error = targetWindow.CoffeeScript.code[anyfile].syntaxError;
+          break;
+        }
+      }
+    }
+  }
   var parsed = parsestack(error);
   if (!parsed) return null;
   if (!targetWindow || !targetWindow.CoffeeScript ||
@@ -321,7 +334,14 @@ function editorLineNumberForError(error) {
   }
   // For debugging:
   // console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
-  if (!frame) return null;
+  if (!frame) {
+    if (error instanceof targetWindow.SyntaxError) {
+      if (error.location) {
+        return error.location.first_line - 2;
+      }
+    }
+    return null;
+  }
   var smc = sourceMapConsumerForFile(frame.file);
   /* For debugging:
   var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
