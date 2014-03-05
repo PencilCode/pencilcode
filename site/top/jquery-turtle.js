@@ -4041,10 +4041,6 @@ var dollar_turtle_methods = {
     // Throw an interrupt exception.
     throw new Error('interrupt() called');
   }),
-  interruptable: wrapraw('interruptable',
-  ["<u>interruptable()</u> True when turtle commands can be stopped."],
-  function interruptable() {
-  }),
   cs: wrapglobalcommand('cs',
   ["<u>cs()</u> Clear screen. Erases both graphics canvas and " +
       "body text: <mark>do cs</mark>"],

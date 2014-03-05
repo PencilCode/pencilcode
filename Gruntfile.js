@@ -18,7 +18,7 @@ module.exports = function(grunt) {
           destPrefix: 'site/top'
         },
         files: {
-          'jquery.js' : 'jquery/index.js',
+          'jquery.js' : 'jquery/dist/jquery.js',
           'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
