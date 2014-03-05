@@ -365,6 +365,7 @@ var undefined = void 0,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
     Pencil, Turtle,
+    interrupted = false,
     global_plan_counter = 0;
 
 function __extends(child, parent) {
@@ -2508,7 +2509,7 @@ function withinOrNot(obj, within, distance, x, y) {
 //////////////////////////////////////////////////////////////////////////
 
 // A class to wrap jQuery
-Pencil = (function(_super) {
+var Pencil = (function(_super) {
   __extends(Pencil, _super);
 
   function Pencil(selector, context) {
@@ -2538,7 +2539,7 @@ Pencil = (function(_super) {
 
 })(jQuery.fn.init);
 
-Turtle = (function(_super) {
+var Turtle = (function(_super) {
   __extends(Turtle, _super);
 
   function Turtle(arg, context) {
@@ -2769,7 +2770,7 @@ function setupContinuation(thissel, name, args, argcount) {
   var done = continuationArg(args, argcount),
       mainargs = !done ? args :
           Array.prototype.slice.call(args, 0, args.length - 1),
-      length = thissel ? thissel.length : 0,
+      length = thissel ? thissel.length || 0 : 0,
       countdown = length + 1,
       sync = true,
       debugId = debug.nextId();
@@ -2826,6 +2827,8 @@ function setupContinuation(thissel, name, args, argcount) {
 // through to the underying function, adding "cc" as the first argument.
 function wrapcommand(name, reqargs, helptext, fn) {
   var wrapper = function commandwrapper() {
+    checkForHungLoop(name);
+    if (interrupted) { throw new Error(name + ' interrupted'); }
     var cc = setupContinuation(this, name, arguments, reqargs),
         args = [cc].concat($.makeArray(cc.args)),
         result;
@@ -2845,6 +2848,8 @@ function wrapcommand(name, reqargs, helptext, fn) {
 // "await done defer()" should be considered.
 function wrappredicate(name, helptext, fn) {
   var wrapper = function predicatewrapper() {
+    checkForHungLoop(name);
+    if (interrupted) { throw new Error(name + ' interrupted'); }
     checkPredicate(name, this);
     return fn.apply(this, arguments);
   };
@@ -2856,6 +2861,8 @@ function wrappredicate(name, helptext, fn) {
 // should execute immediately otherwise.
 function wrapglobalcommand(name, helptext, fn) {
   var wrapper = function globalcommandwrapper() {
+    checkForHungLoop(name);
+    if (interrupted) { throw new Error(name + ' interrupted'); }
     if (global_turtle) {
       var thissel = $(global_turtle).eq(0),
           args = arguments,
@@ -3882,7 +3889,47 @@ var turtlefn = {
   })
 };
 
-var warning_shown = {};
+var warning_shown = {},
+    loopCounter = 0,
+    hungTimer = null,
+    hangStartTime = null;
+
+// When a student makes an infinite loop of turtle motions, the turtle
+// will not move "right away" as it might have on an old Apple II;
+// instead it will just hang the tab.  So to detect this error, this
+// function function fires off a zero-timeout setTimeout message every
+// 100th turtle motion.  If it takes more than a few seconds to receive it,
+// our script is blocking message dispatch, and an interrupt is triggered.
+function checkForHungLoop(fname) {
+  if ($.turtle.hungtimeout == Infinity || loopCounter++ < 100) {
+    return;
+  }
+  loopCounter = 0;
+  var now = (new Date).getTime();
+  if (!hangStartTime) {
+    hangStartTime = now;
+    clearTimeout(hungTimer);
+    hungTimer = setTimeout(function() {
+      clearTimeout(hungTimer);
+      hungTimer = null;
+      hangStartTime = null;
+    });
+    return;
+  }
+  // Timeout after which we interrupt the program: 6 seconds.
+  if (now - hangStartTime > $.turtle.hungtimeout) {
+    if (see.visible()) {
+      see.html('<span style="color:red">Oops: program ' +
+        'interrupted because it was hanging the browser. ' +
+        'Try reducing the number of repetitions.  Or try using ' +
+        '<b style="background:yellow">await done defer()</b> or ' +
+        '<b style="background:yellow">tick</b> ' +
+        'to make an animation.</span>');
+    }
+    $.turtle.interrupt();
+  }
+}
+
 
 // It is unreasonable (and a common error) to queue up motions to try to
 // change the value of a predicate.  The problem is that queuing will not
@@ -3900,7 +3947,7 @@ function checkPredicate(fname, sel) {
     if (!warning_shown[fname]) {
       warning_shown[fname] = 1;
       if (see.visible()) {
-        see.html('<span style="color:red">Warning: ' + fname +
+        see.html('<span style="color:red">Oops: ' + fname +
         ' may not return useful results when motion is queued. ' +
         'Try <b style="background:yellow">speed Infinity</b></span> or ' +
         '<b style="background:yellow">await done defer()</b> first.');
@@ -3954,6 +4001,50 @@ var global_turtle = null;
 var global_turtle_methods = [];
 var attaching_ids = false;
 var dollar_turtle_methods = {
+  interrupt: wrapraw('interrupt',
+  ["<u>interrupt()</u> Interrupts and aborts all turtle commands."],
+  function interrupt(option) {
+    if (option == 'reset') {
+      // interrupt('reset') resets a flag that re-enables turtle
+      // commands.  Until a reset, all turtle commands will throw
+      // exceptions after an interrupt().
+      interrupted = false;
+      return;
+    }
+    if (option == 'test') {
+      // interrupt('test') returns true if something is running that is
+      // interruptable by interrupt().  It is used by the IDE to determine
+      // if a "stop" button should be shown.
+      if (interrupted) return false;
+      if (tickinterval) return true;
+      if ($.timers.length) return true;
+      if (global_turtle && $.queue(global_turtle).length > 0) return true;
+      if ($(':animated').length) return true;
+      return ($('.turtle').filter(function() {
+        return $.queue(this).length > 0;
+      }).length > 0);
+    }
+    // Stop all animations.
+    $(':animated,.turtle').clearQueue().stop();
+    // Set a flag that will cause all commands to throw.
+    interrupted = true;
+    // Turn off the global tick interval timer.
+    globaltick(null, null);
+    // Run through any remaining timers, stopping each one.
+    // This handles the case of animations (like "dot") that
+    // are not attached to an HTML element.
+    for (var j = $.timers.length - 1; j >= 0; --j) {
+      if ($.timers[j].anim && $.timers[j].anim.elem) {
+        $($.timers[j].anim.elem).stop(true, true);
+      }
+    }
+    // Throw an interrupt exception.
+    throw new Error('interrupt() called');
+  }),
+  interruptable: wrapraw('interruptable',
+  ["<u>interruptable()</u> True when turtle commands can be stopped."],
+  function interruptable() {
+  }),
   cs: wrapglobalcommand('cs',
   ["<u>cs()</u> Clear screen. Erases both graphics canvas and " +
       "body text: <mark>do cs</mark>"],
@@ -4380,6 +4471,10 @@ $.turtle = function turtle(id, options) {
   if (!drawing.ctx && ('subpixel' in options)) {
     drawing.subpixel = parseInt(options.subpixel);
   }
+  // Set up hung-browser timeout.
+  $.turtle.hungtimeout = ('hungtimeout' in options) ?
+      parseFloat(options.hungtimeout) : 6000;
+
   // Set up global events.
   if (!('events' in options) || options.events) {
     turtleevents(options.eventprefix);
@@ -4475,6 +4570,7 @@ $.turtle = function turtle(id, options) {
 $.extend($.turtle, dollar_turtle_methods);
 
 function seehelphook(text, result) {
+  // Also, check the command to look for (non-CoffeeScript) help requests.
   if ((typeof result == 'function' || typeof result == 'undefined')
       && /^\w+\s*$/.test(text)) {
     if (result && result.helptext) {
@@ -5065,7 +5161,6 @@ function button(name, callback) {
   }
   return result;
 }
-
 
 // Simplify $('body').append('<input>' + label) and onchange hookup.
 function input(name, callback, numeric) {
@@ -5664,6 +5759,7 @@ var cescapes = {
 };
 var retrying = null;
 var queue = [];
+
 see = function see() {
   if (logconsole && typeof(logconsole.log) == 'function') {
     logconsole.log.apply(window.console, arguments);
@@ -6248,6 +6344,9 @@ function tryinitpanel() {
             }
             return;
           }
+          // When interacting with the see panel, first turn the interrupt
+          // flag off to allow commands to operate after an interrupt.
+          $.turtle.interrupt('reset');
           // Actually execute the command and log the results (or error).
           var hooked = false;
           try {
