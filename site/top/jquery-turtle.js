@@ -5433,6 +5433,12 @@ var debug = {
       this.ide = parent.ide;
       this.ide.bindframe(window);
       this.attached = true;
+      if (window.addEventListener) {
+        window.addEventListener('error', function(event) {
+          // An error event will highlight the error line.
+          debug.reportEvent('error', [event]);
+        });
+      }
     }
   },
   attached: false,
@@ -5671,12 +5677,6 @@ see = function see() {
       queue.push(htmlescape(obj));
     } else {
       queue.push(repr(obj, logdepth, queue));
-    }
-    if (obj instanceof Error ||
-        (window.ErrorEvent && obj instanceof ErrorEvent) ||
-        (obj instanceof Event && obj.error)) {
-      // Logging an error event will highlight the error line if in an ide.
-      debug.reportEvent('error', [obj]);
     }
     if (args.length) { queue.push(' '); }
   }
