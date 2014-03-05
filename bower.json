@@ -4,13 +4,13 @@
   "description": "Website code and config for pencilcode.net.",
   "dependencies": {
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
-    "jquery": "http://code.jquery.com/jquery-1.11.0-beta3.js",
+    "jquery": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
     "requirejs": "latest",
     "ace-builds": "PencilCode/pencilcode-ace-builds#master",
-    "almond": "~0.2.7",
-    "seedrandom": "~2.3.3",
+    "almond": "latest",
+    "seedrandom": "latest",
     "source-map": "mozilla/source-map#master"
   }
 }

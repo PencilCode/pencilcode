@@ -20,12 +20,18 @@ var lineRecord = {};        // map line numbers -> line execution records.
 var everyRecord = [];       // a sequence of all records from the run.
 var cachedSourceMaps = {};  // parsed source maps for currently-running code.
 var cachedParsedStack = {}; // parsed stack traces for currently-running code.
+var pollTimer = null;       // poll for stop button.
+var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
+var throwNeeded = !(new Error).stack;
+
+Error.stackTraceLimit = 20;
 
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
 function bindframe(w) {
+  if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   debugIdException = {};
   debugIdRecord = {};
@@ -35,21 +41,43 @@ function bindframe(w) {
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   firstSessionId = nextDebugId;
+  if (stopButtonShown == 1) {
+    view.showMiddleButton('run');
+  }
+  stopButtonShown = 0;
+  startPollingWindow();
 }
 
 // Exported functions from the edit-debug module are exposed
 // as the top frame's "ide" global variable.
 var debug = window.ide = {
   nextId: function() {
-    debugIdException[nextDebugId] = createError();
+    // The following line of code is hot under profile and is optimized:
+    // By avoiding using createError()'s thrown exception when we can get
+    // a call stack with a simple Error() constructor, we nearly double
+    // speed of a fractal program.
+    debugIdException[nextDebugId] = throwNeeded ? createError() : new Error();
     return nextDebugId++;
   },
   bindframe: bindframe,
+  interruptable: function() {
+    if (targetWindow && targetWindow.jQuery && targetWindow.jQuery.turtle &&
+        typeof(targetWindow.jQuery.turtle.interrupt) == 'function') {
+      return targetWindow.jQuery.turtle.interrupt('test');
+    }
+    return false;
+  },
   reportEvent: function(name, data) {
     if (!targetWindow) {
       return;
     }
-    $(debug).trigger(name, data);
+    // Based on profiling data, we dispatch by hand instead of with
+    // jQuery.trigger.  (This speeds up fractals by 40%.)
+    if (name == 'enter') { debugEnter.apply(null, data); }
+    else if (name == 'exit') { debugExit.apply(null, data); }
+    else if (name == 'appear') { debugAppear.apply(null, data); }
+    else if (name == 'resolve') { debugResolve.apply(null, data); }
+    else if (name == 'error') { debugError.apply(null, data); }
   },
 };
 
@@ -60,21 +88,19 @@ var debug = window.ide = {
 // Appear and resolve will appear between enter and exit if the action is
 // synchronous.  The "length" parameter indicates the number of appear
 // (and matching resolve) events that will be issued for this debugId.
-$(debug).on('enter',
-function debugEnter(event, method, debugId, length, args) {
+function debugEnter(method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   updateLine(record);
-});
+}
 
 // The exit event is triggered when the call to the turtle command is done.
-$(debug).on('exit',
-function debugExit(event, method, debugId, length, args) {
+function debugExit(method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   record.exited = true;
   updateLine(record);
-});
+}
 
 // The appear event is triggered when the visible animation for a turtle
 // command begins.  If the animation happens asynchronously, appear is
@@ -82,20 +108,18 @@ function debugExit(event, method, debugId, length, args) {
 // it can precede exit.  Arguments are the same as for start, except
 // the "index" and "element" arguments indicate the element which is
 // being animated, and its index in the list of animated elements.
-$(debug).on('appear',
-function debugAppear(event, method, debugId, length, index, elem, args) {
+function debugAppear(method, debugId, length, index, elem, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   record.appearCount += 1;
   record.startCoords[index] = collectCoords(elem);
   updateLine(record);
-});
+}
 
 // The resolve event is triggered when the visible animation for a turtle
 // command ends.  It always happens after the corresponding "appear"
 // event, but may occur before or after "exit".
-$(debug).on('resolve',
-function debugResolve(event, method, debugId, length, index, elem) {
+function debugResolve(method, debugId, length, index, elem) {
   var record = debugIdRecord[debugId];
   if (!record) { return; }
   record.resolveCount += 1;
@@ -107,16 +131,15 @@ function debugResolve(event, method, debugId, length, index, elem) {
     console.trace('Error: too many resolve events', record);
   }
   updateLine(record);
-});
+}
 
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
-$(debug).on('error',
-function debugError(event, err) {
+function debugError(err) {
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
-});
+}
 
 // Retrieves (or creates if necessary) the debug record corresponding
 // to the given debugId.  A debug record tracks everything needed for
@@ -245,13 +268,6 @@ function untraceLine(line) {
 // ]
 // Fields that are unknown are present but with value undefined or null.
 function parsestack(err) {
-  if (!(err instanceof targetWindow.Error) && err.error) {
-    // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
-    // contain an "error" property.  This test allows such objects
-    // (and any objects with an error property) to be passed and unwrapped.
-    // http://html5.org/tools/web-apps-tracker?from=8085&to=8086
-    err = err.error;
-  }
   var parsed = [], lines, j, line;
   // This code currently only works on Chrome.
   // TODO: add support for parsing other browsers' call stacks.
@@ -296,7 +312,8 @@ function parsestack(err) {
 function sourceMapConsumerForFile(file) {
   var result = cachedSourceMaps[file];
   if (!result) {
-    var map = targetWindow.CoffeeScript.code[file].map;
+    var map = targetWindow.CoffeeScript &&
+        targetWindow.CoffeeScript.code[file].map;
     if (!map) return null;
     result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
   }
@@ -306,7 +323,26 @@ function sourceMapConsumerForFile(file) {
 // Returns the (1-based) line number for an error object, if any;
 // or returns null if none can be figured out.
 function editorLineNumberForError(error) {
-  if (!error) return null;
+  if (!error || !targetWindow) return null;
+  if (!(error instanceof targetWindow.Error)) {
+    // As of 2013-07-24, the HTML5 standard specifies that ErrorEvents
+    // contain an "error" property.  This test allows such objects
+    // (and any objects with an error property) to be passed and unwrapped.
+    // http://html5.org/tools/web-apps-tracker?from=8085&to=8086
+    if (error.error) {
+      error = error.error;
+    }
+    // If we have a syntax error that doesn't get passed through the
+    // event object, then try to pull it from the CoffeeScript.
+    if (targetWindow.CoffeeScript && targetWindow.CoffeeScript.code) {
+      for (var anyfile in targetWindow.CoffeeScript.code) {
+        if (targetWindow.CoffeeScript.code[anyfile].syntaxError) {
+          error = targetWindow.CoffeeScript.code[anyfile].syntaxError;
+          break;
+        }
+      }
+    }
+  }
   var parsed = parsestack(error);
   if (!parsed) return null;
   if (!targetWindow || !targetWindow.CoffeeScript ||
@@ -321,7 +357,14 @@ function editorLineNumberForError(error) {
   }
   // For debugging:
   // console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
-  if (!frame) return null;
+  if (!frame) {
+    if (error instanceof targetWindow.SyntaxError) {
+      if (error.location) {
+        return error.location.first_line - 2;
+      }
+    }
+    return null;
+  }
   var smc = sourceMapConsumerForFile(frame.file);
   /* For debugging:
   var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
@@ -375,7 +418,7 @@ function displayProtractorForRecord(record) {
   var parsed = parseTurtleTransform(coords.transform);
   if (!parsed) return;
   // TODO: generalize this for turtles that are not in the main field.
-  var origin = scope.jQuery('#field').offset();
+  var origin = targetWindow.jQuery('#field').offset();
   if (!origin) return;
   view.showProtractor(view.paneid('right'),
      origin.left + parsed.tx,
@@ -404,6 +447,52 @@ function parseTurtleTransform(transform) {
       twi = e[6] ? parseFloat(e[6]) : 0;
   return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
 }
+
+///////////////////////////////////////////////////////////////////////////
+// STOP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+function startPollingWindow() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+function pollForStop() {
+  pollTimer = null;
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  if (stoppable) {
+    if (!stopButtonShown) {
+      stopButtonShown = 1;
+      view.showMiddleButton('stop');
+    }
+  } else {
+    if (stopButtonShown) {
+      stopButtonShown = 0;
+      view.showMiddleButton('run');
+    }
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+view.on('stop', function() {
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  targetWindow.jQuery.turtle.interrupt();
+});
+
+///////////////////////////////////////////////////////////////////////////
+// DEBUG EXPORT
+///////////////////////////////////////////////////////////////////////////
 
 return debug;
 

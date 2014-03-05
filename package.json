@@ -20,7 +20,7 @@
     "grunt-bowercopy": "0.4.1",
     "grunt-cli": "0.1.11",
     "grunt-contrib-uglify": "0.2.7",
-    "phantomjs": "1.9.2-6",
+    "phantomjs": "1.9.7-1",
     "express": "~3.4.7",
     "http-proxy": "~0.10.4",
     "connect": "~2.12.0",

@@ -69,15 +69,16 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #middle{z-index:1;display:none;}
 #middle,.vcenter{position:absolute;left:50%;top:50%}
 .hcenter{margin:-50% -50%;}
-#run {border:0;background-color:rgba(255,255,255,0.7);opacity:0.7;
-  box-shadow:0 0 7px gray;color:dodgerblue;
-  border-radius:20px;font-family:inherit;font-size:60px;line-height:60px;
-  padding:10px 10px 10px 15px;margin:0;display:inline-block;}
-#run:hover {box-shadow:0 0 7px black;opacity:0.9}
-#run.pressed:hover { box-shadow: 0 0 14px black; opacity: 1; }
+#run,#stop {border:0;background-color:rgba(255,255,255,0.7);opacity:0.7;
+  box-shadow:0 0 7px gray;color:dodgerblue;border-radius:20px;
+  padding:10px 10px 10px 10px;margin:0;display:inline-block;}
+#run:hover,#stop:hover {box-shadow:0 0 7px black;opacity:0.9}
+#run.pressed:hover,#stop.pressed:hover {box-shadow:0 0 14px black;opacity:1;}
 #run .triangle {width:0;height:0;font-size:0;line-height:0;
   border-bottom:20px solid transparent;border-top:20px solid transparent;
-  border-left:36px solid dodgerblue;}
+  border-left:36px solid dodgerblue; margin-left: 6px;}
+#stop .square {width:0;height:0;font-size:0;line-height:0;
+  border:16px solid dodgerblue; margin: 4px 5px;}
 .panetitle,#owner{user-select:none;-webkit-user-select:none;
   -moz-user-select:none;cursor:default;}
 #owner:hover{text-decoration:underline;}
@@ -90,9 +91,11 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   line-height: 121%;
 }
 /* Code line highlighting for errors */
-.debugerror{position:absolute;background:red;}
+.debugerror{position:absolute;background:rgba(255,0,0,0.7);z-index:1;}
 /* Code line highlighting for currently-running code */
 .debugtrace{position:absolute;background:paleturquoise;}
+/* Code line highlighting for mouse-focused code */
+.debugfocus{position:absolute;background:yellow;z-index:2;}
 body#pencilcode #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;
