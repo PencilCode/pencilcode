@@ -208,56 +208,42 @@ function updateTopControls(addHistory) {
 // an event handler function
 //
 
-var commandhandlers = {
- 'help' : onhelp,
- 'tour' : ontour,
- 'clip' : onclip,
- 'share' : onshare
-}
-
-for (var item in commandhandlers) {
-  if (commandhandlers[item] != null)
-    view.on(item, commandhandlers[item]);
-}
-
-
-function onhelp() {
+view.on('help', function () {
   view.flashNotification('<a href="http://' +
      window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
-    (getEditTextIfAny() ?
-        '&emsp; <a id="clip" href="#clip">Copy as url.</a>' : '') +
     (model.username ?
         '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
   );
-}
+});
 
-function onshare() {
-  opts = new Object();
-  opts.shareRunURL = "http://" + document.domain + '/home/' + 
-    modelatpos('left').filename;
-  opts.shareEditURL = window.location.href;
-  opts.title = modelatpos('left').filename;
-
-  view.showShareDialog(opts);
-}
-
-function ontour() {
+view.on('tour', function () {
   // view.flashNotification('Tour coming soon.');
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
-}
+});
 
-function onclip() {
+view.on('share', function () {
+  // First save (including login user if necessary)
+
+
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
   shortenUrl('http://' + window.pencilcode.domain + '/edit/' +
       shortfilename + '#text=' +
-      encodeURIComponent(code).replace(/%20/g, '+'), function(shortened) {
-    if (shortened) {
-      prompt('URL to copy this code:', shortened);
-    }
-  });
-}
+      encodeURIComponent(code).replace(/%20/g, '+'), 
+      function(shortened) {
+	// Now bring up share dialog
+	opts = new Object();
+	opts.shareRunURL = "http://" + document.domain + '/home/' + 
+	  modelatpos('left').filename;
+	opts.shareEditURL = window.location.href;
+
+	opts.shareClipURL = shortened;
+	opts.title = modelatpos('left').filename;
+
+	view.showShareDialog(opts);
+      });
+});
 
 view.on('bydate', function() {
   if (modelatpos('left').isdir) {
@@ -1218,6 +1204,11 @@ function renderDirectory(position) {
   view.setPaneLinkText(pane, links, filename);
   updateTopControls(false);
 }
+
+//
+// Returns text content of the coffeescript editor
+// or null if there's no file loaded. 
+//
 
 function getEditTextIfAny() {
   var m = modelatpos('left');

@@ -561,21 +561,45 @@ function showShareDialog(opts) {
   bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
   bodyText = bodyText + 'Running program: ' + opts.shareRunURL + '\r\n\r\n';
   bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
+  if (opts.shareClipURL)
+    bodyText = bodyText + 'Shortened URL: ' + opts.shareClipURL + '\r\n\r\n';
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
   // Need to escape the text since it will go into a url link
   bodyText = escape(bodyText);
   subjectText = escape(subjectText);
-  
+
   opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
   opts.content = (opts.content) ? opts.content : 
-      '<div class="field">' + 
-        '<div style="display:inline-table">' +
-          '<div><a id="sharehlink" target="_blank" href="mailto:?body='+bodyText+'&subject='+subjectText+'">Share program via email</a></div>' +
-        '</div>' +
-      '</div>';
-  opts.showSubmitBtn = false;
+      '<div class="content">' + 
+        '<div class="field">' + 
+          'Full Screen <input type="text" value="' + opts.shareRunURL + '"><button class="copy" url="' + opts.shareRunURL + '"><img src="/copy.png"></button>' + 
+        '</div>' + 
+        '<div class="field">' + 
+          'Code <input type="text" value="' + opts.shareEditURL + '"><button class="copy" url="' + opts.shareEditURL + '"><img src="/copy.png"></button>' + 
+        '</div>' + 
+        (opts.shareClipURL ?
+        '<div class="field">' + 
+   	  'Shortened <input type="text" value="' + opts.shareClipURL + '"><button class="copy" url="' + opts.shareClipURL + '"><img src="/copy.png"></button>' + 
+	 '</div>' : '') + 
+      '</div><br>' + 
+    '<button class="ok"><a id="sharehlink" target="_blank" href="mailto:?body='+bodyText+'&subject='+subjectText+'">Email</a></button>' +
+    '<button class="cancel">Cancel</button>';
+
+  opts.init = function(dialog) {
+    dialog.find('#sharehlink').focus();
+  }
+
+  opts.onclick = function(e, dialog, state) {
+    if ($(e.target).hasClass("copy"))
+      buttonObj = $(e.target);
+    else
+      buttonObj = $(e.target).parents(".copy");
+    if (buttonObj && buttonObj[0]) {
+      prompt('URL to copy:', buttonObj[0].attributes.url.value);
+    }
+  }
 
   showDialog(opts);
 }
@@ -586,11 +610,8 @@ function showDialog(opts) {
   overlay.html('');
   var dialog = $('<div class="dialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
-    '</div><div class="content">' +
+    '</div>' + 
     (opts.content ? opts.content : '') + 
-    '</div><br>' +
-    (opts.showSubmitBtn ?'<button type="submit" class="ok">OK</button>' : '') +
-    '<button class="cancel">Cancel</button>' +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
     '</div></div>').appendTo(overlay);
@@ -618,21 +639,32 @@ function showDialog(opts) {
         } else {
           dialog.find('button.ok').removeAttr('disabled');
         }
-      } else if (/^(?:username|password)$/.test(attr)) {
-        dialog.find('.' + attr).val(up[attr]);
-      } else if (/^(?:info|prompt)$/.test(attr)) {
-        dialog.find('.' + attr).html(up[attr]);
+      } else {
+        var x = dialog.find('.' + attr);
+        if (!x)
+          return;
+
+        if (x[0].tagName == "INPUT") {
+          x.val(up[attr]);
+        }
+        else {
+          x.html(up[attr]);
+        }
       }
     }
   }
   function state() {
-    return {
-      username: dialog.find('.username').val(),
-      checkbox: dialog.find('.agreetoterms').prop('checked'),
-      password: dialog.find('.password').val(),
-      newpass: dialog.find('.newpass').val(),
-      update: update
-    };
+    var retVal;
+
+    if (opts.retrieveState)
+      retVal = opts.retrieveState(dialog);
+
+    if (!retVal)
+      retVal = new Object();
+
+    retVal.update = update;
+    
+    return retVal;
   }
   function validate(e) {
     if (e && ($(e.target).attr('target') == '_blank' ||
@@ -658,15 +690,9 @@ function showDialog(opts) {
     if ($(e.target).hasClass('cancel') || overlay.is(e.target)) {
       update({cancel:true});
     }
-    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
-      opts.switchuser();
-      return false;
-    }
-  });
-  dialog.find('.username').on('keypress', function(e) {
-    if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
-          String.fromCharCode(e.which))) {
-      return false;
+
+    if (opts.onclick) {
+      opts.onclick(e, dialog, state());
     }
   });
   dialog.on('keydown', function(e) {
@@ -674,17 +700,13 @@ function showDialog(opts) {
       update({cancel:true});
       return;
     }
-    if (e.which == 13) {
-      if (dialog.find('.username').is(':focus')) {
-        dialog.find('.password').focus();
-      } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
-        opts.done(state());
-      }
+
+    if (opts.onkeydown) {
+      opts.onkeydown(e, dialog, state());
     }
   });
-  dialog.find('input:not([disabled])').eq(0).focus();
   if (opts.init) {
-    opts.init(state());
+    opts.init(dialog);
   }
   validate();
 }
@@ -696,9 +718,10 @@ function showDialog(opts) {
 
 function showLoginDialog(opts) {
   if (!opts)
-    opts = new object();
+    opts = new Object();
 
   opts.content = 
+    '<div class="content">' + 
     '<div class="field">Name:<div style="display:inline-table">'+ 
       '<input class="username"' +
       (opts.username ? ' value="' + opts.username + '" disabled' : '') +
@@ -710,8 +733,43 @@ function showLoginDialog(opts) {
       (opts.setpass ?
       '<div class="field">Old password:<input type="password" class="password"></div>' +
       '<div class="field">New password:<input type="password" class="newpass"></div>' :
-      '<div class="field">Password:<input type="password" class="password"></div>');
-  opts.showSubmitBtn = true;
+      '<div class="field">Password:<input type="password" class="password"></div>') + 
+    '</div><br>' + 
+    '<button class="ok">OK</button>' + 
+    '<button class="cancel">Cancel</button>';
+  opts.init = function(dialog) {
+    dialog.find('.username').on('keypress', function(e) {
+      if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
+            String.fromCharCode(e.which))) {
+        return false;
+      }
+    });
+
+    dialog.find('input:not([disabled])').eq(0).focus();
+  }
+  opts.onkeydown = function(e, dialog, state) {
+    if (e.which == 13) {
+      if (dialog.find('.username').is(':focus')) {
+        dialog.find('.password').focus();
+      } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
+        opts.done(state);
+      }
+    }
+  }
+  opts.onclick = function(e, dialog, state) {
+    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
+      opts.switchuser();
+      return false;
+    }
+  }
+  opts.retrieveState = function(dialog) {
+    return {
+      username: dialog.find('.username').val(),
+      checkbox: dialog.find('.agreetoterms').prop('checked'),
+      password: dialog.find('.password').val(),
+      newpass: dialog.find('.newpass').val(),
+    };
+  }
 
   showDialog(opts);
 }

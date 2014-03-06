@@ -543,23 +543,6 @@ describe('code editor', function() {
       done();
     });
   });
-  it('should open share dialog when share is pressed', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-      // Click the share button
-      $('#share').mousedown();
-      $('#share').click();
-    }, function() {
-      // Wait for the share dialog to pop up.
-      if (!$('.dialog').is(':visible')) return;
-      return {
-        sharehref: $('#sharehlink').href
-      };  
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.equal('livetest', result.sharehref);
-      done();
-    });
-  });
   it('should log out when logout is pressed', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click the log out button again.
