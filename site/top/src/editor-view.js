@@ -494,13 +494,13 @@ function showButtons(buttonlist) {
     } else {
       html += '<button' +
         (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
-        (buttonlist[j].disabled ? ' disabled' : '') + 
+        (buttonlist[j].disabled ? ' disabled' : '') +
         (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
         '>' + buttonlist[j].label + '</button>';
     }
   }
   bar.html(html);
-  
+
   // set tooltip for the save button after the buttons are
   // registered with the buttonbar
   $('#save').tooltipster();
@@ -815,11 +815,17 @@ function hideProtractor(pane) {
   if (protractor.length) {
     protractor.remove();
     preview.find('.protractor-label').remove();
-    return;
   }
 }
 
-function showProtractor(pane, x, y, direction, radius) {
+// step is a record of the following form:
+//  startCoords:
+//    pageX:, pageY:, direction:, scale:
+//  endCoords:
+//    pageX:, pageY:, direction:, scale:
+//  command: "fd"
+//  args: [50]
+function showProtractor(pane, step) {
   var paneState = state.pane[pane];
   if (!paneState.running) {
     console.log('NOT RUNNING, no protractor for you!');
@@ -836,26 +842,129 @@ function showProtractor(pane, x, y, direction, radius) {
   });
   protractor[0].width = protractor.width();
   protractor[0].height = protractor.height();
-  renderProtractor(protractor, x, y, direction, radius);
+  renderProtractor(protractor, step);
+  /*
   protractor.mousemove({protractor:protractor, centerX:x, centerY:y, direction:direction},
                        updateProtractor);
+  */
 }
 
-function renderProtractor(canvas, x, y, direction, radius) {
+function canvas_arc_arrow(context, cx, cy, radius, fromangle, toangle, ccw) {
+  context.arc(cx, cy, radius, fromangle, toangle, ccw);
+  var headx = cx + radius * Math.cos(toangle),
+      heady = cy + radius * Math.sin(toangle);
+  canvas_arrow_head(context,
+      headx, heady, toangle + (ccw ? -1 : 1) * Math.PI / 2, 10);
+}
+
+function canvas_straight_arrow(context, fromx, fromy, tox, toy){
+  var headlen = 10;   // length of head in pixels
+  var angle = Math.atan2(toy - fromy, tox - fromx);
+  context.moveTo(fromx, fromy);
+  context.lineTo(tox, toy);
+  canvas_arrow_head(context, tox, toy, angle, headlen);
+}
+
+function canvas_arrow_head(context, x, y, angle, headlen) {
+  context.moveTo(x - headlen * Math.cos(angle - Math.PI/6),
+                 y - headlen * Math.sin(angle - Math.PI/6));
+  context.lineTo(x, y);
+  context.lineTo(x - headlen * Math.cos(angle + Math.PI/6),
+                 y - headlen * Math.sin(angle + Math.PI/6));
+}
+
+function pageDistance(a, b) {
+  var dx = a.pageX - b.pageX,
+      dy = a.pageY - b.pageY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function toCanvasRadians(direction) {
+  return (((direction % 360) + 270 + 360) % 360) / 180 * Math.PI;
+}
+
+function renderProtractor(canvas, step) {
   var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
+  if (!step.startCoords) {
+    return;
+  }
+  var arrowDrawn = false;
+  if (step.command == 'lt' || step.command == 'rt') {
+    if (pageDistance(step.startCoords, step.endCoords) <= 0.8) {
+      ctx.save();
+      ctx.beginPath();
+      canvas_arc_arrow(
+          ctx,
+          step.startCoords.pageX, step.startCoords.pageY,
+          40,
+          toCanvasRadians(step.startCoords.direction),
+          toCanvasRadians(step.endCoords.direction),
+          step.command == 'lt');
+      ctx.strokeStyle = "orange";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+      arrowDrawn = true;
+    } else if (step.args.length >= 2 && parseFloat(step.args[1]) > 0.8) {
+      var radius = parseFloat(step.args[1]) * step.startCoords.scale,
+          startdir = toCanvasRadians(step.startCoords.direction +
+              (step.command == 'lt' ? 1 : -1) * 90),
+          enddir = toCanvasRadians(step.endCoords.direction +
+              (step.command == 'lt' ? 1 : -1) * 90),
+          cx = step.startCoords.pageX - Math.cos(startdir) * radius,
+          cy = step.startCoords.pageY - Math.sin(startdir) * radius;
+      ctx.save();
+      ctx.beginPath();
+      canvas_arc_arrow(
+          ctx,
+          cx, cy, radius, startdir, enddir,
+          step.command == 'lt');
+      ctx.strokeStyle = "orange";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+  } else if (pageDistance(step.startCoords, step.endCoords) > 0.8) {
+    ctx.save();
+    ctx.beginPath();
+    canvas_straight_arrow(
+        ctx,
+        step.startCoords.pageX, step.startCoords.pageY,
+        step.endCoords.pageX, step.endCoords.pageY);
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.save();
-  ctx.translate(x, y);
-  drawProtractor.drawProtractor(ctx, radius||200, direction - 90);
+  ctx.translate(step.startCoords.pageX, step.startCoords.pageY);
+  drawProtractor.drawProtractor(ctx, 30, step.startCoords.direction + 270);
   ctx.restore();
+
+  // TEXT LABEL
+  var label = $(canvas).closest('.preview').find('.protractor-label');
+  if (!label.length) {
+    label = $('<div class="protractor-label"></div>')
+        .css({position: 'absolute', display: 'table', zIndex: 1})
+        .insertBefore($(canvas).closest('.preview').find('.protractor'));
+  }
+  label.text(step.command + ' ' + Array.prototype.join.call(step.args, ','));
+  label.css({
+    textShadow: '0 0 8px white, 0 0 5px white, 0 0 3px white',
+    top: step.startCoords.pageY + $(label).height(),
+    left: step.startCoords.pageX - $(label).outerWidth() / 2
+  });
+  console.log(label);
 }
 
 function to360(d) {
   return (720 + d) % 360;
 }
 
+/*
 function updateProtractor(event) {
   var dx = event.data.centerX - event.offsetX;
   var dy = event.data.centerY - event.offsetY;
@@ -900,6 +1009,7 @@ function updateProtractor(event) {
   }
   label.css(css);
 }
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////

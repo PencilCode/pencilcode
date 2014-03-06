@@ -411,20 +411,31 @@ view.on('leavegutter', function(pane, lineno) {
   view.hideProtractor(view.paneid('right'));
 });
 
+function convertCoords(origin, astransform) {
+  if (!origin) { console.log('reason 1'); return null; }
+  if (!astransform || !astransform.transform) {console.log('reason 2'); return null; }
+  var parsed = parseTurtleTransform(astransform.transform);
+  if (!parsed) return null;
+  return {
+    pageX: origin.left + parsed.tx,
+    pageY: origin.top + parsed.ty,
+    direction: parsed.rot,
+    scale: parsed.sy
+  };
+}
+
 function displayProtractorForRecord(record) {
-  if (record.startCoords.length <= 0) return;
-  var coords = record.endCoords[record.startCoords.length - 1];
-  if (!coords || !coords.transform) return;
-  var parsed = parseTurtleTransform(coords.transform);
-  if (!parsed) return;
   // TODO: generalize this for turtles that are not in the main field.
   var origin = targetWindow.jQuery('#field').offset();
-  if (!origin) return;
-  view.showProtractor(view.paneid('right'),
-     origin.left + parsed.tx,
-     origin.top + parsed.ty,
-     parsed.rot,
-     30);
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  view.showProtractor(view.paneid('right'), step);
 }
 
 // The canonical 2D transforms written by this plugin have the form:
