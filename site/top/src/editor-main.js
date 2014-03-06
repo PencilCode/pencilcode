@@ -33,7 +33,6 @@ require([
 function($, view, storage, debug, seedrandom, see) {
 
 eval(see.scope('controller'));
-debug.init();
 
 var model = {
   // Owner name of this file or directory.
@@ -264,6 +263,8 @@ view.on('byname', function() {
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
     view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
+    // End debugging session when text is edited.
+    debug.bindframe(null);
   }
 });
 
