@@ -904,6 +904,7 @@ function noteIfUnsaved(position) {
 }
 
 function rotateModelLeft(addHistory) {
+  debug.bindframe(null);
   view.rotateLeft();
   if (modelatpos('back').running) {
     runCodeAtPosition('back', '', null);
@@ -913,6 +914,7 @@ function rotateModelLeft(addHistory) {
 }
 
 function rotateModelRight(addHistory) {
+  debug.bindframe(null);
   view.rotateRight();
   if (modelatpos('back').running) {
     runCodeAtPosition('back', '', null);
@@ -1032,7 +1034,10 @@ function nextLoadNumber() {
   return ++loadNumber;
 }
 
+var stopButtonTimer = null;
+
 function cancelAndClearPosition(pos) {
+  debug.bindframe(null);
   view.clearPane(paneatpos(pos), false);
   modelatpos(pos).loading = 0;
   modelatpos(pos).filename = null;
@@ -1056,7 +1061,9 @@ function runCodeAtPosition(position, code, filename) {
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
-    view.setPaneRunText(pane, code, filename, baseUrl);
+    if (m.running) {
+      view.setPaneRunText(pane, code, filename, baseUrl);
+    }
   }, 0);
   if (code) {
     $.get('/log/' + filename + '?run=' +

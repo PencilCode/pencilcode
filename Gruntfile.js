@@ -18,7 +18,7 @@ module.exports = function(grunt) {
           destPrefix: 'site/top'
         },
         files: {
-          'jquery.js' : 'jquery/index.js',
+          'jquery.js' : 'jquery/dist/jquery.js',
           'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
@@ -198,14 +198,28 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.task.registerTask('test', 'Run integration tests.',
+  function(testname) {
+    if (!!testname) {
+      grunt.config('mochaTest.test.src', ['test/' + testname + '.js']);
+    }
+    grunt.task.run('express:test');
+    grunt.task.run('mochaTest');
+  });
+
+  grunt.task.registerTask('devtest', 'Run tests using uncompiled code.',
+  function(testname) {
+    if (!!testname) {
+      grunt.config('mochaTest.test.src', ['test/' + testname + '.js']);
+    }
+    grunt.task.run('express:devtest');
+    grunt.task.run('mochaTest');
+  });
+
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
-  // "test" tests the compiled editor code.
-  grunt.registerTask('test', ['express:test', 'mochaTest']);
-  // "devtest" tests the uncompiled source code.
-  grunt.registerTask('devtest', ['express:devtest', 'mochaTest']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // default target: compile editor code and uglify turtlebits.js, and test it.

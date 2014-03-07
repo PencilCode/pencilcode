@@ -527,13 +527,22 @@ $(window).on('resize.middlebutton', centerMiddle);
 function showMiddleButton(which) {
   if (which == 'run') {
     $('#middle').find('div').eq(0).html(
-      '<button id="run" title="Ctrl+Enter"><div class="triangle"></div></button>');
+      '<button id="run" title="Ctrl+Enter">' +
+      '<div class="triangle"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
     }
     // set tooltip for the run button
     $('#run').tooltipster();
+  } else if (which == 'stop') {
+    $('#middle').find('div').eq(0).html(
+      '<button id="stop">' +
+      '<div class="square"></div></button>');
+    if (state.previewMode) {
+      $('#middle').show();
+      centerMiddle();
+    }
   } else if (which == 'edit' && state.previewMode) {
     $('#middle').find('div').eq(0).html(
       '<button id="edit">&#x25c1;</button>');
@@ -1213,6 +1222,8 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
+    // Any editing ends the debugging session.
+    require('editor-debug').bindframe(null);
     clearPaneEditorMarks(pane);
     if (editor.getFontSize() > 16) {
       if (editor.getSession().getLength() *

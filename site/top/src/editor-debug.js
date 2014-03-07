@@ -20,12 +20,18 @@ var lineRecord = {};        // map line numbers -> line execution records.
 var everyRecord = [];       // a sequence of all records from the run.
 var cachedSourceMaps = {};  // parsed source maps for currently-running code.
 var cachedParsedStack = {}; // parsed stack traces for currently-running code.
+var pollTimer = null;       // poll for stop button.
+var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
+var throwNeeded = !(new Error).stack;
+
+Error.stackTraceLimit = 20;
 
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
 function bindframe(w) {
+  if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   debugIdException = {};
   debugIdRecord = {};
@@ -35,21 +41,43 @@ function bindframe(w) {
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   firstSessionId = nextDebugId;
+  if (stopButtonShown == 1) {
+    view.showMiddleButton('run');
+  }
+  stopButtonShown = 0;
+  startPollingWindow();
 }
 
 // Exported functions from the edit-debug module are exposed
 // as the top frame's "ide" global variable.
 var debug = window.ide = {
   nextId: function() {
-    debugIdException[nextDebugId] = createError();
+    // The following line of code is hot under profile and is optimized:
+    // By avoiding using createError()'s thrown exception when we can get
+    // a call stack with a simple Error() constructor, we nearly double
+    // speed of a fractal program.
+    debugIdException[nextDebugId] = throwNeeded ? createError() : new Error();
     return nextDebugId++;
   },
   bindframe: bindframe,
+  interruptable: function() {
+    if (targetWindow && targetWindow.jQuery && targetWindow.jQuery.turtle &&
+        typeof(targetWindow.jQuery.turtle.interrupt) == 'function') {
+      return targetWindow.jQuery.turtle.interrupt('test');
+    }
+    return false;
+  },
   reportEvent: function(name, data) {
     if (!targetWindow) {
       return;
     }
-    $(debug).trigger(name, data);
+    // Based on profiling data, we dispatch by hand instead of with
+    // jQuery.trigger.  (This speeds up fractals by 40%.)
+    if (name == 'enter') { debugEnter.apply(null, data); }
+    else if (name == 'exit') { debugExit.apply(null, data); }
+    else if (name == 'appear') { debugAppear.apply(null, data); }
+    else if (name == 'resolve') { debugResolve.apply(null, data); }
+    else if (name == 'error') { debugError.apply(null, data); }
   },
 };
 
@@ -60,21 +88,19 @@ var debug = window.ide = {
 // Appear and resolve will appear between enter and exit if the action is
 // synchronous.  The "length" parameter indicates the number of appear
 // (and matching resolve) events that will be issued for this debugId.
-$(debug).on('enter',
-function debugEnter(event, method, debugId, length, args) {
+function debugEnter(method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   updateLine(record);
-});
+}
 
 // The exit event is triggered when the call to the turtle command is done.
-$(debug).on('exit',
-function debugExit(event, method, debugId, length, args) {
+function debugExit(method, debugId, length, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   record.exited = true;
   updateLine(record);
-});
+}
 
 // The appear event is triggered when the visible animation for a turtle
 // command begins.  If the animation happens asynchronously, appear is
@@ -82,20 +108,18 @@ function debugExit(event, method, debugId, length, args) {
 // it can precede exit.  Arguments are the same as for start, except
 // the "index" and "element" arguments indicate the element which is
 // being animated, and its index in the list of animated elements.
-$(debug).on('appear',
-function debugAppear(event, method, debugId, length, index, elem, args) {
+function debugAppear(method, debugId, length, index, elem, args) {
   var record = getDebugRecord(method, debugId, length, args);
   if (!record) { return; }
   record.appearCount += 1;
   record.startCoords[index] = collectCoords(elem);
   updateLine(record);
-});
+}
 
 // The resolve event is triggered when the visible animation for a turtle
 // command ends.  It always happens after the corresponding "appear"
 // event, but may occur before or after "exit".
-$(debug).on('resolve',
-function debugResolve(event, method, debugId, length, index, elem) {
+function debugResolve(method, debugId, length, index, elem) {
   var record = debugIdRecord[debugId];
   if (!record) { return; }
   record.resolveCount += 1;
@@ -107,16 +131,15 @@ function debugResolve(event, method, debugId, length, index, elem) {
     console.trace('Error: too many resolve events', record);
   }
   updateLine(record);
-});
+}
 
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
-$(debug).on('error',
-function debugError(event, err) {
+function debugError(err) {
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
-});
+}
 
 // Retrieves (or creates if necessary) the debug record corresponding
 // to the given debugId.  A debug record tracks everything needed for
@@ -371,6 +394,50 @@ function editorLineNumberForError(error) {
   // Subtract a few lines of boilerplate from the top of the script.
   return line - 3;
 }
+
+///////////////////////////////////////////////////////////////////////////
+// STOP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+function startPollingWindow() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+function pollForStop() {
+  pollTimer = null;
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  if (stoppable) {
+    if (!stopButtonShown) {
+      stopButtonShown = 1;
+      view.showMiddleButton('stop');
+    }
+  } else {
+    if (stopButtonShown) {
+      stopButtonShown = 0;
+      view.showMiddleButton('run');
+    }
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+view.on('stop', function() {
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    return;
+  }
+  targetWindow.jQuery.turtle.interrupt();
+});
+
+
 
 return debug;
 
