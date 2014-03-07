@@ -221,9 +221,6 @@ view.on('tour', function () {
 });
 
 view.on('share', function () {
-  // First save (including login user if necessary)
-
-
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
@@ -231,7 +228,6 @@ view.on('share', function () {
       shortfilename + '#text=' +
       encodeURIComponent(code).replace(/%20/g, '+'), 
       function(shortened) {
-	// Now bring up share dialog
 	opts = new Object();
 	opts.shareRunURL = "http://" + document.domain + '/home/' + 
 	  modelatpos('left').filename;
@@ -240,7 +236,16 @@ view.on('share', function () {
 	opts.shareClipURL = shortened;
 	opts.title = modelatpos('left').filename;
 
-	view.showShareDialog(opts);
+	// First save if needed (including login user if necessary)
+	if (view.isPaneEditorDirty(paneatpos('left'))) {
+	  saveAction(false, function() { 
+            // Now bring up share dialog
+	    view.showShareDialog(opts);
+	  });
+	}
+	else {
+	  view.showShareDialog(opts);
+	}
       });
 });
 
@@ -393,12 +398,12 @@ view.on('setpass', function() {
   });
 });
 
-view.on('save', function() { saveAction(false); });
-view.on('overwrite', function() { saveAction(true); });
+view.on('save', function() { saveAction(false, null); });
+view.on('overwrite', function() { saveAction(true, null); });
 view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
 
-function saveAction(forceOverwrite) {
+function saveAction(forceOverwrite, contFunction) {
   if (specialowner()) {
     signUpAndSave();
     return;
@@ -429,7 +434,7 @@ function saveAction(forceOverwrite) {
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
     // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite, noteclean);
+    logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction);
     return;
   }
   // Attempt to save.
@@ -438,32 +443,11 @@ function saveAction(forceOverwrite) {
       model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
   function(status) {
     if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean);
-    } else if (status.newer) {
-      view.flashNotification('Newer copy on network. ' +
-          '<a href="#overwrite" id="overwrite">Overwrite</a>?');
-    } else if (status.transient) {
-      view.flashNotification('Network down.  Local backup made.');
-    } else if (status.offline) {
-      view.flashNotification('Offline.  Local backup made.');
-    } else if (status.error) {
-      view.flashNotification(status.error);
-    } else if (status.deleted) {
-      view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
-      if (modelatpos('left').filename == filename) {
-        cancelAndClearPosition('left');
-        var parentdir = '';
-        if (filename.indexOf('/') >= 0) {
-          parentdir = filename.replace(/\/[^\/]+\/?$/, '');
-        }
-        loadFileIntoPosition('back', parentdir, true, true);
-        rotateModelRight(true);
-      }
+      logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction);
     } else {
-      noteclean(status.mtime);
-      if (!specialowner()) {
-        cookie('recent', window.location.href,
-            { expires: 7, path: '/', domain: window.pencilcode.domain });
+      handleSaveStatus(status, filename, noteclean);
+      if (contFunction) {
+        contFunction();
       }
     }
   });
@@ -614,7 +598,7 @@ function signUpAndSave() {
   });
 }
 
-function logInAndSave(filename, newdata, forceOverwrite, noteclean) {
+function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction) {
   if (!filename || !newdata) {
     return;
   }
@@ -636,43 +620,55 @@ function logInAndSave(filename, newdata, forceOverwrite, noteclean) {
           return;
         }
         state.update({cancel: true});
-        if (m.newer) {
-          view.flashNotification('Newer copy on network. ' +
-              '<a href="#overwrite" id="overwrite">Overwrite</a>?');
-        } else if (m.transient) {
-          view.flashNotification('Network down.  Local backup made.');
-        } else if (m.error) {
-          view.flashNotification(m.error);
-        } else if (m.deleted) {
-          view.flashNotification(
-              'Deleted ' + filename.replace(/^.*\//, '') + '.');
-          cookie('login', model.username + ':' + model.passkey,
-              { expires: 1, path: '/' });
-          if (model.ownername) {
-             cookie('recent', window.location.href,
-                { expires: 7, path: '/', domain: window.pencilcode.domain });
-          }
-          if (modelatpos('left').filename == filename) {
-            cancelAndClearPosition('left');
-            var parentdir = '';
-            if (filename.indexOf('/') >= 0) {
-              parentdir = filename.replace(/\/[^\/]+\/?$/, '');
-            }
-            loadFileIntoPosition('back', parentdir, true, true);
-            rotateModelRight(true);
-          }
-        } else {
-          noteclean(m.mtime);
-          cookie('login', model.username + ':' + model.passkey,
-              { expires: 1, path: '/' });
-          if (model.ownername) {
-            cookie('recent', window.location.href,
-                { expires: 7, path: '/', domain: window.pencilcode.domain });
-          }
+	handleSaveStatus(m, filename, noteclean);
+        if (contFunction) {
+	  contFunction();
         }
       });
     }
   });
+}
+
+ function handleSaveStatus(status, filename, noteclean) {
+  if (status.newer) {
+    view.flashNotification('Newer copy on network. ' +
+			   '<a href="#overwrite" id="overwrite">Overwrite</a>?');
+  } else if (status.transient) {
+    view.flashNotification('Network down.  Local backup made.');
+  } else if (status.offline) {
+    view.flashNotification('Offline.  Local backup made.');
+  } else if (status.error) {
+    view.flashNotification(status.error);
+  } else if (status.deleted) {
+    view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
+
+    cookie('login', model.username + ':' + model.passkey,
+	   { expires: 1, path: '/' });
+    if (model.ownername) {
+      cookie('recent', window.location.href,
+	     { expires: 7, path: '/', domain: window.pencilcode.domain });
+    }
+
+    if (modelatpos('left').filename == filename) {
+      cancelAndClearPosition('left');
+      var parentdir = '';
+      if (filename.indexOf('/') >= 0) {
+	parentdir = filename.replace(/\/[^\/]+\/?$/, '');
+      }
+      loadFileIntoPosition('back', parentdir, true, true);
+      rotateModelRight(true);
+    }
+  } else {
+    noteclean(status.mtime);
+
+    cookie('login', model.username + ':' + model.passkey,
+	   { expires: 1, path: '/' });
+
+    if (!specialowner()) {
+      cookie('recent', window.location.href,
+	     { expires: 7, path: '/', domain: window.pencilcode.domain });
+    }
+  }
 }
 
 function chooseNewFilename(dirlist) {

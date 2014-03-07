@@ -693,7 +693,7 @@ function showDialog(opts) {
     }
 
     if (opts.onclick) {
-      opts.onclick(e, dialog, state());
+      return opts.onclick(e, dialog, state());
     }
   });
   dialog.on('keydown', function(e) {
@@ -703,7 +703,7 @@ function showDialog(opts) {
     }
 
     if (opts.onkeydown) {
-      opts.onkeydown(e, dialog, state());
+      return opts.onkeydown(e, dialog, state());
     }
   });
   if (opts.init) {
