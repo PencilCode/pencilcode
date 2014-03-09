@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see'],
-function($, tooltipster, see) {
+define(['jquery', 'tooltipster', 'see', 'ZeroClipboard'],
+function($, tooltipster, see, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -53,6 +53,16 @@ var state = {
     charlie: initialPaneState()
   },
 }
+
+//
+// Zeroclipboard seems very flakey.  The documentation says
+// that this configuration should not be necessary but it seems to be
+// 
+
+ZeroClipboard.config({ 
+   moviePath : '/ZeroClipboard.swf', 
+   allowScriptAccess : 'always'
+});
 
 window.pencilcode.view = {
   // Listens to events
@@ -565,7 +575,7 @@ function showMiddleButton(which) {
 
 function showShareDialog(opts) {
   if (!opts) {
-    opts = new Object();
+    opts = { };
   }
 
   bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
@@ -584,31 +594,27 @@ function showShareDialog(opts) {
   opts.content = (opts.content) ? opts.content : 
       '<div class="content">' + 
         '<div class="field">' + 
-          'Full Screen <input type="text" value="' + opts.shareRunURL + '"><button class="copy" url="' + opts.shareRunURL + '"><img src="/copy.png"></button>' + 
+          'Full Screen <input type="text" value="' + opts.shareRunURL + '"><button class="copy" data-clipboard-text="' + opts.shareRunURL + '"><img src="/copy.png"></button>' + 
         '</div>' + 
         '<div class="field">' + 
-          'Code <input type="text" value="' + opts.shareEditURL + '"><button class="copy" url="' + opts.shareEditURL + '"><img src="/copy.png"></button>' + 
+          'Code <input type="text" value="' + opts.shareEditURL + '"><button class="copy" data-clipboard-text="' + opts.shareEditURL + '"><img src="/copy.png"></button>' + 
         '</div>' + 
         (opts.shareClipURL ?
         '<div class="field">' + 
-   	  'Shortened <input type="text" value="' + opts.shareClipURL + '"><button class="copy" url="' + opts.shareClipURL + '"><img src="/copy.png"></button>' + 
-	 '</div>' : '') + 
+          'Shortened <input type="text" value="' + opts.shareClipURL + '"><button class="copy" data-clipboard-text="' + opts.shareClipURL + '"><img src="/copy.png"></button>' + 
+         '</div>' : '') + 
       '</div><br>' + 
-    '<button class="ok"><a id="sharehlink" target="_blank" href="mailto:?body='+bodyText+'&subject='+subjectText+'">Email</a></button>' +
+    '<button class="ok">Email</button>' +
     '<button class="cancel">Cancel</button>';
 
   opts.init = function(dialog) {
     dialog.find('#sharehlink').focus();
+
+    var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
   }
 
-  opts.onclick = function(e, dialog, state) {
-    if ($(e.target).hasClass("copy"))
-      buttonObj = $(e.target);
-    else
-      buttonObj = $(e.target).parents(".copy");
-    if (buttonObj && buttonObj[0]) {
-      prompt('URL to copy:', buttonObj[0].attributes.url.value);
-    }
+  opts.done = function(state) {
+    window.open('mailto:?body='+bodyText+'&subject='+subjectText);
   }
 
   showDialog(opts);
@@ -651,10 +657,8 @@ function showDialog(opts) {
         }
       } else {
         var x = dialog.find('.' + attr);
-        if (!x)
-          return;
 
-        if (x[0].tagName == "INPUT") {
+        if (x.prop('tagName') == "INPUT") {
           x.val(up[attr]);
         }
         else {
@@ -670,7 +674,7 @@ function showDialog(opts) {
       retVal = opts.retrieveState(dialog);
 
     if (!retVal)
-      retVal = new Object();
+      retVal = { };
 
     retVal.update = update;
     
@@ -728,7 +732,7 @@ function showDialog(opts) {
 
 function showLoginDialog(opts) {
   if (!opts)
-    opts = new Object();
+    opts = { };
 
   opts.content = 
     '<div class="content">' + 

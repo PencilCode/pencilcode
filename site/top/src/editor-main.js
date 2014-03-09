@@ -99,8 +99,8 @@ function posofpane(pane) {
 //
 // Special owner is defined as one of:
 //   Nobody is the owner of this file/directory OR
-//   it's the guide who's logged in OR
-//   it's the event who's logged in. 
+//   it's the guide who's the owner OR
+//   it's the event who's the owner
 //
 function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
@@ -159,10 +159,10 @@ function updateTopControls(addHistory) {
     } else {
       // We're either in some file or directory
       if (m.isdir) {
-	//
-	// If it's a directory then allow browsing by date
-	// or by alphabetical
-	//
+        //
+        // If it's a directory then allow browsing by date
+        // or by alphabetical
+        //
 
         if (m.bydate) {
           buttons.push({id: 'byname', label: 'Alphabetize'});
@@ -207,7 +207,7 @@ function updateTopControls(addHistory) {
 // an event handler function
 //
 
-view.on('help', function () {
+view.on('help', function() {
   view.flashNotification('<a href="http://' +
      window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
     (model.username ?
@@ -215,12 +215,12 @@ view.on('help', function () {
   );
 });
 
-view.on('tour', function () {
+view.on('tour', function() {
   // view.flashNotification('Tour coming soon.');
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
 });
 
-view.on('share', function () {
+view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
@@ -228,24 +228,24 @@ view.on('share', function () {
       shortfilename + '#text=' +
       encodeURIComponent(code).replace(/%20/g, '+'), 
       function(shortened) {
-	opts = new Object();
-	opts.shareRunURL = "http://" + document.domain + '/home/' + 
-	  modelatpos('left').filename;
-	opts.shareEditURL = window.location.href;
+        opts = new Object();
+        opts.shareRunURL = "http://" + document.domain + '/home/' + 
+          modelatpos('left').filename;
+        opts.shareEditURL = window.location.href;
 
-	opts.shareClipURL = shortened;
-	opts.title = modelatpos('left').filename;
+        opts.shareClipURL = shortened;
+        opts.title = modelatpos('left').filename;
 
-	// First save if needed (including login user if necessary)
-	if (view.isPaneEditorDirty(paneatpos('left'))) {
-	  saveAction(false, function() { 
+        // First save if needed (including login user if necessary)
+        if (view.isPaneEditorDirty(paneatpos('left'))) {
+          saveAction(false, 'Log in to share', function() { 
             // Now bring up share dialog
-	    view.showShareDialog(opts);
-	  });
-	}
-	else {
-	  view.showShareDialog(opts);
-	}
+            view.showShareDialog(opts);
+          });
+        }
+        else {
+          view.showShareDialog(opts);
+        }
       });
 });
 
@@ -398,12 +398,12 @@ view.on('setpass', function() {
   });
 });
 
-view.on('save', function() { saveAction(false, null); });
-view.on('overwrite', function() { saveAction(true, null); });
+view.on('save', function() { saveAction(false, null, null); });
+view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
 
-function saveAction(forceOverwrite, contFunction) {
+function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (specialowner()) {
     signUpAndSave();
     return;
@@ -434,7 +434,8 @@ function saveAction(forceOverwrite, contFunction) {
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
     // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction);
+    logInAndSave(filename, newdata, forceOverwrite, 
+                 noteclean, loginPrompt, doneCallback);
     return;
   }
   // Attempt to save.
@@ -443,11 +444,12 @@ function saveAction(forceOverwrite, contFunction) {
       model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
   function(status) {
     if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction);
+      logInAndSave(filename, newdata, forceOverwrite, noteclean, 
+                   loginPrompt, doneCallback);
     } else {
       handleSaveStatus(status, filename, noteclean);
-      if (contFunction) {
-        contFunction();
+      if (doneCallback) {
+        doneCallback();
       }
     }
   });
@@ -598,12 +600,13 @@ function signUpAndSave() {
   });
 }
 
-function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction) {
+function logInAndSave(filename, newdata, forceOverwrite, 
+                      noteclean, loginPrompt, doneCallback) {
   if (!filename || !newdata) {
     return;
   }
   view.showLoginDialog({
-    prompt: 'Log in to save.',
+    prompt: (loginPrompt) ? loginPrompt : 'Log in to save.',
     username: model.ownername,
     switchuser: signUpAndSave,
     validate: function(state) { return {}; },
@@ -620,9 +623,9 @@ function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction
           return;
         }
         state.update({cancel: true});
-	handleSaveStatus(m, filename, noteclean);
-        if (contFunction) {
-	  contFunction();
+        handleSaveStatus(m, filename, noteclean);
+        if (doneCallback) {
+          doneCallback();
         }
       });
     }
@@ -632,7 +635,7 @@ function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction
  function handleSaveStatus(status, filename, noteclean) {
   if (status.newer) {
     view.flashNotification('Newer copy on network. ' +
-			   '<a href="#overwrite" id="overwrite">Overwrite</a>?');
+                           '<a href="#overwrite" id="overwrite">Overwrite</a>?');
   } else if (status.transient) {
     view.flashNotification('Network down.  Local backup made.');
   } else if (status.offline) {
@@ -643,17 +646,17 @@ function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction
     view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
 
     cookie('login', model.username + ':' + model.passkey,
-	   { expires: 1, path: '/' });
+           { expires: 1, path: '/' });
     if (model.ownername) {
       cookie('recent', window.location.href,
-	     { expires: 7, path: '/', domain: window.pencilcode.domain });
+             { expires: 7, path: '/', domain: window.pencilcode.domain });
     }
 
     if (modelatpos('left').filename == filename) {
       cancelAndClearPosition('left');
       var parentdir = '';
       if (filename.indexOf('/') >= 0) {
-	parentdir = filename.replace(/\/[^\/]+\/?$/, '');
+        parentdir = filename.replace(/\/[^\/]+\/?$/, '');
       }
       loadFileIntoPosition('back', parentdir, true, true);
       rotateModelRight(true);
@@ -662,11 +665,11 @@ function logInAndSave(filename, newdata, forceOverwrite, noteclean, contFunction
     noteclean(status.mtime);
 
     cookie('login', model.username + ':' + model.passkey,
-	   { expires: 1, path: '/' });
+           { expires: 1, path: '/' });
 
     if (!specialowner()) {
       cookie('recent', window.location.href,
-	     { expires: 7, path: '/', domain: window.pencilcode.domain });
+             { expires: 7, path: '/', domain: window.pencilcode.domain });
     }
   }
 }
@@ -1210,7 +1213,7 @@ function renderDirectory(position) {
 }
 
 //
-// Returns text content of the coffeescript editor
+// Returns text content of the editor
 // or null if there's no file loaded. 
 //
 
