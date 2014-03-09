@@ -569,7 +569,7 @@ function showLoginDialog(opts) {
   var dialog = $('<div class="logindialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
     '</div><div class="content">' +
-    '<div class="field">Name:<div style="display:inline-table">' + 
+    '<div class="field">Name:<div style="display:inline-table">' +
     '<input class="username"' +
     (opts.username ? ' value="' + opts.username + '" disabled' : '') +
     '>' +
@@ -951,7 +951,11 @@ function renderProtractor(canvas, step) {
         .css({position: 'absolute', display: 'table', zIndex: 1})
         .insertBefore($(canvas).closest('.preview').find('.protractor'));
   }
-  label.text(step.command + ' ' + Array.prototype.join.call(step.args, ','));
+  var argrepr = [];
+  for (var j = 0; j < step.args.length; ++j) {
+    argrepr.push(see.repr(step.args[j]));
+  }
+  label.html(step.command + ' ' + argrepr.join(', '));
   label.css({
     textShadow: '0 0 8px white, 0 0 5px white, 0 0 3px white',
     top: step.startCoords.pageY + $(label).height(),
