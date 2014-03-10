@@ -25,6 +25,24 @@ module.exports = function(grunt) {
           'seedrandom.js': 'seedrandom/seedrandom.js'
         }
       },
+      zeroclipboard: {
+        options: {
+          destPrefix: 'site/top/lib/zeroclipboard'
+        },
+        files: {
+          'ZeroClipboard.js' : 'zeroclipboard/ZeroClipboard.js',
+          'ZeroClipboard.swf' : 'zeroclipboard/ZeroClipboard.swf'
+        }
+      },
+      tooltipster: {
+        options: {
+          destPrefix: 'site/top/lib/tooltipster'
+        },
+        files: {
+          'js': 'tooltipster/js',
+          'css': 'tooltipster/css'
+        }
+      },
       lib: {
         options: {
           destPrefix: 'site/top/lib'

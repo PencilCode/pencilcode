@@ -1,10 +1,5 @@
-html {
-	 -webkit-font-smoothing: antialiased;
-}
-
 /* This is the default Tooltipster theme (feel free to modify or duplicate and create multiple themes!): */
 .tooltipster-default {
-	box-sizing: content-box;  /* added by davidbau */
 	border-radius: 5px; 
 	border: 2px solid #000;
 	background: #4c4c4c;
@@ -45,6 +40,8 @@ html {
 	font-size: 0;
 	line-height: 0;
 	position: absolute;
+	left: 0;
+	top: 0;
 	z-index: 9999999;
 	pointer-events: none;
 	width: auto;

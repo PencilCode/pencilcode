@@ -5,7 +5,8 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'sourcemap': 'src/sourcemap'
+    'sourcemap': 'src/sourcemap',
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
   },
   shim: {
     'tooltipster': {
@@ -70,8 +71,8 @@ var model = {
 };
 
 //
-// Retrieve model.pane object given position.  It will be one of 
-// the alpha, bravo or charlie objects from above.  
+// Retrieve model.pane object given position.  It will be one of
+// the alpha, bravo or charlie objects from above.
 //
 // Parameters:
 //    pos: Position is one of 'left', 'back' or 'right', which maps
@@ -202,7 +203,7 @@ function updateTopControls(addHistory) {
 }
 
 //
-// Now setup event handlers.  Each event handler corresponds to 
+// Now setup event handlers.  Each event handler corresponds to
 // an ID (as specified in updateTopControls() above) and
 // an event handler function
 //
@@ -226,10 +227,10 @@ view.on('share', function() {
   var code = getEditTextIfAny() || '';
   shortenUrl('http://' + window.pencilcode.domain + '/edit/' +
       shortfilename + '#text=' +
-      encodeURIComponent(code).replace(/%20/g, '+'), 
+      encodeURIComponent(code).replace(/%20/g, '+'),
       function(shortened) {
         opts = new Object();
-        opts.shareRunURL = "http://" + document.domain + '/home/' + 
+        opts.shareRunURL = "http://" + document.domain + '/home/' +
           modelatpos('left').filename;
         opts.shareEditURL = window.location.href;
 
@@ -238,7 +239,7 @@ view.on('share', function() {
 
         // First save if needed (including login user if necessary)
         if (view.isPaneEditorDirty(paneatpos('left'))) {
-          saveAction(false, 'Log in to share', function() { 
+          saveAction(false, 'Log in to share', function() {
             // Now bring up share dialog
             view.showShareDialog(opts);
           });
@@ -434,7 +435,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
     // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite, 
+    logInAndSave(filename, newdata, forceOverwrite,
                  noteclean, loginPrompt, doneCallback);
     return;
   }
@@ -444,7 +445,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
   function(status) {
     if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean, 
+      logInAndSave(filename, newdata, forceOverwrite, noteclean,
                    loginPrompt, doneCallback);
     } else {
       handleSaveStatus(status, filename, noteclean);
@@ -600,7 +601,7 @@ function signUpAndSave() {
   });
 }
 
-function logInAndSave(filename, newdata, forceOverwrite, 
+function logInAndSave(filename, newdata, forceOverwrite,
                       noteclean, loginPrompt, doneCallback) {
   if (!filename || !newdata) {
     return;
@@ -1214,7 +1215,7 @@ function renderDirectory(position) {
 
 //
 // Returns text content of the editor
-// or null if there's no file loaded. 
+// or null if there's no file loaded.
 //
 
 function getEditTextIfAny() {
