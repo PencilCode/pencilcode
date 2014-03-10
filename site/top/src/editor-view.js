@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see'],
-function($, tooltipster, see) {
+define(['jquery', 'tooltipster', 'see', 'ZeroClipboard'],
+function($, tooltipster, see, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -54,6 +54,16 @@ var state = {
   },
 }
 
+//
+// Zeroclipboard seems very flakey.  The documentation says
+// that this configuration should not be necessary but it seems to be
+//
+
+ZeroClipboard.config({
+   moviePath : '/lib/zeroclipboard/ZeroClipboard.swf',
+   allowScriptAccess : 'always'
+});
+
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
@@ -89,6 +99,9 @@ window.pencilcode.view = {
   flashButton: flashButton,
   // Show login (or create account) dialog.
   showLoginDialog: showLoginDialog,
+  // Show share dialog.
+  showShareDialog: showShareDialog,
+  showDialog: showDialog,
   // The run button
   showMiddleButton: showMiddleButton,
   // Sets editable name.
@@ -492,13 +505,13 @@ function showButtons(buttonlist) {
     } else {
       html += '<button' +
         (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
-        (buttonlist[j].disabled ? ' disabled' : '') + 
+        (buttonlist[j].disabled ? ' disabled' : '') +
         (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
         '>' + buttonlist[j].label + '</button>';
     }
   }
   bar.html(html);
-  
+
   // set tooltip for the save button after the buttons are
   // registered with the buttonbar
   $('#save').tooltipster();
@@ -557,34 +570,97 @@ function showMiddleButton(which) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// LOGIN DIALOG
+// SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
 
-function showLoginDialog(opts) {
+function showShareDialog(opts) {
+  if (!opts) {
+    opts = { };
+  }
+
+  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
+  bodyText = bodyText + 'Running program: ' + opts.shareRunURL + '\r\n\r\n';
+  bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
+  if (opts.shareClipURL)
+    bodyText = bodyText + 'Shortened URL: ' + opts.shareClipURL + '\r\n\r\n';
+
+  subjectText = 'Pencilcode program: ' + opts.title;
+
+  // Need to escape the text since it will go into a url link
+  bodyText = escape(bodyText);
+  subjectText = escape(subjectText);
+
+  opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
+  opts.content = (opts.content) ? opts.content :
+      '<div class="content">' +
+        '<div class="field">' +
+          'Full Screen <input type="text" value="' +
+          opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareRunURL + '"><img src="/copy.png"></button>' +
+        '</div>' +
+        '<div class="field">' +
+          'Code <input type="text" value="' +
+          opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareEditURL + '"><img src="/copy.png"></button>' +
+        '</div>' +
+        (opts.shareClipURL ?
+        '<div class="field">' +
+          'Shortened <input type="text" value="' +
+          opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareClipURL + '"><img src="/copy.png"></button>' +
+         '</div>' : '') +
+      '</div><br>' +
+    '<button class="ok" title="Share by email">Email</button>' +
+    '<button class="cancel">Cancel</button>';
+
+  opts.init = function(dialog) {
+    dialog.find('#sharehlink').focus();
+    dialog.find('button.ok').tooltipster();
+    dialog.find('button.copy').tooltipster();
+    var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
+    var tooltipTimer = null;
+    clipboardClient.on('complete', function(client, args) {
+      var button = this;
+      // Hide any other copy tooltips in this dialog.
+      dialog.find('button.copy').not(button).tooltipster('hide');
+      // Just flash tooltipster for a couple seconds, because mouseleave
+      // doesn't appear to work.
+      $(button).tooltipster('content', 'Copied!').tooltipster('show');
+      clearTimeout(tooltipTimer);
+      tooltipTimer = setTimeout(function() {
+        $(button).tooltipster('hide');
+      }, 1500);
+    });
+  }
+
+  opts.done = function(state) {
+    window.open('mailto:?body='+bodyText+'&subject='+subjectText);
+  }
+
+  showDialog(opts);
+}
+
+function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="logindialog"><div class="prompt">' +
+  var dialog = $('<div class="dialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
-    '</div><div class="content">' +
-    '<div class="field">Name:<div style="display:inline-table">' + 
-    '<input class="username"' +
-    (opts.username ? ' value="' + opts.username + '" disabled' : '') +
-    '>' +
-    (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
-     '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
-     'Not me?</a></div>' : '') +
-    '</div></div>' +
-    (opts.setpass ?
-    '<div class="field">Old password:<input type="password" class="password"></div>' +
-    '<div class="field">New password:<input type="password" class="newpass"></div>' :
-    '<div class="field">Password:<input type="password" class="password"></div>') +
-    '</div><br>' +
-    '<button type="submit" class="ok">OK</button>' +
-    '<button class="cancel">Cancel</button>' +
+    '</div>' +
+    (opts.content ? opts.content : '') +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
     '</div></div>').appendTo(overlay);
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // function: update
+  //
+  // Called from event handlers inside the dialog.  The parameter
+  // is an anonymous object that contains information on what do do:
+  // up.cancel --> Close out the dialog
+  //
+  ////////////////////////////////////////////////////////////////
   function update(up) {
     if (!up) return;
     if (up.cancel) {
@@ -599,21 +675,30 @@ function showLoginDialog(opts) {
         } else {
           dialog.find('button.ok').removeAttr('disabled');
         }
-      } else if (/^(?:username|password)$/.test(attr)) {
-        dialog.find('.' + attr).val(up[attr]);
-      } else if (/^(?:info|prompt)$/.test(attr)) {
-        dialog.find('.' + attr).html(up[attr]);
+      } else {
+        var x = dialog.find('.' + attr);
+
+        if (x.prop('tagName') == "INPUT") {
+          x.val(up[attr]);
+        }
+        else {
+          x.html(up[attr]);
+        }
       }
     }
   }
   function state() {
-    return {
-      username: dialog.find('.username').val(),
-      checkbox: dialog.find('.agreetoterms').prop('checked'),
-      password: dialog.find('.password').val(),
-      newpass: dialog.find('.newpass').val(),
-      update: update
-    };
+    var retVal;
+
+    if (opts.retrieveState)
+      retVal = opts.retrieveState(dialog);
+
+    if (!retVal)
+      retVal = { };
+
+    retVal.update = update;
+
+    return retVal;
   }
   function validate(e) {
     if (e && ($(e.target).attr('target') == '_blank' ||
@@ -639,15 +724,9 @@ function showLoginDialog(opts) {
     if ($(e.target).hasClass('cancel') || overlay.is(e.target)) {
       update({cancel:true});
     }
-    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
-      opts.switchuser();
-      return false;
-    }
-  });
-  dialog.find('.username').on('keypress', function(e) {
-    if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
-          String.fromCharCode(e.which))) {
-      return false;
+
+    if (opts.onclick) {
+      return opts.onclick(e, dialog, state());
     }
   });
   dialog.on('keydown', function(e) {
@@ -655,19 +734,78 @@ function showLoginDialog(opts) {
       update({cancel:true});
       return;
     }
+
+    if (opts.onkeydown) {
+      return opts.onkeydown(e, dialog, state());
+    }
+  });
+  if (opts.init) {
+    opts.init(dialog);
+  }
+  validate();
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// LOGIN DIALOG
+///////////////////////////////////////////////////////////////////////////
+
+function showLoginDialog(opts) {
+  if (!opts)
+    opts = { };
+
+  opts.content =
+    '<div class="content">' +
+    '<div class="field">Name:<div style="display:inline-table">'+
+      '<input class="username"' +
+      (opts.username ? ' value="' + opts.username + '" disabled' : '') +
+      '>' +
+      (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
+       '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
+       'Not me?</a></div>' : '') +
+    '</div></div>' +
+      (opts.setpass ?
+      '<div class="field">Old password:<input type="password" class="password"></div>' +
+      '<div class="field">New password:<input type="password" class="newpass"></div>' :
+      '<div class="field">Password:<input type="password" class="password"></div>') +
+    '</div><br>' +
+    '<button class="ok">OK</button>' +
+    '<button class="cancel">Cancel</button>';
+  opts.init = function(dialog) {
+    dialog.find('.username').on('keypress', function(e) {
+      if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
+            String.fromCharCode(e.which))) {
+        return false;
+      }
+    });
+
+    dialog.find('input:not([disabled])').eq(0).focus();
+  }
+  opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
       if (dialog.find('.username').is(':focus')) {
         dialog.find('.password').focus();
       } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
-        opts.done(state());
+        opts.done(state);
       }
     }
-  });
-  dialog.find('input:not([disabled])').eq(0).focus();
-  if (opts.init) {
-    opts.init(state());
   }
-  validate();
+  opts.onclick = function(e, dialog, state) {
+    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
+      opts.switchuser();
+      return false;
+    }
+  }
+  opts.retrieveState = function(dialog) {
+    return {
+      username: dialog.find('.username').val(),
+      checkbox: dialog.find('.agreetoterms').prop('checked'),
+      password: dialog.find('.password').val(),
+      newpass: dialog.find('.newpass').val(),
+    };
+  }
+
+  showDialog(opts);
 }
 
 ///////////////////////////////////////////////////////////////////////////
