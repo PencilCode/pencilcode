@@ -135,12 +135,13 @@ function updateTopControls(addHistory) {
       // If so, then insert save button
       //
       buttons.push(
-        {id: 'save', title: 'Ctrl+S', label: 'Save',
+        {id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
          disabled: !specialowner() && model.username &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
 
       // Also insert share button
-      buttons.push({id: 'share', label: 'Share'});
+      buttons.push({
+        id: 'share', title: 'Share links to this program', label: 'Share'});
     }
 
     //
@@ -153,9 +154,13 @@ function updateTopControls(addHistory) {
       // is already logged in
       //
       if (model.username) {
-        buttons.push({id: 'logout', label: 'Log out'});
+        buttons.push({
+          id: 'logout', label: 'Log out',
+          title: 'Log out from ' + model.username});
       } else {
-        buttons.push({id: 'login', label: 'Log in'});
+        buttons.push({
+          id: 'login', label: 'Log in',
+          title: 'Enter password for ' + model.ownername});
       }
     } else {
       // We're either in some file or directory
@@ -175,8 +180,9 @@ function updateTopControls(addHistory) {
     buttons.push(
         {id: 'help', label: '<span class=helplink>?</span>' });
     if (m.data && m.data.file) {
-      buttons.push(
-        {id: 'guide', label: '<span class=helplink>Guide</span>' });
+      buttons.push({
+        id: 'guide', label: '<span class=helplink>Guide</span>',
+        title: 'Open online guide'});
     }
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
