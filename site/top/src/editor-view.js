@@ -596,14 +596,14 @@ function showShareDialog(opts) {
         (opts.shareRunURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
-          'title="Run Without Showing Code" href="' +
+          'title="Run without showing code" href="' +
           opts.shareRunURL + '">Full Screen</a> <input type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
-          'title="Link Showing The Code" href="' +
+          'title="Link showing the code" href="' +
           opts.shareEditURL + '">Code</a> <input type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
@@ -611,7 +611,7 @@ function showShareDialog(opts) {
         (opts.shareClipURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
-          'title="Copy This Code Snippet" href="' +
+          'title="Copy this code snippet" href="' +
           opts.shareClipURL + '">Copy</a> <input type="text" value="' +
           opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareClipURL + '"><img src="/copy.png" title="Copy"></button>' +
