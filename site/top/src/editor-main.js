@@ -229,9 +229,12 @@ view.on('share', function() {
       shortfilename + '#text=' +
       encodeURIComponent(code).replace(/%20/g, '+'),
       function(shortened) {
-        opts = new Object();
-        opts.shareRunURL = "http://" + document.domain + '/home/' +
-          modelatpos('left').filename;
+        opts = {};
+        if (model.ownername) {
+          // Share the run URL unless there is no owner (e.g., for /first).
+          opts.shareRunURL = "http://" + document.domain + '/home/' +
+            modelatpos('left').filename;
+        }
         opts.shareEditURL = window.location.href;
 
         opts.shareClipURL = shortened;
