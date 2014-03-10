@@ -624,6 +624,9 @@ function showShareDialog(opts) {
     dialog.find('a.quiet').tooltipster();
     dialog.find('button.ok').tooltipster();
     dialog.find('button.copy').tooltipster();
+    dialog.find('.field input').each(function() {
+      this.scrollLeft = this.scrollWidth;
+    });
     var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
     var tooltipTimer = null;
     clipboardClient.on('complete', function(client, args) {
