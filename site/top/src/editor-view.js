@@ -1335,7 +1335,8 @@ function fixRepeatedCtrlFCommand(editor) {
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorText(pane, text, filename) {
+// @param instructionHTML instructions to show near the editor.
+function setPaneEditorText(pane, text, filename, instructionHTML) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
@@ -1344,7 +1345,15 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
-  $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var paneHTML = '<div id="' + id + '" class="editor"></div>';
+  // if the instructionHTML is provided, then create another
+  // div inside this pane for the instructions.
+  if (instructionHTML) {
+    paneHTML =
+       '<div class="instructions">' + instructionHTML + '</div>' +
+       paneHTML;
+  }
+  $('#' + pane).html(paneHTML);
   var editor = paneState.editor = ace.edit(id);
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);

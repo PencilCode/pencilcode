@@ -63,6 +63,7 @@ var model = {
       isdir: false,
       data: null,
       bydate: false,
+      template: null,
       loading: 0
     },
     bravo: {
@@ -70,6 +71,7 @@ var model = {
       isdir: false,
       data: null,
       bydate: false,
+      template: null,
       loading: 0
     },
     charlie: {
@@ -77,6 +79,7 @@ var model = {
       isdir: false,
       data: null,
       bydate: false,
+      template: null,
       loading: 0
     }
   },
@@ -214,7 +217,7 @@ function updateTopControls(addHistory) {
   // Is this helpful or confusing?
   if (m.data && m.data.file) {
     if (!modelatpos('right').running) {
-      runCodeAtPosition('right', '', m.filename);
+      runCodeAtPosition('right', '', m.filename, m.template);
     }
   }
   // Update editability.
@@ -321,7 +324,9 @@ view.on('run', function() {
     storage.saveFile(model.ownername,
         modelatpos('left').filename, newdata, false, null, true);
   }
-  runCodeAtPosition('right', runtext, modelatpos('left').filename);
+  runCodeAtPosition(
+      'right', runtext,
+      modelatpos('left').filename, modelatpos('left').template);
   if (!specialowner()) {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -936,7 +941,7 @@ function rotateModelLeft(addHistory) {
   debug.bindframe(null);
   view.rotateLeft();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    runCodeAtPosition('back', '', null, null);
   }
   noteIfUnsaved('left');
   updateTopControls(addHistory);
@@ -946,7 +951,7 @@ function rotateModelRight(addHistory) {
   debug.bindframe(null);
   view.rotateRight();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    runCodeAtPosition('back', '', null, null);
   }
   updateTopControls(addHistory);
 }
@@ -1074,9 +1079,11 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).data = null;
   modelatpos(pos).bydate = false;
   modelatpos(pos).running = false;
+  modelatpos(pos).template = null;
 }
 
-function runCodeAtPosition(position, code, filename) {
+// Runs the given code, applying template boilerplate if given.
+function runCodeAtPosition(position, code, filename, template) {
   var m = modelatpos(position);
   if (!m.running) {
     cancelAndClearPosition(position);
@@ -1091,7 +1098,8 @@ function runCodeAtPosition(position, code, filename) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, code, filename, baseUrl);
+      view.setPaneRunText(
+         pane, expandRunTemplate(template, code), filename, baseUrl);
     }
   }, 0);
   if (code) {
@@ -1136,12 +1144,17 @@ function createNewFileIntoPosition(position, filename, text) {
     data: text,
     mtime: 0
   };
-  view.setPaneEditorText(pane, text, filename);
+  view.setPaneEditorText(pane, text, filename, null);
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
 }
 
 
+// Given a pane position (e.g., 'left' or 'right'), does a couple steps:
+// (1) Loads the underlying file given by filename
+// (2) If it is a template file, loads the template metdata
+// (3) Puts the loaded data into the model.pane[pane] object for the pane
+// (4) Finally, calls callback cb when done.
 function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -1150,55 +1163,86 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   // update the model and execute the load.
   if (mpp.filename === filename && !forcenet) {
     cb && cb();
-  } else {
-    view.clearPane(pane, true); // show loading animation.
-    mpp.filename = filename;
-    mpp.isdir = isdir;
-    mpp.bydate = isdir && defaultDirSortingByDate();
-    mpp.loading = loadNum;
-    mpp.data = null;
-    mpp.running = false;
-    storage.loadFile(model.ownername, filename, forcenet, function(m) {
-      if (mpp.loading != loadNum) {
-        if (window.console) {
-          window.console.log('aborted: loading is ' + mpp.loading + ' instead of ' + loadNum);
-        }
-        return;
+    return;
+  }
+  view.clearPane(pane, true); // show loading animation.
+  mpp.filename = filename;
+  mpp.isdir = isdir;
+  mpp.bydate = isdir && defaultDirSortingByDate();
+  mpp.loading = loadNum;
+  mpp.data = null;
+  mpp.running = false;
+  var mpploading = {};
+  function checkConsistency() {
+    // This function verifies that the load that we are completing
+    // is the same as the load that we started (might not be true if
+    // the user clicks on load several times, faster than net responses).
+    // Should be called before mutating mpp again.
+    if (mpp.loading != loadNum) {
+      if (window.console) {
+        window.console.trace('aborted: loading is ' + mpp.loading +
+            ' instead of ' + loadNum);
       }
-      mpp.loading = 0;
-      if (model.ownername === '' && filename === '') {
-        mpp.isdir = true;
-        mpp.data = m;
-        renderDirectory(posofpane(pane));
-        cb && cb();
-      } else if (m.directory && m.list) {
-        // Directory listing.
-        mpp.isdir = true;
-        mpp.data = m;
-        renderDirectory(posofpane(pane));
-        cb && cb();
-      } else if (!m.data && m.newfile) {
-        // In the nofile case, create an empty file.
-        createNewFileIntoPosition('left', filename);
-        updateTopControls(false);
-        view.flashNotification('New file ' + filename + '.');
-        cb && cb();
-      } else {
-        // The single file case.
-        // TODO:
-        // 2. in the offline case, notify the user that we are working offline.
-        // 3. in the unsaved case, notify the user that we loaded a backup and
-        //    give a link to load from network.
-        if (!m.data) { m.data = ''; }
-        mpp.isdir = false;
-        mpp.data = m;
-        view.setPaneEditorText(pane, m.data, filename);
-        noteIfUnsaved(posofpane(pane));
-        updateTopControls(false);
-        cb && cb();
-      }
+      return false;
+    }
+    mpp.loading = 0;
+    return true;
+  }
+  function firstStepLoadFile(m) {
+    if (model.ownername === '' && filename === '') {
+      if (!checkConsistency()) { return; }
+      mpp.isdir = true;
+      mpp.data = m;
+      renderDirectory(posofpane(pane));
+    } else if (m.directory && m.list) {
+      // Directory listing.
+      if (!checkConsistency()) { return; }
+      mpp.isdir = true;
+      mpp.data = m;
+      renderDirectory(posofpane(pane));
+      cb && cb();
+    } else if (!m.data && m.newfile) {
+      // In the nofile case, create an empty file.
+      createNewFileIntoPosition('left', filename);
+      updateTopControls(false);
+      view.flashNotification('New file ' + filename + '.');
+      cb && cb();
+    } else {
+      // The single file case.
+      // TODO:
+      // 2. in the offline case, notify the user that we are working offline.
+      // 3. in the unsaved case, notify the user that we loaded a backup and
+      //    give a link to load from network.
+      if (!m.data) { m.data = ''; }
+      mpploading.isdir = false;
+      mpploading.data = m;
+      secondStepOpenTemplate();
+    }
+  }
+  function secondStepOpenTemplate() {
+    // TODO: maybe do a prelim request instead of forcing errors when
+    // the template is missing some stuff.
+    var templateBaseDir = parseTemplateDirFromLoadedFile(mpploading.data);
+    if (!templateBaseDir) {
+      thirdStepShowEditor();
+      return;
+    }
+    loadTemplateMetadata(templateBaseDir, function(template) {
+      mpploading.template = template;
+      thirdStepShowEditor();
     });
   }
+  function thirdStepShowEditor() {
+    if (!checkConsistency()) { return; }
+    $.extend(mpp, mpploading);
+    console.log('mpp.data', mpp.data, 'mpploading.data', mpploading.data)
+    view.setPaneEditorText(pane, mpp.data.data, filename,
+        instructionTextForTemplate(mpp.template));
+    noteIfUnsaved(posofpane(pane));
+    updateTopControls(false);
+    cb && cb();
+  }
+  storage.loadFile(model.ownername, filename, forcenet, firstStepLoadFile);
 };
 
 function sortByDate(a, b) {
@@ -1326,6 +1370,37 @@ function cookie(key, value, options) {
   }
   return result;
 };
+
+///////////////////////////////////////////////////////////////////////////
+// TEMPLATE SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+
+// Given a template object and some edited code, expands the
+// template for the running version of the code.
+function expandRunTemplate(template, code) {
+  return code;
+}
+
+// Given some saved code, pull the first line and looks to see
+// if it contains a specially-formatted template URL.  If so,
+// it returns it.  Otherwise, returns null.
+function parseTemplateDirFromLoadedFile(code) {
+  return null;
+}
+
+// Given a template base directory, loads the template metadata.
+function loadTemplateMetadata(templateBaseDir, callback) {
+  callback({
+    boilerplate: 'here'
+  });
+}
+
+// Given a template object, returns a piece of HTML that the IDE
+// will place in a div above the code editor.
+function instructionTextForTemplate(template) {
+
+}
 
 readNewUrl();
 
