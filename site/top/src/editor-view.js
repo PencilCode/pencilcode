@@ -206,6 +206,7 @@ var hotkeys = {
   'S': function() { fireEvent('save'); return false; },
   'H': forwardCommandToEditor,
   'F': forwardCommandToEditor,
+  // \x08 is the key code for backspace
   '\x08': function(e) { if (!e.target.isContentEditable) e.preventDefault(); }
 };
 
