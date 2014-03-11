@@ -477,6 +477,7 @@ $('#buttonbar,#middle').on('mousemove', 'button', function(e) {
 $('#buttonbar,#middle').on('click', 'button', function(e) {
   if (this.id) {
     $(this).removeClass('pressed');
+    $(this).tooltipster('hide');
     fireEvent(this.id, []);
     return false;
   }
@@ -512,9 +513,8 @@ function showButtons(buttonlist) {
   }
   bar.html(html);
 
-  // set tooltip for the save button after the buttons are
-  // registered with the buttonbar
-  $('#save').tooltipster();
+  // Enable tooltipster for any new buttons.
+  $('#buttonbar button').tooltipster();
 }
 
 function enableButton(id, enable) {
@@ -537,17 +537,15 @@ $(window).on('resize.middlebutton', centerMiddle);
 function showMiddleButton(which) {
   if (which == 'run') {
     $('#middle').find('div').eq(0).html(
-      '<button id="run" title="Ctrl+Enter">' +
+      '<button id="run" title="Run program (Ctrl+Enter)">' +
       '<div class="triangle"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
     }
-    // set tooltip for the run button
-    $('#run').tooltipster();
   } else if (which == 'stop') {
     $('#middle').find('div').eq(0).html(
-      '<button id="stop">' +
+      '<button id="stop" title="Stop program">' +
       '<div class="square"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
@@ -567,6 +565,8 @@ function showMiddleButton(which) {
   } else {
     $('#middle').hide().find('div').eq(0).html('');
   }
+  // Enable tooltipster on the middle button.
+  $('#middle button').tooltipster();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -762,7 +762,7 @@ function showLoginDialog(opts) {
       '>' +
       (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
        '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
-       'Not me?</a></div>' : '') +
+       'Not me? Switch user.</a></div>' : '') +
     '</div></div>' +
       (opts.setpass ?
       '<div class="field">Old password:<input type="password" class="password"></div>' +
