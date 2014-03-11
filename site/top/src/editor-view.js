@@ -593,30 +593,40 @@ function showShareDialog(opts) {
   opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
+        (opts.shareRunURL ?
         '<div class="field">' +
-          'Full Screen <input type="text" value="' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Run without showing code" href="' +
+          opts.shareRunURL + '">Full Screen</a> <input type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareRunURL + '"><img src="/copy.png"></button>' +
-        '</div>' +
+          opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
+        '</div>' : '') +
         '<div class="field">' +
-          'Code <input type="text" value="' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Link showing the code" href="' +
+          opts.shareEditURL + '">Code</a> <input type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareEditURL + '"><img src="/copy.png"></button>' +
+          opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' +
         (opts.shareClipURL ?
         '<div class="field">' +
-          'Shortened <input type="text" value="' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Copy this code snippet" href="' +
+          opts.shareClipURL + '">Copy</a> <input type="text" value="' +
           opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareClipURL + '"><img src="/copy.png"></button>' +
+          opts.shareClipURL + '"><img src="/copy.png" title="Copy"></button>' +
          '</div>' : '') +
       '</div><br>' +
     '<button class="ok" title="Share by email">Email</button>' +
     '<button class="cancel">Cancel</button>';
 
   opts.init = function(dialog) {
-    dialog.find('#sharehlink').focus();
+    dialog.find('a.quiet').tooltipster();
     dialog.find('button.ok').tooltipster();
     dialog.find('button.copy').tooltipster();
+    dialog.find('.field input').each(function() {
+      this.scrollLeft = this.scrollWidth;
+    });
     var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
     var tooltipTimer = null;
     clipboardClient.on('complete', function(client, args) {
@@ -626,6 +636,8 @@ function showShareDialog(opts) {
       // Just flash tooltipster for a couple seconds, because mouseleave
       // doesn't appear to work.
       $(button).tooltipster('content', 'Copied!').tooltipster('show');
+      // Select the text in the copied field.
+      $(button).closest('.field').find('input').select();
       clearTimeout(tooltipTimer);
       tooltipTimer = setTimeout(function() {
         $(button).tooltipster('hide');
