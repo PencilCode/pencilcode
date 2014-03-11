@@ -1537,6 +1537,8 @@ function getOffscreenCanvas(width, height) {
   if (globalDrawing.offscreen &&
       globalDrawing.offscreen.width === width &&
       globalDrawing.offscreen.height === height) {
+    // Return a clean canvas.
+    globalDrawing.offscreen.getContext('2d').clearRect(0, 0, width, height);
     return globalDrawing.offscreen;
   }
   if (!globalDrawing.offscreen) {
@@ -2029,7 +2031,6 @@ function touchesPixel(elem, color) {
       rgba = rgbaForColor(color),
       j = 1, k, data;
   if (!c || c.length < 3 || !w || !h) { return false; }
-  octx.clearRect(0, 0, w, h);
   octx.drawImage(canvas,
       bb.left, bb.top, w, h, 0, 0, w, h);
   octx.save();
@@ -2655,18 +2656,33 @@ function withinOrNot(obj, within, distance, x, y) {
 //////////////////////////////////////////////////////////////////////////
 
 // A class to wrap jQuery
-var Pencil = (function(_super) {
-  __extends(Pencil, _super);
+var Sprite = (function(_super) {
+  __extends(Sprite, _super);
 
-  function Pencil(selector, context) {
+  function Sprite(selector, context) {
     this.constructor = jQuery;
     this.constructor.prototype = Object.getPrototypeOf(this);
-    if ('function' !== typeof selector) {
+    var constructed = false;
+    if (!$.isPlainObject(selector)) {
+      // The Sprite constructor starts as just the jQuery constructor
+      // except in the case where the argument is a plain {} object.
       jQuery.fn.init.call(this, selector, context, rootjQuery);
+      constructed = true;
+    }
+    if (!constructed || this.length == 0) {
+      // If the jQuery constructor did not select anything, then
+      // the Sprite constructor creates a canvas element, defaulting
+      // to a blank 256x256 canvas if no shape is specified.
+      var sprite = hatchone(selector, context, '256x256').get(0);
+      if (!constructed) {
+        jQuery.fn.init.call(this, sprite, context, rootjQuery);
+      } else {
+        Array.prototype.push.call(this, sprite);
+      }
     }
   }
 
-  Pencil.prototype.pushStack = function() {
+  Sprite.prototype.pushStack = function() {
     var count, ret, same;
     ret = jQuery.fn.pushStack.apply(this, arguments);
     count = ret.length;
@@ -2681,7 +2697,7 @@ var Pencil = (function(_super) {
     }
   };
 
-  return Pencil;
+  return Sprite;
 
 })(jQuery.fn.init);
 
@@ -2689,12 +2705,13 @@ var Turtle = (function(_super) {
   __extends(Turtle, _super);
 
   function Turtle(arg, context) {
-    Turtle.__super__.constructor.call(this, hatchone(arg, context));
+    // The turtle is a sprite that just defaults to the turtle shape.
+    Turtle.__super__.constructor.call(this, hatchone(arg, context, 'turtle'));
   }
 
   return Turtle;
 
-})(Pencil);
+})(Sprite);
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
@@ -3644,8 +3661,8 @@ var turtlefn = {
   }),
   drawon: wrapcommand('drawon', 1,
   ["<u>drawon(canvas)</u> Switches to drawing on the specified canvas. " +
-      "<mark>A = new Turtle('100x100'); " +
-      "drawon A.canvas(); pen red; fd 10</mark>"],
+      "<mark>A = new Sprite('100x100'); " +
+      "drawon A; pen red; fd 50; done -> A.rt 360</mark>"],
   function drawon(cc, canvas) {
     return this.plan(function(j, elem) {
       cc.appear(j);
@@ -3739,23 +3756,24 @@ var turtlefn = {
       count = 1;
     }
     // Determine the container in which to hatch the turtle.
-    var container = this[0], clone = null;
+    var container = this[0];
     if ($.isWindow(container) || container.nodeType === 9) {
       container = getTurtleField();
-    } else if (/^(?:br|img|input|hr)$/i.test(container.tagName)) {
+    } else if (/^(?:br|img|input|hr|canvas)$/i.test(container.tagName)) {
       container = container.parentElement;
-      clone = this[0];
     }
     // Create the turtle(s)
     if (count === 1) {
       // Pass through identical jquery instance in the 1 case.
       return hatchone(
-          typeof spec === 'function' ? spec(0) : spec, container, clone);
+          typeof spec === 'function' ? spec(0) : spec,
+          container, 'turtle');
     } else {
       var k = 0, result = [];
       for (; k < count; ++k) {
         result.push(hatchone(
-            typeof spec === 'function' ? spec(k) : spec, container, clone)[0]);
+            typeof spec === 'function' ? spec(k) : spec,
+            container, 'turtle')[0]);
       }
       return $(result);
     }
@@ -4516,7 +4534,11 @@ var dollar_turtle_methods = {
   Turtle: wrapraw('Turtle',
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
-  Pencil: Pencil,
+  Sprite: wrapraw('Sprite',
+  ["<u>new Sprite({width:w,height:h,color:c})</u> " +
+      "Make a new sprite to <mark>drawon</mark>. " +
+      "<mark>s = new Sprite({width:50,height:50,color:blue}); " +
+      "s.fd 100</mark>"], Sprite),
   loadscript: wrapraw('loadscript',
   ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
        "the given URL, calling callback when done."],
@@ -5076,23 +5098,46 @@ function createRectangleShape(width, height, subpixels) {
   });
 }
 
-function nameToImg(name) {
+function lookupShape(shapename) {
+  if (!shapename) {
+    return null;
+  }
+  if (shapename in shapes) {
+    return shapes[shapename];
+  }
+  var m = shapename.match(/^(\d+)x(\d+)(?:\/(\d+))?$/);
+  if (m) {
+    return createRectangleShape(
+        parseFloat(m[1]), parseFloat(m[2]), m[3] && parseFloat(m[3]));
+  }
+  return null;
+}
+
+function specToImage(spec, defaultshape) {
+  var width = spec.width || spec.height || 256;
+  var height = spec.height || spec.width || 256;
+  var subpixel = spec.subpixel || 1;
+  var color = spec.color || 'transparent';
+  var shape = createRectangleShape(width, height, subpixel);
+  return shape(color);
+}
+
+function nameToImg(name, defaultshape) {
   // Parse forms for built-in shapes:
   // "red" -> red default shape (red turtle)
   // "turtle" -> default color turtle (mediumseagreen turtle)
   // "blue turtle" -> blue turtle
   // "rgba(50, 90, 255) pencil" -> bluish pencil
+  // {width: 100, height: 100, color: green} -> green 100x100 square
   if (!name) { return null; }
-  var builtin = name.trim().split(/\s+/), color = null, shape = null,
-      dimensionpat = /^(\d+)x(\d+)(?:\/(\d+))?$/;
+  if ($.isPlainObject(name)) {
+    return specToImage(name, defaultshape);
+  }
+  var builtin = name.trim().split(/\s+/), color = null, shape = null;
   if (builtin.length) {
-    var m;
-    if (builtin[builtin.length - 1] in shapes) {
-      shape = shapes[builtin.pop()];
-    } else if (null != (m = builtin[builtin.length - 1].match(dimensionpat))) {
+    shape = lookupShape(builtin[builtin.length - 1]);
+    if (shape) {
       builtin.pop();
-      shape = createRectangleShape(
-          parseFloat(m[1]), parseFloat(m[2]), m[3] && parseFloat(m[3]));
     }
   }
   if (builtin.length && isCSSColor(builtin.join(' '))) {
@@ -5100,7 +5145,7 @@ function nameToImg(name) {
     builtin.length = 0;
   }
   if (!shape && color) {
-    shape = shapes.turtle; // Default shape when there's only a color.
+    shape = lookupShape(defaultshape); // Default shape when only a color.
   }
   if (shape) {
     return shape(color);
@@ -5166,11 +5211,11 @@ function escapeHtml(string) {
   return String(string).replace(/[&<>"]/g, function(s) {return entityMap[s];});
 }
 
-function hatchone(name, container, clonepos) {
+function hatchone(name, container, defaultshape) {
   var isID = name && /^[a-zA-Z]\w*$/.exec(name),
       isTag = name && /^<.*>$/.exec(name),
-      img = nameToImg(name) ||
-        (name == null) && nameToImg('turtle');
+      img = nameToImg(name, defaultshape) ||
+        (name == null) && nameToImg(defaultshape);
 
   // Don't overwrite previously existing id.
   if (isID && $('#' + name).length) { isID = false; }
@@ -5207,7 +5252,7 @@ function hatchone(name, container, clonepos) {
   result.css({
     turtlePosition:
         computeTargetAsTurtlePosition(
-              result[0], $(clonepos || container).pagexy(), null, 0, 0),
+              result[0], $(container).pagexy(), null, 0, 0),
     turtleRotation: 0,
     turtleScale: 1});
 
