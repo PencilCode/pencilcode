@@ -200,6 +200,19 @@ $(window).on('popstate', function(e) {
   fireEvent('popstate', [undo]);
 });
 
+// Calls preventDefault on an event if the event is not an editor.
+function ignoreBackspace(e) {
+  if (!e || !e.target ||
+      e.target.isContentEditable ||
+      e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') {
+    // In the above cases, let backspace pass through.
+    return;
+  }
+  // Otherwise, prevent backspace from doing the history "back" action.
+  e.preventDefault();
+  return false;
+}
+
 // Global hotkeys for this application.  Ctrl- (or Command- or backspace) key functions.
 var hotkeys = {
   '\r': function() { fireEvent('run'); return false; },
@@ -207,7 +220,7 @@ var hotkeys = {
   'H': forwardCommandToEditor,
   'F': forwardCommandToEditor,
   // \x08 is the key code for backspace
-  '\x08': function(e) { if (!e.target.isContentEditable) e.preventDefault(); }
+  '\x08': ignoreBackspace
 };
 
 // Capture global keyboard shortcuts.
@@ -941,7 +954,7 @@ function setPaneRunText(pane, text, filename, targetUrl) {
       framedoc.write(code);
       framedoc.close();
       // Bind the key handlers to the iframe once it's loaded.
-      $(iframe).load(function () {
+      $(iframe).load(function() {
         $('body', framedoc).on('keydown', function(e) {
           if (e.ctrlKey || e.metaKey || e.which === 8) {
             var handler = hotkeys[String.fromCharCode(e.which)];
