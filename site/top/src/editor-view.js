@@ -939,18 +939,18 @@ function setPaneRunText(pane, text, filename, targetUrl) {
         }
       }
       framedoc.write(code);
-      // TODO This is a failed attempt in capturing Ctrl-S and Ctrl-F and backspace
-      /*
-      $('body', framedoc).on('keydown', function(e) {
-        if (e.ctrlKey || e.metaKey || e.which === 8) {
-          var handler = hotkeys[String.fromCharCode(e.which)];
-          if (handler) {
-            return handler(e);
-          }
-        }
-      });
-      */
       framedoc.close();
+      // Bind the key handlers to the iframe once it's loaded.
+      $(iframe).load(function () {
+        $('body', framedoc).on('keydown', function(e) {
+          if (e.ctrlKey || e.metaKey || e.which === 8) {
+            var handler = hotkeys[String.fromCharCode(e.which)];
+            if (handler) {
+              return handler(e);
+            }
+          }
+        });
+      });
     }
     $(this).dequeue();
   });
