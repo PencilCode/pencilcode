@@ -1838,13 +1838,14 @@ function computeCanvasPageTransform(canvas) {
   return totalInverse;
 }
 
-function applyCanvasPageTransform(ctx, canvas) {
+function setCanvasPageTransform(ctx, canvas) {
   if (canvas === globalDrawing.canvas) {
-    ctx.scale(globalDrawing.subpixel, globalDrawing.subpixel);
+    ctx.setTransform(
+        globalDrawing.subpixel, 0, 0, globalDrawing.subpixel, 0, 0);
   } else {
     var pageToCanvas = computeCanvasPageTransform(canvas);
     if (pageToCanvas) {
-      ctx.transform.apply(ctx, pageToCanvas);
+      ctx.setTransform.apply(ctx, pageToCanvas);
     }
   }
 }
@@ -1855,8 +1856,8 @@ function drawAndClearPath(drawOnCanvas, path, style, scale) {
       j = path.length,
       segment;
   ctx.save();
+  setCanvasPageTransform(ctx, drawOnCanvas);
   ctx.beginPath();
-  applyCanvasPageTransform(ctx, drawOnCanvas);
   // Scale up lineWidth by sx.  (TODO: consider parent transforms.)
   applyPenStyle(ctx, style, scale);
   while (j--) {
@@ -1938,9 +1939,10 @@ function fillDot(drawOnCanvas, position, diameter, style) {
   ctx.save();
   applyPenStyle(ctx, style);
   if (diameter === Infinity) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillRect(0, 0, drawOnCanvas.width, drawOnCanvas.height);
   } else {
-    applyCanvasPageTransform(ctx, drawOnCanvas);
+    setCanvasPageTransform(ctx, drawOnCanvas);
     ctx.beginPath();
     ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
     ctx.closePath();
@@ -1956,10 +1958,9 @@ function clearField(arg) {
   if ((!arg || /\bcanvas\b/.test(arg)) && globalDrawing.canvas) {
     var ctx = globalDrawing.canvas.getContext('2d');
     ctx.save();
-    // Clip to box and use 'copy' mode so that 'transparent' can be
-    // written into the canvas - that's better erasing than 'white'.
-    ctx.globalCompositeOperation = 'copy';
-    ctx.fillRect(0, 0, globalDrawing.canvas.width, globalDrawing.canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(
+        0, 0, globalDrawing.canvas.width, globalDrawing.canvas.height);
     ctx.restore();
   }
   if (!arg || /\bturtles\b/.test(arg)) {
