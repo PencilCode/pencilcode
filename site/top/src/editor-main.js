@@ -1231,23 +1231,32 @@ function getEditTextIfAny() {
 }
 
 function shortenUrl(url, cb) {
-  $.getJSON('http://call.jsonlib.com/fetch', {
+  var reqObj = {
     dataType: 'json',
     // type: 'POST',
     url: 'https://www.googleapis.com/urlshortener/v1/url?' +
          'key=AIzaSyCSnpkwynMDLa7h_lkx4r7QDb2sjqdrFTo',
     header: 'Content-Type: application/json',
-    data: JSON.stringify({longUrl: url})},
-  function(m) {
-    if (!m.content) { cb(null); return; }
-    var content;
-    try {
-      content = JSON.parse(m.content);
-    } catch(e) {
-      cb(null); return;
-    }
-    cb(content.id);
-  }).error(function() { cb(null) });
+    data: JSON.stringify({longUrl: url})
+  };
+  var reqStr = 'http://call.jsonlib.com/fetch?' + escape(JSON.stringify(reqObj));
+
+  // If the request length is longer than 2048, it is not going to succeed.
+  if (reqStr.length <= 2048) {
+    $.getJSON('http://call.jsonlib.com/fetch', reqObj,
+        function(m) {
+          if (!m.content) { cb(null); return; }
+          var content;
+          try {
+            content = JSON.parse(m.content);
+          } catch(e) {
+            cb(null); return;
+          }
+          cb(content.id);
+        }).error(function() { cb(null) });
+  } else {
+    cb(null);
+  }
 }
 
 function cookie(key, value, options) {

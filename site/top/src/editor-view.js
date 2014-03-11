@@ -598,20 +598,20 @@ function showShareDialog(opts) {
           '<a target="_blank" class="quiet" title="Run Without Code" href="' +
           opts.shareRunURL + '">Full Screen</a> <input type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareRunURL + '"><img src="/copy.png"></button>' +
+          opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         '<div class="field">' +
           '<a target="_blank" class="quiet" title="Share My Code" href="' +
           opts.shareEditURL + '">Code</a> <input type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareEditURL + '"><img src="/copy.png"></button>' +
+          opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' +
         (opts.shareClipURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" title="Share Code Snippet" href="' +
           opts.shareClipURL + '">Shortened</a> <input type="text" value="' +
           opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareClipURL + '"><img src="/copy.png"></button>' +
+          opts.shareClipURL + '"><img src="/copy.png" title="Copy"></button>' +
          '</div>' : '') +
       '</div><br>' +
     '<button class="ok" title="Share by email">Email</button>' +
