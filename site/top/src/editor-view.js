@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'draw-protractor'],
-function($, tooltipster, see, drawProtractor) {
+define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard'],
+function($, tooltipster, see, drawProtractor, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -54,6 +54,16 @@ var state = {
   },
 }
 
+//
+// Zeroclipboard seems very flakey.  The documentation says
+// that this configuration should not be necessary but it seems to be
+//
+
+ZeroClipboard.config({
+   moviePath : '/lib/zeroclipboard/ZeroClipboard.swf',
+   allowScriptAccess : 'always'
+});
+
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
@@ -91,6 +101,9 @@ window.pencilcode.view = {
   flashButton: flashButton,
   // Show login (or create account) dialog.
   showLoginDialog: showLoginDialog,
+  // Show share dialog.
+  showShareDialog: showShareDialog,
+  showDialog: showDialog,
   // The run button
   showMiddleButton: showMiddleButton,
   // Sets editable name.
@@ -189,22 +202,32 @@ $(window).on('popstate', function(e) {
   fireEvent('popstate', [undo]);
 });
 
-// Global hotkeys for this application.  Ctrl- (or Command-) key functions.
+// Calls preventDefault on an event if the event is not an editor.
+function ignoreBackspace(e) {
+  if (!e || !e.target ||
+      e.target.isContentEditable ||
+      e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') {
+    // In the above cases, let backspace pass through.
+    return;
+  }
+  // Otherwise, prevent backspace from doing the history "back" action.
+  e.preventDefault();
+  return false;
+}
+
+// Global hotkeys for this application.  Ctrl- (or Command- or backspace) key functions.
 var hotkeys = {
   '\r': function() { fireEvent('run'); return false; },
   'S': function() { fireEvent('save'); return false; },
   'H': forwardCommandToEditor,
-  'F': forwardCommandToEditor
+  'F': forwardCommandToEditor,
+  // \x08 is the key code for backspace
+  '\x08': ignoreBackspace
 };
 
 // Capture global keyboard shortcuts.
-// TODO(davibau): This is only a start at preventing the browser from
-// bringing up its unhelpful Save and Find dialogs when Ctrl-S or Ctrl-F.
-// Other keyboard traps include Backspace (for browser "back"), and
-// also, all these keys when the focus is on the nested frame.  We should
-// capture those cases as well, but that is not yet done.
 $('body').on('keydown', function(e) {
-  if (e.ctrlKey || e.metaKey) {
+  if (e.ctrlKey || e.metaKey || e.which === 8) {
     var handler = hotkeys[String.fromCharCode(e.which)];
     if (handler) {
       return handler(e);
@@ -466,6 +489,7 @@ $('#buttonbar,#middle').on('mousemove', 'button', function(e) {
 $('#buttonbar,#middle').on('click', 'button', function(e) {
   if (this.id) {
     $(this).removeClass('pressed');
+    $(this).tooltipster('hide');
     fireEvent(this.id, []);
     return false;
   }
@@ -501,9 +525,8 @@ function showButtons(buttonlist) {
   }
   bar.html(html);
 
-  // set tooltip for the save button after the buttons are
-  // registered with the buttonbar
-  $('#save').tooltipster();
+  // Enable tooltipster for any new buttons.
+  $('#buttonbar button').tooltipster();
 }
 
 function enableButton(id, enable) {
@@ -526,17 +549,15 @@ $(window).on('resize.middlebutton', centerMiddle);
 function showMiddleButton(which) {
   if (which == 'run') {
     $('#middle').find('div').eq(0).html(
-      '<button id="run" title="Ctrl+Enter">' +
+      '<button id="run" title="Run program (Ctrl+Enter)">' +
       '<div class="triangle"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
     }
-    // set tooltip for the run button
-    $('#run').tooltipster();
   } else if (which == 'stop') {
     $('#middle').find('div').eq(0).html(
-      '<button id="stop">' +
+      '<button id="stop" title="Stop program">' +
       '<div class="square"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
@@ -556,37 +577,114 @@ function showMiddleButton(which) {
   } else {
     $('#middle').hide().find('div').eq(0).html('');
   }
+  // Enable tooltipster on the middle button.
+  $('#middle button').tooltipster();
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// LOGIN DIALOG
+// SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
 
-function showLoginDialog(opts) {
+function showShareDialog(opts) {
+  if (!opts) {
+    opts = { };
+  }
+
+  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
+  bodyText = bodyText + 'Running program: ' + opts.shareRunURL + '\r\n\r\n';
+  bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
+  if (opts.shareClipURL)
+    bodyText = bodyText + 'Shortened URL: ' + opts.shareClipURL + '\r\n\r\n';
+
+  subjectText = 'Pencilcode program: ' + opts.title;
+
+  // Need to escape the text since it will go into a url link
+  bodyText = escape(bodyText);
+  subjectText = escape(subjectText);
+
+  opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
+  opts.content = (opts.content) ? opts.content :
+      '<div class="content">' +
+        (opts.shareRunURL ?
+        '<div class="field">' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Run without showing code" href="' +
+          opts.shareRunURL + '">Full Screen</a> <input type="text" value="' +
+          opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
+        '</div>' : '') +
+        '<div class="field">' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Link showing the code" href="' +
+          opts.shareEditURL + '">Code</a> <input type="text" value="' +
+          opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
+        '</div>' +
+        (opts.shareClipURL ?
+        '<div class="field">' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Copy this code snippet" href="' +
+          opts.shareClipURL + '">Copy</a> <input type="text" value="' +
+          opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareClipURL + '"><img src="/copy.png" title="Copy"></button>' +
+         '</div>' : '') +
+      '</div><br>' +
+    '<button class="ok" title="Share by email">Email</button>' +
+    '<button class="cancel">Cancel</button>';
+
+  opts.init = function(dialog) {
+    dialog.find('a.quiet').tooltipster();
+    dialog.find('button.ok').tooltipster();
+    dialog.find('button.copy').tooltipster();
+    dialog.find('.field input').each(function() {
+      this.scrollLeft = this.scrollWidth;
+    });
+    var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
+    var tooltipTimer = null;
+    clipboardClient.on('complete', function(client, args) {
+      var button = this;
+      // Hide any other copy tooltips in this dialog.
+      dialog.find('button.copy').not(button).tooltipster('hide');
+      // Just flash tooltipster for a couple seconds, because mouseleave
+      // doesn't appear to work.
+      $(button).tooltipster('content', 'Copied!').tooltipster('show');
+      // Select the text in the copied field.
+      $(button).closest('.field').find('input').select();
+      clearTimeout(tooltipTimer);
+      tooltipTimer = setTimeout(function() {
+        $(button).tooltipster('hide');
+      }, 1500);
+    });
+  }
+
+  opts.done = function(state) {
+    window.open('mailto:?body='+bodyText+'&subject='+subjectText);
+  }
+
+  showDialog(opts);
+}
+
+function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="logindialog"><div class="prompt">' +
+  var dialog = $('<div class="dialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
-    '</div><div class="content">' +
-    '<div class="field">Name:<div style="display:inline-table">' +
-    '<input class="username"' +
-    (opts.username ? ' value="' + opts.username + '" disabled' : '') +
-    '>' +
-    (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
-     '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
-     'Not me?</a></div>' : '') +
-    '</div></div>' +
-    (opts.setpass ?
-    '<div class="field">Old password:<input type="password" class="password"></div>' +
-    '<div class="field">New password:<input type="password" class="newpass"></div>' :
-    '<div class="field">Password:<input type="password" class="password"></div>') +
-    '</div><br>' +
-    '<button type="submit" class="ok">OK</button>' +
-    '<button class="cancel">Cancel</button>' +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
+    '</div>' +
+    (opts.content ? opts.content : '') +
     '</div></div>').appendTo(overlay);
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // function: update
+  //
+  // Called from event handlers inside the dialog.  The parameter
+  // is an anonymous object that contains information on what do do:
+  // up.cancel --> Close out the dialog
+  //
+  ////////////////////////////////////////////////////////////////
   function update(up) {
     if (!up) return;
     if (up.cancel) {
@@ -601,21 +699,30 @@ function showLoginDialog(opts) {
         } else {
           dialog.find('button.ok').removeAttr('disabled');
         }
-      } else if (/^(?:username|password)$/.test(attr)) {
-        dialog.find('.' + attr).val(up[attr]);
-      } else if (/^(?:info|prompt)$/.test(attr)) {
-        dialog.find('.' + attr).html(up[attr]);
+      } else {
+        var x = dialog.find('.' + attr);
+
+        if (x.prop('tagName') == "INPUT") {
+          x.val(up[attr]);
+        }
+        else {
+          x.html(up[attr]);
+        }
       }
     }
   }
   function state() {
-    return {
-      username: dialog.find('.username').val(),
-      checkbox: dialog.find('.agreetoterms').prop('checked'),
-      password: dialog.find('.password').val(),
-      newpass: dialog.find('.newpass').val(),
-      update: update
-    };
+    var retVal;
+
+    if (opts.retrieveState)
+      retVal = opts.retrieveState(dialog);
+
+    if (!retVal)
+      retVal = { };
+
+    retVal.update = update;
+
+    return retVal;
   }
   function validate(e) {
     if (e && ($(e.target).attr('target') == '_blank' ||
@@ -641,15 +748,9 @@ function showLoginDialog(opts) {
     if ($(e.target).hasClass('cancel') || overlay.is(e.target)) {
       update({cancel:true});
     }
-    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
-      opts.switchuser();
-      return false;
-    }
-  });
-  dialog.find('.username').on('keypress', function(e) {
-    if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
-          String.fromCharCode(e.which))) {
-      return false;
+
+    if (opts.onclick) {
+      return opts.onclick(e, dialog, state());
     }
   });
   dialog.on('keydown', function(e) {
@@ -657,19 +758,78 @@ function showLoginDialog(opts) {
       update({cancel:true});
       return;
     }
+
+    if (opts.onkeydown) {
+      return opts.onkeydown(e, dialog, state());
+    }
+  });
+  if (opts.init) {
+    opts.init(dialog);
+  }
+  validate();
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// LOGIN DIALOG
+///////////////////////////////////////////////////////////////////////////
+
+function showLoginDialog(opts) {
+  if (!opts)
+    opts = { };
+
+  opts.content =
+    '<div class="content">' +
+    '<div class="field">Name:<div style="display:inline-table">'+
+      '<input class="username"' +
+      (opts.username ? ' value="' + opts.username + '" disabled' : '') +
+      '>' +
+      (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
+       '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
+       'Not me? Switch user.</a></div>' : '') +
+    '</div></div>' +
+      (opts.setpass ?
+      '<div class="field">Old password:<input type="password" class="password"></div>' +
+      '<div class="field">New password:<input type="password" class="newpass"></div>' :
+      '<div class="field">Password:<input type="password" class="password"></div>') +
+    '</div><br>' +
+    '<button class="ok">OK</button>' +
+    '<button class="cancel">Cancel</button>';
+  opts.init = function(dialog) {
+    dialog.find('.username').on('keypress', function(e) {
+      if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
+            String.fromCharCode(e.which))) {
+        return false;
+      }
+    });
+
+    dialog.find('input:not([disabled])').eq(0).focus();
+  }
+  opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
       if (dialog.find('.username').is(':focus')) {
         dialog.find('.password').focus();
       } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
-        opts.done(state());
+        opts.done(state);
       }
     }
-  });
-  dialog.find('input:not([disabled])').eq(0).focus();
-  if (opts.init) {
-    opts.init(state());
   }
-  validate();
+  opts.onclick = function(e, dialog, state) {
+    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
+      opts.switchuser();
+      return false;
+    }
+  }
+  opts.retrieveState = function(dialog) {
+    return {
+      username: dialog.find('.username').val(),
+      checkbox: dialog.find('.agreetoterms').prop('checked'),
+      password: dialog.find('.password').val(),
+      newpass: dialog.find('.newpass').val(),
+    };
+  }
+
+  showDialog(opts);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -803,6 +963,17 @@ function setPaneRunText(pane, text, filename, targetUrl) {
       }
       framedoc.write(code);
       framedoc.close();
+      // Bind the key handlers to the iframe once it's loaded.
+      $(iframe).load(function() {
+        $('body', framedoc).on('keydown', function(e) {
+          if (e.ctrlKey || e.metaKey || e.which === 8) {
+            var handler = hotkeys[String.fromCharCode(e.which)];
+            if (handler) {
+              return handler(e);
+            }
+          }
+        });
+      });
     }
     $(this).dequeue();
   });

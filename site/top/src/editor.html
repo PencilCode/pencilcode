@@ -33,13 +33,13 @@ document.write(
 function htmlEscape(s){return s.replace(
   /[<>&]/g,function(c){return c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
 document.write([
-'<a href="/edit/"><span id="owner" title="Top directory.">',
+'<a href="/edit/"><span id="owner" title="Top directory">',
 pencilcode.owner,
-'</span></a><a href="../"><img id="folder" title="Parent directory." src="//',
+'</span></a><a href="../"><img id="folder" title="Parent directory" src="//',
 pencilcode.domain,
 '/folder_32.png',
 '" height="32" width="32"></a>',
-'<span id="filename" title="Edit to move or rename.">',
+'<span id="filename" title="Edit to move or rename">',
 htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 '</span>'].join(''));
 })();

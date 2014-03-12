@@ -11,6 +11,8 @@
     "ace-builds": "PencilCode/pencilcode-ace-builds#master",
     "almond": "latest",
     "seedrandom": "latest",
-    "source-map": "mozilla/source-map#master"
+    "source-map": "mozilla/source-map#master",
+    "tooltipster": "latest",
+    "zeroclipboard": "latest"
   }
 }

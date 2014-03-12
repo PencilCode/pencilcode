@@ -155,7 +155,7 @@ describe('code editor', function() {
       $('#login').click();
     }, function() {
       // Wait for the login dialog to be visible.
-      if (!$('.logindialog').is(':visible')) return;
+      if (!$('.dialog').is(':visible')) return;
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),
@@ -329,7 +329,7 @@ describe('code editor', function() {
       $('#save').click();
     }, function() {
       // Wait for the login dialog to pop up.
-      if (!$('.logindialog').is(':visible')) return;
+      if (!$('.dialog').is(':visible')) return;
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),

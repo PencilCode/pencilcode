@@ -475,6 +475,31 @@ function inverse2x2(a) {
       rotation(-(d[0]))));
 }
 
+// By convention, a 2x3 transformation matrix has a 2x2 transform
+// in the first four slots and a 1x2 translation in the last two slots.
+// The array [a, b, c, d, e, f] is shorthand for the following 3x3
+// matrix where the upper-left 2x2 is an in-place transform, and the
+// upper-right vector [e, f] is the translation.
+//
+//   [a c e]   The inverse of this 3x3 matrix can be formed by
+//   [b d f]   figuring the inverse of the 2x2 upper-left corner
+//   [0 0 1]   (call that Ai), and then negating the upper-right vector
+//             (call that -t) and then forming Ai * (-t).
+//
+//   [ A  t]   (if Ai is the inverse of A)   [  Ai  Ai*(-t) ]
+//   [0 0 1]          --- invert --->        [ 0 0    1     ]
+//
+// The result is of the same form, and can be represented as an array
+// of six numbers.
+function inverse2x3(a) {
+  var ai = inverse2x2(a);
+  if (a.length == 4) return ai;
+  var nait = matrixVectorProduct(ai, [-a[4], -a[5]]);
+  ai.push(nait[0]);
+  ai.push(nait[1]);
+  return ai;
+}
+
 function rotation(theta) {
   var c = Math.cos(theta),
       s = Math.sin(theta);
@@ -793,27 +818,37 @@ function cleanedStyle(trans) {
   return result;
 }
 
-function getTurtleOrigin(elem, inverseParent, corners) {
+// Returns the turtle's origin (the absolute location of its pen and
+// center of rotation when no transforms are applied) in page coordinates.
+function getTurtleOrigin(elem, inverseParent, extra) {
+  var state = $.data(elem, 'turtleData');
+  if (state && state.quickhomeorigin && state.down && !extra) {
+    return state.quickhomeorigin;
+  }
   var hidden = ($.css(elem, 'display') === 'none'),
       swapout = hidden ?
         { position: "absolute", visibility: "hidden", display: "block" } : {},
       substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
           $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      old = {}, name, gbcr;
+      old = {}, name, gbcr, transformOrigin, result;
   for (name in swapout) {
     old[name] = elem.style[name];
     elem.style[name] = swapout[name];
   }
   gbcr = getPageGbcr(elem);
+  transformOrigin = readTransformOrigin(elem, [gbcr.width, gbcr.height]);
   for (name in swapout) {
     elem.style[name] = cleanedStyle(old[name]);
   }
-  if (corners) {
-    corners.gbcr = gbcr;
+  if (extra) {
+    extra.gbcr = gbcr;
+    extra.localorigin = transformOrigin;
   }
-  return addVector(
-      [gbcr.left, gbcr.top],
-      readTransformOrigin(elem, [gbcr.width, gbcr.height]));
+  var result = addVector([gbcr.left, gbcr.top], transformOrigin);
+  if (state && state.down) {
+    state.quickhomeorigin = result;
+  }
+  return result;
 }
 
 function unattached(elt) {
@@ -1371,7 +1406,7 @@ function normalizeRotationDelta(x) {
 //////////////////////////////////////////////////////////////////////////
 
 // drawing state.
-var drawing = {
+var globalDrawing = {
   attached: false,
   surface: null,
   field: null,
@@ -1382,17 +1417,17 @@ var drawing = {
 };
 
 function getTurtleField() {
-  if (!drawing.field) {
+  if (!globalDrawing.field) {
     createSurfaceAndField();
   }
-  return drawing.field;
+  return globalDrawing.field;
 }
 
 function getTurtleClipSurface() {
-  if (!drawing.surface) {
+  if (!globalDrawing.surface) {
     createSurfaceAndField();
   }
-  return drawing.surface;
+  return globalDrawing.surface;
 
 }
 
@@ -1406,8 +1441,11 @@ function createSurfaceAndField() {
       position: 'absolute',
       display: 'inline-block',
       top: 0, left: 0, width: '100%', height: '100%',
-      zIndex: -1,
       font: 'inherit',
+      // z-index: -1 is required to keep the turtle
+      // surface behind document text and buttons, so
+      // the canvas does not block interaction
+      zIndex: -1,
       // Setting transform origin for the turtle field
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
@@ -1425,14 +1463,14 @@ function createSurfaceAndField() {
       // will not change even if the document resizes.
       transformOrigin: "0px 0px",
     }).appendTo(surface);
-  drawing.surface = surface;
-  drawing.field = field;
+  globalDrawing.surface = surface;
+  globalDrawing.field = field;
   attachClipSurface();
 }
 
 function attachClipSurface() {
   if (document.body) {
-    $(drawing.surface).prependTo('body');
+    $(globalDrawing.surface).prependTo('body');
     // Attach an event handler to forward mouse events from the body
     // to turtles in the turtle field layer.
     $('body').on('click.turtle ' +
@@ -1442,7 +1480,8 @@ function attachClipSurface() {
         // touch a turtle directly within the turtlefield.
         var warn = $.turtle.nowarn;
         $.turtle.nowarn = true;
-        var sel = $(drawing.surface).find('.turtle').within('touch', e).eq(0);
+        var sel = $(globalDrawing.surface)
+            .find('.turtle').within('touch', e).eq(0);
         $.turtle.nowarn = warn;
         if (sel.length === 1) {
           // Erase portions of the event that are wrong for the turtle.
@@ -1460,34 +1499,59 @@ function attachClipSurface() {
   }
 }
 
-function getTurtleDrawingCtx() {
-  if (drawing.ctx) {
-    return drawing.ctx;
+// Given a $.data(elem, 'turtleData') state object, return or create
+// the drawing canvas that this turtle should be drawing on.
+function getDrawOnCanvas(state) {
+  if (!state.drawOnCanvas) {
+    state.drawOnCanvas = getTurtleDrawingCanvas();
+  }
+  return state.drawOnCanvas;
+}
+
+// Similar to getDrawOnCanvas, but for the read-only case: it avoids
+// creating turtleData if none exists, and it avoid creating the global
+// canvas if one doesn't already exist.  If there is no global canvas,
+// this returns null.
+function getCanvasForReading(elem) {
+  var state = $.data(elem, 'turtleData');
+  if (!state) return null;
+  if (state.drawOnCanvas) return state.drawOnCanvas;
+  return globalDrawing.canvas;
+}
+
+function getTurtleDrawingCanvas() {
+  if (globalDrawing.canvas) {
+    return globalDrawing.canvas;
   }
   var surface = getTurtleClipSurface();
-  drawing.canvas = document.createElement('canvas');
-  $(drawing.canvas).css({'z-index': -1});
-  surface.insertBefore(drawing.canvas, surface.firstChild);
-  drawing.ctx = drawing.canvas.getContext('2d');
+  globalDrawing.canvas = document.createElement('canvas');
+  $(globalDrawing.canvas).css({'z-index': -1});
+  surface.insertBefore(globalDrawing.canvas, surface.firstChild);
   resizecanvas();
   pollbodysize(resizecanvas);
   $(window).resize(resizecanvas);
-  drawing.ctx.scale(drawing.subpixel, drawing.subpixel);
-  return drawing.ctx;
+  return globalDrawing.canvas;
 }
 
 function getOffscreenCanvas(width, height) {
-  if (drawing.offscreen &&
-      drawing.offscreen.width === width &&
-      drawing.offscreen.height === height) {
-    return drawing.offscreen;
+  if (globalDrawing.offscreen &&
+      globalDrawing.offscreen.width === width &&
+      globalDrawing.offscreen.height === height) {
+    // Return a clean canvas.
+    globalDrawing.offscreen.getContext('2d').clearRect(0, 0, width, height);
+    return globalDrawing.offscreen;
   }
-  if (!drawing.offscreen) {
-    drawing.offscreen = document.createElement('canvas');
+  if (!globalDrawing.offscreen) {
+    globalDrawing.offscreen = document.createElement('canvas');
+    /* for debugging "touches": make offscreen canvas visisble.
+    $(globalDrawing.offscreen)
+      .css({position:'absolute',top:0,left:0,zIndex:1})
+      .appendTo('body');
+    */
   }
-  drawing.offscreen.width = width;
-  drawing.offscreen.height = height;
-  return drawing.offscreen;
+  globalDrawing.offscreen.width = width;
+  globalDrawing.offscreen.height = height;
+  return globalDrawing.offscreen;
 }
 
 function pollbodysize(callback) {
@@ -1501,34 +1565,54 @@ function pollbodysize(callback) {
       lastheight = b.height();
     }
   });
-  if (drawing.timer) {
-    clearInterval(drawing.timer);
+  if (globalDrawing.timer) {
+    clearInterval(globalDrawing.timer);
   }
-  drawing.timer = setInterval(poller, 250);
+  globalDrawing.timer = setInterval(poller, 250);
+}
+
+function sizexy() {
+  // Notice that before the body exists, we cannot get its size; so
+  // we fall back to the window size.
+  // Using innerHeight || $(window).height() deals with quirks-mode.
+  var b = $('body');
+  return [
+    Math.max(b.outerWidth(true), window.innerWidth || $(window).width()),
+    Math.max(b.outerHeight(true), window.innerHeight || $(window).height())
+  ];
 }
 
 function resizecanvas() {
-  if (!drawing.canvas) return;
-  var b = $('body'),
-      wh = Math.max(b.outerHeight(true),
-          window.innerHeight || $(window).height()),
-      bw = Math.max(200, Math.ceil(b.outerWidth(true) / 100) * 100),
-      bh = Math.max(200, Math.ceil(wh / 100) * 100),
-      cw = drawing.canvas.width,
-      ch = drawing.canvas.height,
+  if (!globalDrawing.canvas) return;
+  var sxy = sizexy(),
+      ww = sxy[0],
+      wh = sxy[1],
+      cw = globalDrawing.canvas.width,
+      ch = globalDrawing.canvas.height,
+      // Logic: minimum size 200; only shrink if larger than 2000;
+      // and only resize if changed more than 100 pixels.
+      bw = Math.max(Math.min(2000, Math.max(200, cw)),
+                    Math.ceil(ww / 100) * 100) * globalDrawing.subpixel,
+      bh = Math.max(Math.min(2000, Math.max(200, cw)),
+                    Math.ceil(wh / 100) * 100) * globalDrawing.subpixel,
       tc;
-  $(drawing.surface).css({ width: b.outerWidth(true) + 'px',
-      height: wh + 'px'});
-  if (cw != bw * drawing.subpixel || ch != bh * drawing.subpixel) {
+  $(globalDrawing.surface).css({
+      width: ww + 'px',
+      height: wh + 'px'
+  });
+  if (cw != bw || ch != bh) {
     // Transfer canvas out to tc and back again after resize.
     tc = document.createElement('canvas');
-    tc.width = Math.min(cw, bw * drawing.subpixel);
-    tc.height = Math.min(ch, bh * drawing.subpixel);
-    tc.getContext('2d').drawImage(drawing.canvas, 0, 0);
-    drawing.canvas.width = bw * drawing.subpixel;
-    drawing.canvas.height = bh * drawing.subpixel;
-    drawing.canvas.getContext('2d').drawImage(tc, 0, 0);
-    $(drawing.canvas).css({ width: bw, height: bh });
+    tc.width = Math.min(cw, bw);
+    tc.height = Math.min(ch, bh);
+    tc.getContext('2d').drawImage(globalDrawing.canvas, 0, 0);
+    globalDrawing.canvas.width = bw;
+    globalDrawing.canvas.height = bh;
+    globalDrawing.canvas.getContext('2d').drawImage(tc, 0, 0);
+    $(globalDrawing.canvas).css({
+      width: bw / globalDrawing.subpixel,
+      height: bh / globalDrawing.subpixel
+    });
   }
 }
 
@@ -1603,7 +1687,9 @@ function getTurtleData(elem) {
       speed: 'turtle',
       easing: 'swing',
       turningRadius: 0,
-      quickpagexy: null
+      drawOnCanvas: null,
+      quickpagexy: null,
+      quickhomeorigin: null
     });
   }
   return state;
@@ -1667,6 +1753,7 @@ function makePenDownHook() {
       if (style != state.down) {
         state.down = style;
         state.quickpagexy = null;
+        state.quickhomeorigin = null;
         elem.style.turtlePenDown = writePenDown(style);
         flushPenState(elem);
       }
@@ -1713,13 +1800,63 @@ function applyPenStyle(ctx, ps, scale) {
   }
 }
 
-function drawAndClearPath(path, style, scale) {
-  var ctx = getTurtleDrawingCtx(),
+// Computes a matrix that transforms page coordinates to the local
+// canvas coordinates.  Applying this matrix as the canvas transform
+// allows us to draw on a canvas using page coordinates; and the bits
+// will show up on the canvas in the corresponding location on the
+// physical page, even if the canvas has been moved by absolute
+// position and CSS 2d transforms.
+function computeCanvasPageTransform(canvas) {
+  if (!canvas) { return; }
+  if (canvas === globalDrawing.canvas) {
+    return [globalDrawing.subpixel, 0, 0, globalDrawing.subpixel];
+  }
+  var totalParentTransform = totalTransform2x2(canvas.parentElement),
+      inverseParent = inverse2x2(totalParentTransform),
+      out = {},
+      origin = getTurtleOrigin(canvas, inverseParent, out),
+      gbcr = out.gbcr,
+      originTranslate = [1, 0, 0, 1, -origin[0], -origin[1]],
+      finalScale = gbcr.width && gbcr.height &&
+          [canvas.width / gbcr.width, 0, 0, canvas.height / gbcr.height],
+      localTransform = readTransformMatrix(canvas) || [1, 0, 0, 1],
+      inverseTransform = inverse2x3(localTransform),
+      totalInverse;
+  if (!inverseParent || !inverseTransform || !finalScale) {
+    return;
+  }
+  totalInverse =
+      matrixProduct(
+        matrixProduct(
+          matrixProduct(
+            finalScale,
+            inverseTransform),
+          inverseParent),
+        originTranslate);
+  totalInverse[4] += out.localorigin[0] * finalScale[0];
+  totalInverse[5] += out.localorigin[1] * finalScale[3];
+  return totalInverse;
+}
+
+function applyCanvasPageTransform(ctx, canvas) {
+  if (canvas === globalDrawing.canvas) {
+    ctx.scale(globalDrawing.subpixel, globalDrawing.subpixel);
+  } else {
+    var pageToCanvas = computeCanvasPageTransform(canvas);
+    if (pageToCanvas) {
+      ctx.transform.apply(ctx, pageToCanvas);
+    }
+  }
+}
+
+function drawAndClearPath(drawOnCanvas, path, style, scale) {
+  var ctx = drawOnCanvas.getContext('2d'),
       isClosed, skipLast,
       j = path.length,
       segment;
   ctx.save();
   ctx.beginPath();
+  applyCanvasPageTransform(ctx, drawOnCanvas);
   // Scale up lineWidth by sx.  (TODO: consider parent transforms.)
   applyPenStyle(ctx, style, scale);
   while (j--) {
@@ -1783,26 +1920,27 @@ function flushPenState(elem) {
   }
   if (!state.style.savePath) {
     var ts = readTurtleTransform(elem, true);
-    drawAndClearPath(state.path, state.style, ts.sx);
+    drawAndClearPath(getDrawOnCanvas(state), state.path, state.style, ts.sx);
   }
 }
 
 function endAndFillPenPath(elem, style) {
   var ts = readTurtleTransform(elem, true),
       state = getTurtleData(elem);
-  drawAndClearPath(state.path, style);
+  drawAndClearPath(getDrawOnCanvas(state), state.path, style);
   if (state.style && state.style.savePath) {
     $.style(elem, 'turtlePenStyle', 'none');
   }
 }
 
-function fillDot(position, diameter, style) {
-  var ctx = getTurtleDrawingCtx();
+function fillDot(drawOnCanvas, position, diameter, style) {
+  var ctx = drawOnCanvas.getContext('2d');
   ctx.save();
   applyPenStyle(ctx, style);
-  if (diameter === Infinity && drawing.canvas) {
-    ctx.fillRect(0, 0, drawing.canvas.width, drawing.canvas.height);
+  if (diameter === Infinity) {
+    ctx.fillRect(0, 0, drawOnCanvas.width, drawOnCanvas.height);
   } else {
+    applyCanvasPageTransform(ctx, drawOnCanvas);
     ctx.beginPath();
     ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
     ctx.closePath();
@@ -1815,12 +1953,18 @@ function fillDot(position, diameter, style) {
 }
 
 function clearField(arg) {
-  if (!arg || /\bcanvas\b/.test(arg)) {
-    eraseBox(document, {fillStyle: 'transparent'});
+  if ((!arg || /\bcanvas\b/.test(arg)) && globalDrawing.canvas) {
+    var ctx = globalDrawing.canvas.getContext('2d');
+    ctx.save();
+    // Clip to box and use 'copy' mode so that 'transparent' can be
+    // written into the canvas - that's better erasing than 'white'.
+    ctx.globalCompositeOperation = 'copy';
+    ctx.fillRect(0, 0, globalDrawing.canvas.width, globalDrawing.canvas.height);
+    ctx.restore();
   }
   if (!arg || /\bturtles\b/.test(arg)) {
-    if (drawing.surface) {
-      var sel = $(drawing.surface).find('.turtle');
+    if (globalDrawing.surface) {
+      var sel = $(globalDrawing.surface).find('.turtle');
       if (global_turtle) {
         sel = sel.not(global_turtle);
       }
@@ -1829,35 +1973,14 @@ function clearField(arg) {
   }
   if (!arg || /\btext\b/.test(arg)) {
     var keep = $('samp#_testpanel');
-    if (drawing.surface) {
-      keep = keep.add(drawing.surface);
+    if (globalDrawing.surface) {
+      keep = keep.add(globalDrawing.surface);
     }
     $('body').contents().not(keep).remove();
   }
 }
 
-function eraseBox(elem, style) {
-  var c = getCornersInPageCoordinates(elem),
-      ctx = getTurtleDrawingCtx(),
-      j = 1;
-  if (!c || c.length < 3) { return; }
-  ctx.save();
-  // Clip to box and use 'copy' mode so that 'transparent' can be
-  // written into the canvas - that's better erasing than 'white'.
-  ctx.globalCompositeOperation = 'copy';
-  applyPenStyle(ctx, style);
-  ctx.beginPath();
-  ctx.moveTo(c[0].pageX, c[0].pageY);
-  for (; j < c.length; j += 1) {
-    ctx.lineTo(c[j].pageX, c[j].pageY);
-  }
-  ctx.closePath();
-  ctx.clip();
-  ctx.fill();
-  ctx.restore();
-}
-
-function getBoundingBoxOfCorners(c, clipToDoc) {
+function getBoundingBoxOfCorners(c, clip) {
   if (!c || c.length < 1) return null;
   var j = 1, result = {
     left: Math.floor(c[0].pageX),
@@ -1871,30 +1994,45 @@ function getBoundingBoxOfCorners(c, clipToDoc) {
     result.right = Math.max(result.right, Math.ceil(c[j].pageX));
     result.bottom = Math.max(result.bottom, Math.ceil(c[j].pageY));
   }
-  if (clipToDoc) {
-    result.left = Math.max(0, result.left);
-    result.top = Math.max(0, result.top);
-    result.right = Math.min(dw(), result.right);
-    result.bottom = Math.min(dh(), result.bottom);
+  if (clip) {
+    result.left = Math.max(clip.left, result.left);
+    result.top = Math.max(clip.top, result.top);
+    result.right = Math.min(clip.right, result.right);
+    result.bottom = Math.min(clip.bottom, result.bottom);
+  }
+  return result;
+}
+
+function transformPoints(m, points) {
+  if (!m || !points) return null;
+  if (m.length == 4 && isone2x2(m)) return points;
+  var result = [], j, prod;
+  for (j = 0; j < points.length; ++j) {
+    prod = matrixVectorProduct(m, [points[j].pageX, points[j].pageY]);
+    result.push({pageX: prod[0], pageY: prod[1]});
   }
   return result;
 }
 
 function touchesPixel(elem, color) {
-  if (!elem || !drawing.canvas) { return false; }
-  var c = getCornersInPageCoordinates(elem),
-      canvas = drawing.canvas,
-      bb = getBoundingBoxOfCorners(c, true),
-      w = (bb.right - bb.left) * drawing.subpixel,
-      h = (bb.bottom - bb.top) * drawing.subpixel,
+  if (!elem) { return false; }
+  var rgba = rgbaForColor(color),
+      canvas = getCanvasForReading(elem);
+  if (!canvas) { return rgba[3] == 0; }
+  var trans = computeCanvasPageTransform(canvas),
+      originalc = getCornersInPageCoordinates(elem),
+      c = transformPoints(trans, originalc),
+      bb = getBoundingBoxOfCorners(c,
+          {left:0, top:0, right:canvas.width, bottom:canvas.height}),
+      w = (bb.right - bb.left),
+      h = (bb.bottom - bb.top),
       osc = getOffscreenCanvas(w, h),
       octx = osc.getContext('2d'),
       rgba = rgbaForColor(color),
       j = 1, k, data;
   if (!c || c.length < 3 || !w || !h) { return false; }
-  octx.clearRect(0, 0, w, h);
   octx.drawImage(canvas,
-      bb.left * drawing.subpixel, bb.top * drawing.subpixel, w, h, 0, 0, w, h);
+      bb.left, bb.top, w, h, 0, 0, w, h);
   octx.save();
   // Erase everything outside clipping region.
   octx.beginPath();
@@ -1903,11 +2041,11 @@ function touchesPixel(elem, color) {
   octx.lineTo(w, h);
   octx.lineTo(0, h);
   octx.closePath();
-  octx.moveTo((c[0].pageX - bb.left) * drawing.subpixel,
-              (c[0].pageY - bb.top) * drawing.subpixel);
+  octx.moveTo((c[0].pageX - bb.left),
+              (c[0].pageY - bb.top));
   for (; j < c.length; j += 1) {
-    octx.lineTo((c[j].pageX - bb.left) * drawing.subpixel,
-                (c[j].pageY - bb.top) * drawing.subpixel);
+    octx.lineTo((c[j].pageX - bb.left),
+                (c[j].pageY - bb.top));
   }
   octx.closePath();
   octx.clip();
@@ -1947,7 +2085,7 @@ function touchesPixel(elem, color) {
 //////////////////////////////////////////////////////////////////////////
 
 function applyImg(sel, img) {
-  if (sel[0].tagName == 'IMG') {
+  if (sel[0].tagName == 'IMG' || sel[0].tagName == 'CANVAS') {
     setImageWithStableOrigin(sel[0], img.url, img.css);
   } else {
     var props = {
@@ -2397,13 +2535,16 @@ function resizeEarlyIfPossible(url, elem, css) {
 
 function applyLoadedImage(loaded, elem, css) {
   // Read the element's origin before setting the image src.
-  var oldOrigin = readTransformOrigin(elem);
-  // Set the image to a 1x1 transparent GIF, and clear the transform origin.
-  // (This "reset" code was original added in an effort to avoid browser
-  // bugs, but it is not clear if it is still needed.)
-  elem.src = 'data:image/gif;base64,R0lGODlhAQABAIAAA' +
-             'AAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-  var sel = $(elem);
+  var oldOrigin = readTransformOrigin(elem),
+      sel = $(elem),
+      isCanvas = (elem.tagName == 'CANVAS');
+  if (!isCanvas) {
+    // Set the image to a 1x1 transparent GIF, and clear the transform origin.
+    // (This "reset" code was original added in an effort to avoid browser
+    // bugs, but it is not clear if it is still needed.)
+    elem.src = 'data:image/gif;base64,R0lGODlhAQABAIAAA' +
+               'AAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  }
   sel.css({
     backgroundImage: 'none',
     height: '',
@@ -2414,7 +2555,13 @@ function applyLoadedImage(loaded, elem, css) {
     // Now set the source, and then apply any css requested.
     elem.width = loaded.width;
     elem.height = loaded.height;
-    elem.src = loaded.src;
+    if (!isCanvas) {
+      elem.src = loaded.src;
+    } else {
+      var ctx = elem.getContext('2d');
+      ctx.clearRect(0, 0, loaded.width, loaded.height);
+      ctx.drawImage(loaded, 0, 0);
+    }
   }
   if (css) {
     sel.css(css);
@@ -2509,18 +2656,33 @@ function withinOrNot(obj, within, distance, x, y) {
 //////////////////////////////////////////////////////////////////////////
 
 // A class to wrap jQuery
-var Pencil = (function(_super) {
-  __extends(Pencil, _super);
+var Sprite = (function(_super) {
+  __extends(Sprite, _super);
 
-  function Pencil(selector, context) {
+  function Sprite(selector, context) {
     this.constructor = jQuery;
     this.constructor.prototype = Object.getPrototypeOf(this);
-    if ('function' !== typeof selector) {
+    var constructed = false;
+    if (!$.isPlainObject(selector)) {
+      // The Sprite constructor starts as just the jQuery constructor
+      // except in the case where the argument is a plain {} object.
       jQuery.fn.init.call(this, selector, context, rootjQuery);
+      constructed = true;
+    }
+    if (!constructed || this.length == 0) {
+      // If the jQuery constructor did not select anything, then
+      // the Sprite constructor creates a canvas element, defaulting
+      // to a blank 256x256 canvas if no shape is specified.
+      var sprite = hatchone(selector, context, '256x256').get(0);
+      if (!constructed) {
+        jQuery.fn.init.call(this, sprite, context, rootjQuery);
+      } else {
+        Array.prototype.push.call(this, sprite);
+      }
     }
   }
 
-  Pencil.prototype.pushStack = function() {
+  Sprite.prototype.pushStack = function() {
     var count, ret, same;
     ret = jQuery.fn.pushStack.apply(this, arguments);
     count = ret.length;
@@ -2535,7 +2697,7 @@ var Pencil = (function(_super) {
     }
   };
 
-  return Pencil;
+  return Sprite;
 
 })(jQuery.fn.init);
 
@@ -2543,12 +2705,13 @@ var Turtle = (function(_super) {
   __extends(Turtle, _super);
 
   function Turtle(arg, context) {
-    Turtle.__super__.constructor.call(this, hatchone(arg, context));
+    // The turtle is a sprite that just defaults to the turtle shape.
+    Turtle.__super__.constructor.call(this, hatchone(arg, context, 'turtle'));
   }
 
   return Turtle;
 
-})(Pencil);
+})(Sprite);
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
@@ -3312,13 +3475,15 @@ var turtlefn = {
       cc.appear(j);
       var c = this.pagexy(),
           ts = readTurtleTransform(elem, true),
+          state = getTurtleData(elem),
+          drawOnCanvas = getDrawOnCanvas(state),
           // Scale by sx.  (TODO: consider parent transforms.)
           targetDiam = diameter * ts.sx,
           animDiam = Math.max(0, targetDiam - 2),
           finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
           hasAlpha = /rgba|hlsa/.test(ps.fillStyle);
       if (canMoveInstantly(this)) {
-        fillDot(c, finalDiam, ps);
+        fillDot(drawOnCanvas, c, finalDiam, ps);
         cc.resolve(j);
       } else {
         this.queue(function(next) {
@@ -3326,11 +3491,11 @@ var turtlefn = {
             duration: animTime(elem),
             step: function() {
               if (!hasAlpha) {
-                fillDot(c, this.radius, ps);
+                fillDot(drawOnCanvas, c, this.radius, ps);
               }
             },
             complete: function() {
-              fillDot(c, finalDiam, ps);
+              fillDot(drawOnCanvas, c, finalDiam, ps);
               cc.resolve(j);
               next();
             }
@@ -3494,6 +3659,22 @@ var turtlefn = {
     });
     return this;
   }),
+  drawon: wrapcommand('drawon', 1,
+  ["<u>drawon(canvas)</u> Switches to drawing on the specified canvas. " +
+      "<mark>A = new Sprite('100x100'); " +
+      "drawon A; pen red; fd 50; done -> A.rt 360</mark>"],
+  function drawon(cc, canvas) {
+    return this.plan(function(j, elem) {
+      cc.appear(j);
+      var state = getTurtleData(elem);
+      if (canvas && (canvas.jquery && $.isFunction(canvas.canvas))) {
+        state.drawOnCanvas = canvas.canvas();
+      } else if (canvas && canvas.tagName && canvas.tagName == 'CANVAS') {
+        state.drawOnCanvas = canvas;
+      }
+      cc.resolve(j);
+    });
+  }),
   label: wrapcommand('label', 1,
   ["<u>label(text)</u> Labels the current position with HTML: " +
       "<mark>label 'remember'</mark>",
@@ -3575,23 +3756,24 @@ var turtlefn = {
       count = 1;
     }
     // Determine the container in which to hatch the turtle.
-    var container = this[0], clone = null;
+    var container = this[0];
     if ($.isWindow(container) || container.nodeType === 9) {
       container = getTurtleField();
-    } else if (/^(?:br|img|input|hr)$/i.test(container.tagName)) {
+    } else if (/^(?:br|img|input|hr|canvas)$/i.test(container.tagName)) {
       container = container.parentElement;
-      clone = this[0];
     }
     // Create the turtle(s)
     if (count === 1) {
       // Pass through identical jquery instance in the 1 case.
       return hatchone(
-          typeof spec === 'function' ? spec(0) : spec, container, clone);
+          typeof spec === 'function' ? spec(0) : spec,
+          container, 'turtle');
     } else {
       var k = 0, result = [];
       for (; k < count; ++k) {
         result.push(hatchone(
-            typeof spec === 'function' ? spec(k) : spec, container, clone)[0]);
+            typeof spec === 'function' ? spec(k) : spec,
+            container, 'turtle')[0]);
       }
       return $(result);
     }
@@ -3659,6 +3841,14 @@ var turtlefn = {
     dx = pos.pageX - cur.pageX;
     dy = pos.pageY - cur.pageY;
     return Math.sqrt(dx * dx + dy * dy);
+  }),
+  canvas: wrapraw('canvas',
+  ["<u>turtle.canvas()</u> The canvas for the turtle image. " +
+      "Draw on the turtle: " +
+      "<mark>c = turtle.canvas().getContext('2d'); c.fillStyle = red; " +
+      "c.fillRect(10, 10, 30, 30)</mark>"],
+  function canvas() {
+    return this.filter('canvas').get(0);
   }),
   cell: wrapraw('cell',
   ["<u>cell(r, c)</u> Row r and column c in a table. " +
@@ -4059,6 +4249,17 @@ var dollar_turtle_methods = {
   function ct() {
     clearField('text');
   }),
+  canvas: wrapraw('canvas',
+  ["<u>canvas()</u> Returns the raw turtle canvas. " +
+      "<mark>c = canvas().getContext('2d'); c.fillStyle = red; " +
+      "c.fillRect(100,100,200,200)</mark>"],
+  function canvas() {
+    return getTurtleDrawingCanvas();
+  }),
+  sizexy: wrapraw('sizexy',
+  ["<u>sizexy()</u> Get the document pixel [width, height]. " +
+      "<mark>[w, h] = sizexy(); canvas('2d').fillRect(0, 0, w, h)</mark>"],
+  sizexy),
   tick: wrapraw('tick',
   ["<u>tick(fps, fn)</u> Calls fn fps times per second until " +
       "<u>tick</u> is called again: " +
@@ -4333,7 +4534,11 @@ var dollar_turtle_methods = {
   Turtle: wrapraw('Turtle',
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
-  Pencil: Pencil,
+  Sprite: wrapraw('Sprite',
+  ["<u>new Sprite({width:w,height:h,color:c})</u> " +
+      "Make a new sprite to <mark>drawon</mark>. " +
+      "<mark>s = new Sprite({width:50,height:50,color:blue}); " +
+      "s.fd 100</mark>"], Sprite),
   loadscript: wrapraw('loadscript',
   ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
        "the given URL, calling callback when done."],
@@ -4464,12 +4669,12 @@ $.turtle = function turtle(id, options) {
             $(this).html().replace(/^\x3c!\[CDATA\[\n?|\]\]\x3e$/g, ''));
     });
   }
-  if (!drawing.ctx && ('subpixel' in options)) {
-    drawing.subpixel = parseInt(options.subpixel);
+  if (!globalDrawing.ctx && ('subpixel' in options)) {
+    globalDrawing.subpixel = parseInt(options.subpixel);
   }
-  // Set up hung-browser timeout.
+  // Set up hung-browser timeout, default 10 seconds.
   $.turtle.hungtimeout = ('hungtimeout' in options) ?
-      parseFloat(options.hungtimeout) : 6000;
+      parseFloat(options.hungtimeout) : 10000;
 
   // Set up global events.
   if (!('events' in options) || options.events) {
@@ -4675,9 +4880,7 @@ function rgbaForColor(color) {
 }
 
 function createTurtleShellOfColor(color) {
-  var c = document.createElement('canvas');
-  c.width = 40;
-  c.height = 48;
+  var c = getOffscreenCanvas(40, 48);
   var ctx = c.getContext('2d'),
       cx = 20,
       cy = 26;
@@ -4727,9 +4930,7 @@ function createTurtleShellOfColor(color) {
 }
 
 function createPointerOfColor(color) {
-  var c = document.createElement('canvas');
-  c.width = 40;
-  c.height = 48;
+  var c = getOffscreenCanvas(40, 48);
   var ctx = c.getContext('2d');
   ctx.beginPath();
   ctx.moveTo(0,48);
@@ -4743,9 +4944,7 @@ function createPointerOfColor(color) {
 }
 
 function createRadiusOfColor(color) {
-  var c = document.createElement('canvas');
-  c.width = 40;
-  c.height = 40;
+  var c = getOffscreenCanvas(40, 40);
   var ctx = c.getContext('2d');
   ctx.beginPath();
   ctx.arc(20,20,18,-5 * Math.PI / 2,-Math.PI / 2);
@@ -4759,9 +4958,7 @@ function createRadiusOfColor(color) {
 }
 
 function createPencilOfColor(color) {
-  var c = document.createElement('canvas');
-  c.width = 40;
-  c.height = 48;
+  var c = getOffscreenCanvas(40, 48);
   var ctx = c.getContext('2d');
   ctx.beginPath();
   function tip() {
@@ -4877,23 +5074,78 @@ var shapes = {
   }
 };
 
-function nameToImg(name) {
+function createRectangleShape(width, height, subpixels) {
+  if (!subpixels) {
+    subpixels = 1;
+  }
+  return (function(color) {
+    var c = getOffscreenCanvas(width, height);
+    var ctx = c.getContext('2d');
+    if (color && color != 'transparent') {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, width, height);
+    }
+    var sw = width / subpixels, sh = height / subpixels;
+    return {
+      url: c.toDataURL(),
+      css: {
+        width: sw,
+        height: sh,
+        transformOrigin: (sw / 2) + 'px + ' + (sh / 2) + 'px',
+        opacity: 1
+      }
+    };
+  });
+}
+
+function lookupShape(shapename) {
+  if (!shapename) {
+    return null;
+  }
+  if (shapename in shapes) {
+    return shapes[shapename];
+  }
+  var m = shapename.match(/^(\d+)x(\d+)(?:\/(\d+))?$/);
+  if (m) {
+    return createRectangleShape(
+        parseFloat(m[1]), parseFloat(m[2]), m[3] && parseFloat(m[3]));
+  }
+  return null;
+}
+
+function specToImage(spec, defaultshape) {
+  var width = spec.width || spec.height || 256;
+  var height = spec.height || spec.width || 256;
+  var subpixel = spec.subpixel || 1;
+  var color = spec.color || 'transparent';
+  var shape = createRectangleShape(width, height, subpixel);
+  return shape(color);
+}
+
+function nameToImg(name, defaultshape) {
   // Parse forms for built-in shapes:
   // "red" -> red default shape (red turtle)
   // "turtle" -> default color turtle (mediumseagreen turtle)
   // "blue turtle" -> blue turtle
   // "rgba(50, 90, 255) pencil" -> bluish pencil
+  // {width: 100, height: 100, color: green} -> green 100x100 square
   if (!name) { return null; }
+  if ($.isPlainObject(name)) {
+    return specToImage(name, defaultshape);
+  }
   var builtin = name.trim().split(/\s+/), color = null, shape = null;
-  if (builtin.length && builtin[builtin.length - 1] in shapes) {
-    shape = shapes[builtin.pop()];
+  if (builtin.length) {
+    shape = lookupShape(builtin[builtin.length - 1]);
+    if (shape) {
+      builtin.pop();
+    }
   }
   if (builtin.length && isCSSColor(builtin.join(' '))) {
     color = builtin.join(' ');
     builtin.length = 0;
   }
   if (!shape && color) {
-    shape = shapes.turtle; // Default shape when there's only a color.
+    shape = lookupShape(defaultshape); // Default shape when only a color.
   }
   if (shape) {
     return shape(color);
@@ -4959,11 +5211,11 @@ function escapeHtml(string) {
   return String(string).replace(/[&<>"]/g, function(s) {return entityMap[s];});
 }
 
-function hatchone(name, container, clonepos) {
+function hatchone(name, container, defaultshape) {
   var isID = name && /^[a-zA-Z]\w*$/.exec(name),
       isTag = name && /^<.*>$/.exec(name),
-      img = nameToImg(name) ||
-        (isID || name === undefined) && nameToImg('turtle');
+      img = nameToImg(name, defaultshape) ||
+        (name == null) && nameToImg(defaultshape);
 
   // Don't overwrite previously existing id.
   if (isID && $('#' + name).length) { isID = false; }
@@ -4971,7 +5223,7 @@ function hatchone(name, container, clonepos) {
   // Create an image element with the requested name.
   var result;
   if (img) {
-    result = $('<img>');
+    result = $('<canvas>');
     applyImg(result, img);
   } else if (isTag) {
     result = $(name);
@@ -5000,7 +5252,7 @@ function hatchone(name, container, clonepos) {
   result.css({
     turtlePosition:
         computeTargetAsTurtlePosition(
-              result[0], $(clonepos || container).pagexy(), null, 0, 0),
+              result[0], $(container).pagexy(), null, 0, 0),
     turtleRotation: 0,
     turtleScale: 1});
 
