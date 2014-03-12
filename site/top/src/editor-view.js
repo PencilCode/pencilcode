@@ -224,10 +224,6 @@ var hotkeys = {
 };
 
 // Capture global keyboard shortcuts.
-// TODO(davibau): This is only a start at preventing the browser from
-// bringing up its unhelpful Save and Find dialogs when Ctrl-S or Ctrl-F.
-// also, all these keys when the focus is on the nested frame.  We should
-// capture those cases as well, but that is not yet done.
 $('body').on('keydown', function(e) {
   if (e.ctrlKey || e.metaKey || e.which === 8) {
     var handler = hotkeys[String.fromCharCode(e.which)];
