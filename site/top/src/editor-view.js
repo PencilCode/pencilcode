@@ -200,22 +200,32 @@ $(window).on('popstate', function(e) {
   fireEvent('popstate', [undo]);
 });
 
-// Global hotkeys for this application.  Ctrl- (or Command-) key functions.
+// Calls preventDefault on an event if the event is not an editor.
+function ignoreBackspace(e) {
+  if (!e || !e.target ||
+      e.target.isContentEditable ||
+      e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') {
+    // In the above cases, let backspace pass through.
+    return;
+  }
+  // Otherwise, prevent backspace from doing the history "back" action.
+  e.preventDefault();
+  return false;
+}
+
+// Global hotkeys for this application.  Ctrl- (or Command- or backspace) key functions.
 var hotkeys = {
   '\r': function() { fireEvent('run'); return false; },
   'S': function() { fireEvent('save'); return false; },
   'H': forwardCommandToEditor,
-  'F': forwardCommandToEditor
+  'F': forwardCommandToEditor,
+  // \x08 is the key code for backspace
+  '\x08': ignoreBackspace
 };
 
 // Capture global keyboard shortcuts.
-// TODO(davibau): This is only a start at preventing the browser from
-// bringing up its unhelpful Save and Find dialogs when Ctrl-S or Ctrl-F.
-// Other keyboard traps include Backspace (for browser "back"), and
-// also, all these keys when the focus is on the nested frame.  We should
-// capture those cases as well, but that is not yet done.
 $('body').on('keydown', function(e) {
-  if (e.ctrlKey || e.metaKey) {
+  if (e.ctrlKey || e.metaKey || e.which === 8) {
     var handler = hotkeys[String.fromCharCode(e.which)];
     if (handler) {
       return handler(e);
@@ -951,6 +961,17 @@ function setPaneRunText(pane, text, filename, targetUrl) {
       }
       framedoc.write(code);
       framedoc.close();
+      // Bind the key handlers to the iframe once it's loaded.
+      $(iframe).load(function() {
+        $('body', framedoc).on('keydown', function(e) {
+          if (e.ctrlKey || e.metaKey || e.which === 8) {
+            var handler = hotkeys[String.fromCharCode(e.which)];
+            if (handler) {
+              return handler(e);
+            }
+          }
+        });
+      });
     }
     $(this).dequeue();
   });
