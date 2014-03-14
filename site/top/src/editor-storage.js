@@ -96,6 +96,11 @@ function networkErrorMessage(domain) {
   }
 }
 
+// Returns true if the owner is the special user 'drive'.
+function isGDrive(owner) {
+  return owner == 'drive';
+}
+
 window.pencilcode.storage = {
   loadUserList: function(cb) {
     $.getJSON('http://' + window.pencilcode.domain + '/load/', function(m) {
@@ -128,6 +133,12 @@ window.pencilcode.storage = {
         callback(loadBackup(filename, {offline:true}));
       }, 0);
       return;
+    }
+    if (isGDrive(ownername)) {
+      // TODO (gdrive) - split filename into UID/fileid, then
+      // use the gdrive API to load it.
+      console.log('TODO: gdrive should load', filename);
+      callback({error: 'Should load ' + filename + '. Not yet implemented.'});
     }
     $.getJSON((ownername ? '//' + ownername + '.' +
                window.pencilcode.domain : '') +

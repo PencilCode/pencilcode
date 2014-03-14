@@ -124,6 +124,16 @@ function specialowner() {
           model.ownername === 'event');
 }
 
+//
+// GDrive mode is used when editing a file
+// from gDrive.  In that case, the domain name is "drive.pencilcode.net"
+// and the ownername is 'drive'.  The filename will contain the
+// actual GDrive userid/fileid.
+//
+function gdrivemode() {
+  return (model.ownername === 'drive');
+}
+
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
   // Update visible URL and main title name.
@@ -984,11 +994,27 @@ function readNewUrl(undo) {
       return;
     }
   }
+  if (ownername == 'drive' && filename == 'open') {
+    // In the gdrive open-file case, we set the "filename" to
+    // gdrive-user-id/gdrive-file-id.  It will be dealt with
+    // in the storage layer.
+    var queryparams = deparam(window.location.href);
+    if (queryparams.state) {
+      var state = JSON.parse(queryparams.state);
+      if (state.action == 'open' &&
+          state.ids && state.ids.length && state.userId) {
+        filename = state.userId + '/' + state.ids[0];
+        view.setVisibleUrl('/edit/' + filename);
+      }
+    }
+    login = [null, null, null];
+  }
+  // If login information wasn't provided on URL, read it from the cookie.
   if (!login) {
     var savedlogin = cookie('login');
     login = savedlogin && /\b^([^:]*)(?::(\w+))?$/.exec(cookie('login'));
   } else if (ownername) {
-    cookie('login', login, { expires: 1, path: '/' });
+    cookie('login', login[0], { expires: 1, path: '/' });
   }
   if (login) {
     model.username = login[1] || null;
@@ -1045,6 +1071,11 @@ function readNewUrl(undo) {
     cancelAndClearPosition('left');
   }
   loadFileIntoPosition('left', filename, isdir, isdir);
+}
+
+function readNewDriveUrl() {
+  console.log('GDRIVE CASE');
+  console.log(deparam(window.location.href));
 }
 
 function directNetLoad() {
@@ -1325,7 +1356,20 @@ function cookie(key, value, options) {
     }
   }
   return result;
-};
+}
+
+function deparam(qs) {
+  var params = {}, pair, i;
+  // remove preceding non-querystring, correct spaces, and split
+  qs = qs.substring(qs.search(/[?#]/)+1).replace(/\+/g,' ').split(/[&#]/);
+  // march and parse
+  for (i = qs.length; i > 0;) {
+    pair = qs[--i].split('=');
+    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+  }
+  return params;
+}
+
 
 readNewUrl();
 
