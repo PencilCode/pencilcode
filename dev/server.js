@@ -45,7 +45,8 @@ function proxyPacGenerator(req, res, next) {
     });
     res.end(
         'function FindProxyForURL(url, host) {\n' +
-        ' if (shExpMatch(host, "*.dev")) {\n' +
+        ' if (shExpMatch(host, "*.dev") || ' +
+              'host == "drive.pencilcode.net") {\n' +
         '  return "PROXY ' + hostDomain + ':' + hostPort + '";\n' +
         ' }\n' +
         ' return "DIRECT";\n' +
