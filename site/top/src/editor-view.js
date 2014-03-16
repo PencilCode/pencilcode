@@ -1046,8 +1046,8 @@ function labelStep(preview, step) {
       // Otherwise, use toString repr.
       onerepr = arg.toString();
     }
-    if (onerepr.length > 12) {
-      onerepr = onerepr.substr(0, 9) + '...'
+    if (onerepr.length > 80) {
+      onerepr = onerepr.substr(0, 77) + '...'
     }
     argrepr.push(onerepr);
   }
