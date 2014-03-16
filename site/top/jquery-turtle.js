@@ -3378,6 +3378,8 @@ var turtlefn = {
       penstyle = 'black';
     } else if (penstyle === null) {
       penstyle = 'none';
+    } else if ($.isPlainObject(penstyle)) {
+      penstyle = writePenStyle(penstyle);
     }
     this.plan(function(j, elem) {
       cc.appear(j);
@@ -3450,6 +3452,9 @@ var turtlefn = {
       "<mark>pen path; rt 100, 90; fill blue</mark>"],
   function fill(cc, style) {
     if (!style) { style = 'black'; }
+    else if ($.isPlainObject(style)) {
+      style = writePenStyle(style);
+    }
     var ps = parsePenStyle(style, 'fillStyle');
     this.plan(function(j, elem) {
       cc.appear(j);
