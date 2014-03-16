@@ -1027,17 +1027,35 @@ function labelStep(preview, step) {
   }
   var argrepr = [], onerepr;
   for (var j = 0; j < step.args.length; ++j) {
-    try {
-      onerepr = JSON.stringify(step.args[j]);
-    } catch (e) {
-      onerepr = step.args[j].toString();
+    var arg = step.args[j];
+    onerepr = null;
+    if (!arg) {
+      onerepr = 'null';
+    }
+    if (typeof(arg) == 'number') {
+      // JSON repr is no good for Infinity or NaN.
+      onerepr = arg.toString();
+    }
+    if (!onerepr) {
+      // Try using JSON repr.
+      try {
+        onerepr = JSON.stringify(arg);
+      } catch (e) { }
+    }
+    if (!onerepr) {
+      // Otherwise, use toString repr.
+      onerepr = arg.toString();
     }
     if (onerepr.length > 12) {
       onerepr = onerepr.substr(0, 9) + '...'
     }
     argrepr.push(onerepr);
   }
-  label.html(step.command + ' ' + argrepr.join(', '));
+  if (argrepr.length) {
+    label.html(step.command + ' ' + argrepr.join(', '));
+  } else {
+    label.html(step.command + '()');
+  }
   label.css({
     textShadow: '0 0 8px white, 0 0 5px white, 0 0 3px white',
     top: step.startCoords.pageY + $(label).height(),
