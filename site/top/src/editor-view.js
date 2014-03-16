@@ -655,6 +655,7 @@ function showShareDialog(opts) {
         $(button).tooltipster('hide');
       }, 1500);
     });
+    dialog.find('button.ok').focus();
   }
 
   opts.done = function(state) {
@@ -789,9 +790,12 @@ function showLoginDialog(opts) {
        'Not me? Switch user.</a></div>' : '') +
     '</div></div>' +
       (opts.setpass ?
-      '<div class="field">Old password:<input type="password" class="password"></div>' +
-      '<div class="field">New password:<input type="password" class="newpass"></div>' :
-      '<div class="field">Password:<input type="password" class="password"></div>') +
+        '<div class="field">Old password:<input ' +
+        'type="password" class="password"></div>' +
+        '<div class="field">New password:<input ' +
+        'type="password" class="newpass"></div>'
+      : '<div class="field">Password:<input ' +
+        'type="password" class="password"></div>') +
     '</div><br>' +
     '<button class="ok">OK</button>' +
     '<button class="cancel">Cancel</button>';
