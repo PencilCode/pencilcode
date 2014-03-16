@@ -15,6 +15,105 @@ function to360(v) {
     return v % 360;
 }
 
+function renderProtractor(canvas, step) {
+  var ctx = canvas[0].getContext('2d');
+  ctx.resetTransform();
+  ctx.clearRect(0, 0, canvas.width(), canvas.height());
+  if (!step.startCoords) {
+    return;
+  }
+  var arrowDrawn = false;
+  // Draw an orange arrow if we know where the turtle ends up.
+  if (step.endCoords) {
+    if (step.command == 'lt' || step.command == 'rt') {
+      if (pageDistance(step.startCoords, step.endCoords) <= 0.8) {
+        ctx.save();
+        ctx.beginPath();
+        canvas_arc_arrow(
+            ctx,
+            step.startCoords.pageX, step.startCoords.pageY,
+            40,
+            toCanvasRadians(step.startCoords.direction),
+            toCanvasRadians(step.endCoords.direction),
+            step.command == 'lt');
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+        arrowDrawn = true;
+      } else if (step.args.length >= 2 && parseFloat(step.args[1]) > 0.8) {
+        var radius = parseFloat(step.args[1]) * step.startCoords.scale,
+            startdir = toCanvasRadians(step.startCoords.direction +
+                (step.command == 'lt' ? 1 : -1) * 90),
+            enddir = toCanvasRadians(step.endCoords.direction +
+                (step.command == 'lt' ? 1 : -1) * 90),
+            cx = step.startCoords.pageX - Math.cos(startdir) * radius,
+            cy = step.startCoords.pageY - Math.sin(startdir) * radius;
+        ctx.save();
+        ctx.beginPath();
+        canvas_arc_arrow(
+            ctx,
+            cx, cy, radius, startdir, enddir,
+            step.command == 'lt');
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+      }
+    } else if (pageDistance(step.startCoords, step.endCoords) > 0.8) {
+      ctx.save();
+      ctx.beginPath();
+      canvas_straight_arrow(
+          ctx,
+          step.startCoords.pageX, step.startCoords.pageY,
+          step.endCoords.pageX, step.endCoords.pageY);
+      ctx.strokeStyle = "orange";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  ctx.save();
+  ctx.translate(step.startCoords.pageX, step.startCoords.pageY);
+  drawProtractor(ctx, 30, step.startCoords.direction + 270);
+  ctx.restore();
+}
+
+function canvas_arc_arrow(context, cx, cy, radius, fromangle, toangle, ccw) {
+  context.arc(cx, cy, radius, fromangle, toangle, ccw);
+  var headx = cx + radius * Math.cos(toangle),
+      heady = cy + radius * Math.sin(toangle);
+  canvas_arrow_head(context,
+      headx, heady, toangle + (ccw ? -1 : 1) * Math.PI / 2, 10);
+}
+
+function canvas_straight_arrow(context, fromx, fromy, tox, toy){
+  var headlen = 10;   // length of head in pixels
+  var angle = Math.atan2(toy - fromy, tox - fromx);
+  context.moveTo(fromx, fromy);
+  context.lineTo(tox, toy);
+  canvas_arrow_head(context, tox, toy, angle, headlen);
+}
+
+function canvas_arrow_head(context, x, y, angle, headlen) {
+  context.moveTo(x - headlen * Math.cos(angle - Math.PI/6),
+                 y - headlen * Math.sin(angle - Math.PI/6));
+  context.lineTo(x, y);
+  context.lineTo(x - headlen * Math.cos(angle + Math.PI/6),
+                 y - headlen * Math.sin(angle + Math.PI/6));
+}
+
+function pageDistance(a, b) {
+  var dx = a.pageX - b.pageX,
+      dy = a.pageY - b.pageY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function toCanvasRadians(direction) {
+  return (((direction % 360) + 270 + 360) % 360) / 180 * Math.PI;
+}
+
 function drawTick(ctx, innerRadius, outerRadius, angleRadians) {
     // We treat angleRadians clockwise starting horizontal, pointing right
     // (i.e. pi/2 is straight down, pi is to the left, 3pi/2 is straight up).
@@ -162,7 +261,7 @@ function drawProtractor(ctx, radius, zeroAngle) {
     ctx.restore();
 }
 
-return { drawProtractor: drawProtractor };
+return { renderProtractor: renderProtractor };
 
 });
 

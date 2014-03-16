@@ -150,9 +150,9 @@ function setOnCallback(tag, cb) {
 }
 
 function fireEvent(tag, args) {
-  if (window.console) {
-    window.console.log('fired', tag, args);
-  }
+  // if (window.console) {
+  //   window.console.log('fired', tag, args);
+  // }
   if (tag in state.callbacks) {
     var cb = state.callbacks[tag];
     if (cb) {
@@ -1013,118 +1013,29 @@ function showProtractor(pane, step) {
   });
   protractor[0].width = protractor.width();
   protractor[0].height = protractor.height();
-  renderProtractor(protractor, step);
-  /*
-  protractor.mousemove({protractor:protractor, centerX:x, centerY:y, direction:direction},
-                       updateProtractor);
-  */
+  drawProtractor.renderProtractor(protractor, step);
+  labelStep(preview, step);
 }
 
-function canvas_arc_arrow(context, cx, cy, radius, fromangle, toangle, ccw) {
-  context.arc(cx, cy, radius, fromangle, toangle, ccw);
-  var headx = cx + radius * Math.cos(toangle),
-      heady = cy + radius * Math.sin(toangle);
-  canvas_arrow_head(context,
-      headx, heady, toangle + (ccw ? -1 : 1) * Math.PI / 2, 10);
-}
-
-function canvas_straight_arrow(context, fromx, fromy, tox, toy){
-  var headlen = 10;   // length of head in pixels
-  var angle = Math.atan2(toy - fromy, tox - fromx);
-  context.moveTo(fromx, fromy);
-  context.lineTo(tox, toy);
-  canvas_arrow_head(context, tox, toy, angle, headlen);
-}
-
-function canvas_arrow_head(context, x, y, angle, headlen) {
-  context.moveTo(x - headlen * Math.cos(angle - Math.PI/6),
-                 y - headlen * Math.sin(angle - Math.PI/6));
-  context.lineTo(x, y);
-  context.lineTo(x - headlen * Math.cos(angle + Math.PI/6),
-                 y - headlen * Math.sin(angle + Math.PI/6));
-}
-
-function pageDistance(a, b) {
-  var dx = a.pageX - b.pageX,
-      dy = a.pageY - b.pageY;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function toCanvasRadians(direction) {
-  return (((direction % 360) + 270 + 360) % 360) / 180 * Math.PI;
-}
-
-function renderProtractor(canvas, step) {
-  var ctx = canvas[0].getContext('2d');
-  ctx.resetTransform();
-  ctx.clearRect(0, 0, canvas.width(), canvas.height());
-  if (!step.startCoords) {
-    return;
-  }
-  var arrowDrawn = false;
-  if (step.command == 'lt' || step.command == 'rt') {
-    if (pageDistance(step.startCoords, step.endCoords) <= 0.8) {
-      ctx.save();
-      ctx.beginPath();
-      canvas_arc_arrow(
-          ctx,
-          step.startCoords.pageX, step.startCoords.pageY,
-          40,
-          toCanvasRadians(step.startCoords.direction),
-          toCanvasRadians(step.endCoords.direction),
-          step.command == 'lt');
-      ctx.strokeStyle = "orange";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.restore();
-      arrowDrawn = true;
-    } else if (step.args.length >= 2 && parseFloat(step.args[1]) > 0.8) {
-      var radius = parseFloat(step.args[1]) * step.startCoords.scale,
-          startdir = toCanvasRadians(step.startCoords.direction +
-              (step.command == 'lt' ? 1 : -1) * 90),
-          enddir = toCanvasRadians(step.endCoords.direction +
-              (step.command == 'lt' ? 1 : -1) * 90),
-          cx = step.startCoords.pageX - Math.cos(startdir) * radius,
-          cy = step.startCoords.pageY - Math.sin(startdir) * radius;
-      ctx.save();
-      ctx.beginPath();
-      canvas_arc_arrow(
-          ctx,
-          cx, cy, radius, startdir, enddir,
-          step.command == 'lt');
-      ctx.strokeStyle = "orange";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.restore();
-    }
-  } else if (pageDistance(step.startCoords, step.endCoords) > 0.8) {
-    ctx.save();
-    ctx.beginPath();
-    canvas_straight_arrow(
-        ctx,
-        step.startCoords.pageX, step.startCoords.pageY,
-        step.endCoords.pageX, step.endCoords.pageY);
-    ctx.strokeStyle = "orange";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  ctx.save();
-  ctx.translate(step.startCoords.pageX, step.startCoords.pageY);
-  drawProtractor.drawProtractor(ctx, 30, step.startCoords.direction + 270);
-  ctx.restore();
-
+function labelStep(preview, step) {
   // TEXT LABEL
-  var label = $(canvas).closest('.preview').find('.protractor-label');
+  var label = $(preview).find('.protractor-label');
   if (!label.length) {
     label = $('<div class="protractor-label"></div>')
         .css({position: 'absolute', display: 'table', zIndex: 1})
-        .insertBefore($(canvas).closest('.preview').find('.protractor'));
+        .insertBefore($(preview).find('.protractor'));
   }
-  var argrepr = [];
+  var argrepr = [], onerepr;
   for (var j = 0; j < step.args.length; ++j) {
-    argrepr.push(see.repr(step.args[j]));
+    try {
+      onerepr = JSON.stringify(step.args[j]);
+    } catch (e) {
+      onerepr = step.args[j].toString();
+    }
+    if (onerepr.length > 12) {
+      onerepr = onerepr.substr(0, 9) + '...'
+    }
+    argrepr.push(onerepr);
   }
   label.html(step.command + ' ' + argrepr.join(', '));
   label.css({
@@ -1132,59 +1043,7 @@ function renderProtractor(canvas, step) {
     top: step.startCoords.pageY + $(label).height(),
     left: step.startCoords.pageX - $(label).outerWidth() / 2
   });
-  console.log(label);
 }
-
-function to360(d) {
-  return (720 + d) % 360;
-}
-
-/*
-function updateProtractor(event) {
-  var dx = event.data.centerX - event.offsetX;
-  var dy = event.data.centerY - event.offsetY;
-  var dist = Math.sqrt(dx*dx + dy*dy);
-  var radius = Math.max(50, dist);
-  renderProtractor(
-    event.data.protractor,
-    event.data.centerX,
-    event.data.centerY,
-    event.data.direction,
-    radius);
-
-  var preview = event.data.protractor.parent();
-  var label = preview.find('.protractor-label');
-  if (!label.length) {
-    label = $('<div class=protractor-label>').insertBefore(event.data.protractor);
-  }
-  var protractorDir = to360(270 + Math.atan2(dy, dx) * 180 / Math.PI);
-  var turnMagnitude = Math.round(to360(protractorDir - event.data.direction));
-  var turnDir = "rt ";
-  if (turnMagnitude > 180) {
-    turnDir = "lt ";
-    turnMagnitude = 360 - turnMagnitude;
-  }
-  label.html(turnDir + turnMagnitude +  '<br>fd ' + Math.round(dist));
-  var css = {
-    position: 'absolute',
-    display: 'inline-block',
-    top: '',
-    left: '',
-  };
-  var smallRadius = radius < 150;
-  if ((event.data.centerX >= event.offsetX) == smallRadius) {
-    css.left = (event.offsetX - label.outerWidth()) + 'px';
-  } else {
-    css.left = (event.offsetX) + 'px';
-  }
-  if ((event.data.centerY >= event.offsetY) == smallRadius) {
-    css.top = (event.offsetY - label.outerHeight()) + 'px';
-  } else {
-    css.top = (event.offsetY) + 'px';
-  }
-  label.css(css);
-}
-*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1628,9 +1487,15 @@ function markPaneEditorLine(pane, line, markclass) {
   if (zline in idMap) {
     return;  // Nothing to do if already highlighted.
   }
-  var r = paneState.editor.session.highlightLines(zline, zline, markclass);
-  // Save the mark ID so that it can be cleared later.
-  idMap[zline] = r.id;
+  if (/^gutter/.test(markclass)) {
+    paneState.editor.session.addGutterDecoration(zline, markclass);
+    // Save the mark line number so that it can be cleared later (no IDs).
+    idMap[zline] = true;
+  } else {
+    var r = paneState.editor.session.highlightLines(zline, zline, markclass);
+    // Save the mark ID so that it can be cleared later.
+    idMap[zline] = r.id;
+  }
 }
 
 // The inverse of markPaneEditorLine: clears a marked line by
@@ -1651,7 +1516,11 @@ function clearPaneEditorLine(pane, line, markclass) {
     return;
   }
   var session = paneState.editor.session;
-  session.removeMarker(id);
+  if (/^gutter/.test(markclass)) {
+    session.removeGutterDecoration(zline, markclass);
+  } else {
+    session.removeMarker(id);
+  }
   delete idMap[zline];
 }
 
@@ -1675,7 +1544,11 @@ function clearPaneEditorMarks(pane, markclass) {
   delete paneState.marked[markclass];
   if (idMap) {
     for (var zline in idMap) {
-      session.removeMarker(idMap[zline]);
+      if (/^gutter/.test(markclass)) {
+        session.removeGutterDecoration(zline, markclass);
+      } else {
+        session.removeMarker(idMap[zline]);
+      }
     }
   }
 }

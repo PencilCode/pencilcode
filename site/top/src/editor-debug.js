@@ -180,11 +180,14 @@ function updateLine(record) {
     return;
   }
   // Optimization: only compute line number when there is a visible
-  // async animation.
-  if (record.line == null && record.exception && record.exited &&
-      record.appearCount > record.resolveCount) {
+  // async animation, OR, if it's one of the first 100 debug events.
+  if (record.line == null && record.exception &&
+      ((record.exited && record.appearCount > record.resolveCount) ||
+       record.debugId - firstSessionId < 100)) {
     record.line = editorLineNumberForError(record.exception);
   }
+  // TODO: schedule background computation of line numbers for debug
+  // events after the first 100.
   if (record.line != null) {
     var oldRecord = lineRecord[record.line];
     if (record.appearCount > record.resolveCount) {
@@ -246,6 +249,8 @@ function createError() {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
+  view.markPaneEditorLine(
+      view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 
@@ -413,7 +418,7 @@ view.on('leavegutter', function(pane, lineno) {
 
 function convertCoords(origin, astransform) {
   if (!origin) { console.log('reason 1'); return null; }
-  if (!astransform || !astransform.transform) {console.log('reason 2'); return null; }
+  if (!astransform || !astransform.transform) { return null; }
   var parsed = parseTurtleTransform(astransform.transform);
   if (!parsed) return null;
   return {

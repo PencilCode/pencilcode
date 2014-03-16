@@ -100,6 +100,8 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 .debugtrace{position:absolute;background:paleturquoise;}
 /* Code line highlighting for mouse-focused code */
 .debugfocus{position:absolute;background:yellow;z-index:2;}
+/* Gutter line highlighting for lines that can be mouseovered */
+.guttermouseable{background:bisque;}
 body#pencilcode #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;
