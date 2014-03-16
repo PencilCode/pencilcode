@@ -3640,7 +3640,7 @@ var turtlefn = {
    "<u>wear(url)</u> Sets the turtle image url: " +
       "<mark>wear 'http://bit.ly/1bgrQ0p'</mark>"],
   function wear(cc, name) {
-    var img = nameToImg(name);
+    var img = nameToImg(name, 'turtle');
     if (!img) return this;
     this.plan(function(j, elem) {
       cc.appear(j);

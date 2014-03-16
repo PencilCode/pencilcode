@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////r
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
@@ -180,11 +180,14 @@ function updateLine(record) {
     return;
   }
   // Optimization: only compute line number when there is a visible
-  // async animation.
-  if (record.line == null && record.exception && record.exited &&
-      record.appearCount > record.resolveCount) {
+  // async animation, OR, if it's one of the first 100 debug events.
+  if (record.line == null && record.exception &&
+      ((record.exited && record.appearCount > record.resolveCount) ||
+       record.debugId - firstSessionId < 100)) {
     record.line = editorLineNumberForError(record.exception);
   }
+  // TODO: schedule background computation of line numbers for debug
+  // events after the first 100.
   if (record.line != null) {
     var oldRecord = lineRecord[record.line];
     if (record.appearCount > record.resolveCount) {
@@ -246,6 +249,8 @@ function createError() {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
+  view.markPaneEditorLine(
+      view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 
@@ -395,6 +400,70 @@ function editorLineNumberForError(error) {
   return line - 3;
 }
 
+//////////////////////////////////////////////////////////////////////
+// GUTTER HIGHLIGHTING SUPPORT
+//////////////////////////////////////////////////////////////////////
+view.on('entergutter', function(pane, lineno) {
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(lineRecord[lineno]);
+});
+
+view.on('leavegutter', function(pane, lineno) {
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.hideProtractor(view.paneid('right'));
+});
+
+function convertCoords(origin, astransform) {
+  if (!origin) { console.log('reason 1'); return null; }
+  if (!astransform || !astransform.transform) { return null; }
+  var parsed = parseTurtleTransform(astransform.transform);
+  if (!parsed) return null;
+  return {
+    pageX: origin.left + parsed.tx,
+    pageY: origin.top + parsed.ty,
+    direction: parsed.rot,
+    scale: parsed.sy
+  };
+}
+
+function displayProtractorForRecord(record) {
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = targetWindow.jQuery('#field').offset();
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  view.showProtractor(view.paneid('right'), step);
+}
+
+// The canonical 2D transforms written by this plugin have the form:
+// translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
+// (with each component optional).
+// This function quickly parses this form into a canonicalized object.
+function parseTurtleTransform(transform) {
+  if (transform === 'none') {
+    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+  }
+  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
+  // and FF put them in there; so allow them.
+  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
+  if (!e) { return null; }
+  var tx = e[1] ? parseFloat(e[1]) : 0,
+      ty = e[2] ? parseFloat(e[2]) : 0,
+      rot = e[3] ? parseFloat(e[3]) : 0,
+      sx = e[4] ? parseFloat(e[4]) : 1,
+      sy = e[5] ? parseFloat(e[5]) : sx,
+      twi = e[6] ? parseFloat(e[6]) : 0;
+  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // STOP BUTTON SUPPORT
 ///////////////////////////////////////////////////////////////////////////
@@ -437,7 +506,9 @@ view.on('stop', function() {
   targetWindow.jQuery.turtle.interrupt();
 });
 
-
+///////////////////////////////////////////////////////////////////////////
+// DEBUG EXPORT
+///////////////////////////////////////////////////////////////////////////
 
 return debug;
 

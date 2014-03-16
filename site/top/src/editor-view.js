@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'ZeroClipboard'],
-function($, tooltipster, see, ZeroClipboard) {
+define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard'],
+function($, tooltipster, see, drawProtractor, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -83,6 +83,8 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
+  showProtractor: showProtractor,
+  hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   // Mananges panes and preview mode
@@ -668,10 +670,10 @@ function showDialog(opts) {
   overlay.html('');
   var dialog = $('<div class="dialog"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
-    '</div>' +
-    (opts.content ? opts.content : '') +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
+    '</div>' +
+    (opts.content ? opts.content : '') +
     '</div></div>').appendTo(overlay);
 
   ////////////////////////////////////////////////////////////////
@@ -976,6 +978,91 @@ function setPaneRunText(pane, text, filename, targetUrl) {
     $(this).dequeue();
   });
 }
+
+function hideProtractor(pane) {
+  var paneState = state.pane[pane];
+  var preview = $('#' + pane + ' .preview');
+  var protractor = preview.find('.protractor');
+  if (protractor.length) {
+    protractor.remove();
+    preview.find('.protractor-label').remove();
+  }
+}
+
+// step is a record of the following form:
+//  startCoords:
+//    pageX:, pageY:, direction:, scale:
+//  endCoords:
+//    pageX:, pageY:, direction:, scale:
+//  command: "fd"
+//  args: [50]
+function showProtractor(pane, step) {
+  var paneState = state.pane[pane];
+  if (!paneState.running) {
+    console.log('NOT RUNNING, no protractor for you!');
+    return;
+  }
+  var preview = $('#' + pane + ' .preview');
+  var protractor = $('<canvas class=protractor>').appendTo(preview);
+  protractor.css({
+    "position": "absolute",
+    "top": "0",
+    "left": "0",
+    "width": "100vw",
+    "height": "100vh",
+  });
+  protractor[0].width = protractor.width();
+  protractor[0].height = protractor.height();
+  drawProtractor.renderProtractor(protractor, step);
+  labelStep(preview, step);
+}
+
+function labelStep(preview, step) {
+  // TEXT LABEL
+  var label = $(preview).find('.protractor-label');
+  if (!label.length) {
+    label = $('<div class="protractor-label"></div>')
+        .css({position: 'absolute', display: 'table', zIndex: 1})
+        .insertBefore($(preview).find('.protractor'));
+  }
+  var argrepr = [], onerepr;
+  for (var j = 0; j < step.args.length; ++j) {
+    var arg = step.args[j];
+    onerepr = null;
+    if (!arg) {
+      onerepr = 'null';
+    }
+    if (typeof(arg) == 'number') {
+      // JSON repr is no good for Infinity or NaN.
+      onerepr = arg.toString();
+    }
+    if (!onerepr) {
+      // Try using JSON repr.
+      try {
+        onerepr = JSON.stringify(arg);
+      } catch (e) { }
+    }
+    if (!onerepr) {
+      // Otherwise, use toString repr.
+      onerepr = arg.toString();
+    }
+    if (onerepr.length > 80) {
+      onerepr = onerepr.substr(0, 77) + '...'
+    }
+    argrepr.push(onerepr);
+  }
+  if (argrepr.length) {
+    label.html(step.command + ' ' + argrepr.join(', '));
+  } else {
+    label.html(step.command + '()');
+  }
+  label.css({
+    textShadow: '0 0 8px white, 0 0 5px white, 0 0 3px white',
+    top: step.startCoords.pageY + $(label).height(),
+    left: step.startCoords.pageX - $(label).outerWidth() / 2
+  });
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // DIRECTORY LISTING
@@ -1302,6 +1389,16 @@ function setPaneEditorText(pane, text, filename) {
   editor.on('focus', function() {
     fireEvent('editfocus', [pane]);
   });
+  var gutter = $('#' + id + ' .ace_gutter');
+  gutter.on('mouseenter', '.ace_gutter-cell', function() {
+    fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('mouseleave', '.ace_gutter-cell', function() {
+    fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('click', '.ace_gutter-cell', function() {
+    fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
+  });
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
@@ -1404,13 +1501,29 @@ function markPaneEditorLine(pane, line, markclass) {
     paneState.marked[markclass] = {};
   }
   // Grab the map of line numbers for this highlight class.
+  // idMap is a map going from zero-index line numbers to
+  // ACE editor "highlightLine" IDs.  The ids are needed to
+  // later remove line highlights.  For gutter-line-number
+  // decorations (for which, by convention, we will use css
+  // names starting with the string "gutter"), there are no
+  // IDs, but it is still necessary to track whether we have
+  // applied a gutter style so that we can avoid adding
+  // styles twice, and so that we can remove them later.
+  // In the gutter case, so idMap will contain 'true' if we
+  // have applied the style on a particular line.
   var idMap = paneState.marked[markclass];
   if (zline in idMap) {
     return;  // Nothing to do if already highlighted.
   }
-  var r = paneState.editor.session.highlightLines(zline, zline, markclass);
-  // Save the mark ID so that it can be cleared later.
-  idMap[zline] = r.id;
+  if (/^gutter/.test(markclass)) {
+    paneState.editor.session.addGutterDecoration(zline, markclass);
+    // Save the mark line number so that it can be cleared later (no IDs).
+    idMap[zline] = true;
+  } else {
+    var r = paneState.editor.session.highlightLines(zline, zline, markclass);
+    // Save the mark ID so that it can be cleared later.
+    idMap[zline] = r.id;
+  }
 }
 
 // The inverse of markPaneEditorLine: clears a marked line by
@@ -1431,7 +1544,11 @@ function clearPaneEditorLine(pane, line, markclass) {
     return;
   }
   var session = paneState.editor.session;
-  session.removeMarker(id);
+  if (/^gutter/.test(markclass)) {
+    session.removeGutterDecoration(zline, markclass);
+  } else {
+    session.removeMarker(id);
+  }
   delete idMap[zline];
 }
 
@@ -1455,7 +1572,11 @@ function clearPaneEditorMarks(pane, markclass) {
   delete paneState.marked[markclass];
   if (idMap) {
     for (var zline in idMap) {
-      session.removeMarker(idMap[zline]);
+      if (/^gutter/.test(markclass)) {
+        session.removeGutterDecoration(zline, markclass);
+      } else {
+        session.removeMarker(idMap[zline]);
+      }
     }
   }
 }

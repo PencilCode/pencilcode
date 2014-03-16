@@ -1,9 +1,24 @@
+///////////////////////////////////////////////////////////////////////////
+// JQUERY PREDEFINITION
+///////////////////////////////////////////////////////////////////////////
+
+// Jquery is already defined in turtlebits.js - we define it here
+// to make require.js aware of it.
+define('jquery', [], function() {
+      return jQuery;
+});
+
+
+///////////////////////////////////////////////////////////////////////////
+// REQUIRE JS path config
+///////////////////////////////////////////////////////////////////////////
 require.config({
   baseUrl: '/',
   paths: {
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
+    'draw-protractor': 'src/draw-protractor',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
@@ -30,8 +45,9 @@ require([
   'editor-storage',
   'editor-debug',
   'seedrandom',
-  'see'],
-function($, view, storage, debug, seedrandom, see) {
+  'see',
+  'draw-protractor'],
+function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 

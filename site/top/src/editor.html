@@ -15,11 +15,15 @@ window.pencilcode = {
   domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
   owner: location.host.replace(/\.[^.]*.{8}$/, '')
 };
+// Preload some CSS and scripts from the top-level pencilcode domain,
+// so that they are cached across different users.
 document.write(
   '<link rel="stylesheet" type="text/css" href="//' +
   pencilcode.domain + '/editor.css">' +
   '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">');
+  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
+  '<script src="//' + pencilcode.domain + '/turtlebits.js"><' +
+  '/script>');
 </script>
 </head>
 <body id="pencilcode">
