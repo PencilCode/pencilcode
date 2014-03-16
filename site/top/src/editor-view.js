@@ -1501,6 +1501,16 @@ function markPaneEditorLine(pane, line, markclass) {
     paneState.marked[markclass] = {};
   }
   // Grab the map of line numbers for this highlight class.
+  // idMap is a map going from zero-index line numbers to
+  // ACE editor "highlightLine" IDs.  The ids are needed to
+  // later remove line highlights.  For gutter-line-number
+  // decorations (for which, by convention, we will use css
+  // names starting with the string "gutter"), there are no
+  // IDs, but it is still necessary to track whether we have
+  // applied a gutter style so that we can avoid adding
+  // styles twice, and so that we can remove them later.
+  // In the gutter case, so idMap will contain 'true' if we
+  // have applied the style on a particular line.
   var idMap = paneState.marked[markclass];
   if (zline in idMap) {
     return;  // Nothing to do if already highlighted.
