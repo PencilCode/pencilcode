@@ -1455,14 +1455,14 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // Given a template object, returns a piece of HTML that the IDE
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
-  var instructionHtml;
+  // TODO:  alert that the instruction file is missing
+  //TODO:  place the instructions into a separate iframe?
   if (!template) {
-  	  instructionHtml = '<p>No template found</p>';
+    return '<p>No template found</p>';
   } else {
-  	  instructionHtml = '<p>Here are instructions for your lesson</p>';
-  	  //instructionHtml = template.Instruction;
+  	  return '<p> template found</p>';
+  	  //template.instructions;
   }
-  return instructionHtml;	
 }
 
 readNewUrl();
