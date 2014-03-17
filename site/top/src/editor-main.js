@@ -1451,10 +1451,8 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // Given a template object, returns a piece of HTML that the IDE
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
-  // TODO:  alert that the instruction file is missing
-  //TODO:  place the instructions into a separate iframe?
-  if (!template) {
-    return '<p>No template found</p>';
+  if (template && !template.instructions) {
+  	  return '<div>No instructions for this template.</div>';
   } else {
   	  return template.instructions;
   }
