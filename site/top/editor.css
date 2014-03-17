@@ -65,7 +65,8 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   margin:5px;
   background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);}
 .pane{position:absolute;top:84px;bottom:0;background:whitesmoke;
-  border-left:1px solid white;border-right:1px solid white;z-index:0;}
+  border-left:1px solid white;border-right:1px solid white;z-index:0;
+  display:flex;flex-direction:column;}
 .back{left:-50%;width:50%;}
 .left{left:0;width:50%;}
 .right{left:50%;width:50%;}
@@ -87,7 +88,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   -moz-user-select:none;cursor:default;}
 #owner:hover{text-decoration:underline;}
 #folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
-.editor{position:absolute:top:0;height:100%;left:0;width:100%;
+.editor{position:absolute:top:0;flex:auto;left:0;width:100%;
   background-color:white;font:24px "Source Code Pro";font-weight:600;}
 #pencilcode .ace_editor {
   font-family: "Source Code Pro";
