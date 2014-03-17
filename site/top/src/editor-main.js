@@ -1152,7 +1152,7 @@ function createNewFileIntoPosition(position, filename, text) {
 
 // Given a pane position (e.g., 'left' or 'right'), does a couple steps:
 // (1) Loads the underlying file given by filename
-// (2) If it is a template file, loads the template metdata
+// (2) If it is a template file, loads the template metadata
 // (3) Puts the loaded data into the model.pane[pane] object for the pane
 // (4) Finally, calls callback cb when done.
 function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
@@ -1399,7 +1399,14 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // Given a template object, returns a piece of HTML that the IDE
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
-
+  var instructionHtml;
+  if (!template) {
+  	  instructionHtml = '<p>No template found</p>';
+  } else {
+  	  instructionHtml = '<p>Here are instructions for your lesson</p>';
+  	  //instructionHtml = template.Instruction;
+  }
+  return instructionHtml;	
 }
 
 readNewUrl();
