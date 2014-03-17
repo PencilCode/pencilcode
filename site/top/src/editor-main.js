@@ -1386,14 +1386,11 @@ function expandRunTemplate(template, code) {
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
 function parseTemplateDirFromLoadedFile(code) {
-  var m = /^#!pencil[ \t]+([^\n\r]+)/.exec(code);
+  // Search for "#!pencil <url>\n" at the start of the file.
+  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code);
   if (m && m.index == 0) {
+    return m[1];
   }
-
-
-
-
-
   return null;
 }
 
