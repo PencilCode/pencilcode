@@ -1099,7 +1099,7 @@ function runCodeAtPosition(position, code, filename, template) {
   setTimeout(function() {
     if (m.running) {
       view.setPaneRunText(
-         pane, expandRunTemplate(template, code), filename, baseUrl);
+         pane, code, template, filename, baseUrl);
     }
   }, 0);
   if (code) {
@@ -1372,25 +1372,23 @@ function cookie(key, value, options) {
 };
 
 ///////////////////////////////////////////////////////////////////////////
-// TEMPLATE SUPPORT
+// TEMPLATE SUPPORT (see also editor-view.js:expandRunTemplate)
 ///////////////////////////////////////////////////////////////////////////
-
-
-// Given a template object and some edited code, expands the
-// template for the running version of the code.
-function expandRunTemplate(template, code) {
-  return code;
-}
 
 // Given some saved code, pull the first line and looks to see
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
 function parseTemplateDirFromLoadedFile(code) {
   // Search for "#!pencil <url>\n" at the start of the file.
-  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code);
+  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code.data);
   if (m && m.index == 0) {
-    return m[1];
+    var hashBangParams = m[1];
+    console.log("User's file refers to a template: " + hashBangParams);
+    return hashBangParams;
   }
+
+  console.log("User's file does not refer to a template:\n" + code.data.substr(0, 100));
+
   return null;
 }
 

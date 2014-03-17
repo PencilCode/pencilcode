@@ -417,7 +417,7 @@ $('#filename').on('blur', function() {
   var sel = $('#filename');
   var enteredtext = sel.text();
   var fixedtext = enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
-      .replace(/^\/*/, '').replace(/\/\/+/g, '/');
+      .replace(/^\/[*]/, '').replace(/\/\/+/g, '/');
   if (!fixedtext) {
     fixedtext = state.nameText;
   }
@@ -897,10 +897,35 @@ window.pencilcode.domain + '/turtlebits.js"><\057script>\n' +
 text + '\n<\057script>\n</body>\n</html>\n');
 }
 
-function modifyForPreview(text, filename, targetUrl) {
+// Given a template object and some edited code, expands the
+// template for the running version of the code.
+function expandRunTemplate(template, code) {
+  // Remove "#!... at start of file, replace with a \n so we don't change line numbers.
+  var cleanedCode = code.replace(/^#![\n\r]*($|[\n\r])/, '\n');
+  var result = template.wrapper.data.replace('{{text}}', code);
+  if (result != template.wrapper) {
+    console.log("Added user's code to custom wrapper");
+  } else {
+    console.log("Failed to add user's code to wrapper:\n" + template.wrapper);
+    result = code;
+  }
+
+  var mimeType = mimeForFilename(template.wrapper.file);
+//  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
+
+
+  return result;
+}
+
+function modifyForPreview(text, template, filename, targetUrl) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text);
+    if (template && template.wrapper) {
+      text = expandRunTemplate(template, text);
+    } else {
+      console.log("Wrapping user's code in default wrapper");
+      text = wrapTurtle(text);
+    }
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   }
   if (!text) return '';
@@ -931,14 +956,14 @@ function modifyForPreview(text, filename, targetUrl) {
   return text;
 }
 
-function setPaneRunText(pane, text, filename, targetUrl) {
+function setPaneRunText(pane, text, template, filename, targetUrl) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
   updatePaneTitle(pane);
   // Assemble text and insert <base>, <plaintext>, etc., as appropriate.
-  var code = modifyForPreview(text, filename, targetUrl);
+  var code = modifyForPreview(text, template, filename, targetUrl);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
