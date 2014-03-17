@@ -1396,8 +1396,9 @@ function parseTemplateDirFromLoadedFile(code) {
 function loadTemplateMetadata(templateBaseDir, callback) {
   var match = templateBaseDir.split(':');
   if (match.length != 2) {
+    console.log('failed to parse template location');
     // error
-    callback();
+    callback(null);
     return;
   }
   var templateOwner = match[0];

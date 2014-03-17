@@ -1394,7 +1394,8 @@ function setPaneEditorText(pane, text, filename, instructionHTML) {
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(modeForMimeType(paneState.mimeType));
-  var lines = text.split('\n').length;
+  var lineArr = text.split('\n');
+  var lines = lineArr.length;
   var long = (lines * 24 * 1.4 > $('#' + pane).height());
   if (long) {
     $('.editor').css({fontWeight: 500, lineHeight: '129%'});
@@ -1423,6 +1424,16 @@ function setPaneEditorText(pane, text, filename, instructionHTML) {
       fireEvent('dirty', [pane]);
     }
   });
+
+  setTimeout(function() {
+    var foldMarker = '# fold';
+    for (var i = 0, line; (line = lineArr[i]) !== undefined; i++) {
+      if (line.lastIndexOf(foldMarker) + foldMarker.length == line.length) {
+        var data = editor.getSession().getParentFoldRangeData(i + 1);
+        editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+      }
+    }
+  }, 200);
   if (long) {
     editor.gotoLine(0);
   } else {
