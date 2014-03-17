@@ -1386,13 +1386,26 @@ function expandRunTemplate(template, code) {
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
 function parseTemplateDirFromLoadedFile(code) {
+  var m = /^#!pencil[ \t]+([^\n\r]+)/.exec(code);
+  if (m && m.index == 0) {
+  }
+
+
+
+
+
   return null;
 }
 
 // Given a template base directory, loads the template metadata.
 function loadTemplateMetadata(templateBaseDir, callback) {
   callback({
-    boilerplate: 'here'
+    // wrapper is the source that will wrap the student's code, contains
+    // the string {{text}} at the point the student's code should be inserted.
+    wrapper: '',
+
+    // HTML to be displayed above editor
+    instructions: '',
   });
 }
 
