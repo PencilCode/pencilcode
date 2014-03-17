@@ -1451,11 +1451,16 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // Given a template object, returns a piece of HTML that the IDE
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
-  if (template && !template.instructions) {
-  	  return '<div>No instructions for this template.</div>';
-  } else {
-  	  return template.instructions;
-  }
+	if (template) {
+		if (!template.instructions) {
+		'No instructions for this template.';	
+		} else {
+			return template.instructions;
+		}
+		
+	}  else {
+	return null;	
+	}
 }
 
 readNewUrl();
