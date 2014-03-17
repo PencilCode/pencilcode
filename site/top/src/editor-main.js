@@ -1462,8 +1462,7 @@ function instructionTextForTemplate(template) {
   if (!template) {
     return '<p>No template found</p>';
   } else {
-  	  return '<p> template found</p>';
-  	  //template.instructions;
+  	  return template.instructions;
   }
 }
 
