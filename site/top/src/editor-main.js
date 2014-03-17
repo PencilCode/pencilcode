@@ -1386,14 +1386,70 @@ function expandRunTemplate(template, code) {
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
 function parseTemplateDirFromLoadedFile(code) {
+  // Search for "#!pencil <url>\n" at the start of the file.
+  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code);
+  if (m && m.index == 0) {
+    return m[1];
+  }
   return null;
 }
 
 // Given a template base directory, loads the template metadata.
 function loadTemplateMetadata(templateBaseDir, callback) {
-  callback({
-    boilerplate: 'here'
-  });
+  var dirReStr = "http://(\\w+)\\." + window.pencilcode.domain + "/load/(.+?)/?$";
+  var dirRe = new RegExp(dirReStr);
+  var match = dirRe.exec(templateBaseDir);
+  if (!match) {
+    // error
+    callback();
+    return;
+  }
+  var templateOwner = match[1];
+  var templateName = match[2];
+
+  var instructionsFile = null;
+  var wrapperFile = null;
+
+  var processTemplateDir = function(dirData) {
+    // Check for wrapper and instruction files and load them.
+    for (var i = 0, file; file = dirData.list[i]; i++) {
+      if (file.name == 'instructions.html') {
+        instructionsFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, instructionsFile, true, processInstructions);
+      } else if (file.name == 'wrapper') {
+        wrapperFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
+      }
+    }
+  };
+
+  var templateData = {
+    // wrapper is the source that will wrap the student's code, contains
+    // the string {{text}} at the point the student's code should be inserted.
+    wrapper: '',
+
+    // HTML to be displayed above editor
+    instructions: ''
+  };
+
+  var processInstructions = function(fileData) {
+    templateData.instructions = fileData.data;
+    finish();
+  };
+
+  var processWrapper = function(fileData) {
+    templateData.wrapper = fileData.data;
+    finish();
+  };
+
+  var finish = function() {
+    if ((!instructionsFile || templateData.instructions) &&
+        (!wrapperFile || templateData.wrapper)) {
+      callback(templateData);
+    }
+  }
+
+  storage.loadFile(templateOwner, templateName, true, processTemplateDir);
 }
 
 // Given a template object, returns a piece of HTML that the IDE
