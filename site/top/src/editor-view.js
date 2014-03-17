@@ -898,22 +898,27 @@ text + '\n<\057script>\n</body>\n</html>\n');
 }
 
 // Given a template object and some edited code, expands the
-// template for the running version of the code.
+// template for the running version of the code. Note that when
+// first opening a file in the editor, code is "" (empty string),
+// rather than the file's content. Wrapper authors made need to handle
+// that case, or we made need to do something different (e.g. just
+// use the default wrapper only in this case, as it displays the grid
+// and default turtle).
 function expandRunTemplate(template, code) {
   // Remove "#!... at start of file, replace with a \n so we don't change line numbers.
-  var cleanedCode = code.replace(/^#![\n\r]*($|[\n\r])/, '\n');
-  var result = template.wrapper.data.replace('{{text}}', code);
-  if (result != template.wrapper) {
+  var cleanedCode = code.replace(/^#![^\n\r]*($|[\n\r])/, '\n'),
+      tmpl = template.wrapper.data,
+      result = tmpl.replace('{{text}}', cleanedCode);
+  if (result != tmpl) {
     console.log("Added user's code to custom wrapper");
   } else {
     console.log("Failed to add user's code to wrapper:\n" + template.wrapper);
-    result = code;
+    result = cleanedCode;
   }
-
   var mimeType = mimeForFilename(template.wrapper.file);
-//  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-
-
+  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
+    result = wrapTurtle(result);
+  }
   return result;
 }
 

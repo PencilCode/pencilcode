@@ -1394,6 +1394,10 @@ function parseTemplateDirFromLoadedFile(code) {
 
 // Given a template base directory, loads the template metadata.
 function loadTemplateMetadata(templateBaseDir, callback) {
+  // TODO(jamessynge) Let's make this able to support more domains (e.g. both pencilcode.net and
+  // pencilcode.net.dev), to not require /load/ at the start of the path. Could support a
+  // path such as "teacherName:/path/to/template/dir", so that we don't tie ourselves to a
+  // specific domain.
   var dirReStr = "http://(\\w+)\\." + window.pencilcode.domain + "/load/(.+?)/?$";
   var dirRe = new RegExp(dirReStr);
   var match = dirRe.exec(templateBaseDir);
