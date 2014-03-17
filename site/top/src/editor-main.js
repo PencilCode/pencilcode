@@ -1453,9 +1453,9 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 function instructionTextForTemplate(template) {
 	if (template) {
 		if (!template.instructions) {
-		'No instructions for this template.';	
+		  return '<p>No instructions for this template.</p>';	
 		} else {
-			return template.instructions;
+		  return template.instructions;
 		}
 		
 	}  else {
