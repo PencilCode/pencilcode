@@ -1099,7 +1099,7 @@ function runCodeAtPosition(position, code, filename, template) {
   setTimeout(function() {
     if (m.running) {
       view.setPaneRunText(
-         pane, expandRunTemplate(template, code), filename, baseUrl);
+         pane, code, template, filename, baseUrl);
     }
   }, 0);
   if (code) {
@@ -1372,30 +1372,32 @@ function cookie(key, value, options) {
 };
 
 ///////////////////////////////////////////////////////////////////////////
-// TEMPLATE SUPPORT
+// TEMPLATE SUPPORT (see also editor-view.js:expandRunTemplate)
 ///////////////////////////////////////////////////////////////////////////
-
-
-// Given a template object and some edited code, expands the
-// template for the running version of the code.
-function expandRunTemplate(template, code) {
-  return code;
-}
 
 // Given some saved code, pull the first line and looks to see
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
 function parseTemplateDirFromLoadedFile(code) {
   // Search for "#!pencil <url>\n" at the start of the file.
-  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code);
+  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code.data);
   if (m && m.index == 0) {
-    return m[1];
+    var hashBangParams = m[1];
+    console.log("User's file refers to a template: " + hashBangParams);
+    return hashBangParams;
   }
+
+  console.log("User's file does not refer to a template:\n" + code.data.substr(0, 100));
+
   return null;
 }
 
 // Given a template base directory, loads the template metadata.
 function loadTemplateMetadata(templateBaseDir, callback) {
+  // TODO(jamessynge) Let's make this able to support more domains (e.g. both pencilcode.net and
+  // pencilcode.net.dev), to not require /load/ at the start of the path. Could support a
+  // path such as "teacherName:/path/to/template/dir", so that we don't tie ourselves to a
+  // specific domain.
   var dirReStr = "http://(\\w+)\\." + window.pencilcode.domain + "/load/(.+?)/?$";
   var dirRe = new RegExp(dirReStr);
   var match = dirRe.exec(templateBaseDir);
@@ -1416,7 +1418,7 @@ function loadTemplateMetadata(templateBaseDir, callback) {
       if (file.name == 'instructions.html') {
         instructionsFile = templateName + '/' + file.name;
         storage.loadFile(templateOwner, instructionsFile, true, processInstructions);
-      } else if (file.name == 'wrapper') {
+      } else if (file.name == 'wrapper' || file.name == 'wrapper.html') {
         wrapperFile = templateName + '/' + file.name;
         storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
       }
@@ -1438,7 +1440,7 @@ function loadTemplateMetadata(templateBaseDir, callback) {
   };
 
   var processWrapper = function(fileData) {
-    templateData.wrapper = fileData.data;
+    templateData.wrapper = fileData;
     finish();
   };
 
