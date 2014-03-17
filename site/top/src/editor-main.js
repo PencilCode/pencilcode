@@ -1416,7 +1416,7 @@ function loadTemplateMetadata(templateBaseDir, callback) {
       if (file.name == 'instructions.html') {
         instructionsFile = templateName + '/' + file.name;
         storage.loadFile(templateOwner, instructionsFile, true, processInstructions);
-      } else if (file.name == 'wrapper') {
+      } else if (file.name == 'wrapper' || file.name == 'wrapper.html') {
         wrapperFile = templateName + '/' + file.name;
         storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
       }
@@ -1438,7 +1438,7 @@ function loadTemplateMetadata(templateBaseDir, callback) {
   };
 
   var processWrapper = function(fileData) {
-    templateData.wrapper = fileData.data;
+    templateData.wrapper = fileData;
     finish();
   };
 
