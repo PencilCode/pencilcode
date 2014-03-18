@@ -294,7 +294,12 @@ view.on('byname', function() {
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
     view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
-    // End debugging session when text is edited.
+  }
+});
+
+view.on('changelines', function(pane) {
+  // End debugging session when number of lines is changed.
+  if (posofpane(pane) == 'left') {
     debug.bindframe(null);
   }
 });
