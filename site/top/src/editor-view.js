@@ -78,6 +78,7 @@ window.pencilcode.view = {
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
   notePaneEditorCleanText: notePaneEditorCleanText,
+  notePaneEditorCleanLineCount: notePaneEditorCleanLineCount,
   noteNewFilename: noteNewFilename,
   setPaneEditorReadOnly: setPaneEditorReadOnly,
   isPaneEditorDirty: isPaneEditorDirty,
@@ -137,6 +138,7 @@ function initialPaneState() {
   return {
     editor: null,       // The ace editor instance.
     cleanText: null,    // The last-saved copy of the text.
+    cleanLineCount: 0,  // The last-run number of lines of text.
     marked: {},         // Tracks highlighted lines (see markPaneEditorLine)
     mimeType: null,     // The current mime type.
     dirtied: false,     // Set if known to be dirty.
@@ -1022,6 +1024,9 @@ function showProtractor(pane, step) {
 }
 
 function labelStep(preview, step) {
+  if (!step.startCoords) {
+    return;
+  }
   // TEXT LABEL
   var label = $(preview).find('.protractor-label');
   if (!label.length) {
@@ -1203,6 +1208,7 @@ function clearPane(pane, loading) {
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
+  paneState.cleanLineCount = 0;
   paneState.marked = {};
   paneState.mimeType = null;
   paneState.dirtied = false;
@@ -1370,9 +1376,6 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
-    // Any editing ends the debugging session.
-    require('editor-debug').bindframe(null);
-    clearPaneEditorMarks(pane);
     if (editor.getFontSize() > 16) {
       if (editor.getSession().getLength() *
           editor.getFontSize() * 1.4 > $('#' + pane).height()) {
@@ -1382,6 +1385,11 @@ function setPaneEditorText(pane, text, filename) {
     }
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
+    }
+    // Any editing that changes the line count ends the debugging session.
+    if (paneState.cleanLineCount != editor.getSession().getLength()) {
+      clearPaneEditorMarks(pane);
+      fireEvent('changelines', [pane]);
     }
   });
   if (long) {
@@ -1394,13 +1402,13 @@ function setPaneEditorText(pane, text, filename) {
     fireEvent('editfocus', [pane]);
   });
   var gutter = $('#' + id + ' .ace_gutter');
-  gutter.on('mouseenter', '.ace_gutter-cell', function() {
+  gutter.on('mouseenter', '.guttermouseable', function() {
     fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('mouseleave', '.ace_gutter-cell', function() {
+  gutter.on('mouseleave', '.guttermouseable', function() {
     fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('click', '.ace_gutter-cell', function() {
+  gutter.on('click', '.guttermouseable', function() {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
 }
@@ -1596,6 +1604,13 @@ function notePaneEditorCleanText(pane, text) {
   if ((text == editortext) == (paneState.dirtied)) {
     paneState.dirtied = (text != editortext);
     fireEvent('dirty', [pane]);
+  }
+}
+
+function notePaneEditorCleanLineCount(pane) {
+  var paneState = state.pane[pane];
+  if (paneState.editor) {
+    paneState.cleanLineCount = paneState.editor.getSession().getLength();
   }
 }
 
