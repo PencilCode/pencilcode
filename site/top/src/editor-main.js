@@ -1453,11 +1453,11 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
     if (template) {
-        if (!template.instructions) {
-            return '<p>No instructions for this template.</p>';
-        } else {
+        if (template.instructions) {
             return template.instructions;
         }
+        else
+            return null;
     } else {
         return null;
     }
