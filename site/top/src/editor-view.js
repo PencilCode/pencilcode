@@ -897,6 +897,31 @@ window.pencilcode.domain + '/turtlebits.js"><\057script>\n' +
 text + '\n<\057script>\n</body>\n</html>\n');
 }
 
+function parseTemplateWrapper(wrapperText) {
+  // Find the lines that demark the default implementation of the assignment.
+  var startRe = /^.*{{start-default-text(;[^=]+=[^;}]*)*}}$/m,
+      startMatch = startRe.exec(wrapperText),
+      endRe = /^.*{{end-default-text}}$/m,
+      endMatch = endRe.exec(wrapperText);
+  if (!startMatch) {
+    console.log("Unable to find {{start-default-text}} in wrapper.");
+    return;
+  }
+  if (!endMatch) {
+    console.log("Unable to find {{end-default-text}} in wrapper.");
+    return;
+  }
+  var result = {
+    before: wrapperText.substr(0, startMatch.index),
+    startLine: startMatch[0],
+    startVars: startMatch[1],
+    defaultText: wrapperText.substring(startRe.lastIndex, endMatch.Index),
+    endLine: endMatch[0],
+    after: wrapperText.substr(endRe.lastIndex)
+  };
+  return result;
+}
+
 // Given a template object and some edited code, expands the
 // template for the running version of the code. Note that when
 // first opening a file in the editor, code is "" (empty string),
@@ -908,7 +933,8 @@ function expandRunTemplate(template, code) {
   // Remove "#!... at start of file, replace with a \n so we don't change line numbers.
   var cleanedCode = code.replace(/^#![^\n\r]*($|[\n\r])/, '\n'),
       tmpl = template.wrapper.data,
-      result = tmpl.replace('{{text}}', cleanedCode);
+      result = tmpl.replace('{{text}}', cleanedCode),
+      dummy = parseTemplateWrapper(tmpl);
   if (result != tmpl) {
     console.log("Added user's code to custom wrapper");
   } else {
