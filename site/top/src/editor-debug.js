@@ -42,10 +42,6 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   firstSessionId = nextDebugId;
-  if (stopButtonShown == 1) {
-    view.showMiddleButton('run');
-  }
-  stopButtonShown = 0;
   startPollingWindow();
 }
 
@@ -80,6 +76,7 @@ var debug = window.ide = {
     else if (name == 'resolve') { debugResolve.apply(null, data); }
     else if (name == 'error') { debugError.apply(null, data); }
   },
+  flashStopButton: flashStopButton
 };
 
 // The "enter" event is triggered inside the call to a turtle command.
@@ -469,10 +466,35 @@ function parseTurtleTransform(transform) {
 // STOP BUTTON SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+// Flashes the stop button for half a second.
+function flashStopButton() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (!stopButtonShown) {
+    view.showMiddleButton('stop');
+    stopButtonShown = 1;
+  }
+  // Within one second, startPollingWindow should be called,
+  // cancelling this timer.  If it is not (for example, if we
+  // are running a plain HTML file or something else that does
+  // not bind to the IDE debugger API), then we just clear
+  // the stop button ourselves.
+  pollTimer = setTimeout(function() {
+    if (stopButtonShown) {
+      view.showMiddleButton('run');
+      stopButtonShown = 0;
+    }
+  }, 1000);
+}
+
+
 function startPollingWindow() {
   if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
       typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    if (stopButtonShown) {
+      view.showMiddleButton('run');
+      stopButtonShown = 0;
+    }
     return;
   }
   pollTimer = setTimeout(pollForStop, 100);
@@ -502,6 +524,7 @@ function pollForStop() {
 view.on('stop', function() {
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
       typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    // Do nothing if the program is not something that we can interrupt.
     return;
   }
   targetWindow.jQuery.turtle.interrupt();
