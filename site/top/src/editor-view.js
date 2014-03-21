@@ -899,9 +899,9 @@ text + '\n<\057script>\n</body>\n</html>\n');
 
 function parseTemplateWrapper(wrapperText) {
   // Find the lines that demark the default implementation of the assignment.
-  var startRe = /^.*{{start-default-text(;[^=]+=[^;}]*)*}}$/m,
+  var startRe = /^.*{{start-default-text(;[^=]+=[^;}]*)*}}$/gm,
       startMatch = startRe.exec(wrapperText),
-      endRe = /^.*{{end-default-text}}$/m,
+      endRe = /^.*{{end-default-text}}$/gm,
       endMatch = endRe.exec(wrapperText);
   if (!startMatch) {
     console.log("Unable to find {{start-default-text}} in wrapper.");
@@ -915,7 +915,7 @@ function parseTemplateWrapper(wrapperText) {
     before: wrapperText.substr(0, startMatch.index),
     startLine: startMatch[0],
     startVars: startMatch[1],
-    defaultText: wrapperText.substring(startRe.lastIndex, endMatch.Index),
+    defaultText: wrapperText.substring(startRe.lastIndex, endMatch.index),
     endLine: endMatch[0],
     after: wrapperText.substr(endRe.lastIndex)
   };
@@ -933,14 +933,12 @@ function expandRunTemplate(template, code) {
   // Remove "#!... at start of file, replace with a \n so we don't change line numbers.
   var cleanedCode = code.replace(/^#![^\n\r]*($|[\n\r])/, '\n'),
       tmpl = template.wrapper.data,
-      result = tmpl.replace('{{text}}', cleanedCode),
-      dummy = parseTemplateWrapper(tmpl);
-  if (result != tmpl) {
-    console.log("Added user's code to custom wrapper");
-  } else {
-    console.log("Failed to add user's code to wrapper:\n" + template.wrapper);
-    result = cleanedCode;
+      wrapper = parseTemplateWrapper(tmpl);
+  if (!wrapper) {
+    return code;
   }
+  var result = wrapper.before + cleanedCode + wrapper.after;
+  console.log("Added user's code to custom wrapper");
   var mimeType = mimeForFilename(template.wrapper.file);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     result = wrapTurtle(result);
