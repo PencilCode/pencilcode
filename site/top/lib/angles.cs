@@ -6,6 +6,7 @@ window.showangle = (x, c) ->
     t.ht()
     t.moveto turtle
     t.turnto turtle.direction()
+    t.css { turtleScale: turtle.css('turtleScale') }
     t.pen c
     t.fd 100
     t.bk 50
@@ -28,6 +29,7 @@ window.showarc = (a, r, c) ->
     t.ht()
     t.moveto turtle
     t.turnto turtle.direction()
+    t.css { turtleScale: turtle.css('turtleScale') }
     t.pen c
     t.rt 90
     t.fd r

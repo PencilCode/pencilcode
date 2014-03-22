@@ -1,4 +1,3 @@
 User-agent: *
 Disallow: /save/
-Disallow: /load/
 Disallow: /edit/
