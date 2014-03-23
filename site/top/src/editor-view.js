@@ -891,6 +891,8 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
+// TODO Move next few functions related to wrapping into another file so
+// they're more accessible outside of this file.
 function wrapTurtle(text) {
   return (
 '<!doctype html>\n<html>\n<head>\n<script src="http://' +
@@ -945,15 +947,35 @@ function parseTemplateWrapper(wrapperText) {
 // use the default wrapper only in this case, as it displays the grid
 // and default turtle).
 function expandRunTemplate(template, code) {
-  // Remove "#!... at start of file, replace with a \n so we don't change line numbers.
-  var cleanedCode = code.replace(/^#![^\n\r]*($|[\n\r])/, '\n'),
+  // Remove "#!pencil... at start of file, replace with a \n so we don't change line numbers.
+  var cleanedCode = code.replace(/^#!pencil[^\n\r]*($|[\n\r])/, '\n'),
       tmpl = template.wrapper.data,
       wrapper = parseTemplateWrapper(tmpl);
   if (!wrapper) {
     return code;
   }
+  if (wrapper.vars) {
+    var prefix;
+    if (wrapper.vars.linePrefix) {
+      prefix = wrapper.vars.linePrefix;
+    } else if (wrapper.vars.indentBy) {
+      var indentBy = +wrapper.vars.indentBy;
+      if (indentBy > 0) {
+        prefix = "                               ".substr(0, indentBy);
+      }
+    }
+    if (prefix != undefined) {
+      var lines = cleanedCode.split('\n');
+      cleanedCode = prefix + lines.join('\n' + prefix) + '\n';
+    }
+  }
   var result = wrapper.before + cleanedCode + wrapper.after;
   console.log("Added user's code to custom wrapper");
+  // TODO Consider adding support for multiple levels of wrapping (i.e. where
+  // metadata in first wrapper specifies path to next wrapper). For the moment,
+  // if the wrapper's file name has no extension, we assume that the wrapper is
+  // coffee script, to be wrapped in the standard code which adds turtlebits
+  // and creates the default turtle.
   var mimeType = mimeForFilename(template.wrapper.file);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     result = wrapTurtle(result);
