@@ -40,6 +40,7 @@ function bindframe(w) {
   cachedSourceMaps = {};
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
+  view.notePaneEditorCleanLineCount(view.paneid('left'));
   firstSessionId = nextDebugId;
   if (stopButtonShown == 1) {
     view.showMiddleButton('run');
