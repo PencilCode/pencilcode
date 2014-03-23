@@ -899,7 +899,7 @@ text + '\n<\057script>\n</body>\n</html>\n');
 
 function parseTemplateWrapper(wrapperText) {
   // Find the lines that demark the default implementation of the assignment.
-  var startRe = /^.*{{start-default-text(;[^=]+=[^;}]*)*}}$/gm,
+  var startRe = /^.*{{start-default-text((?:;[^=]+=[^;}]*)*)}}$/gm,
       startMatch = startRe.exec(wrapperText),
       endRe = /^.*{{end-default-text}}$/gm,
       endMatch = endRe.exec(wrapperText);
@@ -914,11 +914,24 @@ function parseTemplateWrapper(wrapperText) {
   var result = {
     before: wrapperText.substr(0, startMatch.index),
     startLine: startMatch[0],
-    startVars: startMatch[1],
     defaultText: wrapperText.substring(startRe.lastIndex, endMatch.index),
     endLine: endMatch[0],
     after: wrapperText.substr(endRe.lastIndex)
   };
+  if (startMatch[1]) {
+    var parts = startMatch[1].substr(1).split(';'), vars = {};
+    $.each(parts, function(n, part) {
+      var offset = part.indexOf('='),
+          key = part.substr(0, offset),
+          value = part.substr(offset+1);
+      if (vars.hasOwnProperty(key)) {
+        console.log('Duplicate property (' + key + ') in start marker:\n' + startMatch[0]);
+        return;
+      }
+      vars[key] = value;
+    });
+    result.vars = vars;
+  }
   return result;
 }
 
