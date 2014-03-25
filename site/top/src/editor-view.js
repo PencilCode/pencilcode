@@ -607,13 +607,13 @@ function showShareDialog(opts) {
   opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
-       (opts.shareRunURL ?
+       (opts.shareActivityURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
           'title="Start a new Activity" href="' +
-          opts.shareEditURL + '">Activity</a> <input type="text" value="' +
-          opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
+          opts.shareActivityURL + '">Activity</a> <input type="text" value="' +
+          opts.shareActivityURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareActivityURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         (opts.shareRunURL ?
         '<div class="field">' +
