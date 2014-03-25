@@ -259,6 +259,13 @@ view.on('share', function() {
           // Share the run URL unless there is no owner (e.g., for /first).
           opts.shareRunURL = "http://" + document.domain + '/home/' +
             modelatpos('left').filename;
+          
+          //Share activity URL
+          //http://start.pencilcode.net/edit/some_path?activity=
+          opts.shareActivityURL = "http://start." + window.pencilcode.domain +
+            '/edit/' + modelatpos('left').filename + '?' + 'activity=' +
+            "http://" + document.domain + '/home/' +
+            modelatpos('left').filename;
         }
         opts.shareEditURL = window.location.href;
 
