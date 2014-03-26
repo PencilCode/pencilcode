@@ -895,8 +895,8 @@ function wrapTurtle(text) {
   return (
 '<!doctype html>\n<html>\n<head>\n<script src="http://' +
 window.pencilcode.domain + '/turtlebits.js"><\057script>\n' +
-'</head>\n<body>\n<script type="text/coffeescript">\neval $.turtle()\n\n' +
-text + '\n<\057script>\n</body>\n</html>\n');
+'</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
+text + '\n<\057script></body></html>');
 }
 
 function modifyForPreview(text, filename, targetUrl) {
