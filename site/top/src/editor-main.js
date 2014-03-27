@@ -261,11 +261,7 @@ view.on('share', function() {
             modelatpos('left').filename;
           
           //Share activity URL
-          //http://start.pencilcode.net/edit/some_path?activity=
-          opts.shareActivityURL = "http://start." + window.pencilcode.domain +
-            '/edit/' + modelatpos('left').filename + '?' + 'activity=' +
-            "http://" + document.domain + '/home/' +
-            modelatpos('left').filename;
+          opts.shareActivityURL = getStartActivityURL();
         }
         opts.shareEditURL = window.location.href;
 
@@ -1473,6 +1469,34 @@ function instructionTextForTemplate(template) {
     } else {
         return null;
     }
+}
+
+// Constuct an activity URL from the current run file path
+function getStartActivityURL() {
+    var isInstructionFile = true; //TODO: fix file checks
+    var isActivityFile = true;
+    var isWrapperFile = true;
+    var activityDir = '';
+    var defaultPath = '';
+    var m = '';
+    
+    m = modelatpos('left').filename;
+    if (m.isdir) {
+        defaultPath = m;
+     } else {
+        defaultPath = m.substr(0, m.lastIndexOf('/'));
+     }
+    activityDir = "http://" + document.domain + '/home/' + defaultPath;
+
+    //TODO:  Get saved metadata for activity templates
+    // or check the storage for the existence of activity files
+    if ((isInstructionFile && isWrapperFile) || isActivityFile) {
+         return "http://start." + window.pencilcode.domain +
+            '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
+      } else {
+        console.log('failed to find activity files');
+        return '';
+      }
 }
 
 readNewUrl();
