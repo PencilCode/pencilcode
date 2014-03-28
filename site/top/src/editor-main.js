@@ -52,6 +52,7 @@ function($, view, storage, debug, seedrandom, see, drawProtractor) {
 eval(see.scope('controller'));
 
 var model = {
+    
   // Owner name of this file or directory.
   ownername: null,
   // True if /edit/ url.
@@ -1472,45 +1473,48 @@ function instructionTextForTemplate(template) {
 }
 
 // Constuct an activity URL from the current run file path
-// TODO: set the activity file list on the view
 function getStartActivityURL() {
+    var isInstruction = false;
+    var isWrapper = false;
+    var isJson = false;    
     var activityDir = '';
     var defaultPath = '';
     var filename = modelatpos('left').filename;
-    if (filename.isdir) {
+    
+    var isdir = /\/$/.test(window.location.pathname);
+    if (isdir) {
         defaultPath = filename;
     } else {
         defaultPath = filename.substr(0, filename.lastIndexOf('/'));
     }
     activityDir = "http://" + document.domain + '/home/' + defaultPath;
-    var activityFileList = [];
-    var aURL = '';
     
-    storage.loadFileList(model.ownername, defaultPath, function(list) {
-        var isInstruction = false;
-        var isWrapper = false;
-        var isJson = false;
-        if (list) {
-            activityFileList = list;
-            for (var j = 0; j < activityFileList.length; j++) {
-                if (activityFileList.indexOf('instructions.html') >= 0) {
+    var getFilesInDir = function(dirData) {
+        var file = dirData.list[0];
+        var name = file.name;
+     
+        if (dirData.list) {
+            for (var j = 0, file; file = dirData.list[j]; j++) {
+                if (dirData.list[j].name ==='instructions.html') {
                     isInstruction = true;
-                } else if (activityFileList.indexOf('wrapper' || 'wrapper.html') >= 0) {
+                    //console.log('yep, found an instruction file.');
+                } else if (dirData.list[j].name === 'wrapper' ||
+                           dirData.list[j].name === 'wrapper.html') {
                     isWrapper = true;
-                } else if (activityFileList.indexOf('activity.json') >= 0) {
+                    //console.log('yep, found an wrapper file.');
+                } else if (dirData.list[j].name === 'activity.json') {
                     isJson = true;
                 }
             }
-            if ((isInstruction && isWrapper) || isJson) {
-                aURL = createURL;
-            }
         }
-    });
-    var createURL = function() {
-         aURL = "http://start." + window.pencilcode.domain +
-            '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
     }
-    return "http://start." + window.pencilcode.domain +
+    storage.loadFile(model.ownername, defaultPath, true, getFilesInDir);
+    
+    if ((isInstruction && isWrapper) || isJson) {
+        console.log('found an instruction and wrapper file');
+        // verify this in view, when user clicks on activity link
+     }
+     return "http://start." + window.pencilcode.domain +
     '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
 }
 
