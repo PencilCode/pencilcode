@@ -1378,7 +1378,7 @@ function setPaneEditorText(pane, text, filename) {
   var big = { width: 14, height: 29 };
   // We're "long" if we bump out of the pane rectangle.
   var long = ((dimensions.rows + 2) * big.height > $('#' + pane).height() ||
-              (dimensions.columns + 1) * big.width > $('#' + pane).width());
+              (dimensions.columns + 5) * big.width > $('#' + pane).width());
   if (long) {
     // Use a small font for long documents.
     $('#' + pane + ' .editor').css({fontWeight: 500, lineHeight: '119%'});
