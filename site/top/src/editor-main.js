@@ -1129,7 +1129,7 @@ function defaultDirSortingByDate() {
 
 function setDefaultDirSortingByDate(f) {
   try {
-    if (f) {
+    if (f) { 
       window.localStorage.dirsort = 'bydate';
     } else {
       delete window.localStorage['dirsort'];
@@ -1472,32 +1472,48 @@ function instructionTextForTemplate(template) {
 }
 
 // Constuct an activity URL from the current run file path
+// TODO: set the activity file list on the view
 function getStartActivityURL() {
-    var isInstructionFile = true; //TODO: fix file checks
-    var isActivityFile = true;
-    var isWrapperFile = true;
     var activityDir = '';
     var defaultPath = '';
-    var m = '';
-    
-    m = modelatpos('left').filename;
-    if (m.isdir) {
-        defaultPath = m;
-     } else {
-        defaultPath = m.substr(0, m.lastIndexOf('/'));
-     }
+    var filename = modelatpos('left').filename;
+    if (filename.isdir) {
+        defaultPath = filename;
+    } else {
+        defaultPath = filename.substr(0, filename.lastIndexOf('/'));
+    }
     activityDir = "http://" + document.domain + '/home/' + defaultPath;
-
-    //TODO:  Get saved metadata for activity templates
-    // or check the storage for the existence of activity files
-    if ((isInstructionFile && isWrapperFile) || isActivityFile) {
-         return "http://start." + window.pencilcode.domain +
+    var activityFileList = [];
+    var aURL = '';
+    
+    storage.loadFileList(model.ownername, defaultPath, function(list) {
+        var isInstruction = false;
+        var isWrapper = false;
+        var isJson = false;
+        if (list) {
+            activityFileList = list;
+            for (var j = 0; j < activityFileList.length; j++) {
+                if (activityFileList.indexOf('instructions.html') >= 0) {
+                    isInstruction = true;
+                } else if (activityFileList.indexOf('wrapper' || 'wrapper.html') >= 0) {
+                    isWrapper = true;
+                } else if (activityFileList.indexOf('activity.json') >= 0) {
+                    isJson = true;
+                }
+            }
+            if ((isInstruction && isWrapper) || isJson) {
+                aURL = createURL;
+            }
+        }
+    });
+    var createURL = function() {
+         aURL = "http://start." + window.pencilcode.domain +
             '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
-      } else {
-        console.log('failed to find activity files');
-        return '';
-      }
+    }
+    return "http://start." + window.pencilcode.domain +
+    '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
 }
+
 
 readNewUrl();
 
