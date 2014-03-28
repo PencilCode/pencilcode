@@ -610,8 +610,8 @@ function showShareDialog(opts) {
        (opts.shareActivityURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
-          'title="Start a new Activity" href="' +
-          opts.shareActivityURL + '">Activity</a> <input type="text" value="' +
+          'title="Link to student activity file" href="' +
+          opts.shareActivityURL + '">New Activity</a> <input type="text" value="' +
           opts.shareActivityURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareActivityURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
