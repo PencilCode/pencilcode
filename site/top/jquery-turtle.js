@@ -4362,6 +4362,9 @@ var dollar_turtle_methods = {
   function write(html) {
     return output(Array.prototype.join.call(arguments, ' '), 'div');
   }),
+  typeout: wrapraw('typeout',
+  ["<u>print(text)</u> Writes out typewriter-style text. " +
+      "<mark>typeout 'Hello!\n'</mark>"], plainTextPrint),
   read: wrapraw('read',
   ["<u>read(fn)</u> Reads text or numeric input. " +
       "Calls fn once: " +
@@ -4378,6 +4381,11 @@ var dollar_turtle_methods = {
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
   function readstr(a, b) { return input(a, b, -1); }),
+  menu: wrapraw('menu',
+  ["<u>menu(map)</u> shows a menu of choices and calls a function " +
+      "based on the user's choice: " +
+      "<mark>menu{A: (-> write 'chose A'), B: (-> write 'chose B')})</menu>"],
+  menu),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -5452,6 +5460,20 @@ function turtleevents(prefix) {
   }
 }
 
+// autoScrollAfter will detect if the body is scrolled near the
+// bottom already.  If it is, then it autoscrolls it down after
+// running the passed function.  (E.g., to allow "print" to scroll
+// text upward.)
+function autoScrollAfter(f) {
+  var stick = ($(window).height() + $('body').prop('scrollTop') + 10 >=
+               $('body').prop('scrollHeight'));
+  f();
+  if (stick) {
+    $('body').prop('scrollTop',
+      $('body').prop('scrollHeight') - $(window).height());
+  }
+}
+
 // Simplify $('body').append(html).
 function output(html, defaulttag) {
   if (html === undefined || html === null) {
@@ -5471,8 +5493,115 @@ function output(html, defaulttag) {
     }
     result = $(html);
   }
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
+}
+
+// Simplify output of preformatted text inside a <pre>.
+function plainTextPrint() {
+  var args = arguments;
+  autoScrollAfter(function() {
+    var pre = document.body.lastChild;
+    if (!pre || pre.tagName != 'PRE') {
+      pre = document.createElement('pre');
+      document.body.appendChild(pre);
+    }
+    for (var j = 0; j < args.length; j++) {
+      var t;
+      if (args[j] == null) {
+        t = typeof(args[j]);
+      } else {
+        t = args[j].toString();
+      }
+      pre.appendChild(document.createTextNode(t));
+    }
+  });
+}
+
+// Support display of a single one-shot input menu.
+function menu(choices, fn) {
+  var result = $('<form>').css({display:'table'}),
+      name = Math.random().toString().substr(2),
+      triggered = false,
+      count = 0,
+      cursor = 0,
+      keys = {};
+  // Creates a function to be called when the user picks
+  // a choice: triggering should only be done once.
+  function triggerOnce(text, outcome) {
+    return (function() {
+      if (!triggered) {
+        triggered = true;
+        $('input[name=' + name + ']').prop('disabled', true);
+        var value = text;
+        if ($.isFunction(outcome)) {
+          outcome();
+        } else if (outcome != null) {
+          value = outcome;
+        }
+        if ($.isFunction(fn)) {
+          fn(value);
+        }
+      } else {
+        return false
+      }
+    });
+  }
+  // Constructs the HTML for a choice, with a name that
+  // causes the radio buttons to be grouped, and with the
+  // text label selected by the programmer.  Also keeps track
+  // of the first character of the label for use as a keyboard shortcut.
+  function addChoice(text, outcome) {
+    if ($.isFunction(text)) {
+      text = text.name || text.helpname || text.toString();
+    }
+    var radio = $('<input type="radio" name="' + name + '">').change(
+            triggerOnce(text, outcome)),
+        label = $('<label style="display:table">').append(radio).append(text),
+        key = text && text.toString().substr(0, 1).toUpperCase();
+    if (key && !(key in keys)) {
+      keys[key] = count;
+    }
+    count += 1;
+    result.append(label);
+  }
+  // Decodes choices from either an array or a plain object.
+  if ($.isArray(choices)) {
+    for (var j = 0; j < choices.length; ++j) {
+      addChoice(choices[j], choices[j]);
+    }
+  } else if ($.isPlainObject(choices)) {
+    for (text in choices) {
+      addChoice(text, choices[text]);
+    }
+  } else {
+    result.append('null');
+  }
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
+  function focusCursor() {
+    result.find('label').eq(cursor).focus();
+  }
+  result.on('keydown', function(e) {
+    if (e.which >= 37 && e.which <= 40) {
+      if (e.which >= 39) {
+        cursor = (cursor + 1) % count;
+      } else {
+        cursor = (cursor + count - 1) % count;
+      }
+      focusCursor();
+      return false;
+    } else if (e.which == 13) {
+      result.find(':focus').click();
+    } else if (String.fromCharCode(e.which) in keys) {
+      cursor = keys[String.fromCharCode(e.which)];
+      focusCursor();
+    }
+  });
+  focusCursor();
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
@@ -5550,7 +5679,9 @@ function input(name, callback, numeric) {
   dodebounce();
   textbox.on('keypress keydown', key);
   textbox.on('change', newval);
-  $('body').append(label);
+  autoScrollAfter(function() {
+    $('body').append(label);
+  });
   textbox.focus();
   return thisval;
 }
@@ -5611,7 +5742,9 @@ function table(height, width, cellCss, tableCss) {
     { width: 'auto', height: 'auto', maxWidth: 'auto', border: 'none'},
     tableCss));
   result.find('td').css($.extend({}, defaultCss, cellCss));
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
 }
 
