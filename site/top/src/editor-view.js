@@ -123,7 +123,8 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl
+  setVisibleUrl: setVisibleUrl,
+  parseTemplateWrapper: parseTemplateWrapper
 };
 
 function paneid(position) {
@@ -926,7 +927,7 @@ function parseTemplateWrapper(wrapperText) {
   var result = {
     before: wrapperText.substr(0, startMatch.index),
     startLine: startMatch[0],
-    defaultText: wrapperText.substring(startRe.lastIndex, endMatch.index),
+    defaultText: wrapperText.substring(startRe.lastIndex+1, endMatch.index),
     endLine: endMatch[0],
     after: wrapperText.substr(endRe.lastIndex)
   };
@@ -944,6 +945,8 @@ function parseTemplateWrapper(wrapperText) {
     });
     result.vars = vars;
   }
+  // TODO(jamessynge): Remove linePrefix or indentBy*' ' from beginning of each line
+  // of the defaultText.
   return result;
 }
 
