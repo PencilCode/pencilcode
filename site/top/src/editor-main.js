@@ -124,9 +124,14 @@ function posofpane(pane) {
 //   it's the event who's the owner
 //
 function specialowner() {
-  return (!model.ownername || model.ownername === 'guide' ||
-          model.ownername === 'event');
+  return !model.ownername || !!specialowner.specialowners[model.ownername];
 }
+specialowner.specialowners = {guide: true, event: true, start: true};
+
+function saveableOwner() {
+  return model.ownername && !saveableOwner.unsaveableOwners[model.ownername];
+}
+saveableOwner.unsaveableOwners = {guide: true, event: true};
 
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
@@ -156,7 +161,7 @@ function updateTopControls(addHistory) {
       //
       buttons.push(
         {id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
-         disabled: !specialowner() && model.username &&
+         disabled: model.username && saveableOwner() &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
 
       // Also insert share button
@@ -164,37 +169,24 @@ function updateTopControls(addHistory) {
         id: 'share', title: 'Share links to this program', label: 'Share'});
     }
 
-    //
-    // If this directory is owned by some person (i.e. not specialowner)
-    //
+    // Offer logout button if user is logged in, else offer login button if not
+    // special owner.
+    if (model.username) {
+      buttons.push({
+        id: 'logout', label: 'Log out',
+        title: 'Log out from ' + model.username});
+    } else if (!specialowner()) {
+      buttons.push({
+        id: 'login', label: 'Log in',
+        title: 'Enter password for ' + model.ownername});
+    }
 
-    if (!specialowner()) {
-      //
-      // Then insert logout/login buttons depending on if someone
-      // is already logged in
-      //
-      if (model.username) {
-        buttons.push({
-          id: 'logout', label: 'Log out',
-          title: 'Log out from ' + model.username});
+    // If viewing a normal directory, offer sorting buttons.
+    if (!specialowner() && m.isdir) {
+      if (m.bydate) {
+        buttons.push({id: 'byname', label: 'Alphabetize'});
       } else {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Enter password for ' + model.ownername});
-      }
-    } else {
-      // We're either in some file or directory
-      if (m.isdir) {
-        //
-        // If it's a directory then allow browsing by date
-        // or by alphabetical
-        //
-
-        if (m.bydate) {
-          buttons.push({id: 'byname', label: 'Alphabetize'});
-        } else {
-          buttons.push({id: 'bydate', label: 'Sort by Date'});
-        }
+        buttons.push({id: 'bydate', label: 'Sort by Date'});
       }
     }
     buttons.push(
@@ -445,6 +437,9 @@ view.on('guide', function() {
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (specialowner()) {
+    // TODO First figure out what is to be saved, then figure out if we need
+    // signUpAndSave.  That way we can handle special behavior for activities
+    // (e.g. hide #!pencil from beginning of file when user edits).
     signUpAndSave();
     return;
   }
@@ -999,7 +994,7 @@ function parseURLCore(url) {
   var parsed, type = $.type(url);
   if (type == 'string' && $.type(window.URL) == 'function') {
     // Need a very modern browser.
-    parsed = new window.URL(url);
+    parsed = new window.URL(url, window.location.href);
   } else if (type == 'object' && url.href) {
     parsed = url;
   }
