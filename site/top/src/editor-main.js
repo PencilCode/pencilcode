@@ -1713,7 +1713,6 @@ function getStartActivityURL() {
   
   if ((isInstruction && isWrapper) || isJson) {
         //console.log('found an instruction and wrapper file');
-        // verify this in view, when user clicks on activity link
   }
   return "http://start." + window.pencilcode.domain +
     '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
