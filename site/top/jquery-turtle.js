@@ -5179,84 +5179,6 @@ $.extend(true, $.fx, {
 // Wrappers for all API functions
 //////////////////////////////////////////////////////////////////////////
 
-function helpwrite(text) {
-  see.html('<aside style="line-height:133%;word-break:normal;' +
-           'white-space:normal">' + text + '</aside>');
-}
-function globalhelp(obj) {
-  var helptable = $.extend({}, dollar_turtle_methods, turtlefn, extrahelp),
-      helplist, j;
-  if (obj && (!$.isArray(obj.helptext))) {
-    if (obj in helptable) {
-      obj = helptable[obj];
-    }
-  }
-  if (obj && $.isArray(obj.helptext) && obj.helptext.length) {
-    for (j = 0; j < obj.helptext.length; ++j) {
-      var text = obj.helptext[j];
-      helpwrite(text.replace(/<(u)>/g,
-          '<$1 style="border:1px solid black;text-decoration:none;' +
-          'word-break:keep-all;white-space:nowrap">').replace(/<(mark)>/g,
-          '<$1 style="border:1px solid blue;color:blue;text-decoration:none;' +
-          'word-break:keep-all;white-space:nowrap;cursor:pointer;" ' +
-          'onclick="see.enter($(this).text())">'));
-    }
-    return helpok;
-  }
-  if (typeof obj == 'number') {
-    helpwrite('Equal to the number ' + obj + '.');
-    return helpok;
-  }
-  if (typeof obj == 'boolean') {
-    helpwrite('Equal to the boolean value ' + obj + '.');
-    return helpok;
-  }
-  if (obj === null) {
-    helpwrite('The special null value represents the absence of a value.');
-    return helpok;
-  }
-  if (obj === undefined) {
-    helpwrite('This is an unassigned value.');
-    return helpok;
-  }
-  if (obj === window) {
-    helpwrite('The global window object represents the browser window.');
-    return helpok;
-  }
-  if (obj === document) {
-    helpwrite('The HTML document running the program.');
-    return helpok;
-  }
-  if (obj === jQuery) {
-    helpwrite('The jQuery function.  Read about it at ' +
-        '<a href="http://learn.jquery.com/" target="_blank">jquery.com</a>.');
-    return helpok;
-  }
-  if (obj && obj != globalhelp) {
-    helpwrite('No help available for ' + obj);
-    return helpok;
-  }
-  helplist = [];
-  for (var name in helptable) {
-    if (helptable[name].helptext && helptable[name].helptext.length &&
-        (!(name in window) || typeof(window[name]) == 'function')) {
-      helplist.push(name);
-    }
-  }
-  helplist.sort(function(a, b) {
-    if (a.length != b.length) { return a.length - b.length; }
-    if (a < b) { return -1; }
-    if (a > b) { return 1; }
-    return 0;
-  });
-  helpwrite("help available for: " + helplist.map(function(x) {
-     return '<mark style="border:1px solid blue;color:blue;text-decoration:none;' +
-       'word-break:keep-all;white-space:nowrap;cursor:pointer;" ' +
-       'onclick="see.enter($(this).text())">' + x + '</mark>';
-  }).join(" "));
-  return helpok;
-}
-globalhelp.helptext = [];
 
 function canMoveInstantly(sel) {
   var atime, elem;
@@ -5466,9 +5388,14 @@ function wrapglobalcommand(name, helptext, fn) {
 
 // Wrapraw sets up help text for a function (such as "sqrt") that does
 // not need any other setup.
-function wrapraw(name, helptext, fn) {
+function wrapraw(name, helptext, fn, extras) {
   fn.helpname = name;
   fn.helptext = helptext;
+  if (extras) {
+    for (var key in extras) {
+      fn[key] = extras[key];
+    }
+  }
   return fn;
 }
 
@@ -6594,16 +6521,13 @@ function checkForHungLoop(fname) {
     }, 0);
     return;
   }
-  // Timeout after which we interrupt the program: 6 seconds.
+  // Timeout after which we interrupt the program: (a few seconds).
   if (now - hangStartTime > $.turtle.hungtimeout) {
-    if (see.visible()) {
-      see.html('<span style="color:red">Oops: program ' +
+    debug.warn('Oops: program ' +
         'interrupted because it was hanging the browser. ' +
         'Try reducing the number of repetitions.  Or try using ' +
-        '<b style="background:yellow">await done defer()</b> or ' +
-        '<b style="background:yellow">tick</b> ' +
-        'to make an animation.</span>');
-    }
+        '"await done defer()" or ' +
+        '"tick" to make an animation.');
     $.turtle.interrupt();
   }
 }
@@ -6624,15 +6548,9 @@ function checkPredicate(fname, sel) {
   if (!ok) {
     if (!warning_shown[fname]) {
       warning_shown[fname] = 1;
-      if (see.visible()) {
-        see.html('<span style="color:red">Oops: ' + fname +
+      debug.warn('Oops: ' + fname +
         ' may not return useful results when motion is queued. ' +
-        'Try <b style="background:yellow">speed Infinity</b></span> or ' +
-        '<b style="background:yellow">await done defer()</b> first.');
-      } else {
-        console.warn(fname + ' may not return useful results when motion ' +
-        'is queued.  Try "speed Infinity" or "await done defer()".');
-      }
+        'Try "speed Infinity" or "await done defer()" first.');
     }
     sel.finish();
   }
@@ -6640,13 +6558,16 @@ function checkPredicate(fname, sel) {
 
 // LEGACY NAMES
 
+function showDeprecation(oldname, newname) {
+  if (!(oldname in warning_shown)) {
+    debug.warn(oldname + ' deprecated.  Use ' + newname + '.');
+    warning_shown[oldname] = 1;
+  }
+}
+
 function deprecate(map, oldname, newname) {
   map[oldname] = function() {
-    if (!(oldname in warning_shown)) {
-      see.html('<span style="color:red;">' + oldname + ' deprecated.  Use ' +
-          newname + '.</span>');
-      warning_shown[oldname] = 1;
-    }
+    showDeprecation(oldname, newname);
     // map[oldname] = map[newname];
     return map[newname].apply(this, arguments);
   }
@@ -6844,6 +6765,27 @@ var dollar_turtle_methods = {
     });
     sync = null;
   }),
+  log: wrapraw('log',
+  ["<u>log(text)</u> Logs text in test panel or debug console. " +
+      "<mark>log 'the date is', new Date</mark>"],
+  function log(data) {
+    debug.log.apply(debug, arguments);
+  }, {
+    warn: function warn(data) {
+      debug.warn.apply(debug, arguments);
+    },
+    scope: function scope(name, evalpump, evalthis) {
+      if (!evalpump) {
+        return "$.turtle.log.scope(" + cstring(name) +
+               ",function(){return eval(arguments[0]);},this)";
+      } else {
+        debug.addEvalPump(name, evalpump, evalthis);
+      }
+    },
+    eval: function(code, scope) {
+      return debug.eval(code, scope);
+    }
+  }),
   append: wrapraw('append',
   ["<u>append(html)</u> Appends text to the document without a new line. " +
       "<mark>append 'try this twice...'</mark>"],
@@ -6892,6 +6834,7 @@ var dollar_turtle_methods = {
   random),
   hatch:
   function hatch(count, spec) {
+    showDeprecation('hatch', 'new Turtle');
     return $(document).hatch(count, spec);
   },
   button: wrapraw('button',
@@ -7135,6 +7078,7 @@ function pollSendRecv(name) {
 
 
 deprecate(dollar_turtle_methods, 'defaultspeed', 'speed');
+deprecate(dollar_turtle_methods, 'see', 'log');
 
 var helpok = {};
 
@@ -7236,12 +7180,10 @@ $.turtle = function turtle(id, options) {
   }
   // Set up global log function.
   if (!('see' in options) || options.see) {
-    exportsee();
-    exportedsee = true;
     if (window.addEventListener) {
-      window.addEventListener('error', see);
+      window.addEventListener('error', $.turtle.warn);
     } else {
-      window.onerror = see;
+      window.onerror = $.turtle.warn;
     }
   }
   // Copy $.turtle.* functions into global namespace.
@@ -7269,6 +7211,8 @@ $.turtle = function turtle(id, options) {
         wrotebody = true;
       }
       selector = new Turtle(id);
+      selector.attr('id', id);
+      window[id] = selector;
     }
   }
   if (selector && !selector.length) { selector = null; }
@@ -7283,63 +7227,11 @@ $.turtle = function turtle(id, options) {
        globalizeMethods(selector, globalfn));
     global_turtle = selector[0];
   }
-  // Set up global objects by id.
-  if (!('ids' in options) || options.ids) {
-    turtleids(options.idprefix);
-    if (selector && id) {
-      window[id] = selector;
-    }
-  }
-  // Set up test console.
-  if (!('panel' in options) || options.panel) {
-    var retval = null,
-        seeopt = {
-      title: 'test panel (type help for help)',
-      abbreviate: [undefined, helpok],
-      consolehook: seehelphook
-    };
-    if (selector) { seeopt.abbreviate.push(selector); }
-    if (options.title) {
-      seeopt.title = options.title;
-    }
-    if (options.panelheight) {
-      seeopt.height = options.panelheight;
-    }
-    see.init(seeopt);
-    if (wrotebody) {
-       see.html('<span style="color:red">Turtle script should be inside body ' +
-                '- wrote a &lt;body&gt;</span>');
-    }
-    // Return an eval loop hook string if 'see' is exported.
-    if (exportedsee) {
-      if (window.CoffeeScript) {
-        return "see.init(eval(see.cs))";
-      } else {
-        return see.here;
-      }
-    }
-  }
+  // Return string for creating debug eval pump.
+  return $.turtle.log.scope();
 };
 
 $.extend($.turtle, dollar_turtle_methods);
-
-function seehelphook(text, result) {
-  // Also, check the command to look for (non-CoffeeScript) help requests.
-  if ((typeof result == 'function' || typeof result == 'undefined')
-      && /^\w+\s*$/.test(text)) {
-    if (result && result.helptext) {
-      globalhelp(result);
-      return true;
-    } else if (text in extrahelp) {
-      globalhelp(text);
-      return true;
-    }
-  } else if (typeof result == 'undefined' && /^help\s+\S+$/.test(text)) {
-    globalhelp(/^help\s+(\S+)$/.exec(text)[1]);
-    return true;
-  }
-  return false;
-}
 
 function copyhelp(method, fname, extrahelp, globalfn) {
   if (method.helptext) {
@@ -7833,13 +7725,9 @@ function escapeHtml(string) {
 }
 
 function hatchone(name, container, defaultshape) {
-  var isID = name && /^[a-zA-Z]\w*$/.exec(name),
-      isTag = name && /^<.*>$/.exec(name),
+  var isTag = name && /^<.*>$/.exec(name),
       img = nameToImg(name, defaultshape) ||
         (name == null) && nameToImg(defaultshape);
-
-  // Don't overwrite previously existing id.
-  if (isID && $('#' + name).length) { isID = false; }
 
   // Create an image element with the requested name.
   var result;
@@ -7880,14 +7768,6 @@ function hatchone(name, container, defaultshape) {
   // Every hatched turtle has class="turtle".
   result.addClass('turtle');
 
-  // Set the id.
-  if (isID) {
-    result.attr('id', name);
-    // Update global variable unless there is a conflict.
-    if (attaching_ids && !window.hasOwnProperty(name)) {
-      window[name] = result;
-    }
-  }
   // Move it to the center of the document and export the name as a global.
   return result;
 }
@@ -7948,17 +7828,6 @@ function globaldefaultspeed(mps) {
   } else {
     $.fx.speeds.turtle = mps > 0 ? 1000 / mps : 0;
   }
-}
-
-// Simplify $('#x').move() to just x.move()
-function turtleids(prefix) {
-  if (prefix === undefined) {
-    prefix = '';
-  }
-  $('[id]').each(function(j, item) {
-    window[prefix + item.id] = $('#' + item.id);
-  });
-  attaching_ids = true;
 }
 
 // Simplify $(window).click(function(e) { x.moveto(e); } to just
@@ -8394,666 +8263,56 @@ var debug = {
   },
   attached: false,
   ide: null,
+  evalPump: {},
   reportEvent: function reportEvent(name, args) {
     if (this.ide) { this.ide.reportEvent(name, args); }
   },
   nextId: function nextId() {
-    if (this.ide) {
+    if (this.ide && this.ide.nextId) {
       return this.ide.nextId();
     } else {
       return 0;
     }
+  },
+  log: function log() {
+    if (this.ide && this.ide.log) {
+      this.ide.log.apply(null, arguments);
+    } else if (console && console.log) {
+      console.log.apply(console, arguments);
+    }
+  },
+  warn: function warn() {
+    if (this.ide && this.ide.warn) {
+      this.ide.warn.apply(null, arguments);
+    } else if (console && console.warn) {
+      console.warn.apply(console, arguments);
+    }
+  },
+  addEvalPump: function addEval(name, pump, pumpthis) {
+    this.evalPump[name || ''] = {p: pump, t: pumpthis};
+    if (this.ide && this.ide.addEvalPump) {
+      this.ide.addEvalPump(name, pump, pumpthis);
+    }
+  },
+  eval: function eval(str, name) {
+    var record = this.evalPump[name || ''];
+    if (record) {
+      return record.p.call(record.t, str);
+    }
   }
 };
 
-debug.init();
 
-//////////////////////////////////////////////////////////////////////////
-// SEE LOGGING SUPPORT
-// A copy of see.js here.
-// TODO: figure out how to move this into the IDE.
-//////////////////////////////////////////////////////////////////////////
-
-// see.js version 0.2
-
-var pulljQueryVersion = null;  // Disable auto-pull of jQuery
-
-var seepkg = 'see'; // Defines the global package name used.
-var version = '0.2';
-var oldvalue = noteoldvalue(seepkg);
-// Option defaults
-var linestyle = 'position:relative;display:block;font-family:monospace;' +
-  'font-size:16px;word-break:break-all;margin-bottom:3px;padding-left:1em;';
-var logdepth = 5;
-var autoscroll = false;
-var logelement = 'body';
-var panel = false;
-try {
-  // show panel by default if framed inside a top url with /edit/,
-  // and if the screen is big enough (i.e., omit mobile clients).
-  panel = (window.self !== window.top &&
-           screen.width >= 800 && screen.height >= 600 &&
-      /^\/edit\//.test(window.top.window.location.pathname));
-} catch(e) {}
-var see;  // defined below.
-var paneltitle = '';
-var logconsole = null;
-var uselocalstorage = '_loghistory';
-var panelheight = 250;
-var currentscope = '';
-var scopes = {
-  '':  { e: window.eval, t: window },
-  top: { e: window.eval, t: window }
-};
-var coffeescript = window.CoffeeScript;
-var seejs = '(function(){return eval(arguments[0]);})';
-
-function init(options) {
-  if (arguments.length === 0) {
-    options = {};
-  } else if (arguments.length == 2) {
-    var newopt = {};
-    newopt[arguments[0]] = arguments[1];
-    options = newopt;
-  } else if (arguments.length == 1 && typeof arguments[0] == 'function') {
-    options = {'eval': arguments[0]};
-  }
-  if ('jQuery' in options) { $ = options.jQuery; }
-  if ('eval' in options) { scopes[''].e = options['eval']; }
-  if ('this' in options) { scopes[''].t = options['this']; }
-  if ('element' in options) { logelement = options.element; }
-  if ('autoscroll' in options) { autoscroll = options.autoscroll; }
-  if ('linestyle' in options) { linestyle = options.linestyle; }
-  if ('depth' in options) { logdepth = options.depth; }
-  if ('panel' in options) { panel = options.panel; }
-  if ('height' in options) { panelheight = options.height; }
-  if ('title' in options) { paneltitle = options.title; }
-  if ('console' in options) { logconsole = options.console; }
-  if ('history' in options) { uselocalstorage = options.history; }
-  if ('coffee' in options) { coffeescript = options.coffee; }
-  if ('abbreviate' in options) { abbreviate = options.abbreviate; }
-  if ('consolehook' in options) { consolehook = options.consolehook; }
-  if ('noconflict' in options) { noconflict(options.noconflict); }
-  if (panel) {
-    // panel overrides element and autoscroll.
-    logelement = '#_testlog';
-    autoscroll = '#_testscroll';
-    pulljQuery(tryinitpanel);
-  }
-  return scope();
-}
-
-function scope(name, evalfuncarg, evalthisarg) {
-  if (arguments.length <= 1) {
-    if (!arguments.length) {
-      name = '';
-    }
-    return seepkg + '.scope(' + cstring(name) + ',' + seejs + ',this)';
-  }
-  scopes[name] = { e: evalfuncarg, t: evalthisarg };
-}
-
-function seeeval(scope, code) {
-  if (arguments.length == 1) {
-    code = scope;
-    scope = '';
-  }
-  var ef = scopes[''].e, et = scopes[''].t;
-  if (scopes.hasOwnProperty(scope)) {
-    if (scopes[scope].e) { ef = scopes[scope].e; }
-    if (scopes[scope].t) { et = scopes[scope].t; }
-  }
-  return ef.call(et, code);
-}
-
-var varpat = '[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*';
-var initialvardecl = new RegExp(
-  '^\\s*var\\s+(?:' + varpat + '\\s*,\\s*)*' + varpat + '\\s*;\\s*');
-
-function barecs(s) {
-  // Compile coffeescript in bare mode.
-  var compiler = coffeescript || window.CoffeeScript;
-  var compiled = compiler.compile(s, {bare:1});
-  if (compiled) {
-    // Further strip top-level var decls out of the coffeescript so
-    // that assignments can leak out into the enclosing scope.
-    compiled = compiled.replace(initialvardecl, '');
-  }
-  return compiled;
-}
-
-function exportsee() {
-  see.repr = repr;
-  see.html = loghtml;
-  see.noconflict = noconflict;
-  see.init = init;
-  see.scope = scope;
-  see.eval = seeeval;
-  see.barecs = barecs;
-  see.here = 'eval(' + seepkg + '.init())';
-  see.clear = seeclear;
-  see.hide = seehide;
-  see.show = seeshow;
-  see.visible = seevisible;
-  see.enter = seeenter;
-  see.js = seejs;
-  see.cs = '(function(){return eval(' + seepkg + '.barecs(arguments[0]));})';
-  see.version = version;
-  window[seepkg] = see;
-}
-
-function noteoldvalue(name) {
-  return {
-    name: name,
-    has: window.hasOwnProperty(name),
-    value: window[name]
-  };
-}
-
-function restoreoldvalue(old) {
-  if (!old.has) {
-    delete window[old.name];
-  } else {
-    window[old.name] = old.value;
-  }
-}
-
-function noconflict(newname) {
-  if (!newname || typeof(newname) != 'string') {
-    newname = 'see' + (1 + Math.random() + '').substr(2);
-  }
-  if (oldvalue) {
-    restoreoldvalue(oldvalue);
-  }
-  seepkg = newname;
-  oldvalue = noteoldvalue(newname);
-  exportsee();
-  return see;
-}
-
-function pulljQuery(callback) {
-  if (!pulljQueryVersion || ($ && $.fn && $.fn.jquery)) {
-    callback();
-    return;
-  }
-  function loadscript(src, callback) {
-    function setonload(script, fn) {
-      script.onload = script.onreadystatechange = fn;
-    }
-    var script = document.createElement("script"),
-       head = document.getElementsByTagName("head")[0],
-       pending = 1;
-    setonload(script, function() {
-      if (pending && (!script.readyState ||
-          {loaded:1,complete:1}[script.readyState])) {
-        pending = 0;
-        callback();
-        setonload(script, null);
-        head.removeChild(script);
-      }
-    });
-    script.src = src;
-    head.appendChild(script);
-  }
-  loadscript(
-      '//ajax.googleapis.com/ajax/libs/jquery/' +
-      pulljQueryVersion + '/jquery.min.js',
-      function() {
-    $ = jQuery.noConflict(true);
-    callback();
-  });
-}
-
-// ---------------------------------------------------------------------
-// LOG FUNCTION SUPPORT
-// ---------------------------------------------------------------------
-var logcss = "input._log:focus{outline:none;}samp._logcaret{position:absolute;left:0;font-size:120%;}samp._logcaret:before{content: '>'}label._log > span:first-of-type:hover{text-decoration:underline;}samp._log > label._log,samp_.log > span > label._log{display:inline-block;vertical-align:top;}label._log > span:first-of-type{margin-left:2em;text-indent:-1em;}label._log > ul{display:none;padding-left:14px;margin:0;}label._log > span:before{content:'';font-size:70%;font-style:normal;display:inline-block;width:0;text-align:center;}label._log > span:first-of-type:before{content:'\\0025B6';}label._log > ul > li{display:block;white-space:pre-line;margin-left:2em;text-indent:-1em}label._log > ul > li > samp{margin-left:-1em;text-indent:0;white-space:pre;}label._log > input[type=checkbox]:checked ~ span{margin-left:2em;text-indent:-1em;}label._log > input[type=checkbox]:checked ~ span:first-of-type:before{content:'\\0025BC';}label._log > input[type=checkbox]:checked ~ span:before{content:'';}label._log,label._log > input[type=checkbox]:checked ~ ul{display:block;}label._log > span:first-of-type,label._log > input[type=checkbox]:checked ~ span{display:inline-block;}label._log > input[type=checkbox],label._log > input[type=checkbox]:checked ~ span > span{display:none;}";
-var addedcss = false;
-var cescapes = {
-  '\0': '\\0', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r',
-  '\t': '\\t', '\v': '\\v', "'": "\\'", '"': '\\"', '\\': '\\\\'
-};
-var retrying = null;
-var queue = [];
-
-see = function see() {
-  if (logconsole && typeof(logconsole.log) == 'function') {
-    logconsole.log.apply(window.console, arguments);
-  }
-  var args = Array.prototype.slice.call(arguments);
-  queue.push('<samp class="_log">');
-  while (args.length) {
-    var obj = args.shift();
-    if (vtype(obj) == 'String')  {
-      // Logging a string just outputs the string without quotes.
-      queue.push(htmlescape(obj));
-    } else {
-      queue.push(repr(obj, logdepth, queue));
-    }
-    if (args.length) { queue.push(' '); }
-  }
-  queue.push('</samp>');
-  flushqueue();
-};
-
-function loghtml(html) {
-  queue.push('<samp class="_log">');
-  queue.push(html);
-  queue.push('</samp>');
-  flushqueue();
-}
-
-function vtype(obj) {
-  var bracketed = Object.prototype.toString.call(obj);
-  var vt = bracketed.substring(8, bracketed.length - 1);
-  if (vt == 'Object') {
-    if ('length' in obj && 'slice' in obj && 'number' == typeof obj.length) {
-      return 'Array';
-    }
-    if ('originalEvent' in obj && 'target' in obj && 'type' in obj) {
-      return vtype(obj.originalEvent);
-    }
-  }
-  return vt;
-}
-
-function isprimitive(vt) {
-  switch (vt) {
-    case 'String':
-    case 'Number':
-    case 'Boolean':
-    case 'Undefined':
-    case 'Date':
-    case 'RegExp':
-    case 'Null':
-      return true;
-  }
-  return false;
-}
-
-function isdom(obj) {
-  return (obj.nodeType && obj.nodeName && typeof(obj.cloneNode) == 'function');
-}
-
-function midtruncate(s, maxlen) {
-  if (maxlen && maxlen > 3 && s.length > maxlen) {
-    return s.substring(0, Math.floor(maxlen / 2) - 1) + '...' +
-        s.substring(s.length - (Math.ceil(maxlen / 2) - 2));
-  }
-  return s;
-}
-
-function cstring(s, maxlen) {
+function cstring(s) {
+  if (!s) { return '""'; }
   function cescape(c) {
-    if (cescapes.hasOwnProperty(c)) {
-      return cescapes[c];
-    }
     var temp = '0' + c.charCodeAt(0).toString(16);
     return '\\x' + temp.substring(temp.length - 2);
   }
-  if (s.indexOf('"') == -1 || s.indexOf('\'') != -1) {
-    return midtruncate('"' +
-        htmlescape(s.replace(/[\0-\x1f\x7f-\x9f"\\]/g, cescape)) + '"', maxlen);
-  } else {
-    return midtruncate("'" +
-        htmlescape(s.replace(/[\0-\x1f\x7f-\x9f'\\]/g, cescape)) + "'", maxlen);
-  }
-}
-function tiny(obj, maxlen) {
-  var vt = vtype(obj);
-  if (vt == 'String') { return cstring(obj, maxlen); }
-  if (vt == 'Undefined' || vt == 'Null') { return vt.toLowerCase(); }
-  if (isprimitive(vt)) { return '' + obj; }
-  if (vt == 'Array' && obj.length === 0) { return '[]'; }
-  if (vt == 'Object' && isshort(obj)) { return '{}'; }
-  if (isdom(obj) && obj.nodeType == 1) {
-    if (obj.hasAttribute('id')) {
-      return obj.tagName.toLowerCase() +
-          '#' + htmlescape(obj.getAttribute('id'));
-    } else {
-      if (obj.hasAttribute('class')) {
-        var classname = obj.getAttribute('class').split(' ')[0];
-        if (classname) {
-          return obj.tagName.toLowerCase() + '.' + htmlescape(classname);
-        }
-      }
-      return obj.tagName.toLowerCase();
-    }
-  }
-  return vt;
-}
-function isnonspace(dom) {
-  return (dom.nodeType != 3 || /[^\s]/.exec(dom.textContent));
-}
-function trimemptystartline(s) {
-  return s.replace(/^\s*\n/, '');
-}
-function isshort(obj, shallow, maxlen) {
-  var vt = vtype(obj);
-  if (isprimitive(vt)) { return true; }
-  if (!shallow && vt == 'Array') { return !maxlen || obj.length <= maxlen; }
-  if (isdom(obj)) {
-    if (obj.nodeType == 9 || obj.nodeType == 11) return false;
-    if (obj.nodeType == 1) {
-      return (obj.firstChild === null ||
-         obj.firstChild.nextSibling === null &&
-         obj.firstChild.nodeType == 3 &&
-         obj.firstChild.textContent.length <= maxlen);
-    }
-    return true;
-  }
-  if (vt == 'Function') {
-    var sc = obj.toString();
-    return (sc.length - sc.indexOf('{') <= maxlen);
-  }
-  if (vt == 'Error') {
-    return !!obj.stack;
-  }
-  var count = 0;
-  for (var prop in obj) {
-    if (obj.hasOwnProperty(prop)) {
-      count += 1;
-      if (shallow && !isprimitive(vtype(obj[prop]))) { return false; }
-      if (maxlen && count > maxlen) { return false; }
-    }
-  }
-  return true;
-}
-function domsummary(dom, maxlen) {
-  var short;
-  if ('outerHTML' in dom) {
-    short = isshort(dom, true, maxlen);
-    var html = dom.cloneNode(short).outerHTML;
-    var tail = null;
-    if (!short) {
-      var m = /^(.*)(<\/[^\s]*>$)/.exec(html);
-      if (m) {
-        tail = m[2];
-        html = m[1];
-      }
-    }
-    return [htmlescape(html), tail && htmlescape(tail)];
-  }
-  if (dom.nodeType == 1) {
-    var parts = ['<' + dom.tagName];
-    for (var j = 0; j < dom.attributes.length; ++j) {
-      parts.push(domsummary(dom.attributes[j], maxlen)[0]);
-    }
-    short = isshort(dom, true, maxlen);
-    if (short && dom.firstChild) {
-      return [htmlescape(parts.join(' ') + '>' +
-          dom.firstChild.textContent + '</' + dom.tagName + '>'), null];
-    }
-    return [htmlescape(parts.join(' ') + (dom.firstChild? '>' : '/>')),
-        !dom.firstChild ? null : htmlescape('</' + dom.tagName + '>')];
-  }
-  if (dom.nodeType == 2) {
-    return [htmlescape(dom.name + '="' +
-        htmlescape(midtruncate(dom.value, maxlen), '"') + '"'), null];
-  }
-  if (dom.nodeType == 3) {
-    return [htmlescape(trimemptystartline(dom.textContent)), null];
-  }
-  if (dom.nodeType == 4) {
-    return ['<![CDATA[' + htmlescape(midtruncate(dom.textContent, maxlen)) +
-        ']]>', null];
-  }
-  if (dom.nodeType == 8) {
-    return ['<!--' + htmlescape(midtruncate(dom.textContent, maxlen)) +
-        '-->', null];
-  }
-  if (dom.nodeType == 10) {
-    return ['<!DOCTYPE ' + htmlescape(dom.nodeName) + '>', null];
-  }
-  return [dom.nodeName, null];
-}
-function summary(obj, maxlen) {
-  var vt = vtype(obj);
-  if (isprimitive(vt)) {
-    return tiny(obj, maxlen);
-  }
-  if (isdom(obj)) {
-    var ds = domsummary(obj, maxlen);
-    return ds[0] + (ds[1] ? '...' + ds[1] : '');
-  }
-  if (vt == 'Function') {
-    var ft = obj.toString();
-    if (ft.length - ft.indexOf('{') > maxlen) {
-      ft = ft.replace(/\{(?:.|\n)*$/, '').trim();
-    }
-    return ft;
-  }
-  if ((vt == 'Error' || vt == 'ErrorEvent') && 'message' in obj) {
-    return obj.message;
-  }
-  var pieces = [];
-  if (vt == 'Array' && obj.length < maxlen) {
-    var identical = (obj.length >= 5);
-    var firstobj = identical && obj[0];
-    for (var j = 0; j < obj.length; ++j) {
-      if (identical && obj[j] !== firstobj) { identical = false; }
-      pieces.push(tiny(obj[j], maxlen));
-    }
-    if (identical) {
-      return '[' + tiny(firstobj, maxlen) + '] \xd7 ' + obj.length;
-    }
-    return '[' + pieces.join(', ') + ']';
-  } else if (isshort(obj, false, maxlen)) {
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        pieces.push(quotekey(key) + ': ' + tiny(obj[key], maxlen));
-      }
-    }
-    return (vt == 'Object' ? '{' : vt + '{') + pieces.join(', ') + '}';
-  }
-  if (vt == 'Array') { return 'Array(' + obj.length + ')'; }
-  return vt;
-}
-function quotekey(k) {
-  if (/^\w+$/.exec(k)) { return k; }
-  return cstring(k);
-}
-function htmlescape(s, q) {
-  var pat = /[<>&]/g;
-  if (q) { pat = new RegExp('[<>&' + q + ']', 'g'); }
-  return s.replace(pat, function(c) {
-    return c == '<' ? '&lt;' : c == '>' ? '&gt;' : c == '&' ? '&amp;' :
-           c == '"' ? '&quot;' : '&#' + c.charCodeAt(0) + ';';
-  });
-}
-function unindented(s) {
-  s = s.replace(/^\s*\n/, '');
-  var leading = s.match(/^\s*\S/mg);
-  var spaces = leading.length && leading[0].length - 1;
-  var j = 1;
-  // If the block begins with a {, ignore those spaces.
-  if (leading.length > 1 && leading[0].trim() == '{') {
-    spaces = leading[1].length - 1;
-    j = 2;
-  }
-  for (; j < leading.length; ++j) {
-    spaces = Math.min(leading[j].length - 1, spaces);
-    if (spaces <= 0) { return s; }
-  }
-  var removal = new RegExp('^\\s{' + spaces + '}', 'mg');
-  return s.replace(removal, '');
-}
-function expand(prefix, obj, depth, output) {
-  output.push('<label class="_log"><input type="checkbox"><span>');
-  if (prefix) { output.push(prefix); }
-  if (isdom(obj)) {
-    var ds = domsummary(obj, 10);
-    output.push(ds[0]);
-    output.push('</span><ul>');
-    for (var node = obj.firstChild; node; node = node.nextSibling) {
-      if (isnonspace(node)) {
-        if (node.nodeType == 3) {
-          output.push('<li><samp>');
-          output.push(unindented(node.textContent));
-          output.push('</samp></li>');
-        } else if (isshort(node, true, 20) || depth <= 1) {
-          output.push('<li>' + summary(node, 20) + '</li>');
-        } else {
-          expand('', node, depth - 1, output);
-        }
-      }
-    }
-    output.push('</ul>');
-    if (ds[1]) {
-      output.push('<span>');
-      output.push(ds[1]);
-      output.push('</span>');
-    }
-    output.push('</label>');
-  } else {
-    output.push(summary(obj, 10));
-    output.push('</span><ul>');
-    var vt = vtype(obj);
-    if (vt == 'Function') {
-      var ft = obj.toString();
-      var m = /\{(?:.|\n)*$/.exec(ft);
-      if (m) { ft = m[0]; }
-      output.push('<li><samp>');
-      output.push(htmlescape(unindented(ft)));
-      output.push('</samp></li>');
-    } else if (vt == 'Error') {
-      output.push('<li><samp>');
-      output.push(htmlescape(obj.stack));
-      output.push('</samp></li>');
-    } else if (vt == 'Array') {
-      for (var j = 0; j < Math.min(100, obj.length); ++j) {
-        try {
-          val = obj[j];
-        } catch(e) {
-          val = e;
-        }
-        if (isshort(val, true, 20) || depth <= 1 || vtype(val) == 'global') {
-          output.push('<li>' + j + ': ' + summary(val, 100) + '</li>');
-        } else {
-          expand(j + ': ', val, depth - 1, output);
-        }
-      }
-      if (obj.length > 100) {
-        output.push('<li>length=' + obj.length + ' ...</li>');
-      }
-    } else {
-      var count = 0;
-      for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          count += 1;
-          if (count > 100) { continue; }
-          var val;
-          try {
-            val = obj[key];
-          } catch(e) {
-            val = e;
-          }
-          if (isshort(val, true, 20) || depth <= 1 || vtype(val) == 'global') {
-            output.push('<li>');
-            output.push(quotekey(key));
-            output.push(': ');
-            output.push(summary(val, 100));
-            output.push('</li>');
-          } else {
-            expand(quotekey(key) + ': ', val, depth - 1, output);
-          }
-        }
-      }
-      if (count > 100) {
-        output.push('<li>' + count + ' properties total...</li>');
-      }
-    }
-    output.push('</ul></label>');
-  }
-}
-function initlogcss() {
-  if (!addedcss && !window.document.getElementById('_logcss')) {
-    var style = window.document.createElement('style');
-    style.id = '_logcss';
-    style.innerHTML = (linestyle ? 'samp._log{' +
-        linestyle + '}' : '') + logcss;
-    window.document.head.appendChild(style);
-    addedcss = true;
-  }
-}
-function repr(obj, depth, aoutput) {
-  depth = depth || 3;
-  var output = aoutput || [];
-  var vt = vtype(obj);
-  if (vt == 'Error' || vt == 'ErrorEvent') {
-    output.push('<span style="color:red;">');
-    expand('', obj, depth, output);
-    output.push('</span>');
-  } else if (isprimitive(vt)) {
-    output.push(tiny(obj));
-  } else if (isshort(obj, true, 100) || depth <= 0) {
-    output.push(summary(obj, 100));
-  } else {
-    expand('', obj, depth, output);
-  }
-  if (!aoutput) {
-    return output.join('');
-  }
-}
-function aselement(s, def) {
-  switch (typeof s) {
-    case 'string':
-      if (s == 'body') { return document.body; }
-      if (document.querySelector) { return document.querySelector(s); }
-      if ($) { return $(s)[0]; }
-      return null;
-    case 'undefined':
-      return def;
-    case 'boolean':
-      if (s) { return def; }
-      return null;
-    default:
-      return s;
-  }
-  return null;
-}
-function stickscroll() {
-  var stick = false, a = aselement(autoscroll, null);
-  if (a) {
-    stick = a.scrollHeight - a.scrollTop - 10 <= a.clientHeight;
-  }
-  if (stick) {
-    return (function() {
-      a.scrollTop = a.scrollHeight - a.clientHeight;
-    });
-  } else {
-    return (function() {});
-  }
-}
-function flushqueue() {
-  var elt = aselement(logelement, null);
-  if (elt && elt.appendChild && queue.length) {
-    initlogcss();
-    var temp = window.document.createElement('samp');
-    temp.innerHTML = queue.join('');
-    queue.length = 0;
-    var complete = stickscroll();
-    while (child = temp.firstChild) {
-      elt.appendChild(child);
-    }
-    complete();
-  }
-  if (!retrying && queue.length) {
-    retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
-  } else if (retrying && !queue.length) {
-    clearTimeout(retrying);
-    retrying = null;
-  }
+  return '"' + s.replace(/[\0-\x1f\x7f-\x9f"\\]/g, cescape) + '"';
 }
 
-// ---------------------------------------------------------------------
-// TEST PANEL SUPPORT
-// ---------------------------------------------------------------------
-var addedpanel = false;
-var inittesttimer = null;
-var abbreviate = [{}.undefined];
-var consolehook = null;
-
+<<<<<<< HEAD
 function seehide() {
   $('#_testpanel').hide();
 }
@@ -9298,6 +8557,8 @@ function tryinitpanel() {
   }
 }
 
-eval("scope('jquery-turtle', " + seejs + ", this)");
+debug.init();
+
+eval($.turtle.log.scope('jquery-turtle'));
 
 })(jQuery);

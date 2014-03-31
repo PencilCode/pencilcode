@@ -78,16 +78,16 @@ describe('code debugger', function() {
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
+        if (!$('.preview iframe')[0].contentWindow.log) return;
         // Evaluate some expression in the coffeescript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        var seval = $('.preview iframe')[0].contentWindow.log.eval;
         // And also wait for the turtle to start moving.
         if (seval('getxy()')[1] < 10) return;
         return {
           direction: seval('direction()'),
           getxy: seval('getxy()'),
-          touchesred: seval('touches red'),
-          touchesblue: seval('touches blue'),
+          touchesred: seval('touches(red)'),
+          touchesblue: seval('touches(blue)'),
           queuelen: seval('turtle.queue().length'),
           stopcount: $('#stop').length
         };
@@ -119,15 +119,15 @@ describe('code debugger', function() {
     }, function() {
       try {
         if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
+        if (!$('.preview iframe')[0].contentWindow.log) return;
         // Evaluate some expression in the coffeescript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        var seval = $('.preview iframe')[0].contentWindow.log.eval;
         // Reset interrupts so that we can evaluate some expressions.
         seval('interrupt("reset")');
         // And also wait for the turtle to start moving.
         return {
-          touchesred: seval('touches red'),
-          touchesblue: seval('touches blue'),
+          touchesred: seval('touches(red)'),
+          touchesblue: seval('touches(blue)'),
           queuelen: seval('turtle.queue().length'),
           debugtracecount: $('.debugtrace').length,
           debugtracetop: $('.debugtrace').css('top')
@@ -144,14 +144,13 @@ describe('code debugger', function() {
       assert.equal(true, result.touchesblue);
       // The turtle should not be moving any more.
       assert.equal(0, result.queuelen);
-      /* TODO: investigate if PhantomJS stack traces can be parsed.
-       * For now, line tracing dosn't work on PhantomJS, so these tests
-       * are disabled.
+      // TODO: investigate if PhantomJS stack traces can be parsed.
+      // For now, line tracing dosn't work on PhantomJS, so these tests
+      // are disabled.
       // A line of code should be traced.
-      assert.equal(1, result.debugtracecount);
+      // assert.equal(1, result.debugtracecount);
       // The traced code should be around line 4 or beyond.
-      assert.ok(parseInt(result.debugtracetop) > 80);
-      */
+      // assert.ok(parseInt(result.debugtracetop) > 80);
       done();
     });
   });

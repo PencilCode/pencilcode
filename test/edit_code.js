@@ -236,15 +236,15 @@ describe('code editor', function() {
         if (!$('.preview iframe').length) return;
         if (!$('.preview iframe')[0].contentWindow.see) return;
         // Evaluate some expression in the coffeescript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        var seval = $('.preview iframe')[0].contentWindow.log.eval;
         // And also wait for the turtle to start turning, then stop moving.
         if (!seval('direction()')) return;
         if (seval('turtle.queue().length')) return;
         return {
           direction: seval('direction()'),
           getxy: seval('getxy()'),
-          touchesred: seval('touches red'),
-          touchesblue: seval('touches blue'),
+          touchesred: seval('touches(red)'),
+          touchesblue: seval('touches(blue)'),
           queuelen: seval('turtle.queue().length')
         };
       }
