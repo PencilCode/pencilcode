@@ -971,13 +971,110 @@ function isFileWithin(base, candidate) {
       candidate.indexOf(base) === 0;
 }
 
+// Parse the string in window.location.search into '&' separated key=value pairs,
+// and split those pairs, using the key as the property name in the return value object.
+function parseURIKeyValues(s) {
+  var variables = {};
+  if ($.type(s) == 'string' && s.length) {
+    $.each(s.split('&'), function(ndx, pair) {
+      var parts = pair.split('='),
+          key = decodeURIComponent(parts.shift()),
+          value = decodeURIComponent(parts.join('='));
+      if (key == '') {
+        console.log('key missing in search string: ' + s);
+      } else if (variables.hasOwnProperty(key)) {
+        if ($.type(variables[key]) == 'string') {
+          variables[key] = [ variables[key] ];
+        }
+        variables[key].push(value);
+      } else {
+        variables[key] = value;
+      }
+    });
+  }
+  return variables;
+}
+
+function parseURLCore(url) {
+  var parsed, type = $.type(url);
+  if (type == 'string' && $.type(window.URL) == 'function') {
+    // Need a very modern browser.
+    parsed = new window.URL(url);
+  } else if (type == 'object' && url.href) {
+    parsed = url;
+  }
+  if (!parsed) {
+    console.log('parseURL failed');
+    console.log(url);
+    return;
+  }
+  // Make a deep copy of parsed, ensuring the standard URLUtils properties
+  // are present.
+  parsed = $.extend(true, {
+      href: '',
+      protocol: '',
+      host: '',
+      hostname: '',
+      port: '',
+      pathname: '',
+      search: '',
+      hash: '',
+      username: '',
+      password: '',
+      origin: ''}, parsed);
+  return parsed;
+}
+
+function parseURL(url) {
+  var parsed = parseURLCore(url);
+  // Now add our own properties to those defined in the standard for URLUtils.
+
+  // TODO(davidbau): Explain this regexp.  It seems to mean ignore last 8
+  // characters, and, working backwards, the characters up to, and including
+  // the first period.  This seems designed to convert foo.pencilcode.net,
+  // or foo.pencilcode.net.dev into foo, but if we were to host pencilcode
+  // at pencilcode.oxford.ac.uk, then the owner would be pencilcode, which
+  // seems not ideal! Perhaps we need the server to tell us the root domain.
+  parsed.ownername = parsed.hostname.replace(/(?:(.*)\.)?[^.]*.{8}$/, '$1');
+
+  // The filename is the path after to first component (e.g. without /edit
+  // or /home).
+  parsed.filename = parsed.pathname.replace(
+          /^\/[^\/]+\//, '').replace(/\/+$/, ''),
+
+  // Parse the key=value pairs out of the search (aka query) and the hash strings.
+  parsed.searchVars = parseURIKeyValues(parsed.search.replace(/^\?+/, ''));
+  parsed.hashVars = parseURIKeyValues(parsed.hash.replace(/^#+/, ''));
+
+  // Probably a directory if the pathname ends with slash.
+  parsed.isdir = /\/$/.test(parsed.pathname);
+
+  // TODO Extract login from hash if present; appears to have the following format:
+  //   login[0]="#login=user:password"
+  //   login[1]="user"
+  //   login[2]="password"
+  // parsed.login =...
+
+  // Extract edit mode
+  parsed.editmode = /^\/edit\//.test(parsed.pathname);
+
+  return parsed;
+}
+
+function assertEQ(a, b, msg) {
+  if (a === b) return;
+  alert(a + ' !== ' + b + '\n\n' + msg);
+}
+
 function readNewUrl(undo) {
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
+      parsedURL = parseURL(window.location), // TODO(jamessynge): check that values match those below.
   // Owner comes from domain name.
       ownername = window.location.hostname.replace(
           /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
-  // Filename comes from URL minus first directory part.
+  // Filename comes from URL minus first directory part
+  // (i.e. without /edit/ or /home/, for example).
       filename = window.location.pathname.replace(
           /^\/[^\/]+\//, '').replace(/\/+$/, ''),
   // Expect directory if the pathname ends with slash.
@@ -987,7 +1084,19 @@ function readNewUrl(undo) {
   // Extract text from hash if present.
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
   // Extract edit mode
-      editmode = /^\/edit\//.test(window.location.pathname);
+      editmode = /^\/edit\//.test(window.location.pathname),
+  // Extract variables in search string
+      searchVars = parsedURL.searchVars;
+
+
+  // TODO REMOVE BEFORE PUSHING UPSTREAM
+  assertEQ(parsedURL.ownername, ownername, 'ownername');
+  assertEQ(parsedURL.filename, filename, 'filename');
+  assertEQ(parsedURL.isdir, isdir, 'isdir');
+  assertEQ(parsedURL.editmode, editmode, 'editmode');
+
+
+
   // Give the user a chance to abort navigation.
   if (undo && view.isPaneEditorDirty(paneatpos('left'))) {
     view.flashButton('save');
@@ -1020,6 +1129,17 @@ function readNewUrl(undo) {
     model.editmode = editmode;
     forceRefresh = true;
   }
+  if (ownername === 'start' && editmode && searchVars.hasOwnProperty('activity')) {
+    // User is starting a new activity (e.g. a lesson defined by a teacher).
+    // TODO(davidbau): Please help figure out how this should interact with the block
+    // below which animates panes.
+    // Should we actually just fetch the default text for the activity at this point,
+    // store that in 'text', set firsturl = true, and fall through?
+
+    startNewActivity(filename, searchVars.activity);
+    return;
+  }
+
   // If the new url is replacing an existing one, animate it in.
   if (!firsturl && modelatpos('left').filename !== null) {
     if (isFileWithin(modelatpos('left').filename, filename)) {
@@ -1254,6 +1374,65 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   storage.loadFile(model.ownername, filename, forcenet, firstStepLoadFile);
 };
 
+function startNewActivity(filename, activityURL) {
+  view.setPreviewMode(true /*show preview*/, true /*no animation delay*/);
+
+  var position = 'left',
+      pane = paneatpos(position),
+      mpp = model.pane[pane],
+      loadNum = nextLoadNumber();
+
+  // TODO Do we need a loadnum, given that we aren't loading the user's own file?
+
+  view.clearPane(pane, true); // show loading animation.
+
+  mpp.filename = filename;
+  mpp.isdir = false;
+  mpp.loading = loadNum;
+  mpp.data = {
+    file: filename,
+    data: '',  // To be filled in from activity.
+    mtime: 0
+  };
+  mpp.running = false;
+
+  function checkConsistency() {
+    // This function verifies that the load that we are completing
+    // is the same as the load that we started (might not be true if
+    // the user clicks on load several times, faster than net responses).
+    // Should be called before mutating mpp again.
+    if (mpp.loading != loadNum) {
+      if (window.console) {
+        window.console.trace('aborted: loading is ' + mpp.loading +
+            ' instead of ' + loadNum);
+      }
+      return false;
+    }
+    mpp.loading = 0;
+    return true;
+  }
+
+  function activityLoaded(activityData) {
+    // TODO Convert 'template' to 'activity' throughout (coordinate with others to
+    // reduce the number of merge conflicts).
+
+    // TODO If failed to load, redirect to pencilcode.net/?  OR show some error?
+
+    if (!checkConsistency()) { return; }
+    mpp.template = activityData;
+    mpp.data.data = '#!pencil ' + activityData.activityURL + '\n' +
+                    activityData.wrapperParts.defaultText;
+    mpp.unsaved = true;
+    console.log('mpp.data', mpp.data)
+    view.setPaneEditorText(pane, mpp.data.data, filename,
+        instructionTextForTemplate(mpp.template));
+    noteIfUnsaved(posofpane(pane));
+    updateTopControls(false);
+  }
+
+  loadTemplateMetadata(activityURL, activityLoaded);
+}
+
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
 }
@@ -1403,16 +1582,32 @@ function parseTemplateDirFromLoadedFile(code) {
 
 // Given a template base directory, loads the template metadata.
 function loadTemplateMetadata(templateBaseDir, callback) {
-  var match = templateBaseDir.split(':');
-  if (match.length != 2) {
-    console.log('failed to parse template location');
-    // error
-    callback(null);
-    return;
+  var templateOwner, templateName, activityURL;
+  if (window.URL && /^(https?:)?\/\//.test(templateBaseDir)) {
+    var parsedURL = parseURL(templateBaseDir);
+    templateOwner = parsedURL.ownername;
+    templateName = parsedURL.filename;
+    activityURL = '//' + parsedURL.hostname + '/home/' + templateName;
   }
-  var templateOwner = match[0];
-  var templateName = match[1];
 
+  // TODO Remove this if block which is from our hackathon where we
+  // chose to use owner:/path/to/dir as the templateBaseDir, but David
+  // argues for full URL (as handled above) so we can support multiple
+  // instances (root domains) of pencilcode.
+  if (!templateOwner || !templateName) {
+    var match = templateBaseDir.split(':');
+    if (match.length != 2) {
+      console.log('Failed to parse template location: ' + templateBaseDir);
+      callback(null);
+      return;
+    }
+    templateOwner = match[0];
+    templateName = match[1];
+    activityURL = '//' + templateOwner + "." +
+                  window.pencilcode.domain + '/home/' + templateName;
+  }
+
+  var activityFile = null;
   var instructionsFile = null;
   var wrapperFile = null;
 
@@ -1425,17 +1620,25 @@ function loadTemplateMetadata(templateBaseDir, callback) {
       } else if (file.name == 'wrapper' || file.name == 'wrapper.html') {
         wrapperFile = templateName + '/' + file.name;
         storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
+      } else if (file.name == 'activity.json') {
+        activityFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, activityFile, true, processActivity);
       }
     }
   };
 
   var templateData = {
+    activityURL: activityURL,
+
     // wrapper is the source that will wrap the student's code, contains
     // the string {{text}} at the point the student's code should be inserted.
     wrapper: '',
 
     // HTML to be displayed above editor
-    instructions: ''
+    instructions: '',
+
+    // From optional json file.
+    metadata: {}
   };
 
   var processInstructions = function(fileData) {
@@ -1445,12 +1648,19 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 
   var processWrapper = function(fileData) {
     templateData.wrapper = fileData;
+    templateData.wrapperParts = view.parseTemplateWrapper(fileData.data);
+    finish();
+  };
+
+  var processActivity = function(fileData) {
+    templateData.metadata = JSON.parse(fileData.data);
     finish();
   };
 
   var finish = function() {
     if ((!instructionsFile || templateData.instructions) &&
-        (!wrapperFile || templateData.wrapper)) {
+        (!wrapperFile || templateData.wrapper) &&
+        (!activityFile || templateData.metadata)) {
       callback(templateData);
     }
   }
@@ -1461,60 +1671,56 @@ function loadTemplateMetadata(templateBaseDir, callback) {
 // Given a template object, returns a piece of HTML that the IDE
 // will place in a div above the code editor.
 function instructionTextForTemplate(template) {
-    if (template) {
-        if (template.instructions) {
-            return template.instructions;
-        }
-        else
-            return null;
-    } else {
-        return null;
-    }
+  if (template) {
+    if (template.instructions)
+      return template.instructions;
+    else
+      return null;
+  } else {
+    return null;
+  }
 }
 
-// Constuct an activity URL from the current run file path
+// Construct an activity URL from the current run file path.
 function getStartActivityURL() {
-    var isInstruction = false;
-    var isWrapper = false;
-    var isJson = false;    
-    var activityDir = '';
-    var defaultPath = '';
-    var filename = modelatpos('left').filename;
-    
-    var isdir = /\/$/.test(window.location.pathname);
-    if (isdir) {
-        defaultPath = filename;
-    } else {
-        defaultPath = filename.substr(0, filename.lastIndexOf('/'));
-    }
-    activityDir = "http://" + document.domain + '/home/' + defaultPath;
-    
-    var getFilesInDir = function(dirData) {
-        var file = dirData.list[0];
-        var name = file.name;
-     
-        if (dirData.list) {
-            for (var j = 0, file; file = dirData.list[j]; j++) {
-                if (dirData.list[j].name ==='instructions.html') {
-                    isInstruction = true;
-                    //console.log('yep, found an instruction file.');
-                } else if (dirData.list[j].name === 'wrapper' ||
-                           dirData.list[j].name === 'wrapper.html') {
-                    isWrapper = true;
-                    //console.log('yep, found an wrapper file.');
-                } else if (dirData.list[j].name === 'activity.json') {
-                    isJson = true;
-                }
-            }
+  var isInstruction = false;
+  var isWrapper = false;
+  var isJson = false;
+  var activityDir = '';
+  var defaultPath = '';
+  var m = modelatpos('left');
+  var fn = m.filename;
+  
+  if (m.isdir) {
+    defaultPath = fn;
+  } else {
+    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
+  }
+  // Omit the protocol from the activityDir so that it defaults to
+  // that used by the page.
+  activityDir = "//" + document.domain + '/home/' + defaultPath;
+  
+  var getFilesInDir = function(dirData) {
+    if (dirData.list) {
+      for (var j = 0, file; file = dirData.list[j]; j++) {
+        if (dirData.list[j].name ==='instructions.html') {
+          isInstruction = true;
+        } else if (dirData.list[j].name === 'wrapper' ||
+                   dirData.list[j].name === 'wrapper.html') {
+            isWrapper = true;
+        } else if (dirData.list[j].name === 'activity.json') {
+            isJson = true;
         }
+      }
     }
-    storage.loadFile(model.ownername, defaultPath, true, getFilesInDir);
-    
-    if ((isInstruction && isWrapper) || isJson) {
-        console.log('found an instruction and wrapper file');
+  }
+  storage.loadFile(model.ownername, defaultPath, true, getFilesInDir);
+  
+  if ((isInstruction && isWrapper) || isJson) {
+        //console.log('found an instruction and wrapper file');
         // verify this in view, when user clicks on activity link
-     }
-     return "http://start." + window.pencilcode.domain +
+  }
+  return "http://start." + window.pencilcode.domain +
     '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
 }
 
