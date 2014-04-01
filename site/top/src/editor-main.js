@@ -65,7 +65,8 @@ var model = {
       data: null,
       bydate: false,
       template: null,
-      loading: 0
+      loading: 0,
+      activityDir: false
     },
     bravo: {
       filename: null,
@@ -73,7 +74,8 @@ var model = {
       data: null,
       bydate: false,
       template: null,
-      loading: 0
+      loading: 0,
+      activityDir: false
     },
     charlie: {
       filename: null,
@@ -81,13 +83,14 @@ var model = {
       data: null,
       bydate: false,
       template: null,
-      loading: 0
+      loading: 0,
+      activityDir: false
     }
   },
   // Logged in username, or null if not logged in.
   username: null,
   // Three digit passkey, hashed from password.
-  passkey: null,
+  passkey: null
 };
 
 //
@@ -167,7 +170,10 @@ function updateTopControls(addHistory) {
       // Also insert share button
       buttons.push({
         id: 'share', title: 'Share links to this program', label: 'Share'});
-    }
+      
+      // check for an activity dir before the share
+      isActivityDir()
+       }
 
     // Offer logout button if user is logged in, else offer login button if not
     // special owner.
@@ -196,6 +202,7 @@ function updateTopControls(addHistory) {
         id: 'guide', label: '<span class=helplink>Guide</span>',
         title: 'Open online guide'});
     }
+    
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
@@ -252,9 +259,10 @@ view.on('share', function() {
           // Share the run URL unless there is no owner (e.g., for /first).
           opts.shareRunURL = "http://" + document.domain + '/home/' +
             modelatpos('left').filename;
-          
-          //Share activity URL
-          opts.shareActivityURL = getStartActivityURL();
+            
+          if (modelatpos('left').activityDir) {
+            opts.shareActivityURL = getStartActivityURL();
+          }
         }
         opts.shareEditURL = window.location.href;
 
@@ -1676,48 +1684,59 @@ function instructionTextForTemplate(template) {
   }
 }
 
-// Construct an activity URL from the current run file path.
-function getStartActivityURL() {
+// Check for activity files in directory
+// Set activityDir for model
+function isActivityDir() {
   var isInstruction = false;
   var isWrapper = false;
-  var isJson = false;
-  var activityDir = '';
   var defaultPath = '';
   var m = modelatpos('left');
   var fn = m.filename;
+
+  if (m.isdir) {
+    defaultPath = fn;
+  } else {
+    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
+  } 
+  var getFilesInDir = function(data) {
+    if (data.length) {
+       for (var j = 0; j < data.length; ++j) {
+        if (data[j].name === 'instructions.html') {
+        isInstruction = true;
+        } else if (data[j].name === 'wrapper.html') {
+          isWrapper = true;
+        }
+       }
+    }
+    if (isInstruction && isWrapper) {
+      m.activityDir = true;
+    }
+  }
+  storage.loadDirList(model.ownername, defaultPath, getFilesInDir); 
+}
+
+// Construct an activity URL from the current run file path.
+function getStartActivityURL() {
+  var defaultPath = '';
+  var m = modelatpos('left');
+  var fn = m.filename;
+  var aUrl = '';
+  var activityDir = '';
   
   if (m.isdir) {
     defaultPath = fn;
   } else {
     defaultPath = fn.substr(0, fn.lastIndexOf('/'));
   }
-  // Omit the protocol from the activityDir so that it defaults to
-  // that used by the page.
-  activityDir = "//" + document.domain + '/home/' + defaultPath;
-  
-  var getFilesInDir = function(dirData) {
-    if (dirData.list) {
-      for (var j = 0, file; file = dirData.list[j]; j++) {
-        if (dirData.list[j].name ==='instructions.html') {
-          isInstruction = true;
-        } else if (dirData.list[j].name === 'wrapper' ||
-                   dirData.list[j].name === 'wrapper.html') {
-            isWrapper = true;
-        } else if (dirData.list[j].name === 'activity.json') {
-            isJson = true;
-        }
-      }
-    }
+  if (m.activityDir) {
+    // Omit the protocol from the activityDir so that it defaults to
+    // that used by the page.
+    activityDir = "//" + document.domain + '/home/' + defaultPath;
+    aUrl = ("http://start." + window.pencilcode.domain +
+      '/edit/' + defaultPath + '?' + 'activity=' + activityDir);
   }
-  storage.loadFile(model.ownername, defaultPath, true, getFilesInDir);
-  
-  if ((isInstruction && isWrapper) || isJson) {
-        //console.log('found an instruction and wrapper file');
-  }
-  return "http://start." + window.pencilcode.domain +
-    '/edit/' + defaultPath + '?' + 'activity=' + activityDir;
+  return aUrl;
 }
-
 
 readNewUrl();
 
