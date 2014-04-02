@@ -121,7 +121,16 @@ function posofpane(pane) {
 //
 function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
+          model.ownername === 'frame' ||
           model.ownername === 'event');
+}
+
+//
+// A no-save owner is an owner that does not participate in saving
+// or loading at all.  This is the case for framed usage.
+//
+function nosaveowner() {
+  return model.ownername === 'frame';
 }
 
 function updateTopControls(addHistory) {
@@ -336,7 +345,7 @@ view.on('run', function() {
 });
 
 $(window).on('beforeunload', function() {
-  if (view.isPaneEditorDirty(paneatpos('left'))) {
+  if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
     view.flashButton('save');
     return "There are unsaved changes."
   }
@@ -437,6 +446,9 @@ view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
+  if (nosaveowner()) {
+    return;
+  }
   if (specialowner()) {
     signUpAndSave();
     return;
@@ -500,6 +512,9 @@ function keyFromPassword(username, p) {
 }
 
 function signUpAndSave() {
+  if (nosaveowner()) {
+    return;
+  }
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   var mp = modelatpos('left');
   var runtext = mimetext && mimetext.text;
@@ -635,7 +650,7 @@ function signUpAndSave() {
 
 function logInAndSave(filename, newdata, forceOverwrite,
                       noteclean, loginPrompt, doneCallback) {
-  if (!filename || !newdata) {
+  if (!filename || !newdata || nosaveowner()) {
     return;
   }
   view.showLoginDialog({
@@ -829,7 +844,7 @@ function doneWithFile(filename) {
 view.on('rename', function(newname) {
   var pp = paneatpos('left');
   var mp = modelatpos('left');
-  if (mp.filename === newname) {
+  if (mp.filename === newname || nosaveowner()) {
     // Nothing to do
     return;
   }
@@ -982,7 +997,7 @@ function readNewUrl(undo) {
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname);
   // Give the user a chance to abort navigation.
-  if (undo && view.isPaneEditorDirty(paneatpos('left'))) {
+  if (undo && view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
     view.flashButton('save');
     if (!window.confirm(
       "There are unsaved changes.\n\n" +

@@ -541,9 +541,14 @@ function enableButton(id, enable) {
   }
 }
 
+// Centers the middle button div using javascript.
 function centerMiddle() {
   var m = $('#middle');
+  // Horizontal center taking into account the button width.
   m.css({left:($(window).width() - m.outerWidth()) / 2});
+  // Vertical center taking into the editor height and button height.
+  m.css({top:($(window).height() -
+      ($('.pane').height() + m.outerHeight()) / 2)})
 }
 
 $(window).on('resize.middlebutton', centerMiddle);
