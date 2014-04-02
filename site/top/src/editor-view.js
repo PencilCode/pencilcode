@@ -1304,7 +1304,12 @@ function updatePaneTitle(pane) {
 }
 
 function normalizeCarriageReturns(text) {
-  return text.replace(/\r\n|\r/g, "\n");
+  var result = text.replace(/\r\n|\r/g, "\n");
+  if (result.length && result.substr(result.length - 1) != '\n') {
+    // Ensure empty last line.
+    result += '\n';
+  }
+  return result;
 }
 
 // The ACE editor's default keybinding for repeated Ctrl-F is dangerous
@@ -1428,13 +1433,13 @@ function setPaneEditorText(pane, text, filename) {
   editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
-  publish('updated', [text]);
+  publish('update', [text]);
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
+    var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
     if (editor.getFontSize() > 16) {
-      var session = editor.getSession();
       var long = (session.getLength() * big.height > $('#' + pane).height());
       if (!long) {
         // Scan for wrapped lines.
@@ -1453,8 +1458,10 @@ function setPaneEditorText(pane, text, filename) {
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
+    // Publish the update event for hosting frame.
+    publish('update', [session.getValue()]);
     // Any editing that changes the line count ends the debugging session.
-    if (paneState.cleanLineCount != editor.getSession().getLength()) {
+    if (paneState.cleanLineCount != session.getLength()) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
     }

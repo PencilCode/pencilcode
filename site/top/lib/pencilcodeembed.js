@@ -14,11 +14,11 @@
 // 2. Create a div on your page.
 // 3. var pce = new PencilCodeEmbed(div);
 //    pce.beginLoad('pen red\nfd 50\nrt 45\nfd 50');
-// 4. pce.on('loaded', function(){ ... }) will be called when ready.
+// 4. pce.on('load', function(){ ... }) will be called when ready.
 // 5. pce.setCode('pen red\nfd 100');
 //    pce.beginRun();
-// 6. pce.on('executed', function(){ ... }) will be called when ready.
-// 7. pce.on('updated', function(code){ ... }) will be called every time
+// 6. pce.on('execute', function(){ ... }) will be called when ready.
+// 7. pce.on('update', function(code){ ... }) will be called every time
 //    editor content changes.
 //
 // Here is a complete example:
@@ -44,7 +44,7 @@
 //  pce.on('updated', function(code) {
 //    console.log('new code: ' + code);
 //  });
-//  pce.on('loaded', function() {
+//  pce.on('load', function() {
 //    console.log('load complete');
 //    pce.hideEditor();
 //    pce.hideMiddleButton();
@@ -102,62 +102,42 @@
         methodName: method,
         args: args,
         secret: secret};
+    if (!iframeParent.iframe) {
+      throw new Error('PencilCodeEmbed: beginLoad must be called first.');
+    }
     iframeParent.iframe.contentWindow.postMessage(
         JSON.stringify(payload), targetUrl);
+    return iframeParent;
   };
 
   var PencilCodeEmbed = (function() {
     function PencilCodeEmbed(div) {
       this.div = div;
-      this._lastSeenCode = '';
+      this.updatedCode = '';
       this.callbacks = {};
 
       // hook up noop event handlers
-      this.on('loaded', function(){});
-      this.on('updated', function(code){});
-      this.on('executed', function(){});
+      this.on('load', function(){});
+      this.on('update', function(code){});
+      this.on('execute', function(){});
       this.on('error', function(error){});
     }
 
     var proto = PencilCodeEmbed.prototype;
 
     proto.on = function(tag, cb) {
-      this.callbacks[tag] = cb;
+      if (!(tag in this.callbacks)) {
+        this.callbacks[tag] = [];
+      }
+      this.callbacks[tag].push(cb);
     };
 
     proto.beginLoad = function(code) {
-       var that = this;
+      if (!code) {
+        code = '';
+      }
 
-       window.addEventListener('message', function(evt) {
-          // check origin
-          if (event.origin != targetDomain) {
-            return false;
-          }
-
-          // check the event is from the child we know about
-          if (event.source !== that.iframe.contentWindow) {
-            return false;
-          }
-
-          // parse event data
-          try {
-            var data = JSON.parse(evt.data);
-          } catch(error) {
-            return false;
-          }
-
-          // invoke method
-          var tag = data.methodName;
-          if (tag in that.callbacks) {
-            var cb = that.callbacks[tag];
-            if (cb) {
-              cb.apply(that, data.args);
-              return true;
-            }
-          }
-
-          return false;
-       });
+      var that = this;
 
       this.div.innerHTML = '';
       this.iframe = document.createElement('iframe');
@@ -165,71 +145,110 @@
       this.iframe.style.height = '100%';
       this.div.appendChild(this.iframe);
 
-      if (!code) {
-        code = '';
-      }
-      this._lastSeenCode = code;
+      this.updatedCode = code;
+
+      window.addEventListener('message', function(evt) {
+        // check origin
+        if (event.origin != targetDomain) {
+          return false;
+        }
+
+        // check the event is from the child we know about
+        if (event.source !== that.iframe.contentWindow) {
+          return false;
+        }
+
+        // parse event data
+        try {
+          var data = JSON.parse(evt.data);
+        } catch(error) {
+          return false;
+        }
+
+        var handled = false;
+
+        // cache updated editor text
+        if (data.methodName == 'update') {
+          that.updatedCode = data.args[0];
+          handled = true;
+        }
+
+        // invoke method
+        var tag = data.methodName;
+        if (tag in that.callbacks) {
+          var cbarray = that.callbacks[tag];
+          for (var j = 0; j < cbarray.length; ++j) {
+            var cb = cbarray[j];
+            if (cb) {
+              cb.apply(that, data.args);
+              handled = true;
+            }
+          }
+        }
+        return handled;
+      });
 
       this.iframe.src =
-        targetUrl +
-        '#text=' + encodeURIComponent(code) +
-        '&secret=' + secret;
+          targetUrl +
+          '#text=' + encodeURIComponent(code) +
+          '&secret=' + secret;
+      return this;
     };
 
     // sets code into the editor
     proto.setCode = function(code) {
-      this._lastSeenCode = code;
-      invokeRemote(this, 'setCode', [code]);
+      this.updatedCode = code;
+      return invokeRemote(this, 'setCode', [code]);
     };
 
     // gets code from the editor
     proto.getCode = function() {
-      return this._lastSeenCode;
+      return this.updatedCode;
     };
 
     // starts running
     proto.beginRun = function() {
-      invokeRemote(this, 'beginRun', []);
+      return invokeRemote(this, 'beginRun', []);
     };
 
     // makes editor editable
     proto.setEditable = function() {
-      invokeRemote(this, 'setEditable', []);
+      return invokeRemote(this, 'setEditable', []);
     };
 
     // makes editor read only
     proto.setReadOnly = function() {
-      invokeRemote(this, 'setReadOnly', []);
+      return invokeRemote(this, 'setReadOnly', []);
     };
 
     // hides editor
     proto.hideEditor = function() {
-      invokeRemote(this, 'hideEditor', []);
+      return invokeRemote(this, 'hideEditor', []);
     };
 
     // shows editor
     proto.showEditor = function() {
-      invokeRemote(this, 'showEditor', []);
+      return invokeRemote(this, 'showEditor', []);
     };
 
     // hides middle button
     proto.hideMiddleButton = function() {
-      invokeRemote(this, 'hideMiddleButton', []);
+      return invokeRemote(this, 'hideMiddleButton', []);
     };
 
     // shows middle button
     proto.showMiddleButton = function() {
-      invokeRemote(this, 'showMiddleButton', []);
+      return invokeRemote(this, 'showMiddleButton', []);
     };
 
     // show butter bar notification
     proto.showNotification = function(message) {
-      invokeRemote(this, 'showNotification', [message]);
+      return invokeRemote(this, 'showNotification', [message]);
     };
 
     // hides butter bar notification
     proto.hideNotification = function() {
-      invokeRemote(this, 'hideNotification', []);
+      return invokeRemote(this, 'hideNotification', []);
     };
 
     return PencilCodeEmbed;

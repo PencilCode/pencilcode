@@ -306,11 +306,6 @@ view.on('byname', function() {
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
     view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
-
-    var mimetext = view.getPaneEditorText(pane);
-    if (mimetext && mimetext.text) {
-      view.publish('updated', [mimetext.text]);
-    }
   }
 });
 
@@ -1066,7 +1061,7 @@ function readNewUrl(undo) {
   // Preload text if specified.
   if (text) {
     createNewFileIntoPosition('left', filename,
-       decodeURIComponent(text[1].replace(/\+/g, ' ')) + '\n');
+       decodeURIComponent(text[1].replace(/\+/g, ' ')));
     updateTopControls(false);
     return;
   }
@@ -1476,7 +1471,9 @@ view.on('messageToParent', function(methodName, args){
 
 view.subscribe(createMessageSinkFunction());
 
-view.publish('loaded');
+// For a hosting frame, publish the 'load' event before publishing
+// the first 'update' events.
+view.publish('load');
 
 readNewUrl();
 
