@@ -1100,7 +1100,7 @@ function runCodeAtPosition(position, code, filename) {
     if (m.running) {
       view.setPaneRunText(pane, code, filename, baseUrl);
     }
-  }, 0);
+  }, 1);
   if (code) {
     $.get('/log/' + filename + '?run=' +
         encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, '|')
