@@ -187,8 +187,8 @@ function updateTopControls(addHistory) {
         title: 'Enter password for ' + model.ownername});
     }
 
-    // If viewing a normal directory, offer sorting buttons.
-    if (!specialowner() && m.isdir) {
+    // If viewing a directory, offer sorting buttons.
+    if (m.isdir) {
       if (m.bydate) {
         buttons.push({id: 'byname', label: 'Alphabetize'});
       } else {
