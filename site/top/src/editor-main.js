@@ -1349,6 +1349,117 @@ function cookie(key, value, options) {
   return result;
 };
 
+// parses window.location.hash into parts and extract secret and tagId
+function getTagIdAndSecret() {
+  // parse location hash
+  var hash = window.location.hash.substring(1);
+  var hashParts = hash.split('&');
+  var hashDict = {};
+  for (var i = 0; i < hashParts.length; i++) {
+    if (hashParts[i].indexOf('=') === -1) {
+      return noneMessageSink;
+    }
+
+    var separatorLocation = hashParts[i].indexOf('=');
+    hashDict[hashParts[i].substring(0, separatorLocation)] = (
+      hashParts[i].substring(separatorLocation + 1));
+  }
+
+  if (!hashDict.tagId || !hashDict.secret) {
+    return {tagId: null, secret: null};
+  }
+  return {tagId: hashDict.tagId, secret: hashDict.secret}
+}
+
+// save original hash as URL may change
+var crossFrameHash = getTagIdAndSecret();
+
+// processes messages from other frames
+$(window).on('message', function(e) {
+    var data = JSON.parse(e.originalEvent.data);
+
+    // check secret
+    if (!data.secret || data.secret != crossFrameHash.secret) {
+      return false;
+    }
+
+    // check tagId
+    if (!data.tagId || data.tagId != crossFrameHash.tagId) {
+      return false;
+    }
+
+    // invoke
+    switch (data.methodName) {
+      case 'setCode':
+         view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+        break;
+      case 'beginRun':
+        view.run();
+        break;
+      case 'hideEditor':
+        view.hideEditor();
+        break
+      case 'showEditor':
+        view.showEditor();
+        break
+      case 'hideMiddleButton':
+        view.canShowMiddleButton = false;
+        view.showMiddleButton('');
+        break
+      case 'showMiddleButton':
+        view.canShowMiddleButton = true;
+        view.showMiddleButton('run');
+        break
+      case 'setEditable':
+        view.setPaneEditorReadOnly(paneatpos('left'), false);
+        break
+      case 'setReadOnly':
+        view.setPaneEditorReadOnly(paneatpos('left'), true);
+        break
+      case 'showNotification':
+        view.flashNotification(data.args[0]);
+        break;
+      case 'hideNotification':
+        view.dismissNotification();
+        break;
+      default:
+        return false;
+    }
+});
+
+// posts message to the parent window, which may have embedded us
+function createMessageSinkFunction() {
+  var noneMessageSink = function(method, args){};
+
+  // check we do have a parent window
+  if (window.parent === window) {
+    return noneMessageSink;
+  }
+
+  // validate presence of tagId and secret in hash
+  if (!crossFrameHash.tagId || !crossFrameHash.secret) {
+    return noneMessageSink;
+  }
+
+  return function(method, args){
+    var payload = {
+        methodName: method,
+        args: args,
+        tagId: crossFrameHash.tagId,
+        secret: crossFrameHash.secret};
+    window.parent.postMessage(
+        JSON.stringify(payload), '*');
+  };
+}
+
+view.on('messageToParent', function(methodName, args){
+  postMessageToParent(methodName, args);
+});
+
+view.subscribe(createMessageSinkFunction());
+
+view.publish('onLoadComplete');
+
 readNewUrl();
 
 return model;

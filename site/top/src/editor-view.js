@@ -45,6 +45,7 @@ var state = {
   nameText: $('#filename').text(),
   previewMode: true,
   callbacks: {},
+  subscriber: null,
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
   pane: {
@@ -67,6 +68,22 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
+  run: function(){ fireEvent('run', []); },
+  subscribe: function(callback){
+    state.subscriber = callback; },
+  publish: function(method, args){
+    if (state.subscriber) { state.subscriber(method, args); } },
+
+  hideEditor: function() {
+    $('#bravotitle').hide();
+    $('#bravo').hide();
+  },
+  showEditor: function() {
+    $('#bravo').show();
+    $('#bravotitle').show();
+  },
+
+
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
@@ -106,7 +123,15 @@ window.pencilcode.view = {
   showShareDialog: showShareDialog,
   showDialog: showDialog,
   // The run button
-  showMiddleButton: showMiddleButton,
+  canShowMiddleButton: true,
+  showMiddleButton: function(which) {
+    if (window.pencilcode.view.canShowMiddleButton) {
+      $('#middle').show();
+      showMiddleButton(which);
+    } else {
+      $('#middle').hide();
+    }
+  },
   // Sets editable name.
   setNameText: function(s) {
     state.nameText = s;

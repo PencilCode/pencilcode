@@ -516,6 +516,8 @@ function pollForStop() {
     if (stopButtonShown) {
       stopButtonShown = 0;
       view.showMiddleButton('run');
+
+      view.publish('onRunComplete');
     }
   }
   pollTimer = setTimeout(pollForStop, 100);
