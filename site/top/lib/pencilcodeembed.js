@@ -107,6 +107,11 @@
                 that.onLoadComplete();
               }
               break;
+            case 'onDirty':
+              if (that.onDirty) {
+                that.onDirty(data.args[0]);
+              }
+              break;
             case 'onRunComplete':
               if (that.onRunComplete) {
                 that.onRunComplete();

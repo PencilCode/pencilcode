@@ -68,21 +68,15 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
+
+  // start code execution
   run: function(){ fireEvent('run', []); },
+
+  // publish/subscribe for global events; all global events are broadcast
+  // to the parent frames using postMessage() if we are iframed
   subscribe: function(callback){
     state.subscriber = callback; },
-  publish: function(method, args){
-    if (state.subscriber) { state.subscriber(method, args); } },
-
-  hideEditor: function() {
-    $('#bravotitle').hide();
-    $('#bravo').hide();
-  },
-  showEditor: function() {
-    $('#bravo').show();
-    $('#bravotitle').show();
-  },
-
+  publish: publish,
 
   // Sets up the text-editor in the view.
   paneid: paneid,
@@ -105,6 +99,15 @@ window.pencilcode.view = {
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
+  hideEditor: function(pane) {
+    $('#' + pane + 'title').hide();
+    $('#' + pane).hide();
+  },
+  showEditor: function(pane) {
+    $('#' + pane).show();
+    $('#' + pane + 'title').show();
+  },
+
   // Mananges panes and preview mode
   setPreviewMode: setPreviewMode,
   getPreviewMode: function() { return state.previewMode; },
@@ -150,6 +153,10 @@ window.pencilcode.view = {
   // Sets visible URL without navigating.
   setVisibleUrl: setVisibleUrl
 };
+
+function publish(method, args){
+  if (state.subscriber) { state.subscriber(method, args); }
+}
 
 function paneid(position) {
   return $('.' + position).filter('.pane').attr('id');
@@ -1421,6 +1428,7 @@ function setPaneEditorText(pane, text, filename) {
   editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
+  publish('onDirty', [text]);
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);

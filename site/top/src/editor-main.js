@@ -303,6 +303,11 @@ view.on('byname', function() {
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
     view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
+
+    var mimetext = view.getPaneEditorText(pane);
+    if (mimetext && mimetext.text) {
+      view.publish('onDirty', [mimetext.text]);
+    }
   }
 });
 
@@ -1376,55 +1381,60 @@ var crossFrameHash = getTagIdAndSecret();
 
 // processes messages from other frames
 $(window).on('message', function(e) {
+  // parse event data
+  try {
     var data = JSON.parse(e.originalEvent.data);
+  } catch(error) {
+    return;
+  }
 
-    // check secret
-    if (!data.secret || data.secret != crossFrameHash.secret) {
+  // check secret
+  if (!data.secret || data.secret != crossFrameHash.secret) {
+    return false;
+  }
+
+  // check tagId
+  if (!data.tagId || data.tagId != crossFrameHash.tagId) {
+    return false;
+  }
+
+  // invoke the requested method
+  switch (data.methodName) {
+    case 'setCode':
+       view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      break;
+    case 'beginRun':
+      view.run();
+      break;
+    case 'hideEditor':
+      view.hideEditor(paneatpos('left'));
+      break
+    case 'showEditor':
+      view.showEditor(paneatpos('left'));
+      break
+    case 'hideMiddleButton':
+      view.canShowMiddleButton = false;
+      view.showMiddleButton('');
+      break
+    case 'showMiddleButton':
+      view.canShowMiddleButton = true;
+      view.showMiddleButton('run');
+      break
+    case 'setEditable':
+      view.setPaneEditorReadOnly(paneatpos('left'), false);
+      break
+    case 'setReadOnly':
+      view.setPaneEditorReadOnly(paneatpos('left'), true);
+      break
+    case 'showNotification':
+      view.flashNotification(data.args[0]);
+      break;
+    case 'hideNotification':
+      view.dismissNotification();
+      break;
+    default:
       return false;
-    }
-
-    // check tagId
-    if (!data.tagId || data.tagId != crossFrameHash.tagId) {
-      return false;
-    }
-
-    // invoke
-    switch (data.methodName) {
-      case 'setCode':
-         view.setPaneEditorText(paneatpos('left'), data.args[0], null);
-        break;
-      case 'beginRun':
-        view.run();
-        break;
-      case 'hideEditor':
-        view.hideEditor();
-        break
-      case 'showEditor':
-        view.showEditor();
-        break
-      case 'hideMiddleButton':
-        view.canShowMiddleButton = false;
-        view.showMiddleButton('');
-        break
-      case 'showMiddleButton':
-        view.canShowMiddleButton = true;
-        view.showMiddleButton('run');
-        break
-      case 'setEditable':
-        view.setPaneEditorReadOnly(paneatpos('left'), false);
-        break
-      case 'setReadOnly':
-        view.setPaneEditorReadOnly(paneatpos('left'), true);
-        break
-      case 'showNotification':
-        view.flashNotification(data.args[0]);
-        break;
-      case 'hideNotification':
-        view.dismissNotification();
-        break;
-      default:
-        return false;
-    }
+  }
 });
 
 // posts message to the parent window, which may have embedded us
