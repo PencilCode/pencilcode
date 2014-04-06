@@ -111,7 +111,7 @@ window.pencilcode.storage = {
       cb(null);
     });
   },
-  loadDirList: function(ownername, filename, cb) {
+  loadDirList: function(ownername, filename, callback) {
     if (!ownername && filename.indexOf('/') >= 0) {
       setTimeout(function() {
         callback({error: "Cannot load."});
@@ -123,7 +123,7 @@ window.pencilcode.storage = {
         '/load/' + filename, function(m) {
       // If there is no owner, we are not allowed to load directories
       if (!ownername && filename && m.directory) {
-        cb({error: "Cannot load."});
+        callback({error: "Cannot load."});
       }
       if (m && m.directory && m.list) {
         var result = [];
@@ -131,10 +131,10 @@ window.pencilcode.storage = {
           var reserved = (m.list[j].mode.indexOf('d') < 0);
           result.push({ name: m.list[j].name});
         }
-        cb(result);
+        callback(result);
         return;
       }
-      cb(null);
+      callback(null);
     });
   },
   // Given a filename (no owner, leading, or trailing slash),
