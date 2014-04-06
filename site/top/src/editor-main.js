@@ -51,6 +51,31 @@ function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 
+// TODO Document the fields of the pane model.
+function defaultPaneModel() {
+  return {
+      filename: null,
+      isdir: false,
+      data: null,
+      bydate: false,
+      loading: 0,
+      running: 0,
+      template: null,
+      activityDir: false
+  };
+}
+
+function clearPaneModel(m) {
+  m.filename = null;
+  m.isdir = false;
+  m.data = null;
+  m.bydate = false;
+  m.loading = 0;
+  m.running = false;
+  m.template = null;
+  m.activityDir = false;
+}
+
 var model = {
     
   // Owner name of this file or directory.
@@ -59,33 +84,9 @@ var model = {
   editmode: false,
   // Contents of the three panes.
   pane: {
-    alpha: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      template: null,
-      loading: 0,
-      activityDir: false
-    },
-    bravo: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      template: null,
-      loading: 0,
-      activityDir: false
-    },
-    charlie: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      template: null,
-      loading: 0,
-      activityDir: false
-    }
+    alpha: defaultPaneModel(),
+    bravo: defaultPaneModel(),
+    charlie: defaultPaneModel()
   },
   // Logged in username, or null if not logged in.
   username: null,
@@ -170,10 +171,11 @@ function updateTopControls(addHistory) {
       // Also insert share button
       buttons.push({
         id: 'share', title: 'Share links to this program', label: 'Share'});
-      
-      // check for an activity dir before the share
-      isActivityDir()
-       }
+
+      // Check now whether the file is in an activity dir so that we know whether to
+      // offer 'Share Activity' when the user clicks Share.
+      checkIfActivityDir();
+    }
 
     // Offer logout button if user is logged in, else offer login button if not
     // special owner.
@@ -1072,7 +1074,9 @@ function assertEQ(a, b, msg) {
 function readNewUrl(undo) {
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
-      parsedURL = parseURL(window.location), // TODO(jamessynge): check that values match those below.
+      // TODO(jamessynge): Get complete parseURL impl working, then stop depending upon
+      // the patterns below.
+      parsedURL = parseURL(window.location),
   // Owner comes from domain name.
       ownername = window.location.hostname.replace(
           /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
@@ -1090,15 +1094,6 @@ function readNewUrl(undo) {
       editmode = /^\/edit\//.test(window.location.pathname),
   // Extract variables in search string
       searchVars = parsedURL.searchVars;
-
-
-  // TODO REMOVE BEFORE PUSHING UPSTREAM
-  assertEQ(parsedURL.ownername, ownername, 'ownername');
-  assertEQ(parsedURL.filename, filename, 'filename');
-  assertEQ(parsedURL.isdir, isdir, 'isdir');
-  assertEQ(parsedURL.editmode, editmode, 'editmode');
-
-
 
   // Give the user a chance to abort navigation.
   if (undo && view.isPaneEditorDirty(paneatpos('left'))) {
@@ -1205,13 +1200,7 @@ var stopButtonTimer = null;
 function cancelAndClearPosition(pos) {
   debug.bindframe(null);
   view.clearPane(paneatpos(pos), false);
-  modelatpos(pos).loading = 0;
-  modelatpos(pos).filename = null;
-  modelatpos(pos).isdir = false;
-  modelatpos(pos).data = null;
-  modelatpos(pos).bydate = false;
-  modelatpos(pos).running = false;
-  modelatpos(pos).template = null;
+  clearPaneModel(modelatpos(pos));
 }
 
 // Runs the given code, applying template boilerplate if given.
@@ -1276,11 +1265,11 @@ function createNewFileIntoPosition(position, filename, text) {
     data: text,
     mtime: 0
   };
+  mpp.activityDir = false;
   view.setPaneEditorText(pane, text, filename, null);
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
 }
-
 
 // Given a pane position (e.g., 'left' or 'right'), does a couple steps:
 // (1) Loads the underlying file given by filename
@@ -1302,6 +1291,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   mpp.isdir = isdir;
   mpp.bydate = isdir && defaultDirSortingByDate();
   mpp.loading = loadNum;
+  mpp.activityDir = false;
   mpp.data = null;
   mpp.running = false;
   var mpploading = {};
@@ -1633,15 +1623,16 @@ function loadTemplateMetadata(templateBaseDir, callback) {
   var templateData = {
     activityURL: activityURL,
 
-    // wrapper is the source that will wrap the student's code, contains
-    // the string {{text}} at the point the student's code should be inserted.
-    wrapper: '',
+    // wrapper is the file (object) that will wrap the student's code, contains
+    // the strings {{start-default-text}} and {{end-default-text}} to mark where
+    // the student's code should be inserted.
+    wrapper: null,
 
     // HTML to be displayed above editor
     instructions: '',
 
     // From optional json file.
-    metadata: {}
+    metadata: null
   };
 
   var processInstructions = function(fileData) {
@@ -1684,11 +1675,12 @@ function instructionTextForTemplate(template) {
   }
 }
 
-// Check for activity files in directory
+// Check for activity files in current (left) directory, asynchronously.
 // Set activityDir for model
-function isActivityDir() {
-  var isInstruction = false;
-  var isWrapper = false;
+function checkIfActivityDir() {
+  var hasInstruction = false;
+  var hasWrapper = false;
+  var hasMetadata = false;
   var defaultPath = '';
   var m = modelatpos('left');
   var fn = m.filename;
@@ -1698,21 +1690,26 @@ function isActivityDir() {
   } else {
     defaultPath = fn.substr(0, fn.lastIndexOf('/'));
   } 
-  var getFilesInDir = function(data) {
+  function detectActivityDir(data) {
     if (data.length) {
        for (var j = 0; j < data.length; ++j) {
-        if (data[j].name === 'instructions.html') {
-        isInstruction = true;
-        } else if (data[j].name === 'wrapper.html') {
-          isWrapper = true;
+        if (data[j].name === 'wrapper.html') {
+          hasWrapper = true;
+        } else if (data[j].name === 'wrapper') {
+          hasWrapper = true;
+        } else if (data[j].name === 'activity.json') {
+          hasMetadata = true;
         }
-       }
+      }
     }
-    if (isInstruction && isWrapper) {
-      m.activityDir = true;
+    if (hasWrapper || hasMetadata) {
+      var currModel = modelatpos('left');
+      if (currModel === m && m.filename === fn) {
+        m.activityDir = true;
+      }
     }
   }
-  storage.loadDirList(model.ownername, defaultPath, getFilesInDir); 
+  storage.loadDirList(model.ownername, defaultPath, detectActivityDir); 
 }
 
 // Construct an activity URL from the current run file path.
