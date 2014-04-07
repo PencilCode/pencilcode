@@ -84,6 +84,9 @@ var model = {
   username: null,
   // Three digit passkey, hashed from password.
   passkey: null,
+  // secrets passed in from the embedding frame via
+  // window.location.hash
+  crossFrameContext: getCrossFrameContext()
 };
 
 //
@@ -1354,34 +1357,40 @@ function cookie(key, value, options) {
   return result;
 };
 
-// parses window.location.hash into parts and extract secret and tagId
-function getTagIdAndSecret() {
-  if (!window.location.hash) {
-    return {tagId: null, secret: null};
+///////////////////////////////////////////////////////////////////////////
+// CROSS-FRAME-MESSAGE SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+// parses window.location.hash params into a dict
+function parseWindowLocationHash() {
+  if (!window.location.hash || window.location.hash.length < 2) {
+    return {};
   }
 
-  // parse location hash
   var hash = window.location.hash.substring(1);
   var hashParts = hash.split('&');
   var hashDict = {};
   for (var i = 0; i < hashParts.length; i++) {
     if (hashParts[i].indexOf('=') === -1) {
-      return {tagId: null, secret: null};
+      return {};
     }
 
     var separatorLocation = hashParts[i].indexOf('=');
     hashDict[hashParts[i].substring(0, separatorLocation)] = (
-      hashParts[i].substring(separatorLocation + 1));
+      decodeURIComponent(hashParts[i].substring(separatorLocation + 1)));
   }
 
-  if (!hashDict.tagId || !hashDict.secret) {
-    return {tagId: null, secret: null};
-  }
-  return {tagId: hashDict.tagId, secret: hashDict.secret}
+  return hashDict;
 }
 
-// save original hash as URL may change
-var crossFrameContext = getTagIdAndSecret();
+// extracts secret from the location hash
+function getCrossFrameContext() {
+  var hashDict = parseWindowLocationHash();
+  if (!hashDict.secret) {
+    return {secret: null};
+  }
+  return {secret: hashDict.secret}
+}
 
 // processes messages from other frames
 $(window).on('message', function(e) {
@@ -1389,16 +1398,11 @@ $(window).on('message', function(e) {
   try {
     var data = JSON.parse(e.originalEvent.data);
   } catch(error) {
-    return;
-  }
-
-  // check secret
-  if (!data.secret || data.secret != crossFrameContext.secret) {
     return false;
   }
 
-  // check tagId
-  if (!data.tagId || data.tagId != crossFrameContext.tagId) {
+  // check secret
+  if (!data.secret || data.secret != model.crossFrameContext.secret) {
     return false;
   }
 
@@ -1412,24 +1416,24 @@ $(window).on('message', function(e) {
       break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
-      break
+      break;
     case 'showEditor':
       view.showEditor(paneatpos('left'));
-      break
+      break;
     case 'hideMiddleButton':
       view.canShowMiddleButton = false;
       view.showMiddleButton('');
-      break
+      break;
     case 'showMiddleButton':
       view.canShowMiddleButton = true;
       view.showMiddleButton('run');
-      break
+      break;
     case 'setEditable':
       view.setPaneEditorReadOnly(paneatpos('left'), false);
-      break
+      break;
     case 'setReadOnly':
       view.setPaneEditorReadOnly(paneatpos('left'), true);
-      break
+      break;
     case 'showNotification':
       view.flashNotification(data.args[0]);
       break;
@@ -1439,6 +1443,8 @@ $(window).on('message', function(e) {
     default:
       return false;
   }
+
+  return true;
 });
 
 // posts message to the parent window, which may have embedded us
@@ -1450,17 +1456,15 @@ function createMessageSinkFunction() {
     return noneMessageSink;
   }
 
-  // validate presence of tagId and secret in hash
-  if (!crossFrameContext.tagId || !crossFrameContext.secret) {
+  // validate presence of secret in hash
+  if (!model.crossFrameContext.secret) {
     return noneMessageSink;
   }
 
   return function(method, args){
     var payload = {
         methodName: method,
-        args: args,
-        tagId: crossFrameContext.tagId,
-        secret: crossFrameContext.secret};
+        args: args};
     window.parent.postMessage(
         JSON.stringify(payload), '*');
   };

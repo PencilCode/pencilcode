@@ -42,7 +42,7 @@
 //  var pce = new PencilCodeEmbed(document.getElementById('pencil'));
 //  pce.onDirty = function(code) {
 //    console.log('new code: ' + code);
-//  }
+//  };
 //  pce.onLoadComplete = function() {
 //    console.log('load complete');
 //    pce.hideEditor();
@@ -71,31 +71,13 @@
 
 (function(global) {
 
-  // makes new unique id not found in any other DOM element
-  function generateNewRandomId() {
-    while (true) {
-      var ID_LENGTH = 12;
-      var generatedId = '';
-      for (var i = 0; i < ID_LENGTH; i++) {
-        generatedId += String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      }
-      if (!document.getElementById(generatedId)) {
-        return generatedId;
-      }
-    }
-  }
-
   // makes secret for cross-frame communications
   function makeSecret() {
-    var alphanumericChars = (
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
     var SECRET_LENGTH = 64;
 
-    // A random string used to verify messages sent from the iframed window.
-    var secret = ''
+    var secret = '';
     for (var i = 0; i < SECRET_LENGTH; i++) {
-      secret += alphanumericChars.charAt(
-          Math.floor(Math.random() * alphanumericChars.length));
+      secret += String.fromCharCode(65 + Math.floor(Math.random() * 26));
     }
 
     return secret;
@@ -112,14 +94,12 @@
   var targetDomain = 'http://frame.pencilcode.net' + dev;
   var targetUrl = targetDomain + '/edit/frame';
   var secret = makeSecret();
-  var tagId = generateNewRandomId();
 
   // send messages to the remote iframe
   function invokeRemote(iframeParent, method, args) {
     var payload = {
         methodName: method,
         args: args,
-        tagId: tagId,
         secret: secret};
     iframeParent.iframe.contentWindow.postMessage(
         JSON.stringify(payload), targetUrl);
@@ -141,23 +121,19 @@
             return false;
           }
 
+          // check the event is from the child we know about
+          if (event.source !== that.iframe.contentWindow) {
+            return false;
+          }
+
           // parse event data
           try {
             var data = JSON.parse(evt.data);
           } catch(error) {
-            return;
+            return false;
           }
 
-          // verify that the message comes with a secret
-          if (!data.secret || data.secret !== secret) {
-            return;
-          }
-
-          // verify that the message comes to the right destination
-          if (!data.tagId || data.tagId !== tagId) {
-            return;
-          }
-
+          // invoke method
           switch (data.methodName) {
             case 'onLoadComplete':
               if (that.onLoadComplete) {
@@ -173,15 +149,16 @@
               if (that.onRunComplete) {
                 that.onRunComplete();
               }
-              break
+              break;
             default:
               return false;
           }
+
+          return true;
        });
 
       this.div.innerHTML = '';
       this.iframe = document.createElement('iframe');
-      this.iframe.setAttribute('id', this.tagId);
       this.iframe.style.width = '100%';
       this.iframe.style.height = '100%';
       this.div.appendChild(this.iframe);
@@ -189,7 +166,6 @@
       this.iframe.src =
         targetUrl +
         '#text=' + encodeURIComponent('') +
-        '&tagId=' + tagId +
         '&secret=' + secret;
     };
 
