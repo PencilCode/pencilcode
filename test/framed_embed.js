@@ -53,22 +53,63 @@ describe('framed embed', function() {
        '/script>');
     asyncTest(_page, one_step_timeout, null, function() {
     }, function() {
-      // Poll until the element with class="editor" appears on the page.
+      // wait until PencilCodeEmbed is ready
       if (!window.PencilCodeEmbed) return;
-      // Reach in and return the text that is shown within the editor.
-      var pco = new PencilCodeEmbed(document.getElementById("embed"));
-      var longcode = "pen red\\n";
-      for (var j = 0; j < 1000; ++j) {
-        longcode += "fd 50; rt " + j + ", 50\\n";
-      }
-      pco.setCode(longcode);
-      return {
-        src: document.getElementsByTagName('iframe')[0].src
-      };
-    }, function(err, result) {
+      return true;
+    }, function(err, result){
       assert.ifError(err);
-      assert.ok(/rt%20999/.test(result.src));
-      done();
+
+      var code = null;
+      var event_code = null;
+      var loaded = false;
+      var ran = false;
+
+      asyncTest(_page, one_step_timeout, null, function() {
+        var pco = new PencilCodeEmbed(document.getElementById("embed"));
+
+        pco.onLoadComplete = function() {
+          loaded = true;
+
+          // watch editor changes and code execution status
+          pco.onDirty = function(code) {
+            event_code = code;
+          };
+          pco.onRunComplete = function () {
+            ran = true;
+          };
+
+          // change visibility of controls
+          pco.hideEditor();
+          pco.showEditor();
+
+          pco.hideMiddleButton();
+          pco.showMiddleButton();
+
+          pco.setReadOnly();
+          pco.setEditable();
+
+          pco.showNotification('Welcome!');
+          pco.hideNotification();
+
+          // put some code into the editor
+          var code = "speed 100\npen red\\n";
+          for (var j = 0; j < 100; ++j) {
+            code += "fd 50; rt " + j + ", 50\\n";
+          }
+          pco.setCode(code);
+
+          // execute code loaded into the editor
+          pco.beginRun();
+        };
+        pco.beginLoad();
+      }, function() {
+        // wait until PencilCodeEmbed is fully loaded and code has ran
+        return loaded && ran;
+      }, function(err, result){
+        assert.ifError(err);
+        assert.ok(code == event_code);
+        done();
+      });
     });
   });
 });

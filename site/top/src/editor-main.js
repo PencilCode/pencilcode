@@ -1356,13 +1356,17 @@ function cookie(key, value, options) {
 
 // parses window.location.hash into parts and extract secret and tagId
 function getTagIdAndSecret() {
+  if (!window.location.hash) {
+    return {tagId: null, secret: null};
+  }
+
   // parse location hash
   var hash = window.location.hash.substring(1);
   var hashParts = hash.split('&');
   var hashDict = {};
   for (var i = 0; i < hashParts.length; i++) {
     if (hashParts[i].indexOf('=') === -1) {
-      return noneMessageSink;
+      return {tagId: null, secret: null};
     }
 
     var separatorLocation = hashParts[i].indexOf('=');
@@ -1377,7 +1381,7 @@ function getTagIdAndSecret() {
 }
 
 // save original hash as URL may change
-var crossFrameHash = getTagIdAndSecret();
+var crossFrameContext = getTagIdAndSecret();
 
 // processes messages from other frames
 $(window).on('message', function(e) {
@@ -1389,12 +1393,12 @@ $(window).on('message', function(e) {
   }
 
   // check secret
-  if (!data.secret || data.secret != crossFrameHash.secret) {
+  if (!data.secret || data.secret != crossFrameContext.secret) {
     return false;
   }
 
   // check tagId
-  if (!data.tagId || data.tagId != crossFrameHash.tagId) {
+  if (!data.tagId || data.tagId != crossFrameContext.tagId) {
     return false;
   }
 
@@ -1447,7 +1451,7 @@ function createMessageSinkFunction() {
   }
 
   // validate presence of tagId and secret in hash
-  if (!crossFrameHash.tagId || !crossFrameHash.secret) {
+  if (!crossFrameContext.tagId || !crossFrameContext.secret) {
     return noneMessageSink;
   }
 
@@ -1455,8 +1459,8 @@ function createMessageSinkFunction() {
     var payload = {
         methodName: method,
         args: args,
-        tagId: crossFrameHash.tagId,
-        secret: crossFrameHash.secret};
+        tagId: crossFrameContext.tagId,
+        secret: crossFrameContext.secret};
     window.parent.postMessage(
         JSON.stringify(payload), '*');
   };
