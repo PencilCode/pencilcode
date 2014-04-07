@@ -1,17 +1,74 @@
 // pencilcodeembed.js
 
-// To embed a pencil code editor:
+// This script allows you to embed a pencil code editor and
+// debugger into your web page. You can control appearance,
+// execute actions and receive various events from the editor.
+// This script uses postMessags() for cross-frame communications.
+//
+// To embed a pencil code editor into your web page:
+//
 // 1. Load this script either with a script tag
 //    or using an AMD loader like require.js.
 //    If loading using require.js, then the class
 //    name will be packagename.PencilCodeEmbed.
 // 2. Create a div on your page.
 // 3. var pce = new PencilCodeEmbed(div);
-// 4. pce.setCode('pen red\nfd 100');
+//    pce.beginLoad();
+// 4. onLoadComplete() will be called when loading completes.
+// 5. pce.setCode('pen red\nfd 100');
+//    pce.beginRun();
+// 6. onRunComplete() will be called when execution completes.
+// 7. onDirty() will be called every time editor content changes.
 //
-// This script does not yet support capturing
-// events from the editor.  That will come
-// in a future version.
+// Here is a complete example:
+//
+//  var smiley = [
+//    'speed 5',
+//    'dot yellow, 160',
+//    'fd 20',
+//    'rt 90',
+//    'fd 25',
+//    'dot black, 20',
+//    'bk 50',
+//    'dot black, 20',
+//    'bk 5',
+//    'rt 90',
+//    'fd 40',
+//    'pen black, 7',
+//    'lt 30',
+//    'lt 120, 35'
+//  ];
+//
+//  var pce = new PencilCodeEmbed(document.getElementById('pencil'));
+//  pce.onDirty = function(code) {
+//    console.log('new code: ' + code);
+//  }
+//  pce.onLoadComplete = function() {
+//    console.log('load complete');
+//    pce.hideEditor();
+//    pce.hideMiddleButton();
+//    pce.setReadOnly();
+//    pce.showNotification('Pay attention to the Turtle!');
+//    setTimeout(function(){
+//      pce.hideNotification();
+//      pce.setCode(smiley.join('\n'));
+//      pce.onRunComplete = function () {
+//        console.log('run complete');
+//        pce.showNotification('Turtle is smart! Let\'s make it smarter!');
+//        setTimeout(function(){
+//          pce.hideNotification();
+//          pce.showEditor();
+//          pce.showMiddleButton();
+//          pce.setEditable();
+//        }, 2000);
+//      };
+//      pce.beginRun();
+//    }, 2000);
+//  };
+//  pce.beginLoad();
+//
+// Enjoy!
+
 (function(global) {
 
   // makes new unique id not found in any other DOM element
