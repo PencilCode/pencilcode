@@ -62,9 +62,9 @@ describe('framed embed', function() {
       asyncTest(_page, one_step_timeout, null, function() {
 
         // prepare code
-        var code = "speed 100\npen red\\n";
+        var code = "speed 100\npen red\n";
         for (var j = 0; j < 100; ++j) {
-          code += "fd 50; rt " + j + ", 50\\n";
+          code += "fd 50; rt " + j + ", 50\n";
         }
 
         // this object will hold various checks we do along the way
@@ -75,6 +75,7 @@ describe('framed embed', function() {
           loaded: false,
           updated: false,
           executed: false,
+          error: false,
           loadedThis: false,
           updatedThis: false,
           executedThis: false
@@ -99,6 +100,11 @@ describe('framed embed', function() {
             window.test.executedThis = this == pco;
             window.test.executed = true;
             window.test.executedCode = pco.getCode();
+          });
+
+          // trap errors
+          pco.on('error', function (error) {
+            window.test.error = true;
           });
 
           // change visibility of controls
@@ -133,6 +139,7 @@ describe('framed embed', function() {
         assert.ok(result.loaded);
         assert.ok(result.updated);
         assert.ok(result.executed);
+        assert.ok(!result.error);
 
         assert.ok(result.loadedThis);
         assert.ok(result.updatedThis);

@@ -116,6 +116,7 @@
       this.on('loaded', function(){});
       this.on('updated', function(code){});
       this.on('executed', function(){});
+      this.on('error', function(error){});
     }
 
     var proto = PencilCodeEmbed.prototype;

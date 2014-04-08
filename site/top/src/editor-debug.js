@@ -74,7 +74,22 @@ var debug = window.ide = {
     else if (name == 'exit') { debugExit.apply(null, data); }
     else if (name == 'appear') { debugAppear.apply(null, data); }
     else if (name == 'resolve') { debugResolve.apply(null, data); }
-    else if (name == 'error') { debugError.apply(null, data); }
+    else if (name == 'error') {
+      debugError.apply(null, data);
+
+      // data can't be marshalled fully due to circular references not
+      // being supported by JSON.stringify(); copy over the essential bits
+      var simpleData = {};
+      try{
+        if (toString.call(data) === "[object Array]" &&
+            data.length > 0 && data[0].message) {
+          simpleData.message = data[0].message;
+        }
+      } catch (error) {
+        simpleData.message = 'Unknown error.';
+      }
+      view.publish('error', [simpleData]);
+    }
   },
   flashStopButton: flashStopButton
 };
