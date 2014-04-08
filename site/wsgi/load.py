@@ -239,8 +239,8 @@ def application(env, start_response):
     return (
     '<!doctype html>\n<html>\n<head>\n' +
     '<script src="http://%s/turtlebits.js"></script>\n' % (domain) +
-    '</head>\n<body>\n<script type="text/coffeescript">\neval $.turtle()\n\n' +
-    text + '\n</script>\n</body>\n</html>\n')
+    '</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
+    text + '\n</script></body></html>')
   
   if os.path.isfile(absfile):
     split = filename.rsplit('.', 1)

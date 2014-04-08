@@ -335,6 +335,8 @@ view.on('run', function() {
     storage.saveFile(model.ownername,
         modelatpos('left').filename, newdata, false, null, true);
   }
+  // Provide instant (momentary) feedback that the program is now running.
+  debug.flashStopButton();
   runCodeAtPosition(
       'right', runtext,
       modelatpos('left').filename, modelatpos('left').template);

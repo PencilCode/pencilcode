@@ -366,6 +366,7 @@ var undefined = void 0,
     rootjQuery = jQuery(function() {}),
     Pencil, Turtle,
     interrupted = false,
+    async_pending = 0,
     global_plan_counter = 0;
 
 function __extends(child, parent) {
@@ -822,7 +823,7 @@ function cleanedStyle(trans) {
 // center of rotation when no transforms are applied) in page coordinates.
 function getTurtleOrigin(elem, inverseParent, extra) {
   var state = $.data(elem, 'turtleData');
-  if (state && state.quickhomeorigin && state.down && !extra) {
+  if (state && state.quickhomeorigin && state.down && state.style && !extra) {
     return state.quickhomeorigin;
   }
   var hidden = ($.css(elem, 'display') === 'none'),
@@ -845,7 +846,7 @@ function getTurtleOrigin(elem, inverseParent, extra) {
     extra.localorigin = transformOrigin;
   }
   var result = addVector([gbcr.left, gbcr.top], transformOrigin);
-  if (state && state.down) {
+  if (state && state.down && state.style) {
     state.quickhomeorigin = result;
   }
   return result;
@@ -1039,7 +1040,7 @@ function getCenterInPageCoordinates(elem) {
     return getRoundedCenterLTWH(0, 0, dw(), dh());
   }
   var state = getTurtleData(elem);
-  if (state && state.quickpagexy && state.down) {
+  if (state && state.quickpagexy && state.down && state.style) {
     return state.quickpagexy;
   }
   var tr = getElementTranslation(elem),
@@ -1049,7 +1050,7 @@ function getCenterInPageCoordinates(elem) {
       origin = getTurtleOrigin(elem, inverseParent),
       pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
       result = { pageX: pos[0], pageY: pos[1] };
-  if (state && simple && state.down) {
+  if (state && simple && state.down && state.style) {
     state.quickpagexy = result;
   }
   return result;
@@ -2663,24 +2664,12 @@ var Sprite = (function(_super) {
   function Sprite(selector, context) {
     this.constructor = jQuery;
     this.constructor.prototype = Object.getPrototypeOf(this);
-    var constructed = false;
-    if (!$.isPlainObject(selector)) {
-      // The Sprite constructor starts as just the jQuery constructor
-      // except in the case where the argument is a plain {} object.
-      jQuery.fn.init.call(this, selector, context, rootjQuery);
-      constructed = true;
+    if (!selector || typeof(selector) == 'string' ||
+        $.isPlainObject(selector) || typeof(selector) == 'number') {
+      // Use hatchone to create an element.
+      selector = hatchone(selector, context, '256x256');
     }
-    if (!constructed || this.length == 0) {
-      // If the jQuery constructor did not select anything, then
-      // the Sprite constructor creates a canvas element, defaulting
-      // to a blank 256x256 canvas if no shape is specified.
-      var sprite = hatchone(selector, context, '256x256').get(0);
-      if (!constructed) {
-        jQuery.fn.init.call(this, sprite, context, rootjQuery);
-      } else {
-        Array.prototype.push.call(this, sprite);
-      }
-    }
+    jQuery.fn.init.call(this, selector, context, rootjQuery);
   }
 
   Sprite.prototype.pushStack = function() {
@@ -2951,7 +2940,11 @@ function setupContinuation(thissel, name, args, argcount) {
       // timeout in this case.
       if (done) {
         if (sync) {
-          setTimeout(done, 0);
+          async_pending += 1;
+          setTimeout(function() {
+            async_pending -= 1;
+            done();
+          }, 0);
         } else {
           done();
         }
@@ -3564,13 +3557,38 @@ var turtlefn = {
   }),
   pause: wrapcommand('pause', 1,
   ["<u>pause(seconds)</u> Pauses some seconds before proceeding. " +
-      "<mark>fd 100; pause 2.5; bk 100</mark>"],
+      "<mark>fd 100; pause 2.5; bk 100</mark>",
+   "<u>pause(turtle)</u> Waits for other turtles to be done before " +
+      "proceeding. <mark>t = new Turtle().fd 100; pause t; bk 100</mark>"],
   function pause(cc, seconds) {
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      visiblePause(elem, seconds);
-      this.plan(cc.resolver(j));
-    });
+    var qname = 'fx', promise = null, completion = null;
+    if (seconds && $.isFunction(seconds.done)) {
+      // Accept a promise-like object that has a "done" method.
+      promise = seconds;
+      completion = seconds.done;
+    } else if ($.isFunction(seconds)) {
+      // Or accept a function that is assumed to take a callback.
+      completion = seconds;
+    }
+    if (completion) {
+      this.queue(function() {
+        var elem = this;
+        completion.call(promise, function() {
+          // If the user sets up a callback that is called more than
+          // once, then ignore calls after the first one.
+          var once = elem;
+          elem = null;
+          if (once) { $.dequeue(once); }
+        });
+      });
+    } else {
+      // Pause for some number of seconds.
+      this.plan(function(j, elem) {
+        cc.appear(j);
+        visiblePause(elem, seconds);
+        this.plan(cc.resolver(j));
+      });
+    }
     return this;
   }),
   st: wrapcommand('st', 0,
@@ -4020,7 +4038,11 @@ var turtlefn = {
         // Never do callback synchronously.  Instead redo the promise
         // callback after a zero setTimeout.
         var async = sync;
-        setTimeout(function() { async.promise().done(callback); }, 0);
+        async_pending += 1;
+        setTimeout(function() {
+          async_pending -= 1;
+          async.promise().done(callback);
+        }, 0);
       } else {
         callback.apply(this, arguments);
       }
@@ -4062,7 +4084,11 @@ var turtlefn = {
           } else {
             // Insert a timeout after executing a batch of plans,
             // to avoid deep recursion.
-            setTimeout(function() { $.dequeue(elem, qname); }, 0);
+            async_pending += 1;
+            setTimeout(function() {
+              async_pending -= 1;
+              $.dequeue(elem, qname);
+            }, 0);
           }
         });
       animation.finish = action;
@@ -4214,6 +4240,7 @@ var dollar_turtle_methods = {
       if (interrupted) return false;
       if (tickinterval) return true;
       if ($.timers.length) return true;
+      if (async_pending) return true;
       if (global_turtle && $.queue(global_turtle).length > 0) return true;
       if ($(':animated').length) return true;
       return ($('.turtle').filter(function() {
@@ -4312,7 +4339,11 @@ var dollar_turtle_methods = {
         // Never do callback synchronously.  Instead redo the promise
         // callback after a zero setTimeout.
         var async = sync;
-        setTimeout(function() { async.promise().done(callback); }, 0);
+        async_pending += 1;
+        setTimeout(function() {
+          async_pending -= 1;
+          async.promise().done(callback);
+        }, 0);
       } else {
         callback.apply(this, arguments);
       }
@@ -4942,7 +4973,7 @@ function createPointerOfColor(color) {
   ctx.moveTo(0,48);
   ctx.lineTo(20,0);
   ctx.lineTo(40,48);
-  ctx.lineTo(20,42);
+  ctx.lineTo(20,36);
   ctx.closePath();
   ctx.fillStyle = color;
   ctx.fill();
@@ -4960,6 +4991,19 @@ function createRadiusOfColor(color) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 4
   ctx.stroke();
+  return c.toDataURL();
+}
+
+function createDotOfColor(color, diam) {
+  diam = diam || 12;
+  var c = getOffscreenCanvas(diam, diam);
+  var ctx = c.getContext('2d');
+  var r = diam / 2;
+  ctx.beginPath();
+  ctx.arc(r, r, r, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
   return c.toDataURL();
 }
 
@@ -5046,8 +5090,8 @@ var shapes = {
       css: {
         width: 20,
         height: 24,
-        transformOrigin: '10px 0px',
-        turtleHull: "-10 24 0 0 10 24",
+        transformOrigin: '10px 18px',
+        turtleHull: "-10 6 0 -18 10 6",
         opacity: 0.67
       }
     };
@@ -5061,6 +5105,32 @@ var shapes = {
         height: 20,
         transformOrigin: '10px 10px',
         turtleHull: "-10 0 -7 7 0 10 7 7 10 0 7 -7 0 -10 -7 -7",
+        opacity: 1
+      }
+    };
+  },
+  dot: function(color) {
+    if (!color) { color = 'black'; }
+    return {
+      url: createDotOfColor(color, 24),
+      css: {
+        width: 12,
+        height: 12,
+        transformOrigin: '6px 6px',
+        turtleHull: "-6 0 -4 4 0 6 4 4 6 0 4 -4 0 -6 -4 -4",
+        opacity: 1
+      }
+    };
+  },
+  point: function(color) {
+    if (!color) { color = 'black'; }
+    return {
+      url: createDotOfColor(color, 6),
+      css: {
+        width: 3,
+        height: 3,
+        transformOrigin: '1.5px 1.5px',
+        turtleHull: "-1.5 0 -1 1 0 1.5 1 1 1.5 0 1 -1 0 -1.5 -1 -1",
         opacity: 1
       }
     };
@@ -5139,7 +5209,13 @@ function nameToImg(name, defaultshape) {
   if ($.isPlainObject(name)) {
     return specToImage(name, defaultshape);
   }
-  var builtin = name.trim().split(/\s+/), color = null, shape = null;
+  if ($.isFunction(name) && (name.helpname || name.name)) {
+    // Deal with unquoted "tan" and "dot".
+    name = name.helpname || name.name;
+  }
+  var builtin = name.toString().trim().split(/\s+/),
+      color = null,
+      shape = null;
   if (builtin.length) {
     shape = lookupShape(builtin[builtin.length - 1]);
     if (shape) {

@@ -1,6 +1,6 @@
 /*
 
-Tooltipster 3.1.2 | 2014-03-17
+Tooltipster 3.1.4 | 2014-03-20
 A rockin' custom tooltip jQuery plugin
 
 Developed by Caleb Jacob under the MIT license http://opensource.org/licenses/MIT
@@ -53,6 +53,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 		
 		// list of instance variables
 		
+		this.bodyOverflowX;
 		// stack of custom callbacks provided as parameters to API methods
 		this.callbacks = {
 			hide: [],
@@ -294,6 +295,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 						// the timer (if any) will start when the tooltip has fully appeared after its transition
 						var extraTime = self.options.speed;
 						
+						// disable horizontal scrollbar to keep overflowing tooltips from jacking with it and then restore it to its previous value
+						self.bodyOverflowX = $('body').css('overflow-x');
+						$('body').css('overflow-x', 'hidden');
+						
 						// get some other settings related to building the tooltip
 						var animation = 'tooltipster-' + self.options.animation,
 							animationSpeed = '-webkit-transition-duration: '+ self.options.speed +'ms; -webkit-animation-duration: '+ self.options.speed +'ms; -moz-transition-duration: '+ self.options.speed +'ms; -moz-animation-duration: '+ self.options.speed +'ms; -o-transition-duration: '+ self.options.speed +'ms; -o-animation-duration: '+ self.options.speed +'ms; -ms-transition-duration: '+ self.options.speed +'ms; -ms-animation-duration: '+ self.options.speed +'ms; transition-duration: '+ self.options.speed +'ms; animation-duration: '+ self.options.speed +'ms;',
@@ -525,6 +530,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 					// unbind orientationchange, scroll and resize listeners
 					$(window).off('.'+ self.namespace);
 					
+					$('body')
+						// unbind any auto-closing click/touch listeners
+						.off('.'+ self.namespace)
+						.css('overflow-x', self.bodyOverflowX);
+					
 					// unbind any auto-closing click/touch listeners
 					$('body').off('.'+ self.namespace);
 					
@@ -690,7 +700,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 					tooltipInnerWidth = self.$tooltip.innerWidth() + 1, // this +1 stops FireFox from sometimes forcing an additional text line
 					tooltipHeight = self.$tooltip.outerHeight(false);
 				
-				// if this is an <area> tag inside a <map>, all hell breaks loose. Recaclulate all the measurements based on coordinates
+				// if this is an <area> tag inside a <map>, all hell breaks loose. Recalculate all the measurements based on coordinates
 				if (self.$elProxy.is('area')) {
 					var areaShape = self.$elProxy.attr('shape'),
 						mapName = self.$elProxy.parent().attr('name'),
@@ -727,7 +737,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 							areaGreatestY = 0,
 							arrayAlternate = 'even';
 						
-						for (i = 0; i < areaMeasurements.length; i++) {
+						for (var i = 0; i < areaMeasurements.length; i++) {
 							var areaNumber = parseInt(areaMeasurements[i]);
 							
 							if (arrayAlternate == 'even') {
@@ -870,7 +880,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 				if(practicalPosition == 'left') {
 					myLeft = proxy.offset.left - offsetX - tooltipWidth - 12;
 					myLeftMirror = proxy.offset.left + offsetX + proxy.dimension.width + 12;
-					var topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + self.$elProxy.outerHeight(false));
+					var topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + proxy.dimension.height);
 					myTop = proxy.offset.top - (topDifference / 2) - offsetY;
 					
 					// if the tooltip goes off boths sides of the page
@@ -881,7 +891,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 						
 						tooltipHeight = self.$tooltip.outerHeight(false);
 						myLeft = proxy.offset.left - offsetX - newWidth - 12 - borderWidth;
-						topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + self.$elProxy.outerHeight(false));
+						topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + proxy.dimension.height);
 						myTop = proxy.offset.top - (topDifference / 2) - offsetY;
 					}
 					
@@ -895,7 +905,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 				if(practicalPosition == 'right') {
 					myLeft = proxy.offset.left + offsetX + proxy.dimension.width + 12;
 					myLeftMirror = proxy.offset.left - offsetX - tooltipWidth - 12;
-					var topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + self.$elProxy.outerHeight(false));
+					var topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + proxy.dimension.height);
 					myTop = proxy.offset.top - (topDifference / 2) - offsetY;
 					
 					// if the tooltip goes off boths sides of the page
@@ -905,7 +915,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 						self.$tooltip.css('width', newWidth + 'px');
 						
 						tooltipHeight = self.$tooltip.outerHeight(false);
-						topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + self.$elProxy.outerHeight(false));
+						topDifference = (proxy.offset.top + tooltipHeight) - (proxy.offset.top + proxy.dimension.height);
 						myTop = proxy.offset.top - (topDifference / 2) - offsetY;
 					}
 						
