@@ -10,7 +10,13 @@ var express = require('express'),
 function rewriteRules(req, res, next) {
   var u = utils.parseUrl(req);
   if (u.pathname == '/') { u.pathname = '/welcome.html'; }
-  else if (/^\/edit\//.test(u.pathname)) { u.pathname = '/editor.html'; }
+  else if (/^\/edit\//.test(u.pathname)) {
+    if (/^frame\./.test(req.headers['host'])) {
+      u.pathname = '/framed.html';
+    } else {
+      u.pathname = '/editor.html';
+    }
+  }
   else if (/^\/home(?=\/).*\/$/.test(u.pathname)) { u.pathname = '/dir.html'; }
   else { next(); return; }
   req.url = url.format(u);

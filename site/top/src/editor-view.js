@@ -45,6 +45,7 @@ var state = {
   nameText: $('#filename').text(),
   previewMode: true,
   callbacks: {},
+  subscriber: null,
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
   pane: {
@@ -67,6 +68,16 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
+
+  // start code execution
+  run: function(){ fireEvent('run', []); },
+
+  // publish/subscribe for global events; all global events are broadcast
+  // to the parent frames using postMessage() if we are iframed
+  subscribe: function(callback){
+    state.subscriber = callback; },
+  publish: publish,
+
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
@@ -88,6 +99,15 @@ window.pencilcode.view = {
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
+  hideEditor: function(pane) {
+    $('#' + pane + 'title').hide();
+    $('#' + pane).hide();
+  },
+  showEditor: function(pane) {
+    $('#' + pane).show();
+    $('#' + pane + 'title').show();
+  },
+
   // Mananges panes and preview mode
   setPreviewMode: setPreviewMode,
   getPreviewMode: function() { return state.previewMode; },
@@ -106,7 +126,15 @@ window.pencilcode.view = {
   showShareDialog: showShareDialog,
   showDialog: showDialog,
   // The run button
-  showMiddleButton: showMiddleButton,
+  canShowMiddleButton: true,
+  showMiddleButton: function(which) {
+    if (window.pencilcode.view.canShowMiddleButton) {
+      $('#middle').show();
+      showMiddleButton(which);
+    } else {
+      $('#middle').hide();
+    }
+  },
   // Sets editable name.
   setNameText: function(s) {
     state.nameText = s;
@@ -125,6 +153,10 @@ window.pencilcode.view = {
   // Sets visible URL without navigating.
   setVisibleUrl: setVisibleUrl
 };
+
+function publish(method, args){
+  if (state.subscriber) { state.subscriber(method, args); }
+}
 
 function paneid(position) {
   return $('.' + position).filter('.pane').attr('id');
@@ -541,9 +573,14 @@ function enableButton(id, enable) {
   }
 }
 
+// Centers the middle button div using javascript.
 function centerMiddle() {
   var m = $('#middle');
+  // Horizontal center taking into account the button width.
   m.css({left:($(window).width() - m.outerWidth()) / 2});
+  // Vertical center taking into the editor height and button height.
+  m.css({top:($(window).height() -
+      ($('.pane').height() + m.outerHeight()) / 2)})
 }
 
 $(window).on('resize.middlebutton', centerMiddle);
@@ -1267,7 +1304,12 @@ function updatePaneTitle(pane) {
 }
 
 function normalizeCarriageReturns(text) {
-  return text.replace(/\r\n|\r/g, "\n");
+  var result = text.replace(/\r\n|\r/g, "\n");
+  if (result.length && result.substr(result.length - 1) != '\n') {
+    // Ensure empty last line.
+    result += '\n';
+  }
+  return result;
 }
 
 // The ACE editor's default keybinding for repeated Ctrl-F is dangerous
@@ -1391,12 +1433,13 @@ function setPaneEditorText(pane, text, filename) {
   editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
+  publish('update', [text]);
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);
+    var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
     if (editor.getFontSize() > 16) {
-      var session = editor.getSession();
       var long = (session.getLength() * big.height > $('#' + pane).height());
       if (!long) {
         // Scan for wrapped lines.
@@ -1415,8 +1458,10 @@ function setPaneEditorText(pane, text, filename) {
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
+    // Publish the update event for hosting frame.
+    publish('update', [session.getValue()]);
     // Any editing that changes the line count ends the debugging session.
-    if (paneState.cleanLineCount != editor.getSession().getLength()) {
+    if (paneState.cleanLineCount != session.getLength()) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
     }
