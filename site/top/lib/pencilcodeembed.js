@@ -14,11 +14,12 @@
 // 2. Create a div on your page.
 // 3. var pce = new PencilCodeEmbed(div);
 //    pce.beginLoad('pen red\nfd 50\nrt 45\nfd 50');
-// 4. onLoadComplete() will be called when loading completes.
+// 4. pce.on('loaded', function(){ ... }) will be called when ready.
 // 5. pce.setCode('pen red\nfd 100');
 //    pce.beginRun();
-// 6. onRunComplete() will be called when execution completes.
-// 7. onDirty() will be called every time editor content changes.
+// 6. pce.on('executed', function(){ ... }) will be called when ready.
+// 7. pce.on('updated', function(code){ ... }) will be called every time
+//    editor content changes.
 //
 // Here is a complete example:
 //
@@ -40,10 +41,10 @@
 //  ];
 //
 //  var pce = new PencilCodeEmbed(document.getElementById('pencil'));
-//  pce.onDirty = function(code) {
+//  pce.on('updated', function(code) {
 //    console.log('new code: ' + code);
-//  };
-//  pce.onLoadComplete = function() {
+//  });
+//  pce.on('loaded', function() {
 //    console.log('load complete');
 //    pce.hideEditor();
 //    pce.hideMiddleButton();
@@ -52,7 +53,7 @@
 //    setTimeout(function(){
 //      pce.hideNotification();
 //      pce.setCode(smiley.join('\n'));
-//      pce.onRunComplete = function () {
+//      pce.on('executed', function () {
 //        console.log('run complete');
 //        pce.showNotification('Turtle is smart! Let\'s make it smarter!');
 //        setTimeout(function(){
@@ -61,10 +62,10 @@
 //          pce.showMiddleButton();
 //          pce.setEditable();
 //        }, 2000);
-//      };
+//      });
 //      pce.beginRun();
 //    }, 2000);
-//  };
+//  });
 //  pce.beginLoad('pen red\nfd 50\nrt 45\nfd 50');
 //
 // Enjoy!
@@ -109,9 +110,19 @@
     function PencilCodeEmbed(div) {
       this.div = div;
       this._lastSeenCode = '';
+      this.callbacks = {};
+
+      // hook up noop event handlers
+      this.on('loaded', function(){});
+      this.on('updated', function(code){});
+      this.on('executed', function(){});
     }
 
     var proto = PencilCodeEmbed.prototype;
+
+    proto.on = function(tag, cb) {
+      this.callbacks[tag] = cb;
+    };
 
     proto.beginLoad = function(code) {
        var that = this;
@@ -135,28 +146,16 @@
           }
 
           // invoke method
-          switch (data.methodName) {
-            case 'onLoadComplete':
-              if (that.onLoadComplete) {
-                that.onLoadComplete();
-              }
-              break;
-            case 'onDirty':
-              if (that.onDirty) {
-                that._lastSeenCode = data.args[0];
-                that.onDirty(data.args[0]);
-              }
-              break;
-            case 'onRunComplete':
-              if (that.onRunComplete) {
-                that.onRunComplete();
-              }
-              break;
-            default:
-              return false;
+          var tag = data.methodName;
+          if (tag in that.callbacks) {
+            var cb = that.callbacks[tag];
+            if (cb) {
+              cb.apply(that, data.args);
+              return true;
+            }
           }
 
-          return true;
+          return false;
        });
 
       this.div.innerHTML = '';
@@ -181,7 +180,7 @@
       this._lastSeenCode = code;
       invokeRemote(this, 'setCode', [code]);
     };
-    
+
     // gets code from the editor
     proto.getCode = function() {
       return this._lastSeenCode;

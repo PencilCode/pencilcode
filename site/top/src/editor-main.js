@@ -309,7 +309,7 @@ view.on('dirty', function(pane) {
 
     var mimetext = view.getPaneEditorText(pane);
     if (mimetext && mimetext.text) {
-      view.publish('onDirty', [mimetext.text]);
+      view.publish('updated', [mimetext.text]);
     }
   }
 });
@@ -1476,7 +1476,7 @@ view.on('messageToParent', function(methodName, args){
 
 view.subscribe(createMessageSinkFunction());
 
-view.publish('onLoadComplete');
+view.publish('loaded');
 
 readNewUrl();
 

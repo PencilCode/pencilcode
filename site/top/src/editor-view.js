@@ -1428,7 +1428,7 @@ function setPaneEditorText(pane, text, filename) {
   editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
-  publish('onDirty', [text]);
+  publish('updated', [text]);
   editor.getSession().setUndoManager(um);
   editor.getSession().on('change', function() {
     ensureEmptyLastLine(editor);

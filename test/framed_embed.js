@@ -59,26 +59,47 @@ describe('framed embed', function() {
     }, function(err, result){
       assert.ifError(err);
 
-      var code = null;
-      var code2 = null;
-      var code3 = null;
-      var loaded = false;
-      var ran = false;
-
       asyncTest(_page, one_step_timeout, null, function() {
+
+        // prepare code
+        var code = "speed 100\npen red\\n";
+        for (var j = 0; j < 100; ++j) {
+          code += "fd 50; rt " + j + ", 50\\n";
+        }
+
+        // this object will hold various checks we do along the way
+        window.test = {
+          code: code,
+          updatedCode: null,
+          executedCode: null,
+          loaded: false,
+          updated: false,
+          executed: false,
+          loadedThis: false,
+          updatedThis: false,
+          executedThis: false
+        };
+
+        // created pencil code
         var pco = new PencilCodeEmbed(document.getElementById("embed"));
 
-        pco.onLoadComplete = function() {
-          loaded = true;
+        pco.on('loaded', function() {
+          window.test.loadedThis = this == pco;
+          window.test.loaded = true;
 
-          // watch editor changes and code execution status
-          pco.onDirty = function(code) {
-            code2 = code;
-            code3 = pco.getCode();
-          };
-          pco.onRunComplete = function () {
-            ran = true;
-          };
+          // watch editor changes
+          pco.on('updated', function(code) {
+            window.test.updatedThis = this == pco;
+            window.test.updated = true;
+            window.test.updatedCode = code;
+          });
+
+          // watch execution
+          pco.on('executed', function () {
+            window.test.executedThis = this == pco;
+            window.test.executed = true;
+            window.test.executedCode = pco.getCode();
+          });
 
           // change visibility of controls
           pco.hideEditor();
@@ -94,23 +115,31 @@ describe('framed embed', function() {
           pco.hideNotification();
 
           // put some code into the editor
-          var code = "speed 100\npen red\\n";
-          for (var j = 0; j < 100; ++j) {
-            code += "fd 50; rt " + j + ", 50\\n";
-          }
           pco.setCode(code);
 
           // execute code loaded into the editor
           pco.beginRun();
-        };
+        });
         pco.beginLoad();
       }, function() {
-        // wait until PencilCodeEmbed is fully loaded and code has ran
-        return loaded && ran;
+        // wait until PencilCodeEmbed is fully loaded and code has executed
+        if (window.test.loaded && window.test.updated && window.test.executed){
+          return window.test;
+        }
+        return false;
       }, function(err, result){
         assert.ifError(err);
-        assert.ok(code == code2);
-        assert.ok(code == code3);
+
+        assert.ok(result.loaded);
+        assert.ok(result.updated);
+        assert.ok(result.executed);
+
+        assert.ok(result.loadedThis);
+        assert.ok(result.updatedThis);
+        assert.ok(result.executedThis);
+
+        assert.ok(result.code == result.executedCode);
+        assert.ok(result.code == result.updatedCode);
         done();
       });
     });
