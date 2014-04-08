@@ -13,7 +13,7 @@
 //    name will be packagename.PencilCodeEmbed.
 // 2. Create a div on your page.
 // 3. var pce = new PencilCodeEmbed(div);
-//    pce.beginLoad();
+//    pce.beginLoad('pen red\nfd 50\nrt 45\nfd 50');
 // 4. onLoadComplete() will be called when loading completes.
 // 5. pce.setCode('pen red\nfd 100');
 //    pce.beginRun();
@@ -65,7 +65,7 @@
 //      pce.beginRun();
 //    }, 2000);
 //  };
-//  pce.beginLoad();
+//  pce.beginLoad('pen red\nfd 50\nrt 45\nfd 50');
 //
 // Enjoy!
 
@@ -108,11 +108,12 @@
   var PencilCodeEmbed = (function() {
     function PencilCodeEmbed(div) {
       this.div = div;
+      this._lastSeenCode = '';
     }
 
     var proto = PencilCodeEmbed.prototype;
 
-    proto.beginLoad = function() {
+    proto.beginLoad = function(code) {
        var that = this;
 
        window.addEventListener('message', function(evt) {
@@ -142,6 +143,7 @@
               break;
             case 'onDirty':
               if (that.onDirty) {
+                that._lastSeenCode = data.args[0];
                 that.onDirty(data.args[0]);
               }
               break;
@@ -163,15 +165,26 @@
       this.iframe.style.height = '100%';
       this.div.appendChild(this.iframe);
 
+      if (!code) {
+        code = '';
+      }
+      this._lastSeenCode = code;
+
       this.iframe.src =
         targetUrl +
-        '#text=' + encodeURIComponent('') +
+        '#text=' + encodeURIComponent(code) +
         '&secret=' + secret;
     };
 
-    // gets code from the editor
+    // sets code into the editor
     proto.setCode = function(code) {
+      this._lastSeenCode = code;
       invokeRemote(this, 'setCode', [code]);
+    };
+    
+    // gets code from the editor
+    proto.getCode = function() {
+      return this._lastSeenCode;
     };
 
     // starts running

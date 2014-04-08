@@ -60,7 +60,8 @@ describe('framed embed', function() {
       assert.ifError(err);
 
       var code = null;
-      var event_code = null;
+      var code2 = null;
+      var code3 = null;
       var loaded = false;
       var ran = false;
 
@@ -72,7 +73,8 @@ describe('framed embed', function() {
 
           // watch editor changes and code execution status
           pco.onDirty = function(code) {
-            event_code = code;
+            code2 = code;
+            code3 = pco.getCode();
           };
           pco.onRunComplete = function () {
             ran = true;
@@ -107,7 +109,8 @@ describe('framed embed', function() {
         return loaded && ran;
       }, function(err, result){
         assert.ifError(err);
-        assert.ok(code == event_code);
+        assert.ok(code == code2);
+        assert.ok(code == code3);
         done();
       });
     });
