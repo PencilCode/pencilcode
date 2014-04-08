@@ -77,7 +77,6 @@ function clearPaneModel(m) {
 }
 
 var model = {
-    
   // Owner name of this file or directory.
   ownername: null,
   // True if /edit/ url.
@@ -91,7 +90,10 @@ var model = {
   // Logged in username, or null if not logged in.
   username: null,
   // Three digit passkey, hashed from password.
-  passkey: null
+  passkey: null,
+  // secrets passed in from the embedding frame via
+  // window.location.hash
+  crossFrameContext: getCrossFrameContext()
 };
 
 //
@@ -130,12 +132,22 @@ function posofpane(pane) {
 function specialowner() {
   return !model.ownername || !!specialowner.specialowners[model.ownername];
 }
-specialowner.specialowners = {guide: true, event: true, start: true};
 
+specialowner.specialowners = {
+  guide: true, event: true, start: true, frame: true
+};
+
+//
+// A saveable owner is an owner that participates in saving
+// and loading.
+//
 function saveableOwner() {
   return model.ownername && !saveableOwner.unsaveableOwners[model.ownername];
 }
-saveableOwner.unsaveableOwners = {guide: true, event: true};
+saveableOwner.unsaveableOwners = {
+  guide: true, event: true, frame: true
+};
+
 
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
@@ -204,7 +216,7 @@ function updateTopControls(addHistory) {
         id: 'guide', label: '<span class=helplink>Guide</span>',
         title: 'Open online guide'});
     }
-    
+
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
@@ -261,7 +273,7 @@ view.on('share', function() {
           // Share the run URL unless there is no owner (e.g., for /first).
           opts.shareRunURL = "http://" + document.domain + '/home/' +
             modelatpos('left').filename;
-            
+
           if (modelatpos('left').activityDir) {
             opts.shareActivityURL = getStartActivityURL();
           }
@@ -347,7 +359,7 @@ view.on('run', function() {
 });
 
 $(window).on('beforeunload', function() {
-  if (view.isPaneEditorDirty(paneatpos('left'))) {
+  if (view.isPaneEditorDirty(paneatpos('left')) && saveableOwner()) {
     view.flashButton('save');
     return "There are unsaved changes."
   }
@@ -448,6 +460,9 @@ view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
+  if (!saveableOwner()) {
+    return;
+  }
   if (specialowner()) {
     // TODO First figure out what is to be saved, then figure out if we need
     // signUpAndSave.  That way we can handle special behavior for activities
@@ -514,6 +529,9 @@ function keyFromPassword(username, p) {
 }
 
 function signUpAndSave() {
+  if (!saveableOwner()) {
+    return;
+  }
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   var mp = modelatpos('left');
   var runtext = mimetext && mimetext.text;
@@ -649,7 +667,7 @@ function signUpAndSave() {
 
 function logInAndSave(filename, newdata, forceOverwrite,
                       noteclean, loginPrompt, doneCallback) {
-  if (!filename || !newdata) {
+  if (!filename || !newdata || !saveableOwner()) {
     return;
   }
   view.showLoginDialog({
@@ -843,7 +861,7 @@ function doneWithFile(filename) {
 view.on('rename', function(newname) {
   var pp = paneatpos('left');
   var mp = modelatpos('left');
-  if (mp.filename === newname) {
+  if (mp.filename === newname || !saveableOwner()) {
     // Nothing to do
     return;
   }
@@ -1098,7 +1116,7 @@ function readNewUrl(undo) {
       searchVars = parsedURL.searchVars;
 
   // Give the user a chance to abort navigation.
-  if (undo && view.isPaneEditorDirty(paneatpos('left'))) {
+  if (undo && view.isPaneEditorDirty(paneatpos('left')) && saveableOwner()) {
     view.flashButton('save');
     if (!window.confirm(
       "There are unsaved changes.\n\n" +
@@ -1170,7 +1188,7 @@ function readNewUrl(undo) {
   // Preload text if specified.
   if (text) {
     createNewFileIntoPosition('left', filename,
-       decodeURIComponent(text[1].replace(/\+/g, ' ')) + '\n');
+       decodeURIComponent(text[1].replace(/\+/g, ' ')));
     updateTopControls(false);
     return;
   }
@@ -1224,7 +1242,7 @@ function runCodeAtPosition(position, code, filename, template) {
       view.setPaneRunText(
          pane, code, template, filename, baseUrl);
     }
-  }, 0);
+  }, 1);
   if (code) {
     $.get('/log/' + filename + '?run=' +
         encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, '|')
@@ -1244,7 +1262,7 @@ function defaultDirSortingByDate() {
 
 function setDefaultDirSortingByDate(f) {
   try {
-    if (f) { 
+    if (f) {
       window.localStorage.dirsort = 'bydate';
     } else {
       delete window.localStorage['dirsort'];
@@ -1691,7 +1709,7 @@ function checkIfActivityDir() {
     defaultPath = fn;
   } else {
     defaultPath = fn.substr(0, fn.lastIndexOf('/'));
-  } 
+  }
   function detectActivityDir(data) {
     if (data.length) {
        for (var j = 0; j < data.length; ++j) {
@@ -1711,7 +1729,7 @@ function checkIfActivityDir() {
       }
     }
   }
-  storage.loadDirList(model.ownername, defaultPath, detectActivityDir); 
+  storage.loadDirList(model.ownername, defaultPath, detectActivityDir);
 }
 
 // Construct an activity URL from the current run file path.
@@ -1721,7 +1739,7 @@ function getStartActivityURL() {
   var fn = m.filename;
   var aUrl = '';
   var activityDir = '';
-  
+
   if (m.isdir) {
     defaultPath = fn;
   } else {
@@ -1736,6 +1754,129 @@ function getStartActivityURL() {
   }
   return aUrl;
 }
+
+///////////////////////////////////////////////////////////////////////////
+// CROSS-FRAME-MESSAGE SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+// parses window.location.hash params into a dict
+function parseWindowLocationHash() {
+  if (!window.location.hash || window.location.hash.length < 2) {
+    return {};
+  }
+
+  var hash = window.location.hash.substring(1);
+  var hashParts = hash.split('&');
+  var hashDict = {};
+  for (var i = 0; i < hashParts.length; i++) {
+    if (hashParts[i].indexOf('=') === -1) {
+      return {};
+    }
+
+    var separatorLocation = hashParts[i].indexOf('=');
+    hashDict[hashParts[i].substring(0, separatorLocation)] = (
+      decodeURIComponent(hashParts[i].substring(separatorLocation + 1)));
+  }
+
+  return hashDict;
+}
+
+// extracts secret from the location hash
+function getCrossFrameContext() {
+  var hashDict = parseWindowLocationHash();
+  if (!hashDict.secret) {
+    return {secret: null};
+  }
+  return {secret: hashDict.secret}
+}
+
+// processes messages from other frames
+$(window).on('message', function(e) {
+  // parse event data
+  try {
+    var data = JSON.parse(e.originalEvent.data);
+  } catch(error) {
+    return false;
+  }
+
+  // check secret
+  if (!data.secret || data.secret != model.crossFrameContext.secret) {
+    return false;
+  }
+
+  // invoke the requested method
+  switch (data.methodName) {
+    case 'setCode':
+       view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      break;
+    case 'beginRun':
+      view.run();
+      break;
+    case 'hideEditor':
+      view.hideEditor(paneatpos('left'));
+      break;
+    case 'showEditor':
+      view.showEditor(paneatpos('left'));
+      break;
+    case 'hideMiddleButton':
+      view.canShowMiddleButton = false;
+      view.showMiddleButton('');
+      break;
+    case 'showMiddleButton':
+      view.canShowMiddleButton = true;
+      view.showMiddleButton('run');
+      break;
+    case 'setEditable':
+      view.setPaneEditorReadOnly(paneatpos('left'), false);
+      break;
+    case 'setReadOnly':
+      view.setPaneEditorReadOnly(paneatpos('left'), true);
+      break;
+    case 'showNotification':
+      view.flashNotification(data.args[0]);
+      break;
+    case 'hideNotification':
+      view.dismissNotification();
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+});
+
+// posts message to the parent window, which may have embedded us
+function createMessageSinkFunction() {
+  var noneMessageSink = function(method, args){};
+
+  // check we do have a parent window
+  if (window.parent === window) {
+    return noneMessageSink;
+  }
+
+  // validate presence of secret in hash
+  if (!model.crossFrameContext.secret) {
+    return noneMessageSink;
+  }
+
+  return function(method, args){
+    var payload = {
+        methodName: method,
+        args: args};
+    window.parent.postMessage(
+        JSON.stringify(payload), '*');
+  };
+}
+
+view.on('messageToParent', function(methodName, args){
+  postMessageToParent(methodName, args);
+});
+
+view.subscribe(createMessageSinkFunction());
+
+// For a hosting frame, publish the 'load' event before publishing
+// the first 'update' events.
+view.publish('load');
 
 readNewUrl();
 

@@ -99,7 +99,10 @@ module.exports = function(grunt) {
         files: [ {
           expand: true,
           flatten: true,
-          src: [ 'site/top/src/editor.html' ],
+          src: [
+            'site/top/src/editor.html',
+            'site/top/src/framed.html'
+          ],
           dest: 'site/top'
         } ]
       }
