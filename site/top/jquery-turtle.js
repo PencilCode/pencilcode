@@ -102,7 +102,6 @@ $(q).nearest(pos) // Filters to item (or items if tied) nearest pos.
 $(q).within(d, t) // Filters to items with centers within d of t.pagexy().
 $(q).notwithin()  // The negation of within.
 $(q).cell(y, x)   // Selects the yth row and xth column cell in a table.
-$(q).hatch([n,] [img]) // Creates and returns n turtles with the given img.
 </pre>
 
 
@@ -241,10 +240,12 @@ random('gray')        // Returns a random hsl(0, 0, *) gray.
 remove()              // Removes default turtle and its globals (fd, etc).
 see(a, b, c...)       // Logs tree-expandable data into debugging panel.
 write(html)           // Appends html into the document body.
+type(plaintext)       // Appends preformatted text into a pre in the document.
 read([label,] fn)     // Makes a one-time input field, calls fn after entry.
 readnum([label,] fn)  // Like read, but restricted to numeric input.
 readstr([label,] fn)  // Like read, but never converts input to a number.
 button([label,] fn)   // Makes a clickable button, calls fn when clicked.
+menu(choices, fn)     // Makes a clickable choice, calls fn when chosen.
 table(m, n)           // Outputs a table with m rows and n columns.
 play('[DFG][EGc]')    // Plays musical notes.
 send(m, arg)          // Sends an async message to be received by recv(m, fn).
@@ -260,8 +261,8 @@ eval $.turtle()  # Create the default turtle and global functions.
 defaultspeed Infinity
 write "Catch blue before red gets you."
 bk 100
-r = hatch red
-b = hatch blue
+r = new Turtle red
+b = new Turtle blue
 tick 10, ->
   turnto lastmousemove
   fd 6
@@ -1974,7 +1975,9 @@ function clearField(arg) {
     }
   }
   if (!arg || /\btext\b/.test(arg)) {
-    var keep = $('samp#_testpanel');
+    // "turtlefield" is a CSS class to use to mark top-level
+    // elements that should not be deleted by clearscreen.
+    var keep = $('.turtlefield');
     if (globalDrawing.surface) {
       keep = keep.add(globalDrawing.surface);
     }
@@ -4362,6 +4365,9 @@ var dollar_turtle_methods = {
   function write(html) {
     return output(Array.prototype.join.call(arguments, ' '), 'div');
   }),
+  type: wrapraw('type',
+  ["<u>type(text)</u> Types preformatted text like a typewriter. " +
+      "<mark>type 'Hello!\n'</mark>"], plainTextPrint),
   read: wrapraw('read',
   ["<u>read(fn)</u> Reads text or numeric input. " +
       "Calls fn once: " +
@@ -4378,6 +4384,11 @@ var dollar_turtle_methods = {
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
   function readstr(a, b) { return input(a, b, -1); }),
+  menu: wrapraw('menu',
+  ["<u>menu(map)</u> shows a menu of choices and calls a function " +
+      "based on the user's choice: " +
+      "<mark>menu {A: (-> write 'chose A'), B: (-> write 'chose B')}</mark>"],
+  menu),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -5452,6 +5463,44 @@ function turtleevents(prefix) {
   }
 }
 
+// autoScrollAfter will detect if the body is scrolled near the
+// bottom already.  If it is, then it autoscrolls it down after
+// running the passed function.  (E.g., to allow "print" to scroll
+// text upward.)
+function autoScrollAfter(f) {
+  var slop = 10,
+      seen = autoScrollBottomSeen(),
+      stick = ($(window).height() + $(window).scrollTop() + slop >=
+          $('html').outerHeight(true));
+  f();
+  if (stick) {
+    var scrollPos = $(window).scrollTop(),
+        advancedScrollPos = Math.min(seen,
+            $('html').outerHeight(true) - $(window).height());
+    if (advancedScrollPos > scrollPos) {
+      $(window).scrollTop(advancedScrollPos);
+    }
+  }
+}
+var autoScrollState = {
+  autoScrollTimer: null,
+  bottomSeen: 0
+};
+// We cache bottomSeen until a zero-delay timer can clear it,
+// so that a sequence of writes to the screen will not autoscroll
+// more than one full page.
+function autoScrollBottomSeen() {
+  if (!autoScrollState.timer) {
+    autoScrollState.timer = setTimeout(function() {
+      autoScrollState.timer = null;
+    }, 0);
+    autoScrollState.bottomSeen = Math.min(
+        $(window).height() + $(window).scrollTop(),
+        $('body').height() + $('body').offset().top);
+  }
+  return autoScrollState.bottomSeen;
+}
+
 // Simplify $('body').append(html).
 function output(html, defaulttag) {
   if (html === undefined || html === null) {
@@ -5471,8 +5520,160 @@ function output(html, defaulttag) {
     }
     result = $(html);
   }
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
+}
+
+// Simplify output of preformatted text inside a <pre>.
+function plainTextPrint() {
+  var args = arguments;
+  autoScrollAfter(function() {
+    var pre = document.body.lastChild;
+    if (!pre || pre.tagName != 'PRE') {
+      pre = document.createElement('pre');
+      document.body.appendChild(pre);
+    }
+    for (var j = 0; j < args.length; j++) {
+      pre.appendChild(document.createTextNode(String(args[j])));
+    }
+  });
+}
+
+// Creates and displays a one-shot input menu as a set of.
+// radio buttons, each with a specified label.
+//
+// The menu fires a callback event when the user selects
+// an item by clicking or by keyboard.  It has been tested
+// to have good keyboard accessibility on IE10, FF, and Chrome.
+//
+// The choices argument can either be:
+// (1) an array of choices (each used as both label and outcome).
+// (2) a dictionary mapping text labels to outcomes.
+//
+// The second argument is a callback called once with the outcome
+// value when a choice is made.
+//
+// If the second argument is omitted, it defaults to a function that
+// invokes the outcome value if it is a function.  That way, the
+// first argument can be a list of functions or a map from
+// text labels to functions.
+function menu(choices, fn) {
+  var result = $('<form>')
+          .css({display:'table'}).submit(function(){return false;}),
+      triggered = false,
+      count = 0,
+      cursor = 0,
+      suppressChange = 0,
+      keys = {};
+  // Default behavior: invoke the outcome if it is a function.
+  if (!fn) {
+    fn = (function invokeOutcome(out) {
+      if ($.isFunction(out)) { out.call(null); }
+    });
+  }
+  // Creates a function to be called when the user commits and picks
+  // a choice: triggering should only be done once.
+  function triggerOnce(outcome) {
+    return (function(e) {
+      if (!triggered && !(suppressChange && e.type == 'change')) {
+        triggered = true;
+        $(this).prop('checked', true);
+        result.find('input[type=radio]').prop('disabled', true);
+        fn(outcome);
+      }
+    });
+  }
+  // Returns a handler to be called when the user tentatively
+  // focuses on the nth item.
+  function triggerFocus(ordinal) {
+    return (function() {
+      if (!triggered) {
+        cursor = ordinal;
+        focusCursor();
+      }
+    });
+  }
+  // Shows keyboard focus rectangle (for browsers that support it)
+  // and checks the item under the cursor while suppressing
+  // an action.
+  function focusCursor(initial) {
+    if (!initial) {
+      suppressChange += 1;
+      setTimeout(function() { suppressChange -= 1; }, 0);
+      result.find('input').eq(cursor).prop('checked', true);
+    }
+    result.find('input').eq(cursor).focus();
+  }
+  // Constructs the HTML for a choice, with a name that
+  // causes the radio buttons to be grouped, and with the
+  // text label selected by the programmer.  Also keeps track
+  // of the first character of the label for use as a keyboard shortcut.
+  function addChoice(text, outcome) {
+    if ($.isFunction(text)) {
+      // For an array of functions, just label each choice with
+      // the ordinal position.
+      text = (count + 1).toString();
+    }
+    var value = $.isFunction(outcome) || outcome == null ? text: outcome,
+        radio = $('<input type="radio" name="menu">')
+            .attr('value', value)
+            .on('change click', triggerOnce(outcome)),
+        label = $('<label style="display:table">')
+            .append(radio).append(text)
+            .on('click', triggerOnce(outcome))
+            .on('mousedown', triggerFocus(count)),
+        key = text && text.toString().substr(0, 1).toUpperCase();
+    if (key && !(key in keys)) {
+      keys[key] = count;
+    }
+    count += 1;
+    result.append(label);
+  }
+  // Decodes choices from either an array or a plain object.
+  if ($.isArray(choices)) {
+    for (var j = 0; j < choices.length; ++j) {
+      addChoice(choices[j], choices[j]);
+    }
+  } else if ($.isPlainObject(choices)) {
+    for (text in choices) {
+      addChoice(text, choices[text]);
+    }
+  } else {
+    addChoice(choices, choices);
+  }
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
+  // Accessibility support: deal with arrow keys.
+  result.on('keydown', function(e) {
+    if (e.which >= 37 && e.which <= 40 || e.which == 32) {
+      var synccursor = result.find('input').index(result.find(':checked'));
+      if (synccursor >= 0 && cursor != synccursor) {
+        // If the highlighted item was moved in a way that we didn't
+        // track, then just let it show what the browser switched to.
+        cursor = synccursor;
+      } else {
+        if (synccursor < 0) { // If unselected, first arrow selects the first.
+          cursor = 0;
+        } else if (e.which >= 39 || e.which == 32) { // Cycle forward.
+          cursor = (cursor + 1) % count;
+        } else { // Cycle backward.
+          cursor = (cursor + count - 1) % count;
+        }
+      }
+      focusCursor();
+      return false;  // Suppress browser's default handling.
+    } else if (e.which == 13) {
+      // Enter key will proceed.
+      result.find(':checked').click();
+    } else if (String.fromCharCode(e.which) in keys) {
+      cursor = keys[String.fromCharCode(e.which)];
+      focusCursor();
+    }
+  });
+  focusCursor(true);
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
@@ -5550,7 +5751,9 @@ function input(name, callback, numeric) {
   dodebounce();
   textbox.on('keypress keydown', key);
   textbox.on('change', newval);
-  $('body').append(label);
+  autoScrollAfter(function() {
+    $('body').append(label);
+  });
   textbox.focus();
   return thisval;
 }
@@ -5611,7 +5814,9 @@ function table(height, width, cellCss, tableCss) {
     { width: 'auto', height: 'auto', maxWidth: 'auto', border: 'none'},
     tableCss));
   result.find('td').css($.extend({}, defaultCss, cellCss));
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
 }
 
@@ -6617,7 +6822,8 @@ function tryinitpanel() {
         state.height = Math.min(wheight(), Math.max(10, wheight() - 50));
       }
       $('body').prepend(
-        '<samp id="_testpanel" style="overflow:hidden;z-index:99;' +
+        '<samp id="_testpanel" class="turtlefield" ' +
+            'style="overflow:hidden;z-index:99;' +
             'position:fixed;bottom:0;left:0;width:100%;height:' + state.height +
             'px;background:rgba(240,240,240,0.8);' +
             'font:10pt monospace;' +
