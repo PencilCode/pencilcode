@@ -1577,16 +1577,26 @@ function setPaneEditorText(pane, text, filename, instructionHTML) {
       fireEvent('changelines', [pane]);
     }
   });
-
-  setTimeout(function() {
-    var foldMarker = '# fold';
+  // Fold any blocks with a line that ends with "# fold" or "// fold"
+  function autoFold() {
+    editor.getSession().off('tokenizerUpdate', autoFold);
+    var foldMarker = /(?:#|\/\/)\s*fold$/;
     for (var i = 0, line; (line = lineArr[i]) !== undefined; i++) {
-      if (line.lastIndexOf(foldMarker) + foldMarker.length == line.length) {
+      var match = foldMarker.exec(line);
+      if (match) {
         var data = editor.getSession().getParentFoldRangeData(i + 1);
-        editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+        if (data && data.range && data.range.start && data.range.end) {
+          editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+        } else if (match.index == 0) {
+          // If the # fold is not in a block and is at the 0th column,
+          // then use it as an indicator to fold all the blocks in the file.
+          editor.getSession().foldAll(0, lineArr.length);
+          return;
+        }
       }
     }
-  }, 200);
+  }
+  editor.getSession().on('tokenizerUpdate', autoFold);
   if (long) {
     editor.gotoLine(0);
   } else {
