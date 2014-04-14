@@ -2707,6 +2707,211 @@ var Turtle = (function(_super) {
 })(Sprite);
 
 //////////////////////////////////////////////////////////////////////////
+// KEYBOARD HANDLING
+// Implementation of the "pressed" function
+//////////////////////////////////////////////////////////////////////////
+
+// The implementation of the "pressed" function is captured in a closure.
+var pressedKey = (function() {
+  var ua = typeof window !== 'undefined' ? window.navigator.userAgent : '',
+      isOSX = /OS X/.test(ua),
+      isOpera = /Opera/.test(ua),
+      maybeFirefox = !/like Gecko/.test(ua) && !isOpera,
+      pressedState = {},
+      events = 'mousedown mouseup keydown keyup blur contextmenu',
+      keyCodeName = {
+    1:  'mouse 1',
+    2:  'mouse 2',
+    3:  'break',
+    4:  'mouse 3',
+    5:  'mouse 4',
+    6:  'mouse 5',
+    8:  'backspace',
+    9:  'tab',
+    12: 'clear',
+    13: 'enter',
+    16: 'shift',
+    17: 'control',
+    18: 'alt',
+    19: 'pause',
+    20: 'caps lock',
+    21: 'ime hangul',
+    23: 'ime junja',
+    24: 'ime final',
+    25: 'ime kanji',
+    27: 'escape',
+    28: 'ime convert',
+    29: 'ime nonconvert',
+    30: 'ime accept',
+    31: 'ime mode change',
+    27: 'escape',
+    32: 'space',
+    33: 'page up',
+    34: 'page down',
+    35: 'end',
+    36: 'home',
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down',
+    41: 'select',
+    42: 'print',
+    43: 'execute',
+    44: 'snapshot',
+    45: 'insert',
+    46: 'delete',
+    47: 'help',
+  // no one handles meta-left and right properly, so we coerce into one.
+    91: 'meta',  // meta-left
+    92: 'meta',  // meta-right
+  // chrome,opera,safari all report this for meta-right (osx mbp).
+    93: isOSX ? 'meta' : 'menu',
+    95: 'sleep',
+    106: 'num *',
+    107: 'num +',
+    108: 'num enter',
+    109: 'num -',
+    110: 'num .',
+    111: 'num /',
+    144: 'num lock',
+    145: 'scroll lock',
+    160: 'shift left',
+    161: 'shift right',
+    162: 'control left',
+    163: 'control right',
+    164: 'alt left',
+    165: 'alt right',
+    166: 'browser back',
+    167: 'browser forward',
+    168: 'browser refresh',
+    169: 'browser stop',
+    170: 'browser search',
+    171: 'browser favorites',
+    172: 'browser home',
+    // ff/osx reports 'volume-mute' for '-'
+    173: isOSX && maybeFirefox ? '-' : 'volume mute',
+    174: 'volume down',
+    175: 'volume up',
+    176: 'next track',
+    177: 'prev track',
+    178: 'stop',
+    179: 'play pause',
+    180: 'launch mail',
+    181: 'launch media-select',
+    182: 'launch app 1',
+    183: 'launch app 2',
+    186: ';',
+    187: '=',
+    188: ',',
+    189: '-',
+    190: '.',
+    191: '/',
+    192: '`',
+    219: '[',
+    220: '\\',
+    221: ']',
+    222: "'",
+    223: 'meta',
+    224: 'meta',      // firefox reports meta here.
+    226: 'alt gr',
+    229: 'ime process',
+    231: isOpera ? '`' : 'unicode',
+    246: 'attention',
+    247: 'crsel',
+    248: 'exsel',
+    249: 'erase eof',
+    250: 'play',
+    251: 'zoom',
+    252: 'no name',
+    253: 'pa 1',
+    254: 'clear'
+  };
+  // :-@, 0-9, a-z(lowercased)
+  for (i = 48; i < 91; ++i) {
+    keyCodeName[i] = String.fromCharCode(i).toLowerCase();
+  }
+  // num-0-9 numeric keypad
+  for (i = 96; i < 106; ++i) {
+    keyCodeName[i] = 'num ' +  (i - 96);
+  }
+  // f1-f24
+  for (i = 112; i < 136; ++i) {
+    keyCodeName[i] = 'f' + (i-111);
+  }
+  // Listener for keyboard, mouse, and focus events that updates pressedState.
+  function pressListener(event) {
+    var name, simplified, down;
+    if (event.type == 'mousedown' || event.type == 'mouseup') {
+      name = 'mouse ' + event.which;
+      down = (event.type == 'mousedown');
+    } else if (event.type == 'keydown' || event.type == 'keyup') {
+      name = keyCodeName[event.which];
+      down = (event.type == 'keydown');
+      if (event.which >= 160 && event.which <= 165) {
+        // For "shift left", also trigger "shift"; same for control and alt.
+        simplified = name.split(' ')[0];
+      }
+    } else if (event.type == 'blur' || event.type == 'contextmenu') {
+      // When losing focus, clear all keyboard state.
+      if (!event.isDefaultPrevented()) {
+        resetPressedState();
+      }
+      return;
+    }
+    updatePressedState(name, down);
+    updatePressedState(simplified, down);
+    if (down) {
+      // After any keydown event, unlisten and relisten, to put oursleves last.
+      $(window).off(events, pressListener);
+      $(window).on(events, pressListener);
+    }
+  }
+  // The pressedState map just has an entry for each pressed key.
+  // Unpressing a key will delete the actual key from the map.
+  function updatePressedState(name, down) {
+    if (name != null) {
+      if (!down) {
+        delete pressedState[name];
+      } else {
+        pressedState[name] = true;
+      }
+    }
+  }
+  // The state map is reset by clearing every member.
+  function resetPressedState() {
+    for (key in pressedState) {
+      delete pressedState[key];
+    }
+  }
+  // The pressed listener can be turned on and off using pressed.enable(flag).
+  function enablePressListener(turnon) {
+    resetPressedState();
+    if (turnon) {
+      $(window).on(events, pressListener);
+    } else {
+      $(window).off(events, pressListener);
+    }
+  }
+  // All pressed keys known can be listed using pressed.list().
+  function listPressedKeys() {
+    var result = [];
+    for (key in pressedState) {
+      if (pressedState[key]) { result.push(key); }
+    }
+    return result;
+  }
+  // The pressed function just polls the given keyname.
+  function pressed(keyname) {
+    keyname = keyname.toLowerCase();
+    if (pressedState[keyname]) return true;
+    return false;
+  }
+  pressed.enable = enablePressListener;
+  pressed.list = listPressedKeys;
+  return pressed;
+})();
+
+//////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
 // Register all our hooks.
 //////////////////////////////////////////////////////////////////////////
@@ -4527,8 +4732,8 @@ var dollar_turtle_methods = {
   function atan(x) { return roundEpsilon(Math.atan(x) * 180 / Math.PI); }
   ),
   atan2: wrapraw('atan2',
-  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, in degrees. " +
-      "<mark>see atan -1, 0</mark>"],
+  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, " +
+      "in degrees. <mark>see atan -1, 0</mark>"],
   function atan2(x, y) {
     return roundEpsilon(Math.atan2(x, y) * 180 / Math.PI);
   }),
@@ -4597,7 +4802,12 @@ var dollar_turtle_methods = {
       $.getScript(url, callback);
     }
   }),
-
+  pressed: wrapraw('pressed',
+  ["<u>pressed('control left')</u> Tests if a specific key is pressed. " +
+      "<mark>if pressed 'a' then write 'a was pressed'</mark>",
+   "<u>pressed.list()</u> Returns a list of pressed keys, by name. " +
+      "<mark>write 'Pressed keys: ' + pressed.list().join(',')</mark>"
+  ], pressedKey),
   help: globalhelp
 };
 
@@ -4727,6 +4937,9 @@ $.turtle = function turtle(id, options) {
   // Set up global events.
   if (!('events' in options) || options.events) {
     turtleevents(options.eventprefix);
+  }
+  if (!('pressed' in options) || options.pressed) {
+    pressedKey.enable(true);
   }
   // Set up global log function.
   if (!('see' in options) || options.see) {
