@@ -72,14 +72,19 @@ grunt devserver
 
 To use the devserver, launch your web browser pointing to the
 devserver's `http://localhost:8008/proxy.pac`.  For example, with chrome
-on OSX, add the following to your .bashrc:
+on OSX, add a couple aliases to your .profile by running the following:
 
 <pre>
+cat &gt;&gt; ~/.profile &lt;&lt;EOF
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
 alias devchrome="chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
+EOF
+source ~/.profile
 </pre>
 
-On Linux:
+And then "devchrome" will launch an instance of Chrome with the right proxy.
+
+On Linux, add something like this to your .bashrc:
 
 <pre>
 alias devchrome="google-chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
