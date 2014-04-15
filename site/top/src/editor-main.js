@@ -389,8 +389,7 @@ view.on('login', function() {
           return;
         }
         state.update({cancel: true});
-        cookie('login', model.username + ':' + model.passkey,
-            { expires: 1, path: '/' });
+        saveLoginCookie();
         if (!specialowner()) {
           cookie('recent', window.location.href,
               { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -430,8 +429,7 @@ view.on('setpass', function() {
         state.update({cancel: true});
         model.username = model.ownername;
         model.passkey = newpasskey;
-        cookie('login', model.username + ':' + model.passkey,
-            { expires: 1, path: '/' });
+        saveLoginCookie();
         if (!specialowner()) {
           cookie('recent', window.location.href,
               { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -495,6 +493,11 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       logInAndSave(filename, newdata, forceOverwrite, noteclean,
                    loginPrompt, doneCallback);
     } else {
+      if (!model.username) {
+        // If not yet logged in but we have saved (e.g., no password needed),
+        // then log us in.
+        model.username = model.ownername;
+      }
       handleSaveStatus(status, filename, noteclean);
       if (doneCallback) {
         doneCallback();
@@ -695,9 +698,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
     view.flashNotification(status.error);
   } else if (status.deleted) {
     view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
-
-    cookie('login', model.username + ':' + model.passkey,
-           { expires: 1, path: '/' });
+    saveLoginCookie();
     if (model.ownername) {
       cookie('recent', window.location.href,
              { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -714,15 +715,17 @@ function logInAndSave(filename, newdata, forceOverwrite,
     }
   } else {
     noteclean(status.mtime);
-
-    cookie('login', model.username + ':' + model.passkey,
-           { expires: 1, path: '/' });
-
+    saveLoginCookie();
     if (!specialowner()) {
       cookie('recent', window.location.href,
              { expires: 7, path: '/', domain: window.pencilcode.domain });
     }
   }
+}
+
+function saveLoginCookie() {
+  cookie('login', (model.username || '') + ':' + (model.passkey || ''),
+         { expires: 1, path: '/' });
 }
 
 function chooseNewFilename(dirlist) {
@@ -932,8 +935,7 @@ function logInAndMove(filename, newfilename, completeRename) {
         if (m.error) {
           view.flashNotification(m.error);
         } else {
-          cookie('login', model.username + ':' + model.passkey,
-              { expires: 1, path: '/' });
+          saveLoginCookie();
           if (model.ownername) {
             cookie('recent', window.location.href,
                 { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -1011,7 +1013,7 @@ function readNewUrl(undo) {
   }
   if (!login) {
     var savedlogin = cookie('login');
-    login = savedlogin && /\b^([^:]*)(?::(\w+))?$/.exec(cookie('login'));
+    login = savedlogin && /\b^([^:]*)(?::(\w*))?$/.exec(cookie('login'));
   } else if (ownername) {
     cookie('login', login, { expires: 1, path: '/' });
   }
