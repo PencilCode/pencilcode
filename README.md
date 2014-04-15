@@ -42,7 +42,8 @@ npm install -g grunt-cli
 The above drops all the built binaries into `~/local/bin` so you
 don't need root.
 
-On the Mac, git comes from Apple (just agree to their license),
+On the Mac, git comes from Apple (you can get it as part of the
+[Command line tools for XCode](https://developer.apple.com/downloads/index.action?q=xcode#)),
 and node.js can be installed from http://nodejs.org/download/.
 You will need to `sudo npm install -g grunt-cli`.
 
