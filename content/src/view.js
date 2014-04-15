@@ -2281,6 +2281,8 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
   });
 
+  var lineArr = text.split('\n');
+  var lines = lineArr.length;
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -2337,6 +2339,26 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   });
   $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);
+  // Fold any blocks with a line that ends with "# fold" or "// fold"
+  function autoFold() {
+    editor.getSession().off('tokenizerUpdate', autoFold);
+    var foldMarker = /(?:#|\/\/)\s*fold$/;
+    for (var i = 0, line; (line = lineArr[i]) !== undefined; i++) {
+      var match = foldMarker.exec(line);
+      if (match) {
+        var data = editor.getSession().getParentFoldRangeData(i + 1);
+        if (data && data.range && data.range.start && data.range.end) {
+          editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+        } else if (match.index == 0) {
+          // If the # fold is not in a block and is at the 0th column,
+          // then use it as an indicator to fold all the blocks in the file.
+          editor.getSession().foldAll(0, lineArr.length);
+          return;
+        }
+      }
+    }
+  }
+  editor.getSession().on('tokenizerUpdate', autoFold);
   if (long) {
     editor.gotoLine(0);
   } else {
