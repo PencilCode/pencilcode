@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<title>Pencil Code Editor</title>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500,600">
+<meta name="viewport" content="initial-scale=1,width=device-width">
+<style>
+* {box-sizing:border-box;}
+/* Some CSS overrides for the framed case */
+.framed .panetitle {top:0}
+.framed .pane {top:0}
+</style>
+<script>
+window.pencilcode = {
+  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
+  owner: location.host.replace(/\.[^.]*.{8}$/, '')
+};
+// Preload some CSS and scripts from the top-level pencilcode domain,
+// so that they are cached across different users.
+document.write(
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/editor.css">' +
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
+  '<script src="//' + pencilcode.domain + '/turtlebits.js"><' +
+  '/script>');
+</script>
+</head>
+<body id="pencilcode" class="framed">
+<div id="overflow">
+<div id="overlay"></div>
+<div id="notification"><div><div></div></div></div>
+<div id="middle"><div></div></div>
+<div id="alphatitle" class="back panetitle" style="height:0"></div>
+<div id="alpha" class="back pane"></div>
+<div id="bravotitle" class="left panetitle" style="height:0;width:100%"></div>
+<div id="bravo" class="left pane" style="width:100%"
+><div class="vcenter"><div class="hcenter"
+><div class="loading"></div></div></div></div>
+<div id="charlietitle" class="right panetitle" style="height:0;left:100%"></div>
+<div id="charlie" class="right pane" style="left:100%"></div>
+</div>
+<script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
+<script data-main="/src/editor-main" src="/src/require.js"></script>
+</body>
+</html>
+

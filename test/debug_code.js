@@ -129,7 +129,7 @@ describe('code debugger', function() {
           touchesred: seval('touches red'),
           touchesblue: seval('touches blue'),
           queuelen: seval('turtle.queue().length'),
-          debugtracecount: $('.debugtrace'),
+          debugtracecount: $('.debugtrace').length,
           debugtracetop: $('.debugtrace').css('top')
         };
       }

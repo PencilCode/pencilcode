@@ -102,7 +102,6 @@ $(q).nearest(pos) // Filters to item (or items if tied) nearest pos.
 $(q).within(d, t) // Filters to items with centers within d of t.pagexy().
 $(q).notwithin()  // The negation of within.
 $(q).cell(y, x)   // Selects the yth row and xth column cell in a table.
-$(q).hatch([n,] [img]) // Creates and returns n turtles with the given img.
 </pre>
 
 
@@ -241,10 +240,12 @@ random('gray')        // Returns a random hsl(0, 0, *) gray.
 remove()              // Removes default turtle and its globals (fd, etc).
 see(a, b, c...)       // Logs tree-expandable data into debugging panel.
 write(html)           // Appends html into the document body.
+type(plaintext)       // Appends preformatted text into a pre in the document.
 read([label,] fn)     // Makes a one-time input field, calls fn after entry.
 readnum([label,] fn)  // Like read, but restricted to numeric input.
 readstr([label,] fn)  // Like read, but never converts input to a number.
 button([label,] fn)   // Makes a clickable button, calls fn when clicked.
+menu(choices, fn)     // Makes a clickable choice, calls fn when chosen.
 table(m, n)           // Outputs a table with m rows and n columns.
 play('[DFG][EGc]')    // Plays musical notes.
 send(m, arg)          // Sends an async message to be received by recv(m, fn).
@@ -260,8 +261,8 @@ eval $.turtle()  # Create the default turtle and global functions.
 defaultspeed Infinity
 write "Catch blue before red gets you."
 bk 100
-r = hatch red
-b = hatch blue
+r = new Turtle red
+b = new Turtle blue
 tick 10, ->
   turnto lastmousemove
   fd 6
@@ -1974,7 +1975,9 @@ function clearField(arg) {
     }
   }
   if (!arg || /\btext\b/.test(arg)) {
-    var keep = $('samp#_testpanel');
+    // "turtlefield" is a CSS class to use to mark top-level
+    // elements that should not be deleted by clearscreen.
+    var keep = $('.turtlefield');
     if (globalDrawing.surface) {
       keep = keep.add(globalDrawing.surface);
     }
@@ -2702,6 +2705,211 @@ var Turtle = (function(_super) {
   return Turtle;
 
 })(Sprite);
+
+//////////////////////////////////////////////////////////////////////////
+// KEYBOARD HANDLING
+// Implementation of the "pressed" function
+//////////////////////////////////////////////////////////////////////////
+
+// The implementation of the "pressed" function is captured in a closure.
+var pressedKey = (function() {
+  var ua = typeof window !== 'undefined' ? window.navigator.userAgent : '',
+      isOSX = /OS X/.test(ua),
+      isOpera = /Opera/.test(ua),
+      maybeFirefox = !/like Gecko/.test(ua) && !isOpera,
+      pressedState = {},
+      events = 'mousedown mouseup keydown keyup blur contextmenu',
+      keyCodeName = {
+    1:  'mouse 1',
+    2:  'mouse 2',
+    3:  'break',
+    4:  'mouse 3',
+    5:  'mouse 4',
+    6:  'mouse 5',
+    8:  'backspace',
+    9:  'tab',
+    12: 'clear',
+    13: 'enter',
+    16: 'shift',
+    17: 'control',
+    18: 'alt',
+    19: 'pause',
+    20: 'caps lock',
+    21: 'ime hangul',
+    23: 'ime junja',
+    24: 'ime final',
+    25: 'ime kanji',
+    27: 'escape',
+    28: 'ime convert',
+    29: 'ime nonconvert',
+    30: 'ime accept',
+    31: 'ime mode change',
+    27: 'escape',
+    32: 'space',
+    33: 'page up',
+    34: 'page down',
+    35: 'end',
+    36: 'home',
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down',
+    41: 'select',
+    42: 'print',
+    43: 'execute',
+    44: 'snapshot',
+    45: 'insert',
+    46: 'delete',
+    47: 'help',
+  // no one handles meta-left and right properly, so we coerce into one.
+    91: 'meta',  // meta-left
+    92: 'meta',  // meta-right
+  // chrome,opera,safari all report this for meta-right (osx mbp).
+    93: isOSX ? 'meta' : 'menu',
+    95: 'sleep',
+    106: 'num *',
+    107: 'num +',
+    108: 'num enter',
+    109: 'num -',
+    110: 'num .',
+    111: 'num /',
+    144: 'num lock',
+    145: 'scroll lock',
+    160: 'shift left',
+    161: 'shift right',
+    162: 'control left',
+    163: 'control right',
+    164: 'alt left',
+    165: 'alt right',
+    166: 'browser back',
+    167: 'browser forward',
+    168: 'browser refresh',
+    169: 'browser stop',
+    170: 'browser search',
+    171: 'browser favorites',
+    172: 'browser home',
+    // ff/osx reports 'volume-mute' for '-'
+    173: isOSX && maybeFirefox ? '-' : 'volume mute',
+    174: 'volume down',
+    175: 'volume up',
+    176: 'next track',
+    177: 'prev track',
+    178: 'stop',
+    179: 'play pause',
+    180: 'launch mail',
+    181: 'launch media-select',
+    182: 'launch app 1',
+    183: 'launch app 2',
+    186: ';',
+    187: '=',
+    188: ',',
+    189: '-',
+    190: '.',
+    191: '/',
+    192: '`',
+    219: '[',
+    220: '\\',
+    221: ']',
+    222: "'",
+    223: 'meta',
+    224: 'meta',      // firefox reports meta here.
+    226: 'alt gr',
+    229: 'ime process',
+    231: isOpera ? '`' : 'unicode',
+    246: 'attention',
+    247: 'crsel',
+    248: 'exsel',
+    249: 'erase eof',
+    250: 'play',
+    251: 'zoom',
+    252: 'no name',
+    253: 'pa 1',
+    254: 'clear'
+  };
+  // :-@, 0-9, a-z(lowercased)
+  for (i = 48; i < 91; ++i) {
+    keyCodeName[i] = String.fromCharCode(i).toLowerCase();
+  }
+  // num-0-9 numeric keypad
+  for (i = 96; i < 106; ++i) {
+    keyCodeName[i] = 'num ' +  (i - 96);
+  }
+  // f1-f24
+  for (i = 112; i < 136; ++i) {
+    keyCodeName[i] = 'f' + (i-111);
+  }
+  // Listener for keyboard, mouse, and focus events that updates pressedState.
+  function pressListener(event) {
+    var name, simplified, down;
+    if (event.type == 'mousedown' || event.type == 'mouseup') {
+      name = 'mouse ' + event.which;
+      down = (event.type == 'mousedown');
+    } else if (event.type == 'keydown' || event.type == 'keyup') {
+      name = keyCodeName[event.which];
+      down = (event.type == 'keydown');
+      if (event.which >= 160 && event.which <= 165) {
+        // For "shift left", also trigger "shift"; same for control and alt.
+        simplified = name.split(' ')[0];
+      }
+    } else if (event.type == 'blur' || event.type == 'contextmenu') {
+      // When losing focus, clear all keyboard state.
+      if (!event.isDefaultPrevented()) {
+        resetPressedState();
+      }
+      return;
+    }
+    updatePressedState(name, down);
+    updatePressedState(simplified, down);
+    if (down) {
+      // After any keydown event, unlisten and relisten, to put oursleves last.
+      $(window).off(events, pressListener);
+      $(window).on(events, pressListener);
+    }
+  }
+  // The pressedState map just has an entry for each pressed key.
+  // Unpressing a key will delete the actual key from the map.
+  function updatePressedState(name, down) {
+    if (name != null) {
+      if (!down) {
+        delete pressedState[name];
+      } else {
+        pressedState[name] = true;
+      }
+    }
+  }
+  // The state map is reset by clearing every member.
+  function resetPressedState() {
+    for (key in pressedState) {
+      delete pressedState[key];
+    }
+  }
+  // The pressed listener can be turned on and off using pressed.enable(flag).
+  function enablePressListener(turnon) {
+    resetPressedState();
+    if (turnon) {
+      $(window).on(events, pressListener);
+    } else {
+      $(window).off(events, pressListener);
+    }
+  }
+  // All pressed keys known can be listed using pressed.list().
+  function listPressedKeys() {
+    var result = [];
+    for (key in pressedState) {
+      if (pressedState[key]) { result.push(key); }
+    }
+    return result;
+  }
+  // The pressed function just polls the given keyname.
+  function pressed(keyname) {
+    keyname = keyname.toLowerCase();
+    if (pressedState[keyname]) return true;
+    return false;
+  }
+  pressed.enable = enablePressListener;
+  pressed.list = listPressedKeys;
+  return pressed;
+})();
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
@@ -4362,6 +4570,9 @@ var dollar_turtle_methods = {
   function write(html) {
     return output(Array.prototype.join.call(arguments, ' '), 'div');
   }),
+  type: wrapraw('type',
+  ["<u>type(text)</u> Types preformatted text like a typewriter. " +
+      "<mark>type 'Hello!\n'</mark>"], plainTextPrint),
   read: wrapraw('read',
   ["<u>read(fn)</u> Reads text or numeric input. " +
       "Calls fn once: " +
@@ -4378,6 +4589,11 @@ var dollar_turtle_methods = {
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
   function readstr(a, b) { return input(a, b, -1); }),
+  menu: wrapraw('menu',
+  ["<u>menu(map)</u> shows a menu of choices and calls a function " +
+      "based on the user's choice: " +
+      "<mark>menu {A: (-> write 'chose A'), B: (-> write 'chose B')}</mark>"],
+  menu),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -4516,8 +4732,8 @@ var dollar_turtle_methods = {
   function atan(x) { return roundEpsilon(Math.atan(x) * 180 / Math.PI); }
   ),
   atan2: wrapraw('atan2',
-  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, in degrees. " +
-      "<mark>see atan -1, 0</mark>"],
+  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, " +
+      "in degrees. <mark>see atan -1, 0</mark>"],
   function atan2(x, y) {
     return roundEpsilon(Math.atan2(x, y) * 180 / Math.PI);
   }),
@@ -4586,7 +4802,12 @@ var dollar_turtle_methods = {
       $.getScript(url, callback);
     }
   }),
-
+  pressed: wrapraw('pressed',
+  ["<u>pressed('control left')</u> Tests if a specific key is pressed. " +
+      "<mark>if pressed 'a' then write 'a was pressed'</mark>",
+   "<u>pressed.list()</u> Returns a list of pressed keys, by name. " +
+      "<mark>write 'Pressed keys: ' + pressed.list().join(',')</mark>"
+  ], pressedKey),
   help: globalhelp
 };
 
@@ -4716,6 +4937,9 @@ $.turtle = function turtle(id, options) {
   // Set up global events.
   if (!('events' in options) || options.events) {
     turtleevents(options.eventprefix);
+  }
+  if (!('pressed' in options) || options.pressed) {
+    pressedKey.enable(true);
   }
   // Set up global log function.
   if (!('see' in options) || options.see) {
@@ -5452,6 +5676,44 @@ function turtleevents(prefix) {
   }
 }
 
+// autoScrollAfter will detect if the body is scrolled near the
+// bottom already.  If it is, then it autoscrolls it down after
+// running the passed function.  (E.g., to allow "print" to scroll
+// text upward.)
+function autoScrollAfter(f) {
+  var slop = 10,
+      seen = autoScrollBottomSeen(),
+      stick = ($(window).height() + $(window).scrollTop() + slop >=
+          $('html').outerHeight(true));
+  f();
+  if (stick) {
+    var scrollPos = $(window).scrollTop(),
+        advancedScrollPos = Math.min(seen,
+            $('html').outerHeight(true) - $(window).height());
+    if (advancedScrollPos > scrollPos) {
+      $(window).scrollTop(advancedScrollPos);
+    }
+  }
+}
+var autoScrollState = {
+  autoScrollTimer: null,
+  bottomSeen: 0
+};
+// We cache bottomSeen until a zero-delay timer can clear it,
+// so that a sequence of writes to the screen will not autoscroll
+// more than one full page.
+function autoScrollBottomSeen() {
+  if (!autoScrollState.timer) {
+    autoScrollState.timer = setTimeout(function() {
+      autoScrollState.timer = null;
+    }, 0);
+    autoScrollState.bottomSeen = Math.min(
+        $(window).height() + $(window).scrollTop(),
+        $('body').height() + $('body').offset().top);
+  }
+  return autoScrollState.bottomSeen;
+}
+
 // Simplify $('body').append(html).
 function output(html, defaulttag) {
   if (html === undefined || html === null) {
@@ -5471,8 +5733,160 @@ function output(html, defaulttag) {
     }
     result = $(html);
   }
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
+}
+
+// Simplify output of preformatted text inside a <pre>.
+function plainTextPrint() {
+  var args = arguments;
+  autoScrollAfter(function() {
+    var pre = document.body.lastChild;
+    if (!pre || pre.tagName != 'PRE') {
+      pre = document.createElement('pre');
+      document.body.appendChild(pre);
+    }
+    for (var j = 0; j < args.length; j++) {
+      pre.appendChild(document.createTextNode(String(args[j])));
+    }
+  });
+}
+
+// Creates and displays a one-shot input menu as a set of.
+// radio buttons, each with a specified label.
+//
+// The menu fires a callback event when the user selects
+// an item by clicking or by keyboard.  It has been tested
+// to have good keyboard accessibility on IE10, FF, and Chrome.
+//
+// The choices argument can either be:
+// (1) an array of choices (each used as both label and outcome).
+// (2) a dictionary mapping text labels to outcomes.
+//
+// The second argument is a callback called once with the outcome
+// value when a choice is made.
+//
+// If the second argument is omitted, it defaults to a function that
+// invokes the outcome value if it is a function.  That way, the
+// first argument can be a list of functions or a map from
+// text labels to functions.
+function menu(choices, fn) {
+  var result = $('<form>')
+          .css({display:'table'}).submit(function(){return false;}),
+      triggered = false,
+      count = 0,
+      cursor = 0,
+      suppressChange = 0,
+      keys = {};
+  // Default behavior: invoke the outcome if it is a function.
+  if (!fn) {
+    fn = (function invokeOutcome(out) {
+      if ($.isFunction(out)) { out.call(null); }
+    });
+  }
+  // Creates a function to be called when the user commits and picks
+  // a choice: triggering should only be done once.
+  function triggerOnce(outcome) {
+    return (function(e) {
+      if (!triggered && !(suppressChange && e.type == 'change')) {
+        triggered = true;
+        $(this).prop('checked', true);
+        result.find('input[type=radio]').prop('disabled', true);
+        fn(outcome);
+      }
+    });
+  }
+  // Returns a handler to be called when the user tentatively
+  // focuses on the nth item.
+  function triggerFocus(ordinal) {
+    return (function() {
+      if (!triggered) {
+        cursor = ordinal;
+        focusCursor();
+      }
+    });
+  }
+  // Shows keyboard focus rectangle (for browsers that support it)
+  // and checks the item under the cursor while suppressing
+  // an action.
+  function focusCursor(initial) {
+    if (!initial) {
+      suppressChange += 1;
+      setTimeout(function() { suppressChange -= 1; }, 0);
+      result.find('input').eq(cursor).prop('checked', true);
+    }
+    result.find('input').eq(cursor).focus();
+  }
+  // Constructs the HTML for a choice, with a name that
+  // causes the radio buttons to be grouped, and with the
+  // text label selected by the programmer.  Also keeps track
+  // of the first character of the label for use as a keyboard shortcut.
+  function addChoice(text, outcome) {
+    if ($.isFunction(text)) {
+      // For an array of functions, just label each choice with
+      // the ordinal position.
+      text = (count + 1).toString();
+    }
+    var value = $.isFunction(outcome) || outcome == null ? text: outcome,
+        radio = $('<input type="radio" name="menu">')
+            .attr('value', value)
+            .on('change click', triggerOnce(outcome)),
+        label = $('<label style="display:table">')
+            .append(radio).append(text)
+            .on('click', triggerOnce(outcome))
+            .on('mousedown', triggerFocus(count)),
+        key = text && text.toString().substr(0, 1).toUpperCase();
+    if (key && !(key in keys)) {
+      keys[key] = count;
+    }
+    count += 1;
+    result.append(label);
+  }
+  // Decodes choices from either an array or a plain object.
+  if ($.isArray(choices)) {
+    for (var j = 0; j < choices.length; ++j) {
+      addChoice(choices[j], choices[j]);
+    }
+  } else if ($.isPlainObject(choices)) {
+    for (text in choices) {
+      addChoice(text, choices[text]);
+    }
+  } else {
+    addChoice(choices, choices);
+  }
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
+  // Accessibility support: deal with arrow keys.
+  result.on('keydown', function(e) {
+    if (e.which >= 37 && e.which <= 40 || e.which == 32) {
+      var synccursor = result.find('input').index(result.find(':checked'));
+      if (synccursor >= 0 && cursor != synccursor) {
+        // If the highlighted item was moved in a way that we didn't
+        // track, then just let it show what the browser switched to.
+        cursor = synccursor;
+      } else {
+        if (synccursor < 0) { // If unselected, first arrow selects the first.
+          cursor = 0;
+        } else if (e.which >= 39 || e.which == 32) { // Cycle forward.
+          cursor = (cursor + 1) % count;
+        } else { // Cycle backward.
+          cursor = (cursor + count - 1) % count;
+        }
+      }
+      focusCursor();
+      return false;  // Suppress browser's default handling.
+    } else if (e.which == 13) {
+      // Enter key will proceed.
+      result.find(':checked').click();
+    } else if (String.fromCharCode(e.which) in keys) {
+      cursor = keys[String.fromCharCode(e.which)];
+      focusCursor();
+    }
+  });
+  focusCursor(true);
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
@@ -5550,7 +5964,9 @@ function input(name, callback, numeric) {
   dodebounce();
   textbox.on('keypress keydown', key);
   textbox.on('change', newval);
-  $('body').append(label);
+  autoScrollAfter(function() {
+    $('body').append(label);
+  });
   textbox.focus();
   return thisval;
 }
@@ -5611,7 +6027,9 @@ function table(height, width, cellCss, tableCss) {
     { width: 'auto', height: 'auto', maxWidth: 'auto', border: 'none'},
     tableCss));
   result.find('td').css($.extend({}, defaultCss, cellCss));
-  result.appendTo('body');
+  autoScrollAfter(function() {
+    result.appendTo('body');
+  });
   return result;
 }
 
@@ -6617,7 +7035,8 @@ function tryinitpanel() {
         state.height = Math.min(wheight(), Math.max(10, wheight() - 50));
       }
       $('body').prepend(
-        '<samp id="_testpanel" style="overflow:hidden;z-index:99;' +
+        '<samp id="_testpanel" class="turtlefield" ' +
+            'style="overflow:hidden;z-index:99;' +
             'position:fixed;bottom:0;left:0;width:100%;height:' + state.height +
             'px;background:rgba(240,240,240,0.8);' +
             'font:10pt monospace;' +
