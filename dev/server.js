@@ -3,8 +3,10 @@ var express = require('express'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
+    save = require('./save.js'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
+    config = require(process.argv[2]),
     proxy = new httpProxy.RoutingProxy();
 
 function rewriteRules(req, res, next) {
@@ -19,7 +21,7 @@ function rewriteRules(req, res, next) {
 
 function proxyRules(req, res, next) {
   var u = utils.parseUrl(req);
-  if (/^\/(?:home|load|save)(?=\/)/.test(u.pathname) &&
+  if (/^\/(?:home|load)(?=\/)/.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
@@ -57,14 +59,25 @@ function proxyPacGenerator(req, res, next) {
   }
 }
 
+// Remap any relative directories in the config to base off __dirname
+for (var dir in config.dirs) {
+  config.dirs[dir] = path.join(__dirname, config.dirs[dir]);
+}
+app.locals.config = config;
+app.use(express.bodyParser());
 app.use(rewriteRules);
 console.log('using', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
 app.configure('development', function() {
   app.use(express.static(path.join(__dirname, '../site/top/src')));
 });
 app.use(express.static(path.join(__dirname, '../site/top')));
-app.use(proxyRules);
-app.use(proxyPacGenerator);
+if (config.useProxy) {
+  app.use(proxyRules);
+  app.use(proxyPacGenerator);
+}
+app.use('/save', function(req, res) {
+  save.handleSave(req, res, app);
+});
 app.get('*', function(req, res) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('404 - ' + req.url);

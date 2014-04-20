@@ -145,7 +145,9 @@ module.exports = function(grunt) {
       },
       dev: {
         options: {
-          node_env: 'development'
+          node_env: 'development',
+          args: ['./config.json'],
+          debug: true
         }
       },
       comp: {
@@ -156,19 +158,21 @@ module.exports = function(grunt) {
       devtest: {
         options: {
           node_env: 'development',
+          args: ['./config.json'],
           port: 8193
         }
       },
       test: {
         options: {
           node_env: 'compiled',
+          args: ['./config.json'],
           port: 8193
         }
       }
     },
     watch: {
       dev: {
-        files: ['dev/server.js'],
+        files: ['dev/server.js', 'dev/save.js', 'dev/config.json'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
@@ -187,6 +191,16 @@ module.exports = function(grunt) {
           colors: false
         }
       }
+    },
+    foreverServer: {
+      prodserver: {
+        options: {
+          index: 'dev/server.js'
+        }
+      }
+    },
+    'node-inspector': {
+      dev: { }
     }
   });
 
@@ -198,6 +212,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-forever');
+  grunt.loadNpmTasks('grunt-node-inspector');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -235,11 +251,14 @@ module.exports = function(grunt) {
   });
 
   // "devserver" serves editor code directly from the src directory.
-  grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
+  grunt.registerTask('devserver', 
+                     ['proxymessage', 'watch:dev', 'node-inspector:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
+  // "prodserver" runs this as if its a production server
+  grunt.registerTask('prodserver', ['requirejs', 'replace', 'uglify', 'foreverServer:prodserver:start']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
