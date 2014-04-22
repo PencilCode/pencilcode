@@ -27,6 +27,16 @@ exports.handleSave = function(req, res, app) {
       user = null;
     }
 
+    /*
+    console.log({
+      'user': user, 
+      'key': key,
+      'filename': filename,
+      'data': data,
+      'sourcefile': sourcefile,
+      'conditional': conditional});
+    */
+
     //
     // Validate parameters
     //
@@ -61,8 +71,9 @@ exports.handleSave = function(req, res, app) {
           errorExit('Unknown mode type');
       }      
     }
+
     if (conditional) {
-      conditional = parseFloat(conditional);
+      conditional = Date.parse(conditional);
       if (isNaN(conditional)) {
         errorExit('Illegal conditional');
       }
@@ -222,7 +233,7 @@ exports.handleSave = function(req, res, app) {
 
     if (conditional) {
       if (fs.existsSync(absfile)) {
-        mtime = fs.statSync(absfile).mtime;
+	mtime = Date.parse(fs.statSync(absfile).mtime);
         if (mtime > conditional) {
             res.json({'error': 'Did not overwrite newer file.', 
                       'newer': mtime});
@@ -319,6 +330,7 @@ exports.handleSave = function(req, res, app) {
 }
 
 function errorExit(msg) {
+  console.log('ERROREXIT: ' + msg);
   throw new ImmediateReturnError(msg, {error: msg});
 }
 
