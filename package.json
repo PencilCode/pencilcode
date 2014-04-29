@@ -34,6 +34,7 @@
     "forever": "0.10.11",
     "grunt-forever": "0.4.4",
     "grunt-node-inspector": "0.1.5",
-    "fs.extra": "1.2.1"
+    "fs.extra": "1.2.1",
+    "fs-ext": "0.3.2"
   }
 }

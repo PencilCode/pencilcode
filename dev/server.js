@@ -4,6 +4,7 @@ var express = require('express'),
     http = require('http'),
     url = require('url'),
     save = require('./save.js'),
+    load = require('./load.js'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
     config = require(process.argv[2]),
@@ -27,7 +28,7 @@ function rewriteRules(req, res, next) {
 
 function proxyRules(req, res, next) {
   var u = utils.parseUrl(req);
-  if (/^\/(?:home|load)(?=\/)/.test(u.pathname) &&
+  if (/^\/(?:home)(?=\/)/.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
@@ -83,6 +84,9 @@ if (config.useProxy) {
 }
 app.use('/save', function(req, res) {
   save.handleSave(req, res, app);
+});
+app.use('/load', function(req, res) {
+  load.handleLoad(req, res, app);
 });
 app.get('*', function(req, res) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });

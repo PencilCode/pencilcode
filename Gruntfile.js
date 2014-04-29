@@ -149,7 +149,7 @@ module.exports = function(grunt) {
       dev: {
         options: {
           node_env: 'development',
-          //debug: true,
+          debug: true,
           args: ['./config.json']
         }
       },
@@ -176,7 +176,11 @@ module.exports = function(grunt) {
     },
     watch: {
       dev: {
-        files: ['dev/server.js', 'dev/save.js', 'dev/config.json'],
+        files: ['dev/server.js', 
+                'dev/save.js', 
+                'dev/config.json', 
+                'dev/utils.js',
+                'dev/load.js'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },

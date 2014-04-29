@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var fsExtra = require('fs.extra');
+var utils = require('./utils');
 
 exports.handleSave = function(req, res, app) {
   var data = req.param('data', null);
@@ -11,21 +12,9 @@ exports.handleSave = function(req, res, app) {
   var sourcekey = req.param('sourcekey', null);
 
   try {
-    var domainIndex = req.host.indexOf(app.locals.config.host);
-    if (domainIndex < 0) {
-      errorExit('Domain not found in host: ' + app.locals.config.host);
-    }
-
-    // Adjust domainIndex for '.' separator
-    domainIndex = (domainIndex > 0) ? domainIndex - 1 : domainIndex;
-
-    var user = req.host.substring(0, domainIndex);
-    var filename = req.param("file", filenameFromUri(req));
+    var user = utils.getUser(req, app);
+    var filename = req.param("file", utils.filenameFromUri(req));
     var origfilename = filename;
-
-    if (user == '') {
-      user = null;
-    }
 
     /*
     console.log({
@@ -37,72 +26,75 @@ exports.handleSave = function(req, res, app) {
       'conditional': conditional});
     */
 
+    try {
+      fsExtra.removeSync(utils.getRootCacheName(app));
+    }
+    catch (e) { }
+
     //
     // Validate parameters
     //
 
     if (data && sourcefile) {
-      errorExit('Cannot supply both data and source');
+      utils.errorExit('Cannot supply both data and source');
     }
 
     if (mode) {
       switch (mode) {
         case 'mv':
           if (!sourcefile) {
-	    errorExit('No source specified for mv');
+	    utils.errorExit('No source specified for mv');
           }
           break;
         case 'a':
           if (!data) {
-	    errorExit('No data specified for append');
+	    utils.errorExit('No data specified for append');
 	  }
           break;
         case 'setkey': 
           if (!data && sourcefile) {
-	    errorExit('Invalid parameters specified for setkey');
+	    utils.errorExit('Invalid parameters specified for setkey');
 	  }
           break;
         case 'rmtree':
           if (data || sourcefile) {
-	    errorExit('Either data or source specified for rmtree');
+	    utils.errorExit('Either data or source specified for rmtree');
 	  }
           break;
         default:
-          errorExit('Unknown mode type');
+          utils.errorExit('Unknown mode type');
       }      
     }
 
     if (conditional) {
       conditional = Date.parse(conditional);
       if (isNaN(conditional)) {
-        errorExit('Illegal conditional');
+        utils.errorExit('Illegal conditional');
       }
     }
 
     // validate username
     if (user) {
-      if (!/^[A-Za-z]\w{2,}$/.test(user)) {
-        errorExit('Bad username ' + user);
-      }
+      utils.validateUserName(user);
       filename = path.join(user, filename);
     }
 
     var topdir = false;
-    if (!/^(?:[\w][\w\.\-]*)(?:\/[\w][\w\.\-]*)+\/?$/.test(filename)) {
+    if (!utils.isFileNameValid(filename, true)) {
       if (mode == 'setkey' || 
 	  (!data && (mode == 'rmtree' || mode == 'mv' || !sourcefile)) &&
 	  /^[\w][\w\\-]*\/?$/.test(filename)) {
         topdir = true;
       }
       else {
-        errorExit('Bad filename ' + filename);
+        utils.errorExit('Bad filename ' + filename);
       }
     }
 
-    var absfile = makeAbsolute(filename, app);
+    var absfile = utils.makeAbsolute(filename, app);
     var userdir = null;
     if (user) {
-      userdir = getUserHomeDir(user, app);
+      userdir = utils.getUserHomeDir(user, app);
     }
 
     //
@@ -121,7 +113,7 @@ exports.handleSave = function(req, res, app) {
 
     if (mode == 'setkey') {
       if (!topdir) {
-        errorExit('Can only set key on a top-level user directory.');
+        utils.errorExit('Can only set key on a top-level user directory.');
       }
 
       doSetKey(user, key, data, res, app);
@@ -135,18 +127,18 @@ exports.handleSave = function(req, res, app) {
 
     if (sourcefile) {
       if (!/^(?:[\w][\w\.\-]*)(?:\/[\w][\w\.\-]*)*\/?$/.test(sourcefile)) {
-        errorExit('Bad source filename: ' + sourcefile);
+        utils.errorExit('Bad source filename: ' + sourcefile);
       }
 
       sourceuser = filenameuser(sourcefile);
-      var absSourceFile = makeAbsolute(sourcefile, app);
+      var absSourceFile = utils.makeAbsolute(sourcefile, app);
       if (!fs.existsSync(absSourceFile)) {
-	errorExit('Source file does not exist. ' + sourcefile);
+	utils.errorExit('Source file does not exist. ' + sourcefile);
       }
 
       // Only directories can be copied or moved to the top
       if (topdir && !fs.statSync(absSourceFile).isDirectory()) {
-	errorExit('Bad filename. ' + filename);
+	utils.errorExit('Bad filename. ' + filename);
       }
 
       // mv requires authz on the source dir
@@ -166,14 +158,14 @@ exports.handleSave = function(req, res, app) {
           fs.mkdirSync(path.dirname(absfile));
 	}
 	catch (e) {
-          errorExit('Could not create dir: ' + path.dirname(filename));
+          utils.errorExit('Could not create dir: ' + path.dirname(filename));
 	}
       }
 
       // move case
       if (mode == 'mv') {
 	if (fs.existsSync(absfile)) {
-          errorExit('Cannot replace existing file: ' + filename);
+          utils.errorExit('Cannot replace existing file: ' + filename);
 	}
 
 	try {
@@ -198,7 +190,7 @@ exports.handleSave = function(req, res, app) {
 	  }
 	}
 	catch (e) {
-          errorExit('Could not move ' + sourcefile + ' to ' + filename);
+          utils.errorExit('Could not move ' + sourcefile + ' to ' + filename);
 	}
       }
       else {
@@ -207,7 +199,7 @@ exports.handleSave = function(req, res, app) {
 	  // Are we copying a directory?
           if (fs.stat(absSourceFile).isDirectory()) {
             if (fs.existsSync(absfile)) {
-              errorExit('Cannot overwwrite existing directory ' + filename);
+              utils.errorExit('Cannot overwwrite existing directory ' + filename);
 	    }
 
 	    fsExtra.copySync(absSourceFile, absfile); 
@@ -218,7 +210,7 @@ exports.handleSave = function(req, res, app) {
           }
         }
         catch (e) {
-          errorExit('Could not copy ' + sourcefile + ' to ' + filename);
+          utils.errorExit('Could not copy ' + sourcefile + ' to ' + filename);
         }
       }
 
@@ -248,7 +240,7 @@ exports.handleSave = function(req, res, app) {
 
     if (!data) {
         //if (!req.body.hasOwnProperty('data')) {
-        //errorExit('Missing data= form field argument.');
+        //utils.errorExit('Missing data= form field argument.');
         //}
 
       if (fs.existsSync(absfile)) {
@@ -256,7 +248,7 @@ exports.handleSave = function(req, res, app) {
           fsExtra.removeSync(absfile);
 	}
 	catch (e) {
-          errorExit('Could not remove: ' + absfile);
+          utils.errorExit('Could not remove: ' + absfile);
 	}
 
         try {
@@ -275,7 +267,7 @@ exports.handleSave = function(req, res, app) {
 
     // Validate data
     if (data.length > 1024 * 1024) {
-      errorExit('Data too large.');
+      utils.errorExit('Data too large.');
     }
 
     //
@@ -289,7 +281,7 @@ exports.handleSave = function(req, res, app) {
 	fsExtra.mkdirsSync(path.dirname(absfile));
       }
       catch (e) {
-        errorExit('Could not create dir: ' + path.dirname(filename));
+        utils.errorExit('Could not create dir: ' + path.dirname(filename));
       }
     }
 
@@ -314,40 +306,19 @@ exports.handleSave = function(req, res, app) {
       return;
     }
     catch (e) {
-      errorExit('Error writing file: ' + absfile);
+      utils.errorExit('Error writing file: ' + absfile);
     }
 
     return;
   }
   catch (e) {
-    if (e instanceof ImmediateReturnError) {
+    if (e instanceof utils.ImmediateReturnError) {
       res.json(e.jsonObj);
     }
     else {
       throw e;
     }
   }
-}
-
-function errorExit(msg) {
-  console.log('ERROREXIT: ' + msg);
-  throw new ImmediateReturnError(msg, {error: msg});
-}
-
-function filenameFromUri(req) {
-  var path = req.path;
-
-  return path;
-}
-
-function makeAbsolute(filename, app) {
-  var absfile = path.join(app.locals.config.dirs.datadir, filename);
-  if (absfile.indexOf(app.locals.config.dirs.datadir) != 0) {
-    errorExit('Illegal filename ' + filename);
-  }
-  absfile = path.resolve(absfile); // Resolve to absolute path
-
-  return absfile;
 }
 
 function touchUserDir(userdir) {
@@ -382,24 +353,10 @@ function isValidKey(user, key, app) {
   // with the hashed user password
   // 
 
-  var keydir = getKeyDir(user, app);
+  var keydir = utils.getKeyDir(user, app);
   var statObj = null;
 
-  try {
-    statObj = fs.statSync(keydir);
-  }
-  catch (e) {
-  }
-
-  if (!statObj) {
-    //
-    // .key directory does not seem to exist off user home directory.  
-    // Assume that this means user does not have a password set.  
-    //
-    return true;
-  }
-
-  if (!statObj.isDirectory()) { 
+  if (!utils.isPresent(keydir, 'dir')) {
     return true;
   }
 
@@ -435,7 +392,7 @@ function doSetKey(user, oldkey, newkey, res, app) {
     return;
   }
 
-  var keydir = getKeyDir(user, app);
+  var keydir = utils.getKeyDir(user, app);
 
   try {
     // Create directory if not present
@@ -465,31 +422,10 @@ function doSetKey(user, oldkey, newkey, res, app) {
     }
   }
   catch (e) {
-    errorExit('Could not set key.');
+    utils.errorExit('Could not set key.');
   }
 }
 
-function ImmediateReturnError(message, jsonObj) {
-  this.name = 'ImmediateReturnError';
-  this.message = message;
-  this.jsonObj = jsonObj;
-}
-ImmediateReturnError.prototype = Error.prototype;
-
-//
-// Return user key directory where password is stored.
-//
-function getKeyDir(user, app) {
-  return path.resolve(path.join(app.locals.config.dirs.datadir, user, '.key'));
-}
-
-//
-// Return user home dir
-//
-
-function getUserHomeDir(user, app) {
-  return path.resolve(path.join(app.locals.config.dirs.datadir, user));
-}
 
 function checkReservedUser(user, app) {
   var datadirAbs = path.resolve(app.locals.config.dirs.datadir);
@@ -499,25 +435,25 @@ function checkReservedUser(user, app) {
   }
 
   if (user != user.toLowerCase()) {
-    errorExit('Username should be lowercase.');
+    utils.errorExit('Username should be lowercase.');
   }
   
   var normalized = user.toLowerCase();
   if (fs.existsSync(path.join(datadirAbs, normalized))) {
-    errorExit('Username is reserved.');
+    utils.errorExit('Username is reserved.');
   }
 
   // Also check possible variations of badwords
   var normalizedi = translate(normalized, '013456789', 'oieasbtbg');
   if (normalized != normalizedi && 
       fs.existsSync(path.join(datadirAbs, normalizedi))) {
-    errorExit('Username is reserved.');
+    utils.errorExit('Username is reserved.');
   }
 
   var normalizedl = translate(normalized, '013456789', 'oleasbtbg');
   if (normalizedl != normalized &&
       fs.existsSync(path.join(datadirAbs, normalizedl))) {
-    errorExit('Username is reserved.');
+    utils.errorExit('Username is reserved.');
   }
 
   var checkwords = [normalized, normalizedi, normalizedl];
@@ -529,13 +465,13 @@ function checkReservedUser(user, app) {
   for (var i = 0; i < checkwords.length; i++) {
     for (var j = 0; j < badwords.length; j++) {
       if (badwords[j].length > 0 && checkwords[i] == badwords[j]) {
-        errorExit('Username is reserved.');
+        utils.errorExit('Username is reserved.');
       }
     }
     for (var j = 0; j < badsubstrings.length; j++) {
       if (badsubstrings[j].length > 0 && 
 	  checkwords[i].indexOf(badsubstrings[j]) != -1) {
-        errorExit('Username is reserved.');
+        utils.errorExit('Username is reserved.');
       }
     }
   }
@@ -547,7 +483,7 @@ function translate(source, from, to) {
   var copy = new String(source);
 
   if (fromArr.length != toArr.length) {
-    errorExit('Uh oh, parameters to translate are incorrect.');
+    utils.errorExit('Uh oh, parameters to translate are incorrect.');
   }
 
   for (var i = 0; i < fromArr.length; i++) {
