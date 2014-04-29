@@ -30,24 +30,43 @@ where 60 is middle C.
 
 ###
 
-class Keyboard
+class Keyboard extends Sprite
   constructor: (options = {}) ->
-    defwidth = if options.kh? then (options.kh / 5) else 10
+    defwidth = if options.kh?
+        (options.kh / 5)
+      else
+        10
     @kw = options.kw ? defwidth
     @kh = options.kh ? @kw * 5
     @bkw = options.bkw ? @kw * 3 / 5
     @bkh = options.bkh ? @kh * 3 / 5
     @lowest = options.lowest ? 21
     @highest = options.highest ? 108
-    @x = options.x ? 0
-    @y = options.y ? 0
-    @center = floor((@lowest + @highest) / 2)
+    @horiz = @calcHoriz()
     @kt = new Turtle
     @kt.ht()
     @kt.speed Infinity
-    @pt = new Turtle
-    @pt.ht()
+    @pt = this
+    # Render the keyboard as its own sprite
+    # that can be moved around.
+    super
+      width: @horiz.right - @horiz.left + 2
+      height: @kh + 2
+    @kt.drawon this
     do @drawall
+
+  calcHoriz: () ->
+    leftmost = Keyboard.wcp(@lowest)
+    rightmost = Keyboard.wcp(@highest) + 1
+    # if the highest key is a black key
+    # then go right one more space
+    if (Keyboard.keyshape(@highest) >= 8)
+      rightmost += 1
+    return {
+      left: leftmost * @kw
+      right: rightmost * @kw
+      mid: (leftmost + rightmost) * @kw / 2
+    }
 
   # white-key position: gives a number
   # that increases by 1 for every white
@@ -70,8 +89,9 @@ class Keyboard
     if (args.length <= 0 or
         not $.isPlainObject(args[0]))
       args.unshift({})
-    args[0].callback = @makecallback()
-    @pt.play.apply(@pt, args)
+    args[0].callback = @makecallback(
+      args[0].callback)
+    Sprite.prototype.play.apply(@pt, args)
 
   draw: (n, fillcolor) ->
     if not (@lowest <= n <= @highest)
@@ -91,7 +111,7 @@ class Keyboard
     for n in [@lowest..@highest]
       @draw(n)
 
-  makecallback: ->
+  makecallback: (cb2) ->
     pressed = []
     convertfreq = (f) ->
       round(69 + ln(f / 440) * 12 / ln(2))
@@ -104,14 +124,17 @@ class Keyboard
         midikey = convertfreq f
         pressed.push midikey
         @draw midikey, Keyboard.keycolor midikey
+      if cb2
+        cb2(d)
     return callback
 
   keyoutline: (kt, n) ->
     # TODO: replace this with high-performance
     # canvas drawing code.
-    startx = @kw *
-      (Keyboard.wcp(n) - Keyboard.wcp(@center))
+    startx = @kw * Keyboard.wcp(n) - @horiz.mid
     starty = -@kh / 2
+    kt.jumpto this
+    kt.turnto this.direction()
     # top width of the c key
     ckw = (3 * @kw - 2 * @bkw) / 3
     # top width of the f key
@@ -134,7 +157,7 @@ class Keyboard
         startx += 2 * fkw + @bkw - @kw
       when 12
         startx += 3 * fkw + 2 * @bkw - 2 * @kw
-    kt.jumpto startx, starty
+    kt.jump startx, starty
     switch ks
       when 1
         kt.fd @kh
@@ -237,5 +260,5 @@ class Keyboard
         kt.bk @bkh
         kt.slide -@bkw
 
+# Export the Keyboard class as a global.
 window.Keyboard = Keyboard
-
