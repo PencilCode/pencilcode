@@ -6,5 +6,5 @@
   },
   "host": "pencilcode.net.dev",
   "useProxy": 1,
-  "proxyLoadSave", 1
+  "proxyLoadSave": 0
 }
