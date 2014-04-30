@@ -17,8 +17,8 @@ a rest, a semitone, an octave, and a chord:
 
 k.play {tempo: 150}, "c G/2 G/2 A G z B [_B,CEGc]"
 
-Implementation notes: currently keyboard drawing is
-slower than it should be.  It should be sped up.
+Implementation notes: for speed, keyboard drawing
+is done with raw canvas commands.
 
 A specific key can be highlighted by just saying
 something like this:
@@ -32,29 +32,31 @@ where 60 is middle C.
 
 class Keyboard extends Sprite
   constructor: (options = {}) ->
+    # default key width
     defwidth = if options.kh?
         (options.kh / 5)
       else
         10
-    @kw = options.kw ? defwidth
-    @kh = options.kh ? @kw * 5
-    @bkw = options.bkw ? @kw * 3 / 5
-    @bkh = options.bkh ? @kh * 3 / 5
-    @lowest = options.lowest ? 21
-    @highest = options.highest ? 108
-    @horiz = @calcHoriz()
-    @kt = new Turtle
-    @kt.ht()
-    @kt.speed Infinity
-    @pt = this
+    # Calculate some geometry constants for the keyboard:
+    @kw = options.kw ? defwidth          # white key width
+    @kh = options.kh ? @kw * 5           # white key height
+    @bkw = options.bkw ? @kw * 3 / 5     # black key width
+    @bkh = options.bkh ? @kh * 3 / 5     # black key height
+    @lowest = options.lowest ? 21        # midi num for lowest key
+    @highest = options.highest ? 108     # midi num for highest key
+    @hlw = (options.lw ? 1.6) / 2        # half line width
+    @horiz = @calcHoriz()                # {left, right} boundaries
+    @ckw = (3 * @kw - 2 * @bkw) / 3      # top width of the c key
+    @fkw = (4 * @kw - 3 * @bkw) / 4      # top width of the f key
     # Render the keyboard as its own sprite
     # that can be moved around.
     super
-      width: @horiz.right - @horiz.left + 2
-      height: @kh + 2
-    @kt.drawon this
+      width: Math.ceil(@horiz.right - @horiz.left + @hlw * 2)
+      height: Math.ceil(@kh + @hlw * 2)
     do @drawall
 
+  # Calculates the bounding left and right pixel positions
+  # given the lowest and higest keys to render.
   calcHoriz: () ->
     leftmost = Keyboard.wcp(@lowest)
     rightmost = Keyboard.wcp(@highest) + 1
@@ -65,17 +67,20 @@ class Keyboard extends Sprite
     return {
       left: leftmost * @kw
       right: rightmost * @kw
-      mid: (leftmost + rightmost) * @kw / 2
     }
 
-  # white-key position: gives a number
+  # white-key position, used for locating a
+  # key horizontally: given a midi key number,
+  # caculates a "white key number"
   # that increases by 1 for every white
   # key, or that is the next lower white
   # key number for every black key.
   @wcp: (n) ->
-    floor((n + 7) / 12 * 7) - 4
+    floor((n + 7) / 12 * 7)
 
   # A code for the shape of the key number.
+  # C,D,E,F,G,A,B are 1,2,3,4,5,6,7 and
+  # C#,D#,F#,G#,A# are 8,9,10,11,12.
   @keyshape: (n) ->
     [1,8,2,9,3,4,10,5,11,6,12,7][n % 12]
 
@@ -83,6 +88,7 @@ class Keyboard extends Sprite
   @keycolor: (n) ->
     hsl(n / 12 * 360, 1, 0.5)
 
+  # Override Turtle.play to intercept the callback.
   play: ->
     args = Array.prototype.slice.call(
       arguments, 0)
@@ -91,8 +97,11 @@ class Keyboard extends Sprite
       args.unshift({})
     args[0].callback = @makecallback(
       args[0].callback)
-    Sprite.prototype.play.apply(@pt, args)
+    Sprite.prototype.play.apply(this, args)
 
+  # Draw the nth key with the given fillcolor.
+  # Here n is specified as a midi number for the
+  # key, i.e., 60 is middle C.
   draw: (n, fillcolor) ->
     if not (@lowest <= n <= @highest)
       return
@@ -101,18 +110,30 @@ class Keyboard extends Sprite
         fillcolor = black
       else
         fillcolor = white
-    @kt.pen path
-    @keyoutline(@kt, n)
-    @kt.fill fillcolor
-    @kt.pen black
-    @keyoutline(@kt, n)
+    ctx = @canvas().getContext '2d'
+    ctx.save()
+    ctx.beginPath()
+    @keyoutline(ctx, n)
+    ctx.fillStyle = fillcolor
+    ctx.strokeStyle = 'black'
+    ctx.lineWidth = @hlw * 2
+    ctx.fill()
+    ctx.stroke()
+    ctx.restore()
 
+  # Draw the entire keyboard with default colors
+  # (i.e., white and black
   drawall: ->
     for n in [@lowest..@highest]
       @draw(n)
 
+  # Creates a callback closure for listening to
+  # play events and formatting keys.
   makecallback: (cb2) ->
+    # keep track of keys that have been colored.
     pressed = []
+    # convertfreq converts a Hz frequency to
+    # the closest midi number.
     convertfreq = (f) ->
       round(69 + ln(f / 440) * 12 / ln(2))
     callback = (d) =>
@@ -128,137 +149,74 @@ class Keyboard extends Sprite
         cb2(d)
     return callback
 
-  keyoutline: (kt, n) ->
-    # TODO: replace this with high-performance
-    # canvas drawing code.
-    startx = @kw * Keyboard.wcp(n) - @horiz.mid
-    starty = -@kh / 2
-    kt.jumpto this
-    kt.turnto this.direction()
-    # top width of the c key
-    ckw = (3 * @kw - 2 * @bkw) / 3
-    # top width of the f key
-    fkw = (4 * @kw - 3 * @bkw) / 4
+  # A utility function for generating the path outline
+  # of the key with midi number n.
+  keyoutline: (ctx, n) ->
+    # startx will be the left edge of the key rectangle.
+    # Here we compute it exactly for white keys and get
+    # the closest white key position for black keys.
+    # Black keys will further modify startx below.
+    startx = @hlw + @kw * Keyboard.wcp(n) - @horiz.left
+    starty = @hlw
     ks = Keyboard.keyshape(n)
     # key shapes are modified for the lowest
     # and highest keys on the piano.
-    ll = n is @lowest
-    hh = n is @highest
-    if ks >= 8
-      starty += @kh - @bkh
-    switch ks
-      when 8
-        startx += ckw
-      when 9
-        startx += 2 * ckw + @bkw - @kw
-      when 10
-        startx += fkw
-      when 11
-        startx += 2 * fkw + @bkw - @kw
-      when 12
-        startx += 3 * fkw + 2 * @bkw - 2 * @kw
-    kt.jump startx, starty
+    leftmost = n is @lowest
+    rightmost = n is @highest
+    # White keys can have cut-in corners, so lcx will
+    # be the left corner width and rcx is the right
+    # cut-in corner width, to be computed below.
+    lcx = 0
+    rcx = 0
     switch ks
       when 1
-        kt.fd @kh
-        kt.slide ckw
-        if hh
-          kt.slide @kw - ckw
-          kt.bk @kh
-        else
-          kt.bk @bkh
-          kt.slide @kw - ckw
-          kt.bk @kh - @bkh
-        kt.slide -@kw
+        rcx = @kw - @ckw
       when 2
-        if ll
-          kt.fd @kh
-          kt.slide (@kw - ckw) / 2
-        else
-          kt.fd @kh - @bkh
-          kt.slide (@kw - ckw) / 2
-          kt.fd @bkh
-        kt.slide ckw
-        if hh
-          kt.slide (@kw  - ckw) / 2
-          kt.bk @kh
-        else
-          kt.bk @bkh
-          kt.slide (@kw - ckw) / 2
-          kt.bk @kh - @bkh
-        kt.slide -@kw
+        rcx = lcx = (@kw - @ckw) / 2
       when 3
-        if ll
-          kt.fd @kh
-          kt.slide @kw - ckw
-        else
-          kt.fd @kh - @bkh
-          kt.slide @kw - ckw
-          kt.fd @bkh
-        kt.slide ckw
-        kt.bk @kh
-        kt.slide -@kw
+        lcx = @kw - @ckw
       when 4
-        kt.fd @kh
-        kt.slide fkw
-        if hh
-          kt.slide @kw - fkw
-          kt.bk @kh
-        else
-          kt.bk @bkh
-          kt.slide @kw - fkw
-          kt.bk @kh - @bkh
-        kt.slide -@kw
+        rcx = @kw - @fkw
       when 5
-        if ll
-          kt.fd @kh
-          kt.slide fkw + @bkw - @kw
-        else
-          kt.fd @kh - @bkh
-          kt.slide fkw + @bkw - @kw
-          kt.fd @bkh
-        kt.slide fkw
-        if hh
-          kt.slide 2 * @kw - 2 * fkw - @bkw
-          kt.bk @kh
-        else
-          kt.bk @bkh
-          kt.slide 2 * @kw - 2 * fkw - @bkw
-          kt.bk @kh - @bkh
-        kt.slide -@kw
+        lcx = @fkw + @bkw - @kw
+        rcx = 2 * @kw - 2 * @fkw - @bkw
       when 6
-        if ll
-          kt.fd @kh
-          kt.slide 2 * @kw - 2 * fkw - @bkw
-        else
-          kt.fd @kh - @bkh
-          kt.slide 2 * @kw - 2 * fkw - @bkw
-          kt.fd @bkh
-        kt.slide fkw
-        if hh
-          kt.slide fkw + @bkw - @kw
-          kt.bk @kh
-        else
-          kt.bk @bkh
-          kt.slide fkw + @bkw - @kw
-          kt.bk @kh - @bkh
-        kt.slide -@kw
+        lcx = 2 * @kw - 2 * @fkw - @bkw
+        rcx = @fkw + @bkw - @kw
       when 7
-        if ll
-          kt.fd @kh
-          kt.slide @kw - fkw
-        else
-          kt.fd @kh - @bkh
-          kt.slide @kw - fkw
-          kt.fd @bkh
-        kt.slide fkw
-        kt.bk @kh
-        kt.slide -@kw
-      when 8, 9, 10, 11, 12
-        kt.fd @bkh
-        kt.slide @bkw
-        kt.bk @bkh
-        kt.slide -@bkw
+        lcx = @kw - @fkw
+      when 8
+        startx += @ckw
+      when 9
+        startx += 2 * @ckw + @bkw - @kw
+      when 10
+        startx += @fkw
+      when 11
+        startx += 2 * @fkw + @bkw - @kw
+      when 12
+        startx += 3 * @fkw + 2 * @bkw - 2 * @kw
+    # Cut-in corners are not cut-in for the leftmost
+    # or rightmost key.
+    if leftmost then lcx = 0
+    if rightmost then rcx = 0
+    if ks >= 8
+      # draw black keys
+      ctx.moveTo(startx, starty + @bkh)
+      ctx.lineTo(startx + @bkw, starty + @bkh)
+      ctx.lineTo(startx + @bkw, starty)
+      ctx.lineTo(startx, starty)
+      ctx.closePath()
+    else
+      # draw white keys
+      ctx.moveTo(startx, starty + @kh)
+      ctx.lineTo(startx + @kw, starty + @kh)
+      ctx.lineTo(startx + @kw, starty + @bkh)
+      ctx.lineTo(startx + @kw - rcx, starty + @bkh)
+      ctx.lineTo(startx + @kw - rcx, starty)
+      ctx.lineTo(startx + lcx, starty)
+      ctx.lineTo(startx + lcx, starty + @bkh)
+      ctx.lineTo(startx, starty + @bkh)
+      ctx.closePath()
 
 # Export the Keyboard class as a global.
 window.Keyboard = Keyboard
