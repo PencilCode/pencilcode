@@ -43,23 +43,23 @@ exports.handleSave = function(req, res, app) {
       switch (mode) {
         case 'mv':
           if (!sourcefile) {
-	    utils.errorExit('No source specified for mv');
+            utils.errorExit('No source specified for mv');
           }
           break;
         case 'a':
           if (!data) {
-	    utils.errorExit('No data specified for append');
-	  }
+            utils.errorExit('No data specified for append');
+          }
           break;
         case 'setkey': 
           if (!data && sourcefile) {
-	    utils.errorExit('Invalid parameters specified for setkey');
-	  }
+            utils.errorExit('Invalid parameters specified for setkey');
+          }
           break;
         case 'rmtree':
           if (data || sourcefile) {
-	    utils.errorExit('Either data or source specified for rmtree');
-	  }
+            utils.errorExit('Either data or source specified for rmtree');
+          }
           break;
         default:
           utils.errorExit('Unknown mode type');
@@ -67,10 +67,7 @@ exports.handleSave = function(req, res, app) {
     }
 
     if (conditional) {
-      conditional = Date.parse(conditional);
-      if (isNaN(conditional)) {
-        utils.errorExit('Illegal conditional');
-      }
+      conditional = new Date(conditional);
     }
 
     // validate username
@@ -82,8 +79,8 @@ exports.handleSave = function(req, res, app) {
     var topdir = false;
     if (!utils.isFileNameValid(filename, true)) {
       if (mode == 'setkey' || 
-	  (!data && (mode == 'rmtree' || mode == 'mv' || !sourcefile)) &&
-	  /^[\w][\w\\-]*\/?$/.test(filename)) {
+          (!data && (mode == 'rmtree' || mode == 'mv' || !sourcefile)) &&
+          /^[\w][\w\\-]*\/?$/.test(filename)) {
         topdir = true;
       }
       else {
@@ -133,77 +130,77 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
       if (!fs.existsSync(absSourceFile)) {
-	utils.errorExit('Source file does not exist. ' + sourcefile);
+        utils.errorExit('Source file does not exist. ' + sourcefile);
       }
 
       // Only directories can be copied or moved to the top
       if (topdir && !fs.statSync(absSourceFile).isDirectory()) {
-	utils.errorExit('Bad filename. ' + filename);
+        utils.errorExit('Bad filename. ' + filename);
       }
 
       // mv requires authz on the source dir
       if (mode == 'mv') {
         if (!isValidKey(sourceuser, sourcekey, app)) {
-	  var msg = (!key) ? 
-	      'Source password protected.' : 'Incorrect source password.';
-	  res.json({'error': msg, 'auth': 'key'});
-	  return;
-	}
+          var msg = (!key) ? 
+              'Source password protected.' : 'Incorrect source password.';
+          res.json({'error': msg, 'auth': 'key'});
+          return;
+        }
       }
 
       // Create target parent directory if needed
       if (!fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
-	try {
+        try {
           fs.mkdirSync(path.dirname(absfile));
-	}
-	catch (e) {
+        }
+        catch (e) {
           utils.errorExit('Could not create dir: ' + path.dirname(filename));
-	}
+        }
       }
 
       // move case
       if (mode == 'mv') {
-	if (fs.existsSync(absfile)) {
+        if (fs.existsSync(absfile)) {
           utils.errorExit('Cannot replace existing file: ' + filename);
-	}
+        }
 
-	try {
-	  fs.renameSync(absSourceFile, absfile);
+        try {
+          fs.renameSync(absSourceFile, absfile);
 
-	  // Cleanup directories if necessary
-	  var dir = path.dirname(absSourceFile);
-	  for (; dir ; dir = path.dirname(dir)) {
+          // Cleanup directories if necessary
+          var dir = path.dirname(absSourceFile);
+          for (; dir ; dir = path.dirname(dir)) {
             try {
-	      fs.rmdirSync(dir);
-	    }
-	    catch (e) {
-	      // Failed to remove dir, assume not empty
-	      break;
-	    }
-	  }
+              fs.rmdirSync(dir);
+            }
+            catch (e) {
+              // Failed to remove dir, assume not empty
+              break;
+            }
+          }
 
-	  // Remove .key when moving top dir into deeper dir because we don't
-	  // want to propagate password data
-	  if (topdir && filename != user) {
+          // Remove .key when moving top dir into deeper dir because we don't
+          // want to propagate password data
+          if (topdir && filename != user) {
             fsExtra.removeSync(path.join(absfile, '.key'));
-	  }
-	}
-	catch (e) {
+          }
+        }
+        catch (e) {
           utils.errorExit('Could not move ' + sourcefile + ' to ' + filename);
-	}
+        }
       }
       else {
-	// Copy case
+        // Copy case
         try {
-	  // Are we copying a directory?
+          // Are we copying a directory?
           if (fs.stat(absSourceFile).isDirectory()) {
             if (fs.existsSync(absfile)) {
               utils.errorExit('Cannot overwwrite existing directory ' + filename);
-	    }
+            }
 
-	    fsExtra.copySync(absSourceFile, absfile); 
-	    // TODO: Need to ignore .key subdirs and contents
+            fsExtra.copySync(absSourceFile, absfile); 
+            // TODO: Need to ignore .key subdirs and contents
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
@@ -225,7 +222,7 @@ exports.handleSave = function(req, res, app) {
 
     if (conditional) {
       if (fs.existsSync(absfile)) {
-	mtime = Date.parse(fs.statSync(absfile).mtime);
+        mtime = fs.statSync(absfile).mtime.getTime();
         if (mtime > conditional) {
             res.json({'error': 'Did not overwrite newer file.', 
                       'newer': mtime});
@@ -301,7 +298,7 @@ exports.handleSave = function(req, res, app) {
 	statObj = fs.statSync(absfile);
 	touchUserDir(userdir);
 
-	res.json({saved: filename, mtime: statObj.mtime, size: statObj.size});
+	res.json({saved: filename, mtime: statObj.mtime.getTime(), size: statObj.size});
       });
       return;
     }

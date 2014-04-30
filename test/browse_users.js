@@ -56,7 +56,7 @@ describe('browse users in edit mode', function() {
       return dirs.join(' ');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(result.split(' ').length > 100);
+      assert.ok(result.split(' ').length > 1);
       done();
     });
   });
@@ -68,7 +68,7 @@ describe('browse users in edit mode', function() {
       return dirs.join(' ');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(/ abc123 .* cody .* david .* guide .* piper .* zog /
+      assert.ok(/a .*b .*c .*livetest .*z/
           .test(result));
       done();
     });
@@ -79,11 +79,11 @@ describe('browse users in edit mode', function() {
       $('#bydate').click();
       $('.directory a').each(function() { dirs.push($(this).text()); });
       var r = dirs.join(' ');
-      if (!/ david .* abc123 /.test(r)) return null;
+      if (!/z .*b/.test(r)) return null;
       return r;
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(/ david .* abc123 /
+      assert.ok(/z .*b/
           .test(result));
       done();
     });

@@ -21,6 +21,9 @@ exports.handleLoad = function(req, res, app) {
 
   try {
     var isrootlisting = !user && filename == '';
+
+    //console.log({'filename': filename, 'user': user, 'isroot': isrootlisting});
+
     if (isrootlisting) {
       try {
         // Try the cache first if it exists
@@ -33,6 +36,7 @@ exports.handleLoad = function(req, res, app) {
 	  // TODO: Finish this part.
 	}
 	else {
+	  //console.log(data);
 	  res.json(data);
 	  return;
 	}
@@ -76,7 +80,7 @@ exports.handleLoad = function(req, res, app) {
       res.json({'file': '/' + filename, 
                 'data': data,
                 'auth': haskey,
-                'mtime': statObj.mtime, 
+		'mtime': statObj.mtime.getTime(), 
                 'mime': mimetype});
       return;
     }
@@ -103,13 +107,13 @@ exports.handleLoad = function(req, res, app) {
 
     // Handle the case of a new file create
     if (filename.length > 0 && 
-	filename[filename.length - 1] != '/' && 
-	isValidNewFile(absfile)) {
+        filename[filename.length - 1] != '/' && 
+        isValidNewFile(absfile)) {
       res.set('Cache-Control', 'no-cache, must-revalidate');
       res.json({'error': 'could not read file ' + filename,
-		'newfile': true,
-		'auth': haskey,
-		'info': absfile});
+                'newfile': true,
+                'auth': haskey,
+                'info': absfile});
       return;
     }
 
@@ -144,7 +148,7 @@ function isValidNewFile(newAbsFileName, app) {
 
     try {
       if (fs.statSync(dir).isDirectory()) {
-	return true;
+        return true;
       }
     }
     catch (e) { }
@@ -177,7 +181,7 @@ function buildDirList(absdir, contents) {
       modestr += 'x';
     }
 
-    var mtime = statObj.mtime;
+    var mtime = statObj.mtime.getTime();
     // If its an empty file, then reset mtime
     if (statObj.isFile() && statObj.size == 0) {
       mtime = 0;
