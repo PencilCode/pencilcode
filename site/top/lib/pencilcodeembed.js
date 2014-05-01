@@ -149,12 +149,12 @@
 
       window.addEventListener('message', function(evt) {
         // check origin
-        if (event.origin != targetDomain) {
+        if (evt.origin != targetDomain) {
           return false;
         }
 
         // check the event is from the child we know about
-        if (event.source !== that.iframe.contentWindow) {
+        if (evt.source !== that.iframe.contentWindow) {
           return false;
         }
 
