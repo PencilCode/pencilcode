@@ -51,28 +51,26 @@ function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 
-// TODO Document the fields of the pane model.
 function defaultPaneModel() {
-  return {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      loading: 0,
-      running: 0,
-      template: null,
-      activityDir: false
-  };
+  var result = {};
+  clearPaneModel(result);
+  return result;
 }
 
 function clearPaneModel(m) {
-  m.filename = null;
-  m.isdir = false;
-  m.data = null;
-  m.bydate = false;
-  m.loading = 0;
-  m.running = false;
-  m.template = null;
+  m.filename = null;      // dir/subdir/name (no leading or trailing slash).
+  m.isdir = false;        // true if directory
+  m.data = null;          // the raw data object loaded from storage, e.g.:
+                          // { mime: 'text/x-turtlebits',
+                          //   data: loadedtext,
+                          //   auth: true,
+                          //   file: '/username/dir/subdir/name',
+                          //   mtime: 1397775835.2
+                          // }
+  m.bydate = false;       // true if ordered by date.
+  m.loading = 0;          // generation number for managing async load.
+  m.running = false;      // true if this is a running preview pane.
+  m.template = null;      // TODO: will be the PencilTemplate object
   m.activityDir = false;
 }
 
@@ -186,7 +184,7 @@ function updateTopControls(addHistory) {
 
       // Check now whether the file is in an activity dir so that we know whether to
       // offer 'Share Activity' when the user clicks Share.
-      checkIfActivityDir();
+      // checkIfActivityDir();
     }
 
     // Offer logout button if user is logged in, else offer login button if not
@@ -996,8 +994,9 @@ function isFileWithin(base, candidate) {
       candidate.indexOf(base) === 0;
 }
 
-// Parse the string in window.location.search into '&' separated key=value pairs,
-// and split those pairs, using the key as the property name in the return value object.
+// Parse the string in window.location.search into '&' separated key=value
+// pairs, and split those pairs, using the key as the property name in the
+// return value object.
 function parseURIKeyValues(s) {
   var variables = {};
   if ($.type(s) == 'string' && s.length) {
@@ -1005,14 +1004,8 @@ function parseURIKeyValues(s) {
       var parts = pair.split('='),
           key = decodeURIComponent(parts.shift()),
           value = decodeURIComponent(parts.join('='));
-      if (key == '') {
-        console.log('key missing in search string: ' + s);
-      } else if (variables.hasOwnProperty(key)) {
-        if ($.type(variables[key]) == 'string') {
-          variables[key] = [ variables[key] ];
-        }
-        variables[key].push(value);
-      } else {
+      // Only accept the first value when there are repeats.
+      if (!(key in variables)) {
         variables[key] = value;
       }
     });
@@ -1023,40 +1016,42 @@ function parseURIKeyValues(s) {
 function parseURLCore(url) {
   var parsed, type = $.type(url);
   if (type == 'string' && $.type(window.URL) == 'function') {
-    // Need a very modern browser.
+    // Modern browsers have a URL object.
     parsed = new window.URL(url, window.location.href);
+  } else if (type == 'string') {
+    // Old browsers can parse urls using "<a>" elements.
+    parsed = document.createElement('a');
+    parsed.href = url;
   } else if (type == 'object' && url.href) {
     parsed = url;
   }
-  if (!parsed) {
-    console.log('parseURL failed');
-    console.log(url);
-    return;
-  }
-  // Make a deep copy of parsed, ensuring the standard URLUtils properties
-  // are present.
-  parsed = $.extend(true, {
-      href: '',
-      protocol: '',
-      host: '',
-      hostname: '',
-      port: '',
-      pathname: '',
-      search: '',
-      hash: '',
-      username: '',
-      password: '',
-      origin: ''}, parsed);
-  return parsed;
+  // Copy over parsed, ensuring standard URL properties are present.
+  var result = {
+    href: '',
+    protocol: '',
+    host: '',
+    hostname: '',
+    port: '',
+    pathname: '',
+    search: '',
+    hash: '',
+    username: '',
+    password: '',
+    origin: ''
+  };
+  for (var f in result) {
+    if (f in parsed) {
+      result[f] = parsed[f];
+    }
+  };
+  return result;
 }
 
 function parseURL(url) {
   var parsed = parseURLCore(url);
   // Now add our own properties to those defined in the standard for URLUtils.
 
-  // TODO(davidbau): Explain this regexp.  It seems to mean ignore last 8
-  // characters, and, working backwards, the characters up to, and including
-  // the first period.  This seems designed to convert foo.pencilcode.net,
+  // The following regexp is designed to convert foo.pencilcode.net,
   // or foo.pencilcode.net.dev into foo, but if we were to host pencilcode
   // at pencilcode.oxford.ac.uk, then the owner would be pencilcode, which
   // seems not ideal! Perhaps we need the server to tell us the root domain.
@@ -1067,18 +1062,21 @@ function parseURL(url) {
   parsed.filename = parsed.pathname.replace(
           /^\/[^\/]+\//, '').replace(/\/+$/, ''),
 
-  // Parse the key=value pairs out of the search (aka query) and the hash strings.
+  // Parse the key=value pairs out of the query and the hash strings.
   parsed.searchVars = parseURIKeyValues(parsed.search.replace(/^\?+/, ''));
   parsed.hashVars = parseURIKeyValues(parsed.hash.replace(/^#+/, ''));
+  parsed.vars = $.extend({}, parsed.searchVars, parsed.hashVars);
 
   // Probably a directory if the pathname ends with slash.
   parsed.isdir = /\/$/.test(parsed.pathname);
 
-  // TODO Extract login from hash if present; appears to have the following format:
-  //   login[0]="#login=user:password"
-  //   login[1]="user"
-  //   login[2]="password"
-  // parsed.login =...
+  // Parse autologin information from the URL.
+  // login[1]="user"
+  // login[2]="password"
+  parsed.login = null;
+  if ('login' in parsed.hashVars) {
+    parsed.login = /^([^:]*)(?::(\w+))?$/.exec(parsed.hashVars.login);
+  }
 
   // Extract edit mode
   parsed.editmode = /^\/edit\//.test(parsed.pathname);
@@ -1096,24 +1094,13 @@ function readNewUrl(undo) {
   var firsturl = (model.ownername === null),
       // TODO(jamessynge): Get complete parseURL impl working, then stop depending upon
       // the patterns below.
-      parsedURL = parseURL(window.location),
-  // Owner comes from domain name.
-      ownername = window.location.hostname.replace(
-          /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
-  // Filename comes from URL minus first directory part
-  // (i.e. without /edit/ or /home/, for example).
-      filename = window.location.pathname.replace(
-          /^\/[^\/]+\//, '').replace(/\/+$/, ''),
-  // Expect directory if the pathname ends with slash.
-      isdir = /\/$/.test(window.location.pathname),
-  // Extract login from hash if present.
-      login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(window.location.hash),
-  // Extract text from hash if present.
-      text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
-  // Extract edit mode
-      editmode = /^\/edit\//.test(window.location.pathname),
-  // Extract variables in search string
-      searchVars = parsedURL.searchVars;
+      parsed = parseURL(window.location),
+      ownername = parsed.ownername,
+      filename = parsed.filename,
+      isdir = parsed.isdir,
+      login = parsed.login,
+      text = parsed.vars.text,
+      editmode = parsed.editmode;
 
   // Give the user a chance to abort navigation.
   if (undo && view.isPaneEditorDirty(paneatpos('left')) && saveableOwner()) {
@@ -1129,7 +1116,7 @@ function readNewUrl(undo) {
     var savedlogin = cookie('login');
     login = savedlogin && /\b^([^:]*)(?::(\w+))?$/.exec(cookie('login'));
   } else if (ownername) {
-    cookie('login', login, { expires: 1, path: '/' });
+    cookie('login', login[1] + ':' + login[2], { expires: 1, path: '/' });
   }
   if (login) {
     model.username = login[1] || null;
@@ -1147,17 +1134,6 @@ function readNewUrl(undo) {
     model.editmode = editmode;
     forceRefresh = true;
   }
-  if (ownername === 'start' && editmode && searchVars.hasOwnProperty('activity')) {
-    // User is starting a new activity (e.g. a lesson defined by a teacher).
-    // TODO(davidbau): Please help figure out how this should interact with the block
-    // below which animates panes.
-    // Should we actually just fetch the default text for the activity at this point,
-    // store that in 'text', set firsturl = true, and fall through?
-
-    startNewActivity(filename, searchVars.activity);
-    return;
-  }
-
   // If the new url is replacing an existing one, animate it in.
   if (!firsturl && modelatpos('left').filename !== null) {
     if (isFileWithin(modelatpos('left').filename, filename)) {
@@ -1188,7 +1164,7 @@ function readNewUrl(undo) {
   // Preload text if specified.
   if (text) {
     createNewFileIntoPosition('left', filename,
-       decodeURIComponent(text[1].replace(/\+/g, ' ')));
+       decodeURIComponent(text.replace(/\+/g, ' ')));
     updateTopControls(false);
     return;
   }
@@ -1361,15 +1337,16 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
       secondStepOpenTemplate();
     }
   }
+  var templateUrl = '', textToEdit = '';
   function secondStepOpenTemplate() {
     // TODO: maybe do a prelim request instead of forcing errors when
     // the template is missing some stuff.
-    var templateBaseDir = parseTemplateDirFromLoadedFile(mpploading.data);
-    if (!templateBaseDir) {
+    templateUrl = parseTemplateUrlFromLoadedFile(mpploading.data);
+    if (!templateUrl) {
       thirdStepShowEditor();
       return;
     }
-    loadTemplateMetadata(templateBaseDir, function(template) {
+    loadTemplateMetadata(templateUrl, function(template) {
       mpploading.template = template;
       thirdStepShowEditor();
     });
@@ -1386,70 +1363,9 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   }
   storage.loadFile(model.ownername, filename, forcenet, firstStepLoadFile);
 };
-
-function startNewActivity(filename, activityURL) {
-  view.setPreviewMode(true /*show preview*/, true /*no animation delay*/);
-
-  var position = 'left',
-      pane = paneatpos(position),
-      mpp = model.pane[pane],
-      loadNum = nextLoadNumber();
-
-  // TODO Do we need a loadnum, given that we aren't loading the user's own file?
-
-  view.clearPane(pane, true); // show loading animation.
-
-  mpp.filename = filename;
-  mpp.isdir = false;
-  mpp.loading = loadNum;
-  mpp.data = {
-    file: filename,
-    data: '',  // To be filled in from activity.
-    mtime: 0
-  };
-  mpp.running = false;
-
-  function checkConsistency() {
-    // This function verifies that the load that we are completing
-    // is the same as the load that we started (might not be true if
-    // the user clicks on load several times, faster than net responses).
-    // Should be called before mutating mpp again.
-    if (mpp.loading != loadNum) {
-      if (window.console) {
-        window.console.trace('aborted: loading is ' + mpp.loading +
-            ' instead of ' + loadNum);
-      }
-      return false;
-    }
-    mpp.loading = 0;
-    return true;
-  }
-
-  function activityLoaded(activityData) {
-    // TODO Convert 'template' to 'activity' throughout (coordinate with others to
-    // reduce the number of merge conflicts).
-
-    // TODO If failed to load, redirect to pencilcode.net/?  OR show some error?
-
-    if (!checkConsistency()) { return; }
-    mpp.template = activityData;
-    mpp.data.data = '#!pencil ' + activityData.activityURL + '\n' +
-                    activityData.wrapperParts.defaultText;
-    mpp.unsaved = true;
-    console.log('mpp.data', mpp.data)
-    view.setPaneEditorText(pane, mpp.data.data, filename,
-        instructionTextForTemplate(mpp.template));
-    noteIfUnsaved(posofpane(pane));
-    updateTopControls(false);
-  }
-
-  loadTemplateMetadata(activityURL, activityLoaded);
-}
-
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
 }
-
 function renderDirectory(position) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -1579,17 +1495,16 @@ function cookie(key, value, options) {
 // Given some saved code, pull the first line and looks to see
 // if it contains a specially-formatted template URL.  If so,
 // it returns it.  Otherwise, returns null.
-function parseTemplateDirFromLoadedFile(code) {
+function parseTemplateUrlFromLoadedFile(code) {
   // Search for "#!pencil <url>\n" at the start of the file.
-  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code.data);
+  var m = /^#!pencil[ \t]+([\S]+)/.exec(code.data);
   if (m && m.index == 0) {
     var hashBangParams = m[1];
     console.log("User's file refers to a template: " + hashBangParams);
     return hashBangParams;
   }
-
-  console.log("User's file does not refer to a template:\n" + code.data.substr(0, 100));
-
+  console.log("User's file does not refer to a template:\n" +
+              code.data.substr(0, 100));
   return null;
 }
 

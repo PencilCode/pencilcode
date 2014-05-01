@@ -7,8 +7,12 @@ function($, see) {
 
 eval(see.scope('storage'));
 function hasBackup(filename) {
-  if (!window.localStorage) return false;
-  return ('backup:' + filename) in window.localStorage;
+  try {
+    if (!window.localStorage) return false;
+    return ('backup:' + filename) in window.localStorage;
+  } catch(e) {
+    return false;
+  }
 }
 
 function isOnline() {

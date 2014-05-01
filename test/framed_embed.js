@@ -146,8 +146,8 @@ describe('framed embed', function() {
     }, function(err, result){
       assert.ifError(err);
       assert.ok(result.code0.length > 5000);
-      assert.equal(result.code0, result.code1);
-      assert.equal(result.code0, result.code2);
+      assert.equal(result.code1, result.code0);
+      assert.equal(result.code2, result.code0);
       assert.equal(1, result.loaded);
       assert.equal(1, result.updated);
       assert.ok(!result.executed);
