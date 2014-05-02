@@ -30,6 +30,21 @@ where 60 is middle C.
 
 ###
 
+colors12 = [
+  '#db4437' # google red
+  '#ff5722' # orange
+  '#f4b400' # google yellow
+  '#ffeb3b' # yellow
+  '#cddc39' # lime
+  '#0f9d58' # google green
+  '#00bcd4' # teal
+  '#03a9f4' # light blue
+  '#4285f4' # google blue
+  '#673ab7' # deep purple
+  '#9c27b0' # purple
+  '#e91e63' # pink
+]
+
 class Keyboard extends Sprite
   ###
   The constructor accepts an optional object with any
@@ -139,7 +154,7 @@ class Keyboard extends Sprite
 
   # A colorful color to use for the key number.
   @keycolor: (n) ->
-    hsl(n / 12 * 360, 1, 0.5)
+    colors12[(n % 12 + 12) % 12]
 
   # Override Turtle.play to intercept the callback.
   play: ->
