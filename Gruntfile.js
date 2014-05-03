@@ -155,7 +155,7 @@ module.exports = function(grunt) {
       },
       comp: {
         options: {
-          node_env: 'compiled'
+          node_env: 'compiled',
           args: ['./configProd.json']
         }
       },
