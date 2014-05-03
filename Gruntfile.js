@@ -149,13 +149,14 @@ module.exports = function(grunt) {
       dev: {
         options: {
           node_env: 'development',
-          debug: true,
+          //debug: true,
           args: ['./config.json']
         }
       },
       comp: {
         options: {
           node_env: 'compiled'
+          args: ['./configProd.json']
         }
       },
       devtest: {
@@ -176,16 +177,12 @@ module.exports = function(grunt) {
     },
     watch: {
       dev: {
-        files: ['dev/server.js', 
-                'dev/save.js', 
-                'dev/config.json', 
-                'dev/utils.js',
-                'dev/load.js'],
+        files: ['dev/*.js'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ['dev/server.js'],
+        files: ['dev/*.js'],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }
@@ -197,13 +194,6 @@ module.exports = function(grunt) {
           timeout: 100000,
           reporter: 'list',
           colors: false
-        }
-      }
-    },
-    foreverServer: {
-      prodserver: {
-        options: {
-          index: 'dev/server.js'
         }
       }
     },
@@ -220,7 +210,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-forever');
   grunt.loadNpmTasks('grunt-node-inspector');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
@@ -265,8 +254,6 @@ module.exports = function(grunt) {
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
-  // "prodserver" runs this as if its a production server
-  grunt.registerTask('prodserver', ['requirejs', 'replace', 'uglify', 'foreverServer:prodserver:start']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };

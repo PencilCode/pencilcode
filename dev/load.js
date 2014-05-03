@@ -32,14 +32,9 @@ exports.handleLoad = function(req, res, app) {
 	res.set('Cache-Control', 'no-cache, must-revalidate');
 	res.set('Content-Type', 'text/javascript');
 
-	if (callback) {
-	  // TODO: Finish this part.
-	}
-	else {
-	  //console.log(data);
-	  res.json(data);
-	  return;
-	}
+	//console.log(data);
+	res.jsonp(data);
+	return;
       }
       catch (e) { }
     }
@@ -77,11 +72,11 @@ exports.handleLoad = function(req, res, app) {
 	  getMimeType(filename.substring(filename.lastIndexOf('.')));
 
       res.set('Cache-Control', 'no-cache, must-revalidate');
-      res.json({'file': '/' + filename, 
-                'data': data,
-                'auth': haskey,
-		'mtime': statObj.mtime.getTime(), 
-                'mime': mimetype});
+      res.jsonp({'file': '/' + filename, 
+                 'data': data,
+                 'auth': haskey,
+		 'mtime': statObj.mtime.getTime(), 
+                 'mime': mimetype});
       return;
     }
     
@@ -101,7 +96,7 @@ exports.handleLoad = function(req, res, app) {
         fsExtra.outputJsonSync(utils.getRootCacheName(app), jsonRet);
       }
       res.set('Cache-Control', 'no-cache, must-revalidate');
-      res.json(jsonRet);
+      res.jsonp(jsonRet);
       return;
     }
 
@@ -110,10 +105,10 @@ exports.handleLoad = function(req, res, app) {
         filename[filename.length - 1] != '/' && 
         isValidNewFile(absfile)) {
       res.set('Cache-Control', 'no-cache, must-revalidate');
-      res.json({'error': 'could not read file ' + filename,
-                'newfile': true,
-                'auth': haskey,
-                'info': absfile});
+      res.jsonp({'error': 'could not read file ' + filename,
+                 'newfile': true,
+                 'auth': haskey,
+                 'info': absfile});
       return;
     }
 
@@ -121,7 +116,7 @@ exports.handleLoad = function(req, res, app) {
   }
   catch (e) {
     if (e instanceof utils.ImmediateReturnError) {
-      res.json(e.jsonObj);
+      res.jsonp(e.jsonObj);
     }
     else {
       throw e;
