@@ -21,6 +21,7 @@ require.config({
     'draw-protractor': 'src/draw-protractor',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
+    'pencilformat': 'lib/pencilformat',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
   },
   shim: {
@@ -44,10 +45,19 @@ require([
   'editor-view',
   'editor-storage',
   'editor-debug',
+  'pencilformat',
   'seedrandom',
   'see',
   'draw-protractor'],
-function($, view, storage, debug, seedrandom, see, drawProtractor) {
+function(
+  $,
+  view,
+  storage,
+  debug,
+  pencilformat,
+  seedrandom,
+  see,
+  drawProtractor) {
 
 eval(see.scope('controller'));
 
@@ -1092,8 +1102,6 @@ function assertEQ(a, b, msg) {
 function readNewUrl(undo) {
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
-      // TODO(jamessynge): Get complete parseURL impl working, then stop depending upon
-      // the patterns below.
       parsed = parseURL(window.location),
       ownername = parsed.ownername,
       filename = parsed.filename,
@@ -1215,8 +1223,7 @@ function runCodeAtPosition(position, code, filename, template) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(
-         pane, code, template, filename, baseUrl);
+      view.setPaneRunText(pane, code, template, filename, baseUrl);
     }
   }, 1);
   if (code) {
@@ -1337,16 +1344,11 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
       secondStepOpenTemplate();
     }
   }
-  var templateUrl = '', textToEdit = '';
   function secondStepOpenTemplate() {
-    // TODO: maybe do a prelim request instead of forcing errors when
-    // the template is missing some stuff.
-    templateUrl = parseTemplateUrlFromLoadedFile(mpploading.data);
-    if (!templateUrl) {
-      thirdStepShowEditor();
-      return;
-    }
-    loadTemplateMetadata(templateUrl, function(template) {
+    mpploading.pencil = new pencilformat.PencilCode(mpploading.data.data);
+    var templateUrl = mpploading.pencil.baseTemplateUrl();
+    pencilformat.PencilCode.resolveTemplate(
+        templateUrl, storage.loadTemplateUrl, function(template) {
       mpploading.template = template;
       thirdStepShowEditor();
     });
@@ -1355,8 +1357,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     if (!checkConsistency()) { return; }
     $.extend(mpp, mpploading);
     console.log('mpp.data', mpp.data, 'mpploading.data', mpploading.data)
-    view.setPaneEditorText(pane, mpp.data.data, filename,
-        instructionTextForTemplate(mpp.template));
+    view.setPaneEditorText(pane, mpp.pencil.code(), filename, mpp.template);
     noteIfUnsaved(posofpane(pane));
     updateTopControls(false);
     cb && cb();
@@ -1487,188 +1488,6 @@ function cookie(key, value, options) {
   }
   return result;
 };
-
-///////////////////////////////////////////////////////////////////////////
-// TEMPLATE SUPPORT (see also editor-view.js:expandRunTemplate)
-///////////////////////////////////////////////////////////////////////////
-
-// Given some saved code, pull the first line and looks to see
-// if it contains a specially-formatted template URL.  If so,
-// it returns it.  Otherwise, returns null.
-function parseTemplateUrlFromLoadedFile(code) {
-  // Search for "#!pencil <url>\n" at the start of the file.
-  var m = /^#!pencil[ \t]+([\S]+)/.exec(code.data);
-  if (m && m.index == 0) {
-    var hashBangParams = m[1];
-    console.log("User's file refers to a template: " + hashBangParams);
-    return hashBangParams;
-  }
-  console.log("User's file does not refer to a template:\n" +
-              code.data.substr(0, 100));
-  return null;
-}
-
-// Given a template base directory, loads the template metadata.
-function loadTemplateMetadata(templateBaseDir, callback) {
-  var templateOwner, templateName, activityURL;
-  if (window.URL && /^(https?:)?\/\//.test(templateBaseDir)) {
-    var parsedURL = parseURL(templateBaseDir);
-    templateOwner = parsedURL.ownername;
-    templateName = parsedURL.filename;
-    activityURL = '//' + parsedURL.hostname + '/home/' + templateName;
-  }
-
-  // TODO Remove this if block which is from our hackathon where we
-  // chose to use owner:/path/to/dir as the templateBaseDir, but David
-  // argues for full URL (as handled above) so we can support multiple
-  // instances (root domains) of pencilcode.
-  if (!templateOwner || !templateName) {
-    var match = templateBaseDir.split(':');
-    if (match.length != 2) {
-      console.log('Failed to parse template location: ' + templateBaseDir);
-      callback(null);
-      return;
-    }
-    templateOwner = match[0];
-    templateName = match[1];
-    activityURL = '//' + templateOwner + "." +
-                  window.pencilcode.domain + '/home/' + templateName;
-  }
-
-  var activityFile = null;
-  var instructionsFile = null;
-  var wrapperFile = null;
-
-  var processTemplateDir = function(dirData) {
-    // Check for wrapper and instruction files and load them.
-    for (var i = 0, file; file = dirData.list[i]; i++) {
-      if (file.name == 'instructions.html') {
-        instructionsFile = templateName + '/' + file.name;
-        storage.loadFile(templateOwner, instructionsFile, true, processInstructions);
-      } else if (file.name == 'wrapper' || file.name == 'wrapper.html') {
-        wrapperFile = templateName + '/' + file.name;
-        storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
-      } else if (file.name == 'activity.json') {
-        activityFile = templateName + '/' + file.name;
-        storage.loadFile(templateOwner, activityFile, true, processActivity);
-      }
-    }
-  };
-
-  var templateData = {
-    activityURL: activityURL,
-
-    // wrapper is the file (object) that will wrap the student's code, contains
-    // the strings {{start-default-text}} and {{end-default-text}} to mark where
-    // the student's code should be inserted.
-    wrapper: null,
-
-    // HTML to be displayed above editor
-    instructions: '',
-
-    // From optional json file.
-    metadata: null
-  };
-
-  var processInstructions = function(fileData) {
-    templateData.instructions = fileData.data;
-    finish();
-  };
-
-  var processWrapper = function(fileData) {
-    templateData.wrapper = fileData;
-    templateData.wrapperParts = view.parseTemplateWrapper(fileData.data);
-    finish();
-  };
-
-  var processActivity = function(fileData) {
-    templateData.metadata = JSON.parse(fileData.data);
-    finish();
-  };
-
-  var finish = function() {
-    if ((!instructionsFile || templateData.instructions) &&
-        (!wrapperFile || templateData.wrapper) &&
-        (!activityFile || templateData.metadata)) {
-      callback(templateData);
-    }
-  }
-
-  storage.loadFile(templateOwner, templateName, true, processTemplateDir);
-}
-
-// Given a template object, returns a piece of HTML that the IDE
-// will place in a div above the code editor.
-function instructionTextForTemplate(template) {
-  if (template) {
-    if (template.instructions)
-      return template.instructions;
-    else
-      return null;
-  } else {
-    return null;
-  }
-}
-
-// Check for activity files in current (left) directory, asynchronously.
-// Set activityDir for model
-function checkIfActivityDir() {
-  var hasInstruction = false;
-  var hasWrapper = false;
-  var hasMetadata = false;
-  var defaultPath = '';
-  var m = modelatpos('left');
-  var fn = m.filename;
-
-  if (m.isdir) {
-    defaultPath = fn;
-  } else {
-    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
-  }
-  function detectActivityDir(data) {
-    if (data.length) {
-       for (var j = 0; j < data.length; ++j) {
-        if (data[j].name === 'wrapper.html') {
-          hasWrapper = true;
-        } else if (data[j].name === 'wrapper') {
-          hasWrapper = true;
-        } else if (data[j].name === 'activity.json') {
-          hasMetadata = true;
-        }
-      }
-    }
-    if (hasWrapper || hasMetadata) {
-      var currModel = modelatpos('left');
-      if (currModel === m && m.filename === fn) {
-        m.activityDir = true;
-      }
-    }
-  }
-  storage.loadDirList(model.ownername, defaultPath, detectActivityDir);
-}
-
-// Construct an activity URL from the current run file path.
-function getStartActivityURL() {
-  var defaultPath = '';
-  var m = modelatpos('left');
-  var fn = m.filename;
-  var aUrl = '';
-  var activityDir = '';
-
-  if (m.isdir) {
-    defaultPath = fn;
-  } else {
-    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
-  }
-  if (m.activityDir) {
-    // Omit the protocol from the activityDir so that it defaults to
-    // that used by the page.
-    activityDir = "//" + document.domain + '/home/' + defaultPath;
-    aUrl = ("http://start." + window.pencilcode.domain +
-      '/edit/' + defaultPath + '?' + 'activity=' + activityDir);
-  }
-  return aUrl;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // CROSS-FRAME-MESSAGE SUPPORT

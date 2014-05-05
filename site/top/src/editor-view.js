@@ -987,55 +987,11 @@ function parseTemplateWrapper(wrapperText) {
   return result;
 }
 
-// Given a template object and some edited code, expands the
-// template for the running version of the code. Note that when
-// first opening a file in the editor, code is "" (empty string),
-// rather than the file's content. Wrapper authors made need to handle
-// that case, or we made need to do something different (e.g. just
-// use the default wrapper only in this case, as it displays the grid
-// and default turtle).
-function expandRunTemplate(template, code) {
-  // Remove "#!pencil... at start of file, replace with a \n so we don't change line numbers.
-  var cleanedCode = code.replace(/^#!pencil[^\n\r]*($|[\n\r])/, '\n'),
-      tmpl = template.wrapper.data,
-      wrapper = parseTemplateWrapper(tmpl);
-  if (!wrapper) {
-    return code;
-  }
-  if (wrapper.vars) {
-    var prefix;
-    if (wrapper.vars.linePrefix) {
-      prefix = wrapper.vars.linePrefix;
-    } else if (wrapper.vars.indentBy) {
-      var indentBy = +wrapper.vars.indentBy;
-      if (indentBy > 0) {
-        prefix = "                               ".substr(0, indentBy);
-      }
-    }
-    if (prefix != undefined) {
-      var lines = cleanedCode.split('\n');
-      cleanedCode = prefix + lines.join('\n' + prefix) + '\n';
-    }
-  }
-  var result = wrapper.before + cleanedCode + wrapper.after;
-  console.log("Added user's code to custom wrapper");
-  // TODO Consider adding support for multiple levels of wrapping (i.e. where
-  // metadata in first wrapper specifies path to next wrapper). For the moment,
-  // if the wrapper's file name has no extension, we assume that the wrapper is
-  // coffee script, to be wrapped in the standard code which adds turtlebits
-  // and creates the default turtle.
-  var mimeType = mimeForFilename(template.wrapper.file);
-  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    result = wrapTurtle(result);
-  }
-  return result;
-}
-
 function modifyForPreview(text, template, filename, targetUrl) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    if (template && template.wrapper) {
-      text = expandRunTemplate(template, text);
+    if (template) {
+      text = template.templateExecutable(text);
     } else {
       console.log("Wrapping user's code in default wrapper");
       text = wrapTurtle(text);
@@ -1496,21 +1452,25 @@ function getTextRowsAndColumns(text) {
 // @param text the initial text to edit.
 // @param filename the filename to use.
 // @param instructionHTML instructions to show near the editor.
-function setPaneEditorText(pane, text, filename, instructionHTML) {
+function setPaneEditorText(pane, text, filename, template) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
   var paneState = state.pane[pane];
   paneState.filename = filename;
+  // TODO(stemplate) - allow template to override mime
   paneState.mimeType = mimeForFilename(filename);
+  // TODO(stemplate) - allow template to override short desc
   paneState.cleanText = text;
   paneState.dirtied = false;
   var paneHTML = '<div id="' + id + '" class="editor"></div>';
-  // if the instructionHTML is provided, then create another
-  // div inside this pane for the instructions.
-  if (instructionHTML) {
+  var instructions = null;
+  if (template) {
+    instructions = template.templateValue('instructions');
+  }
+  if (instructions) {
     paneHTML =
-       '<div class="instructions">' + instructionHTML + '</div>' +
+       '<div class="instructions">' + instructions + '</div>' +
        paneHTML;
   }
   $('#' + pane).html(paneHTML);
@@ -1657,7 +1617,7 @@ function setPaneEditorReadOnly(pane, ro) {
   var paneState = state.pane[pane];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
-  $(paneState.editor.container).find('.ace_content').css({
+  $(paneState.editor.template).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
   // Only if the editor is read only do we want to blur it.

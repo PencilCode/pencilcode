@@ -323,6 +323,10 @@ window.pencilcode.storage = {
   deleteAllBackup: function() {
     deleteBackupPrefix('');
   },
+  loadTemplateUrl: function(url, callback) {
+    // In the future, special template URL forms can be defined here.
+    $.get(url).done(callback).fail(function() { callback(null); });
+  },
   // TODO: cache-refreshing crawl.
   recrawlCache: function() {
     // Load dirtree URL

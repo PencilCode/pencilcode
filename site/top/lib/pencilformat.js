@@ -427,6 +427,21 @@ function assembleData(isTemplate, baseTemplateUrl, code) {
   return hbline + '\n' + code;
 }
 
+PencilCode.resolveTemplate = function(templateUrl, urlResolver, callback) {
+  if (registeredBaseTemplate.hasOwnProperty(templateUrl)) {
+    callback(registeredBaseTemplate[templateUrl]);
+    return;
+  }
+  urlResolver(templateUrl, function(data) {
+    var result = null;
+    if (data != null) {
+      result = new PencilCode(data);
+    }
+    callback(result);
+    return;
+  });
+}
+
 // Registered a built-in base template name (e.g., 'turtle', 'html')
 // that will not need to be resolved via the URL resolver.
 PencilCode.registerBaseTemplate =
@@ -496,20 +511,17 @@ function resolveBase(urlResolver, callback) {
     callback();
     return;
   }
-  if (registeredBaseTemplate.hasOwnProperty(
-       this.baseTemplateUrl())) {
-    this._baseTemplate = registeredBaseTemplate[this.baseTemplateUrl()];
-    callback();
-    return;
-  }
-  urlResolver(this.baseTemplateUrl(), function(data) {
-    if (!this._baseTemplate) {
-      if (!data) {
-        this.addError('Could not load base template ' +
-            this.baseTemplateUrl() + '.');
-      } else {
-        this._baseTemplate = new PencilCode(data);
-      }
+  PencilCode.resolveTemplate(this.baseTemplateUrl(), urlResolver,
+  function(template) {
+    if (this_.baseTemplate) {
+      callback();
+      return;
+    }
+    if (!template) {
+      this.addError('Could not load base template ' +
+          this.baseTemplateUrl() + '.');
+    } else {
+      this._baseTemplate = template
     }
     callback();
     return;
@@ -524,10 +536,9 @@ PencilCode.prototype.baseTemplate = function() {
 
 PencilCode.prototype.expansion = function() {
   if (!this._baseTemplate) {
-    throw new Error(
-      'Unresolved base template ' + this.baseTemplateUrl() + '.');
+    return 'Unresolved base template ' + this.baseTemplateUrl() + '.';
   }
-  return this._baseTemplate.templateExpansion(this);
+  return this._baseTemplate.templateExpansion(this.code());
 }
 
 PencilCode.prototype.executable = function() {
@@ -536,15 +547,14 @@ PencilCode.prototype.executable = function() {
   }
   if (!this._baseTemplate) {
     return errorExecutable([
-    'Unresolved base template ' + this.baseTemplateUrl() + '.']);
+      'Unresolved base template ' + this.baseTemplateUrl() + '.']);
   }
-  return this._baseTemplate.templateExpansion(this);
+  return this._baseTemplate.templateExecutable(this.code());
 }
 
 PencilCode.prototype.getValue = function(name) {
   if (!this._baseTemplate) {
-    throw new Error(
-      'Unresolved base template ' + this.baseTemplateUrl() + '.');
+    return null;
   }
   return this._baseTemplate.templateValue(name);
 }
@@ -586,7 +596,7 @@ PencilCode.prototype.templateSectionValue = function(name, attr) {
 // Expands the code of a PencilCode instance with this template.
 // Expands the code once only, which means that it may not be
 // expanded to executable HTML.
-PencilCode.prototype.templateExpansion = function(instance) {
+PencilCode.prototype.templateExpansion = function(code) {
   if (!this._template) {
     throw new Error('A non-template cannot do an expansion.');
   }
@@ -601,16 +611,16 @@ PencilCode.prototype.templateExpansion = function(instance) {
   if (indent == null) {
     indent = detectIndent(this.templateValue('code'));
   }
-  return substituteSegments(this._template, { code: instance.code() });
+  return substituteSegments(this._template, { code: code });
 }
 
 // Expands the code of a PencilCode instance to create executable HTML.
 // Can expand built-in templates further.
-PencilCode.prototype.templateExecutable = function(instance) {
+PencilCode.prototype.templateExecutable = function(code) {
   if (this.errorMessages) {
     return errorExecutable(this.errorMessages);
   }
-  var expanded = this.templateExpansion(instance);
+  var expanded = this.templateExpansion(code);
   if (this.baseTemplateUrl() == 'html') {
     // Avoid infinite recursion.
     return expanded;
