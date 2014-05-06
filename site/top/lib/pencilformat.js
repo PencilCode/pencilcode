@@ -377,8 +377,8 @@ function PencilCode(data) {
 // An internal method to reparse the code (if it is a template file).
 PencilCode.prototype._reparseTemplate = function _reparseTemplate() {
   var errors = [];
-  if (!registeredBaseTemplate.hasOwnProperty(
-        this.baseTemplateUrl())) {
+  if (this.baseTemplateUrl() != 'html' &&
+      !registeredBaseTemplate.hasOwnProperty(this.baseTemplateUrl())) {
     errors.push('Unsupported base pencil type ' +
         this.baseTemplateUrl() + '.');
   }
@@ -445,11 +445,13 @@ PencilCode.resolveTemplate = function(templateUrl, urlResolver, callback) {
 // Registered a built-in base template name (e.g., 'turtle', 'html')
 // that will not need to be resolved via the URL resolver.
 PencilCode.registerBaseTemplate =
-function registerTemplate(name, theTemplate) {
+function registerBaseTemplate(name, theTemplate) {
   if (!theTemplate.isTemplate()) {
     throw new Error('Base template is not a template.');
   }
   registeredBaseTemplate[name] = theTemplate;
+  theTemplate.resolveBase(null, function(){});
+  console.log('resolved base for',  theTemplate);
 }
 
 // Returns the original data text for the code, including hashbang.
@@ -507,21 +509,22 @@ PencilCode.prototype.addError = function(msg) {
 //     or not).
 PencilCode.prototype.resolveBase =
 function resolveBase(urlResolver, callback) {
+  var outer = this;
   if (this._baseTemplate) {
     callback();
     return;
   }
   PencilCode.resolveTemplate(this.baseTemplateUrl(), urlResolver,
   function(template) {
-    if (this_.baseTemplate) {
+    if (outer._baseTemplate) {
       callback();
       return;
     }
     if (!template) {
-      this.addError('Could not load base template ' +
-          this.baseTemplateUrl() + '.');
+      outer.addError('Could not load base template ' +
+          outer.baseTemplateUrl() + '.');
     } else {
-      this._baseTemplate = template
+      outer._baseTemplate = template
     }
     callback();
     return;
@@ -598,6 +601,7 @@ PencilCode.prototype.templateSectionValue = function(name, attr) {
 // expanded to executable HTML.
 PencilCode.prototype.templateExpansion = function(code) {
   if (!this._template) {
+    console.log(this);
     throw new Error('A non-template cannot do an expansion.');
   }
   var indent = this.templateSectionValue('code', 'indent');
@@ -611,7 +615,9 @@ PencilCode.prototype.templateExpansion = function(code) {
   if (indent == null) {
     indent = detectIndent(this.templateValue('code'));
   }
-  return substituteSegments(this._template, { code: code });
+  return substituteSegments(this._template, {
+    code: applyIndent(indent, code)
+  });
 }
 
 // Expands the code of a PencilCode instance to create executable HTML.
@@ -630,7 +636,7 @@ PencilCode.prototype.templateExecutable = function(code) {
     throw new Error('Unsupported base template ' +
        this.baseTemplateUrl() + '.');
   }
-  return baseTemplate.executable(expanded);
+  return baseTemplate.templateExecutable(expanded);
 }
 
 // Register the built-in template for #!pencil html
@@ -665,6 +671,8 @@ PencilCode.registerBaseTemplate('turtle', new PencilCode(
 var impl = {
   PencilCode: PencilCode
 };
+
+console.log(registeredBaseTemplate);
 
 //
 // Nodejs and AMD support: export the implementation as a module using

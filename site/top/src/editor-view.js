@@ -992,6 +992,7 @@ function modifyForPreview(text, template, filename, targetUrl) {
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     if (template) {
       text = template.templateExecutable(text);
+      console.log('used executable on ', template, ' and got', text);
     } else {
       console.log("Wrapping user's code in default wrapper");
       text = wrapTurtle(text);
@@ -1038,6 +1039,7 @@ function setPaneRunText(pane, text, template, filename, targetUrl) {
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
   }
+  console.log('running', text);
   var session = Math.random();
   preview.data('session', session);
   $('#' + pane).queue(function() {
