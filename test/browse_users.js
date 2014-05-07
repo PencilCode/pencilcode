@@ -50,7 +50,7 @@ describe('browse users in edit mode', function() {
       port: 8193,
       path: '/save/touch?data=x'
     }, function(resp) {
-      console.log(resp.statusCode);
+      assert.equal(resp.statusCode, 200);
       done();
     }).on('error', function(e) {
       console.log('error', e);
