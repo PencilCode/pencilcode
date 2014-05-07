@@ -414,7 +414,9 @@ PencilCode.prototype._reparseTemplate = function _reparseTemplate() {
 //   newCode));
 PencilCode.assembleData =
 function assembleData(isTemplate, baseTemplateUrl, code) {
+  console.log('called assembleData');
   if (!isTemplate && !baseTemplateUrl) {
+    console.log('assembling', code);
     return code;
   }
   var hbline = '#!pencil';
@@ -455,11 +457,11 @@ function registerBaseTemplate(name, theTemplate) {
 }
 
 // Returns the original data text for the code, including hashbang.
-PencilCode.prototype.data = function() {
+PencilCode.prototype.data = function(code) {
   return PencilCode.assembleData(
     this._hashbang.isTemplate,
     this._hashbang.baseTemplateUrl,
-    this._hashbang.code);
+    code == null ? this._hashbang.code : code);
 }
 
 // Returns the code to be displayed in the editor, without hashbang.
@@ -669,7 +671,8 @@ PencilCode.registerBaseTemplate('turtle', new PencilCode(
 ));
 
 var impl = {
-  PencilCode: PencilCode
+  PencilCode: PencilCode,
+  turtleTemplate: registeredBaseTemplate.turtle
 };
 
 console.log(registeredBaseTemplate);
@@ -683,7 +686,7 @@ if (module && module.exports) {
 } else if (define && define.amd) {
   define(function() { return impl; });
 } else {
-  global.PencilCode = PencilCode;
+  global.pencilformat = impl;
 }
 
 // End anonymous scope, and pass in context.

@@ -18,6 +18,7 @@ require.config({
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
+    'codeutil': 'src/codeutil',
     'draw-protractor': 'src/draw-protractor',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
@@ -45,6 +46,7 @@ require([
   'editor-view',
   'editor-storage',
   'editor-debug',
+  'codeutil',
   'pencilformat',
   'seedrandom',
   'see',
@@ -54,6 +56,7 @@ function(
   view,
   storage,
   debug,
+  codeutil,
   pencilformat,
   seedrandom,
   see,
@@ -71,7 +74,7 @@ function clearPaneModel(m) {
   m.filename = null;      // dir/subdir/name (no leading or trailing slash).
   m.isdir = false;        // true if directory
   m.data = null;          // the raw data object loaded from storage, e.g.:
-                          // { mime: 'text/x-turtlebits',
+                          // { mime: 'text/x-pencilcode',
                           //   data: loadedtext,
                           //   auth: true,
                           //   file: '/username/dir/subdir/name',
@@ -158,6 +161,7 @@ saveableOwner.unsaveableOwners = {
 
 
 function updateTopControls(addHistory) {
+  console.log('update top controls');
   var m = modelatpos('left');
   // Update visible URL and main title name.
   view.setNameText(m.filename);
@@ -183,6 +187,7 @@ function updateTopControls(addHistory) {
       //
       // If so, then insert save button
       //
+      console.log(model.username, saveableOwner(), view.isPaneEditorDirty(paneatpos('left')));
       buttons.push(
         {id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
          disabled: model.username && saveableOwner() &&
@@ -347,8 +352,11 @@ view.on('run', function() {
     cancelAndClearPosition('back');
     rotateModelLeft(true);
   }
-  var runtext = mimetext && mimetext.text;
-  var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  var edittext = mimetext && mimetext.text;
+  var savetext = codeutil.assembleSaveText(
+      edittext, modelatpos('left').pencil);
+
+  var newdata = $.extend({}, modelatpos('left').data, {data: savetext});
   view.clearPaneEditorMarks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
@@ -358,7 +366,7 @@ view.on('run', function() {
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
   runCodeAtPosition(
-      'right', runtext,
+      'right', edittext,
       modelatpos('left').filename, modelatpos('left').template);
   if (!specialowner()) {
     cookie('recent', window.location.href,
@@ -479,20 +487,26 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     return;
   }
   var mimetext = view.getPaneEditorText(paneatpos('left'));
-  var runtext = mimetext && mimetext.text;
+  var edittext = mimetext && mimetext.text;
   var filename = modelatpos('left').filename;
-  if (!runtext && runtext !== '') {
+  if (!edittext && edittext !== '') {
     // TODO: error message or something - or is this a deletion?
     return;
   }
-  // TODO: pick the right mime type here.
+  var savetext = codeutil.assembleSaveText(
+      edittext, modelatpos('left').template);
+  var mime = mimetext && mimetext.mime;
+  if (modelatpos('left').template) {
+    mime = 'text/x-pencilcode';
+  }
+  console.log('saving', edittext, savetext);
   var newdata = $.extend({},
-      modelatpos('left').data, { data: runtext, mime: mimetext.mime });
+      modelatpos('left').data, { data: savetext, mime: mime });
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
     view.notePaneEditorCleanText(
-        paneatpos('left'), newdata.data);
+        paneatpos('left'), edittext);
     if (modelatpos('left').filename == filename) {
       var oldmtime = modelatpos('left').data.mtime || 0;
       if (mtime) {
@@ -1215,15 +1229,18 @@ function runCodeAtPosition(position, code, filename, template) {
   }
   m.running = true;
   m.filename = filename;
-  var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
-          window.pencilcode.domain + '/home/' + filename;
   var pane = paneatpos(position);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, code, template, filename, baseUrl);
+      var baseUrl = 'http://' +
+          (model.ownername ? model.ownername + '.' : '') +
+          window.pencilcode.domain + '/home/' + filename;
+      var runtext = codeutil.assembleRunText(
+          code, filename, template, baseUrl);
+      view.setPaneRunText(pane, runtext, filename);
     }
   }, 1);
   if (code) {
@@ -1269,7 +1286,9 @@ function createNewFileIntoPosition(position, filename, text) {
     mtime: 0
   };
   mpp.activityDir = false;
-  view.setPaneEditorText(pane, text, filename, null);
+  console.log(mpp);
+  // No special mimetype, description, or instructions.
+  view.setPaneEditorText(pane, text, filename);
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
 }
@@ -1345,19 +1364,35 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     }
   }
   function secondStepOpenTemplate() {
-    mpploading.pencil = new pencilformat.PencilCode(mpploading.data.data);
-    var templateUrl = mpploading.pencil.baseTemplateUrl();
-    pencilformat.PencilCode.resolveTemplate(
-        templateUrl, storage.loadTemplateUrl, function(template) {
-      mpploading.template = template;
+    console.log('mime', mpploading.data.mime);
+    if (/^text\/x-(?:pencilcode|turtlebits)/.test(mpploading.data.mime)) {
+      mpploading.pencil = new pencilformat.PencilCode(mpploading.data.data);
+      var templateUrl = mpploading.pencil.baseTemplateUrl();
+      pencilformat.PencilCode.resolveTemplate(
+          templateUrl, storage.loadTemplateUrl, function(template) {
+        mpploading.template = template;
+        thirdStepShowEditor();
+      });
+    } else {
       thirdStepShowEditor();
-    });
+    }
   }
   function thirdStepShowEditor() {
     if (!checkConsistency()) { return; }
     $.extend(mpp, mpploading);
-    console.log('mpp.data', mpp.data, 'mpploading.data', mpploading.data)
-    view.setPaneEditorText(pane, mpp.pencil.code(), filename, mpp.template);
+    var mimeType = codeutil.mimeForTemplate(filename, mpp.template),
+        description = null, instructions = null, code = null;
+    if (mpp.template) {
+      description = mpp.template.getValue('description');
+      instructions = mpp.template.getValue('instructions');
+    }
+    if (mpp.pencil) {
+      code = mpp.pencil.code();
+    } else {
+      code = mpp.data.data;
+    }
+    view.setPaneEditorText(pane,
+        code, filename, mimeType, description, instructions);
     noteIfUnsaved(posofpane(pane));
     updateTopControls(false);
     cb && cb();

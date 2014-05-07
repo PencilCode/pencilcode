@@ -2,8 +2,21 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard'],
-function($, tooltipster, see, drawProtractor, ZeroClipboard) {
+define([
+  'jquery',
+  'codeutil',
+  'draw-protractor',
+  'see',
+  'tooltipster',
+  'ZeroClipboard'],
+function(
+  $,
+  codeutil,
+  drawProtractor,
+  see,
+  tooltipster,
+  ZeroClipboard
+) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -167,17 +180,23 @@ function panepos(id) {
   return $('#' + id).attr('class').replace(/\s|pane/g, '');
 }
 
+function resetPaneState(paneState) {
+  paneState.editor = null;       // The ace editor instance.
+  paneState.cleanText = null;    // The last-saved copy of the text.
+  paneState.cleanLineCount = 0;  // The last-run number of lines of text.
+  paneState.marked = {};         // For highlighted lines (markPaneEditorLine)
+  paneState.filename = null;     // The name of the file edited or run.
+  paneState.mimeType = null;     // The current mime type.
+  paneState.dirtied = false;     // Set if known to be dirty.
+  paneState.description = null;  // Description of the filetype.
+  paneState.links = null;        // Directory listing links.
+  paneState.running = false;     // True if this is a run pane.
+}
+
 function initialPaneState() {
-  return {
-    editor: null,       // The ace editor instance.
-    cleanText: null,    // The last-saved copy of the text.
-    cleanLineCount: 0,  // The last-run number of lines of text.
-    marked: {},         // Tracks highlighted lines (see markPaneEditorLine)
-    mimeType: null,     // The current mime type.
-    dirtied: false,     // Set if known to be dirty.
-    links: null,        // Unused in this mode.
-    running: false      // Unused in this mode.
-  };
+  var result = {};
+  resetPaneState(result);
+  return result;
 }
 
 function setOnCallback(tag, cb) {
@@ -482,7 +501,7 @@ function fixParentLink(elt) {
   if (filename.indexOf('/') >= 0) {
     filename = filename.replace(/\/[^\/]+\/?$/, '');
   } else {
-     filename = '';
+    filename = '';
   }
   if (!filename) {
     filename = 'http://' + window.pencilcode.domain + '/edit/';
@@ -982,8 +1001,6 @@ function parseTemplateWrapper(wrapperText) {
     });
     result.vars = vars;
   }
-  // TODO(jamessynge): Remove linePrefix or indentBy*' ' from beginning of each line
-  // of the defaultText.
   return result;
 }
 
@@ -1027,19 +1044,17 @@ function modifyForPreview(text, template, filename, targetUrl) {
   return text;
 }
 
-function setPaneRunText(pane, text, template, filename, targetUrl) {
+function setPaneRunText(pane, runtext, filename) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
   updatePaneTitle(pane);
-  // Assemble text and insert <base>, <plaintext>, etc., as appropriate.
-  var code = modifyForPreview(text, template, filename, targetUrl);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
   }
-  console.log('running', text);
+  console.log('running', runtext);
   var session = Math.random();
   preview.data('session', session);
   $('#' + pane).queue(function() {
@@ -1062,7 +1077,7 @@ function setPaneRunText(pane, text, template, filename, targetUrl) {
           window.console.warn('https://bugzilla.mozilla.org/777526', e)
         }
       }
-      framedoc.write(code);
+      framedoc.write(runtext);
       framedoc.close();
       // Bind the key handlers to the iframe once it's loaded.
       $(iframe).load(function() {
@@ -1300,15 +1315,7 @@ function clearPane(pane, loading) {
   if (paneState.editor) {
     paneState.editor.destroy();
   }
-  paneState.editor = null;
-  paneState.filename = null;
-  paneState.cleanText = null;
-  paneState.cleanLineCount = 0;
-  paneState.marked = {};
-  paneState.mimeType = null;
-  paneState.dirtied = false;
-  paneState.links = null;
-  paneState.running = false;
+  resetPaneState(paneState);
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
   $('#' + pane + 'title').html('');
@@ -1338,17 +1345,25 @@ function uniqueId(name) {
   return name + '_' + ('' + Math.random()).substr(2);
 }
 
+function descriptionForMimeType(mimeType) {
+  if (/^text\/plain/.test(mimeType)) {
+    return 'text';
+  } else if (/^text\/xml/.test(mimeType) ||
+      /^application\/json/.test(mimeType)) {
+    return 'data';
+  } else {
+    return 'code';
+  }
+}
+
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var prefix = '', suffix = '';
   if (paneState.editor) {
-    if (/^text\/plain/.test(paneState.mimeType)) {
-      suffix = ' text';
-    } else if (/^text\/xml/.test(paneState.mimeType) ||
-        /^application\/json/.test(paneState.mimeType)) {
-      suffix = ' data';
+    if (paneState.description) {
+      suffix = ' ' + paneState.description;
     } else {
-      suffix = ' code';
+      suffix = ' ' + descriptionForMimeType(paneState.mimeType);
     }
   } else if (paneState.links) {
     suffix = ' directory';
@@ -1357,6 +1372,7 @@ function updatePaneTitle(pane) {
     suffix = ' preview</a>';
   }
   var shortened = paneState.filename || '';
+  console.log(paneState);
   shortened = shortened.replace(/^.*\//, '');
   $('#' + pane + 'title').html(prefix + shortened + suffix);
 }
@@ -1453,23 +1469,19 @@ function getTextRowsAndColumns(text) {
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-// @param instructionHTML instructions to show near the editor.
-function setPaneEditorText(pane, text, filename, template) {
+function setPaneEditorText(
+    pane, text, filename, mimeType, description, instructions) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
   var paneState = state.pane[pane];
   paneState.filename = filename;
-  // TODO(stemplate) - allow template to override mime
-  paneState.mimeType = mimeForFilename(filename);
-  // TODO(stemplate) - allow template to override short desc
+  paneState.mimeType = mimeType || mimeForFilename(filename);
+  paneState.description = description || descriptionForMimeType(mimeType);
   paneState.cleanText = text;
   paneState.dirtied = false;
   var paneHTML = '<div id="' + id + '" class="editor"></div>';
   var instructions = null;
-  if (template) {
-    instructions = template.templateValue('instructions');
-  }
   if (instructions) {
     paneHTML =
        '<div class="instructions">' + instructions + '</div>' +
@@ -1637,8 +1649,10 @@ function isPaneEditorDirty(pane) {
   var text = paneState.editor.getSession().getValue();
   if (text != paneState.cleanText) {
     paneState.dirtied = true;
+    console.log('pane editor is dirty');
     return true;
   }
+  console.log('pane editor is NOT dirty');
   return false;
 }
 
