@@ -11,7 +11,8 @@ require.config({
     'filetype': 'src/filetype',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
-    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
+    'ice': 'src/ice/dist/ice'
   },
   shim: {
     'tooltipster': {
