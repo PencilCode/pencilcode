@@ -9,6 +9,9 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    run_grunt: {
+      src: ['src/ice/Gruntfile.coffee']
+    },
     bowercopy: {
       options: {
         clean: true
@@ -201,6 +204,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-run-grunt');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -237,13 +241,17 @@ module.exports = function(grunt) {
     grunt.task.run('mochaTest');
   });
 
+  grunt.task.registerTask('ice', ['run_grunt'])
+
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
+  // "build", for development, builds code without running tests.
+  grunt.registerTask('build', ['ice', 'requirejs', 'replace']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
-  grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
+  grunt.registerTask('default', ['ice', 'requirejs', 'replace', 'uglify', 'test']);
 };
 

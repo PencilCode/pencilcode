@@ -429,6 +429,22 @@ view.on('leavegutter', function(pane, lineno) {
   view.hideProtractor(view.paneid('right'));
 });
 
+view.on('icehover', function(pane, ev) {
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.hideProtractor(view.paneid('right'));
+
+  if (ev.line == null) return;
+
+  var lineno = ev.line + 1;
+
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  
+  displayProtractorForRecord(lineRecord[lineno]);
+});
+
 function convertCoords(origin, astransform) {
   if (!origin) { console.log('reason 1'); return null; }
   if (!astransform || !astransform.transform) { return null; }

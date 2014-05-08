@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard'],
-function($, tooltipster, see, drawProtractor, ZeroClipboard) {
+define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard', 'ice'],
+function($, tooltipster, see, drawProtractor, ZeroClipboard, ice) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -55,6 +55,12 @@ var state = {
   },
 }
 
+var iceMarkClassColors = {
+  'debugerror': '#F00',
+  'debugfocus': '#FFF',
+  'debugtrace': '#FF0'
+}
+
 //
 // Zeroclipboard seems very flakey.  The documentation says
 // that this configuration should not be necessary but it seems to be
@@ -81,7 +87,7 @@ window.pencilcode.view = {
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
-  setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
+  setPaneTitle: function(pane, html) { $('#' + pane + 'title_text').html(html); },
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
@@ -1253,7 +1259,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
-  $('#' + pane + 'title').html('');
+  $('#' + pane + 'title_text').html(''); $('#' + pane + 'title-extra').html('');
 }
 
 function modeForMimeType(mimeType) {
@@ -1292,6 +1298,19 @@ function updatePaneTitle(pane) {
     } else {
       suffix = ' code';
     }
+
+    $('#' + pane + 'title-extra').html('');
+    $('#' + pane + 'title-extra').append($('<span>').addClass('ice-toggle-button').text('use blocks').click(function() {
+      var togglingSucceeded = paneState.iceEditor.toggleBlocks();
+      if (togglingSucceeded) {
+        if (paneState.iceEditor.currentlyUsingBlocks) {
+          $(this).text('use code');
+        }
+        else {
+          $(this).text('use blocks');
+        }
+      }
+    }));
   } else if (paneState.links) {
     suffix = ' directory';
   } else if (paneState.running) {
@@ -1300,7 +1319,12 @@ function updatePaneTitle(pane) {
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
-  $('#' + pane + 'title').html(prefix + shortened + suffix);
+  $('#' + pane + 'title_text').html(prefix + shortened + suffix);
+}
+
+function updatePaneExtra(pane) {
+  var paneState = state.pane[pane];
+  
 }
 
 function normalizeCarriageReturns(text) {
@@ -1390,6 +1414,191 @@ function getTextRowsAndColumns(text) {
   };
 }
 
+// The following palette description
+// is copied from compiled CoffeeScript.
+var ICE_EDITOR_PALETTE =[
+  {
+    name: 'Common',
+    blocks: (function() {
+      var _i, _len, _ref, _results;
+      _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'for i in [1..10]\n  fd 10', 'if touches \'red\'\n  fd 10', 'fun = (arg) ->\n  return arg'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteElement = _ref[_i];
+        _results.push(ice.parse(paletteElement).start.next.block);
+      }
+      return _results;
+    })()
+  }, {
+    name: 'Turtle',
+    blocks: (function() {
+      var _i, _len, _ref, _results;
+      _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'pen red', 'dot green, 20', 'slide 10', 'jumpto 0, 0', 'turnto 0', 'rt 90, 100', 'lt 90, 100'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteElement = _ref[_i];
+        _results.push(ice.parse(paletteElement).start.next.block);
+      }
+      return _results;
+    })()
+  }, {
+    name: 'Control',
+    blocks: (function() {
+      var _i, _len, _ref, _results;
+      _ref = ['if touches \'red\'\n  fd 10', 'if touches \'red\'\n  fd 10\nelse\n  bk 10', 'for element, i in list\n  see element', 'for key, value of obj\n  see key, value', 'while touches \'red\'\n  fd 10'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteElement = _ref[_i];
+        _results.push(ice.parse(paletteElement).start.next.block);
+      }
+      return _results;
+    })()
+  }, {
+    name: 'Functions',
+    blocks: [
+      ice.parseObj({
+        type: 'block',
+        valueByDefault: true,
+        color: '#26cf3c',
+        children: [
+          '(', {
+            type: 'socket',
+            precedence: 0,
+            contents: 'arg'
+          }, {
+            type: 'mutationButton',
+            expand: [
+              ', ', {
+                type: 'socket',
+                precedence: 0,
+                contents: 'arg'
+              }, 0
+            ]
+          }, ') ->', {
+            type: 'indent',
+            depth: 2,
+            children: [
+              '\n', {
+                type: 'block',
+                valueByDefault: false,
+                color: '#dc322f',
+                children: [
+                  'return ', {
+                    type: 'socket',
+                    precedence: 0,
+                    contents: 'arg'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }), ice.parse('return arg').start.next.block, ice.parseObj({
+        type: 'block',
+        valueByDefault: false,
+        color: '#268bd2',
+        precedence: 32,
+        children: [
+          {
+            type: 'socket',
+            precedence: 0,
+            contents: 'fn'
+          }, '(', {
+            type: 'socket',
+            precedence: 0,
+            contents: 'arg'
+          }, {
+            type: 'mutationButton',
+            expand: [
+              ', ', {
+                type: 'socket',
+                precedence: 0,
+                contents: 'arg'
+              }, 0
+            ]
+          }, ')'
+        ]
+      })
+    ]
+  }, {
+    name: 'Containers',
+    blocks: [
+      ice.parseObj({
+        type: 'block',
+        valueByDefault: true,
+        color: '#26cf3c',
+        precedence: 32,
+        children: [
+          '[', {
+            type: 'socket',
+            precedence: 0,
+            contents: 'el'
+          }, {
+            type: 'mutationButton',
+            expand: [
+              ', ', {
+                type: 'socket',
+                precedence: 0,
+                contents: 'el'
+              }, 0
+            ]
+          }, ']'
+        ]
+      }), ice.parse("array.push 'hello'").start.next.block, ice.parse("array.sort()").start.next.block, ice.parse('{}').start.next.block, ice.parseObj({
+        type: 'block',
+        valueByDefault: true,
+        precedence: 32,
+        color: '#26cf3c',
+        children: [
+          '{   ', {
+            type: 'indent',
+            depth: 2,
+            children: ['\n']
+          }, '}'
+        ]
+      }), ice.parseObj({
+        type: 'block',
+        color: '#268bd2',
+        children: [
+          {
+            type: 'socket',
+            precedence: 0,
+            contents: 'property'
+          }, ':', {
+            type: 'socket',
+            precedence: 0,
+            contents: 'value'
+          }
+        ]
+      }), ice.parse("obj['hello'] = 'world'").start.next.block
+    ]
+  }, {
+    name: 'Logic',
+    blocks: (function() {
+      var _i, _len, _ref, _results;
+      _ref = ['1 is 1', '1 isnt 2', 'true and false', 'false or true'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteElement = _ref[_i];
+        _results.push(ice.parse(paletteElement).start.next.block);
+      }
+      return _results;
+    })()
+  }, {
+    name: 'Math',
+    blocks: (function() {
+      var _i, _len, _ref, _results;
+      _ref = ['2 + 3', '2 - 3', '2 * 3', '2 / 3', '2 < 3', '3 > 2', 'Math.pow 2, 3', 'Math.sqrt 2', 'random 10'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteElement = _ref[_i];
+        _results.push(ice.parse(paletteElement).start.next.block);
+      }
+      return _results;
+    })()
+  }
+];
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1404,8 +1613,28 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
+
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var editor = paneState.editor = ace.edit(id);
+  var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), ICE_EDITOR_PALETTE);
+  iceEditor.setValue(text); iceEditor.setEditorState(false);
+
+  // Enable whitespace-trimming hack in iceEditor
+  iceEditor.setTrimWhitespace(true);
+
+  iceEditor.on('linehover', function(ev) {
+    fireEvent('icehover', [pane, ev]);
+  });
+
+  iceEditor.on('change', function() {
+    fireEvent('dirty', [pane]);
+    publish('update', [iceEditor.getValue()]);
+    
+    //Clear lines
+    iceEditor.clearLineMarks();
+    fireEvent('changelines', [pane]);
+  });
+  var editor = paneState.editor = iceEditor.aceEditor;
+
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
   editor.setTheme("ace/theme/chrome");
@@ -1415,6 +1644,7 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -1430,7 +1660,6 @@ function setPaneEditorText(pane, text, filename) {
     $('#' + pane + ' .editor').css({fontWeight: 600, lineHeight: '121%'});
     editor.setFontSize(24);
   }
-  editor.setValue(text);
   var um = editor.getSession().getUndoManager();
   um.reset();
   publish('update', [text]);
@@ -1541,7 +1770,7 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue(); //paneState.editor.getSession().getValue();
   if (text != paneState.cleanText) {
     paneState.dirtied = true;
     return true;
@@ -1554,7 +1783,7 @@ function getPaneEditorText(pane) {
   if (!paneState.editor) {
     return null;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue(); //paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
   return {text: text, mime: paneState.mimeType };
@@ -1607,6 +1836,15 @@ function markPaneEditorLine(pane, line, markclass) {
     idMap[zline] = true;
   } else {
     var r = paneState.editor.session.highlightLines(zline, zline, markclass);
+
+    // Mark the ICE editor line, if applicable
+    if (paneState.iceEditor.currentlyUsingBlocks) {
+      paneState.iceEditor.markLine(zline, {
+        color: (markclass in iceMarkClassColors ? iceMarkClassColors[markclass] : '#FF0'),
+        tag: markclass
+      });
+    }
+
     // Save the mark ID so that it can be cleared later.
     idMap[zline] = r.id;
   }
@@ -1635,6 +1873,7 @@ function clearPaneEditorLine(pane, line, markclass) {
   } else {
     session.removeMarker(id);
   }
+  paneState.iceEditor.unmarkLine(zline, markclass);
   delete idMap[zline];
 }
 
@@ -1665,6 +1904,7 @@ function clearPaneEditorMarks(pane, markclass) {
       }
     }
   }
+  paneState.iceEditor.clearLineMarks(markclass);
 }
 
 function notePaneEditorCleanText(pane, text) {

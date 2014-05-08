@@ -1,0 +1,6 @@
+[submodule "site/top/src/ice_editor_canvas"]
+	path = site/top/src/ice_editor_canvas
+	url = https://github.com/dabbler0/ice_editor_canvas.git
+[submodule "site/top/src/ice"]
+	path = site/top/src/ice
+	url = https://github.com/dabbler0/ice_editor_canvas.git

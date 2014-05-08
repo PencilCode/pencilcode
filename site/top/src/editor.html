@@ -22,7 +22,13 @@ document.write(
   pencilcode.domain + '/editor.css">' +
   '<link rel="stylesheet" type="text/css" href="//' +
   pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/src/ice/css/ice.css">' +
   '<script src="//' + pencilcode.domain + '/turtlebits.js"><' +
+  '/script>' + 
+  '<script src="//' + pencilcode.domain + '/src/ice/vendor/coffee-script.js"><' +
+  '/script>' +
+  '<script src="//' + pencilcode.domain + '/src/ice/vendor/keypress-2.0.1.min.js"><' +
   '/script>');
 </script>
 </head>
@@ -49,13 +55,22 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 })();
 </script></nobr></td>
 <td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
-<div id="alphatitle" class="back panetitle"></div>
+<div id="alphatitle" class="back panetitle">
+  <span id="alphatitle_text"></span>
+  <span id="alphatitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="alpha" class="back pane"></div>
-<div id="bravotitle" class="left panetitle" style="width:100%"></div>
+<div id="bravotitle" class="left panetitle" style="width:100%">
+  <span id="bravotitle_text"></span>
+  <span id="bravotitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="bravo" class="left pane" style="width:100%"
 ><div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<div id="charlietitle" class="right panetitle" style="left:100%"></div>
+<div id="charlietitle" class="right panetitle" style="left:100%">
+  <span id="charlietitle_text"></span>
+  <span id="charlietitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div><!-- end clip -->
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->

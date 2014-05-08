@@ -30,6 +30,8 @@
     "grunt-contrib-watch": "~0.5.3",
     "grunt-mocha-test": "~0.8.1",
     "node-phantom-simple": "~1.0.16",
-    "grunt-contrib-concat": "~0.3.0"
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-coffee": "latest",
+    "grunt-run-grunt": "latest"
   }
 }
