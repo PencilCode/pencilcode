@@ -10,6 +10,16 @@ rootcachename = os.path.join(config.cachedir, 'rootcache')
 def uri_without_query(uri):
   return uri.split('?', 1)[0]
 
+def uri_ext(url):
+  url = uri_without_query(url)
+  dot = url.rfind('.')
+  if dot < 0:
+    return ''
+  return url[dot + 1:]
+
+def uri_without_query(uri):
+  return uri.split('?', 1)[0]
+
 def splituri(uri):
   return [p for p in uri_without_query(uri).split('/') if p]
 
@@ -100,7 +110,7 @@ def application(env, start_response):
       'xml'  : 'text/xml'
     }.get(ext, None)
     if result is None:
-      result = 'text/x-turtlebits'
+      result = 'text/x-pencilcode'
     if result.startswith('text'):
       result += ';charset=utf-8'
     return result
@@ -189,7 +199,7 @@ def application(env, start_response):
       (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = (
           os.fstat(f.fileno()))
       f.close()
-      ext = filename.rsplit('.', 1)[-1]
+      ext = uri_ext(filename)
       mimet = mimetype(ext, absfile, data)
       start_response('200 OK', [
          ('Cache-Control', 'no-cache, must-revalidate'),
@@ -234,14 +244,29 @@ def application(env, start_response):
        ('Content-Length', '%d' % len(data))
     ])
     return data
-  
+
+  def inferScriptType(url):
+    mime = mimetype(uri_ext(url), url)
+    if mime.startswith('text/x-pencilcode'):
+      return mime.replace('x-pencilcode', 'coffeescript')
+    return mime
+
   def wrapturtle(text):
-    return (
-    '<!doctype html>\n<html>\n<head>\n' +
-    '<script src="http://%s/turtlebits.js"></script>\n' % (domain) +
-    '</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
-    text + '\n</script></body></html>')
-  
+    script_pattern = re.compile(
+      '(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|\'[^\'\n]*\')')
+    urls = re.findall(script_pattern, text)
+    # Add the default turtle script.
+    urls.append('//' + domain + '/turtlebits.js')
+    scripts = ['<script src=' + url + ' type="' + inferScriptType(url) +
+       '">\n</script>' for url in urls]
+    result = (
+      '<!doctype html>\n<html>\n<body>' +
+      ''.join(scripts) +
+      '<script type="text/coffeescript">\n' +
+      'window.see && window.see.init(eval(window.see.cs))\n\n' +
+      text + '\n</script></body></html>')
+    return result
+
   if os.path.isfile(absfile):
     split = filename.rsplit('.', 1)
     ext = None if len(split) < 2 else split[-1]
@@ -249,9 +274,9 @@ def application(env, start_response):
     mt = mimetype(ext, absfile, data)
     # for turtlebits: if there is no extension and it looks like a non-HTML
     # text file, assume it is coffeescript that should be wrapped in HTML.
-    if mt.startswith('text/x-turtlebits'):
+    if mt.startswith('text/x-pencilcode'):
       data = wrapturtle(data)
-      mt = mt.replace('x-turtlebits', 'html')
+      mt = mt.replace('x-pencilcode', 'html')
     start_response('200 OK', [
        ('Cache-Control', 'no-cache'),
        ('Content-Type', mt)

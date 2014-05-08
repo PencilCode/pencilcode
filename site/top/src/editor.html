@@ -21,12 +21,10 @@ document.write(
   '<link rel="stylesheet" type="text/css" href="//' +
   pencilcode.domain + '/editor.css">' +
   '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
-  '<script src="//' + pencilcode.domain + '/turtlebits.js"><' +
-  '/script>');
+  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">');
 </script>
 </head>
-<body id="pencilcode">
+<body id="pencildoc">
 <div id="overflow">
 <div id="overlay"></div>
 <div id="notification"><div><div></div></div></div>
@@ -43,6 +41,10 @@ pencilcode.owner,
 pencilcode.domain,
 '/folder_32.png',
 '" height="32" width="32"></a>',
+'<script src="//',
+pencilcode.domain,
+'/turtlebits.js"><',
+'/script>',
 '<span id="filename" title="Edit to move or rename">',
 htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 '</span>'].join(''));

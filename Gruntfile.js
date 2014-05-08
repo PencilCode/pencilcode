@@ -114,7 +114,8 @@ module.exports = function(grunt) {
             'site/top/iced-coffee-script.js',
             'site/top/jquery.js',
             'site/top/jquery-turtle.js',
-            'site/top/lodash.js'
+            'site/top/lodash.js',
+            'site/top/src/showturtle.js'
           ]
         },
         options: {
@@ -132,7 +133,9 @@ module.exports = function(grunt) {
           'site/top/iced-coffee-script.js',
           'site/top/jquery.js',
           'site/top/jquery-turtle.js',
-          'site/top/lodash.js'
+          'site/top/lodash.js',
+          'site/top/src/showturtle.js'
+
         ],
         dest: 'site/top/turtlebits.js'
       },

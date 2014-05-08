@@ -130,9 +130,9 @@ describe('proxy program', function() {
           "    imdata = ctx.getImageData 0, 0, c.width, c.height\n" +
           "    cb(imdata)\n" +
           "  im.src = proxy url\n" +
-          "d = null\n" +
+          "window.d = null\n" +
           "await loadImageData " +
-            "'http://davidbau.com/images/art/enigma.jpg', defer d\n"
+            "'http://davidbau.com/images/art/enigma.jpg', defer window.d\n"
       );
     }, function() {
       var ace_editor = ace.edit($('.editor').attr('id'));
@@ -170,8 +170,8 @@ describe('proxy program', function() {
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
         // And also wait for the turtle to start turning, then stop moving.
         if (!seval) return;
-        if (!seval('d')) return;
-        var d = seval('d');
+        if (!seval('window.d')) return;
+        var d = seval('window.d');
         return {
           width: d.width,
           height: d.height,

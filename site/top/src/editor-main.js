@@ -19,6 +19,7 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'draw-protractor': 'src/draw-protractor',
+    'filetype': 'src/filetype',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
@@ -44,10 +45,19 @@ require([
   'editor-view',
   'editor-storage',
   'editor-debug',
+  'filetype',
   'seedrandom',
   'see',
   'draw-protractor'],
-function($, view, storage, debug, seedrandom, see, drawProtractor) {
+function(
+  $,
+  view,
+  storage,
+  debug,
+  filetype,
+  seedrandom,
+  see,
+  drawProtractor) {
 
 eval(see.scope('controller'));
 
@@ -226,7 +236,11 @@ function updateTopControls(addHistory) {
   // Is this helpful or confusing?
   if (m.data && m.data.file) {
     if (!modelatpos('right').running) {
-      runCodeAtPosition('right', '', m.filename);
+      var mimetext = view.getPaneEditorText(paneatpos('left')),
+          code = (mimetext && mimetext.text) || m.data.data;
+      // The last flag here means: run the supporting scripts
+      // but not the main program.
+      runCodeAtPosition('right', code, m.filename, true);
     }
   }
   // Update editability.
@@ -340,7 +354,7 @@ view.on('run', function() {
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
-  runCodeAtPosition('right', runtext, modelatpos('left').filename);
+  runCodeAtPosition('right', runtext, modelatpos('left').filename, false);
   if (!specialowner()) {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -961,7 +975,7 @@ function rotateModelLeft(addHistory) {
   debug.bindframe(null);
   view.rotateLeft();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    cancelAndClearPosition('back');
   }
   noteIfUnsaved('left');
   updateTopControls(addHistory);
@@ -971,7 +985,7 @@ function rotateModelRight(addHistory) {
   debug.bindframe(null);
   view.rotateRight();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    cancelAndClearPosition('back');
   }
   updateTopControls(addHistory);
 }
@@ -1101,22 +1115,24 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
-function runCodeAtPosition(position, code, filename) {
+function runCodeAtPosition(position, code, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
     cancelAndClearPosition(position);
   }
   m.running = true;
   m.filename = filename;
-  var baseUrl = 'http://' + (model.ownername ? model.ownername + '.' : '') +
-          window.pencilcode.domain + '/home/' + filename;
+  var baseUrl = filename && (
+      'http://' + (model.ownername ? model.ownername + '.' : '') +
+      window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
+  var html = filetype.modifyForPreview(code, filename, baseUrl, emptyOnly);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, code, filename, baseUrl);
+      view.setPaneRunText(pane, html, filename, baseUrl);
     }
   }, 1);
   if (code) {
