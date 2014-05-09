@@ -1,5 +1,6 @@
 var phantom = require('node-phantom-simple'),
     phantomjs = require('phantomjs'),
+    http = require('http'),
     assert = require('assert');
 
 function pollPage(page, timeout, predicate, callback) {
@@ -41,6 +42,20 @@ describe('browse users in edit mode', function() {
   after(function() {
     _ph.exit();
   });
+  it('responds to a touch', function(done) {
+    // Touch the "z" user so that it should be chronologically first.
+    http.get({
+      host: '127.0.0.1',
+      headers: { Host: 'zzz.pencilcode.net.dev' },
+      port: 8193,
+      path: '/save/touch?data=x'
+    }, function(resp) {
+      console.log(resp.statusCode);
+      done();
+    }).on('error', function(e) {
+      console.log('error', e);
+    });
+  });
   it('can open', function(done) {
     _page.open('http://pencilcode.net.dev/edit/', function(err, status){
       assert.ifError(err);
@@ -68,7 +83,7 @@ describe('browse users in edit mode', function() {
       return dirs.join(' ');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(/a .*b .*c .*livetest .*z/
+      assert.ok(/a .*b .*c .*livetest .*zzz/
           .test(result));
       done();
     });
@@ -79,7 +94,7 @@ describe('browse users in edit mode', function() {
       $('#bydate').click();
       $('.directory a').each(function() { dirs.push($(this).text()); });
       var r = dirs.join(' ');
-      if (!/z .*b/.test(r)) return null;
+      if (!/zzz .*b/.test(r)) return null;
       return r;
     }, function(err, result) {
       assert.ifError(err);

@@ -22,19 +22,19 @@ exports.handleLoad = function(req, res, app) {
   try {
     var isrootlisting = !user && filename == '';
 
-    //console.log({'filename': filename, 'user': user, 'isroot': isrootlisting});
+    //console.log({filename: filename, user: user, isroot: isrootlisting});
 
     if (isrootlisting) {
       try {
         // Try the cache first if it exists
         var data = fsExtra.readJsonSync(utils.getRootCacheName(app));
 
-	res.set('Cache-Control', 'no-cache, must-revalidate');
-	res.set('Content-Type', 'text/javascript');
+        res.set('Cache-Control', 'no-cache, must-revalidate');
+        res.set('Content-Type', 'text/javascript');
 
-	//console.log(data);
-	res.jsonp(data);
-	return;
+        //console.log(data);
+        res.jsonp(data);
+        return;
       }
       catch (e) { }
     }
@@ -46,13 +46,13 @@ exports.handleLoad = function(req, res, app) {
         filename = path.join(user, filename);
       }
       else {
-	filename = user + '/';
+        filename = user + '/';
       }
     }
 
     // Validate filename
-    if (filename.length > 0) { 
-	if (!utils.isFileNameValid(filename, false)) {
+    if (filename.length > 0) {
+      if (!utils.isFileNameValid(filename, false)) {
         utils.errorExit('Bad filename: ' + filename);
       }
     }
@@ -63,23 +63,23 @@ exports.handleLoad = function(req, res, app) {
 
     // Handle the case of a file that's present
     if (utils.isPresent(absfile, 'file')) {
-      var data = (tail != null) ? 
-	  readtail(absfile, tail) : fs.readFileSync(absfile, {'encoding': 'utf8'});
+      var data = (tail != null) ?
+        readtail(absfile, tail) : fs.readFileSync(absfile, {encoding: 'utf8'});
 
       var statObj = fs.statSync(absfile);
 
-      var mimetype = 
-	  getMimeType(filename.substring(filename.lastIndexOf('.')));
+      var mimetype =
+        getMimeType(filename.substring(filename.lastIndexOf('.')));
 
       res.set('Cache-Control', 'no-cache, must-revalidate');
-      res.jsonp({'file': '/' + filename, 
-                 'data': data,
-                 'auth': haskey,
-		 'mtime': statObj.mtime.getTime(), 
-                 'mime': mimetype});
+      res.jsonp({file: '/' + filename,
+                 data: data,
+                 auth: haskey,
+                 mtime: statObj.mtime.getTime(),
+                 mime: mimetype});
       return;
     }
-    
+
     // Handle the case of a directory that's present
     if (utils.isPresent(absfile, 'dir')) {
       if (filename.length > 0 && filename[filename.length - 1] != '/') {
@@ -88,8 +88,8 @@ exports.handleLoad = function(req, res, app) {
 
       var list = buildDirList(absfile, fs.readdirSync(absfile).sort());
 
-      var jsonRet = 
-        {'directory': '/' + filename, 'list': list, 'auth': haskey};
+      var jsonRet =
+        {directory: '/' + filename, list: list, auth: haskey};
 
       // Write to cache if this is a top dir listing
       if (isrootlisting) {
@@ -101,14 +101,14 @@ exports.handleLoad = function(req, res, app) {
     }
 
     // Handle the case of a new file create
-    if (filename.length > 0 && 
-        filename[filename.length - 1] != '/' && 
-        isValidNewFile(absfile)) {
+    if (filename.length > 0 &&
+        filename[filename.length - 1] != '/' &&
+        isValidNewFile(absfile, app)) {
       res.set('Cache-Control', 'no-cache, must-revalidate');
-      res.jsonp({'error': 'could not read file ' + filename,
-                 'newfile': true,
-                 'auth': haskey,
-                 'info': absfile});
+      res.jsonp({error: 'could not read file ' + filename,
+                 newfile: true,
+                 auth: haskey,
+                 info: absfile});
       return;
     }
 
@@ -128,7 +128,7 @@ exports.handleLoad = function(req, res, app) {
 function wrapTurtle(text, app) {
   return (
     '<!doctype html>\n<html>\n<head>\n' +
-    '<script src="http://' + app.locals.config.host + 
+    '<script src="http://' + app.locals.config.host +
     '/turtlebits.js"></script>\n' +
     '</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
     text + '\n</script></body></html>');
@@ -155,7 +155,7 @@ function buildDirList(absdir, contents) {
   var list = new Array();
 
   for (var i = 0; i < contents.length; i++) {
-    // Skip over any entries starting with . 
+    // Skip over any entries starting with .
     if (contents[i][0] == '.') {
       continue;
     }
@@ -182,10 +182,10 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({'name': contents[i], 
-	       'mode': modestr, 
-	       'size': statObj.size,
-	       'mtime': mtime});
+    list.push({name: contents[i],
+         mode: modestr,
+         size: statObj.size,
+         mtime: mtime});
   }
 
   return list;
@@ -223,20 +223,22 @@ function userhaskey(user, app) {
 }
 
 function getMimeType(ext) {
-  var mimeTypeTable = { 'jpg'  : 'image/jpeg',
-			'jpeg' : 'image/jpeg',
-			'gif'  : 'image/gif',
-			'png'  : 'image/png',
-			'bmp'  : 'image/x-ms-bmp',
-			'ico'  : 'image/x-icon',
-			'htm'  : 'text/html',
-			'html' : 'text/html',
-			'txt'  : 'text/plain',
-			'text' : 'text/plain',
-			'css'  : 'text/css',
-			'coffee' : 'text/coffeescript',
-			'js'   : 'text/javascript',
-			'xml'  : 'text/xml' };
+  var mimeTypeTable = {
+      'jpg'  : 'image/jpeg',
+      'jpeg' : 'image/jpeg',
+      'gif'  : 'image/gif',
+      'png'  : 'image/png',
+      'bmp'  : 'image/x-ms-bmp',
+      'ico'  : 'image/x-icon',
+      'htm'  : 'text/html',
+      'html' : 'text/html',
+      'txt'  : 'text/plain',
+      'text' : 'text/plain',
+      'css'  : 'text/css',
+      'coffee' : 'text/coffeescript',
+      'js'   : 'text/javascript',
+      'xml'  : 'text/xml'
+  };
   var result = mimeTypeTable[ext];
   if (!result) {
     result = 'text/x-turtlebits';

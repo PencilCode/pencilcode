@@ -187,6 +187,17 @@ module.exports = function(grunt) {
         options: { atBegin: true, spawn: false }
       }
     },
+    copy: {
+      testdata: {
+        files: [ {
+          expand: true,
+          cwd: 'testdata/',
+          src: ['**'],
+          dot: true,
+          dest: 'site/data'
+        } ]
+      }
+    },
     mochaTest: {
       test: {
         src: ['test/*.js'],
@@ -208,6 +219,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-express-server');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-node-inspector');
@@ -234,6 +246,7 @@ module.exports = function(grunt) {
     if (!!testname) {
       grunt.config('mochaTest.test.src', ['test/' + testname + '.js']);
     }
+    grunt.task.run('copy:testdata');
     grunt.task.run('express:test');
     grunt.task.run('mochaTest');
   });
