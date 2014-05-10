@@ -22,7 +22,7 @@ exports.handleLoad = function(req, res, app, format) {
   try {
     var isrootlisting = !user && filename == '' && format == 'json';
 
-    //console.log({'filename': filename, 'user': user, 'isroot': isrootlisting});
+    //console.log({filename: filename, user: user, isroot: isrootlisting});
 
     if (isrootlisting) {
       try {
@@ -51,8 +51,8 @@ exports.handleLoad = function(req, res, app, format) {
     }
 
     // Validate filename
-    if (filename.length > 0) { 
-        if (!utils.isFileNameValid(filename, false)) {
+    if (filename.length > 0) {
+      if (!utils.isFileNameValid(filename, false)) {
         utils.errorExit('Bad filename: ' + filename);
       }
     }
@@ -64,8 +64,8 @@ exports.handleLoad = function(req, res, app, format) {
 
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
-        var data = (tail != null) ? 
-            readtail(absfile, tail) : fs.readFileSync(absfile, {'encoding': 'utf8'});
+        var data = (tail != null) ?
+          readtail(absfile, tail) : fs.readFileSync(absfile, {encoding: 'utf8'});
 
         var statObj = fs.statSync(absfile);
 
@@ -242,7 +242,7 @@ exports.handleLoad = function(req, res, app, format) {
 function wrapTurtle(text, app) {
   return (
     '<!doctype html>\n<html>\n<head>\n' +
-    '<script src="http://' + app.locals.config.host + 
+    '<script src="http://' + app.locals.config.host +
     '/turtlebits.js"></script>\n' +
     '</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
     text + '\n</script></body></html>');
@@ -269,7 +269,7 @@ function buildDirList(absdir, contents) {
   var list = new Array();
 
   for (var i = 0; i < contents.length; i++) {
-    // Skip over any entries starting with . 
+    // Skip over any entries starting with .
     if (contents[i][0] == '.') {
       continue;
     }
@@ -296,10 +296,10 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({'name': contents[i], 
-               'mode': modestr, 
-               'size': statObj.size,
-               'mtime': mtime});
+    list.push({name: contents[i],
+         mode: modestr,
+         size: statObj.size,
+         mtime: mtime});
   }
 
   return list;
@@ -337,20 +337,22 @@ function userhaskey(user, app) {
 }
 
 function getMimeType(ext) {
-  var mimeTypeTable = { 'jpg'  : 'image/jpeg',
-                        'jpeg' : 'image/jpeg',
-                        'gif'  : 'image/gif',
-                        'png'  : 'image/png',
-                        'bmp'  : 'image/x-ms-bmp',
-                        'ico'  : 'image/x-icon',
-                        'htm'  : 'text/html',
-                        'html' : 'text/html',
-                        'txt'  : 'text/plain',
-                        'text' : 'text/plain',
-                        'css'  : 'text/css',
-                        'coffee' : 'text/coffeescript',
-                        'js'   : 'text/javascript',
-                        'xml'  : 'text/xml' };
+  var mimeTypeTable = {
+      'jpg'  : 'image/jpeg',
+      'jpeg' : 'image/jpeg',
+      'gif'  : 'image/gif',
+      'png'  : 'image/png',
+      'bmp'  : 'image/x-ms-bmp',
+      'ico'  : 'image/x-icon',
+      'htm'  : 'text/html',
+      'html' : 'text/html',
+      'txt'  : 'text/plain',
+      'text' : 'text/plain',
+      'css'  : 'text/css',
+      'coffee' : 'text/coffeescript',
+      'js'   : 'text/javascript',
+      'xml'  : 'text/xml'
+  };
   var result = mimeTypeTable[ext];
   if (!result) {
     result = 'text/x-turtlebits';

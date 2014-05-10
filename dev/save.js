@@ -18,12 +18,13 @@ exports.handleSave = function(req, res, app) {
 
     /*
     console.log({
-      'user': user, 
-      'key': key,
-      'filename': filename,
-      'data': data,
-      'sourcefile': sourcefile,
-      'conditional': conditional});
+      user: user,
+      key: key,
+      filename: filename,
+      mode: mode,
+      data: data,
+      sourcefile: sourcefile,
+      conditional: conditional});
     */
 
     try {
@@ -51,7 +52,7 @@ exports.handleSave = function(req, res, app) {
             utils.errorExit('No data specified for append');
           }
           break;
-        case 'setkey': 
+        case 'setkey':
           if (!data && sourcefile) {
             utils.errorExit('Invalid parameters specified for setkey');
           }
@@ -63,7 +64,7 @@ exports.handleSave = function(req, res, app) {
           break;
         default:
           utils.errorExit('Unknown mode type');
-      }      
+      }
     }
 
     if (conditional) {
@@ -78,7 +79,7 @@ exports.handleSave = function(req, res, app) {
 
     var topdir = false;
     if (!utils.isFileNameValid(filename, true)) {
-      if (mode == 'setkey' || 
+      if (mode == 'setkey' ||
           (!data && (mode == 'rmtree' || mode == 'mv' || !sourcefile)) &&
           /^[\w][\w\\-]*\/?$/.test(filename)) {
         topdir = true;
@@ -100,7 +101,7 @@ exports.handleSave = function(req, res, app) {
 
     if (!isValidKey(user, key, app)) {
       var msg = (key) ? 'Incorrect password.' : 'Password protected.';
-      res.json({'error': msg, 'needauth': 'key'});
+      res.json({error: msg, 'needauth': 'key'});
       return;
     }
 
@@ -114,7 +115,7 @@ exports.handleSave = function(req, res, app) {
       }
 
       doSetKey(user, key, data, res, app);
-      res.json((data) ? {'keyset': user} : {'keycleared': user});
+      res.json((data) ? {keyset: user} : {keycleared: user});
       return;
     }
 
@@ -141,9 +142,9 @@ exports.handleSave = function(req, res, app) {
       // mv requires authz on the source dir
       if (mode == 'mv') {
         if (!isValidKey(sourceuser, sourcekey, app)) {
-          var msg = (!key) ? 
+          var msg = (!key) ?
               'Source password protected.' : 'Incorrect source password.';
-          res.json({'error': msg, 'auth': 'key'});
+          res.json({error: msg, 'auth': 'key'});
           return;
         }
       }
@@ -196,10 +197,11 @@ exports.handleSave = function(req, res, app) {
           // Are we copying a directory?
           if (fs.stat(absSourceFile).isDirectory()) {
             if (fs.existsSync(absfile)) {
-              utils.errorExit('Cannot overwwrite existing directory ' + filename);
+              utils.errorExit(
+                  'Cannot overwwrite existing directory ' + filename);
             }
 
-            fsExtra.copySync(absSourceFile, absfile); 
+            fsExtra.copySync(absSourceFile, absfile);
             // TODO: Need to ignore .key subdirs and contents
           }
           else {
@@ -212,7 +214,7 @@ exports.handleSave = function(req, res, app) {
       }
 
       touchUserDir(userdir);
-      res.json({'saved': filename});
+      res.json({saved: filename});
       return;
     }
 
@@ -224,14 +226,14 @@ exports.handleSave = function(req, res, app) {
       if (fs.existsSync(absfile)) {
         mtime = fs.statSync(absfile).mtime.getTime();
         if (mtime > conditional) {
-            res.json({'error': 'Did not overwrite newer file.', 
-                      'newer': mtime});
+            res.json({error: 'Did not overwrite newer file.',
+                      newer: mtime});
             return;
         }
       }
     }
 
-    // 
+    //
     // Handle the delete case
     //
 
@@ -243,17 +245,15 @@ exports.handleSave = function(req, res, app) {
       if (fs.existsSync(absfile)) {
         try {
           fsExtra.removeSync(absfile);
-        }
-        catch (e) {
+        } catch (e) {
           utils.errorExit('Could not remove: ' + absfile);
         }
 
         try {
           removeDirsSync(path.dirname(absfile));
-        }
-        catch (e) { }
+        } catch (e) { }
       }
-        
+
       if (userdir != absfile) {
         touchUserDir(userdir);
       }
@@ -298,7 +298,11 @@ exports.handleSave = function(req, res, app) {
         statObj = fs.statSync(absfile);
         touchUserDir(userdir);
 
-        res.json({saved: filename, mtime: statObj.mtime.getTime(), size: statObj.size});
+        res.json({
+          saved: filename,
+          mtime: statObj.mtime.getTime(),
+          size: statObj.size
+        });
       });
       return;
     }
@@ -320,7 +324,8 @@ exports.handleSave = function(req, res, app) {
 
 function touchUserDir(userdir) {
   try {
-    fs.utimesSync(userdir, Date.now(), Date.now());
+    var now = new Date;
+    fs.utimesSync(userdir, now, now);
   }
   catch (e) { }
 }
@@ -345,10 +350,10 @@ function removeDirsSync(dirStart) {
 function isValidKey(user, key, app) {
   //
   // keydir is the directory containing the hashed user password.
-  // It's a subdir off the user home directory called '.key'.  
+  // It's a subdir off the user home directory called '.key'.
   // Contents of this directory are files that are named
   // with the hashed user password
-  // 
+  //
 
   var keydir = utils.getKeyDir(user, app);
   var statObj = null;
@@ -368,7 +373,7 @@ function isValidKey(user, key, app) {
   if (key) {
     for (var i = 0; i < keys.length; i++) {
       //
-      // Password files are named with 'k' + the hashed password.  
+      // Password files are named with 'k' + the hashed password.
       // See doSetKey() for implementation.  So check the substring
       // offset with 1 to ignore the starting 'k'
       //
@@ -380,9 +385,9 @@ function isValidKey(user, key, app) {
 }
 
 //
-// Create a file with the hashed user password in the 
+// Create a file with the hashed user password in the
 // user key dir.  This is called when the user sets or changes
-// their password. 
+// their password.
 //
 function doSetKey(user, oldkey, newkey, res, app) {
   if (oldkey == newkey) {
@@ -434,7 +439,7 @@ function checkReservedUser(user, app) {
   if (user != user.toLowerCase()) {
     utils.errorExit('Username should be lowercase.');
   }
-  
+
   var normalized = user.toLowerCase();
   if (fs.existsSync(path.join(datadirAbs, normalized))) {
     utils.errorExit('Username is reserved.');
@@ -442,7 +447,7 @@ function checkReservedUser(user, app) {
 
   // Also check possible variations of badwords
   var normalizedi = translate(normalized, '013456789', 'oieasbtbg');
-  if (normalized != normalizedi && 
+  if (normalized != normalizedi &&
       fs.existsSync(path.join(datadirAbs, normalizedi))) {
     utils.errorExit('Username is reserved.');
   }
@@ -454,10 +459,12 @@ function checkReservedUser(user, app) {
   }
 
   var checkwords = [normalized, normalizedi, normalizedl];
-  var badwords = 
-      fs.readFileSync(path.join(__dirname, 'bad-words.txt'), 'utf8').split(/\n/);
-  var badsubstrings = 
-      fs.readFileSync(path.join(__dirname, 'bad-substrings.txt'), 'utf8').split(/\n/); 
+  var badwords =
+      fs.readFileSync(path.join(__dirname, 'bad-words.txt'), 'utf8').
+          split(/\n/);
+  var badsubstrings =
+      fs.readFileSync(path.join(__dirname, 'bad-substrings.txt'), 'utf8').
+          split(/\n/);
 
   for (var i = 0; i < checkwords.length; i++) {
     for (var j = 0; j < badwords.length; j++) {
