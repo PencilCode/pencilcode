@@ -7,8 +7,8 @@ var express = require('express'),
     serverbase = require('./serverbase.js'),
     utils = require('./utils.js');
 
-serverbase.init(app);
-serverbase.init2(app);
+serverbase.initialize(app);
+serverbase.initialize22(app);
 app.listen(process.env.PORT, function() {
   console.log('Express server listening on ' + process.env.PORT);
 });
