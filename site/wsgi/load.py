@@ -248,15 +248,17 @@ def application(env, start_response):
   def inferScriptType(url):
     mime = mimetype(uri_ext(url), url)
     if mime.startswith('text/x-pencilcode'):
-      return mime.replace('x-pencilcode', 'coffeescript')
-    return mime
+      return 'text/coffeescript';
+    if ';' in mime:
+      mime = mime[:mime.find(';')]
+    return mime;
 
   def wrapturtle(text):
     script_pattern = re.compile(
       '(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|\'[^\'\n]*\')')
     urls = re.findall(script_pattern, text)
     # Add the default turtle script.
-    urls.append('//' + domain + '/turtlebits.js')
+    urls.insert(0, '//' + domain + '/turtlebits.js')
     scripts = ['<script src=' + url + ' type="' + inferScriptType(url) +
        '">\n</script>' for url in urls]
     result = (
