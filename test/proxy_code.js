@@ -72,12 +72,12 @@ describe('proxy program', function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; });
+          function() { return $(this).position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "untitled" in it.
       if (!lefttitle.length || !/untitled/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
       if (!$('.editor').length) return;
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       // Return a ton of UI state.
       return {
         filename: $('#filename').text(),
@@ -113,7 +113,7 @@ describe('proxy program', function() {
   it('should be able to enter a program that uses the proxy', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Modify the text in the editor.
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       $('.editor').mousedown();
       ace_editor.getSession().setValue(
           "proxy = (url) ->\n" +
@@ -135,7 +135,7 @@ describe('proxy program', function() {
             "'http://davidbau.com/images/art/enigma.jpg', defer d\n"
       );
     }, function() {
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       return {
         filename: $('#filename').text(),
         text: ace_editor.getValue(),

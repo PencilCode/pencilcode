@@ -22,7 +22,7 @@ require.config({
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
-    'ice': 'src/ice/dist/ice'
+    'ice': 'lib/ice'
   },
   shim: {
     'tooltipster': {

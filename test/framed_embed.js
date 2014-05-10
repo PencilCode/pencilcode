@@ -3,6 +3,7 @@ var phantom = require('node-phantom-simple'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
+    extended_timeout = 20000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
 
@@ -127,7 +128,7 @@ describe('framed embed', function() {
     });
   });
   it('should load code via beginLoad and get update event', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+    asyncTest(_page, extended_timeout, null, function() {
       // prepare long code, to exercise URL length
       var code = "speed 100\npen red\n";
       for (var j = 0; j < 1000; ++j) {

@@ -4457,6 +4457,8 @@ var dollar_turtle_methods = {
     }
     // Stop all animations.
     $(':animated,.turtle').clearQueue().stop();
+    // Stop our audio.
+    resetAudio();
     // Set a flag that will cause all commands to throw.
     interrupted = true;
     // Turn off the global tick interval timer.
@@ -5713,6 +5715,14 @@ function autoScrollBottomSeen() {
   }
   return autoScrollState.bottomSeen;
 }
+// undoScrollAfter will return the scroll position back to its original
+// location after running the passed function.  (E.g., to allow focusing
+// a control without autoscrolling.)
+function undoScrollAfter(f) {
+  var scrollPos = $(window).scrollTop();
+  f();
+  $(window).scrollTop(scrollPos);
+}
 
 // Simplify $('body').append(html).
 function output(html, defaulttag) {
@@ -5886,7 +5896,8 @@ function menu(choices, fn) {
       focusCursor();
     }
   });
-  focusCursor(true);
+  // Focus, but don't cause autoscroll to occur due to focus.
+  undoScrollAfter(function() { focusCursor(true); });
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
@@ -5968,7 +5979,8 @@ function input(name, callback, numeric) {
   autoScrollAfter(function() {
     $('body').append(label);
   });
-  textbox.focus();
+  // Focus, but don't cause autoscroll to occur due to focus.
+  undoScrollAfter(function() { textbox.focus(); });
   return thisval;
 }
 
@@ -6068,6 +6080,13 @@ function getAudioTop() {
   }
   return audioTop;
 }
+function resetAudio() {
+  if (audioTop && audioTop.out.disconnect) {
+    // Disconnect the top-level node and make a new one.
+    audioTop.out.disconnect();
+    audioTop.out = audioTop.ac.createDynamicsCompressor();
+  }
+}
 function parseABCNotes(str) {
   var tokens = str.match(ABCtoken), result = [], stem = null,
       index = 0, dotted = 0, t;
@@ -6100,7 +6119,7 @@ function parseABCNotes(str) {
 }
 function parseStem(tokens, index) {
   var pitch = [];
-  var duration = '';
+  var duration = '', noteDuration, noteTime, minStemTime = Infinity;
   if (index < tokens.length && tokens[index] == '[') {
     index++;
     while (index < tokens.length) {
@@ -6111,8 +6130,21 @@ function parseStem(tokens, index) {
       } else {
         break;
       }
+      // When a stem has more than one duration, select the
+      // shortest one. The standard says to pick the first one,
+      // but in practice, transcribed music online seems to
+      // follow the rule that the stem's duration is determined
+      // by the shortest contained duration.
       if (index < tokens.length && /\d|\//.test(tokens[index])) {
-        duration = tokens[index++];
+        noteDuration = tokens[index++];
+        noteTime = durationToTime(noteDuration);
+      } else {
+        noteDuration = '';
+        noteTime = 1;
+      }
+      if (noteTime && noteTime < minStemTime) {
+        duration = noteDuration;
+        minStemTime = noteTime;
       }
     }
     if (tokens[index] != ']') {
@@ -6267,6 +6299,7 @@ function playABC(done, args) {
     nextToNotify.push(0);
   }
   function callNotifications() {
+    if (interrupted) { return; }
     var now = atop.ac.currentTime, notifyNotes = [], i, j, next = end_time;
     if (callback) {
       for (i = 0; i < voices.length; ++i) {
