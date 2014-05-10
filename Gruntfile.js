@@ -142,7 +142,6 @@ module.exports = function(grunt) {
     },
     express: {
       options: {
-        script: 'dev/server.js',
         port: grunt.option('port'),
         output: 'listening'
       },
@@ -151,11 +150,12 @@ module.exports = function(grunt) {
           script: 'dev/devserver.js',
           node_env: 'development',
           debug: true,
-          args: ['./configDev.json']
+          args: ['../../dev/configDev.json']
         }
       },
       comp: {
         options: {
+          script: 'site/node/server.js',
           node_env: 'compiled',
           args: ['./configProd.json']
         }
@@ -164,7 +164,7 @@ module.exports = function(grunt) {
         options: {
           script: 'dev/devserver.js',
           node_env: 'development',
-          args: ['./configTest.json'],
+          args: ['../../dev/configTest.json'],
           port: 8193
         }
       },
@@ -173,19 +173,19 @@ module.exports = function(grunt) {
           script: 'dev/devserver.js',
           node_env: 'compiled',
           //debug: true,
-          args: ['./configTest.json'],
+          args: ['../../dev/configTest.json'],
           port: 8193, 
         }
       }
     },
     watch: {
       dev: {
-        files: ['dev/*.js'],
+        files: ['dev/*.js', 'site/node/*.js'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ['dev/*.js'],
+        files: ['dev/*.js', 'site/node/*.js'],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }
