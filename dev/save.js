@@ -9,7 +9,7 @@ exports.handleSave = function(req, res, app) {
   var mode = req.param('mode', null);
   var conditional = req.param('conditional', null);
   var key = req.param('key', null);
-  var sourcekey = req.param('sourcekey', null);
+  var sourcekey = req.param('sourcekey', key);
 
   try {
     var user = utils.getUser(req, app);
@@ -243,17 +243,17 @@ exports.handleSave = function(req, res, app) {
       if (fs.existsSync(absfile)) {
         try {
           fsExtra.removeSync(absfile);
-	}
-	catch (e) {
+        }
+        catch (e) {
           utils.errorExit('Could not remove: ' + absfile);
-	}
+        }
 
         try {
           removeDirsSync(path.dirname(absfile));
-	}
-	catch (e) { }
+        }
+        catch (e) { }
       }
-	
+        
       if (userdir != absfile) {
         touchUserDir(userdir);
       }
@@ -272,10 +272,10 @@ exports.handleSave = function(req, res, app) {
     //
 
     if (!fs.existsSync(path.dirname(absfile)) ||
-	!fs.statSync(path.dirname(absfile)).isDirectory()) {
+        !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
       try {
-	fsExtra.mkdirsSync(path.dirname(absfile));
+        fsExtra.mkdirsSync(path.dirname(absfile));
       }
       catch (e) {
         utils.errorExit('Could not create dir: ' + path.dirname(filename));
@@ -293,12 +293,12 @@ exports.handleSave = function(req, res, app) {
 
       writeStream.on('close', function() {
         fs.fsyncSync(fd);
-	fs.closeSync(fd);
+        fs.closeSync(fd);
 
-	statObj = fs.statSync(absfile);
-	touchUserDir(userdir);
+        statObj = fs.statSync(absfile);
+        touchUserDir(userdir);
 
-	res.json({saved: filename, mtime: statObj.mtime.getTime(), size: statObj.size});
+        res.json({saved: filename, mtime: statObj.mtime.getTime(), size: statObj.size});
       });
       return;
     }
@@ -467,7 +467,7 @@ function checkReservedUser(user, app) {
     }
     for (var j = 0; j < badsubstrings.length; j++) {
       if (badsubstrings[j].length > 0 && 
-	  checkwords[i].indexOf(badsubstrings[j]) != -1) {
+          checkwords[i].indexOf(badsubstrings[j]) != -1) {
         utils.errorExit('Username is reserved.');
       }
     }

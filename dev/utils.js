@@ -32,7 +32,7 @@ exports.errorExit = errorExit;
 
 function errorExit(msg) {
   console.log('ERROREXIT: ' + msg);
-  throw new ImmediateReturnError(msg, {error: msg});
+  throw new ImmediateReturnError(msg, {'error': msg});
 }
 
 exports.ImmediateReturnError = ImmediateReturnError;

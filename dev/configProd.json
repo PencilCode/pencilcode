@@ -4,6 +4,5 @@
     "staticdir": "/srv/site/top",
     "cachedir": "/srv/site/cache"
   },
-  "host": "pencilcode.net",
-  "useProxy": 0
+  "host": "pencilcode.net"
 }
