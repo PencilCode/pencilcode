@@ -324,6 +324,9 @@ view.on('editfocus', function(pane) {
 });
 
 view.on('run', function() {
+  // DEBUGGING ONLY
+  window.wasViewOnRunFired = true;
+
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   if (!mimetext) {
     mimetext = view.getPaneEditorText(paneatpos('right'));
@@ -1103,6 +1106,9 @@ function cancelAndClearPosition(pos) {
 }
 
 function runCodeAtPosition(position, code, filename) {
+  // DEBUGGING ONLY
+  window.wasRunCodeCalled = true;
+
   var m = modelatpos(position);
   if (!m.running) {
     cancelAndClearPosition(position);
