@@ -1692,6 +1692,7 @@ function setPaneEditorText(pane, text, filename) {
 
   // Enable whitespace-trimming hack in iceEditor
   iceEditor.setTrimWhitespace(true);
+  console.log('Set whitespace trim.');
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
