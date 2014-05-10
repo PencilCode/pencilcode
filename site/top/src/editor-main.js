@@ -51,6 +51,31 @@ function($, view, storage, debug, seedrandom, see, drawProtractor) {
 
 eval(see.scope('controller'));
 
+// TODO Document the fields of the pane model.
+function defaultPaneModel() {
+  return {
+      filename: null,
+      isdir: false,
+      data: null,
+      bydate: false,
+      loading: 0,
+      running: 0,
+      template: null,
+      activityDir: false
+  };
+}
+
+function clearPaneModel(m) {
+  m.filename = null;
+  m.isdir = false;
+  m.data = null;
+  m.bydate = false;
+  m.loading = 0;
+  m.running = false;
+  m.template = null;
+  m.activityDir = false;
+}
+
 var model = {
   // Owner name of this file or directory.
   ownername: null,
@@ -58,27 +83,9 @@ var model = {
   editmode: false,
   // Contents of the three panes.
   pane: {
-    alpha: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      loading: 0
-    },
-    bravo: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      loading: 0
-    },
-    charlie: {
-      filename: null,
-      isdir: false,
-      data: null,
-      bydate: false,
-      loading: 0
-    }
+    alpha: defaultPaneModel(),
+    bravo: defaultPaneModel(),
+    charlie: defaultPaneModel()
   },
   // Logged in username, or null if not logged in.
   username: null,
@@ -123,18 +130,24 @@ function posofpane(pane) {
 //   it's the event who's the owner
 //
 function specialowner() {
-  return (!model.ownername || model.ownername === 'guide' ||
-          model.ownername === 'frame' ||
-          model.ownername === 'event');
+  return !model.ownername || !!specialowner.specialowners[model.ownername];
 }
 
+specialowner.specialowners = {
+  guide: true, event: true, start: true, frame: true
+};
+
 //
-// A no-save owner is an owner that does not participate in saving
-// or loading at all.  This is the case for framed usage.
+// A saveable owner is an owner that participates in saving
+// and loading.
 //
-function nosaveowner() {
-  return model.ownername === 'frame';
+function saveableOwner() {
+  return model.ownername && !saveableOwner.unsaveableOwners[model.ownername];
 }
+saveableOwner.unsaveableOwners = {
+  guide: true, event: true, frame: true
+};
+
 
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
@@ -164,45 +177,36 @@ function updateTopControls(addHistory) {
       //
       buttons.push(
         {id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
-         disabled: !specialowner() && model.username &&
+         disabled: model.username && saveableOwner() &&
                    !view.isPaneEditorDirty(paneatpos('left')) });
 
       // Also insert share button
       buttons.push({
         id: 'share', title: 'Share links to this program', label: 'Share'});
+
+      // Check now whether the file is in an activity dir so that we know whether to
+      // offer 'Share Activity' when the user clicks Share.
+      checkIfActivityDir();
     }
 
-    //
-    // If this directory is owned by some person (i.e. not specialowner)
-    //
+    // Offer logout button if user is logged in, else offer login button if not
+    // special owner.
+    if (model.username) {
+      buttons.push({
+        id: 'logout', label: 'Log out',
+        title: 'Log out from ' + model.username});
+    } else if (!specialowner()) {
+      buttons.push({
+        id: 'login', label: 'Log in',
+        title: 'Enter password for ' + model.ownername});
+    }
 
-    if (!specialowner()) {
-      //
-      // Then insert logout/login buttons depending on if someone
-      // is already logged in
-      //
-      if (model.username) {
-        buttons.push({
-          id: 'logout', label: 'Log out',
-          title: 'Log out from ' + model.username});
+    // If viewing a directory, offer sorting buttons.
+    if (m.isdir) {
+      if (m.bydate) {
+        buttons.push({id: 'byname', label: 'Alphabetize'});
       } else {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Enter password for ' + model.ownername});
-      }
-    } else {
-      // We're either in some file or directory
-      if (m.isdir) {
-        //
-        // If it's a directory then allow browsing by date
-        // or by alphabetical
-        //
-
-        if (m.bydate) {
-          buttons.push({id: 'byname', label: 'Alphabetize'});
-        } else {
-          buttons.push({id: 'bydate', label: 'Sort by Date'});
-        }
+        buttons.push({id: 'bydate', label: 'Sort by Date'});
       }
     }
     buttons.push(
@@ -212,6 +216,7 @@ function updateTopControls(addHistory) {
         id: 'guide', label: '<span class=helplink>Guide</span>',
         title: 'Open online guide'});
     }
+
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
@@ -226,7 +231,7 @@ function updateTopControls(addHistory) {
   // Is this helpful or confusing?
   if (m.data && m.data.file) {
     if (!modelatpos('right').running) {
-      runCodeAtPosition('right', '', m.filename);
+      runCodeAtPosition('right', '', m.filename, m.template);
     }
   }
   // Update editability.
@@ -268,6 +273,10 @@ view.on('share', function() {
           // Share the run URL unless there is no owner (e.g., for /first).
           opts.shareRunURL = "http://" + document.domain + '/home/' +
             modelatpos('left').filename;
+
+          if (modelatpos('left').activityDir) {
+            opts.shareActivityURL = getStartActivityURL();
+          }
         }
         opts.shareEditURL = window.location.href;
 
@@ -340,7 +349,9 @@ view.on('run', function() {
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
-  runCodeAtPosition('right', runtext, modelatpos('left').filename);
+  runCodeAtPosition(
+      'right', runtext,
+      modelatpos('left').filename, modelatpos('left').template);
   if (!specialowner()) {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: window.pencilcode.domain });
@@ -348,7 +359,7 @@ view.on('run', function() {
 });
 
 $(window).on('beforeunload', function() {
-  if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
+  if (view.isPaneEditorDirty(paneatpos('left')) && saveableOwner()) {
     view.flashButton('save');
     return "There are unsaved changes."
   }
@@ -449,10 +460,13 @@ view.on('guide', function() {
   window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
-  if (nosaveowner()) {
+  if (!saveableOwner()) {
     return;
   }
   if (specialowner()) {
+    // TODO First figure out what is to be saved, then figure out if we need
+    // signUpAndSave.  That way we can handle special behavior for activities
+    // (e.g. hide #!pencil from beginning of file when user edits).
     signUpAndSave();
     return;
   }
@@ -515,7 +529,7 @@ function keyFromPassword(username, p) {
 }
 
 function signUpAndSave() {
-  if (nosaveowner()) {
+  if (!saveableOwner()) {
     return;
   }
   var mimetext = view.getPaneEditorText(paneatpos('left'));
@@ -653,7 +667,7 @@ function signUpAndSave() {
 
 function logInAndSave(filename, newdata, forceOverwrite,
                       noteclean, loginPrompt, doneCallback) {
-  if (!filename || !newdata || nosaveowner()) {
+  if (!filename || !newdata || !saveableOwner()) {
     return;
   }
   view.showLoginDialog({
@@ -847,7 +861,7 @@ function doneWithFile(filename) {
 view.on('rename', function(newname) {
   var pp = paneatpos('left');
   var mp = modelatpos('left');
-  if (mp.filename === newname || nosaveowner()) {
+  if (mp.filename === newname || !saveableOwner()) {
     // Nothing to do
     return;
   }
@@ -961,7 +975,7 @@ function rotateModelLeft(addHistory) {
   debug.bindframe(null);
   view.rotateLeft();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    runCodeAtPosition('back', '', null, null);
   }
   noteIfUnsaved('left');
   updateTopControls(addHistory);
@@ -971,7 +985,7 @@ function rotateModelRight(addHistory) {
   debug.bindframe(null);
   view.rotateRight();
   if (modelatpos('back').running) {
-    runCodeAtPosition('back', '', null);
+    runCodeAtPosition('back', '', null, null);
   }
   updateTopControls(addHistory);
 }
@@ -982,13 +996,112 @@ function isFileWithin(base, candidate) {
       candidate.indexOf(base) === 0;
 }
 
+// Parse the string in window.location.search into '&' separated key=value pairs,
+// and split those pairs, using the key as the property name in the return value object.
+function parseURIKeyValues(s) {
+  var variables = {};
+  if ($.type(s) == 'string' && s.length) {
+    $.each(s.split('&'), function(ndx, pair) {
+      var parts = pair.split('='),
+          key = decodeURIComponent(parts.shift()),
+          value = decodeURIComponent(parts.join('='));
+      if (key == '') {
+        console.log('key missing in search string: ' + s);
+      } else if (variables.hasOwnProperty(key)) {
+        if ($.type(variables[key]) == 'string') {
+          variables[key] = [ variables[key] ];
+        }
+        variables[key].push(value);
+      } else {
+        variables[key] = value;
+      }
+    });
+  }
+  return variables;
+}
+
+function parseURLCore(url) {
+  var parsed, type = $.type(url);
+  if (type == 'string' && $.type(window.URL) == 'function') {
+    // Need a very modern browser.
+    parsed = new window.URL(url, window.location.href);
+  } else if (type == 'object' && url.href) {
+    parsed = url;
+  }
+  if (!parsed) {
+    console.log('parseURL failed');
+    console.log(url);
+    return;
+  }
+  // Make a deep copy of parsed, ensuring the standard URLUtils properties
+  // are present.
+  parsed = $.extend(true, {
+      href: '',
+      protocol: '',
+      host: '',
+      hostname: '',
+      port: '',
+      pathname: '',
+      search: '',
+      hash: '',
+      username: '',
+      password: '',
+      origin: ''}, parsed);
+  return parsed;
+}
+
+function parseURL(url) {
+  var parsed = parseURLCore(url);
+  // Now add our own properties to those defined in the standard for URLUtils.
+
+  // TODO(davidbau): Explain this regexp.  It seems to mean ignore last 8
+  // characters, and, working backwards, the characters up to, and including
+  // the first period.  This seems designed to convert foo.pencilcode.net,
+  // or foo.pencilcode.net.dev into foo, but if we were to host pencilcode
+  // at pencilcode.oxford.ac.uk, then the owner would be pencilcode, which
+  // seems not ideal! Perhaps we need the server to tell us the root domain.
+  parsed.ownername = parsed.hostname.replace(/(?:(.*)\.)?[^.]*.{8}$/, '$1');
+
+  // The filename is the path after to first component (e.g. without /edit
+  // or /home).
+  parsed.filename = parsed.pathname.replace(
+          /^\/[^\/]+\//, '').replace(/\/+$/, ''),
+
+  // Parse the key=value pairs out of the search (aka query) and the hash strings.
+  parsed.searchVars = parseURIKeyValues(parsed.search.replace(/^\?+/, ''));
+  parsed.hashVars = parseURIKeyValues(parsed.hash.replace(/^#+/, ''));
+
+  // Probably a directory if the pathname ends with slash.
+  parsed.isdir = /\/$/.test(parsed.pathname);
+
+  // TODO Extract login from hash if present; appears to have the following format:
+  //   login[0]="#login=user:password"
+  //   login[1]="user"
+  //   login[2]="password"
+  // parsed.login =...
+
+  // Extract edit mode
+  parsed.editmode = /^\/edit\//.test(parsed.pathname);
+
+  return parsed;
+}
+
+function assertEQ(a, b, msg) {
+  if (a === b) return;
+  alert(a + ' !== ' + b + '\n\n' + msg);
+}
+
 function readNewUrl(undo) {
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
+      // TODO(jamessynge): Get complete parseURL impl working, then stop depending upon
+      // the patterns below.
+      parsedURL = parseURL(window.location),
   // Owner comes from domain name.
       ownername = window.location.hostname.replace(
           /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
-  // Filename comes from URL minus first directory part.
+  // Filename comes from URL minus first directory part
+  // (i.e. without /edit/ or /home/, for example).
       filename = window.location.pathname.replace(
           /^\/[^\/]+\//, '').replace(/\/+$/, ''),
   // Expect directory if the pathname ends with slash.
@@ -998,9 +1111,12 @@ function readNewUrl(undo) {
   // Extract text from hash if present.
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
   // Extract edit mode
-      editmode = /^\/edit\//.test(window.location.pathname);
+      editmode = /^\/edit\//.test(window.location.pathname),
+  // Extract variables in search string
+      searchVars = parsedURL.searchVars;
+
   // Give the user a chance to abort navigation.
-  if (undo && view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
+  if (undo && view.isPaneEditorDirty(paneatpos('left')) && saveableOwner()) {
     view.flashButton('save');
     if (!window.confirm(
       "There are unsaved changes.\n\n" +
@@ -1031,6 +1147,17 @@ function readNewUrl(undo) {
     model.editmode = editmode;
     forceRefresh = true;
   }
+  if (ownername === 'start' && editmode && searchVars.hasOwnProperty('activity')) {
+    // User is starting a new activity (e.g. a lesson defined by a teacher).
+    // TODO(davidbau): Please help figure out how this should interact with the block
+    // below which animates panes.
+    // Should we actually just fetch the default text for the activity at this point,
+    // store that in 'text', set firsturl = true, and fall through?
+
+    startNewActivity(filename, searchVars.activity);
+    return;
+  }
+
   // If the new url is replacing an existing one, animate it in.
   if (!firsturl && modelatpos('left').filename !== null) {
     if (isFileWithin(modelatpos('left').filename, filename)) {
@@ -1093,15 +1220,11 @@ var stopButtonTimer = null;
 function cancelAndClearPosition(pos) {
   debug.bindframe(null);
   view.clearPane(paneatpos(pos), false);
-  modelatpos(pos).loading = 0;
-  modelatpos(pos).filename = null;
-  modelatpos(pos).isdir = false;
-  modelatpos(pos).data = null;
-  modelatpos(pos).bydate = false;
-  modelatpos(pos).running = false;
+  clearPaneModel(modelatpos(pos));
 }
 
-function runCodeAtPosition(position, code, filename) {
+// Runs the given code, applying template boilerplate if given.
+function runCodeAtPosition(position, code, filename, template) {
   var m = modelatpos(position);
   if (!m.running) {
     cancelAndClearPosition(position);
@@ -1116,7 +1239,8 @@ function runCodeAtPosition(position, code, filename) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, code, filename, baseUrl);
+      view.setPaneRunText(
+         pane, code, template, filename, baseUrl);
     }
   }, 1);
   if (code) {
@@ -1161,12 +1285,17 @@ function createNewFileIntoPosition(position, filename, text) {
     data: text,
     mtime: 0
   };
-  view.setPaneEditorText(pane, text, filename);
+  mpp.activityDir = false;
+  view.setPaneEditorText(pane, text, filename, null);
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
 }
 
-
+// Given a pane position (e.g., 'left' or 'right'), does a couple steps:
+// (1) Loads the underlying file given by filename
+// (2) If it is a template file, loads the template metadata
+// (3) Puts the loaded data into the model.pane[pane] object for the pane
+// (4) Finally, calls callback cb when done.
 function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -1175,56 +1304,147 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   // update the model and execute the load.
   if (mpp.filename === filename && !forcenet) {
     cb && cb();
-  } else {
-    view.clearPane(pane, true); // show loading animation.
-    mpp.filename = filename;
-    mpp.isdir = isdir;
-    mpp.bydate = isdir && defaultDirSortingByDate();
-    mpp.loading = loadNum;
-    mpp.data = null;
-    mpp.running = false;
-    storage.loadFile(model.ownername, filename, forcenet, function(m) {
-      if (mpp.loading != loadNum) {
-        if (window.console) {
-          window.console.log('aborted: loading is ' + mpp.loading + ' instead of ' + loadNum);
-        }
-        return;
+    return;
+  }
+  view.clearPane(pane, true); // show loading animation.
+  mpp.filename = filename;
+  mpp.isdir = isdir;
+  mpp.bydate = isdir && defaultDirSortingByDate();
+  mpp.loading = loadNum;
+  mpp.activityDir = false;
+  mpp.data = null;
+  mpp.running = false;
+  var mpploading = {};
+  function checkConsistency() {
+    // This function verifies that the load that we are completing
+    // is the same as the load that we started (might not be true if
+    // the user clicks on load several times, faster than net responses).
+    // Should be called before mutating mpp again.
+    if (mpp.loading != loadNum) {
+      if (window.console) {
+        window.console.trace('aborted: loading is ' + mpp.loading +
+            ' instead of ' + loadNum);
       }
-      mpp.loading = 0;
-      if (model.ownername === '' && filename === '') {
-        mpp.isdir = true;
-        mpp.data = m;
-        renderDirectory(posofpane(pane));
-        cb && cb();
-      } else if (m.directory && m.list) {
-        // Directory listing.
-        mpp.isdir = true;
-        mpp.data = m;
-        renderDirectory(posofpane(pane));
-        cb && cb();
-      } else if (!m.data && m.newfile) {
-        // In the nofile case, create an empty file.
-        createNewFileIntoPosition('left', filename);
-        updateTopControls(false);
-        view.flashNotification('New file ' + filename + '.');
-        cb && cb();
-      } else {
-        // The single file case.
-        // TODO:
-        // 2. in the offline case, notify the user that we are working offline.
-        // 3. in the unsaved case, notify the user that we loaded a backup and
-        //    give a link to load from network.
-        if (!m.data) { m.data = ''; }
-        mpp.isdir = false;
-        mpp.data = m;
-        view.setPaneEditorText(pane, m.data, filename);
-        noteIfUnsaved(posofpane(pane));
-        updateTopControls(false);
-        cb && cb();
-      }
+      return false;
+    }
+    mpp.loading = 0;
+    return true;
+  }
+  function firstStepLoadFile(m) {
+    if (model.ownername === '' && filename === '') {
+      if (!checkConsistency()) { return; }
+      mpp.isdir = true;
+      mpp.data = m;
+      renderDirectory(posofpane(pane));
+    } else if (m.directory && m.list) {
+      // Directory listing.
+      if (!checkConsistency()) { return; }
+      mpp.isdir = true;
+      mpp.data = m;
+      renderDirectory(posofpane(pane));
+      cb && cb();
+    } else if (!m.data && m.newfile) {
+      // In the nofile case, create an empty file.
+      createNewFileIntoPosition('left', filename);
+      updateTopControls(false);
+      view.flashNotification('New file ' + filename + '.');
+      cb && cb();
+    } else {
+      // The single file case.
+      // TODO:
+      // 2. in the offline case, notify the user that we are working offline.
+      // 3. in the unsaved case, notify the user that we loaded a backup and
+      //    give a link to load from network.
+      if (!m.data) { m.data = ''; }
+      mpploading.isdir = false;
+      mpploading.data = m;
+      secondStepOpenTemplate();
+    }
+  }
+  function secondStepOpenTemplate() {
+    // TODO: maybe do a prelim request instead of forcing errors when
+    // the template is missing some stuff.
+    var templateBaseDir = parseTemplateDirFromLoadedFile(mpploading.data);
+    if (!templateBaseDir) {
+      thirdStepShowEditor();
+      return;
+    }
+    loadTemplateMetadata(templateBaseDir, function(template) {
+      mpploading.template = template;
+      thirdStepShowEditor();
     });
   }
+  function thirdStepShowEditor() {
+    if (!checkConsistency()) { return; }
+    $.extend(mpp, mpploading);
+    console.log('mpp.data', mpp.data, 'mpploading.data', mpploading.data)
+    view.setPaneEditorText(pane, mpp.data.data, filename,
+        instructionTextForTemplate(mpp.template));
+    noteIfUnsaved(posofpane(pane));
+    updateTopControls(false);
+    cb && cb();
+  }
+  storage.loadFile(model.ownername, filename, forcenet, firstStepLoadFile);
 };
+
+function startNewActivity(filename, activityURL) {
+  view.setPreviewMode(true /*show preview*/, true /*no animation delay*/);
+
+  var position = 'left',
+      pane = paneatpos(position),
+      mpp = model.pane[pane],
+      loadNum = nextLoadNumber();
+
+  // TODO Do we need a loadnum, given that we aren't loading the user's own file?
+
+  view.clearPane(pane, true); // show loading animation.
+
+  mpp.filename = filename;
+  mpp.isdir = false;
+  mpp.loading = loadNum;
+  mpp.data = {
+    file: filename,
+    data: '',  // To be filled in from activity.
+    mtime: 0
+  };
+  mpp.running = false;
+
+  function checkConsistency() {
+    // This function verifies that the load that we are completing
+    // is the same as the load that we started (might not be true if
+    // the user clicks on load several times, faster than net responses).
+    // Should be called before mutating mpp again.
+    if (mpp.loading != loadNum) {
+      if (window.console) {
+        window.console.trace('aborted: loading is ' + mpp.loading +
+            ' instead of ' + loadNum);
+      }
+      return false;
+    }
+    mpp.loading = 0;
+    return true;
+  }
+
+  function activityLoaded(activityData) {
+    // TODO Convert 'template' to 'activity' throughout (coordinate with others to
+    // reduce the number of merge conflicts).
+
+    // TODO If failed to load, redirect to pencilcode.net/?  OR show some error?
+
+    if (!checkConsistency()) { return; }
+    mpp.template = activityData;
+    mpp.data.data = '#!pencil ' + activityData.activityURL + '\n' +
+                    activityData.wrapperParts.defaultText;
+    mpp.unsaved = true;
+    console.log('mpp.data', mpp.data)
+    view.setPaneEditorText(pane, mpp.data.data, filename,
+        instructionTextForTemplate(mpp.template));
+    noteIfUnsaved(posofpane(pane));
+    updateTopControls(false);
+  }
+
+  loadTemplateMetadata(activityURL, activityLoaded);
+}
 
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
@@ -1351,6 +1571,189 @@ function cookie(key, value, options) {
   }
   return result;
 };
+
+///////////////////////////////////////////////////////////////////////////
+// TEMPLATE SUPPORT (see also editor-view.js:expandRunTemplate)
+///////////////////////////////////////////////////////////////////////////
+
+// Given some saved code, pull the first line and looks to see
+// if it contains a specially-formatted template URL.  If so,
+// it returns it.  Otherwise, returns null.
+function parseTemplateDirFromLoadedFile(code) {
+  // Search for "#!pencil <url>\n" at the start of the file.
+  var m = /^#!pencil[ \t]+([^\n\r]+)($|[\n\r])/.exec(code.data);
+  if (m && m.index == 0) {
+    var hashBangParams = m[1];
+    console.log("User's file refers to a template: " + hashBangParams);
+    return hashBangParams;
+  }
+
+  console.log("User's file does not refer to a template:\n" + code.data.substr(0, 100));
+
+  return null;
+}
+
+// Given a template base directory, loads the template metadata.
+function loadTemplateMetadata(templateBaseDir, callback) {
+  var templateOwner, templateName, activityURL;
+  if (window.URL && /^(https?:)?\/\//.test(templateBaseDir)) {
+    var parsedURL = parseURL(templateBaseDir);
+    templateOwner = parsedURL.ownername;
+    templateName = parsedURL.filename;
+    activityURL = '//' + parsedURL.hostname + '/home/' + templateName;
+  }
+
+  // TODO Remove this if block which is from our hackathon where we
+  // chose to use owner:/path/to/dir as the templateBaseDir, but David
+  // argues for full URL (as handled above) so we can support multiple
+  // instances (root domains) of pencilcode.
+  if (!templateOwner || !templateName) {
+    var match = templateBaseDir.split(':');
+    if (match.length != 2) {
+      console.log('Failed to parse template location: ' + templateBaseDir);
+      callback(null);
+      return;
+    }
+    templateOwner = match[0];
+    templateName = match[1];
+    activityURL = '//' + templateOwner + "." +
+                  window.pencilcode.domain + '/home/' + templateName;
+  }
+
+  var activityFile = null;
+  var instructionsFile = null;
+  var wrapperFile = null;
+
+  var processTemplateDir = function(dirData) {
+    // Check for wrapper and instruction files and load them.
+    for (var i = 0, file; file = dirData.list[i]; i++) {
+      if (file.name == 'instructions.html') {
+        instructionsFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, instructionsFile, true, processInstructions);
+      } else if (file.name == 'wrapper' || file.name == 'wrapper.html') {
+        wrapperFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, wrapperFile, true, processWrapper);
+      } else if (file.name == 'activity.json') {
+        activityFile = templateName + '/' + file.name;
+        storage.loadFile(templateOwner, activityFile, true, processActivity);
+      }
+    }
+  };
+
+  var templateData = {
+    activityURL: activityURL,
+
+    // wrapper is the file (object) that will wrap the student's code, contains
+    // the strings {{start-default-text}} and {{end-default-text}} to mark where
+    // the student's code should be inserted.
+    wrapper: null,
+
+    // HTML to be displayed above editor
+    instructions: '',
+
+    // From optional json file.
+    metadata: null
+  };
+
+  var processInstructions = function(fileData) {
+    templateData.instructions = fileData.data;
+    finish();
+  };
+
+  var processWrapper = function(fileData) {
+    templateData.wrapper = fileData;
+    templateData.wrapperParts = view.parseTemplateWrapper(fileData.data);
+    finish();
+  };
+
+  var processActivity = function(fileData) {
+    templateData.metadata = JSON.parse(fileData.data);
+    finish();
+  };
+
+  var finish = function() {
+    if ((!instructionsFile || templateData.instructions) &&
+        (!wrapperFile || templateData.wrapper) &&
+        (!activityFile || templateData.metadata)) {
+      callback(templateData);
+    }
+  }
+
+  storage.loadFile(templateOwner, templateName, true, processTemplateDir);
+}
+
+// Given a template object, returns a piece of HTML that the IDE
+// will place in a div above the code editor.
+function instructionTextForTemplate(template) {
+  if (template) {
+    if (template.instructions)
+      return template.instructions;
+    else
+      return null;
+  } else {
+    return null;
+  }
+}
+
+// Check for activity files in current (left) directory, asynchronously.
+// Set activityDir for model
+function checkIfActivityDir() {
+  var hasInstruction = false;
+  var hasWrapper = false;
+  var hasMetadata = false;
+  var defaultPath = '';
+  var m = modelatpos('left');
+  var fn = m.filename;
+
+  if (m.isdir) {
+    defaultPath = fn;
+  } else {
+    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
+  }
+  function detectActivityDir(data) {
+    if (data.length) {
+       for (var j = 0; j < data.length; ++j) {
+        if (data[j].name === 'wrapper.html') {
+          hasWrapper = true;
+        } else if (data[j].name === 'wrapper') {
+          hasWrapper = true;
+        } else if (data[j].name === 'activity.json') {
+          hasMetadata = true;
+        }
+      }
+    }
+    if (hasWrapper || hasMetadata) {
+      var currModel = modelatpos('left');
+      if (currModel === m && m.filename === fn) {
+        m.activityDir = true;
+      }
+    }
+  }
+  storage.loadDirList(model.ownername, defaultPath, detectActivityDir);
+}
+
+// Construct an activity URL from the current run file path.
+function getStartActivityURL() {
+  var defaultPath = '';
+  var m = modelatpos('left');
+  var fn = m.filename;
+  var aUrl = '';
+  var activityDir = '';
+
+  if (m.isdir) {
+    defaultPath = fn;
+  } else {
+    defaultPath = fn.substr(0, fn.lastIndexOf('/'));
+  }
+  if (m.activityDir) {
+    // Omit the protocol from the activityDir so that it defaults to
+    // that used by the page.
+    activityDir = "//" + document.domain + '/home/' + defaultPath;
+    aUrl = ("http://start." + window.pencilcode.domain +
+      '/edit/' + defaultPath + '?' + 'activity=' + activityDir);
+  }
+  return aUrl;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // CROSS-FRAME-MESSAGE SUPPORT

@@ -111,6 +111,32 @@ window.pencilcode.storage = {
       cb(null);
     });
   },
+  loadDirList: function(ownername, filename, callback) {
+    if (!ownername && filename.indexOf('/') >= 0) {
+      setTimeout(function() {
+        callback({error: "Cannot load."});
+      }, 0);
+      return;
+    }
+    $.getJSON((ownername ? '//' + ownername + '.' +
+               window.pencilcode.domain : '') +
+        '/load/' + filename, function(m) {
+      // If there is no owner, we are not allowed to load directories
+      if (!ownername && filename && m.directory) {
+        callback({error: "Cannot load."});
+      }
+      if (m && m.directory && m.list) {
+        var result = [];
+        for (var j = 0; j < m.list.length; ++j) {
+          var reserved = (m.list[j].mode.indexOf('d') < 0);
+          result.push({ name: m.list[j].name});
+        }
+        callback(result);
+        return;
+      }
+      callback(null);
+    });
+  },
   // Given a filename (no owner, leading, or trailing slash),
   // attempts to load the file (or directory) and then calls callback
   // with the message.  Also automatically caches things in the backup store.

@@ -151,7 +151,8 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl
+  setVisibleUrl: setVisibleUrl,
+  parseTemplateWrapper: parseTemplateWrapper
 };
 
 function publish(method, args){
@@ -451,7 +452,7 @@ $('#filename').on('blur', function() {
   var sel = $('#filename');
   var enteredtext = sel.text();
   var fixedtext = enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
-      .replace(/^\/*/, '').replace(/\/\/+/g, '/');
+      .replace(/^\/[*]/, '').replace(/\/\/+/g, '/');
   if (!fixedtext) {
     fixedtext = state.nameText;
   }
@@ -644,6 +645,14 @@ function showShareDialog(opts) {
   opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
+       (opts.shareActivityURL ?
+        '<div class="field">' +
+          '<a target="_blank" class="quiet" ' +
+          'title="Link to student activity file" href="' +
+          opts.shareActivityURL + '">New Activity</a> <input type="text" value="' +
+          opts.shareActivityURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareActivityURL + '"><img src="/copy.png" title="Copy"></button>' +
+        '</div>' : '') +
         (opts.shareRunURL ?
         '<div class="field">' +
           '<a target="_blank" class="quiet" ' +
@@ -928,6 +937,8 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
+// TODO Move next few functions related to wrapping into another file so
+// they're more accessible outside of this file.
 function wrapTurtle(text) {
   return (
 '<!doctype html>\n<html>\n<head>\n<script src="http://' +
@@ -936,10 +947,99 @@ window.pencilcode.domain + '/turtlebits.js"><\057script>\n' +
 text + '\n<\057script></body></html>');
 }
 
-function modifyForPreview(text, filename, targetUrl) {
+function parseTemplateWrapper(wrapperText) {
+  // Find the lines that demark the default implementation of the assignment.
+  var startRe = /^.*{{start-default-text((?:;[^=]+=[^;}]*)*)}}$/gm,
+      startMatch = startRe.exec(wrapperText),
+      endRe = /^.*{{end-default-text}}$/gm,
+      endMatch = endRe.exec(wrapperText);
+  if (!startMatch) {
+    console.log("Unable to find {{start-default-text}} in wrapper.");
+    return;
+  }
+  if (!endMatch) {
+    console.log("Unable to find {{end-default-text}} in wrapper.");
+    return;
+  }
+  var result = {
+    before: wrapperText.substr(0, startMatch.index),
+    startLine: startMatch[0],
+    defaultText: wrapperText.substring(startRe.lastIndex+1, endMatch.index),
+    endLine: endMatch[0],
+    after: wrapperText.substr(endRe.lastIndex)
+  };
+  if (startMatch[1]) {
+    var parts = startMatch[1].substr(1).split(';'), vars = {};
+    $.each(parts, function(n, part) {
+      var offset = part.indexOf('='),
+          key = part.substr(0, offset),
+          value = part.substr(offset+1);
+      if (vars.hasOwnProperty(key)) {
+        console.log('Duplicate property (' + key + ') in start marker:\n' + startMatch[0]);
+        return;
+      }
+      vars[key] = value;
+    });
+    result.vars = vars;
+  }
+  // TODO(jamessynge): Remove linePrefix or indentBy*' ' from beginning of each line
+  // of the defaultText.
+  return result;
+}
+
+// Given a template object and some edited code, expands the
+// template for the running version of the code. Note that when
+// first opening a file in the editor, code is "" (empty string),
+// rather than the file's content. Wrapper authors made need to handle
+// that case, or we made need to do something different (e.g. just
+// use the default wrapper only in this case, as it displays the grid
+// and default turtle).
+function expandRunTemplate(template, code) {
+  // Remove "#!pencil... at start of file, replace with a \n so we don't change line numbers.
+  var cleanedCode = code.replace(/^#!pencil[^\n\r]*($|[\n\r])/, '\n'),
+      tmpl = template.wrapper.data,
+      wrapper = parseTemplateWrapper(tmpl);
+  if (!wrapper) {
+    return code;
+  }
+  if (wrapper.vars) {
+    var prefix;
+    if (wrapper.vars.linePrefix) {
+      prefix = wrapper.vars.linePrefix;
+    } else if (wrapper.vars.indentBy) {
+      var indentBy = +wrapper.vars.indentBy;
+      if (indentBy > 0) {
+        prefix = "                               ".substr(0, indentBy);
+      }
+    }
+    if (prefix != undefined) {
+      var lines = cleanedCode.split('\n');
+      cleanedCode = prefix + lines.join('\n' + prefix) + '\n';
+    }
+  }
+  var result = wrapper.before + cleanedCode + wrapper.after;
+  console.log("Added user's code to custom wrapper");
+  // TODO Consider adding support for multiple levels of wrapping (i.e. where
+  // metadata in first wrapper specifies path to next wrapper). For the moment,
+  // if the wrapper's file name has no extension, we assume that the wrapper is
+  // coffee script, to be wrapped in the standard code which adds turtlebits
+  // and creates the default turtle.
+  var mimeType = mimeForFilename(template.wrapper.file);
+  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
+    result = wrapTurtle(result);
+  }
+  return result;
+}
+
+function modifyForPreview(text, template, filename, targetUrl) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text);
+    if (template && template.wrapper) {
+      text = expandRunTemplate(template, text);
+    } else {
+      console.log("Wrapping user's code in default wrapper");
+      text = wrapTurtle(text);
+    }
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   }
   if (!text) return '';
@@ -970,14 +1070,14 @@ function modifyForPreview(text, filename, targetUrl) {
   return text;
 }
 
-function setPaneRunText(pane, text, filename, targetUrl) {
+function setPaneRunText(pane, text, template, filename, targetUrl) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
   updatePaneTitle(pane);
   // Assemble text and insert <base>, <plaintext>, etc., as appropriate.
-  var code = modifyForPreview(text, filename, targetUrl);
+  var code = modifyForPreview(text, template, filename, targetUrl);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
@@ -1395,7 +1495,8 @@ function getTextRowsAndColumns(text) {
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorText(pane, text, filename) {
+// @param instructionHTML instructions to show near the editor.
+function setPaneEditorText(pane, text, filename, instructionHTML) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
@@ -1404,7 +1505,15 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
-  $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var paneHTML = '<div id="' + id + '" class="editor"></div>';
+  // if the instructionHTML is provided, then create another
+  // div inside this pane for the instructions.
+  if (instructionHTML) {
+    paneHTML =
+       '<div class="instructions">' + instructionHTML + '</div>' +
+       paneHTML;
+  }
+  $('#' + pane).html(paneHTML);
   var editor = paneState.editor = ace.edit(id);
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
@@ -1415,6 +1524,8 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+  var lineArr = text.split('\n');
+  var lines = lineArr.length;
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -1466,6 +1577,26 @@ function setPaneEditorText(pane, text, filename) {
       fireEvent('changelines', [pane]);
     }
   });
+  // Fold any blocks with a line that ends with "# fold" or "// fold"
+  function autoFold() {
+    editor.getSession().off('tokenizerUpdate', autoFold);
+    var foldMarker = /(?:#|\/\/)\s*fold$/;
+    for (var i = 0, line; (line = lineArr[i]) !== undefined; i++) {
+      var match = foldMarker.exec(line);
+      if (match) {
+        var data = editor.getSession().getParentFoldRangeData(i + 1);
+        if (data && data.range && data.range.start && data.range.end) {
+          editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+        } else if (match.index == 0) {
+          // If the # fold is not in a block and is at the 0th column,
+          // then use it as an indicator to fold all the blocks in the file.
+          editor.getSession().foldAll(0, lineArr.length);
+          return;
+        }
+      }
+    }
+  }
+  editor.getSession().on('tokenizerUpdate', autoFold);
   if (long) {
     editor.gotoLine(0);
   } else {
