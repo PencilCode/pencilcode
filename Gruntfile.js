@@ -84,9 +84,6 @@ module.exports = function(grunt) {
           name: 'src/almond',
           out: 'site/top/editor.js',
           mainConfigFile: 'site/top/src/editor-main.js',
-          uglify: {
-            mangle: false
-          },
           preserveLicenseComments: false
         }
       }
