@@ -55,7 +55,7 @@ describe('code debugger', function() {
         // Poll until the element with class="editor" appears on the page.
         if (!$('.editor').length) return;
         // Reach in and return the text that is shown within the editor.
-        var ace_editor = ace.edit($('.editor').attr('id'));
+        var ace_editor = ace.edit($('.ice-ace')[0]);
         return {
           text: ace_editor.getSession().getValue(),
           runbuttoncount: $('#run').length

@@ -9,9 +9,6 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    run_grunt: {
-      src: ['src/ice/Gruntfile.coffee']
-    },
     bowercopy: {
       options: {
         clean: true
@@ -25,7 +22,9 @@ module.exports = function(grunt) {
           'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
-          'seedrandom.js': 'seedrandom/seedrandom.js'
+          'seedrandom.js': 'seedrandom/seedrandom.js',
+          'lib/ice.js': 'ice-editor/dist/ice-full.min.js',
+          'lib/ice.css': 'ice-editor/dist/ice.min.css'
         }
       },
       zeroclipboard: {
@@ -276,8 +275,6 @@ module.exports = function(grunt) {
     grunt.task.run('mochaTest');
   });
 
-  grunt.task.registerTask('ice', ['run_grunt'])
-
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
                      ['proxymessage', 'watch:dev', 'node-inspector:dev']);
@@ -286,8 +283,8 @@ module.exports = function(grunt) {
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
-  grunt.registerTask('build', ['ice', 'requirejs', 'replace']);
+  grunt.registerTask('build', ['requirejs', 'replace']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
-  grunt.registerTask('default', ['ice', 'requirejs', 'replace', 'uglify', 'test']);
+  grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
 

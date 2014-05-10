@@ -13,6 +13,7 @@
     "seedrandom": "latest",
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
-    "zeroclipboard": "latest"
+    "zeroclipboard": "latest",
+    "ice-editor": "Pencilcode/ice_editor#master"
   }
 }
