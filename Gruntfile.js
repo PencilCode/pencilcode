@@ -149,7 +149,7 @@ module.exports = function(grunt) {
         options: {
           script: 'dev/devserver.js',
           node_env: 'development',
-          debug: true,
+          //debug: true,
           args: ['../../dev/configDev.json']
         }
       },
