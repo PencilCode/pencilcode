@@ -122,9 +122,9 @@ exports.handleLoad = function(req, res, app, format) {
         var data = fs.readFileSync(absfile, {'encoding': 'utf8'});
 
         //For turtle bits, assume it's coffeescript
-        if (mt.indexOf('text/x-turtlebits') == 0) {
+        if (mt.indexOf('text/x-pencilcode') == 0) {
           data = wrapTurtle(data, app);
-          mt = mt.replace('x-turtlebits', 'html');
+          mt = mt.replace('x-pencilcode', 'html');
         }
 
         res.set('Cache-Control', 'no-cache');
@@ -355,7 +355,7 @@ function getMimeType(ext) {
   };
   var result = mimeTypeTable[ext];
   if (!result) {
-    result = 'text/x-turtlebits';
+    result = 'text/x-pencilcode';
   }
 
   if (result.indexOf('text') == 0) {

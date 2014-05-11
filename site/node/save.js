@@ -214,7 +214,7 @@ exports.handleSave = function(req, res, app) {
       }
 
       touchUserDir(userdir);
-      res.json({saved: filename});
+      res.json({saved: '/' + filename});
       return;
     }
 
@@ -299,7 +299,7 @@ exports.handleSave = function(req, res, app) {
         touchUserDir(userdir);
 
         res.json({
-          saved: filename,
+          saved: '/' + filename,
           mtime: statObj.mtime.getTime(),
           size: statObj.size
         });
