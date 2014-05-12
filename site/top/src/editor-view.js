@@ -164,7 +164,9 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl
+  setVisibleUrl: setVisibleUrl,
+  // For debugging only
+  _state: state
 };
 
 function publish(method, args){
@@ -1391,10 +1393,11 @@ function changePaneEditorText(pane, text) {
         ace.require('ace/range').Range.fromPoints(fold.start, fold.end));
     });
   } catch(e) { }
-  session.setScrollTop(saved.scrollTop)
-  session.setScrollTop(saved.scrollLeft)
 
-  // paneState.editor.moveCursorToPosition(cursor);
+  // TODO: detect the case where some text is added and we should
+  // scroll down to make the changes visible.
+  session.setScrollTop(saved.scrollTop);
+  session.setScrollLeft(saved.scrollLeft);
 }
 
 // Initializes an (ACE) editor into a pane, using the given text and the
