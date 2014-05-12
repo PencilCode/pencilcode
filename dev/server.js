@@ -25,7 +25,7 @@ function rewriteRules(req, res, next) {
 
 function proxyRules(req, res, next) {
   var u = utils.parseUrl(req);
-  if (/^\/(?:home|load|save|proxy)(?=\/)/.test(u.pathname) &&
+  if (/^\/(?:code|home|load|save|proxy)(?=\/)/.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;

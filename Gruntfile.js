@@ -135,7 +135,6 @@ module.exports = function(grunt) {
           'site/top/jquery-turtle.js',
           'site/top/lodash.js',
           'site/top/src/showturtle.js'
-
         ],
         dest: 'site/top/turtlebits.js'
       },
