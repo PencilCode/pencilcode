@@ -96,7 +96,9 @@ window.pencilcode.view = {
   setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
-  changePaneEditorText: changePaneEditorText,
+  changePaneEditorText: function(pane, text) {
+    return changeEditorText(state.pane[pane], text);
+  },
   getPaneEditorText: getPaneEditorText,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
@@ -1362,10 +1364,9 @@ function getTextRowsAndColumns(text) {
   };
 }
 
-function changePaneEditorText(pane, text) {
-  var paneState = state.pane[pane];
+function changeEditorText(paneState, text) {
   if (!paneState.editor) {
-    console.warn('changePaneEditorText without an editor');
+    console.warn('changeEditorText without an editor');
     return;
   }
   var saved = {}, editor = paneState.editor, session = editor.session;
@@ -1441,6 +1442,7 @@ function setPaneEditorText(pane, text, filename) {
     editor.setFontSize(24);
   }
   editor.setValue(text);
+  setupAutofoldScriptPragmas(paneState);
   var um = editor.getSession().getUndoManager();
   um.reset();
   publish('update', [text]);
@@ -1483,7 +1485,7 @@ function setPaneEditorText(pane, text, filename) {
   if (long) {
     editor.gotoLine(0);
   } else {
-    editor.gotoLine(editor.getSession().getLength() - 1, 0);
+    editor.gotoLine(editor.getSession().getLength(), 0);
   }
   setPrimaryFocus();
   editor.on('focus', function() {
@@ -1518,6 +1520,82 @@ function ensureEmptyLastLine(editor) {
       editor.moveCursorToPosition(curpos);
     }
   }
+}
+
+function setupAutofoldScriptPragmas(paneState) {
+  var editor = paneState.editor,
+      session = editor.getSession(),
+      foldlines = autofoldScriptPragmas(editor);
+  if (foldlines) {
+    // Don't allow the cursor to be on the same line as the fold
+    function onChangeCursor() {
+      if (!editor.selection.isEmpty()) return;
+      var curpos = editor.getCursorPosition(),
+          fold = session.getFoldAt(curpos.row, curpos.column);
+      if (fold && fold.placeholder == '#@script' &&
+          foldlines.length > curpos.row) {
+        // If the fold has text after it on the same line (a newline
+        // was deleted, then insert a newline here.
+        if (curpos.column > 0 &&
+            session.getLine(curpos.row).length > curpos.column) {
+          session.insert(curpos, '\n');
+          curpos.column = 0;
+        }
+        editor.selection.moveCursorTo(foldlines.length, curpos.column);
+        editor.selection.clearSelection();
+      }
+    };
+    session.on('changeFold', function(e) {
+      var value;
+      if (e.action == 'remove' && e.data && e.data.placeholder == '#@script') {
+        // Don't allow the fold to be deleted.
+        value = editor.getValue();
+        if (value.indexOf(foldlines) < 0) {
+          setTimeout(function() {
+            if (paneState.editor === editor) {
+              changeEditorText(paneState, foldlines.join('\n') +
+                  ((value.indexOf('\n') != 0) ? '\n' : '') + value);
+              foldlines = autofoldScriptPragmas(editor);
+              onChangeCursor();
+            }
+          }, 0);
+        } else {
+          setTimeout(function() {
+            foldlines = autofoldScriptPragmas(editor);
+            if (foldlines) {
+              editor.selection.clearSelection();
+              onChangeCursor();
+            }
+          }, 1000);
+        }
+      }
+    });
+    editor.selection.on('changeSelection', onChangeCursor);
+    editor.selection.on('changeCursor', onChangeCursor);
+  }
+}
+
+function autofoldScriptPragmas(editor) {
+  var session = editor.getSession(),
+      lines = session.getLength(),
+      curpos = editor.getCursorPosition(),
+      foldlines = [],
+      newpos, j, line, foldrange;
+  if (!lines) { return; }
+  for (j = 0; j < lines; ++j) {
+    line = session.getLine(j);
+    if (!/^#\s*@script\b/.test(line)) {
+      break;
+    }
+    foldlines.push(line);
+  }
+  // autofold only if cursor is not inside script pragmas.
+  if (foldlines.length > 0 && (curpos.row >= j || curpos.column == 0)) {
+    foldrange = new (ace.require('ace/range').Range)(0, 0, j - 1, Infinity);
+    session.addFold('#@script', foldrange);
+    return foldlines;
+  }
+  return null;
 }
 
 function setPrimaryFocus() {
