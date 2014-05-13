@@ -1369,8 +1369,14 @@ function changeEditorText(paneState, text) {
     console.warn('changeEditorText without an editor');
     return;
   }
+  // Always ensure there is a trailing newline.
+  if (text.length && text.charAt(text.length - 1) != '\n') {
+    text += '\n';
+  }
+  paneState.changeHandler.suppressChange = true;
   var saved = {}, editor = paneState.editor, session = editor.session;
   saved.selection = session.selection.toJSON()
+  saved.atend = session.selection.getCursor().row >= session.getLength() - 1;
   saved.folds = session.getAllFolds().map(function(fold) {
     return {
       start       : fold.start,
@@ -1382,10 +1388,7 @@ function changeEditorText(paneState, text) {
   saved.scrollLeft = session.getScrollLeft()
 
   // Now set the text and restore everything.
-  paneState.changeHandler.suppressChange = true;
   session.setValue(text);
-  paneState.changeHandler.suppressChange = false;
-  paneState.changeHandler();
 
   session.selection.fromJSON(saved.selection);
   try {
@@ -1395,10 +1398,19 @@ function changeEditorText(paneState, text) {
     });
   } catch(e) { }
 
-  // TODO: detect the case where some text is added and we should
-  // scroll down to make the changes visible.
   session.setScrollTop(saved.scrollTop);
   session.setScrollLeft(saved.scrollLeft);
+
+  // If the cursor used to be at the end, keep it at the end.
+  if (session.selection.isEmpty() && saved.atend) {
+    session.selection.moveCursorTo(session.getLength() - 1, 0);
+  }
+
+  // TODO: detect the case where some text is added and we should
+  // scroll down to make the changes visible.
+
+  paneState.changeHandler.suppressChange = false;
+  paneState.changeHandler();
 }
 
 // Initializes an (ACE) editor into a pane, using the given text and the
@@ -1547,6 +1559,9 @@ function setupAutofoldScriptPragmas(paneState) {
       }
     };
     session.on('changeFold', function(e) {
+      // Don't do anything special if changeHandler is suppressed.
+      if (paneState.changeHandler &&
+          paneState.changeHandler.suppressChange) return;
       var value;
       if (e.action == 'remove' && e.data && e.data.placeholder == '#@script') {
         // Don't allow the fold to be deleted.
