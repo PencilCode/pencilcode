@@ -83,7 +83,7 @@ describe('browse users in edit mode', function() {
       return dirs.join(' ');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(/a .*b .*c .*livetest .*zzz/
+      assert.ok(/aaa .*bbb .*ccc .*livetest .*zzz/
           .test(result));
       done();
     });

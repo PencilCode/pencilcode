@@ -174,18 +174,18 @@ module.exports = function(grunt) {
           node_env: 'compiled',
           //debug: true,
           args: ['../../dev/configTest.json'],
-          port: 8193, 
+          port: 8193,
         }
       }
     },
     watch: {
       dev: {
-        files: ['dev/*.js', 'site/node/*.js'],
+        files: ['dev/*.js', 'dev/configDev.json', 'site/node/*.js'],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ['dev/*.js', 'site/node/*.js'],
+        files: ['dev/*.js', 'site/node/*.js', 'site/node/*.json'],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }
@@ -264,7 +264,7 @@ module.exports = function(grunt) {
   });
 
   // "devserver" serves editor code directly from the src directory.
-  grunt.registerTask('devserver', 
+  grunt.registerTask('devserver',
                      ['proxymessage', 'watch:dev', 'node-inspector:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);

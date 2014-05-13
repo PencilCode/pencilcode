@@ -83,49 +83,49 @@ describe('test of server json apis', function() {
   });
   it('fails to set password on child dir', function(done) {
     var teststr1 = 'abcdefghij';
-    json('withpass', '/save/abc/def?mode=setkey&key=123&data=' + 
+    json('withpass', '/save/abc/def?mode=setkey&key=123&data=' +
          teststr1, function(s, obj) {
       assert.equal(obj.error, 'Can only set key on a top-level user directory.');
       done();
     });
   });
   it('clears password successfully', function(done) {
-    json('withpass', '/save?mode=setkey&key=123',  
+    json('withpass', '/save?mode=setkey&key=123',
          function(s, obj) {
       assert.equal(obj.keycleared, 'withpass');
       done();
     });
   });
   it('sets password successfully', function(done) {
-    json('withpass', '/save?mode=setkey&data=123',  
+    json('withpass', '/save?mode=setkey&data=123',
          function(s, obj) {
       assert.equal(obj.keyset, 'withpass');
       done();
     });
   });
   it('fails to copy a file that doesnt exist', function(done) {
-    json('zzz', '/save/test1?source=notexist',  
+    json('zzz', '/save/test1?source=notexist',
          function(s, obj) {
       assert.ok(/Source file does not exist./.test(obj.error));
       done();
     });
   });
   it('fails to copy a file to root', function(done) {
-    json('zzz', '/save?source=newfile',  
+    json('zzz', '/save?source=newfile',
          function(s, obj) {
       assert.ok(/Bad filename./.test(obj.error));
       done();
     });
   });
   it('fails to move a file without authz', function(done) {
-    json('zzz', '/save/file2?source=withpass/file1&mode=mv',  
+    json('zzz', '/save/file2?source=withpass/file1&mode=mv',
          function(s, obj) {
       assert.equal(obj.error, 'Source password protected.');
       done();
     });
   });
   it('fails to replace an existing file', function(done) {
-    json('withpass', '/save/file1?source=zzz/newfile&mode=mv&key=123',  
+    json('withpass', '/save/file1?source=zzz/newfile&mode=mv&key=123',
          function(s, obj) {
       assert.equal(obj.error.indexOf('Cannot replace existing file'), 0);
       done();
@@ -137,7 +137,7 @@ describe('test of server json apis', function() {
     json('zzz', '/save/' + filename + '?data=abcdefgh', function(s, obj) {
       assert.equal(obj.saved, '/zzz/' + filename);
       // Now move it
-      json('zzz', '/save/mvfile?source=zzz/' + filename + '&mode=mv',  
+      json('zzz', '/save/mvfile?source=zzz/' + filename + '&mode=mv',
          function(s, obj) {
         assert.equal(obj.saved, '/zzz/mvfile');
         // Make sure it loads
@@ -152,7 +152,7 @@ describe('test of server json apis', function() {
       });
     });
   });
-  /*
+  /* TODO: fix copy (commented out because it's not currently working).
   it('correctly copies a file', function(done) {
     // Generate a new file name
     var filename = new Date().getTime();

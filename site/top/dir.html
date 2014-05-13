@@ -71,7 +71,7 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
 <div id="bravo" class="full pane"
 ><div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<script src="http://pencilcode.net/jquery.js"></script>
+<script src="/jquery.js"></script>
 <script>
 (function() {
 
@@ -80,11 +80,15 @@ $('#edit').click(function() {
     window.location.pathname.replace(/^\/[^\/]*\/|.*/, '/edit/');
 });
 
+var domain = location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
+    ownername = location.hostname.replace(/(?:(.*)\.)?[^.]*.{8}$/, '$1');
+
+
 $('#done').click(function() {
   var parent =
      window.location.pathname.replace(/\/[^\/]+\/?$/, '');
   if (parent.indexOf('/', 1) < 0) {
-    window.location.href = 'http://pencilcode.net/';
+    window.location.href = 'http://' + domain + '/';
     return;
   }
   var slashed = parent + (parent[parent.length - 1] == '/' ? '' : '/')
@@ -164,9 +168,7 @@ function setPaneLinkText(list) {
 }
 
 var links = [];
-var ownername = window.location.hostname.replace(
-      /(?:(.*)\.)?[^.]*.{7}$/, '$1');
-var backend = (ownername ? ownername + '.' : '') + 'pencilcode.net';
+var backend = (ownername ? ownername + '.' : '') + domain;
 
 $.getJSON('http://' + backend +
     '/load/' + window.location.pathname.replace(/^\/[^\/]+\//, ''),
@@ -182,7 +184,7 @@ function(m) {
     for (var j = 0; j < m.list.length; ++j) {
       if (m.list[j].mode.indexOf('d') < 0) { continue; }
       var label = m.list[j].name;
-      var href = 'http://' + label + '.pencilcode.net/home/';
+      var href = 'http://' + label + '.' + domain + '/home/';
       links.push({html:label, href:href});
     }
   } else {
