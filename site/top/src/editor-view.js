@@ -1525,11 +1525,12 @@ function ensureEmptyLastLine(editor) {
 function setupAutofoldScriptPragmas(paneState) {
   var editor = paneState.editor,
       session = editor.getSession(),
-      foldlines = autofoldScriptPragmas(editor);
+      foldlines = autofoldScriptPragmas(editor),
+      selfmove = 0;
   if (foldlines) {
     // Don't allow the cursor to be on the same line as the fold
     function onChangeCursor() {
-      if (!editor.selection.isEmpty()) return;
+      if (selfmove) return;
       var curpos = editor.getCursorPosition(),
           fold = session.getFoldAt(curpos.row, curpos.column);
       if (fold && fold.placeholder == '#@script' &&
@@ -1539,10 +1540,10 @@ function setupAutofoldScriptPragmas(paneState) {
         if (curpos.column > 0 &&
             session.getLine(curpos.row).length > curpos.column) {
           session.insert(curpos, '\n');
-          curpos.column = 0;
         }
-        editor.selection.moveCursorTo(foldlines.length, curpos.column);
-        editor.selection.clearSelection();
+        selfmove += 1;
+        editor.selection.moveCursorTo(foldlines.length, 0);
+        selfmove -= 1;
       }
     };
     session.on('changeFold', function(e) {
