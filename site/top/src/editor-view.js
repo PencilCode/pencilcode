@@ -1551,7 +1551,7 @@ function setupAutofoldScriptPragmas(paneState) {
       if (e.action == 'remove' && e.data && e.data.placeholder == '#@script') {
         // Don't allow the fold to be deleted.
         value = editor.getValue();
-        if (value.indexOf(foldlines) < 0) {
+        if (foldlines && value.indexOf(foldlines.join('\n')) < 0) {
           setTimeout(function() {
             if (paneState.editor === editor) {
               changeEditorText(paneState, foldlines.join('\n') +
@@ -1580,7 +1580,7 @@ function autofoldScriptPragmas(editor) {
   var session = editor.getSession(),
       lines = session.getLength(),
       curpos = editor.getCursorPosition(),
-      foldlines = [],
+      foldlines = [], folds,
       newpos, j, line, foldrange;
   if (!lines) { return; }
   for (j = 0; j < lines; ++j) {
@@ -1590,9 +1590,21 @@ function autofoldScriptPragmas(editor) {
     }
     foldlines.push(line);
   }
+  // First remove all folds inside this line range.
+  // (In case the autofolder has inserted some folds for a multiline comment)
+  folds = session.getAllFolds();
+  for (j = 0; j < folds.length; ++j) {
+    if (folds[j].range.endRow < foldlines.length) {
+      console.log('removing fold', folds[j], 'length', folds.length);
+      session.removeFold(folds[j]);
+      console.log('length', folds.length);
+    }
+  }
   // autofold only if cursor is not inside script pragmas.
-  if (foldlines.length > 0 && (curpos.row >= j || curpos.column == 0)) {
-    foldrange = new (ace.require('ace/range').Range)(0, 0, j - 1, Infinity);
+  if (foldlines.length > 0 && (
+      curpos.row >= foldlines.length || curpos.column == 0)) {
+    foldrange = new (ace.require('ace/range').Range)(
+        0, 0, foldlines.length - 1, Infinity);
     session.addFold('#@script', foldrange);
     return foldlines;
   }
