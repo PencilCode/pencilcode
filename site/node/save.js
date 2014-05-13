@@ -72,9 +72,11 @@ exports.handleSave = function(req, res, app) {
     }
 
     // validate username
+    var userdir = null;
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
+      userdir = utils.getUserHomeDir(user, app);
     }
 
     var topdir = false;
@@ -90,10 +92,6 @@ exports.handleSave = function(req, res, app) {
     }
 
     var absfile = utils.makeAbsolute(filename, app);
-    var userdir = null;
-    if (user) {
-      userdir = utils.getUserHomeDir(user, app);
-    }
 
     //
     // Validate that users key matches the supplied key
@@ -129,6 +127,7 @@ exports.handleSave = function(req, res, app) {
       }
 
       sourceuser = filenameuser(sourcefile);
+
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
@@ -195,20 +194,23 @@ exports.handleSave = function(req, res, app) {
         // Copy case
         try {
           // Are we copying a directory?
-          if (fs.stat(absSourceFile).isDirectory()) {
+          if (utils.isPresent(absSourceFile, 'dir')) {
             if (fs.existsSync(absfile)) {
               utils.errorExit(
-                  'Cannot overwwrite existing directory ' + filename);
+                  'Cannot overwrite existing directory ' + filename);
             }
 
-            fsExtra.copySync(absSourceFile, absfile);
+            // TODO: This this not working yet.
+            fsExtra.copyRecursiveSync(absSourceFile, absfile);
             // TODO: Need to ignore .key subdirs and contents
           }
           else {
-            fsExtra.copySync(absSourceFile, absfile);
+            // TODO: This is not working yet.
+            fsExtra.copyRecursiveSync(absSourceFile, absfile);
           }
         }
         catch (e) {
+	    console.log(e);
           utils.errorExit('Could not copy ' + sourcefile + ' to ' + filename);
         }
       }

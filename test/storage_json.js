@@ -60,4 +60,142 @@ describe('test of server json apis', function() {
       });
     });
   });
+  it('fails to save an empty file name', function(done) {
+    var teststr1 = 'abcdefghij';
+    json('zzz', '/save?data=' + teststr1, function(s, obj) {
+      assert.ok(/Bad filename/.test(obj.error));
+      done();
+    });
+  });
+  it('fails to save to an unauthorized user dir', function(done) {
+    var teststr1 = 'abcdefghij';
+    json('withpass', '/save/abc?data=' + teststr1, function(s, obj) {
+      assert.equal(obj.error, 'Password protected.');
+      done();
+    });
+  });
+  it('fails to save with invalid password', function(done) {
+    var teststr1 = 'abcdefghij';
+    json('withpass', '/save/abc?key=key&data=' + teststr1, function(s, obj) {
+      assert.equal(obj.error, 'Incorrect password.');
+      done();
+    });
+  });
+  it('fails to set password on child dir', function(done) {
+    var teststr1 = 'abcdefghij';
+    json('withpass', '/save/abc/def?mode=setkey&key=123&data=' + 
+         teststr1, function(s, obj) {
+      assert.equal(obj.error, 'Can only set key on a top-level user directory.');
+      done();
+    });
+  });
+  it('clears password successfully', function(done) {
+    json('withpass', '/save?mode=setkey&key=123',  
+         function(s, obj) {
+      assert.equal(obj.keycleared, 'withpass');
+      done();
+    });
+  });
+  it('sets password successfully', function(done) {
+    json('withpass', '/save?mode=setkey&data=123',  
+         function(s, obj) {
+      assert.equal(obj.keyset, 'withpass');
+      done();
+    });
+  });
+  it('fails to copy a file that doesnt exist', function(done) {
+    json('zzz', '/save/test1?source=notexist',  
+         function(s, obj) {
+      assert.ok(/Source file does not exist./.test(obj.error));
+      done();
+    });
+  });
+  it('fails to copy a file to root', function(done) {
+    json('zzz', '/save?source=newfile',  
+         function(s, obj) {
+      assert.ok(/Bad filename./.test(obj.error));
+      done();
+    });
+  });
+  it('fails to move a file without authz', function(done) {
+    json('zzz', '/save/file2?source=withpass/file1&mode=mv',  
+         function(s, obj) {
+      assert.equal(obj.error, 'Source password protected.');
+      done();
+    });
+  });
+  it('fails to replace an existing file', function(done) {
+    json('withpass', '/save/file1?source=zzz/newfile&mode=mv&key=123',  
+         function(s, obj) {
+      assert.equal(obj.error.indexOf('Cannot replace existing file'), 0);
+      done();
+    });
+  });
+  it('correctly moves a file', function(done) {
+    // Create a new file
+    var filename = new Date().getTime();
+    json('zzz', '/save/' + filename + '?data=abcdefgh', function(s, obj) {
+      assert.equal(obj.saved, '/zzz/' + filename);
+      // Now move it
+      json('zzz', '/save/mvfile?source=zzz/' + filename + '&mode=mv',  
+         function(s, obj) {
+        assert.equal(obj.saved, '/zzz/mvfile');
+        // Make sure it loads
+        json('zzz', '/load/mvfile', function(s, obj) {
+          assert.equal(obj.file, '/zzz/mvfile');
+          // Now delete it
+          json('zzz', '/save/mvfile?data=', function(s, obj) {
+            assert.equal(obj.deleted, 'zzz/mvfile');
+            done();
+          });
+        });
+      });
+    });
+  });
+  /*
+  it('correctly copies a file', function(done) {
+    // Generate a new file name
+    var filename = new Date().getTime();
+    // Now issue the copy
+    json('zzz', '/save/' + filename + '?source=zzz/newfile', function(s, obj) {
+      assert.equal(obj.saved, '/zzz/' + filename);
+      done();
+    });
+  });
+  */
+  it('fails to load a file thats not present', function(done) {
+    json('zzz', '/load/randomfile', function(s, obj) {
+      assert.equal(obj.error, 'could not read file zzz/randomfile');
+      assert.ok(obj.newfile);
+      done();
+    });
+  });
+  it('Loads a file thats present', function(done) {
+    json('zzz', '/load/newfile', function(s, obj) {
+      assert.equal(obj.file, '/zzz/newfile');
+      assert.equal(obj.mime, 'text/x-pencilcode;charset=utf-8');
+      assert.equal(obj.data, 'fd 1000\n');
+      assert.ok(obj.mtime > 0);
+      done();
+    });
+  });
+  it('Loads a directory thats present', function(done) {
+    json('zzz', '/load', function(s, obj) {
+      assert.equal(obj.directory, '/zzz/');
+      assert.ok(obj.list.length > 0);
+      // Check to see if file is present in list
+      var i;
+      for (i = 0; i < obj.list.length; i++) {
+        if (obj.list[i].name == 'newfile') {
+          assert.equal(obj.list[i].mode, 'rw');
+          assert.equal(obj.list[i].size, 8);
+          assert.ok(obj.list[i].mtime > 0);
+          break;
+        }
+      }
+      assert.ok(i < obj.list.length); // make sure the object was found.
+      done();
+    });
+  });
 });
+
