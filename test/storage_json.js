@@ -138,7 +138,7 @@ describe('test of server json apis', function() {
       assert.equal(obj.saved, '/zzz/' + filename);
       // Now move it
       json('zzz', '/save/mvfile?source=zzz/' + filename + '&mode=mv',
-         function(s, obj) {
+          function(s, obj) {
         assert.equal(obj.saved, '/zzz/mvfile');
         // Make sure it loads
         json('zzz', '/load/mvfile', function(s, obj) {
@@ -152,7 +152,6 @@ describe('test of server json apis', function() {
       });
     });
   });
-  /* TODO: fix copy (commented out because it's not currently working).
   it('correctly copies a file', function(done) {
     // Generate a new file name
     var filename = new Date().getTime();
@@ -162,7 +161,6 @@ describe('test of server json apis', function() {
       done();
     });
   });
-  */
   it('fails to load a file thats not present', function(done) {
     json('zzz', '/load/randomfile', function(s, obj) {
       assert.equal(obj.error, 'could not read file zzz/randomfile');

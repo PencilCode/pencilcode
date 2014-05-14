@@ -1,6 +1,5 @@
 var path = require('path');
 var fs = require('fs');
-var fsExtra = require('fs.extra');
 
 exports.getRootCacheName = function(app) {
   return path.join(app.locals.config.dirs.cachedir, 'rootcache');

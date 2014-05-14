@@ -1,6 +1,6 @@
 var path = require('path');
 var fs = require('fs');
-var fsExtra = require('fs.extra');
+var fsExtra = require('fs-extra');
 var utils = require('./utils');
 
 exports.handleSave = function(req, res, app) {
@@ -180,9 +180,9 @@ exports.handleSave = function(req, res, app) {
             }
           }
 
-          // Remove .key when moving top dir into deeper dir because we don't
-          // want to propagate password data
-          if (topdir && filename != user) {
+          // Remove .key if present, because we don't want to
+          // propagate password data
+          if (utils.isPresent(path.join(absfile, '.key'))) {
             fsExtra.removeSync(path.join(absfile, '.key'));
           }
         }
@@ -200,17 +200,18 @@ exports.handleSave = function(req, res, app) {
                   'Cannot overwrite existing directory ' + filename);
             }
 
-            // TODO: This this not working yet.
-            fsExtra.copyRecursiveSync(absSourceFile, absfile);
-            // TODO: Need to ignore .key subdirs and contents
+            fsExtra.copySync(absSourceFile, absfile);
+            // Remove .key if present, because we don't want to
+            // propagate password data.
+            if (utils.isPresent(path.join(absfile, '.key'))) {
+              fsExtra.removeSync(path.join(absfile, '.key'));
+            }
           }
           else {
-            // TODO: This is not working yet.
-            fsExtra.copyRecursiveSync(absSourceFile, absfile);
+            fsExtra.copySync(absSourceFile, absfile);
           }
         }
         catch (e) {
-	    console.log(e);
           utils.errorExit('Could not copy ' + sourcefile + ' to ' + filename);
         }
       }

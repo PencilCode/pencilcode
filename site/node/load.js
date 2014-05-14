@@ -1,6 +1,6 @@
 var path = require('path');
 var fs = require('fs-ext');
-var fsExtra = require('fs.extra');
+var fsExtra = require('fs-extra');
 var utils = require('./utils');
 
 exports.handleLoad = function(req, res, app, format) {
