@@ -30,7 +30,7 @@ exports.getUser = function(req, app) {
 exports.errorExit = errorExit;
 
 function errorExit(msg) {
-  console.log('ERROREXIT: ' + msg);
+  // console.log('ERROREXIT: ' + msg);
   throw new ImmediateReturnError(msg, {'error': msg});
 }
 
