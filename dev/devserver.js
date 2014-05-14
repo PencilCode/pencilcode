@@ -1,14 +1,15 @@
 var express = require('express'),
-    utils = require('connect').utils,
+    cnUtils = require('connect').utils,
     path = require('path'),
     http = require('http'),
     url = require('url'),
+    serverbase = require('../site/node/serverbase.js'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
     proxy = new httpProxy.RoutingProxy();
 
 function rewriteRules(req, res, next) {
-  var u = utils.parseUrl(req);
+  var u = cnUtils.parseUrl(req);
   if (u.pathname == '/') { u.pathname = '/welcome.html'; }
   else if (/^\/edit\//.test(u.pathname)) {
     if (/^frame\./.test(req.headers['host'])) {
@@ -24,8 +25,10 @@ function rewriteRules(req, res, next) {
 }
 
 function proxyRules(req, res, next) {
-  var u = utils.parseUrl(req);
-  if (/^\/(?:home|load|save|proxy)(?=\/)/.test(u.pathname) &&
+  var u = cnUtils.parseUrl(req);
+  var exp = (req.app.locals.config.useProxy) ?
+    /^\/(?:home|load|save|proxy)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
+  if (exp.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
@@ -40,7 +43,7 @@ function proxyRules(req, res, next) {
 }
 
 function proxyPacGenerator(req, res, next) {
-  var u = utils.parseUrl(req);
+  var u = cnUtils.parseUrl(req);
   if (u.pathname == '/proxy.pac') {
     var hostHeader = req.get('host'),
         hostMatch = /^([^:]+)(?::(\d*))?$/.exec(hostHeader || ''),
@@ -63,19 +66,12 @@ function proxyPacGenerator(req, res, next) {
   }
 }
 
+
+serverbase.initialize(app);
 app.use(rewriteRules);
-console.log('using', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
-app.configure('development', function() {
-  app.use(express.static(path.join(__dirname, '../site/top/src')));
-});
-app.use(express.static(path.join(__dirname, '../site/top')));
 app.use(proxyRules);
 app.use(proxyPacGenerator);
-app.get('*', function(req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('404 - ' + req.url);
-});
-
+serverbase.initialize2(app);
 app.listen(process.env.PORT, function() {
   console.log('Express server listening on ' + process.env.PORT);
 });

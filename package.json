@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/PenciCode/pencilcode-site.git"
+    "url": "git://github.com/PencilCode/pencilcode-site.git"
   },
   "author": "Pencil Code",
   "license": "MIT",
@@ -27,9 +27,13 @@
     "grunt-contrib-requirejs": "~0.4.1",
     "grunt-replace": "~0.5.1",
     "grunt-express-server": "~0.4.11",
+    "grunt-contrib-copy": "~0.5.0",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-mocha-test": "~0.8.1",
     "node-phantom-simple": "~1.0.16",
-    "grunt-contrib-concat": "~0.3.0"
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-node-inspector": "~0.1.5",
+    "fs-extra": "~0.8.1",
+    "fs-ext": "~0.3.2"
   }
 }
