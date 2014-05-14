@@ -1610,9 +1610,7 @@ function autofoldScriptPragmas(editor) {
   folds = session.getAllFolds();
   for (j = 0; j < folds.length; ++j) {
     if (folds[j].range.endRow < foldlines.length) {
-      console.log('removing fold', folds[j], 'length', folds.length);
       session.removeFold(folds[j]);
-      console.log('length', folds.length);
     }
   }
   // autofold only if cursor is not inside script pragmas.
