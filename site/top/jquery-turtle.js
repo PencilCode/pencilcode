@@ -5931,12 +5931,9 @@ function input(name, callback, numeric) {
     name = null;
   }
   name = $.isNumeric(name) || name ? name : '&rArr;';
-  var textbox = $('<input>').css({margin:0, padding:0, flex:1}),
-      label = $(
-      (numeric >= 0 ? '<label style="display:table">'
-                    : '<label style="display:flex">') +
-      name + '&nbsp;' +
-      '</label>').append(textbox),
+  var textbox = $('<input>').css({margin:0, padding:0}),
+      label = $('<label style="display:table">' + name + '&nbsp;' +
+        '</label>').append(textbox),
       thisval = $([textbox[0], label[0]]),
       debounce = null,
       lastseen = textbox.val();
@@ -5985,6 +5982,15 @@ function input(name, callback, numeric) {
   textbox.on('change', newval);
   autoScrollAfter(function() {
     $('body').append(label);
+    if (numeric < 0) {
+      // Widen a "readstr" textbox to make it fill the line.
+      var availwidth = label.parent().width(),
+          freewidth = availwidth + label.offset().left - textbox.offset().left,
+          bigwidth = Math.max(256, availwidth / 2),
+          desiredwidth = freewidth < bigwidth ? availwidth : freewidth,
+          marginwidth = textbox.outerWidth(true) - textbox.width();
+      textbox.width(desiredwidth - marginwidth);
+    }
   });
   // Focus, but don't cause autoscroll to occur due to focus.
   undoScrollAfter(function() { textbox.focus(); });
