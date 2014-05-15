@@ -27,7 +27,7 @@ function rewriteRules(req, res, next) {
 function proxyRules(req, res, next) {
   var u = cnUtils.parseUrl(req);
   var exp = (req.app.locals.config.useProxy) ?
-    /^\/(?:home|load|save|proxy)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
+    /^\/(?:code|home|load|save|proxy)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
   if (exp.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');

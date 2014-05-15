@@ -114,7 +114,8 @@ module.exports = function(grunt) {
             'site/top/iced-coffee-script.js',
             'site/top/jquery.js',
             'site/top/jquery-turtle.js',
-            'site/top/lodash.js'
+            'site/top/lodash.js',
+            'site/top/src/showturtle.js'
           ]
         },
         options: {
@@ -132,7 +133,8 @@ module.exports = function(grunt) {
           'site/top/iced-coffee-script.js',
           'site/top/jquery.js',
           'site/top/jquery-turtle.js',
-          'site/top/lodash.js'
+          'site/top/lodash.js',
+          'site/top/src/showturtle.js'
         ],
         dest: 'site/top/turtlebits.js'
       },
@@ -180,12 +182,20 @@ module.exports = function(grunt) {
     },
     watch: {
       dev: {
-        files: ['dev/*.js', 'dev/configDev.json', 'site/node/*.js'],
+        files: [
+          'dev/*.js',
+          'dev/configDev.json',
+          'site/node/*.js',
+          'site/top/src/filetype.js' ],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ['dev/*.js', 'site/node/*.js', 'site/node/*.json'],
+        files: [
+          'dev/*.js',
+          'site/node/*.js',
+          'site/node/*.json',
+          'site/top/src/filetype.js' ],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }

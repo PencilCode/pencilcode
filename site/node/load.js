@@ -2,6 +2,7 @@ var path = require('path');
 var fs = require('fs-ext');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
+var filetype = require('../top/src/filetype');
 
 exports.handleLoad = function(req, res, app, format) {
   var filename = req.param('file', utils.filenameFromUri(req));
@@ -22,8 +23,6 @@ exports.handleLoad = function(req, res, app, format) {
   try {
     var isrootlisting = !user && filename == '' && format == 'json';
 
-    //console.log({filename: filename, user: user, isroot: isrootlisting});
-
     if (isrootlisting) {
       try {
         // Try the cache first if it exists
@@ -32,7 +31,6 @@ exports.handleLoad = function(req, res, app, format) {
         res.set('Cache-Control', 'no-cache, must-revalidate');
         res.set('Content-Type', 'text/javascript');
 
-        //console.log(data);
         res.jsonp(data);
         return;
       }
@@ -65,12 +63,12 @@ exports.handleLoad = function(req, res, app, format) {
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
         var data = (tail != null) ?
-          readtail(absfile, tail) : fs.readFileSync(absfile, {encoding: 'utf8'});
+            readtail(absfile, tail) :
+            fs.readFileSync(absfile, {encoding: 'utf8'});
 
         var statObj = fs.statSync(absfile);
 
-        var mimetype = 
-            getMimeType(filename.substring(filename.lastIndexOf('.')));
+        var mimetype = filetype.mimeForFilename(filename);
 
         res.set('Cache-Control', 'no-cache, must-revalidate');
         res.jsonp({'file': '/' + filename, 
@@ -117,13 +115,12 @@ exports.handleLoad = function(req, res, app, format) {
     }
     else if (format == 'execute') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
-        var mt = 
-            getMimeType(filename.substring(filename.lastIndexOf('.')));
+        var mt = filetype.mimeForFilename(filename);
         var data = fs.readFileSync(absfile, {'encoding': 'utf8'});
 
-        //For turtle bits, assume it's coffeescript
+        // For turtle bits, assume it's coffeescript
         if (mt.indexOf('text/x-pencilcode') == 0) {
-          data = wrapTurtle(data, app);
+          data = filetype.wrapTurtle(data);
           mt = mt.replace('x-pencilcode', 'html');
         }
 
@@ -181,7 +178,8 @@ exports.handleLoad = function(req, res, app, format) {
           }
           var link = '<a href="/home' + req.path + name + '">' + name + '</a>';
           if (utils.isPresent(af, 'file')) {
-            link += ' <a href="/edit' + req.path + name + '" style="color:lightgray" rel="nofollow">edit</a>';
+            link += ' <a href="/edit' + req.path + name +
+                '" style="color:lightgray" rel="nofollow">edit</a>';
           }
           text += link + '\n';
         }
@@ -195,7 +193,7 @@ exports.handleLoad = function(req, res, app, format) {
       }
       else if (filename.charAt(filename.length - 1) == '/') {
         res.redirect(301, 
-                     path.dirname(filename.substring(0, filename.length-1)) + '/');
+            path.dirname(filename.substring(0, filename.length-1)) + '/');
         return;
       }
       else {
@@ -238,15 +236,6 @@ exports.handleLoad = function(req, res, app, format) {
   }
 
 };
-
-function wrapTurtle(text, app) {
-  return (
-    '<!doctype html>\n<html>\n<head>\n' +
-    '<script src="http://' + app.locals.config.host +
-    '/turtlebits.js"></script>\n' +
-    '</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
-    text + '\n</script></body></html>');
-}
 
 function isValidNewFile(newAbsFileName, app) {
   var dir = path.dirname(newAbsFileName);
@@ -336,31 +325,3 @@ function userhaskey(user, app) {
   return true;
 }
 
-function getMimeType(ext) {
-  var mimeTypeTable = {
-      'jpg'  : 'image/jpeg',
-      'jpeg' : 'image/jpeg',
-      'gif'  : 'image/gif',
-      'png'  : 'image/png',
-      'bmp'  : 'image/x-ms-bmp',
-      'ico'  : 'image/x-icon',
-      'htm'  : 'text/html',
-      'html' : 'text/html',
-      'txt'  : 'text/plain',
-      'text' : 'text/plain',
-      'css'  : 'text/css',
-      'coffee' : 'text/coffeescript',
-      'js'   : 'text/javascript',
-      'xml'  : 'text/xml'
-  };
-  var result = mimeTypeTable[ext];
-  if (!result) {
-    result = 'text/x-pencilcode';
-  }
-
-  if (result.indexOf('text') == 0) {
-    result = result + ';charset=utf-8';
-  }
-
-  return result;
-}

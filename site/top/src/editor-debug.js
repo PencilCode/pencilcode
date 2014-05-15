@@ -91,7 +91,17 @@ var debug = window.ide = {
       view.publish('error', [simpleData]);
     }
   },
-  flashStopButton: flashStopButton
+  flashStopButton: flashStopButton,
+  getEditorText: function() {
+    var mimetext = view.getPaneEditorText(view.paneid('left'));
+    if (mimetext) {
+      return mimetext.text;
+    }
+    return '';
+  },
+  setEditorText: function(text) {
+    view.changePaneEditorText(view.paneid('left'), text);
+  }
 };
 
 // The "enter" event is triggered inside the call to a turtle command.

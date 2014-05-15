@@ -2,8 +2,20 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'draw-protractor', 'ZeroClipboard'],
-function($, tooltipster, see, drawProtractor, ZeroClipboard) {
+define([
+  'jquery',
+  'filetype',
+  'tooltipster',
+  'see',
+  'draw-protractor',
+  'ZeroClipboard'],
+function(
+  $,
+  filetype,
+  tooltipster,
+  see,
+  drawProtractor,
+  ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -84,6 +96,9 @@ window.pencilcode.view = {
   setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
+  changePaneEditorText: function(pane, text) {
+    return changeEditorText(state.pane[pane], text);
+  },
   getPaneEditorText: getPaneEditorText,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
@@ -151,7 +166,9 @@ window.pencilcode.view = {
     else { $('#filename').removeAttr('contentEditable'); }
   },
   // Sets visible URL without navigating.
-  setVisibleUrl: setVisibleUrl
+  setVisibleUrl: setVisibleUrl,
+  // For debugging only
+  _state: state
 };
 
 function publish(method, args){
@@ -169,6 +186,7 @@ function panepos(id) {
 function initialPaneState() {
   return {
     editor: null,       // The ace editor instance.
+    changeHandler: null,// A closure listening to changes.
     cleanText: null,    // The last-saved copy of the text.
     cleanLineCount: 0,  // The last-run number of lines of text.
     marked: {},         // Tracks highlighted lines (see markPaneEditorLine)
@@ -928,56 +946,12 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
-function wrapTurtle(text) {
-  return (
-'<!doctype html>\n<html>\n<head>\n<script src="http://' +
-window.pencilcode.domain + '/turtlebits.js"><\057script>\n' +
-'</head>\n<body><script type="text/coffeescript">\neval $.turtle()\n\n' +
-text + '\n<\057script></body></html>');
-}
-
-function modifyForPreview(text, filename, targetUrl) {
-  var mimeType = mimeForFilename(filename);
-  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text);
-    mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
-  }
-  if (!text) return '';
-  if (mimeType && !/^text\/html/.test(mimeType)) {
-    return '<PLAINTEXT>' + text;
-  }
-  if (targetUrl && !/<base/i.exec(text)) {
-    // Insert a <base href="target_url" /> in a good location.
-    var firstLink = text.match(
-          /(?:<link|<script|<style|<body|<img|<iframe|<frame|<meta|<a)\b/i),
-        insertLocation = [
-          text.match(/(?:<head)\b[^>]*>\n?/i),
-          text.match(/<html\b[^>]*>\n?/i),
-          text.match(/<\!doctype\b[^>]*>\n?/i)
-        ],
-        insertAt = 0, j, match;
-    for (j = 0; j < insertLocation.length; ++j) {
-      match = insertLocation[j];
-      if (match && (!firstLink || match.index < firstLink.index)) {
-        insertAt = match.index + match[0].length;
-        break;
-      }
-    }
-    return text.substring(0, insertAt) +
-             '<base href="' + targetUrl + '" />\n' +
-             text.substring(insertAt);
-  }
-  return text;
-}
-
-function setPaneRunText(pane, text, filename, targetUrl) {
+function setPaneRunText(pane, html, filename, targetUrl) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
   updatePaneTitle(pane);
-  // Assemble text and insert <base>, <plaintext>, etc., as appropriate.
-  var code = modifyForPreview(text, filename, targetUrl);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
@@ -1004,7 +978,7 @@ function setPaneRunText(pane, text, filename, targetUrl) {
           window.console.warn('https://bugzilla.mozilla.org/777526', e)
         }
       }
-      framedoc.write(code);
+      framedoc.write(html);
       framedoc.close();
       // Bind the key handlers to the iframe once it's loaded.
       $(iframe).load(function() {
@@ -1390,6 +1364,55 @@ function getTextRowsAndColumns(text) {
   };
 }
 
+function changeEditorText(paneState, text) {
+  if (!paneState.editor) {
+    console.warn('changeEditorText without an editor');
+    return;
+  }
+  // Always ensure there is a trailing newline.
+  if (text.length && text.charAt(text.length - 1) != '\n') {
+    text += '\n';
+  }
+  paneState.changeHandler.suppressChange = true;
+  var saved = {}, editor = paneState.editor, session = editor.session;
+  saved.selection = session.selection.toJSON()
+  saved.atend = session.selection.getCursor().row >= session.getLength() - 1;
+  saved.folds = session.getAllFolds().map(function(fold) {
+    return {
+      start       : fold.start,
+      end         : fold.end,
+      placeholder : fold.placeholder
+    };
+  });
+  saved.scrollTop = session.getScrollTop()
+  saved.scrollLeft = session.getScrollLeft()
+
+  // Now set the text and restore everything.
+  session.setValue(text);
+
+  session.selection.fromJSON(saved.selection);
+  try {
+    saved.folds.forEach(function(fold){
+      session.addFold(fold.placeholder,
+        ace.require('ace/range').Range.fromPoints(fold.start, fold.end));
+    });
+  } catch(e) { }
+
+  session.setScrollTop(saved.scrollTop);
+  session.setScrollLeft(saved.scrollLeft);
+
+  // If the cursor used to be at the end, keep it at the end.
+  if (session.selection.isEmpty() && saved.atend) {
+    session.selection.moveCursorTo(session.getLength() - 1, 0);
+  }
+
+  // TODO: detect the case where some text is added and we should
+  // scroll down to make the changes visible.
+
+  paneState.changeHandler.suppressChange = false;
+  paneState.changeHandler();
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1401,7 +1424,7 @@ function setPaneEditorText(pane, text, filename) {
   var id = uniqueId('editor');
   var paneState = state.pane[pane];
   paneState.filename = filename;
-  paneState.mimeType = mimeForFilename(filename);
+  paneState.mimeType = filetype.mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
@@ -1431,11 +1454,15 @@ function setPaneEditorText(pane, text, filename) {
     editor.setFontSize(24);
   }
   editor.setValue(text);
+  setupAutofoldScriptPragmas(paneState);
   var um = editor.getSession().getUndoManager();
   um.reset();
   publish('update', [text]);
   editor.getSession().setUndoManager(um);
-  editor.getSession().on('change', function() {
+  var changeHandler = paneState.changeHandler = (function changeHandler() {
+    if (changeHandler.suppressChange) {
+      return;
+    }
     ensureEmptyLastLine(editor);
     var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
@@ -1466,10 +1493,11 @@ function setPaneEditorText(pane, text, filename) {
       fireEvent('changelines', [pane]);
     }
   });
+  editor.getSession().on('change', changeHandler);
   if (long) {
     editor.gotoLine(0);
   } else {
-    editor.gotoLine(editor.getSession().getLength() - 1, 0);
+    editor.gotoLine(editor.getSession().getLength(), 0);
   }
   setPrimaryFocus();
   editor.on('focus', function() {
@@ -1504,6 +1532,96 @@ function ensureEmptyLastLine(editor) {
       editor.moveCursorToPosition(curpos);
     }
   }
+}
+
+function setupAutofoldScriptPragmas(paneState) {
+  var editor = paneState.editor,
+      session = editor.getSession(),
+      foldlines = autofoldScriptPragmas(editor),
+      selfmove = 0;
+  if (foldlines) {
+    // Don't allow the cursor to be on the same line as the fold
+    function onChangeCursor() {
+      if (selfmove) return;
+      var curpos = editor.getCursorPosition(),
+          fold = session.getFoldAt(curpos.row, curpos.column);
+      if (fold && fold.placeholder == '#@script' &&
+          foldlines.length > curpos.row) {
+        // If the fold has text after it on the same line (a newline
+        // was deleted, then insert a newline here.
+        if (curpos.column > 0 &&
+            session.getLine(curpos.row).length > curpos.column) {
+          session.insert(curpos, '\n');
+        }
+        selfmove += 1;
+        editor.selection.moveCursorTo(foldlines.length, 0);
+        selfmove -= 1;
+      }
+    };
+    session.on('changeFold', function(e) {
+      // Don't do anything special if changeHandler is suppressed.
+      if (paneState.changeHandler &&
+          paneState.changeHandler.suppressChange) return;
+      var value;
+      if (e.action == 'remove' && e.data && e.data.placeholder == '#@script') {
+        // Don't allow the fold to be deleted.
+        value = editor.getValue();
+        if (foldlines && value.indexOf(foldlines.join('\n')) < 0) {
+          setTimeout(function() {
+            if (paneState.editor === editor) {
+              changeEditorText(paneState, foldlines.join('\n') +
+                  ((value.indexOf('\n') != 0) ? '\n' : '') + value);
+              foldlines = autofoldScriptPragmas(editor);
+              onChangeCursor();
+            }
+          }, 0);
+        } else {
+          setTimeout(function() {
+            foldlines = autofoldScriptPragmas(editor);
+            if (foldlines) {
+              editor.selection.clearSelection();
+              onChangeCursor();
+            }
+          }, 1000);
+        }
+      }
+    });
+    editor.selection.on('changeSelection', onChangeCursor);
+    editor.selection.on('changeCursor', onChangeCursor);
+  }
+}
+
+function autofoldScriptPragmas(editor) {
+  var session = editor.getSession(),
+      lines = session.getLength(),
+      curpos = editor.getCursorPosition(),
+      foldlines = [], folds,
+      newpos, j, line, foldrange;
+  if (!lines) { return; }
+  for (j = 0; j < lines; ++j) {
+    line = session.getLine(j);
+    if (!/^#\s*@script\b/.test(line)) {
+      break;
+    }
+    foldlines.push(line);
+  }
+  // First remove all folds inside this line range.
+  // (In case the autofolder has inserted some folds for a multiline comment)
+  folds = session.getAllFolds();
+  for (j = 0; j < folds.length; ++j) {
+    if (folds[j].range.endRow < foldlines.length) {
+      session.removeFold(folds[j]);
+    }
+  }
+  // autofold only if cursor is not inside script pragmas.
+  if (foldlines.length > 0 && (
+      curpos.row >= foldlines.length || curpos.column == 0)) {
+    foldrange = new (ace.require('ace/range').Range)(
+        0, 0, foldlines.length - 1, Infinity);
+    session.addFold('#@script', foldrange);
+    return foldlines;
+  }
+  return null;
 }
 
 function setPrimaryFocus() {
@@ -1688,34 +1806,11 @@ function notePaneEditorCleanLineCount(pane) {
   }
 }
 
-function mimeForFilename(filename) {
-  var result = filename && {
-    'jpg'  : 'image/jpeg',
-    'jpeg' : 'image/jpeg',
-    'gif'  : 'image/gif',
-    'png'  : 'image/png',
-    'bmp'  : 'image/x-ms-bmp',
-    'ico'  : 'image/x-icon',
-    'htm'  : 'text/html',
-    'html' : 'text/html',
-    'txt'  : 'text/plain',
-    'text' : 'text/plain',
-    'css'  : 'text/css',
-    'coffee' : 'text/coffeescript',
-    'js'   : 'text/javascript',
-    'xml'  : 'text/xml'
-  }[filename.replace(/^.*\./, '')]
-  if (!result) {
-    result = 'text/x-pencilcode';
-  }
-  return result;
-}
-
 function noteNewFilename(pane, filename) {
   var paneState = state.pane[pane];
   paneState.filename = filename;
   if (paneState.editor) {
-    paneState.mimeType = mimeForFilename(filename);
+    paneState.mimeType = filetype.mimeForFilename(filename);
     paneState.editor.getSession().clearAnnotations();
     paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
   }

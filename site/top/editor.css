@@ -89,7 +89,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
 .editor{position:absolute:top:0;height:100%;left:0;width:100%;
   background-color:white;font:24px "Source Code Pro";font-weight:600;}
-#pencilcode .ace_editor {
+#pencildoc .ace_editor {
   font-family: "Source Code Pro";
   font-weight: 600;
   line-height: 121%;
@@ -103,7 +103,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 /* Gutter line highlighting for lines that can be mouseovered */
 div.guttermouseable{background-position:right;background-repeat:repeat-y;
   background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAABCAYAAAAW/mTzAAAAEElEQVQIW2P8/5/hPwMaAAA38gL/hSCOCgAAAABJRU5ErkJggg==);}
-body#pencilcode #diigolet-csm {
+body#pencildoc #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;
 }
