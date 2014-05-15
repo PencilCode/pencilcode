@@ -1,0 +1,8 @@
+{
+  "dirs": {
+    "datadir": "/srv/site/data",
+    "staticdir": "/srv/site/top",
+    "cachedir": "/srv/site/cache"
+  },
+  "host": "pencilcode.net"
+}

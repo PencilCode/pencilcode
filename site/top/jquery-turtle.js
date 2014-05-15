@@ -1105,7 +1105,7 @@ function getDirectionOnPage(elem) {
       r = convertToRadians(normalizeRotation(ts.rot)),
       ux = Math.sin(r), uy = Math.cos(r),
       totalParentTransform = totalTransform2x2(elem.parentElement),
-      up = matrixVectorProduct(totalParentTransform, [ux, uy]);
+      up = matrixVectorProduct(totalParentTransform, [ux, uy]),
       dp = Math.atan2(up[0], up[1]);
   return radiansToDegrees(dp);
 }
@@ -1621,6 +1621,11 @@ function resizecanvas() {
 // turtlePenStyle style syntax
 function parsePenStyle(text, defaultProp) {
   if (!text) { return null; }
+  if (text && (typeof(text) == "function") && (
+      text.helpname || text.name)) {
+    // Deal with "tan" and "fill".
+    text = (text.helpname || text.name);
+  }
   text = String(text);
   if (text.trim) { text = text.trim(); }
   if (!text || text === 'none') { return null; }
@@ -2879,7 +2884,7 @@ var pressedKey = (function() {
   }
   // The state map is reset by clearing every member.
   function resetPressedState() {
-    for (key in pressedState) {
+    for (var key in pressedState) {
       delete pressedState[key];
     }
   }
@@ -2894,7 +2899,7 @@ var pressedKey = (function() {
   }
   // All pressed keys known can be listed using pressed.list().
   function listPressedKeys() {
-    var result = [];
+    var result = [], key;
     for (key in pressedState) {
       if (pressedState[key]) { result.push(key); }
     }
@@ -3052,6 +3057,7 @@ function canMoveInstantly(sel) {
 function canElementMoveInstantly(elem) {
   // True if the element has no animtation queue and currently is
   // moving at speed Infinity.
+  var atime;
   return (elem && $.queue(elem).length == 0 &&
       ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0));
 }
@@ -4457,6 +4463,8 @@ var dollar_turtle_methods = {
     }
     // Stop all animations.
     $(':animated,.turtle').clearQueue().stop();
+    // Stop our audio.
+    resetAudio();
     // Set a flag that will cause all commands to throw.
     interrupted = true;
     // Turn off the global tick interval timer.
@@ -5713,6 +5721,14 @@ function autoScrollBottomSeen() {
   }
   return autoScrollState.bottomSeen;
 }
+// undoScrollAfter will return the scroll position back to its original
+// location after running the passed function.  (E.g., to allow focusing
+// a control without autoscrolling.)
+function undoScrollAfter(f) {
+  var scrollPos = $(window).scrollTop();
+  f();
+  $(window).scrollTop(scrollPos);
+}
 
 // Simplify $('body').append(html).
 function output(html, defaulttag) {
@@ -5779,7 +5795,8 @@ function menu(choices, fn) {
       count = 0,
       cursor = 0,
       suppressChange = 0,
-      keys = {};
+      keys = {},
+      text;
   // Default behavior: invoke the outcome if it is a function.
   if (!fn) {
     fn = (function invokeOutcome(out) {
@@ -5886,7 +5903,8 @@ function menu(choices, fn) {
       focusCursor();
     }
   });
-  focusCursor(true);
+  // Focus, but don't cause autoscroll to occur due to focus.
+  undoScrollAfter(function() { focusCursor(true); });
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
@@ -5968,7 +5986,8 @@ function input(name, callback, numeric) {
   autoScrollAfter(function() {
     $('body').append(label);
   });
-  textbox.focus();
+  // Focus, but don't cause autoscroll to occur due to focus.
+  undoScrollAfter(function() { textbox.focus(); });
   return thisval;
 }
 
@@ -6039,7 +6058,8 @@ function table(height, width, cellCss, tableCss) {
 // Definition of play("ABC") - uses ABC music note syntax.
 //////////////////////////////////////////////////////////////////////////
 
-var ABCtoken = /\s+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\d*\/\d+|\d+|\/+|[xzXZ]|./g;
+var ABCtoken = /\s+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\d*\/\d+|\d+|\/+|[xzXZ]|\||%[^\n]*$|./g;
+var ABCheader = /^([A-Za-z]):\s*(.*)$/;
 var audioTop = null;
 function isAudioPresent() {
   return !!(window.AudioContext || window.webkitAudioContext);
@@ -6068,14 +6088,177 @@ function getAudioTop() {
   }
   return audioTop;
 }
-function parseABCNotes(str) {
+function resetAudio() {
+  if (audioTop && audioTop.out.disconnect) {
+    // Disconnect the top-level node and make a new one.
+    audioTop.out.disconnect();
+    audioTop.out = audioTop.ac.createDynamicsCompressor();
+    audioTop.out.connect(audioTop.ac.destination);
+  }
+}
+// Returns a map of A-G -> accidentals, according to the key signature.
+function accidentals(n) {
+  var flats =  'BEADGCF',
+      sharps = 'FCGDEAB',
+      result = {}, j;
+  if (!n) {
+    return result;
+  }
+  if (n < 0) {
+    for (j = 0; j < -n && j < 7; ++j) {
+      result[flats.charAt(j)] = '_';
+    }
+  } else {
+    for (j = 0; j < n && j < 7; ++j) {
+      result[sharps.charAt(j)] = '^';
+    }
+  }
+  return result;
+}
+// Decodes the key signature line (e.g., K: C#m) at the front of an ABC tune.
+function keysig(k) {
+  if (!k) { return {}; }
+  var key, sigcodes = {
+    // Major
+    'c#':7, 'f#':6, 'b':5, 'e':4, 'a':3, 'd':2, 'g':1, 'c':0,
+    'f':-1, 'bb':-2, 'eb':-3, 'ab':-4, 'db':-5, 'gb':-6, 'cb':-7,
+    // Minor
+    'a#m':7, 'd#m':6, 'g#m':5, 'c#m':4, 'f#m':3, 'bm':2, 'em':1, 'am':0,
+    'dm':-1, 'gm':-2, 'cm':-3, 'fm':-4, 'bbm':-5, 'ebm':-6, 'abm':-7,
+    // Mixolydian
+    'g#mix':7, 'c#mix':6, 'f#mix':5, 'bmix':4, 'emix':3,
+    'amix':2, 'dmix':1, 'gmix':0, 'cmix':-1, 'fmix':-2,
+    'bbmix':-3, 'ebmix':-4, 'abmix':-5, 'dbmix':-6, 'gbmix':-7,
+    // Dorian
+    'd#dor':7, 'g#dor':6, 'c#dor':5, 'f#dor':4, 'bdor':3,
+    'edor':2, 'ador':1, 'ddor':0, 'gdor':-1, 'cdor':-2,
+    'fdor':-3, 'bbdor':-4, 'ebdor':-5, 'abdor':-6, 'dbdor':-7,
+    // Phrygian
+    'e#phr':7, 'a#phr':6, 'd#phr':5, 'g#phr':4, 'c#phr':3,
+    'f#phr':2, 'bphr':1, 'ephr':0, 'aphr':-1, 'dphr':-2,
+    'gphr':-3, 'cphr':-4, 'fphr':-5, 'bbphr':-6, 'ebphr':-7,
+    // Lydian
+    'f#lyd':7, 'blyd':6, 'elyd':5, 'alyd':4, 'dlyd':3,
+    'glyd':2, 'clyd':1, 'flyd':0, 'bblyd':-1, 'eblyd':-2,
+    'ablyd':-3, 'dblyd':-4, 'gblyd':-5, 'cblyd':-6, 'fblyd':-7,
+    // Locrian
+    'b#loc':7, 'e#loc':6, 'a#loc':5, 'd#loc':4, 'g#loc':3,
+    'c#loc':2, 'f#loc':1, 'bloc':0, 'eloc':-1, 'aloc':-2,
+    'dloc':-3, 'gloc':-4, 'cloc':-5, 'floc':-6, 'bbloc':-7
+  };
+  k = k.replace(/\s+/g, '').toLowerCase().substr(0, 5);
+  var scale = k.match(/maj|min|mix|dor|phr|lyd|loc|m/);
+  if (scale) {
+    if (scale == 'maj') {
+      key = k.substr(0, scale.index);
+    } else if (scale == 'min') {
+      key = k.substr(0, scale.index + 1);
+    } else {
+      key = k.substr(0, scale.index + scale.length);
+    }
+  } else {
+    key = /^[a-g][#b]?/.exec(k) || '';
+  }
+  var result = accidentals(sigcodes[key]);
+  var extras = k.substr(key.length).match(/(__|_|=|\^\^|\^)[a-g]/g);
+  if (extras) {
+    for (j = 0; j < extras.length; ++j) {
+      var note = extras[j].charAt(extras[j].length - 1).toUpperCase();
+      if (extras[j].charAt(0) == '=') {
+        delete result[note];
+      } else {
+        result[note] = extras[j].substr(0, extras[j].length - 1);
+      }
+    }
+  }
+  return result;
+}
+function parseABCFile(str) {
+  var lines = str.split('\n'),
+      result = {},
+      context = result,
+      j, header, notes, key = {}, accent = {};
+  for (j = 0; j < lines.length; ++j) {
+    header = ABCheader.exec(lines[j]);
+    if (header) {
+      if (header[1] == 'V') {
+        if (!('voice' in result)) {
+          result.voice = [];
+        }
+        context = {};
+        accent = {};
+        result.voice.push(context);
+      }
+      if (header[1] == 'K') {
+        key = keysig(header[2]);
+      }
+      context[header[1]] = header[2];
+    } else {
+      notes = parseABCNotes(lines[j], key, accent);
+      if (notes.length) {
+        if (context === result) {
+          if (!('voice' in result)) {
+            result.voice = [];
+          }
+          if (!result.voice.length) {
+            context = {};
+            result.voice.push(context);
+          }
+          context = result.voice[0];
+        }
+        if (!('notes' in context)) {
+          context.notes = [];
+        }
+        context.notes.push.apply(context.notes, notes);
+      }
+    }
+  }
+  if (result.voice) {
+    // Calculate times for all the tied notes.
+    for (j = 0; j < result.voice.length; ++j) {
+      if (result.voice[j].notes) {
+        processTies(result.voice[j].notes);
+      }
+    }
+  }
+  return result;
+}
+function processTies(stems) {
+  var tied = {}, nextTied, j, k, note, firstNote;
+  // Run through all the notes, adding up time for tied notes,
+  // and marking notes that were held over with holdover = true.
+  for (j = 0; j < stems.length; ++j) {
+    nextTied = {};
+    for (k = 0; k < stems[j].note.length; ++k) {
+      firstNote = note = stems[j].note[k];
+      if (tied.hasOwnProperty(note.pitch)) {
+        firstNote = tied[note.pitch];
+        firstNote.time += note.time;
+        note.holdover = true;
+      }
+      if (note.tie) {
+        nextTied[note.pitch] = firstNote;
+      }
+    }
+    tied = nextTied;
+  }
+}
+function parseABCNotes(str, key, accent) {
   var tokens = str.match(ABCtoken), result = [], stem = null,
       index = 0, dotted = 0, t;
   while (index < tokens.length) {
     if (/^s+$/.test(tokens[index])) { index++; continue; }
     if (/</.test(tokens[index])) { dotted = -tokens[index++].length; continue; }
     if (/>/.test(tokens[index])) { dotted = tokens[index++].length; continue; }
-    stem = parseStem(tokens, index);
+    if (/\|/.test(tokens[index])) {
+      // Clear accidentals at the end of a measure.
+      for (t in accent) if (accent.hasOwnProperty(t)) {
+        delete accent[t];
+      }
+      index++;
+      continue;
+    }
+    stem = parseStem(tokens, index, key, accent);
     if (stem === null) {
       // Skip unparsable bits
       index++;
@@ -6098,21 +6281,86 @@ function parseABCNotes(str) {
   }
   return result;
 }
-function parseStem(tokens, index) {
-  var pitch = [];
-  var duration = '';
+function stripNatural(pitch) {
+  if (pitch.length > 0 && (!/[_=^]/.test(pitch.charAt(0)))) {
+    return '=' + pitch;
+  }
+  return pitch;
+}
+function applyAccent(pitch, key, accent) {
+  var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(.*)$/.exec(pitch), letter;
+  if (!m) { return pitch; }
+  letter = m[2].toUpperCase();
+  if (m[1].length > 0) {
+    // When there is an explicit accidental, then remember it for
+    // the rest of the measure.
+    accent[letter] = m[1];
+    return stripNatural(pitch);
+  }
+  if (accent.hasOwnProperty(letter)) {
+    // Accidentals from this measure apply to unaccented notes.
+    return stripNatural(accent[letter] + m[2] + m[3]);
+  }
+  if (key.hasOwnProperty(letter)) {
+    // Key signatures apply by default.
+    return stripNatural(key[letter] + m[2] + m[3]);
+  }
+  return stripNatural(pitch);
+}
+function parseStem(tokens, index, key, accent) {
+  var note = [], frequency = [],
+      duration = '', staccato = false;
+  var lastNote = null, minStemTime = Infinity, j;
+  if (index < tokens.length && '.' == tokens[index]) {
+    staccato = true;
+    index++;
+  }
   if (index < tokens.length && tokens[index] == '[') {
     index++;
     while (index < tokens.length) {
       if (/[A-Ga-g]/.test(tokens[index])) {
-        pitch.push(tokens[index++]);
+        lastNote = {
+          pitch: applyAccent(tokens[index++], key, accent),
+          tie: false
+        }
+        lastNote.frequency = pitchToFrequency(lastNote.pitch);
+        note.push(lastNote);
       } else if (/[xzXZ]/.test(tokens[index])) {
+        lastNote = null;
         index++;
+      } else if ('.' == tokens[index]) {
+        staccato = true;
+        index++;
+        continue;
       } else {
         break;
       }
+      // When a stem has more than one duration, select the
+      // shortest one. The standard says to pick the first one,
+      // but in practice, transcribed music online seems to
+      // follow the rule that the stem's duration is determined
+      // by the shortest contained duration.
       if (index < tokens.length && /\d|\//.test(tokens[index])) {
-        duration = tokens[index++];
+        noteDuration = tokens[index++];
+        noteTime = durationToTime(noteDuration);
+      } else {
+        noteDuration = '';
+        noteTime = 1;
+      }
+      if (lastNote) {
+        // If it's a note (not a rest), store the duration
+        lastNote.duration = noteDuration;
+        lastNote.time = noteTime;
+      }
+      if (noteTime && noteTime < minStemTime) {
+        duration = noteDuration;
+        minStemTime = noteTime;
+      }
+      if (index < tokens.length && '-' == tokens[index]) {
+        if (lastNote) {
+          note[note.length - 1].tie = true;
+        }
+        index++;
       }
     }
     if (tokens[index] != ']') {
@@ -6120,7 +6368,14 @@ function parseStem(tokens, index) {
     }
     index++;
   } else if (index < tokens.length && /[A-Ga-g]/.test(tokens[index])) {
-    pitch.push(tokens[index++]);
+    lastNote = {
+      pitch: applyAccent(tokens[index++], key, accent),
+      tie: false,
+      duration: '',
+      time: 1
+    }
+    lastNote.frequency = pitchToFrequency(lastNote.pitch);
+    note.push(lastNote);
   } else if (/^[xzXZ]$/.test(tokens[index])) {
     // Rest - no pitch.
     index++;
@@ -6129,16 +6384,32 @@ function parseStem(tokens, index) {
   }
   if (index < tokens.length && /\d|\//.test(tokens[index])) {
     duration = tokens[index++];
+    noteTime = durationToTime(duration);
+    for (j = 0; j < note.length; ++j) {
+      note[j].duration = duration;
+      note[j].time = noteTime;
+    }
+  }
+  if (index < tokens.length && '-' == tokens[index]) {
+    index++;
+    for (j = 0; j < note.length; ++j) {
+      note[j].tie = true;
+    }
+  }
+  frequency = []
+  for (j = 0; j < note.length; ++j) {
+    frequency.push(note[j].frequency);
   }
   return {
     index: index,
     value: {
-      pitch: pitch,
+      note: note,
       duration: duration,
-      frequency: pitch.map(pitchToFrequency),
+      staccato: staccato,
+      frequency: frequency,
       time: durationToTime(duration)
     }
-  }
+  };
 }
 function pitchToFrequency(pitch) {
   var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(,+|'+|)$/.exec(pitch);
@@ -6168,17 +6439,15 @@ function playABC(done, args) {
     return;
   }
   var atop = getAudioTop(), callback = null,
-      firstvoice = 0, argindex, voice, freqmult, beatsecs,
+      firstvoice = 0, argindex, voice, beatsecs,
       volume = 0.5, tempo = 120, transpose = 0, type = ['square'],
       venv = {a: 0.01, d: 0.2, s: 0.1, r: 0.1}, envelope = [venv],
       start_time = null, end_time = atop.ac.currentTime,
-      notes, vtype, time, fingers, strength, i, g, t,
-      atime, slast, rtime, stime, dt, opts;
+      notes, vtype, time, fingers, strength, i, j, t, opts;
   if ($.isPlainObject(args[0])) {
     opts = args[0];
     if ('volume' in opts) { volume = opts.volume; }
     if ('tempo' in opts) { tempo = opts.tempo; }
-    if ('transpose' in opts) { transpose = opts.transpose; }
     if ('type' in opts) { type = opts.type; }
     if ('callback' in opts) { callback = opts.callback; }
     if ('envelope' in opts) {
@@ -6200,17 +6469,26 @@ function playABC(done, args) {
   var voices = [];
   for (argindex = firstvoice; argindex < args.length; argindex++) {
     voice = argindex - firstvoice;
-    voices[voice] = notes = parseABCNotes(args[argindex]);
+    abcfile = parseABCFile(args[argindex]);
+    if (abcfile && abcfile.voice && abcfile.voice.length &&
+        abcfile.voice[0].notes) {
+      notes = abcfile.voice[0].notes;
+    } else {
+      notes = [];
+    }
+    voices[voice] = notes
     vtype = type[voice % type.length] || 'square';
     fingers = 0;
     for (i = 0; i < notes.length; i++) {
       fingers = Math.max(fingers, notes[i].frequency.length);
     }
+    for (i = 0; i < notes.length; i++) {
+      notes[i];
+    }
     if (fingers == 0) { continue; }
     // Attenuate chorded voice so chorded power matches volume.
     strength = volume[voice % volume.length] / Math.sqrt(fingers);
     venv = envelope[voice % envelope.length];
-    freqmult = Math.pow(2, transpose[voice % transpose.length] / 12);
     if (start_time === null) {
       start_time = atop.nextStartTime();
     }
@@ -6222,41 +6500,8 @@ function playABC(done, args) {
       notes[i].start_at = time;
       notes[i].end_at = stime;
       notes[i].voice = voice;
-      if (notes[i].frequency.length > 0) {
-        g = atop.ac.createGain();
-        atime = Math.min(t, venv.a) * beatsecs + time;
-        rtime = Math.max(0, t + venv.r) * beatsecs + time;
-        if (atime > rtime) { atime = rtime = (atime + rtime) / 2; }
-        if (rtime < stime) { stime = rtime; rtime = t * beatsecs + time; }
-        dt = venv.d * beatsecs;
-        g.gain.setValueAtTime(0, time);
-        g.gain.linearRampToValueAtTime(strength, atime);
-        if ('setTargetAtTime' in g.gain) {
-          // Current web audio spec.
-          g.gain.setTargetAtTime(venv.s * strength, atime, dt);
-        } else {
-          // Early draft web audio spec.
-          g.gain.setTargetValueAtTime(venv.s * strength, atime, dt);
-        }
-        slast = venv.s + (1 - venv.s) * Math.exp((atime - stime) / dt);
-        g.gain.setValueAtTime(slast * strength, stime);
-        g.gain.linearRampToValueAtTime(0, rtime);
-        g.connect(atop.out);
-        for (var x = 0; x < notes[i].frequency.length; x++) {
-          var o = atop.ac.createOscillator();
-          o.type = vtype;
-          o.frequency.value = notes[i].frequency[x] * freqmult;
-          o.connect(g);
-          if ('start' in g) {
-            // Current web audio spec.
-            o.start(time);
-            o.stop(rtime);
-          } else {
-            // Early draft web audio spec.
-            o.start(time);
-            o.stop(rtime);
-          }
-        }
+      if (notes[i].note.length > 0) {
+        playChordAt(atop, time, notes[i], beatsecs, strength, vtype, venv);
       }
       time += t * beatsecs;
     }
@@ -6267,6 +6512,7 @@ function playABC(done, args) {
     nextToNotify.push(0);
   }
   function callNotifications() {
+    if (interrupted) { return; }
     var now = atop.ac.currentTime, notifyNotes = [], i, j, next = end_time;
     if (callback) {
       for (i = 0; i < voices.length; ++i) {
@@ -6303,6 +6549,72 @@ function playABC(done, args) {
   }
   if (done || callback) {
     callNotifications();
+  }
+}
+function playChordAt(atop, time, stem, beatsecs, strength, vtype, venv) {
+  // First, sort notes into notes that share the same duration.
+  var j, d, staccato = stem.staccato, subchord = {}, n, t, x, s,
+      g, o, atime, rtime, stime, dt, strength;
+  for (j = 0; j < stem.note.length; ++j) {
+    if (stem.note[j].holdover) {
+      // Skip holdover notes.
+      continue;
+    }
+    d = staccato ? 's' : ('' + Math.round(stem.note.time * 1000));
+    if (!subchord.hasOwnProperty(d)) {
+      subchord[d] = [];
+    }
+    subchord[d].push(stem.note[j]);
+  }
+  // Then play each subchord.
+  for (d in subchord) if (subchord.hasOwnProperty(d)) {
+    n = subchord[d];
+    // A subchord shares timing.
+    t = n[0].time;
+    // Staccato: no longer than 1/16 beat, and no sustain.
+    sustain = venv.s;
+    if (staccato) {
+      t = Math.min(t, 1/16, venv.d);
+      s = 0;
+    }
+    stime = t * beatsecs + time;
+    atime = Math.min(t, venv.a) * beatsecs + time;
+    rtime = Math.max(0, t + venv.r) * beatsecs + time;
+    if (atime > rtime) { atime = rtime = (atime + rtime) / 2; }
+    if (rtime < stime) { stime = rtime; rtime = t * beatsecs + time; }
+    dt = venv.d * beatsecs;
+    // Create gain for the ADSR envelope.
+    g = atop.ac.createGain();
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(strength, atime);
+    if ('setTargetAtTime' in g.gain) {
+      // Current web audio spec.
+      g.gain.setTargetAtTime(sustain * strength, atime, dt);
+    } else {
+      // Early draft web audio spec.
+      g.gain.setTargetValueAtTime(sustain * strength, atime, dt);
+    }
+    slast = sustain + (1 - sustain) * Math.exp((atime - stime) / dt);
+    g.gain.setValueAtTime(slast * strength, stime);
+    g.gain.linearRampToValueAtTime(0, rtime);
+    g.connect(atop.out);
+    for (x = 0; x < n.length; x++) {
+      // Create an oscillator for each note.
+      // TODO: support more elaborate vtypes, with lowpass/highpass.
+      o = atop.ac.createOscillator();
+      o.type = vtype;
+      o.frequency.value = n[x].frequency;
+      o.connect(g);
+      if ('start' in g) {
+        // Current web audio spec.
+        o.start(time);
+        o.stop(rtime);
+      } else {
+        // Early draft web audio spec.
+        o.noteOn(time);
+        o.noteOff(rtime);
+      }
+    }
   }
 }
 

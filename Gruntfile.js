@@ -144,43 +144,71 @@ module.exports = function(grunt) {
     },
     express: {
       options: {
-        script: 'dev/server.js',
         port: grunt.option('port'),
         output: 'listening'
       },
       dev: {
         options: {
-          node_env: 'development'
+          script: 'dev/devserver.js',
+          node_env: 'development',
+          //debug: true,
+          args: ['../../dev/configDev.json']
         }
       },
       comp: {
         options: {
-          node_env: 'compiled'
+          script: 'site/node/server.js',
+          node_env: 'compiled',
+          args: ['./configProd.json']
         }
       },
       devtest: {
         options: {
+          script: 'dev/devserver.js',
           node_env: 'development',
+          args: ['../../dev/configTest.json'],
           port: 8193
         }
       },
       test: {
         options: {
+          script: 'dev/devserver.js',
           node_env: 'compiled',
-          port: 8193
+          //debug: true,
+          args: ['../../dev/configTest.json'],
+          port: 8193,
         }
       }
     },
     watch: {
       dev: {
-        files: ['dev/server.js'],
+        files: [
+          'dev/*.js',
+          'dev/configDev.json',
+          'site/node/*.js',
+          'site/top/src/filetype.js' ],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       },
       comp: {
-        files: ['dev/server.js'],
+        files: [
+          'dev/*.js',
+          'site/node/*.js',
+          'site/node/*.json',
+          'site/top/src/filetype.js' ],
         tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
+      }
+    },
+    copy: {
+      testdata: {
+        files: [ {
+          expand: true,
+          cwd: 'testdata/',
+          src: ['**'],
+          dot: true,
+          dest: 'site/data'
+        } ]
       }
     },
     mochaTest: {
@@ -192,6 +220,9 @@ module.exports = function(grunt) {
           colors: false
         }
       }
+    },
+    'node-inspector': {
+      dev: { }
     }
   });
 
@@ -201,8 +232,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-express-server');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-node-inspector');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -226,6 +259,7 @@ module.exports = function(grunt) {
     if (!!testname) {
       grunt.config('mochaTest.test.src', ['test/' + testname + '.js']);
     }
+    grunt.task.run('copy:testdata');
     grunt.task.run('express:test');
     grunt.task.run('mochaTest');
   });
@@ -240,7 +274,8 @@ module.exports = function(grunt) {
   });
 
   // "devserver" serves editor code directly from the src directory.
-  grunt.registerTask('devserver', ['proxymessage', 'watch:dev']);
+  grunt.registerTask('devserver',
+                     ['proxymessage', 'watch:dev', 'node-inspector:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.

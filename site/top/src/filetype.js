@@ -1,4 +1,4 @@
-define([], function() {
+(function(top, module, define) {
 
 function inferScriptType(filename) {
   var mime = mimeForFilename(filename);
@@ -14,7 +14,7 @@ function wrapTurtle(text, pragmasOnly) {
   // Add the default turtle script.
   scripts.push(
     '<script src="//' +
-    window.pencilcode.domain + '/turtlebits.js' +
+    top.pencilcode.domain + '/turtlebits.js' +
     '">\n<\057script>');
   while (null != (result = script_pattern.exec(text))) {
     scripts.push(
@@ -86,12 +86,26 @@ function mimeForFilename(filename) {
   if (!result) {
     result = 'text/x-pencilcode';
   }
+  if (/^text\//.test(result)) {
+    result += ';charset=utf-8';
+  }
   return result;
 }
 
-return {
+var impl = {
+  mimeForFilename: mimeForFilename,
   modifyForPreview: modifyForPreview,
-  mimeForFilename: mimeForFilename
+  wrapTurtle: wrapTurtle
 };
 
-});
+if (module && module.exports) {
+  module.exports = impl;
+} else if (define && define.amd) {
+  define(function() { return impl; });
+}
+
+})(
+  (typeof process) == 'object' ? process : window,
+  (typeof module) == 'object' && module,
+  (typeof define) == 'function' && define
+);
