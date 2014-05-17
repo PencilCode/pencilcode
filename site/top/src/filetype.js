@@ -2,7 +2,7 @@
 
 function inferScriptType(filename) {
   var mime = mimeForFilename(filename);
-  if (mime == 'text/x-pencilcode') {
+  if (/^text\/x-pencilcode/.test(mime)) {
     mime = 'text/coffeescript';
   }
   return mime;
