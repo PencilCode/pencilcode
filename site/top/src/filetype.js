@@ -5,7 +5,8 @@ function inferScriptType(filename) {
   if (/^text\/x-pencilcode/.test(mime)) {
     mime = 'text/coffeescript';
   }
-  return mime;
+  // Script type attributes do not understand encoding.
+  return mime.replace(/;.*$/, '');
 }
 
 function wrapTurtle(text, pragmasOnly) {
