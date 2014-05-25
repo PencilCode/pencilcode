@@ -28,6 +28,8 @@ The Ubuntu and Debian packages for node.js are pretty old, so don't
 just apt-get install the packages.  Get and build the latest `node` and
 `npm` and `grunt` binaries as follows:
 
+(For Linux:)
+
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
 wget -N http://nodejs.org/dist/node-latest.tar.gz
@@ -39,13 +41,27 @@ source ~/.bashrc
 npm install -g grunt-cli
 </pre>
 
+(For Mac:)
+
+<pre>
+mkdir -p /tmp/nodejs && cd /tmp/nodejs
+curl http://nodejs.org/dist/node-latest.tar.gz > node-latest.tar.gz
+tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
+./configure --prefix=$HOME/local
+make install
+echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.profile
+source ~/.profile
+npm install -g grunt-cli
+</pre>
+
 The above drops all the built binaries into `~/local/bin` so you
 don't need root.
 
 On the Mac, git comes from Apple (you can get it as part of the
 [Command line tools for XCode](https://developer.apple.com/downloads/index.action?q=xcode#)),
-and node.js can be installed from http://nodejs.org/download/.
-You will need to `sudo npm install -g grunt-cli`.
+and if you'd rather not build it, node.js can be installed from
+http://nodejs.org/download/.
+You will still need to `sudo npm install -g grunt-cli`.
 
 On Windows, git can be installed from here:
 http://git-scm.com/download/win and node.js can be installed
