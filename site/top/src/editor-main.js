@@ -55,6 +55,8 @@ var model = {
   ownername: null,
   // True if /edit/ url.
   editmode: false,
+  // Used by framers: extra script for the preview pane.
+  previewScript: null,
   // Contents of the three panes.
   pane: {
     alpha: {
@@ -1117,7 +1119,8 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
       'http://' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
-  var html = filetype.modifyForPreview(code, filename, baseUrl, emptyOnly);
+  var html = filetype.modifyForPreview(
+      code, filename, baseUrl, emptyOnly, model.previewScript);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1411,7 +1414,16 @@ $(window).on('message', function(e) {
   // invoke the requested method
   switch (data.methodName) {
     case 'setCode':
-       view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      break;
+    case 'setPreviewScript':
+      model.previewScript = data.args[0];
+      if (modelatpos('right').running) {
+        // If we are currently showing a run pane, then reload it.
+        var mimetext = view.getPaneEditorText(paneatpos('left'));
+        var runtext = mimetext && mimetext.text;
+        runCodeAtPosition('right', runtext, modelatpos('left').filename, true);
+      }
       break;
     case 'beginRun':
       view.run();

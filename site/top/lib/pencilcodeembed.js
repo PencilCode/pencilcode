@@ -195,6 +195,19 @@
       return this;
     };
 
+    // Used to define supplementary scripts to run in the preview pane:
+    // previewScript is an array of objects that may have "src" or
+    // "text" attributes (and "type" attributes) to define script tags
+    // to insert into the preview pane.
+    proto.setPreviewScript = function(previewScript) {
+      return invokeRemote(this, 'setPreviewScript', [previewScript]);
+    };
+
+    // sets code into the editor
+    proto.setCode = function(code) {
+      this.updatedCode = code;
+      return invokeRemote(this, 'setCode', [code]);
+    };
     // sets code into the editor
     proto.setCode = function(code) {
       this.updatedCode = code;
