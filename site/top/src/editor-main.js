@@ -1134,9 +1134,9 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
 }
 
 function defaultDirSortingByDate() {
-  if (!window.localStorage) return false;
   if (!specialowner()) return false;
   try {
+    if (!window.localStorage) return false;
     return window.localStorage.dirsort === 'bydate';
   } catch(e) {
     return false;

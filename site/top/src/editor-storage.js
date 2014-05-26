@@ -7,8 +7,12 @@ function($, see) {
 
 eval(see.scope('storage'));
 function hasBackup(filename) {
-  if (!window.localStorage) return false;
-  return ('backup:' + filename) in window.localStorage;
+  try {
+    if (!window.localStorage) return false;
+    return ('backup:' + filename) in window.localStorage;
+  } catch (e) {
+    return false;
+  }
 }
 
 function isOnline() {
@@ -31,22 +35,22 @@ function loadBackup(filename, annotation) {
 }
 
 function saveBackup(filename, msg) {
-  if (!window.localStorage) return;
   try {
+    if (!window.localStorage) return;
     window.localStorage['backup:' + filename] = JSON.stringify(msg);
   } catch(e) { }
 }
 
 function deleteBackup(filename) {
-  if (!window.localStorage) return;
   try {
+    if (!window.localStorage) return;
     delete window.localStorage['backup:' + filename];
   } catch(e) { }
 }
 
 function deleteBackupPrefix(filename) {
-  if (!window.localStorage) return;
   try {
+    if (!window.localStorage) return;
     var prefix = 'backup:' + filename;
     delete window.localStorage[prefix];
     if (filename.length > 0 &&
@@ -65,8 +69,8 @@ function deleteBackupPrefix(filename) {
 }
 
 function isBackupPreferred(filename, m, preferUnsaved) {
-  if (!window.localStorage) return false;
   try {
+    if (!window.localStorage) return false;
     var result = JSON.parse(window.localStorage['backup:' + filename]);
     // If backup is empty, then don't prefer the backup.
     if (/^\s*$/.test(result.data)) {
