@@ -110,6 +110,7 @@ window.pencilcode.view = {
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunText: setPaneRunText,
+  evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
@@ -171,8 +172,8 @@ window.pencilcode.view = {
   _state: state
 };
 
-function publish(method, args){
-  if (state.subscriber) { state.subscriber(method, args); }
+function publish(method, args, requestid){
+  if (state.subscriber) { state.subscriber(method, args, requestid); }
 }
 
 function paneid(position) {
@@ -202,9 +203,6 @@ function setOnCallback(tag, cb) {
 }
 
 function fireEvent(tag, args) {
-  // if (window.console) {
-  //   window.console.log('fired', tag, args);
-  // }
   if (tag in state.callbacks) {
     var cb = state.callbacks[tag];
     if (cb) {
@@ -994,6 +992,27 @@ function setPaneRunText(pane, html, filename, targetUrl) {
     }
     $(this).dequeue();
   });
+}
+
+function evalInRunningPane(pane, code) {
+  var paneState = state.pane[pane];
+  if (!paneState.running) { return [null, 'error: not running (wrong state)']; }
+  var preview = $('#' + pane + ' .preview');
+  if (!preview.length) { return [null, 'error: not running (no preview)']; }
+  var iframe = preview.find('iframe');
+  if (!iframe.length) { return [null, 'error: not running (no iframe)']; }
+  try {
+    if (typeof(iframe[0].contentWindow.see) == 'function') {
+      return [iframe[0].contentWindow.see.eval(code), null];
+    }
+  } catch(e) {
+    return [null, 'error: ' + e.message];
+  }
+  try {
+    return [contentWindow.eval(code), null];
+  } catch(e) {
+    return [null, 'error: ' + e.message];
+  }
 }
 
 function hideProtractor(pane) {

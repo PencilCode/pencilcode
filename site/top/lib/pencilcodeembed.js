@@ -96,25 +96,12 @@
   var targetUrl = targetDomain + '/edit/frame';
   var secret = makeSecret();
 
-  // send messages to the remote iframe
-  function invokeRemote(iframeParent, method, args) {
-    var payload = {
-        methodName: method,
-        args: args,
-        secret: secret};
-    if (!iframeParent.iframe) {
-      throw new Error('PencilCodeEmbed: beginLoad must be called first.');
-    }
-    iframeParent.iframe.contentWindow.postMessage(
-        JSON.stringify(payload), targetUrl);
-    return iframeParent;
-  };
-
   var PencilCodeEmbed = (function() {
     function PencilCodeEmbed(div) {
       this.div = div;
       this.updatedCode = '';
       this.callbacks = {};
+      this.requests = {};
 
       // hook up noop event handlers
       this.on('load', function(){});
@@ -124,6 +111,24 @@
     }
 
     var proto = PencilCodeEmbed.prototype;
+
+    // send messages to the remote iframe
+    proto.invokeRemote = function(method, args, callback) {
+      var payload = {
+          methodName: method,
+          args: args,
+          secret: secret};
+      if (typeof(callback) == 'function') {
+        payload.requestid = method + Math.random();
+        this.requests[payload.requestid] = callback;
+      }
+      if (!this.iframe) {
+        throw new Error('PencilCodeEmbed: beginLoad must be called first.');
+      }
+      this.iframe.contentWindow.postMessage(
+          JSON.stringify(payload), targetUrl);
+      return this;
+    };
 
     proto.on = function(tag, cb) {
       if (!(tag in this.callbacks)) {
@@ -173,6 +178,20 @@
           handled = true;
         }
 
+        // responses are special: send them their one-time callback.
+        if (data.methodName == 'response') {
+          if (data.requestid in that.requests) {
+            var cb = that.requests[data.requestid];
+            delete that.requests[data.requestid];
+            if (data.args.length < 2) {
+              data.args.push('length was ' + data.args.length);
+            }
+            cb.apply(that, data.args);
+            return true;
+          }
+          return false;
+        }
+
         // invoke method
         var tag = data.methodName;
         if (tag in that.callbacks) {
@@ -200,18 +219,18 @@
     // "text" attributes (and "type" attributes) to define script tags
     // to insert into the preview pane.
     proto.setPreviewScript = function(previewScript) {
-      return invokeRemote(this, 'setPreviewScript', [previewScript]);
+      return this.invokeRemote('setPreviewScript', [previewScript]);
     };
 
     // sets code into the editor
     proto.setCode = function(code) {
       this.updatedCode = code;
-      return invokeRemote(this, 'setCode', [code]);
+      return this.invokeRemote('setCode', [code]);
     };
     // sets code into the editor
     proto.setCode = function(code) {
       this.updatedCode = code;
-      return invokeRemote(this, 'setCode', [code]);
+      return this.invokeRemote('setCode', [code]);
     };
 
     // gets code from the editor
@@ -221,48 +240,52 @@
 
     // starts running
     proto.beginRun = function() {
-      return invokeRemote(this, 'beginRun', []);
+      return this.invokeRemote('beginRun', []);
     };
 
     // makes editor editable
     proto.setEditable = function() {
-      return invokeRemote(this, 'setEditable', []);
+      return this.invokeRemote('setEditable', []);
     };
 
     // makes editor read only
     proto.setReadOnly = function() {
-      return invokeRemote(this, 'setReadOnly', []);
+      return this.invokeRemote('setReadOnly', []);
     };
 
     // hides editor
     proto.hideEditor = function() {
-      return invokeRemote(this, 'hideEditor', []);
+      return this.invokeRemote('hideEditor', []);
     };
 
     // shows editor
     proto.showEditor = function() {
-      return invokeRemote(this, 'showEditor', []);
+      return this.invokeRemote('showEditor', []);
     };
 
     // hides middle button
     proto.hideMiddleButton = function() {
-      return invokeRemote(this, 'hideMiddleButton', []);
+      return this.invokeRemote('hideMiddleButton', []);
     };
 
     // shows middle button
     proto.showMiddleButton = function() {
-      return invokeRemote(this, 'showMiddleButton', []);
+      return this.invokeRemote('showMiddleButton', []);
     };
 
     // show butter bar notification
     proto.showNotification = function(message) {
-      return invokeRemote(this, 'showNotification', [message]);
+      return this.invokeRemote('showNotification', [message]);
     };
 
     // hides butter bar notification
     proto.hideNotification = function() {
-      return invokeRemote(this, 'hideNotification', []);
+      return this.invokeRemote('hideNotification', []);
     };
+
+    proto.eval = function(code, callback) {
+      return this.invokeRemote('eval', [code], callback);
+    }
 
     return PencilCodeEmbed;
   })();

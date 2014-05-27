@@ -990,6 +990,9 @@ function isFileWithin(base, candidate) {
 }
 
 function readNewUrl(undo) {
+  if (readNewUrl.suppress) {
+    return;
+  }
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
   // Owner comes from domain name.
@@ -1028,8 +1031,10 @@ function readNewUrl(undo) {
   }
   // Clean up the hash if present, and absorb the new auth information.
   if (window.location.hash.length) {
+    readNewUrl.suppress = true;
     window.location.replace('#');
     view.setVisibleUrl(window.location.pathname);
+    readNewUrl.suppress = false;
   }
   // Update global model state.
   var forceRefresh = false;
@@ -1066,7 +1071,7 @@ function readNewUrl(undo) {
   view.setPreviewMode(
       model.editmode && (model.ownername !== "" || filename !== ""), firsturl);
   // Preload text if specified.
-  if (text) {
+  if (text != null) {
     createNewFileIntoPosition('left', filename,
        decodeURIComponent(text[1].replace(/\+/g, ' ')));
     updateTopControls(false);
@@ -1196,7 +1201,8 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     storage.loadFile(model.ownername, filename, forcenet, function(m) {
       if (mpp.loading != loadNum) {
         if (window.console) {
-          window.console.log('aborted: loading is ' + mpp.loading + ' instead of ' + loadNum);
+          window.console.log('aborted: loading is ' +
+              mpp.loading + ' instead of ' + loadNum);
         }
         return;
       }
@@ -1425,6 +1431,9 @@ $(window).on('message', function(e) {
         runCodeAtPosition('right', runtext, modelatpos('left').filename, true);
       }
       break;
+    case 'eval':
+      evalAndPostback(data.requestid, data.args[0]);
+      break;
     case 'beginRun':
       view.run();
       break;
@@ -1461,6 +1470,7 @@ $(window).on('message', function(e) {
   return true;
 });
 
+
 // posts message to the parent window, which may have embedded us
 function createMessageSinkFunction() {
   var noneMessageSink = function(method, args){};
@@ -1475,20 +1485,29 @@ function createMessageSinkFunction() {
     return noneMessageSink;
   }
 
-  return function(method, args){
+  return function(method, args, requestid){
     var payload = {
         methodName: method,
         args: args};
+    if (requestid) {
+      payload.requestid = requestid;
+    }
     window.parent.postMessage(
         JSON.stringify(payload), '*');
   };
 }
 
-view.on('messageToParent', function(methodName, args){
-  postMessageToParent(methodName, args);
-});
-
 view.subscribe(createMessageSinkFunction());
+
+function evalAndPostback(requestid, code) {
+  var resultanderror = null;
+  if (modelatpos('right').running) {
+    resultanderror = view.evalInRunningPane(paneatpos('right'), code);
+  } else {
+    resultanderror = [null, 'error: not running'];
+  }
+  view.publish("response", resultanderror, requestid);
+}
 
 // For a hosting frame, publish the 'load' event before publishing
 // the first 'update' events.

@@ -66,7 +66,8 @@ describe('framed embed', function() {
           error: false,
           loadedThis: false,
           updatedThis: false,
-          executedThis: false
+          executedThis: false,
+          response: null
         };
       };
       window.resetTest();
@@ -166,7 +167,7 @@ describe('framed embed', function() {
       window.resetTest();
       // Prepare code without trailing \n, to force change.
       // (the editor will guarantee a trailing \n)
-      window.test.code0 = 'speed 150\npen blue\nrt 90\nfd 100';
+      window.test.code0 = 'k = 887\nspeed 150\npen blue\nrt 90\nfd 100';
       pco.setCode(window.test.code0);
       window.test.code1 = pco.getCode();
     }, function() {
@@ -257,6 +258,97 @@ describe('framed embed', function() {
       assert.ok(!result.error);
       assert.ok(result.executedThis);
       assert.equal(result.code0, result.executedCode);
+      done();
+    });
+  });
+  it('should be able to eval within the frame using eval', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      pco.eval('k', function(v, e) {
+        window.test.response = { value: v, error: e };
+      });
+    }, function() {
+      // wait until run is completed.
+      if (window.test.response) {
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      assert.equal(result.response.value, 887);
+      assert.ok(!result.response.error);
+      done();
+    });
+  });
+  it('should be able to get an error using eval', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      pco.eval('u', function(v, e) {
+        window.test.response = { value: v, error: e };
+      });
+    }, function() {
+      // wait until run is completed.
+      if (window.test.response) {
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      assert.ok(!result.response.value);
+      // Expect some sort of error message here.
+      assert.ok(result.response.error);
+      done();
+    });
+  });
+  it('should run code via beginRun with setPreviewScript', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      window.test.code0 = pco.getCode();
+      pco.setPreviewScript([
+        {text: 'window.u = "hello";'}
+      ]);
+      pco.beginRun();
+    }, function() {
+      // wait until run is completed.
+      if (window.test.executed) {
+        window.test.code1 = pco.getCode();
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      // Preview script is not visible to the user.
+      assert.ok(/fd 100/.test(result.code0));
+      assert.ok(!/hello/.test(result.code0));
+      assert.equal(result.code0, result.code1);
+      // Load event should not fire again.
+      assert.ok(!result.loaded);
+      // Update should not have fired.
+      assert.ok(!result.updated);
+      // Run should happen once.
+      assert.equal(1, result.executed);
+      assert.ok(!result.error);
+      assert.ok(result.executedThis);
+      assert.equal(result.code0, result.executedCode);
+      done();
+    });
+  });
+  it('should be able see a variable set with setPreviewScript', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      pco.eval('u', function(v, e) {
+        window.test.response = { value: v, error: e };
+      });
+    }, function() {
+      // wait until run is completed.
+      if (window.test.response) {
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      assert.ok(!result.response.error);
+      assert.equal(result.response.value, 'hello');
       done();
     });
   });
