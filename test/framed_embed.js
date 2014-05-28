@@ -300,12 +300,12 @@ describe('framed embed', function() {
       done();
     });
   });
-  it('should run code via beginRun with setPreviewScript', function(done) {
+  it('should run code via beginRun with setupScript', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       window.resetTest();
       window.test.code0 = pco.getCode();
-      pco.setPreviewScript([
-        {text: 'window.u = "hello";'}
+      pco.setupScript([
+        {code: 'window.u = "hello";'}
       ]);
       pco.beginRun();
     }, function() {
@@ -333,7 +333,7 @@ describe('framed embed', function() {
       done();
     });
   });
-  it('should be able see a variable set with setPreviewScript', function(done) {
+  it('should be able see a variable set with setupScript', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       window.resetTest();
       pco.eval('u', function(v, e) {

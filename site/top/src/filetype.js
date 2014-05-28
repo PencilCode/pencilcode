@@ -9,7 +9,7 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
-function wrapTurtle(text, pragmasOnly, previewScript) {
+function wrapTurtle(text, pragmasOnly, setupScript) {
   var result, j, scripts = [], script_pattern =
     /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g;
   // Add the default turtle script.
@@ -17,22 +17,20 @@ function wrapTurtle(text, pragmasOnly, previewScript) {
     '<script src="//' +
     top.pencilcode.domain + '/turtlebits.js' +
     '">\n<\057script>');
-  // Then add any previewScript supplied.
-  if (previewScript) {
-    for (j = 0; j < previewScript.length; ++j) {
-      if (previewScript[j].src) {
+  // Then add any setupScript supplied.
+  if (setupScript) {
+    for (j = 0; j < setupScript.length; ++j) {
+      if (setupScript[j].src) {
         scripts.push(
-          '<script src="' + previewScript[j].url +
-          '" type="' +
-          (previewScript[j].type || inferScriptType(previewScript[j].url)) +
+          '<script src="' + setupScript[j].url + '" type="' +
+          (setupScript[j].type || inferScriptType(setupScript[j].url)) +
           '">\n<\057script>');
-      } else if (previewScript[j].text) {
+      } else if (setupScript[j].code) {
         scripts.push(
           '<script' +
-          (previewScript[j].type ?
-              ' type="' + previewScript[j].type + '"' : '') +
+          (setupScript[j].type ? ' type="' + setupScript[j].type + '"' : '') +
           '>\n' +
-          previewScript[j].text +
+          setupScript[j].code +
           '\n<\057script>');
       }
     }
@@ -52,10 +50,10 @@ function wrapTurtle(text, pragmasOnly, previewScript) {
   return result;
 }
 
-function modifyForPreview(text, filename, targetUrl, pragmasOnly, pScript) {
+function modifyForPreview(text, filename, targetUrl, pragmasOnly, sScript) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text, pragmasOnly, pScript);
+    text = wrapTurtle(text, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   }
   if (!text) return '';

@@ -55,8 +55,10 @@ var model = {
   ownername: null,
   // True if /edit/ url.
   editmode: false,
-  // Used by framers: extra script for the preview pane.
-  previewScript: null,
+  // Used by framers: an array of extra script for the preview pane, to
+  // scaffold instructional examples.  See filetype.js wrapTurtle and
+  // PencilCodeEmbed.setupScript to see how extra scripts are passed through.
+  setupScript: null,
   // Contents of the three panes.
   pane: {
     alpha: {
@@ -1007,6 +1009,8 @@ function readNewUrl(undo) {
       login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(window.location.hash),
   // Extract text from hash if present.
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
+  // Extract setup script spec from hash if present.
+      setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(window.location.hash),
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname);
   // Give the user a chance to abort navigation.
@@ -1042,6 +1046,17 @@ function readNewUrl(undo) {
     model.ownername = ownername;
     model.editmode = editmode;
     forceRefresh = true;
+  }
+  // Update setup scripts if specified.
+  if (setup) {
+    try {
+      model.setupScript =
+          JSON.parse(decodeURIComponent(setup[1].replace(/\+/g, ' ')));
+    } catch(e) {
+      if (window.console) {
+        console.log('Unable to parse setup script spec: ' + e.message);
+      }
+    }
   }
   // If the new url is replacing an existing one, animate it in.
   if (!firsturl && modelatpos('left').filename !== null) {
@@ -1125,7 +1140,7 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
-      code, filename, baseUrl, emptyOnly, model.previewScript);
+      code, filename, baseUrl, emptyOnly, model.setupScript);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1422,8 +1437,8 @@ $(window).on('message', function(e) {
     case 'setCode':
       view.setPaneEditorText(paneatpos('left'), data.args[0], null);
       break;
-    case 'setPreviewScript':
-      model.previewScript = data.args[0];
+    case 'setupScript':
+      model.setupScript = data.args[0];
       if (modelatpos('right').running) {
         // If we are currently showing a run pane, then reload it.
         var mimetext = view.getPaneEditorText(paneatpos('left'));

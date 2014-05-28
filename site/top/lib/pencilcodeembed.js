@@ -137,12 +137,15 @@
       this.callbacks[tag].push(cb);
     };
 
-    proto.beginLoad = function(code) {
-      if (!code) {
-        code = '';
+    proto.beginLoad = function(opts) {
+      if (!opts) {
+        opts = { };
+      } else if (typeof(opts) == 'string') {
+        opts = { code: opts };
       }
 
       var that = this;
+      var code = opts.code || '';
 
       this.div.innerHTML = '';
       this.iframe = document.createElement('iframe');
@@ -198,6 +201,7 @@
           var cbarray = that.callbacks[tag];
           for (var j = 0; j < cbarray.length; ++j) {
             var cb = cbarray[j];
+            console.log(tag, j, cb);
             if (cb) {
               cb.apply(that, data.args);
               handled = true;
@@ -207,19 +211,28 @@
         return handled;
       });
 
+      var setuparg = '';
+      if (opts.setup) {
+        setuparg = '&setup=' + encodeURIComponent(JSON.stringify(opts.setup));
+      }
+
       this.iframe.src =
           targetUrl +
           '#text=' + encodeURIComponent(code) +
+          setuparg +
           '&secret=' + secret;
       return this;
     };
 
     // Used to define supplementary scripts to run in the preview pane:
-    // previewScript is an array of objects that may have "src" or
-    // "text" attributes (and "type" attributes) to define script tags
-    // to insert into the preview pane.
-    proto.setPreviewScript = function(previewScript) {
-      return this.invokeRemote('setPreviewScript', [previewScript]);
+    // script is an array of objects that may have "src" or
+    // "code" attributes (and "type" attributes) to define script tags
+    // to insert into the preview pane.  For example, the following sets
+    // up the embedded PencilCode so that the coffeescript code to write
+    // "welcome" is run before user code in the preview pane.
+    // pce.setupScript([{code: 'write "welcome"', type: 'text/coffeescript'}])
+    proto.setupScript = function(setup) {
+      return this.invokeRemote('setupScript', [setup]);
     };
 
     // sets code into the editor
