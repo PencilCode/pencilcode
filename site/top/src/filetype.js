@@ -9,14 +9,32 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
-function wrapTurtle(text, pragmasOnly) {
-  var result, scripts = [], script_pattern =
+function wrapTurtle(text, pragmasOnly, setupScript) {
+  var result, j, scripts = [], script_pattern =
     /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g;
   // Add the default turtle script.
   scripts.push(
     '<script src="//' +
     top.pencilcode.domain + '/turtlebits.js' +
     '">\n<\057script>');
+  // Then add any setupScript supplied.
+  if (setupScript) {
+    for (j = 0; j < setupScript.length; ++j) {
+      if (setupScript[j].src) {
+        scripts.push(
+          '<script src="' + setupScript[j].url + '" type="' +
+          (setupScript[j].type || inferScriptType(setupScript[j].url)) +
+          '">\n<\057script>');
+      } else if (setupScript[j].code) {
+        scripts.push(
+          '<script' +
+          (setupScript[j].type ? ' type="' + setupScript[j].type + '"' : '') +
+          '>\n' +
+          setupScript[j].code +
+          '\n<\057script>');
+      }
+    }
+  }
   while (null != (result = script_pattern.exec(text))) {
     scripts.push(
       '<script src=' + result[1] +
@@ -32,10 +50,10 @@ function wrapTurtle(text, pragmasOnly) {
   return result;
 }
 
-function modifyForPreview(text, filename, targetUrl, pragmasOnly) {
+function modifyForPreview(text, filename, targetUrl, pragmasOnly, sScript) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text, pragmasOnly);
+    text = wrapTurtle(text, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   }
   if (!text) return '';

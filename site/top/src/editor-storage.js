@@ -125,6 +125,12 @@ window.pencilcode.storage = {
       }, 0);
       return;
     }
+    if (ownername == 'frame') {
+      setTimeout(function() {
+        callback({data: null, newfile: true});
+      }, 0);
+      return;
+    }
     if (!ignoreBackup && !isOnline() && hasBackup(filename)) {
       // If the user is offline, then the cached backup is returned
       // marked with {offline:true}.

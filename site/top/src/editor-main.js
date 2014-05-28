@@ -55,6 +55,10 @@ var model = {
   ownername: null,
   // True if /edit/ url.
   editmode: false,
+  // Used by framers: an array of extra script for the preview pane, to
+  // scaffold instructional examples.  See filetype.js wrapTurtle and
+  // PencilCodeEmbed.setupScript to see how extra scripts are passed through.
+  setupScript: null,
   // Contents of the three panes.
   pane: {
     alpha: {
@@ -988,6 +992,9 @@ function isFileWithin(base, candidate) {
 }
 
 function readNewUrl(undo) {
+  if (readNewUrl.suppress) {
+    return;
+  }
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
   // Owner comes from domain name.
@@ -1002,6 +1009,8 @@ function readNewUrl(undo) {
       login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(window.location.hash),
   // Extract text from hash if present.
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
+  // Extract setup script spec from hash if present.
+      setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(window.location.hash),
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname);
   // Give the user a chance to abort navigation.
@@ -1026,8 +1035,10 @@ function readNewUrl(undo) {
   }
   // Clean up the hash if present, and absorb the new auth information.
   if (window.location.hash.length) {
+    readNewUrl.suppress = true;
     window.location.replace('#');
     view.setVisibleUrl(window.location.pathname);
+    readNewUrl.suppress = false;
   }
   // Update global model state.
   var forceRefresh = false;
@@ -1035,6 +1046,17 @@ function readNewUrl(undo) {
     model.ownername = ownername;
     model.editmode = editmode;
     forceRefresh = true;
+  }
+  // Update setup scripts if specified.
+  if (setup) {
+    try {
+      model.setupScript =
+          JSON.parse(decodeURIComponent(setup[1].replace(/\+/g, ' ')));
+    } catch(e) {
+      if (window.console) {
+        console.log('Unable to parse setup script spec: ' + e.message);
+      }
+    }
   }
   // If the new url is replacing an existing one, animate it in.
   if (!firsturl && modelatpos('left').filename !== null) {
@@ -1064,7 +1086,7 @@ function readNewUrl(undo) {
   view.setPreviewMode(
       model.editmode && (model.ownername !== "" || filename !== ""), firsturl);
   // Preload text if specified.
-  if (text) {
+  if (text != null) {
     createNewFileIntoPosition('left', filename,
        decodeURIComponent(text[1].replace(/\+/g, ' ')));
     updateTopControls(false);
@@ -1117,7 +1139,8 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
       'http://' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
-  var html = filetype.modifyForPreview(code, filename, baseUrl, emptyOnly);
+  var html = filetype.modifyForPreview(
+      code, filename, baseUrl, emptyOnly, model.setupScript);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1193,7 +1216,8 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     storage.loadFile(model.ownername, filename, forcenet, function(m) {
       if (mpp.loading != loadNum) {
         if (window.console) {
-          window.console.log('aborted: loading is ' + mpp.loading + ' instead of ' + loadNum);
+          window.console.log('aborted: loading is ' +
+              mpp.loading + ' instead of ' + loadNum);
         }
         return;
       }
@@ -1411,7 +1435,19 @@ $(window).on('message', function(e) {
   // invoke the requested method
   switch (data.methodName) {
     case 'setCode':
-       view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      break;
+    case 'setupScript':
+      model.setupScript = data.args[0];
+      if (modelatpos('right').running) {
+        // If we are currently showing a run pane, then reload it.
+        var mimetext = view.getPaneEditorText(paneatpos('left'));
+        var runtext = mimetext && mimetext.text;
+        runCodeAtPosition('right', runtext, modelatpos('left').filename, true);
+      }
+      break;
+    case 'eval':
+      evalAndPostback(data.requestid, data.args[0]);
       break;
     case 'beginRun':
       view.run();
@@ -1449,6 +1485,7 @@ $(window).on('message', function(e) {
   return true;
 });
 
+
 // posts message to the parent window, which may have embedded us
 function createMessageSinkFunction() {
   var noneMessageSink = function(method, args){};
@@ -1463,20 +1500,29 @@ function createMessageSinkFunction() {
     return noneMessageSink;
   }
 
-  return function(method, args){
+  return function(method, args, requestid){
     var payload = {
         methodName: method,
         args: args};
+    if (requestid) {
+      payload.requestid = requestid;
+    }
     window.parent.postMessage(
         JSON.stringify(payload), '*');
   };
 }
 
-view.on('messageToParent', function(methodName, args){
-  postMessageToParent(methodName, args);
-});
-
 view.subscribe(createMessageSinkFunction());
+
+function evalAndPostback(requestid, code) {
+  var resultanderror = null;
+  if (modelatpos('right').running) {
+    resultanderror = view.evalInRunningPane(paneatpos('right'), code);
+  } else {
+    resultanderror = [null, 'error: not running'];
+  }
+  view.publish("response", resultanderror, requestid);
+}
 
 // For a hosting frame, publish the 'load' event before publishing
 // the first 'update' events.
