@@ -524,6 +524,22 @@ function keyFromPassword(username, p) {
   return key;
 }
 
+function letterComplexity(s) {
+  var maxcount = 0, uniqcount = 0, dupcount = 0, last = null, count = {}, j, c;
+  for (j = 0; j < s.length; ++j) {
+    c = s.charAt(j);
+    if (!(c in count)) {
+      uniqcount += 1;
+      count[c] = 0;
+    }
+    count[c] += 1;
+    maxcount = Math.max(count[c], maxcount);
+    if (c == last) { dupcount += 1; }
+    last = c;
+  }
+  return uniqcount && (uniqcount / (maxcount + dupcount));
+}
+
 function signUpAndSave() {
   if (nosaveowner()) {
     return;
@@ -573,6 +589,13 @@ function signUpAndSave() {
         return {
           disable: true,
           info: 'Invalid username.'
+        };
+      }
+      if (username && letterComplexity(username) <= 1) {
+        // Discourage users from choosing a username "aaaaaa".
+        return {
+          disable: true,
+          info: 'Name "' + username + '" reserved.'
         };
       }
       if (state.username.length < 3) {

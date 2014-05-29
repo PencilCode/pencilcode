@@ -431,6 +431,21 @@ function doSetKey(user, oldkey, newkey, res, app) {
   }
 }
 
+function letterComplexity(s) {
+  var maxcount = 0, uniqcount = 0, dupcount = 0, last = null, count = {}, j, c;
+  for (j = 0; j < s.length; ++j) {
+    c = s.charAt(j);
+    if (!(c in count)) {
+      uniqcount += 1;
+      count[c] = 0;
+    }
+    count[c] += 1;
+    maxcount = Math.max(count[c], maxcount);
+    if (c == last) { dupcount += 1; }
+    last = c;
+  }
+  return uniqcount && (uniqcount / (maxcount + dupcount));
+}
 
 function checkReservedUser(user, app) {
   var datadirAbs = path.resolve(app.locals.config.dirs.datadir);
@@ -445,6 +460,11 @@ function checkReservedUser(user, app) {
 
   var normalized = user.toLowerCase();
   if (fs.existsSync(path.join(datadirAbs, normalized))) {
+    utils.errorExit('Username is reserved.');
+  }
+
+  // Prohibit low-complexity usernames (like "aaaaaa")
+  if (letterComplexity(normalized) <= 1) {
     utils.errorExit('Username is reserved.');
   }
 
@@ -476,7 +496,7 @@ function checkReservedUser(user, app) {
       }
     }
     for (var j = 0; j < badsubstrings.length; j++) {
-      if (badsubstrings[j].length > 0 && 
+      if (badsubstrings[j].length > 0 &&
           checkwords[i].indexOf(badsubstrings[j]) != -1) {
         utils.errorExit('Username is reserved.');
       }
