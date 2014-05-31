@@ -3406,27 +3406,27 @@ var Instrument = (function() {
   // responsible for about 2 seconds of music.  If a graph with too
   // too many nodes is sent to WebAudio at once, output distorts badly.
   function Instrument(options) {
-    this._atop = getAudioTop();     // Audio context.
-    this._timbre = makeTimbre(options, this._atop);  // The instrument's timbre.
-    this._queue = [];               // A queue of future tones to play.
-    this._minQueueTime = Infinity;  // The earliest time in _queue.
-    this._maxScheduledTime = 0;     // The latest time in _queue.
-    this._unsortedQueue = false;    // True if _queue is unsorted.
-    this._startSet = [];            // Unstarted tones already sent to WebAudio.
-    this._finishSet = {};           // Started tones playing in WebAudio.
-    this._cleanupSet = [];          // Tones waiting for cleanup.
-    this._callbackSet = [];         // A set of scheduled callbacks.
-    this._handlers = {};            // 'noteon' and 'noteoff' handlers.
-    this._now = null;               // A cached current-time value.
+    this._atop = getAudioTop();    // Audio context.
+    this._timbre = makeTimbre(options, this._atop); // The instrument's timbre.
+    this._queue = [];              // A queue of future tones to play.
+    this._minQueueTime = Infinity; // The earliest time in _queue.
+    this._maxScheduledTime = 0;    // The latest time in _queue.
+    this._unsortedQueue = false;   // True if _queue is unsorted.
+    this._startSet = [];           // Unstarted tones already sent to WebAudio.
+    this._finishSet = {};          // Started tones playing in WebAudio.
+    this._cleanupSet = [];         // Tones waiting for cleanup.
+    this._callbackSet = [];        // A set of scheduled callbacks.
+    this._handlers = {};           // 'noteon' and 'noteoff' handlers.
+    this._now = null;              // A cached current-time value.
     if (isAudioPresent()) {
-      this.silence();               // Initializes top-level audio node.
+      this.silence();              // Initializes top-level audio node.
     }
   }
 
   Instrument.dequeueTime = 0.5;  // Seconds before an event to reexamine queue.
   Instrument.bufferSecs = 2;     // Seconds ahead to put notes in WebAudio.
   Instrument.toneLength = 10;    // Default duration of a tone.
-  Instrument.cleanupDelay = 0.1; // Silent time before disconnecting gain nodes.
+  Instrument.cleanupDelay = 0.1; // Silent time before disconnecting nodes.
 
   // Sets the default timbre for the instrument.  See defaultTimbre.
   Instrument.prototype.setTimbre = function(t) {
@@ -3601,7 +3601,8 @@ var Instrument = (function() {
       } else {
         // Apply the cutoff frequency adjusted using cutfollow.
         f = ac.createBiquadFilter();
-        f.frequency.value = timbre.cutoff + record.frequency * timbre.cutfollow;
+        f.frequency.value =
+            timbre.cutoff + record.frequency * timbre.cutfollow;
         f.Q.value = timbre.resonance;
         f.connect(g);
       }
@@ -3754,7 +3755,9 @@ var Instrument = (function() {
       record = this._finishSet[freq];
       when = record.time + record.duration;
       if (when <= now) {
-        callbacks.push({order: [when, 0], f: this._trigger, t: this, a: ['noteoff', record]});
+        callbacks.push({
+          order: [when, 0],
+          f: this._trigger, t: this, a: ['noteoff', record]});
         if (record.cleanuptime != Infinity) {
           this._cleanupSet.push(record);
         }
@@ -3766,7 +3769,9 @@ var Instrument = (function() {
       cb = this._callbackSet[j];
       when = cb.time;
       if (when <= now) {
-        callbacks.push({order: [when, 1], f: cb.callback, t: null, a: []});
+        callbacks.push({
+          order: [when, 1],
+          f: cb.callback, t: null, a: []});
         this._callbackSet.splice(j, 1);
         j -= 1;
       }
@@ -3786,8 +3791,9 @@ var Instrument = (function() {
             // Our new sound conflicts with an old one: end the old one
             // and notify immediately of its noteoff event.
             this._truncateSound(conflict, record.time);
-            callbacks.push(
-                {order: [record.time, 0], f: this._trigger, t: this, a: ['noteoff', conflict]});
+            callbacks.push({
+              order: [record.time, 0],
+              f: this._trigger, t: this, a: ['noteoff', conflict]});
             delete this._finishSet[freq];
           } else {
             // A conflict from the future has already scheduled,
@@ -3799,20 +3805,24 @@ var Instrument = (function() {
         }
         this._startSet.splice(j, 1);
         j -= 1;
-        if (record.duration > 0 && record.velocity > 0 && conflict !== record) {
+        if (record.duration > 0 && record.velocity > 0 &&
+            conflict !== record) {
           this._finishSet[freq] = record;
-          callbacks.push(
-              {order: [record.time, 2], f: this._trigger, t: this, a: ['noteon', record]});
+          callbacks.push({
+            order: [record.time, 2],
+            f: this._trigger, t: this, a: ['noteon', record]});
         }
       }
     }
     // Schedule the next _doPoll.
     this._startPollTimer();
 
-    // Sort callbacks according to the "order" tuple, so earlier events are notified first.
+    // Sort callbacks according to the "order" tuple, so earlier events
+    // are notified first.
     callbacks.sort(function(a, b) {
       if (a.order[0] != b.order[0]) { return a.order[0] - b.order[0]; }
-      return a.order[1] - b.order[1]; // tiebreak by notifying 'noteoff' first and 'noteon' last.
+      // tiebreak by notifying 'noteoff' first and 'noteon' last.
+      return a.order[1] - b.order[1];
     });
     // At the end, call all the callbacks without depending on "this" state.
     for (j = 0; j < callbacks.length; ++j) {
@@ -3823,7 +3833,8 @@ var Instrument = (function() {
   // Schedules the next _doPoll call by examining times in the various
   // sets and determining the soonest event that needs _doPoll processing.
   Instrument.prototype._startPollTimer = function(setnow) {
-    // If we have already done a "setnow", then pollTimer is zero-timeout and cannot be faster.
+    // If we have already done a "setnow", then pollTimer is zero-timeout
+    // and cannot be faster.
     if (this._pollTimer && this._now != null) {
       return;
     }
@@ -4752,7 +4763,13 @@ var Instrument = (function() {
             }
           }
         }
-        o.setPeriodicWave(pwave);
+        if (!o.setPeriodicWave && o.setWaveTable) {
+          // The old API name: Safari 7 still uses this.
+          o.setWaveTable(pwave);
+        } else {
+          // The new API name.
+          o.setPeriodicWave(pwave);
+        }
       } else {
         o.type = wavename;
       }
