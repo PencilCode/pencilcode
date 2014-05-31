@@ -123,9 +123,9 @@ Pen and Fill Styles
 -------------------
 
 The turtle pen respects canvas styling: any valid strokeStyle is
-accepted; and also using a space-separated syntax, lineWidth, lineCap,
+accepted; and also using a css-like syntax, lineWidth, lineCap,
 lineJoin, miterLimit, and fillStyle can be specified, e.g.,
-pen('red lineWidth 5 lineCap square').  The same syntax applies for
+pen('red;lineWidth:5;lineCap:square').  The same syntax applies for
 styling dot and fill (except that the default interpretation for the
 first value is fillStyle instead of strokeStyle).
 
@@ -143,11 +143,11 @@ apostrophes, carets, underscores, digits, and slashes as in the
 standard.  Enclosing letters in square brackets represents a chord,
 and z represents a rest.  The default tempo is 120, but can be changed
 by passing a options object as the first parameter setting tempo, e.g.,
-{ tempo: 200 }.  Other options include volume: 0.5, type: 'sine' or
-'square' or 'sawtooth' or 'triangle', and envelope: which defines
-an ADSR envelope e.g., { a: 0.01, d: 0.2, s: 0.1, r: 0.1 }.
+{ tempo: 200 }.
 
-The turtle's motion will pause while it is playing notes.
+The turtle's motion will pause while it is playing notes. A single
+tone can be played immediately (without participating in the
+turtle animation queue) by using the "tone" method.
 
 Planning Logic in the Animation Queue
 -------------------------------------
@@ -306,6 +306,8 @@ $(q).css('turtleTurningRadius, '50px');// arc turning radius for rotation.
 $(q).css('turtlePenStyle', 'red');     // or 'red lineWidth 2px' etc.
 $(q).css('turtlePenDown', 'up');       // default 'down' to draw with pen.
 $(q).css('turtleHull', '5 0 0 5 0 -5');// fine-tune shape for collisions.
+$(q).css('turtleTimbre', 'square');    // quality of the sound.
+$(q).css('turtleVolume', '0.3');       // volume of the sound.
 </pre>
 
 Arbitrary 2d transforms are supported, including transforms of elements
@@ -418,6 +420,110 @@ var transform = styleSupport("transform"),
 if (!transform || !hasGetBoundingClientRect()) {
   // Need transforms and boundingClientRects to support turtle methods.
   return;
+}
+
+// An options string looks like a (simplified) CSS properties string,
+// of the form prop:value;prop:value; etc.  If defaultProp is supplied
+// then the string can begin with "value" (i.e., value1;prop:value2)
+// and that first value will be interpreted as defaultProp:value1.
+// Some rudimentary quoting can be done, e.g., value:"prop", etc.
+function parseOptionString(str, defaultProp) {
+  if (str == null) {
+    return {};
+  }
+  if ($.isPlainObject(str)) {
+    return str;
+  }
+  str = '' + str;
+  // Each token is an identifier, a quoted or parenthesized string,
+  // a run of whitespace, or any other non-matching character.
+  var token = str.match(/[-a-zA-Z_][-\w]*|"[^"]*"|'[^']'|\([^()]*\)|\s+|./g),
+      result = {}, j, t, key = null, value, arg,
+      seencolon = false, vlist = [], firstval = true;
+
+  // While parsing, commitvalue() validates and unquotes a prop:value
+  // pair and commits it to the result.
+  function commitvalue() {
+    // Trim whitespace
+    while (vlist.length && /^\s/.test(vlist[vlist.length - 1])) { vlist.pop(); }
+    while (vlist.length && /^\s/.test(vlist[0])) { vlist.shift(); }
+    if (vlist.length == 1 && (
+          /^".*"$/.test(vlist[0]) || /^'.*'$/.test(vlist[0]))) {
+      // Unquote quoted string.
+      value = vlist[0].substr(1, vlist[0].length - 2);
+    } else if (vlist.length == 2 && vlist[0] == 'url' &&
+        /^(.*)$/.test(vlist[1])) {
+      // Remove url(....) from around a string.
+      value = vlist[1].substr(1, vlist[1].length - 2);
+    } else {
+      // Form the string for the value.
+      arg = vlist.join('');
+      // Convert the value to a number if it looks like a number.
+      if (arg == "") {
+        value = arg;
+      } else if (isNaN(arg)) {
+        value = arg;
+      } else {
+        value = Number(arg);
+      }
+    }
+    // Deal with a keyless first value.
+    if (!seencolon && firstval && defaultProp && vlist.length) {
+      // value will already have been formed.
+      key = defaultProp;
+    }
+    if (key) {
+      result[key] = value;
+    }
+  }
+  // Now the parsing: just iterate through all the tokens.
+  for (j = 0; j < token.length; ++j) {
+    t = token[j];
+    if (!seencolon) {
+      // Before a colon, remember the first identifier as the key.
+      if (!key && /^[a-zA-Z_-]/.test(t)) {
+        key = t;
+      }
+      // And also look for the colon.
+      if (t == ':') {
+        seencolon = true;
+        vlist.length = 0;
+        continue;
+      }
+    }
+    if (t == ';') {
+      // When a semicolon is seen, form the value and save it.
+      commitvalue();
+      // Then reset the parsing state.
+      key = null;
+      vlist.length = 0;
+      seencolon = false;
+      firstval = false;
+      continue;
+    }
+    // Accumulate all tokens into the vlist.
+    vlist.push(t);
+  }
+  commitvalue();
+  return result;
+}
+// Prints a map of options as a parsable string.
+// The inverse of parseOptionString.
+function printOptionAsString(obj) {
+  var result = [];
+  function quoted(s) {
+    if (/[\s;]/.test(s)) {
+      if (s.indexOf('"') < 0) {
+        return '"' + s + '"';
+      }
+      return "'" + s + "'";
+    }
+    return s;
+  }
+  for (var k in obj) if (obj.hasOwnProperty(k)) {
+    result.push(k + ':' + quoted(obj[k]) + ';');
+  }
+  return result.join(' ');
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1281,6 +1387,7 @@ function writeTurtleHull(hull) {
 }
 
 function makeHullHook() {
+  // jQuery CSS hook for turtleHull property.
   return {
     get: function(elem, computed, extra) {
       var hull = getTurtleData(elem).hull;
@@ -1635,43 +1742,17 @@ function parsePenStyle(text, defaultProp) {
   var eraseMode = false;
   if (/^erase\b/.test(text)) {
     text = text.replace(
-        /^erase\b/, 'white globalCompositeOperation destination-out');
+        /^erase\b/, 'white; globalCompositeOperation:destination-out');
     eraseMode = true;
   }
-  var words = text.split(/\s+/),
-      mapping = {
-        strokeStyle: identity,
-        lineWidth: parseFloat,
-        lineCap: identity,
-        lineJoin: identity,
-        miterLimit: parseFloat,
-        fillStyle: identity,
-        globalCompositeOperation: identity
-      },
-      result = {}, j, end = words.length;
+  var result = parseOptionString(text, defaultProp);
   if (eraseMode) { result.eraseMode = true; }
-  for (j = words.length - 1; j >= 0; --j) {
-    if (mapping.hasOwnProperty(words[j])) {
-      var key = words[j],
-          param = words.slice(j + 1, end).join(' ');
-      result[key] = mapping[key](param);
-      end = j;
-    }
-  }
-  if (end > 0 && !result[defaultProp]) {
-    result[defaultProp] = words.slice(0, end).join(' ');
-  }
   return result;
 }
 
 function writePenStyle(style) {
   if (!style) { return 'none'; }
-  var result = [];
-  $.each(style, function(k, v) {
-    result.push(k);
-    result.push(v);
-  });
-  return result.join(' ');
+  return printOptionAsString(style);
 }
 
 function parsePenDown(style) {
@@ -1696,7 +1777,8 @@ function getTurtleData(elem) {
       turningRadius: 0,
       drawOnCanvas: null,
       quickpagexy: null,
-      quickhomeorigin: null
+      quickhomeorigin: null,
+      instrument: null
     });
   }
   return state;
@@ -2665,7 +2747,7 @@ function withinOrNot(obj, within, distance, x, y) {
 // Classes to allow jQuery to be subclassed.
 //////////////////////////////////////////////////////////////////////////
 
-// A class to wrap jQuery
+// Sprite extends the jQuery object prototype.
 var Sprite = (function(_super) {
   __extends(Sprite, _super);
 
@@ -2699,6 +2781,7 @@ var Sprite = (function(_super) {
 
 })(jQuery.fn.init);
 
+// Turtle extends Sprite, and draws a turtle by default.
 var Turtle = (function(_super) {
   __extends(Turtle, _super);
 
@@ -2708,6 +2791,269 @@ var Turtle = (function(_super) {
   }
 
   return Turtle;
+
+})(Sprite);
+
+// Piano extends Sprite, and draws a piano keyboard by default.
+var Piano = (function(_super) {
+  __extends(Piano, _super);
+  // The piano constructor accepts an options object that can have:
+  //   keys: the number of keys.  (this is the default property)
+  //   color: the color of the white keys.
+  //   blackColor: the color of the black keys.
+  //   lineColor: the color of the key outlines.
+  //   width: the overall keyboard pixel width.
+  //   height: the overall keyboard pixel height.
+  //   lineWidth: the outline line width.
+  //   lowest: the lowest key number (as a midi number).
+  //   highest: the highest key number (as a midi number).
+  // Any subset of these properties may be supplied, and reasonable
+  // defaults are chosen for everything else.  For example,
+  // new Piano(88) will create a standard 88-key Piano keyboard.
+  function Piano(options) {
+    var aspect, defwidth, extra, firstwhite, height, width, lastwhite,
+        numwhite = null, self = this;
+    options = parseOptionString(options, 'keys');
+    // The purpose of the logic in the constructor below is to calculate
+    // reasonable defaults for the geometry of the keyboard given any
+    // subset of options.  The geometric measurments go into _geom.
+    var geom = this._geom = {}
+    geom.lineWidth = ('lineWidth' in options) ? options.lineWidth : 1.5;
+    geom.color = ('color' in options) ? options.color : 'white';
+    geom.blackColor = ('blackColor' in options) ? options.blackColor : 'black';
+    geom.lineColor = ('lineColor' in options) ? options.lineColor : 'black';
+    // The extra pixel amount added to the bottom and right to take into
+    // account the line width.
+    extra = Math.ceil(geom.lineWidth);
+    // Compute dimensions: first, default to 422 pixels wide and 100 tall.
+    defwidth = 422;
+    aspect = 4.2;
+    // But if a key count is specified, default width to keep each white
+    // key (i.e., 7/12ths of the keys) about 5:1 tall and the total
+    // keyboard area about 42000 pixels.
+    if ('lowest' in options && 'highest' in options) {
+      numwhite = wcp(options.highest) - wcp(options.lowest) + 1;
+    } else if ('keys' in options) {
+      numwhite = Math.ceil(options.keys / 12 * 7);
+    }
+    if (numwhite) {
+      aspect = numwhite / 5;
+      defwidth = Math.sqrt(42000 * aspect) + extra;
+    }
+    // If not specified explicitly, compute width from height, or if that
+    // was not specified either, use the default width.
+    width = ('width' in options) ? options.width : ('height' in options) ?
+        Math.round((options.height - extra) * aspect + extra): defwidth;
+    // Compute the height from width if not specified.
+    height = ('height' in options) ? options.height :
+        Math.round((width - extra) / aspect + extra);
+    // If no key count, then come up with one based on geometry.
+    if (!numwhite) {
+      numwhite =
+          Math.max(1, Math.round((width - extra) / (height - extra) * 5));
+    }
+    // Default rightmost white key by centering at F above middle C, up to C8.
+    // For example, for 36 keys, there are 21 white keys, and the last
+    // white key is 42 + (21 - 1) / 2 = 52, the B ten white keys above the F.
+    lastwhite = Math.min(wcp(108), Math.ceil(42 + (numwhite - 1) / 2));
+    // If the highest midi key is not specified, then use the default.
+    geom.highest = ('highest' in options) ? options.highest :
+      ('lowest' in options && 'keys' in options) ?
+      options.lowest + options.keys - 1 : mcp(lastwhite);
+    // If the lowest midi key is not specified, then pick one.
+    geom.lowest = ('lowest' in options) ? options.lowest :
+      ('keys' in options) ? geom.highest - options.keys + 1 :
+      Math.min(geom.highest, mcp(wcp(geom.highest) - numwhite + 1));
+    // Final geometry computation.
+    firstwhite = wcp(geom.lowest);
+    lastwhite = wcp(geom.highest);
+    // If highest is a black key, add the space of an extra white key.
+    if (isblackkey(geom.highest)) { lastwhite += 1; }
+    numwhite = lastwhite - firstwhite + 1;
+    // Width and height of a single white key.
+    geom.kw = (width - extra) / numwhite;
+    geom.kh = (('height' in options) ? options.height - extra : geom.kw * 5) +
+      (extra - geom.lineWidth); // Add roundoff to align with sprite bottom.
+    // Width and height of a single black key.
+    geom.bkw = geom.kw * 4 / 7;
+    geom.bkh = geom.kh * 3 / 5;
+    // Pixel offsets for centering the keyboard.
+    geom.halfex = extra / 2;
+    geom.leftpx = firstwhite * geom.kw;
+    geom.rightpx = (lastwhite + 1) * geom.kw;
+    // The top width of a C key and an F key (making space for black keys).
+    geom.ckw = (3 * geom.kw - 2 * geom.bkw) / 3;
+    geom.fkw = (4 * geom.kw - 3 * geom.bkw) / 4;
+    Piano.__super__.constructor.call(this, {
+      width: Math.ceil(geom.rightpx - geom.leftpx + extra),
+      height: Math.ceil(geom.kh + extra)
+    });
+    // The following is a simplistic wavetable simulation of a Piano sound.
+    this.css({ turtleTimbre: "wave:piano;" });
+    // Hook up events.
+    this.on('noteon', function(e) {
+      self.drawkey(e.midi, keycolor(e.midi));
+    });
+    this.on('noteoff', function(e) {
+      self.drawkey(e.midi);
+    });
+    this.draw();
+  }
+
+  // Draws the key a midi number n, using the provided fill color
+  // (defaults to white or black as appropriate).
+  Piano.prototype.drawkey = function(n, fillcolor) {
+    var ctx, geom = this._geom;
+    if (!((geom.lowest <= n && n <= geom.highest))) {
+      return;
+    }
+    if (fillcolor == null) {
+      if (isblackkey(n)) {
+        fillcolor = geom.blackColor;
+      } else {
+        fillcolor = geom.color;
+      }
+    }
+    ctx = this.canvas().getContext('2d');
+    ctx.save();
+    ctx.beginPath();
+    keyoutline(ctx, geom, n);
+    ctx.fillStyle = fillcolor;
+    ctx.strokeStyle = geom.lineColor;
+    ctx.lineWidth = geom.lineWidth;
+    ctx.fill();
+    ctx.stroke();
+    return ctx.restore();
+  };
+
+  // Draws every key on the keyboard.
+  Piano.prototype.draw = function() {
+    for (var n = this._geom.lowest; n <= this._geom.highest; ++n) {
+      this.drawkey(n);
+    }
+  };
+
+  var colors12 = [
+    '#db4437', // C  red
+    '#ff5722', // C# orange
+    '#f4b400', // D  orange yellow
+    '#ffeb3b', // D# yellow
+    '#cddc39', // E  lime
+    '#0f9d58', // F  green
+    '#00bcd4', // F# teal
+    '#03a9f4', // G  light blue
+    '#4285f4', // G# blue
+    '#673ab7', // A  deep purple
+    '#9c27b0', // A# purple
+    '#e91e63'  // B  pink
+  ];
+
+  // Picks a "noteon" color for a midi key number.
+  function keycolor(n) {
+    return colors12[(n % 12 + 12) % 12];
+  };
+
+  // Converts a midi number to a white key position (black keys round left).
+  function wcp(n) {
+    return floor((n + 7) / 12 * 7);
+  };
+
+  // Converts from a white key position to a midi number.
+  function mcp(n) {
+    return ceil(n / 7 * 12) - 7;
+  };
+
+  // True if midi #n is a black key.
+  function isblackkey(n) {
+    return keyshape(n) >= 8;
+  }
+
+  // Returns 1-8 for white keys CDEFGAB, and 9-12 for black keys C#D#F#G#A#.
+  function keyshape(n) {
+    return [1, 8, 2, 9, 3, 4, 10, 5, 11, 6, 12, 7][((n % 12) + 12) % 12];
+  };
+
+  // Given a 2d drawing context and geometry params, outlines midi key #n.
+  function keyoutline(ctx, geom, n) {
+    var ks, lcx, leftmost, rcx, rightmost, startx, starty;
+    // The lower-left corner of the nearest (rounding left) white key.
+    startx = geom.halfex + geom.kw * wcp(n) - geom.leftpx;
+    starty = geom.halfex;
+    // Compute the 12 cases of key shapes, plus special cases for the ends.
+    ks = keyshape(n);
+    leftmost = n === geom.lowest;
+    rightmost = n === geom.highest;
+    // White keys can have two cutouts: lcx is the x measurement of the
+    // left cutout and rcx is the x measurement of the right cutout.
+    lcx = 0;
+    rcx = 0;
+    switch (ks) {
+      case 1:  // C
+        rcx = geom.kw - geom.ckw;
+        break;
+      case 2:  // D
+        rcx = lcx = (geom.kw - geom.ckw) / 2;
+        break;
+      case 3:  // E
+        lcx = geom.kw - geom.ckw;
+        break;
+      case 4:  // F
+        rcx = geom.kw - geom.fkw;
+        break;
+      case 5:  // G
+        lcx = geom.fkw + geom.bkw - geom.kw;
+        rcx = 2 * geom.kw - 2 * geom.fkw - geom.bkw;
+        break;
+      case 6:  // A
+        lcx = 2 * geom.kw - 2 * geom.fkw - geom.bkw;
+        rcx = geom.fkw + geom.bkw - geom.kw;
+        break;
+      case 7:  // B
+        lcx = geom.kw - geom.fkw;
+        break;
+      case 8:  // C#
+        startx += geom.ckw;
+        break;
+      case 9:  // D#
+        startx += 2 * geom.ckw + geom.bkw - geom.kw;
+        break;
+      case 10: // F#
+        startx += geom.fkw;
+        break;
+      case 11: // G#
+        startx += 2 * geom.fkw + geom.bkw - geom.kw;
+        break;
+      case 12: // A#
+        startx += 3 * geom.fkw + 2 * geom.bkw - 2 * geom.kw;
+    }
+    if (leftmost) {
+      lcx = 0;
+    }
+    if (rightmost) {
+      rcx = 0;
+    }
+    if (isblackkey(n)) {
+      // A black key is always a rectangle.  Startx is computed above.
+      ctx.moveTo(startx, starty + geom.bkh);
+      ctx.lineTo(startx + geom.bkw, starty + geom.bkh);
+      ctx.lineTo(startx + geom.bkw, starty);
+      ctx.lineTo(startx, starty);
+      return ctx.closePath();
+    } else {
+      // A white keys is a rectangle with two cutouts.
+      ctx.moveTo(startx, starty + geom.kh);
+      ctx.lineTo(startx + geom.kw, starty + geom.kh);
+      ctx.lineTo(startx + geom.kw, starty + geom.bkh);
+      ctx.lineTo(startx + geom.kw - rcx, starty + geom.bkh);
+      ctx.lineTo(startx + geom.kw - rcx, starty);
+      ctx.lineTo(startx + lcx, starty);
+      ctx.lineTo(startx + lcx, starty + geom.bkh);
+      ctx.lineTo(startx, starty + geom.bkh);
+      return ctx.closePath();
+    }
+  };
+
+  return Piano;
 
 })(Sprite);
 
@@ -2723,14 +3069,15 @@ var pressedKey = (function() {
       isOpera = /Opera/.test(ua),
       maybeFirefox = !/like Gecko/.test(ua) && !isOpera,
       pressedState = {},
-      events = 'mousedown mouseup keydown keyup blur contextmenu',
+      preventable = 'contextmenu',
+      events = 'mousedown mouseup keydown keyup blur ' + preventable,
       keyCodeName = {
-    1:  'mouse 1',
-    2:  'mouse 2',
+    1:  'mouse1',
+    2:  'mouse2',
     3:  'break',
-    4:  'mouse 3',
-    5:  'mouse 4',
-    6:  'mouse 5',
+    4:  'mouse3',
+    5:  'mouse4',
+    6:  'mouse5',
     8:  'backspace',
     9:  'tab',
     12: 'clear',
@@ -2739,20 +3086,20 @@ var pressedKey = (function() {
     17: 'control',
     18: 'alt',
     19: 'pause',
-    20: 'caps lock',
-    21: 'ime hangul',
-    23: 'ime junja',
-    24: 'ime final',
-    25: 'ime kanji',
+    20: 'capslock',
+    21: 'hangulmode',
+    23: 'junjamode',
+    24: 'finalmode',
+    25: 'kanjimode',
     27: 'escape',
-    28: 'ime convert',
-    29: 'ime nonconvert',
-    30: 'ime accept',
-    31: 'ime mode change',
+    28: 'convert',
+    29: 'nonconvert',
+    30: 'accept',
+    31: 'modechange',
     27: 'escape',
     32: 'space',
-    33: 'page up',
-    34: 'page down',
+    33: 'pageup',
+    34: 'pagedown',
     35: 'end',
     36: 'home',
     37: 'left',
@@ -2772,39 +3119,39 @@ var pressedKey = (function() {
   // chrome,opera,safari all report this for meta-right (osx mbp).
     93: isOSX ? 'meta' : 'menu',
     95: 'sleep',
-    106: 'num *',
-    107: 'num +',
-    108: 'num enter',
-    109: 'num -',
-    110: 'num .',
-    111: 'num /',
-    144: 'num lock',
-    145: 'scroll lock',
-    160: 'shift left',
-    161: 'shift right',
-    162: 'control left',
-    163: 'control right',
-    164: 'alt left',
-    165: 'alt right',
-    166: 'browser back',
-    167: 'browser forward',
-    168: 'browser refresh',
-    169: 'browser stop',
-    170: 'browser search',
-    171: 'browser favorites',
-    172: 'browser home',
+    106: 'numpad*',
+    107: 'numpad+',
+    108: 'numpadenter',
+    109: 'numpad-',
+    110: 'numpad.',
+    111: 'numpad/',
+    144: 'numlock',
+    145: 'scrolllock',
+    160: 'shiftleft',
+    161: 'shiftright',
+    162: 'controlleft',
+    163: 'controlright',
+    164: 'altleft',
+    165: 'altright',
+    166: 'browserback',
+    167: 'browserforward',
+    168: 'browserrefresh',
+    169: 'browserstop',
+    170: 'browsersearch',
+    171: 'browserfavorites',
+    172: 'browserhome',
     // ff/osx reports 'volume-mute' for '-'
-    173: isOSX && maybeFirefox ? '-' : 'volume mute',
-    174: 'volume down',
-    175: 'volume up',
-    176: 'next track',
-    177: 'prev track',
-    178: 'stop',
-    179: 'play pause',
-    180: 'launch mail',
-    181: 'launch media-select',
-    182: 'launch app 1',
-    183: 'launch app 2',
+    173: isOSX && maybeFirefox ? '-' : 'volumemute',
+    174: 'volumedown',
+    175: 'volumeup',
+    176: 'mediatracknext',
+    177: 'mediatrackprev',
+    178: 'mediastop',
+    179: 'mediaplaypause',
+    180: 'launchmail',
+    181: 'launchmediaplayer',
+    182: 'launchapp1',
+    183: 'launchapp2',
     186: ';',
     187: '=',
     188: ',',
@@ -2818,17 +3165,17 @@ var pressedKey = (function() {
     222: "'",
     223: 'meta',
     224: 'meta',      // firefox reports meta here.
-    226: 'alt gr',
-    229: 'ime process',
+    226: 'altgraph',
+    229: 'process',
     231: isOpera ? '`' : 'unicode',
     246: 'attention',
     247: 'crsel',
     248: 'exsel',
-    249: 'erase eof',
+    249: 'eraseeof',
     250: 'play',
     251: 'zoom',
-    252: 'no name',
-    253: 'pa 1',
+    252: 'noname',
+    253: 'pa1',
     254: 'clear'
   };
   // :-@, 0-9, a-z(lowercased)
@@ -2854,11 +3201,11 @@ var pressedKey = (function() {
       down = (event.type == 'keydown');
       if (event.which >= 160 && event.which <= 165) {
         // For "shift left", also trigger "shift"; same for control and alt.
-        simplified = name.split(' ')[0];
+        simplified = name.replace(/(?:left|right)$/, '');
       }
     } else if (event.type == 'blur' || event.type == 'contextmenu') {
       // When losing focus, clear all keyboard state.
-      if (!event.isDefaultPrevented()) {
+      if (!event.isDefaultPrevented() || preventable != event.type) {
         resetPressedState();
       }
       return;
@@ -2866,9 +3213,10 @@ var pressedKey = (function() {
     updatePressedState(name, down);
     updatePressedState(simplified, down);
     if (down) {
-      // After any keydown event, unlisten and relisten, to put oursleves last.
-      $(window).off(events, pressListener);
-      $(window).on(events, pressListener);
+      // After any down event, unlisten and relisten to contextmenu,
+      // to put oursleves last.  This allows us to test isDefaultPrevented.
+      $(window).off(preventable, pressListener);
+      $(window).on(preventable, pressListener);
     }
   }
   // The pressedState map just has an entry for each pressed key.
@@ -2907,7 +3255,8 @@ var pressedKey = (function() {
   }
   // The pressed function just polls the given keyname.
   function pressed(keyname) {
-    keyname = keyname.toLowerCase();
+    // Canonical names are lowercase and have no spaces.
+    keyname = keyname.replace(/\s/g, '').toLowerCase();
     if (pressedState[keyname]) return true;
     return false;
   }
@@ -2915,6 +3264,1609 @@ var pressedKey = (function() {
   pressed.list = listPressedKeys;
   return pressed;
 })();
+
+//////////////////////////////////////////////////////////////////////////
+// WEB AUDIO SUPPORT
+// Definition of play("ABC") - uses ABC music note syntax.
+//////////////////////////////////////////////////////////////////////////
+
+
+// jQuery CSS hook for turtleTimbre property.
+function makeTimbreHook() {
+  return {
+    get: function(elem, computed, extra) {
+      return printOptionAsString(getTurtleInstrument(elem).getTimbre());
+    },
+    set: function(elem, value) {
+      getTurtleInstrument(elem).setTimbre(parseOptionString(value, 'wave'));
+    }
+  };
+}
+
+// jQuery CSS hook for turtleVolume property.
+function makeVolumeHook() {
+  return {
+    get: function(elem, computed, extra) {
+      return getTurtleInstrument(elem).getVolume();
+    },
+    set: function(elem, value) {
+      getTurtleInstrument(elem).setVolume(parseFloat(value));
+    }
+  };
+}
+
+// Every HTML element gets an instrument.  This creates and returns it.
+function getTurtleInstrument(elem) {
+  var state = getTurtleData(elem);
+  if (state.instrument) {
+    return state.instrument;
+  }
+  state.instrument = new Instrument();
+  // Hook up noteon and noteoff events.
+  var selector = $(elem);
+  state.instrument.on('noteon', function(r) {
+    var event = $.Event('noteon');
+    event.midi = r.midi;
+    selector.trigger(event);
+  });
+  state.instrument.on('noteoff', function(r) {
+    var event = $.Event('noteoff');
+    event.midi = r.midi;
+    selector.trigger(event);
+  });
+  return state.instrument;
+}
+
+// In addition, threre is a global instrument.  This funcion returns it.
+var global_instrument = null;
+function getGlobalInstrument() {
+  if (!global_instrument) {
+    global_instrument = new Instrument();
+  }
+  return global_instrument;
+}
+
+// Tests for the presence of HTML5 Web Audio (or webkit's version).
+function isAudioPresent() {
+  return !!(window.AudioContext || window.webkitAudioContext);
+}
+
+// All our audio funnels through the same AudioContext with a
+// DynamicsCompressorNode used as the main output, to compress the
+// dynamic range of all audio.  getAudioTop sets this up.
+function getAudioTop() {
+  if (getAudioTop.audioTop) { return getAudioTop.audioTop; }
+  if (!isAudioPresent()) {
+    return null;
+  }
+  var ac = new (window.AudioContext || window.webkitAudioContext);
+  getAudioTop.audioTop = {
+    ac: ac,
+    wavetable: makeWavetable(ac),
+    out: null,
+    currentStart: null
+  };
+  resetAudio();
+  return getAudioTop.audioTop;
+}
+
+// When audio needs to be interrupted globally (e.g., when you press the
+// stop button in the IDE), resetAudio does the job.
+function resetAudio() {
+  if (getAudioTop.audioTop) {
+    var atop = getAudioTop.audioTop;
+    // Disconnect the top-level node and make a new one.
+    if (atop.out) {
+      atop.out.disconnect();
+      atop.out = null;
+      atop.currentStart = null;
+    }
+    var dcn = atop.ac.createDynamicsCompressor();
+    dcn.ratio = 16;
+    dcn.attack = 0.0005;
+    dcn.connect(atop.ac.destination);
+    atop.out = dcn;
+  }
+}
+
+// For precise scheduling of future notes, the AudioContext currentTime is
+// cached and is held constant until the script releases to the event loop.
+function audioCurrentStartTime() {
+  var atop = getAudioTop();
+  if (atop.currentStart != null) {
+    return atop.currentStart;
+  }
+  // A delay could be added below to introduce a universal delay in
+  // all beginning sounds (without skewing durations for scheduled
+  // sequences).
+  atop.currentStart = atop.ac.currentTime /* + 0.0 delay */;
+  setTimeout(function() { atop.currentStart = null; }, 0);
+  return atop.currentStart;
+}
+
+// All further details of audio handling are encapsulated in the Instrument
+// class, which knows how to synthesize a basic timbre; how to play and
+// schedule a tone; and how to parse and sequence a song written in ABC
+// notation.
+var Instrument = (function() {
+  // The constructor accepts a timbre string or object, specifying
+  // its default sound.  The main mechanisms in Instrument are for handling
+  // sequencing of a (potentially large) set of notes over a (potentially
+  // long) period of time.  The overall strategy:
+  //
+  //                       Events:      'noteon'        'noteoff'
+  //                                      |               |
+  // tone()-(quick tones)->| _startSet -->| _finishSet -->| _cleanupSet -->|
+  //   \                   |  /           | Playing tones | Done tones     |
+  //    \---- _queue ------|-/                                             |
+  //      of future tones  |3 secs ahead sent to WebAudio, removed when done
+  //
+  // The reason for this queuing is to reduce the complexity of the
+  // node graph sent to WebAudio: at any time, WebAudio is only
+  // responsible for about 2 seconds of music.  If a graph with too
+  // too many nodes is sent to WebAudio at once, output distorts badly.
+  function Instrument(options) {
+    this._atop = getAudioTop();     // Audio context.
+    this._timbre = makeTimbre(options, this._atop);  // The instrument's timbre.
+    this._queue = [];               // A queue of future tones to play.
+    this._minQueueTime = Infinity;  // The earliest time in _queue.
+    this._maxScheduledTime = 0;     // The latest time in _queue.
+    this._unsortedQueue = false;    // True if _queue is unsorted.
+    this._startSet = [];            // Unstarted tones already sent to WebAudio.
+    this._finishSet = {};           // Started tones playing in WebAudio.
+    this._cleanupSet = [];          // Tones waiting for cleanup.
+    this._callbackSet = [];         // A set of scheduled callbacks.
+    this._handlers = {};            // 'noteon' and 'noteoff' handlers.
+    this._now = null;               // A cached current-time value.
+    if (isAudioPresent()) {
+      this.silence();               // Initializes top-level audio node.
+    }
+  }
+
+  Instrument.dequeueTime = 0.5;  // Seconds before an event to reexamine queue.
+  Instrument.bufferSecs = 2;     // Seconds ahead to put notes in WebAudio.
+  Instrument.toneLength = 10;    // Default duration of a tone.
+  Instrument.cleanupDelay = 0.1; // Silent time before disconnecting gain nodes.
+
+  // Sets the default timbre for the instrument.  See defaultTimbre.
+  Instrument.prototype.setTimbre = function(t) {
+    this._timbre = makeTimbre(t, this._atop);     // Saves a copy.
+  };
+
+  // Returns the default timbre for the instrument as an object.
+  Instrument.prototype.getTimbre = function(t) {
+    return makeTimbre(this._timbre, this._atop);  // Makes a copy.
+  };
+
+  // Sets the overall volume for the instrument immediately.
+  Instrument.prototype.setVolume = function(v) {
+    // Without an audio system, volume cannot be set.
+    if (!this._out) { return; }
+    if (!isNaN(v)) {
+      this._out.gain.value = v;
+    }
+  };
+
+  // Sets the overall volume for the instrument.
+  Instrument.prototype.getVolume = function(v) {
+    // Without an audio system, volume is stuck at zero.
+    if (!this._out) { return 0.0; }
+    return this._out.gain.value;
+  };
+
+  // Silences the instrument immediately by reinitializing the audio
+  // graph for this instrument and emptying or flushing all queues in the
+  // scheduler.  Carefully notifies all notes that have started but not
+  // yet finished, and sequences that are awaiting scheduled callbacks.
+  // Does not notify notes that have not yet started.
+  Instrument.prototype.silence = function() {
+    var j, finished, callbacks, initvolume = 1;
+
+    // Clear future notes.
+    this._queue.length = 0;
+    this._minQueueTime = Infinity;
+    this._maxScheduledTime = 0;
+
+    // Don't notify notes that haven't started yet.
+    this._startSet.length = 0;
+
+    // Flush finish callbacks that are promised.
+    finished = this._finishSet;
+    this._finishSet = {};
+
+    // Flush one-time callacks that are promised.
+    callbacks = this._callbackSet;
+    this._callbackSet = [];
+
+    // Disconnect the audio graph for this instrument.
+    if (this._out) {
+      this._out.disconnect();
+      initvolume = this._out.gain.value;
+    }
+
+    // Reinitialize the audio graph: all audio for the instrument
+    // multiplexes through a single gain node with a master volume.
+    this._atop = getAudioTop();
+    this._out = this._atop.ac.createGain();
+    this._out.gain.value = initvolume;
+    this._out.connect(this._atop.out);
+
+    // As a last step, call all promised notifications.
+    for (j in finished) { this._trigger('noteoff', finished[j]); }
+    for (j = 0; j < callbacks.length; ++j) { callbacks[j].callback(); }
+  };
+
+  // Future notes are scheduled relative to now(), which provides
+  // access to audioCurrentStartTime(), a time that holds steady
+  // until the script releases to the event loop.  When _now is
+  // non-null, it indicates that scheduling is already in progress.
+  // The timer-driven _doPoll function clears the cached _now.
+  Instrument.prototype.now = function() {
+    if (this._now != null) {
+      return this._now;
+    }
+    this._startPollTimer(true);  // passing (true) sets this._now.
+    return this._now;
+  };
+
+  // Register an event handler.  Done without jQuery to reduce dependencies.
+  Instrument.prototype.on = function(eventname, cb) {
+    if (!this._handlers.hasOwnProperty(eventname)) {
+      this._handlers[eventname] = [];
+    }
+    this._handlers[eventname].push(cb);
+  };
+
+  // Unregister an event handler.  Done without jQuery to reduce dependencies.
+  Instrument.prototype.off = function(eventname, cb) {
+    if (this._handlers.hasOwnProperty(eventname)) {
+      if (!cb) {
+        this._handlers[eventname] = [];
+      } else {
+        var j, hunt = this._handlers[eventname];
+        for (j = 0; j < hunt.length; ++j) {
+          if (hunt[j] === cb) {
+            hunt.splice(j, 1);
+            j -= 1;
+          }
+        }
+      }
+    }
+  };
+
+  // Trigger an event, notifying any registered handlers.
+  Instrument.prototype._trigger = function(eventname, record) {
+    var cb = this._handlers[eventname], j;
+    if (!cb) { return; }
+    if (cb.length == 1) {
+      // Special, common case of one handler: no copy needed.
+      cb[0](record);
+      return;
+    }
+    // Copy the array of callbacks before iterating, because the
+    // main this._handlers copy could be changed by a handler.
+    // You get notified if-and-only-if you are registered
+    // at the starting moment of _trigger.
+    cb = cb.slice();
+    for (j = 0; j < cb.length; ++j) {
+      cb[j](record);
+    }
+  };
+
+  // Tells the WebAudio API to play a tone (now or soon).  The passed
+  // record specifies a start time and release time, an ADSR envelope,
+  // and other timbre parameters.  This function sets up a WebAudio
+  // node graph for the tone generators and filters for the tone.
+  Instrument.prototype._makeSound = function(record) {
+    var timbre = record.timbre || this._timbre,
+        starttime = record.time,
+        releasetime = starttime + record.duration,
+        attacktime = Math.min(releasetime, starttime + timbre.attack),
+        decaytime = timbre.decay *
+            Math.pow(440 / record.frequency, timbre.decayfollow),
+        decaystarttime = attacktime,
+        stoptime = releasetime + timbre.release,
+        doubled = timbre.detune && timbre.detune != 1.0,
+        amp = timbre.gain * record.velocity * (doubled ? 0.5 : 1.0),
+        ac = this._atop.ac,
+        g, f, o, o2, pwave, k, wf, bwf;
+    // Only hook up tone generators if it is an audible sound.
+    if (record.duration > 0 && record.velocity > 0) {
+      g = ac.createGain();
+      g.gain.setValueAtTime(0, starttime);
+      g.gain.linearRampToValueAtTime(amp, attacktime);
+      // For the beginning of the decay, use linearRampToValue instead
+      // of setTargetAtTime, because it avoids http://crbug.com/254942.
+      while (decaystarttime < attacktime + 1/32 &&
+             decaystarttime + 1/256 < releasetime) {
+        // Just trace out the curve in increments of 1/256 sec
+        // for up to 1/32 seconds.
+        decaystarttime += 1/256;
+        g.gain.linearRampToValueAtTime(
+            amp * (timbre.sustain + (1 - timbre.sustain) *
+                Math.exp((attacktime - decaystarttime) / decaytime)),
+            decaystarttime);
+      }
+      // For the rest of the decay, use setTargetAtTime.
+      g.gain.setTargetAtTime(amp * timbre.sustain,
+          decaystarttime, decaytime);
+      // Then at release time, mark the value and ramp to zero.
+      g.gain.setValueAtTime(amp * (timbre.sustain + (1 - timbre.sustain) *
+          Math.exp((attacktime - releasetime) / decaytime)), releasetime);
+      g.gain.linearRampToValueAtTime(0, stoptime);
+      g.connect(this._out);
+      // Hook up a low-pass filter if cutoff is specified.
+      if ((!timbre.cutoff && !timbre.cutfollow) || timbre.cutoff == Infinity) {
+        f = g;
+      } else {
+        // Apply the cutoff frequency adjusted using cutfollow.
+        f = ac.createBiquadFilter();
+        f.frequency.value = timbre.cutoff + record.frequency * timbre.cutfollow;
+        f.Q.value = timbre.resonance;
+        f.connect(g);
+      }
+      // Hook up the main oscillator.
+      o = makeOscillator(this._atop, timbre.wave, record.frequency);
+      o.connect(f);
+      o.start(starttime);
+      o.stop(stoptime);
+      // Hook up a detuned oscillator.
+      if (doubled) {
+        o2 = makeOscillator(
+            this._atop, timbre.wave, record.frequency * timbre.detune);
+        o2.connect(f);
+        o2.start(starttime);
+        o2.stop(stoptime);
+      }
+      // Store nodes in the record so that they can be modified
+      // in case the tone is truncated later.
+      record.gainNode = g;
+      record.oscillators = [o];
+      if (doubled) { record.oscillators.push(o2); }
+      record.cleanuptime = stoptime;
+    } else {
+      // Inaudible sounds are scheduled: their purpose is to truncate
+      // audible tones at the same pitch.  But duration is set to zero
+      // so that they are cleaned up quickly.
+      record.duration = 0;
+    }
+    this._startSet.push(record);
+  };
+  // Truncates a sound previously scheduled by _makeSound by using
+  // cancelScheduledValues and directly ramping down to zero.
+  // Can only be used to shorten a sound.
+  Instrument.prototype._truncateSound = function(record, releasetime) {
+    if (releasetime < record.time + record.duration) {
+      record.duration = Math.max(0, releasetime - record.time);
+      if (record.gainNode) {
+        var timbre = record.timbre || this._timbre,
+            starttime = record.time,
+            attacktime = Math.min(releasetime, starttime + timbre.attack),
+            decaytime = timbre.decay *
+                Math.pow(440 / record.frequency, timbre.decayfollow),
+            stoptime = releasetime + timbre.release,
+            cleanuptime = stoptime + Instrument.cleanupDelay,
+            doubled = timbre.detune && timbre.detune != 1.0,
+            amp = timbre.gain * record.velocity * (doubled ? 0.5 : 1.0),
+            j, g = record.gainNode;
+        // Cancel any envelope points after the new releasetime.
+        g.gain.cancelScheduledValues(releasetime);
+        if (releasetime <= starttime) {
+          // Release before start?  Totally silence the note.
+          g.gain.setValueAtTime(0, releasetime);
+        } else if (releasetime <= attacktime) {
+          // Release before attack is done?  Interrupt ramp up.
+          g.gain.linearRampToValueAtTime(
+            amp * (releasetime - starttime) / (attacktime - starttime));
+        } else {
+          // Release during decay?  Interrupt decay down.
+          g.gain.setValueAtTime(amp * (timbre.sustain + (1 - timbre.sustain) *
+            Math.exp((attacktime - releasetime) / decaytime)), releasetime);
+        }
+        // Then ramp down to zero according to record.release.
+        g.gain.linearRampToValueAtTime(0, stoptime);
+        // After stoptime, stop the oscillators.  This is necessary to
+        // eliminate extra work for WebAudio for no-longer-audible notes.
+        if (record.oscillators) {
+          for (j = 0; j < record.oscillators.length; ++j) {
+            record.oscillators[j].stop(stoptime);
+          }
+        }
+        // Schedule disconnect.
+        record.cleanuptime = cleanuptime;
+      }
+    }
+  };
+  // The core scheduling loop is managed by Instrument._doPoll.  It reads
+  // the audiocontext's current time and pushes tone records from one
+  // stage to the next.
+  //
+  // 1. The first stage is the _queue, which has tones that have not
+  //    yet been given to WebAudio. This loop scans _queue to find
+  //    notes that need to begin in the next few seconds; then it
+  //    sends those to WebAduio and moves them to _startSet. Because
+  //    scheduled songs can be long, _queue can be large.
+  //
+  // 2. Second is _startSet, which has tones that have been given to
+  //    WebAudio, but whose start times have not yet elapsed. When
+  //    the time advances past the start time of a record, a 'noteon'
+  //    notification is fired for the tone, and it is moved to
+  //    _finishSet.
+  //
+  // 3. _finishSet represents the notes that are currently sounding.
+  //    The programming model for Instrument is that only one tone of
+  //    a specific frequency may be played at once within a Instrument,
+  //    so only one tone of a given frequency may exist in _finishSet
+  //    at once.  When there is a conflict, the sooner-to-end-note
+  //    is truncated.
+  //
+  // 4. After a note is released, it may have a litle release time
+  //    (depending on timbre.release), after which the nodes can
+  //    be totally disconnected and cleaned up.  _cleanupSet holds
+  //    notes for which we are awaiting cleanup.
+  Instrument.prototype._doPoll = function() {
+    this._pollTimer = null;
+    this._now = null;
+    if (interrupted) {
+      this.silence();
+      return;
+    }
+    var now = this._atop.ac.currentTime, callbacks = [],
+        j, work, when, freq, record, conflict, save, cb;
+    // Schedule a batch of notes
+    if (this._minQueueTime - now <= Instrument.bufferSecs) {
+      if (this._unsortedQueue) {
+        this._queue.sort(function(a, b) {
+          if (a.time != b.time) { return a.time - b.time; }
+          if (a.duration != b.duration) { return a.duration - b.duration; }
+          return a.frequency - b.frequency;
+        });
+        this._unsortedQueue = false;
+      }
+      for (j = 0; j < this._queue.length; ++j) {
+        if (this._queue[j].time - now > Instrument.bufferSecs) { break; }
+      }
+      if (j > 0) {
+        work = this._queue.splice(0, j);
+        for (j = 0; j < work.length; ++j) {
+          this._makeSound(work[j]);
+        }
+        this._minQueueTime =
+          (this._queue.length > 0) ? this._queue[0].time : Infinity;
+      }
+    }
+    // Disconnect notes from the cleanup set.
+    for (j = 0; j < this._cleanupSet.length; ++j) {
+      record = this._cleanupSet[j];
+      if (record.cleanuptime < now) {
+        if (record.gainNode) {
+          // This explicit disconnect is needed or else Chrome's WebAudio
+          // starts getting overloaded after a couple thousand notes.
+          record.gainNode.disconnect();
+          record.gainNode = null;
+        }
+        this._cleanupSet.splice(j, 1);
+        j -= 1;
+      }
+    }
+    // Notify about any notes finishing.
+    for (freq in this._finishSet) {
+      record = this._finishSet[freq];
+      when = record.time + record.duration;
+      if (when <= now) {
+        callbacks.push({order: [when, 0], f: this._trigger, t: this, a: ['noteoff', record]});
+        if (record.cleanuptime != Infinity) {
+          this._cleanupSet.push(record);
+        }
+        delete this._finishSet[freq];
+      }
+    }
+    // Call any specific one-time callbacks that were registered.
+    for (j = 0; j < this._callbackSet.length; ++j) {
+      cb = this._callbackSet[j];
+      when = cb.time;
+      if (when <= now) {
+        callbacks.push({order: [when, 1], f: cb.callback, t: null, a: []});
+        this._callbackSet.splice(j, 1);
+        j -= 1;
+      }
+    }
+    // Notify about any notes starting.
+    for (j = 0; j < this._startSet.length; ++j) {
+      if (this._startSet[j].time <= now) {
+        save = record = this._startSet[j];
+        freq = record.frequency;
+        conflict = null;
+        if (this._finishSet.hasOwnProperty(freq)) {
+          // If there is already a note at the same frequency playing,
+          // then release the one that starts first, immediately.
+          conflict = this._finishSet[freq];
+          if (conflict.time < record.time || (conflict.time == record.time &&
+              conflict.duration < record.duration)) {
+            // Our new sound conflicts with an old one: end the old one
+            // and notify immediately of its noteoff event.
+            this._truncateSound(conflict, record.time);
+            callbacks.push(
+                {order: [record.time, 0], f: this._trigger, t: this, a: ['noteoff', conflict]});
+            delete this._finishSet[freq];
+          } else {
+            // A conflict from the future has already scheduled,
+            // so our own note shouldn't sound.  Truncate ourselves
+            // immediately, and suppress our own noteon and noteoff.
+            this._truncateSound(record, conflict.time);
+            conflict = record;
+          }
+        }
+        this._startSet.splice(j, 1);
+        j -= 1;
+        if (record.duration > 0 && record.velocity > 0 && conflict !== record) {
+          this._finishSet[freq] = record;
+          callbacks.push(
+              {order: [record.time, 2], f: this._trigger, t: this, a: ['noteon', record]});
+        }
+      }
+    }
+    // Schedule the next _doPoll.
+    this._startPollTimer();
+
+    // Sort callbacks according to the "order" tuple, so earlier events are notified first.
+    callbacks.sort(function(a, b) {
+      if (a.order[0] != b.order[0]) { return a.order[0] - b.order[0]; }
+      return a.order[1] - b.order[1]; // tiebreak by notifying 'noteoff' first and 'noteon' last.
+    });
+    // At the end, call all the callbacks without depending on "this" state.
+    for (j = 0; j < callbacks.length; ++j) {
+      cb = callbacks[j];
+      cb.f.apply(cb.t, cb.a);
+    }
+  };
+  // Schedules the next _doPoll call by examining times in the various
+  // sets and determining the soonest event that needs _doPoll processing.
+  Instrument.prototype._startPollTimer = function(setnow) {
+    // If we have already done a "setnow", then pollTimer is zero-timeout and cannot be faster.
+    if (this._pollTimer && this._now != null) {
+      return;
+    }
+    var self = this,
+        poll = function() { self._doPoll(); },
+        earliest = Infinity, j, delay;
+    if (this._pollTimer) {
+      // Clear any old timer
+      clearTimeout(this._pollTimer);
+      this._pollTimer = null;
+    }
+    if (setnow) {
+      // When scheduling tones, cache _now and keep a zero-timeout poll.
+      // _now will be cleared the next time we execute _doPoll.
+      this._now = audioCurrentStartTime();
+      this._pollTimer = setTimeout(poll, 0);
+      return;
+    }
+    // Timer due to notes starting: wake up for 'noteon' notification.
+    for (j = 0; j < this._startSet.length; ++j) {
+      earliest = Math.min(earliest, this._startSet[j].time);
+    }
+    // Timer due to notes finishing: wake up for 'noteoff' notification.
+    for (j in this._finishSet) {
+      earliest = Math.min(
+        earliest, this._finishSet[j].time + this._finishSet[j].duration);
+    }
+    // Timer due to scheduled callback.
+    for (j = 0; j < this._callbackSet.length; ++j) {
+      earliest = Math.min(earliest, this._callbackSet[j].time);
+    }
+    // Timer due to cleanup: add a second to give some time to batch up.
+    if (this._cleanupSet.length > 0) {
+      earliest = Math.min(earliest, this._cleanupSet[0].cleanuptime + 1);
+    }
+    // Timer due to sequencer events: subtract a little time to stay ahead.
+    earliest = Math.min(
+       earliest, this._minQueueTime - Instrument.dequeueTime);
+
+    delay = Math.max(0, earliest - this._atop.ac.currentTime);
+
+    // If there are no future events, then we do not need a timer.
+    if (isNaN(delay) || delay == Infinity) { return; }
+
+    // Use the Javascript timer to wake up at the right moment.
+    this._pollTimer = setTimeout(poll, Math.round(delay * 1000));
+  };
+
+  // The low-level tone function.
+  Instrument.prototype.tone =
+  function(pitch, velocity, duration, delay, timbre) {
+    // If audio is not present, this is a no-op.
+    if (!this._atop) { return; }
+
+    // Convert pitch from various formats to Hz frequency and a midi num.
+    var midi, frequency;
+    if (!pitch) { pitch = 'C'; }
+    if (isNaN(pitch)) {
+      midi = pitchToMidi(pitch);
+      frequency = midiToFrequency(midi);
+    } else {
+      frequency = Number(pitch);
+      if (frequency < 0) {
+        midi = -frequency;
+        frequency = midiToFrequency(midi);
+      } else {
+        midi = frequencyToMidi(frequency);
+      }
+    }
+
+    // Create the record for a tone.
+    var ac = this._atop.ac,
+        now = this.now(),
+        time = now + (delay || 0),
+        record = {
+          time: time,
+          on: false,
+          frequency: frequency,
+          midi: midi,
+          velocity: (velocity == null ? 1 : velocity),
+          duration: (duration == null ? Instrument.toneLength : duration),
+          timbre: timbre,
+          instrument: this,
+          gainNode: null,
+          oscillators: null,
+          cleanuptime: Infinity
+        };
+
+    if (time < now + Instrument.bufferSecs) {
+      // The tone starts soon!  Give it directly to WebAudio.
+      this._makeSound(record);
+    } else {
+      // The tone is later: queue it.
+      if (!this._unsortedQueue && this._queue.length &&
+          time < this._queue[this._queue.length -1].time) {
+        this._unsortedQueue = true;
+      }
+      this._queue.push(record);
+      this._minQueueTime = Math.min(this._minQueueTime, record.time);
+
+    }
+  };
+  // The low-level callback scheduling method.
+  Instrument.prototype.schedule = function(delay, callback) {
+    this._callbackSet.push({ time: this.now() + delay, callback: callback });
+  };
+  // The high-level sequencing method.
+  Instrument.prototype.play = function(abcstring) {
+    var args = Array.prototype.slice.call(arguments),
+        done = null,
+        opts = {}, subfile,
+        abcfile, argindex, tempo, timbre, k, delay, maxdelay = 0, attenuate,
+        voicename, stems, ni, vn, j, stem, note, beatsecs, secs, v, files = [];
+    // Look for continuation as last argument.
+    if (args.length && 'function' == typeof(args[args.length - 1])) {
+      done = args.pop();
+    }
+    if (!this._atop) {
+      if (done) { done(); }
+      return;
+    }
+    // Look for options as first object.
+    argindex = 0;
+    if ('object' == typeof(args[0])) {
+      // Copy own properties into an options object.
+      for (k in args[0]) if (args[0].hasOwnProperty(k)) {
+        opts[k] = args[0][k];
+      }
+      argindex = 1;
+    }
+    // Parse any number of ABC files as input.
+    for (; argindex < args.length; ++argindex) {
+      // Handle splitting of ABC subfiles at X: lines.
+      subfile = args[argindex].split(/\n(?=X:)/);
+      for (k = 0; k < subfile.length; ++k) {
+        abcfile = parseABCFile(subfile[k]);
+        if (!abcfile) continue;
+        // Take tempo markings from the first file, and share them.
+        if (!opts.tempo && abcfile.tempo) {
+          opts.tempo = abcfile.tempo;
+          if (abcfile.unitbeat) {
+            opts.tempo *= abcfile.unitbeat / (abcfile.unitnote || 1);
+          }
+        }
+        // Ignore files without songs.
+        if (!abcfile.voice) continue;
+        files.push(abcfile);
+      }
+    }
+    // Default tempo to 120 if nothing else is specified.
+    if (!opts.tempo) { opts.tempo = 120; }
+    beatsecs = 60.0 / opts.tempo;
+    // Schedule all notes from all the files.
+    for (k = 0; k < files.length; ++k) {
+      abcfile = files[k];
+      // Each file can have multiple voices (e.g., left and right hands)
+      for (vn in abcfile.voice) {
+        // Each voice could have a separate timbre.
+        timbre = makeTimbre(opts.timbre || abcfile.voice[vn].timbre ||
+           abcfile.timbre || this._timbre, this._atop);
+        // Each voice has a series of stems (notes or chords).
+        stems = abcfile.voice[vn].stems;
+        if (!stems) continue;
+        // Starting at delay zero (now), schedule all tones.
+        delay = 0;
+        for (ni = 0; ni < stems.length; ++ni) {
+          stem = stems[ni];
+          // Attenuate chords to reduce clipping.
+          attenuate = 1 / Math.sqrt(stem.notes.length);
+          // Schedule every note inside a stem.
+          for (j = 0; j < stem.notes.length; ++j) {
+            note = stem.notes[j];
+            if (note.holdover) {
+              // Skip holdover notes from ties.
+              continue;
+            }
+            secs = (note.time || stem.time) * beatsecs;
+            if (stem.staccato) {
+              // Shorten staccato notes.
+              secs = Math.min(Math.min(secs, beatsecs / 16),
+                  timbre.attack + timbre.decay);
+            } else if (!note.slurred && secs >= 1/8) {
+              // Separate unslurred notes by about a 30th of a second.
+              secs -= 1/32;
+            }
+            v = (note.velocity || 1) * attenuate;
+            // This is innsermost part of the inner loop!
+            this.tone(                     // Play the tone:
+              note.pitch,                  // at the given pitch
+              v,                           // with the given volume
+              secs,                        // for the given duration
+              delay,                       // starting at the proper time
+              timbre);                     // with the selected timbre
+          }
+          delay += stem.time * beatsecs;   // Advance the sequenced time.
+        }
+        maxdelay = Math.max(delay, maxdelay);
+      }
+    }
+    this._maxScheduledTime =
+        Math.max(this._maxScheduledTime, this.now() + maxdelay);
+    if (done) {
+      // Schedule a "done" callback after all sequencing is complete.
+      this.schedule(maxdelay, done);
+    }
+  };
+
+  // Parses an ABC file to an object with the following structure:
+  // {
+  //   X: value from the X: lines in header (\n separated for multiple values)
+  //   V: value from the V:myname lines that appear before K:
+  //   (etc): for all the one-letter header-names.
+  //   K: value from the K: lines in header.
+  //   tempo: Q: line parsed as beatsecs
+  //   timbre: ... I:timbre line as parsed by makeTimbre
+  //   voice: {
+  //     myname: { // voice with id "myname"
+  //       V: value from the V:myname lines (from the body)
+  //       stems: [...] as parsed by parseABCstems
+  //    }
+  //  }
+  // }
+  // ABC files are idiosyncratic to parse: the written specifications
+  // do not necessarily reflect the defacto standard implemented by
+  // ABC content on the web.  This implementation is designed to be
+  // practical, working on content as it appears on the web, and only
+  // using the written standard as a guideline.
+  var ABCheader = /^([A-Za-z]):\s*(.*)$/;
+  function parseABCFile(str) {
+    var lines = str.split('\n'),
+        result = {
+          voice: {}
+        },
+        context = result, timbre,
+        j, header, stems, key = {}, accent = {slurred: 0}, out, firstvoice;
+    // Shifts context to a voice with the given id given.  If no id
+    // given, then just sticks with the current voice.  If the current
+    // voice is unnamed and empty, renames the current voice.
+    function startVoiceContext(id) {
+      id = id || '';
+      if (!id && context !== result) {
+        return;
+      }
+      if (result.voice.hasOwnProperty(id)) {
+        // Resume a named voice.
+        context = result.voice[id];
+        accent = context.accent;
+      } else {
+        // Start a new voice.
+        context = { id: id, accent: {} };
+        result.voice[id] = context;
+        accent = context.accent;
+      }
+    }
+    // For picking a default voice, looks for the first voice name.
+    function firstVoiceName() {
+      if (result.V) {
+        return result.V.split(/\s+/)[0];
+      } else {
+        return '';
+      }
+    }
+    // ABC files are parsed one line at a time.
+    for (j = 0; j < lines.length; ++j) {
+      // First, check to see if the line is a header line.
+      header = ABCheader.exec(lines[j]);
+      if (header) {
+        // The following headers are recognized and processed.
+        switch(header[1]) {
+          case 'V':
+            // A V: header switches voices if in the body.
+            // If in the header, then it is just advisory.
+            if (context !== result) {
+              startVoiceContext(header[2].split(' ')[0]);
+            }
+            break;
+          case 'M':
+            parseMeter(header[2], context);
+            break;
+          case 'L':
+            parseUnitNote(header[2], context);
+            break;
+          case 'Q':
+            parseTempo(header[2], context);
+            break;
+        }
+        // All headers (including unrecognized ones) are
+        // just accumulated as properties. Repeated header
+        // lines are accumulated as multiline properties.
+        if (context.hasOwnProperty(header[1])) {
+          context[header[1]] += '\n' + header[2];
+        } else {
+          context[header[1]] = header[2];
+        }
+        // The K header is special: it should be the last one
+        // before the voices and notes begin.
+        if (header[1] == 'K' && context === result) {
+          key = keysig(header[2]);
+          startVoiceContext(firstVoiceName());
+        }
+      } else {
+        // Parse a non-header line, looking for notes.
+        out = {};
+        stems = parseABCNotes(lines[j], key, accent, out);
+        if (out.voiceid) {
+          // Handle a note line that starts with [V:voiceid] as speced.
+          // (actually, in practice you see V:voiceid\n lines.)
+          startVoiceContext(out.voiceid);
+        }
+        if (stems && stems.length) {
+          if (context === result) {
+            // If no voice has been selected, then use the first voice.
+            startVoiceContext(firstVoiceName());
+          }
+          // Push the line of stems into the voice.
+          if (!('stems' in context)) { context.stems = []; }
+          context.stems.push.apply(context.stems, stems);
+        }
+      }
+    }
+    if (result.voice) {
+      // Calculate times for all the tied notes.  This happens at the end
+      // because in principle, the first note of a song could be tied all
+      // the way through to the last note.
+      out = [];
+      for (j in result.voice) {
+        if (result.voice[j].stems && result.voice[j].stems.length) {
+          processTies(result.voice[j].stems);
+        } else {
+          out.push(j);
+        }
+      }
+      // Delete any voices that had no stems.
+      for (j = 0; j < out.length; ++j) {
+        delete result.voice[out[j]];
+      }
+    }
+    return result;
+  }
+  // Parse M: lines.  "3/4" is 3/4 time and "C" is 4/4 (common) time.
+  function parseMeter(mline, beatinfo) {
+    var d = /^C/.test(mline) ? 4/4 : durationToTime(mline);
+    if (!d) { return; }
+    if (!beatinfo.unitnote) {
+      if (d < 0.75) {
+        beatinfo.unitnote = 1/16;
+      } else {
+        beatinfo.unitnote = 1/8;
+      }
+    }
+  }
+  // Parse L: lines, e.g., "1/8".
+  function parseUnitNote(lline, beatinfo) {
+    var d = durationToTime(lline);
+    if (!d) { return; }
+    beatinfo.unitnote = d;
+  }
+  // Parse Q: line, e.g., "1/4=66".
+  function parseTempo(qline, beatinfo) {
+    var parts = qline.split(/\s+|=/), j, unit = null, tempo = null;
+    for (j = 0; j < parts.length; ++j) {
+      // It could be reversed, like "66=1/4", or just "120", so
+      // determine what is going on by looking for a slash etc.
+      if (parts[j].indexOf('/') >= 0 || /^[1-4]$/.test(parts[j])) {
+        // The note-unit (e.g., 1/4).
+        unit = unit || durationToTime(parts[j]);
+      } else {
+        // The tempo-number (e.g., 120)
+        tempo = tempo || Number(parts[j]);
+      }
+    }
+    if (unit) {
+      beatinfo.unitbeat = unit;
+    }
+    if (tempo) {
+      beatinfo.tempo = tempo;
+    }
+  }
+  // Run through all the notes, adding up time for tied notes,
+  // and marking notes that were held over with holdover = true.
+  function processTies(stems) {
+    var tied = {}, nextTied, j, k, note, firstNote;
+    for (j = 0; j < stems.length; ++j) {
+      nextTied = {};
+      for (k = 0; k < stems[j].notes.length; ++k) {
+        firstNote = note = stems[j].notes[k];
+        if (tied.hasOwnProperty(note.pitch)) {  // Pitch was tied from before.
+          firstNote = tied[note.pitch];   // Get the earliest note in the tie.
+          firstNote.time += note.time;    // Extend its time.
+          note.holdover = true;           // Silence this note as a holdover.
+        }
+        if (note.tie) {                   // This note is tied with the next.
+          nextTied[note.pitch] = firstNote;  // Save it away.
+        }
+      }
+      tied = nextTied;
+    }
+  }
+  // Returns a map of A-G -> accidentals, according to the key signature.
+  // When n is zero, there are no accidentals (e.g., C major or A minor).
+  // When n is positive, there are n sharps (e.g., for G major, n = 1).
+  // When n is negative, there are -n flats (e.g., for F major, n = -1).
+  function accidentals(n) {
+    var sharps = 'FCGDAEB',
+        result = {}, j;
+    if (!n) {
+      return result;
+    }
+    if (n > 0) {  // Handle sharps.
+      for (j = 0; j < n && j < 7; ++j) {
+        result[sharps.charAt(j)] = '^';
+      }
+    } else {  // Flats are in the opposite order.
+      for (j = 0; j > n && j > -7; --j) {
+        result[sharps.charAt(6 + j)] = '_';
+      }
+    }
+    return result;
+  }
+  // Decodes the key signature line (e.g., K: C#m) at the front of an ABC tune.
+  // Supports the whole range of scale systems listed in the ABC spec.
+  function keysig(keyname) {
+    if (!keyname) { return {}; }
+    var key, sigcodes = {
+      // Major
+      'c#':7, 'f#':6, 'b':5, 'e':4, 'a':3, 'd':2, 'g':1, 'c':0,
+      'f':-1, 'bb':-2, 'eb':-3, 'ab':-4, 'db':-5, 'gb':-6, 'cb':-7,
+      // Minor
+      'a#m':7, 'd#m':6, 'g#m':5, 'c#m':4, 'f#m':3, 'bm':2, 'em':1, 'am':0,
+      'dm':-1, 'gm':-2, 'cm':-3, 'fm':-4, 'bbm':-5, 'ebm':-6, 'abm':-7,
+      // Mixolydian
+      'g#mix':7, 'c#mix':6, 'f#mix':5, 'bmix':4, 'emix':3,
+      'amix':2, 'dmix':1, 'gmix':0, 'cmix':-1, 'fmix':-2,
+      'bbmix':-3, 'ebmix':-4, 'abmix':-5, 'dbmix':-6, 'gbmix':-7,
+      // Dorian
+      'd#dor':7, 'g#dor':6, 'c#dor':5, 'f#dor':4, 'bdor':3,
+      'edor':2, 'ador':1, 'ddor':0, 'gdor':-1, 'cdor':-2,
+      'fdor':-3, 'bbdor':-4, 'ebdor':-5, 'abdor':-6, 'dbdor':-7,
+      // Phrygian
+      'e#phr':7, 'a#phr':6, 'd#phr':5, 'g#phr':4, 'c#phr':3,
+      'f#phr':2, 'bphr':1, 'ephr':0, 'aphr':-1, 'dphr':-2,
+      'gphr':-3, 'cphr':-4, 'fphr':-5, 'bbphr':-6, 'ebphr':-7,
+      // Lydian
+      'f#lyd':7, 'blyd':6, 'elyd':5, 'alyd':4, 'dlyd':3,
+      'glyd':2, 'clyd':1, 'flyd':0, 'bblyd':-1, 'eblyd':-2,
+      'ablyd':-3, 'dblyd':-4, 'gblyd':-5, 'cblyd':-6, 'fblyd':-7,
+      // Locrian
+      'b#loc':7, 'e#loc':6, 'a#loc':5, 'd#loc':4, 'g#loc':3,
+      'c#loc':2, 'f#loc':1, 'bloc':0, 'eloc':-1, 'aloc':-2,
+      'dloc':-3, 'gloc':-4, 'cloc':-5, 'floc':-6, 'bbloc':-7
+    };
+    var k = keyname.replace(/\s+/g, '').toLowerCase().substr(0, 5);
+    var scale = k.match(/maj|min|mix|dor|phr|lyd|loc|m/);
+    if (scale) {
+      if (scale == 'maj') {
+        key = k.substr(0, scale.index);
+      } else if (scale == 'min') {
+        key = k.substr(0, scale.index + 1);
+      } else {
+        key = k.substr(0, scale.index + scale.length);
+      }
+    } else {
+      key = /^[a-g][#b]?/.exec(k) || '';
+    }
+    var result = accidentals(sigcodes[key]);
+    var extras = keyname.substr(key.length).match(/(__|_|=|\^\^|\^)[a-g]/ig);
+    if (extras) {
+      for (j = 0; j < extras.length; ++j) {
+        var note = extras[j].charAt(extras[j].length - 1).toUpperCase();
+        if (extras[j].charAt(0) == '=') {
+          delete result[note];
+        } else {
+          result[note] = extras[j].substr(0, extras[j].length - 1);
+        }
+      }
+    }
+    return result;
+  }
+  // Parses a single line of ABC notes (i.e., not a header line).
+  //
+  // We process an ABC song stream by dividing it into tokens, each of
+  // which is a pitch, duration, or special decoration symbol; then
+  // we process each decoration individually, and we process each
+  // stem as a group using parseStem.
+  // The structure of a single ABC note is something like this:
+  //
+  // NOTE -> STACCATO? PITCH DURATION? TIE?
+  //
+  // I.e., it always has a pitch, and it is prefixed by some optional
+  // decorations such as a (.) staccato marking, and it is suffixed by
+  // an optional duration and an optional tie (-) marking.
+  //
+  // A stem is either a note or a bracketed series of notes, followed
+  // by duration and tie.
+  //
+  // STEM -> NOTE   OR    '[' NOTE * ']' DURAITON? TIE?
+  //
+  // Then a song is just a sequence of stems interleaved with other
+  // decorations such as dynamics markings and measure delimiters.
+  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
+  function parseABCNotes(str, key, accent, out) {
+    var tokens = str.match(ABCtoken), result = [], parsed = null,
+        index = 0, dotted = 0, beatlet = null, t;
+    if (!tokens) {
+      return null;
+    }
+    while (index < tokens.length) {
+      // Ignore %comments and !markings!
+      if (/^[\s%]/.test(tokens[index])) { index++; continue; }
+      // Grab a voice id out of [V:id]
+      if (/^\[V:\S*\]$/.test(tokens[index])) {
+        out.voiceid = tokens[index].substring(3, tokens[index].length - 1);
+        index++;
+        continue;
+      }
+      // Handled dotted notation abbreviations.
+      if (/</.test(tokens[index])) {
+        dotted = -tokens[index++].length;
+        continue;
+      }
+      if (/>/.test(tokens[index])) {
+        dotted = tokens[index++].length;
+        continue;
+      }
+      if (/^\(\d+(?::\d+)*/.test(tokens[index])) {
+        beatlet = parseBeatlet(tokens[index++]);
+        continue;
+      }
+      if (/^[!+].*[!+]$/.test(tokens[index])) {
+        parseDecoration(tokens[index++], accent);
+        continue;
+      }
+      if (/^[()]$/.test(tokens[index])) {
+        if (tokens[index++] == '(') {
+          accent.slurred += 1;
+        } else {
+          accent.slurred -= 1;
+          if (accent.slurred <= 0) {
+            accent.slurred = 0;
+            if (result.length >= 1) {
+              // The last notes in a slur are not slurred.
+              slurStem(result[result.length - 1], false);
+            }
+          }
+        }
+        continue;
+      }
+      // Handle measure markings by clearing accidentals.
+      if (/\|/.test(tokens[index])) {
+        for (t in accent) {
+          if (t.length == 1) {
+            // Single-letter accent properties are note accidentals.
+            delete accent[t];
+          }
+        }
+        index++;
+        continue;
+      }
+      parsed = parseStem(tokens, index, key, accent);
+      // Skip unparsable bits
+      if (parsed === null) {
+        index++;
+        continue;
+      }
+      // Process a parsed stem.
+      if (beatlet) {
+        scaleStem(parsed.stem, beatlet.time);
+        beatlet.count -= 1;
+        if (!beatlet.count) {
+          beatlet = null;
+        }
+      }
+      // If syncopated with > or < notation, shift part of a beat
+      // between this stem and the previous one.
+      if (dotted && result.length) {
+        if (dotted > 0) {
+          t = (1 - Math.pow(0.5, dotted)) * parsed.stem.time;
+        } else {
+          t = (Math.pow(0.5, -dotted) - 1) * result[result.length - 1].time;
+        }
+        syncopateStem(result[result.length - 1], t);
+        syncopateStem(parsed.stem, -t);
+      }
+      dotted = 0;
+      // Slur all the notes contained within a strem.
+      if (accent.slurred) {
+        slurStem(parsed.stem, true);
+      }
+      // Add the stem to the sequence of stems for this voice.
+      result.push(parsed.stem);
+      // Advance the parsing index since a stem is multiple tokens.
+      index = parsed.index;
+    }
+    return result;
+  }
+  // Additively adjusts the beats for a stem and the contained notes.
+  function syncopateStem(stem, t) {
+    var j, note, stemtime = stem.time, newtime = stemtime + t;
+    stem.time = newtime;
+    syncopateStem
+    for (j = 0; j < stem.notes.length; ++j) {
+      note = stem.notes[j];
+      // Only adjust a note's duration if it matched the stem's duration.
+      if (note.time == stemtime) { note.time = newtime; }
+    }
+  }
+  // Marks everything in the stem with the slur attribute (or deletes it).
+  function slurStem(stem, addSlur) {
+    var j, note;
+    for (j = 0; j < stem.notes.length; ++j) {
+      note = stem.notes[j];
+      if (addSlur) {
+        note.slurred = true;
+      } else if (note.slurred) {
+        delete note.slurred;
+      }
+    }
+  }
+  // Scales the beats for a stem and the contained notes.
+  function scaleStem(stem, s) {
+    var j;
+    stem.time *= s;
+    for (j = 0; j < stem.notes.length; ++j) {
+      stem.notes[j].time *= s;;
+    }
+  }
+  // Parses notation of the form (3 or (5:2:10, which means to do
+  // the following 3 notes in the space of 2 notes, or to do the following
+  // 10 notes at the rate of 5 notes per 2 beats.
+  function parseBeatlet(token) {
+    var m = /^\((\d+)(?::(\d+)(?::(\d+))?)?$/.exec(token);
+    if (!m) { return null; }
+    var count = Number(m[1]),
+        beats = Number(m[2]) || 2,
+        duration = Number(m[3]) || count;
+    return {
+      time: beats / count,
+      count: duration
+    };
+  }
+  // Parse !ppp! markings.
+  function parseDecoration(token, accent) {
+    if (token.length < 2) { return; }
+    token = token.substring(1, token.length - 1);
+    switch (token) {
+      case 'pppp': case 'ppp':
+        accent.dynamics = 0.2; break;
+      case 'pp':
+        accent.dynamics = 0.4; break;
+      case 'p':
+        accent.dynamics = 0.6; break;
+      case 'mp':
+        accent.dynamics = 0.8; break;
+      case 'mf':
+        accent.dynamics = 1.0; break;
+      case 'f':
+        accent.dynamics = 1.2; break;
+      case 'ff':
+        accent.dynamics = 1.4; break;
+      case 'fff': case 'ffff':
+        accent.dynamics = 1.5; break;
+    }
+  }
+  // Parses a stem, which may be a single note, or which may be
+  // a chorded note.
+  function parseStem(tokens, index, key, accent) {
+    var notes = [],
+        duration = '', staccato = false,
+        noteDuration, noteTime, velocity,
+        lastNote = null, minStemTime = Infinity, j;
+    // A single staccato marking applies to the entire stem.
+    if (index < tokens.length && '.' == tokens[index]) {
+      staccato = true;
+      index++;
+    }
+    if (index < tokens.length && tokens[index] == '[') {
+      // Deal with [CEG] chorded notation.
+      index++;
+      // Scan notes within the chord.
+      while (index < tokens.length) {
+        // Ignore and space and %comments.
+        if (/^[\s%]/.test(tokens[index])) {
+          index++;
+          continue;
+        }
+        if (/[A-Ga-g]/.test(tokens[index])) {
+          // Grab a pitch.
+          lastNote = {
+            pitch: applyAccent(tokens[index++], key, accent),
+            tie: false
+          }
+          lastNote.frequency = pitchToFrequency(lastNote.pitch);
+          notes.push(lastNote);
+        } else if (/[xzXZ]/.test(tokens[index])) {
+          // Grab a rest.
+          lastNote = null;
+          index++;
+        } else if ('.' == tokens[index]) {
+          // A staccato mark applies to the entire stem.
+          staccato = true;
+          index++;
+          continue;
+        } else {
+          // Stop parsing the stem if something is unrecognized.
+          break;
+        }
+        // After a pitch or rest, look for a duration.
+        if (index < tokens.length &&
+            /^(?![\s%!]).*[\d\/]/.test(tokens[index])) {
+          noteDuration = tokens[index++];
+          noteTime = durationToTime(noteDuration);
+        } else {
+          noteDuration = '';
+          noteTime = 1;
+        }
+        // If it's a note (not a rest), store the duration
+        if (lastNote) {
+          lastNote.duration = noteDuration;
+          lastNote.time = noteTime;
+        }
+        // When a stem has more than one duration, use the shortest
+        // one for timing. The standard says to pick the first one,
+        // but in practice, transcribed music online seems to
+        // follow the rule that the stem's duration is determined
+        // by the shortest contained duration.
+        if (noteTime && noteTime < minStemTime) {
+          duration = noteDuration;
+          minStemTime = noteTime;
+        }
+        // After a duration, look for a tie mark.  Individual notes
+        // within a stem can be tied.
+        if (index < tokens.length && '-' == tokens[index]) {
+          if (lastNote) {
+            notes[notes.length - 1].tie = true;
+          }
+          index++;
+        }
+      }
+      // The last thing in a chord should be a ].  If it isn't, then
+      // this doesn't look like a stem after all, and return null.
+      if (tokens[index] != ']') {
+        return null;
+      }
+      index++;
+    } else if (index < tokens.length && /[A-Ga-g]/.test(tokens[index])) {
+      // Grab a single note.
+      lastNote = {
+        pitch: applyAccent(tokens[index++], key, accent),
+        tie: false,
+        duration: '',
+        time: 1
+      }
+      lastNote.frequency = pitchToFrequency(lastNote.pitch);
+      notes.push(lastNote);
+    } else if (index < tokens.length && /^[xzXZ]$/.test(tokens[index])) {
+      // Grab a rest - no pitch.
+      index++;
+    } else {
+      // Something we don't recognize - not a stem.
+      return null;
+    }
+    // Right after a [chord], note, or rest, look for a duration marking.
+    if (index < tokens.length && /^(?![\s%!]).*[\d\/]/.test(tokens[index])) {
+      duration = tokens[index++];
+      noteTime = durationToTime(duration);
+      // Apply the duration to all the ntoes in the stem.
+      // NOTE: spec suggests multiplying this duration, but that
+      // idiom is not seen (so far) in practice.
+      for (j = 0; j < notes.length; ++j) {
+        notes[j].duration = duration;
+        notes[j].time = noteTime;
+      }
+    }
+    // Then look for a trailing tie marking.  Will tie every note in a chord.
+    if (index < tokens.length && '-' == tokens[index]) {
+      index++;
+      for (j = 0; j < notes.length; ++j) {
+        notes[j].tie = true;
+      }
+    }
+    if (accent.dynamics) {
+      velocity = accent.dynamics;
+      for (j = 0; j < notes.length; ++j) {
+        notes[j].velocity = velocity;
+      }
+    }
+    return {
+      index: index,
+      stem: {
+        notes: notes,
+        duration: duration,
+        staccato: staccato,
+        time: durationToTime(duration)
+      }
+    };
+  }
+  // Normalizes pitch markings by stripping leading = if present.
+  function stripNatural(pitch) {
+    if (pitch.length > 0 && pitch.charAt(0) == '=') {
+      return pitch.substr(1);
+    }
+    return pitch;
+  }
+  // Processes an accented pitch, automatically applying accidentals
+  // that have accumulated within the measure, and also saving
+  // explicit accidentals to continue to apply in the measure.
+  function applyAccent(pitch, key, accent) {
+    var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(.*)$/.exec(pitch), letter;
+    if (!m) { return pitch; }
+    // Note that an accidental in one octave applies in other octaves.
+    letter = m[2].toUpperCase();
+    if (m[1].length > 0) {
+      // When there is an explicit accidental, then remember it for
+      // the rest of the measure.
+      accent[letter] = m[1];
+      return stripNatural(pitch);
+    }
+    if (accent.hasOwnProperty(letter)) {
+      // Accidentals from this measure apply to unaccented notes.
+      return stripNatural(accent[letter] + m[2] + m[3]);
+    }
+    if (key.hasOwnProperty(letter)) {
+      // Key signatures apply by default.
+      return stripNatural(key[letter] + m[2] + m[3]);
+    }
+    return stripNatural(pitch);
+  }
+  // Converts a midi note number to a frequency in Hz.
+  function midiToFrequency(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+  // Converts a frequency in Hz to the closest midi number.
+  function frequencyToMidi(freq) {
+    return Math.round(69 + Math.log(freq / 440) * 12 / Math.LN2);
+  }
+  // Converts an ABC pitch (such as "^G,,") to a midi note number.
+  function pitchToMidi(pitch) {
+    var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])([,']*)$/.exec(pitch);
+    if (!m) { return null; }
+    var n = {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};
+    var a = { '^^':2, '^':1, '': 0, '=':0, '_':-1, '__':-2 };
+    var octave = m[3].replace(/,/g, '').length - m[3].replace(/'/g, '').length;
+    var semitone = n[m[2]] + a[m[1]] + 12 * octave;
+    return semitone + 60; // 60 = midi code middle "C".
+  }
+  // Converts an ABC pitch to a frequency in Hz.
+  function pitchToFrequency(pitch) {
+    return midiToFrequency(pitchToMidi(pitch));
+  }
+  // Converts an ABC duration to a number (e.g., "/3"->0.333 or "11/2"->1.5).
+  function durationToTime(duration) {
+    var m = /^(\d*)(?:\/(\d*))?$|^(\/+)$/.exec(duration), n, d, i = 0, ilen;
+    if (!m) return;
+    if (m[3]) return Math.pow(0.5, m[3].length);
+    d = (m[2] ? parseFloat(m[2]) : /\//.test(duration) ? 2 : 1);
+    // Handle mixed frations:
+    ilen = 0;
+    n = (m[1] ? parseFloat(m[1]) : 1);
+    while (ilen + 1 < m[1].length && n > d) {
+      ilen += 1
+      i = parseFloat(m[1].substring(0, ilen))
+      n = parseFloat(m[1].substring(ilen))
+    }
+    return i + (n / d);
+  }
+
+  // The default sound is a square wave with a pretty quick decay to zero.
+  var defaultTimbre = {
+    wave: 'square',   // Oscillator type.
+    gain: 0.1,        // Overall gain at maximum attack.
+    attack: 0.002,    // Attack time at the beginning of a tone.
+    decay: 0.4,       // Rate of exponential decay after attack.
+    decayfollow: 0,   // Amount of decay shortening for higher notes.
+    sustain: 0,       // Portion of gain to sustain indefinitely.
+    release: 0.1,     // Release time after a tone is done.
+    cutoff: 0,        // Low-pass filter cutoff frequency.
+    cutfollow: 0,     // Cutoff adjustment, a multiple of oscillator freq.
+    resonance: 0,     // Low-pass filter resonance.
+    detune: 0         // Detune factor for a second oscillator.
+  };
+
+  // Norrmalizes a timbre object by making a copy that has exactly
+  // the right set of timbre fields, defaulting when needed.
+  // A timbre can specify any of the fields of defaultTimbre; any
+  // unspecified fields are treated as they are set in defaultTimbre.
+  function makeTimbre(options, atop) {
+    if (!options) {
+      options = {};
+    }
+    if (typeof(options) == 'string') {
+      // Abbreviation: name a wave to get a default timbre for that wave.
+      options = { wave: options };
+    }
+    var result = {}, key,
+        wt = atop && atop.wavetable && atop.wavetable[options.wave];
+    for (key in defaultTimbre) {
+      if (options.hasOwnProperty(key)) {
+        result[key] = options[key];
+      } else if (wt && wt.defs && wt.defs.hasOwnProperty(key)) {
+        result[key] = wt.defs[key];
+      } else{
+        result[key] = defaultTimbre[key];
+      }
+    }
+    return result;
+  }
+
+  // This utility function creates an oscillator at the given frequency
+  // and the given wavename.  It supports lookups in a static wavetable,
+  // defined right below.
+  function makeOscillator(atop, wavename, freq) {
+    var wavetable = atop.wavetable, o = atop.ac.createOscillator(),
+        k, pwave, bwf, wf;
+    try {
+      if (wavetable.hasOwnProperty(wavename)) {
+        // Use a customized wavetable.
+        pwave = wavetable[wavename].wave;
+        if (wavetable[wavename].freq) {
+          bwf = 0;
+          // Look for a higher-frequency variant.
+          for (k in wavetable[wavename].freq) {
+            wf = Number(k);
+            if (freq > wf && wf > bwf) {
+              bwf = wf;
+              pwave = wavetable[wavename].freq[bwf];
+            }
+          }
+        }
+        o.setPeriodicWave(pwave);
+      } else {
+        o.type = wavename;
+      }
+    } catch(e) {
+      if (window.console) { window.console.log(e); }
+      // If unrecognized, just use square.
+      // TODO: support "noise" or other wave shapes.
+      o.type = 'square';
+    }
+    o.frequency.value = freq;
+    return o;
+  }
+
+  return Instrument;
+})();
+
+// wavetable is a table of names for nonstandard waveforms.
+// The table maps names to objects that have wave: and freq:
+// properties. The wave: property is a PeriodicWave to use
+// for the oscillator.  The freq: property, if present,
+// is a map from higher frequencies to more PeriodicWave
+// objects; when a frequency higher than the given threshold
+// is requested, the alternate PeriodicWave is used.
+function makeWavetable(ac) {
+  return (function(wavedata) {
+    function makePeriodicWave(data) {
+      var n = data.real.length,
+          real = new Float32Array(n),
+          imag = new Float32Array(n),
+          j;
+      for (j = 0; j < n; ++j) {
+        real[j] = data.real[j];
+        imag[j] = data.imag[j];
+      }
+      try {
+        // Latest API naming.
+        return ac.createPeriodicWave(real, imag);
+      } catch (e) { }
+      try {
+        // Earlier API naming.
+        return ac.createWaveTable(real, imag);
+      } catch (e) { }
+      return null;
+    }
+    function makeMultiple(data, mult, amt) {
+      var result = { real: [], imag: [] }, j, n = data.real.length, m;
+      for (j = 0; j < n; ++j) {
+        m = Math.log(mult[Math.min(j, mult.length - 1)]);
+        result.real.push(data.real[j] * Math.exp(amt * m));
+        result.imag.push(data.imag[j] * Math.exp(amt * m));
+      }
+      return result;
+    }
+    var result = {}, k, d, n, j, ff, record, wave, pw;
+    for (k in wavedata) {
+      d = wavedata[k];
+      wave = makePeriodicWave(d);
+      if (!wave) { continue; }
+      record = { wave: wave };
+      // A strategy for computing higher frequency waveforms: apply
+      // multipliers to each harmonic according to d.mult.  These
+      // multipliers can be interpolated and applied at any number
+      // of transition frequencies.
+      if (d.mult) {
+        ff = wavedata[k].freq;
+        record.freq = {};
+        for (j = 0; j < ff.length; ++j) {
+          wave =
+            makePeriodicWave(makeMultiple(d, d.mult, (j + 1) / ff.length));
+          if (wave) { record.freq[ff[j]] = wave; }
+        }
+      }
+      // This wave has some default filter settings.
+      if (d.defs) {
+        record.defs = d.defs;
+      }
+      result[k] = record;
+    }
+    return result;
+  })({
+    // Currently the only nonstandard waveform is "piano".
+    // It is based on the first 32 harmonics from the example:
+    // https://github.com/GoogleChrome/web-audio-samples
+    // /blob/gh-pages/samples/audio/wave-tables/Piano
+    // That is a terrific sound for the lowest piano tones.
+    // For higher tones, interpolate to a customzed wave
+    // shape created by hand, and apply a lowpass filter.
+    piano: {
+      real: [0, 0, -0.203569, 0.5, -0.401676, 0.137128, -0.104117, 0.115965,
+             -0.004413, 0.067884, -0.00888, 0.0793, -0.038756, 0.011882,
+             -0.030883, 0.027608, -0.013429, 0.00393, -0.014029, 0.00972,
+             -0.007653, 0.007866, -0.032029, 0.046127, -0.024155, 0.023095,
+             -0.005522, 0.004511, -0.003593, 0.011248, -0.004919, 0.008505],
+      imag: [0, 0.147621, 0, 0.000007, -0.00001, 0.000005, -0.000006, 0.000009,
+             0, 0.000008, -0.000001, 0.000014, -0.000008, 0.000003,
+             -0.000009, 0.000009, -0.000005, 0.000002, -0.000007, 0.000005,
+             -0.000005, 0.000005, -0.000023, 0.000037, -0.000021, 0.000022,
+             -0.000006, 0.000005, -0.000004, 0.000014, -0.000007, 0.000012],
+      // How to adjust the harmonics for the higest notes.
+      mult: [1, 1, 0.18, 0.016, 0.01, 0.01, 0.01, 0.004,
+                0.014, 0.02, 0.014, 0.004, 0.002, 0.00001],
+      // The frequencies at which to interpolate the harmonics.
+      freq: [65, 80, 100, 135, 180, 240, 620, 1360],
+      // The default filter settings to use for the piano wave.
+      // TODO: this approach attenuates low notes too much -
+      // this should be fixed.
+      defs: { wave: 'piano', gain: 0.5,
+              attack: 0.002, decay: 0.4, sustain: 0.005, release: 0.1,
+              decayfollow: 0.7,
+              cutoff: 800, cutfollow: 0.1, resonance: 1, detune: 1.001 }
+    }
+  });
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
@@ -2937,7 +4889,9 @@ $.extend(true, $, {
     turtleScaleX: makeTurtleHook('sx', identity, '', false),
     turtleScaleY: makeTurtleHook('sy', identity, '', false),
     turtleTwist: makeTurtleHook('twi', normalizeRotation, 'deg', false),
-    turtleHull: makeHullHook()
+    turtleHull: makeHullHook(),
+    turtleTimbre: makeTimbreHook(),
+    turtleVolume: makeVolumeHook()
   },
   cssNumber: {
     turtleRotation: true,
@@ -3600,7 +5554,7 @@ var turtlefn = {
         moved = true;
       } else {
         if (lineWidth !== undefined) {
-          penstyle += " lineWidth " + lineWidth;
+          penstyle += ";lineWidth:" + lineWidth;
         }
         this.css('turtlePenStyle', penstyle);
       }
@@ -3852,10 +5806,41 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.queue(function(next) {
-        playABC(function() { cc.resolve(j); next(); }, cc.args);
+        var instrument = getTurtleInstrument(elem),
+            args = $.makeArray(cc.args),
+            dowait = true,
+            continuation = function() { cc.resolve(j); next(); };
+        if (args.length > 0 && $.isPlainObject(args[0]) &&
+            args[0].hasOwnProperty('wait')) {
+          dowait = args[0].wait;
+        }
+        if (dowait) { args.push(continuation); }
+        instrument.play.apply(instrument, args);
+        if (!dowait) { continuation(); }
       });
     });
     return this;
+  }),
+  tone: wrapraw('tone',
+  ["<u>tone(freq)</u> Immediately sound a tone. " +
+      "<u>tone(freq, 0)</u> Stop sounding the tone. " +
+      "<u>tone(freq, v, secs)</u> Play a tone with a volume and duration. " +
+      "Frequency may be a number in Hz or a letter pitch. " +
+      "<mark>tone 440, 5</mark>"],
+  function tone(freq, secs) {
+    var args = arguments;
+    return this.each(function(j, elem) {
+      var instrument = getTurtleInstrument(elem);
+      instrument.tone.apply(instrument, args);
+    });
+  }),
+  silence: wrapraw('silence',
+  ["<u>silence()</u> immediately silences sound from play() or tone()."],
+  function silence() {
+    return this.each(function(j, elem) {
+      var instrument = getTurtleInstrument(elem);
+      instrument.silence();
+    });
   }),
   speed: wrapcommand('speed', 1,
   ["<u>speed(persec)</u> Set one turtle's speed in moves per second: " +
@@ -4349,7 +6334,7 @@ function checkForHungLoop(fname) {
       clearTimeout(hungTimer);
       hungTimer = null;
       hangStartTime = null;
-    });
+    }, 0);
     return;
   }
   // Timeout after which we interrupt the program: 6 seconds.
@@ -4541,8 +6526,37 @@ var dollar_turtle_methods = {
     } else {
       var cc = setupContinuation(null, 'play', arguments, 0);
       cc.appear(null);
-      playABC(function() { cc.resolve(null); }, arguments);
+      var instrument = getGlobalInstrument(),
+          args = $.makeArray(cc.args);
+      args.push(function() { cc.resolve(null); });
+      instrument.play.apply(instrument, args);
       cc.exit();
+    }
+  }),
+  tone: wrapraw('tone',
+  ["<u>tone(freq)</u> Immediately sound a tone. " +
+      "<u>tone(freq, 0)</u> Stop sounding the tone. " +
+      "<u>tone(freq, v, secs)</u> Play a tone with a volume and duration. " +
+      "Frequency may be a number in Hz or a letter pitch. " +
+      "<mark>tone 440, 5</mark>"],
+  function tone() {
+    if (global_turtle) {
+      var sel = $(global_turtle);
+      sel.tone.apply(sel, arguments);
+    } else {
+      var instrument = getGlobalInstrument();
+      instrument.play.apply(instrument, args);
+    }
+  }),
+  silence: wrapraw('silence',
+  ["<u>silence()</u> Immediately silences sound from play() or tone()."],
+  function silence() {
+    if (global_turtle) {
+      var sel = $(global_turtle);
+      sel.silence();
+    } else {
+      var instrument = getGlobalInstrument();
+      instrument.silence();
     }
   }),
   done: wrapraw('done',
@@ -4795,6 +6809,9 @@ var dollar_turtle_methods = {
   Turtle: wrapraw('Turtle',
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
+  Piano: wrapraw('Piano',
+  ["<u>new Piano(keys)</u> Make a new piano. " +
+      "<mark>t = new Piano 88; t.play 'edcdeee'</mark>"], Piano),
   Sprite: wrapraw('Sprite',
   ["<u>new Sprite({width:w,height:h,color:c})</u> " +
       "Make a new sprite to <mark>drawon</mark>. " +
@@ -4811,7 +6828,7 @@ var dollar_turtle_methods = {
     }
   }),
   pressed: wrapraw('pressed',
-  ["<u>pressed('control left')</u> Tests if a specific key is pressed. " +
+  ["<u>pressed('control')</u> Tests if a specific key is pressed. " +
       "<mark>if pressed 'a' then write 'a was pressed'</mark>",
    "<u>pressed.list()</u> Returns a list of pressed keys, by name. " +
       "<mark>write 'Pressed keys: ' + pressed.list().join(',')</mark>"
@@ -4969,7 +6986,7 @@ $.turtle = function turtle(id, options) {
   globaldefaultspeed(('defaultspeed' in options) ?
       options.defaultspeed : 1);
   // Initialize audio context (avoids delay in first notes).
-  try {
+  if (isAudioPresent()) try {
     getAudioTop();
   } catch (e) { }
   // Find or create a singleton turtle if one does not exist.
@@ -6059,580 +8076,23 @@ function table(height, width, cellCss, tableCss) {
   return result;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// WEB AUDIO SUPPORT
-// Definition of play("ABC") - uses ABC music note syntax.
-//////////////////////////////////////////////////////////////////////////
-
-var ABCtoken = /\s+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\d*\/\d+|\d+|\/+|[xzXZ]|\||%[^\n]*$|./g;
-var ABCheader = /^([A-Za-z]):\s*(.*)$/;
-var audioTop = null;
-function isAudioPresent() {
-  return !!(window.AudioContext || window.webkitAudioContext);
-}
-function getAudioTop() {
-  if (!audioTop) {
-    var ac = new (window.AudioContext || window.webkitAudioContext),
-        dcn = ac.createDynamicsCompressor(),
-        firstTime = null;
-    dcn.connect(ac.destination);
-    audioTop = {
-      ac: ac,
-      out: dcn,
-      // Partial workaround for http://crbug.com/254942:
-      // add little extra pauses before scheduling envelopes.
-      // A quarter second or so seems to be needed at initial startup,
-      // then 1/64 second before scheduling each envelope afterwards.
-      nextStartTime: function() {
-        if (firstTime === null) {
-          firstTime = ac.currentTime;
-        }
-        return Math.max(firstTime + 0.25,
-                        ac.currentTime + 0.015625);
-      }
-    }
-  }
-  return audioTop;
-}
-function resetAudio() {
-  if (audioTop && audioTop.out.disconnect) {
-    // Disconnect the top-level node and make a new one.
-    audioTop.out.disconnect();
-    audioTop.out = audioTop.ac.createDynamicsCompressor();
-    audioTop.out.connect(audioTop.ac.destination);
-  }
-}
-// Returns a map of A-G -> accidentals, according to the key signature.
-function accidentals(n) {
-  var flats =  'BEADGCF',
-      sharps = 'FCGDEAB',
-      result = {}, j;
-  if (!n) {
-    return result;
-  }
-  if (n < 0) {
-    for (j = 0; j < -n && j < 7; ++j) {
-      result[flats.charAt(j)] = '_';
-    }
-  } else {
-    for (j = 0; j < n && j < 7; ++j) {
-      result[sharps.charAt(j)] = '^';
-    }
-  }
-  return result;
-}
-// Decodes the key signature line (e.g., K: C#m) at the front of an ABC tune.
-function keysig(k) {
-  if (!k) { return {}; }
-  var key, sigcodes = {
-    // Major
-    'c#':7, 'f#':6, 'b':5, 'e':4, 'a':3, 'd':2, 'g':1, 'c':0,
-    'f':-1, 'bb':-2, 'eb':-3, 'ab':-4, 'db':-5, 'gb':-6, 'cb':-7,
-    // Minor
-    'a#m':7, 'd#m':6, 'g#m':5, 'c#m':4, 'f#m':3, 'bm':2, 'em':1, 'am':0,
-    'dm':-1, 'gm':-2, 'cm':-3, 'fm':-4, 'bbm':-5, 'ebm':-6, 'abm':-7,
-    // Mixolydian
-    'g#mix':7, 'c#mix':6, 'f#mix':5, 'bmix':4, 'emix':3,
-    'amix':2, 'dmix':1, 'gmix':0, 'cmix':-1, 'fmix':-2,
-    'bbmix':-3, 'ebmix':-4, 'abmix':-5, 'dbmix':-6, 'gbmix':-7,
-    // Dorian
-    'd#dor':7, 'g#dor':6, 'c#dor':5, 'f#dor':4, 'bdor':3,
-    'edor':2, 'ador':1, 'ddor':0, 'gdor':-1, 'cdor':-2,
-    'fdor':-3, 'bbdor':-4, 'ebdor':-5, 'abdor':-6, 'dbdor':-7,
-    // Phrygian
-    'e#phr':7, 'a#phr':6, 'd#phr':5, 'g#phr':4, 'c#phr':3,
-    'f#phr':2, 'bphr':1, 'ephr':0, 'aphr':-1, 'dphr':-2,
-    'gphr':-3, 'cphr':-4, 'fphr':-5, 'bbphr':-6, 'ebphr':-7,
-    // Lydian
-    'f#lyd':7, 'blyd':6, 'elyd':5, 'alyd':4, 'dlyd':3,
-    'glyd':2, 'clyd':1, 'flyd':0, 'bblyd':-1, 'eblyd':-2,
-    'ablyd':-3, 'dblyd':-4, 'gblyd':-5, 'cblyd':-6, 'fblyd':-7,
-    // Locrian
-    'b#loc':7, 'e#loc':6, 'a#loc':5, 'd#loc':4, 'g#loc':3,
-    'c#loc':2, 'f#loc':1, 'bloc':0, 'eloc':-1, 'aloc':-2,
-    'dloc':-3, 'gloc':-4, 'cloc':-5, 'floc':-6, 'bbloc':-7
-  };
-  k = k.replace(/\s+/g, '').toLowerCase().substr(0, 5);
-  var scale = k.match(/maj|min|mix|dor|phr|lyd|loc|m/);
-  if (scale) {
-    if (scale == 'maj') {
-      key = k.substr(0, scale.index);
-    } else if (scale == 'min') {
-      key = k.substr(0, scale.index + 1);
-    } else {
-      key = k.substr(0, scale.index + scale.length);
-    }
-  } else {
-    key = /^[a-g][#b]?/.exec(k) || '';
-  }
-  var result = accidentals(sigcodes[key]);
-  var extras = k.substr(key.length).match(/(__|_|=|\^\^|\^)[a-g]/g);
-  if (extras) {
-    for (j = 0; j < extras.length; ++j) {
-      var note = extras[j].charAt(extras[j].length - 1).toUpperCase();
-      if (extras[j].charAt(0) == '=') {
-        delete result[note];
-      } else {
-        result[note] = extras[j].substr(0, extras[j].length - 1);
-      }
-    }
-  }
-  return result;
-}
-function parseABCFile(str) {
-  var lines = str.split('\n'),
-      result = {},
-      context = result,
-      j, header, notes, key = {}, accent = {};
-  for (j = 0; j < lines.length; ++j) {
-    header = ABCheader.exec(lines[j]);
-    if (header) {
-      if (header[1] == 'V') {
-        if (!('voice' in result)) {
-          result.voice = [];
-        }
-        context = {};
-        accent = {};
-        result.voice.push(context);
-      }
-      if (header[1] == 'K') {
-        key = keysig(header[2]);
-      }
-      context[header[1]] = header[2];
-    } else {
-      notes = parseABCNotes(lines[j], key, accent);
-      if (notes.length) {
-        if (context === result) {
-          if (!('voice' in result)) {
-            result.voice = [];
-          }
-          if (!result.voice.length) {
-            context = {};
-            result.voice.push(context);
-          }
-          context = result.voice[0];
-        }
-        if (!('notes' in context)) {
-          context.notes = [];
-        }
-        context.notes.push.apply(context.notes, notes);
-      }
-    }
-  }
-  if (result.voice) {
-    // Calculate times for all the tied notes.
-    for (j = 0; j < result.voice.length; ++j) {
-      if (result.voice[j].notes) {
-        processTies(result.voice[j].notes);
-      }
-    }
-  }
-  return result;
-}
-function processTies(stems) {
-  var tied = {}, nextTied, j, k, note, firstNote;
-  // Run through all the notes, adding up time for tied notes,
-  // and marking notes that were held over with holdover = true.
-  for (j = 0; j < stems.length; ++j) {
-    nextTied = {};
-    for (k = 0; k < stems[j].note.length; ++k) {
-      firstNote = note = stems[j].note[k];
-      if (tied.hasOwnProperty(note.pitch)) {
-        firstNote = tied[note.pitch];
-        firstNote.time += note.time;
-        note.holdover = true;
-      }
-      if (note.tie) {
-        nextTied[note.pitch] = firstNote;
-      }
-    }
-    tied = nextTied;
-  }
-}
-function parseABCNotes(str, key, accent) {
-  var tokens = str.match(ABCtoken), result = [], stem = null,
-      index = 0, dotted = 0, t;
-  while (index < tokens.length) {
-    if (/^s+$/.test(tokens[index])) { index++; continue; }
-    if (/</.test(tokens[index])) { dotted = -tokens[index++].length; continue; }
-    if (/>/.test(tokens[index])) { dotted = tokens[index++].length; continue; }
-    if (/\|/.test(tokens[index])) {
-      // Clear accidentals at the end of a measure.
-      for (t in accent) if (accent.hasOwnProperty(t)) {
-        delete accent[t];
-      }
-      index++;
-      continue;
-    }
-    stem = parseStem(tokens, index, key, accent);
-    if (stem === null) {
-      // Skip unparsable bits
-      index++;
-      continue;
-    }
-    if (stem !== null) {
-      if (dotted && result.length) {
-        if (dotted > 0) {
-          t = (1 - Math.pow(0.5, dotted)) * stem.value.time;
-        } else {
-          t = (Math.pow(0.5, -dotted) - 1) * result[result.length - 1].time;
-        }
-        result[result.length - 1].time += t;
-        stem.value.time -= t;
-        dotted = 0;
-      }
-      result.push(stem.value);
-      index = stem.index;
-    }
-  }
-  return result;
-}
-function stripNatural(pitch) {
-  if (pitch.length > 0 && (!/[_=^]/.test(pitch.charAt(0)))) {
-    return '=' + pitch;
-  }
-  return pitch;
-}
-function applyAccent(pitch, key, accent) {
-  var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(.*)$/.exec(pitch), letter;
-  if (!m) { return pitch; }
-  letter = m[2].toUpperCase();
-  if (m[1].length > 0) {
-    // When there is an explicit accidental, then remember it for
-    // the rest of the measure.
-    accent[letter] = m[1];
-    return stripNatural(pitch);
-  }
-  if (accent.hasOwnProperty(letter)) {
-    // Accidentals from this measure apply to unaccented notes.
-    return stripNatural(accent[letter] + m[2] + m[3]);
-  }
-  if (key.hasOwnProperty(letter)) {
-    // Key signatures apply by default.
-    return stripNatural(key[letter] + m[2] + m[3]);
-  }
-  return stripNatural(pitch);
-}
-function parseStem(tokens, index, key, accent) {
-  var note = [], frequency = [],
-      duration = '', staccato = false;
-  var lastNote = null, minStemTime = Infinity, j;
-  if (index < tokens.length && '.' == tokens[index]) {
-    staccato = true;
-    index++;
-  }
-  if (index < tokens.length && tokens[index] == '[') {
-    index++;
-    while (index < tokens.length) {
-      if (/[A-Ga-g]/.test(tokens[index])) {
-        lastNote = {
-          pitch: applyAccent(tokens[index++], key, accent),
-          tie: false
-        }
-        lastNote.frequency = pitchToFrequency(lastNote.pitch);
-        note.push(lastNote);
-      } else if (/[xzXZ]/.test(tokens[index])) {
-        lastNote = null;
-        index++;
-      } else if ('.' == tokens[index]) {
-        staccato = true;
-        index++;
-        continue;
-      } else {
-        break;
-      }
-      // When a stem has more than one duration, select the
-      // shortest one. The standard says to pick the first one,
-      // but in practice, transcribed music online seems to
-      // follow the rule that the stem's duration is determined
-      // by the shortest contained duration.
-      if (index < tokens.length && /\d|\//.test(tokens[index])) {
-        noteDuration = tokens[index++];
-        noteTime = durationToTime(noteDuration);
-      } else {
-        noteDuration = '';
-        noteTime = 1;
-      }
-      if (lastNote) {
-        // If it's a note (not a rest), store the duration
-        lastNote.duration = noteDuration;
-        lastNote.time = noteTime;
-      }
-      if (noteTime && noteTime < minStemTime) {
-        duration = noteDuration;
-        minStemTime = noteTime;
-      }
-      if (index < tokens.length && '-' == tokens[index]) {
-        if (lastNote) {
-          note[note.length - 1].tie = true;
-        }
-        index++;
-      }
-    }
-    if (tokens[index] != ']') {
-      return null;
-    }
-    index++;
-  } else if (index < tokens.length && /[A-Ga-g]/.test(tokens[index])) {
-    lastNote = {
-      pitch: applyAccent(tokens[index++], key, accent),
-      tie: false,
-      duration: '',
-      time: 1
-    }
-    lastNote.frequency = pitchToFrequency(lastNote.pitch);
-    note.push(lastNote);
-  } else if (/^[xzXZ]$/.test(tokens[index])) {
-    // Rest - no pitch.
-    index++;
-  } else {
-    return null;
-  }
-  if (index < tokens.length && /\d|\//.test(tokens[index])) {
-    duration = tokens[index++];
-    noteTime = durationToTime(duration);
-    for (j = 0; j < note.length; ++j) {
-      note[j].duration = duration;
-      note[j].time = noteTime;
-    }
-  }
-  if (index < tokens.length && '-' == tokens[index]) {
-    index++;
-    for (j = 0; j < note.length; ++j) {
-      note[j].tie = true;
-    }
-  }
-  frequency = []
-  for (j = 0; j < note.length; ++j) {
-    frequency.push(note[j].frequency);
-  }
-  return {
-    index: index,
-    value: {
-      note: note,
-      duration: duration,
-      staccato: staccato,
-      frequency: frequency,
-      time: durationToTime(duration)
-    }
-  };
-}
-function pitchToFrequency(pitch) {
-  var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(,+|'+|)$/.exec(pitch);
-  if (!m) { return null; }
-  var n = {C:-9,D:-7,E:-5,F:-4,G:-2,A:0,B:2,c:3,d:5,e:7,f:8,g:10,a:12,b:14};
-  var a = { '^^':2, '^':1, '': 0, '=':0, '_':-1, '__':-2 };
-  var semitone = n[m[2]] + a[m[1]] + (/,/.test(m[3]) ? -12 : 12) * m[3].length;
-  return 440 * Math.pow(2, semitone / 12);
-}
-function durationToTime(duration) {
-  var m = /^(\d*)(?:\/(\d*))?$|^(\/+)$/.exec(duration), n, d, i = 0, ilen;
-  if (m[3]) return Math.pow(0.5, m[3].length);
-  d = (m[2] ? parseFloat(m[2]) : /\//.test(duration) ? 2 : 1);
-  // Handle mixed frations:
-  ilen = 0;
-  n = (m[1] ? parseFloat(m[1]) : 1);
-  while (ilen + 1 < m[1].length && n > d) {
-    ilen += 1
-    i = parseFloat(m[1].substring(0, ilen))
-    n = parseFloat(m[1].substring(ilen))
-  }
-  return i + (n / d);
-}
-function playABC(done, args) {
-  if (!isAudioPresent()) {
-    if (done) { done(); }
-    return;
-  }
-  var atop = getAudioTop(), callback = null,
-      firstvoice = 0, argindex, voice, beatsecs,
-      volume = 0.5, tempo = 120, transpose = 0, type = ['square'],
-      venv = {a: 0.01, d: 0.2, s: 0.1, r: 0.1}, envelope = [venv],
-      start_time = null, end_time = atop.ac.currentTime,
-      notes, vtype, time, fingers, strength, i, j, t, opts;
-  if ($.isPlainObject(args[0])) {
-    opts = args[0];
-    if ('volume' in opts) { volume = opts.volume; }
-    if ('tempo' in opts) { tempo = opts.tempo; }
-    if ('type' in opts) { type = opts.type; }
-    if ('callback' in opts) { callback = opts.callback; }
-    if ('envelope' in opts) {
-      if ($.isArray(opts.envelope)) {
-        envelope = []
-        for (i = 0; i < opts.envelope.length; i++) {
-          envelope.push($.extend({}, venv, opts.envelope[i]));
-        }
-      } else {
-        $.extend(venv, opts.envelope);
-      }
-    }
-    firstvoice = 1;
-  }
-  beatsecs = 60 / tempo;
-  if (!$.isArray(type)) { type = [type]; }
-  if (!$.isArray(volume)) { volume = [volume]; }
-  if (!$.isArray(transpose)) { transpose = [transpose]; }
-  var voices = [];
-  for (argindex = firstvoice; argindex < args.length; argindex++) {
-    voice = argindex - firstvoice;
-    abcfile = parseABCFile(args[argindex]);
-    if (abcfile && abcfile.voice && abcfile.voice.length &&
-        abcfile.voice[0].notes) {
-      notes = abcfile.voice[0].notes;
-    } else {
-      notes = [];
-    }
-    voices[voice] = notes
-    vtype = type[voice % type.length] || 'square';
-    fingers = 0;
-    for (i = 0; i < notes.length; i++) {
-      fingers = Math.max(fingers, notes[i].frequency.length);
-    }
-    for (i = 0; i < notes.length; i++) {
-      notes[i];
-    }
-    if (fingers == 0) { continue; }
-    // Attenuate chorded voice so chorded power matches volume.
-    strength = volume[voice % volume.length] / Math.sqrt(fingers);
-    venv = envelope[voice % envelope.length];
-    if (start_time === null) {
-      start_time = atop.nextStartTime();
-    }
-    time = start_time;
-    for (i = 0; i < notes.length; i++) {
-      t = notes[i].time;
-      // Fill in fields useful for callback notifications.
-      stime = t * beatsecs + time;
-      notes[i].start_at = time;
-      notes[i].end_at = stime;
-      notes[i].voice = voice;
-      if (notes[i].note.length > 0) {
-        playChordAt(atop, time, notes[i], beatsecs, strength, vtype, venv);
-      }
-      time += t * beatsecs;
-    }
-    end_time = Math.max(end_time, time);
-  }
-  var nextToNotify = [];
-  for (i = 0; i < voices.length; ++i) {
-    nextToNotify.push(0);
-  }
-  function callNotifications() {
-    if (interrupted) { return; }
-    var now = atop.ac.currentTime, notifyNotes = [], i, j, next = end_time;
-    if (callback) {
-      for (i = 0; i < voices.length; ++i) {
-        for (j = nextToNotify[i]; j < voices[i].length; ++j) {
-          if (voices[i][j].start_at <= now) {
-            notifyNotes.push(voices[i][j]);
-          } else {
-            nextToNotify[i] = j;
-            break;
-          }
-        }
-        if (nextToNotify[i] < voices[i].length) {
-          next = Math.min(voices[i][nextToNotify[i]].start_at, next);
-        }
-      }
-      notifyNotes.sort(function(a, b) {
-        if (a.start_at != b.start_at) {
-          return a.start_at - b.start_at;
-        }
-        return a.end_at - b.end_at;
-      });
-      for (i = 0; i < notifyNotes.length; ++i) {
-        try {
-          callback(notifyNotes[i]);
-        } catch(e) { }
-      }
-    }
-    if (now >= end_time) {
-      if (callback) { try { callback(null); } catch(e) { } }
-      if (done) { done(); }
-    } else {
-      setTimeout(callNotifications, (next - atop.ac.currentTime) * 1000);
-    }
-  }
-  if (done || callback) {
-    callNotifications();
-  }
-}
-function playChordAt(atop, time, stem, beatsecs, strength, vtype, venv) {
-  // First, sort notes into notes that share the same duration.
-  var j, d, staccato = stem.staccato, subchord = {}, n, t, x, s,
-      g, o, atime, rtime, stime, dt, strength;
-  for (j = 0; j < stem.note.length; ++j) {
-    if (stem.note[j].holdover) {
-      // Skip holdover notes.
-      continue;
-    }
-    d = staccato ? 's' : ('' + Math.round(stem.note.time * 1000));
-    if (!subchord.hasOwnProperty(d)) {
-      subchord[d] = [];
-    }
-    subchord[d].push(stem.note[j]);
-  }
-  // Then play each subchord.
-  for (d in subchord) if (subchord.hasOwnProperty(d)) {
-    n = subchord[d];
-    // A subchord shares timing.
-    t = n[0].time;
-    // Staccato: no longer than 1/16 beat, and no sustain.
-    sustain = venv.s;
-    if (staccato) {
-      t = Math.min(t, 1/16, venv.d);
-      s = 0;
-    }
-    stime = t * beatsecs + time;
-    atime = Math.min(t, venv.a) * beatsecs + time;
-    rtime = Math.max(0, t + venv.r) * beatsecs + time;
-    if (atime > rtime) { atime = rtime = (atime + rtime) / 2; }
-    if (rtime < stime) { stime = rtime; rtime = t * beatsecs + time; }
-    dt = venv.d * beatsecs;
-    // Create gain for the ADSR envelope.
-    g = atop.ac.createGain();
-    g.gain.setValueAtTime(0, time);
-    g.gain.linearRampToValueAtTime(strength, atime);
-    if ('setTargetAtTime' in g.gain) {
-      // Current web audio spec.
-      g.gain.setTargetAtTime(sustain * strength, atime, dt);
-    } else {
-      // Early draft web audio spec.
-      g.gain.setTargetValueAtTime(sustain * strength, atime, dt);
-    }
-    slast = sustain + (1 - sustain) * Math.exp((atime - stime) / dt);
-    g.gain.setValueAtTime(slast * strength, stime);
-    g.gain.linearRampToValueAtTime(0, rtime);
-    g.connect(atop.out);
-    for (x = 0; x < n.length; x++) {
-      // Create an oscillator for each note.
-      // TODO: support more elaborate vtypes, with lowpass/highpass.
-      o = atop.ac.createOscillator();
-      o.type = vtype;
-      o.frequency.value = n[x].frequency;
-      o.connect(g);
-      if ('start' in g) {
-        // Current web audio spec.
-        o.start(time);
-        o.stop(rtime);
-      } else {
-        // Early draft web audio spec.
-        o.noteOn(time);
-        o.noteOff(rtime);
-      }
-    }
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////
 // DEBUGGING SUPPORT
 //////////////////////////////////////////////////////////////////////////
 var debug = {
   init: function initdebug() {
-    if (parent && parent.ide) {
-      this.ide = parent.ide;
-      this.ide.bindframe(window);
-      this.attached = true;
+    try {
+      if (parent && parent.ide) {
+        this.ide = parent.ide;
+        this.ide.bindframe(window);
+        this.attached = true;
+      }
+    } catch(e) {
+      this.ide = null;
+      this.attached = false;
+    }
+    if (this.attached) {
       if (window.addEventListener) {
         window.addEventListener('error', function(event) {
           // An error event will highlight the error line.
@@ -7332,21 +8792,23 @@ function formattitle(title) {
   return '<samp class="_log" id="_testpaneltitle" style="font-weight:bold;">' +
       title + '</samp>';
 }
+var noLocalStorage = null;
 function readlocalstorage() {
   if (!uselocalstorage) {
     return;
   }
-  var state = { height: panelheight, history: [] };
+  var state = { height: panelheight, history: [] }, result;
   try {
-    var result = window.JSON.parse(window.localStorage[uselocalstorage]);
-    if (result && result.slice && result.length) {
-      // if result is an array, then it's just the history.
-      state.history = result;
-      return state;
-    }
-    $.extend(state, result);
+    result = window.JSON.parse(window.localStorage[uselocalstorage]);
   } catch(e) {
+    result = noLocalStorage || {};
   }
+  if (result && result.slice && result.length) {
+    // if result is an array, then it's just the history.
+    state.history = result;
+    return state;
+  }
+  $.extend(state, result);
   return state;
 }
 function updatelocalstorage(state) {
@@ -7367,7 +8829,11 @@ function updatelocalstorage(state) {
     changed = true;
   }
   if (changed) {
-    window.localStorage[uselocalstorage] = window.JSON.stringify(stored);
+    try {
+      window.localStorage[uselocalstorage] = window.JSON.stringify(stored);
+    } catch(e) {
+      noLocalStorage = stored;
+    }
   }
 }
 function wheight() {
