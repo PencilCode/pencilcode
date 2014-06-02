@@ -1778,7 +1778,8 @@ function getTurtleData(elem) {
       drawOnCanvas: null,
       quickpagexy: null,
       quickhomeorigin: null,
-      instrument: null
+      instrument: null,
+      stream: null
     });
   }
   return state;
@@ -2177,7 +2178,11 @@ function touchesPixel(elem, color) {
 //////////////////////////////////////////////////////////////////////////
 
 function applyImg(sel, img) {
-  if (sel[0].tagName == 'IMG' || sel[0].tagName == 'CANVAS') {
+  if (img.img) {
+    if (sel[0].tagName == 'CANVAS' || sel[0].tagName == img.img.tagName) {
+      applyLoadedImage(img.img, sel[0], img.css);
+    }
+  } else if (sel[0].tagName == 'IMG' || sel[0].tagName == 'CANVAS') {
     setImageWithStableOrigin(sel[0], img.url, img.css);
   } else {
     var props = {
@@ -2508,8 +2513,8 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
           state = $.data(elem, 'turtleData'),
           otx = ts.tx, oty = ts.ty, qpxy;
       if (parts.length < 1 || parts.length > 2) { return; }
-      if (parts.length >= 1) { ts[propx] = parts[0]; }
-      if (parts.length >= 2) { ts[propy] = parts[1]; }
+      if (parts.length >= 1) { ts[propx] = parseFloat(parts[0]); }
+      if (parts.length >= 2) { ts[propy] = parseFloat(parts[1]); }
       else if (!displace) { ts[propy] = ts[propx]; }
       else { ts[propy] = 0; }
       elem.style[transform] = writeTurtleTransform(ts);
@@ -2629,7 +2634,8 @@ function applyLoadedImage(loaded, elem, css) {
   // Read the element's origin before setting the image src.
   var oldOrigin = readTransformOrigin(elem),
       sel = $(elem),
-      isCanvas = (elem.tagName == 'CANVAS');
+      isCanvas = (elem.tagName == 'CANVAS'),
+      ctx;
   if (!isCanvas) {
     // Set the image to a 1x1 transparent GIF, and clear the transform origin.
     // (This "reset" code was original added in an effort to avoid browser
@@ -2645,14 +2651,25 @@ function applyLoadedImage(loaded, elem, css) {
   });
   if (loaded) {
     // Now set the source, and then apply any css requested.
-    elem.width = loaded.width;
-    elem.height = loaded.height;
-    if (!isCanvas) {
-      elem.src = loaded.src;
+    if (loaded.tagName == 'VIDEO') {
+      elem.width = $(loaded).width();
+      elem.height = $(loaded).height();
+      if (isCanvas) {
+        ctx = elem.getContext('2d');
+        ctx.clearRect(0, 0, elem.width, elem.height);
+        ctx.drawImage(loaded, 0, 0, loaded.videoWidth, loaded.videoHeight,
+            0, 0, elem.width, elem.height);
+      }
     } else {
-      var ctx = elem.getContext('2d');
-      ctx.clearRect(0, 0, loaded.width, loaded.height);
-      ctx.drawImage(loaded, 0, 0);
+      elem.width = loaded.width;
+      elem.height = loaded.height;
+      if (!isCanvas) {
+        elem.src = loaded.src;
+      } else {
+        ctx = elem.getContext('2d');
+        ctx.clearRect(0, 0, loaded.width, loaded.height);
+        ctx.drawImage(loaded, 0, 0);
+      }
     }
   }
   if (css) {
@@ -2792,6 +2809,73 @@ var Turtle = (function(_super) {
 
   return Turtle;
 
+})(Sprite);
+
+// Video extends Sprite, and draws a live video camera by default.
+var Video = (function(_super) {
+  __extends(Video, _super);
+  function Video(opts, context) {
+    var attrs = "", hassrc = false, hasautoplay = false, hasdims = false;
+    if ($.isPlainObject(opts)) {
+      for (key in opts) {
+        attrs += ' ' + key + '="' + escapeHtml(opts[key]) + '"';
+      }
+      hassrc = ('src' in opts);
+      hasautoplay = ('autoplay' in opts);
+      hasdims = ('width' in opts || 'height' in opts);
+      if (hasdims && !('height' in opts)) {
+        attrs += ' height=' + Math.round(opts.width * 3/4);
+      }
+      if (hasdims && !('width' in opts)) {
+        attrs += ' width=' + Math.round(opts.height * 4/3);
+      }
+    }
+    if (!hasautoplay) {
+      attrs += ' autoplay';
+    }
+    if (!hasdims) {
+      attrs += ' width=320 height=240';
+    }
+    Video.__super__.constructor.call(this, '<video' + attrs + '>');
+  }
+  Video.prototype.capture = function() {
+    return this.queue(function(next) {
+      var v = this,
+          getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia ||
+                         navigator.msGetUserMedia;
+      if (!getUserMedia) { next(); return; }
+      getUserMedia.call(navigator, {video: true}, function(stream) {
+        if (stream) {
+          var state = getTurtleData(v), k = ('' + Math.random()).substr(2);
+          if (state.stream) {
+            state.stream.stop();
+          }
+          state.stream = stream;
+          $(v).on('play.capture' + k, function() {
+            $(v).off('play.capture' + k);
+            next();
+          });
+          v.src = window.URL.createObjectURL(stream);
+        }
+      }, function() {
+        next();
+      });
+    });
+  };
+  // Disconnects the media stream.
+  Video.prototype.cut = function() {
+    return this.plan(function() {
+      var state = this.data('turtleData');
+      if (state.stream) {
+        state.stream.stop();
+        state.stream = null;
+      }
+      this.attr('src', '');
+    });
+  };
+  return Video;
 })(Sprite);
 
 // Piano extends Sprite, and draws a piano keyboard by default.
@@ -4886,6 +4970,48 @@ function makeWavetable(ac) {
 
 
 //////////////////////////////////////////////////////////////////////////
+// SYNC SUPPORT
+// sync() function
+//////////////////////////////////////////////////////////////////////////
+
+function sync() {
+  var elts = [], j, ready = [], completion = null, argcount = arguments.length;
+  // The optional last argument is a callback when the sync is triggered.
+  if (argcount && $.isFunction(arguments[argcount - 1])) {
+    completion = arguments[--argcount];
+  }
+  // Gather elements passed as arguments.
+  for (j = 0; j < argcount; ++j) {
+    if (arguments[j].constructor === $) {
+      elts.push.apply(elts, arguments[j].toArray());  // Unpack jQuery.
+    } else if ($.isArray(arguments[j])) {
+      elts.push.apply(elts, arguments[j]);  // Accept an array.
+    } else {
+      elts.push(arguments[j]);  // Individual elements.
+    }
+  }
+  elts = $.unique(elts);  // Remove duplicates.
+  function proceed() {
+    var cb = ready, j;
+    ready = null;
+    // Call completion before unblocking animation.
+    if (completion) { completion(); }
+    // Unblock all animation queues.
+    for (j = 0; j < cb.length; ++j) { cb[j](); }
+  }
+  for (j = 0; j < elts.length; ++j) {
+    $(elts[j]).queue(function(next) {
+      if (ready) {
+        ready.push(next);
+        if (ready.length == elts.length) {
+          proceed();
+        }
+      }
+    });
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
 // Register all our hooks.
 //////////////////////////////////////////////////////////////////////////
@@ -4899,8 +5025,8 @@ $.extend(true, $, {
     turtleForward: makeTurtleForwardHook(),
     turtleTurningRadius: makeTurningRadiusHook(),
     turtlePosition: makeTurtleXYHook('turtlePosition', 'tx', 'ty', true),
-    turtlePositionX: makeTurtleHook('tx', identity, 'px', true),
-    turtlePositionY: makeTurtleHook('ty', identity, 'px', true),
+    turtlePositionX: makeTurtleHook('tx', parseFloat, 'px', true),
+    turtlePositionY: makeTurtleHook('ty', parseFloat, 'px', true),
     turtleRotation: makeTurtleHook('rot', maybeArcRotation, 'deg', true),
     turtleScale: makeTurtleXYHook('turtleScale', 'sx', 'sy', false),
     turtleScaleX: makeTurtleHook('sx', identity, '', false),
@@ -6576,6 +6702,9 @@ var dollar_turtle_methods = {
       instrument.silence();
     }
   }),
+  sync: wrapraw('sync',
+  ["<u>sync(t1, t2, t3,...)</u> " +
+      "Selected turtles wait for each other to stop."], sync),
   done: wrapraw('done',
   ["<u>done(fn)</u> Calls fn when animation is complete. Use with await: " +
       "<mark>await done defer()</mark>"],
@@ -6829,6 +6958,9 @@ var dollar_turtle_methods = {
   Piano: wrapraw('Piano',
   ["<u>new Piano(keys)</u> Make a new piano. " +
       "<mark>t = new Piano 88; t.play 'edcdeee'</mark>"], Piano),
+  Video: wrapraw('Video',
+  ["<u>new Video(options)</u> Make a new video. " +
+      "<mark>v = new Video; v.on 'play' -> pic = new Sprite v</mark>"], Video),
   Sprite: wrapraw('Sprite',
   ["<u>new Sprite({width:w,height:h,color:c})</u> " +
       "Make a new sprite to <mark>drawon</mark>. " +
@@ -7031,7 +7163,6 @@ $.turtle = function turtle(id, options) {
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
     global_turtle = selector[0];
-    $(document).on('DOMNodeRemoved.turtle', onDOMNodeRemoved);
   }
   // Set up global objects by id.
   if (!('ids' in options) || options.ids) {
@@ -7126,15 +7257,25 @@ function clearGlobalTurtle() {
   global_turtle_methods.length = 0;
 }
 
-function onDOMNodeRemoved(e) {
-  // Undefine global variable.
-  if (e.target.id && window[e.target.id] && window[e.target.id].jquery &&
-      window[e.target.id].length === 1 && window[e.target.id][0] === e.target) {
-    delete window[e.target.id];
-  }
-  // Clear global turtle.
-  if (e.target === global_turtle) {
-    clearGlobalTurtle();
+// Hook jQuery cleanData.
+var oldCleanData = $.cleanData;
+$.cleanData = function(elems) {
+  for (var i = 0, elem; (elem = elems[i]) !== undefined; i++) {
+    // Clean up media stream.
+    var state = $.data(elem, 'turtleData');
+    if (state && state.stream) {
+      state.stream.stop();
+    }
+    // Undefine global variablelem.
+    if (elem.id && window[elem.id] && window[elem.id].jquery &&
+        window[elem.id].length === 1 &&
+        window[elem.id][0] === elem) {
+      delete window[elem.id];
+    }
+    // Clear global turtlelem.
+    if (elem === global_turtle) {
+      clearGlobalTurtle();
+    }
   }
 }
 
@@ -7479,6 +7620,18 @@ function nameToImg(name, defaultshape) {
     // Deal with unquoted "tan" and "dot".
     name = name.helpname || name.name;
   }
+  if (name.constructor === $) {
+    // Unwrap jquery objects.
+    if (!name.length) { return null; }
+    name = name.get(0);
+  }
+  if (name.tagName) {
+    if (name.tagName != 'CANVAS' && name.tagName != 'IMG' &&
+        name.tagName != 'VIDEO') {
+      return null;
+    }
+    return { img: name, css: { opacity: 1 } };
+  }
   var builtin = name.toString().trim().split(/\s+/),
       color = null,
       shape = null;
@@ -7556,6 +7709,7 @@ var entityMap = {
 };
 
 function escapeHtml(string) {
+  if (string == null) { return ""; }
   return String(string).replace(/[&<>"]/g, function(s) {return entityMap[s];});
 }
 
