@@ -585,14 +585,21 @@ function signUpAndSave() {
           info: 'Username must start with a letter.'
         };
       }
+      if (username && username.length > 20) {
+        return {
+          disable: true,
+          info: 'Username too long.'
+        };
+      }
       if (username && !/^[a-z][a-z0-9]*$/.test(username)) {
         return {
           disable: true,
           info: 'Invalid username.'
         };
       }
-      if (username && letterComplexity(username) <= 1) {
-        // Discourage users from choosing a username "aaaaaa".
+      if (username && (  // Discourage certain forms of usernames:
+          letterComplexity(username) <= 1 ||             // "aaaaa"
+          /(?:com|org|net|edu|mil)$/.test(username))) {  // "emailschooledu"
         return {
           disable: true,
           info: 'Name "' + username + '" reserved.'
