@@ -1778,7 +1778,8 @@ function getTurtleData(elem) {
       drawOnCanvas: null,
       quickpagexy: null,
       quickhomeorigin: null,
-      instrument: null
+      instrument: null,
+      stream: null
     });
   }
   return state;
@@ -2177,7 +2178,11 @@ function touchesPixel(elem, color) {
 //////////////////////////////////////////////////////////////////////////
 
 function applyImg(sel, img) {
-  if (sel[0].tagName == 'IMG' || sel[0].tagName == 'CANVAS') {
+  if (img.img) {
+    if (sel[0].tagName == 'CANVAS' || sel[0].tagName == img.img.tagName) {
+      applyLoadedImage(img.img, sel[0], img.css);
+    }
+  } else if (sel[0].tagName == 'IMG' || sel[0].tagName == 'CANVAS') {
     setImageWithStableOrigin(sel[0], img.url, img.css);
   } else {
     var props = {
@@ -2508,8 +2513,8 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
           state = $.data(elem, 'turtleData'),
           otx = ts.tx, oty = ts.ty, qpxy;
       if (parts.length < 1 || parts.length > 2) { return; }
-      if (parts.length >= 1) { ts[propx] = parts[0]; }
-      if (parts.length >= 2) { ts[propy] = parts[1]; }
+      if (parts.length >= 1) { ts[propx] = parseFloat(parts[0]); }
+      if (parts.length >= 2) { ts[propy] = parseFloat(parts[1]); }
       else if (!displace) { ts[propy] = ts[propx]; }
       else { ts[propy] = 0; }
       elem.style[transform] = writeTurtleTransform(ts);
@@ -2629,7 +2634,8 @@ function applyLoadedImage(loaded, elem, css) {
   // Read the element's origin before setting the image src.
   var oldOrigin = readTransformOrigin(elem),
       sel = $(elem),
-      isCanvas = (elem.tagName == 'CANVAS');
+      isCanvas = (elem.tagName == 'CANVAS'),
+      ctx;
   if (!isCanvas) {
     // Set the image to a 1x1 transparent GIF, and clear the transform origin.
     // (This "reset" code was original added in an effort to avoid browser
@@ -2645,14 +2651,25 @@ function applyLoadedImage(loaded, elem, css) {
   });
   if (loaded) {
     // Now set the source, and then apply any css requested.
-    elem.width = loaded.width;
-    elem.height = loaded.height;
-    if (!isCanvas) {
-      elem.src = loaded.src;
+    if (loaded.tagName == 'VIDEO') {
+      elem.width = $(loaded).width();
+      elem.height = $(loaded).height();
+      if (isCanvas) {
+        ctx = elem.getContext('2d');
+        ctx.clearRect(0, 0, elem.width, elem.height);
+        ctx.drawImage(loaded, 0, 0, loaded.videoWidth, loaded.videoHeight,
+            0, 0, elem.width, elem.height);
+      }
     } else {
-      var ctx = elem.getContext('2d');
-      ctx.clearRect(0, 0, loaded.width, loaded.height);
-      ctx.drawImage(loaded, 0, 0);
+      elem.width = loaded.width;
+      elem.height = loaded.height;
+      if (!isCanvas) {
+        elem.src = loaded.src;
+      } else {
+        ctx = elem.getContext('2d');
+        ctx.clearRect(0, 0, loaded.width, loaded.height);
+        ctx.drawImage(loaded, 0, 0);
+      }
     }
   }
   if (css) {
@@ -2792,6 +2809,76 @@ var Turtle = (function(_super) {
 
   return Turtle;
 
+})(Sprite);
+
+// Webcam extends Sprite, and draws a live video camera by default.
+var Webcam = (function(_super) {
+  __extends(Webcam, _super);
+  function Webcam(opts, context) {
+    var attrs = "", hassrc = false, hasautoplay = false, hasdims = false;
+    if ($.isPlainObject(opts)) {
+      for (key in opts) {
+        attrs += ' ' + key + '="' + escapeHtml(opts[key]) + '"';
+      }
+      hassrc = ('src' in opts);
+      hasautoplay = ('autoplay' in opts);
+      hasdims = ('width' in opts || 'height' in opts);
+      if (hasdims && !('height' in opts)) {
+        attrs += ' height=' + Math.round(opts.width * 3/4);
+      }
+      if (hasdims && !('width' in opts)) {
+        attrs += ' width=' + Math.round(opts.height * 4/3);
+      }
+    }
+    if (!hasautoplay) {
+      attrs += ' autoplay';
+    }
+    if (!hasdims) {
+      attrs += ' width=320 height=240';
+    }
+    Webcam.__super__.constructor.call(this, '<video' + attrs + '>');
+    if (!hassrc) {
+      this.capture();
+    }
+  }
+  Webcam.prototype.capture = function() {
+    return this.queue(function(next) {
+      var v = this,
+          getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia ||
+                         navigator.msGetUserMedia;
+      if (!getUserMedia) { next(); return; }
+      getUserMedia.call(navigator, {video: true}, function(stream) {
+        if (stream) {
+          var state = getTurtleData(v), k = ('' + Math.random()).substr(2);
+          if (state.stream) {
+            state.stream.stop();
+          }
+          state.stream = stream;
+          $(v).on('play.capture' + k, function() {
+            $(v).off('play.capture' + k);
+            next();
+          });
+          v.src = window.URL.createObjectURL(stream);
+        }
+      }, function() {
+        next();
+      });
+    });
+  };
+  // Disconnects the media stream.
+  Webcam.prototype.cut = function() {
+    return this.plan(function() {
+      var state = this.data('turtleData');
+      if (state.stream) {
+        state.stream.stop();
+        state.stream = null;
+      }
+      this.attr('src', '');
+    });
+  };
+  return Webcam;
 })(Sprite);
 
 // Piano extends Sprite, and draws a piano keyboard by default.
@@ -4069,7 +4156,7 @@ var Instrument = (function() {
           voice: {}
         },
         context = result, timbre,
-        j, header, stems, key = {}, accent = {slurred: 0}, out, firstvoice;
+        j, header, stems, key = {}, accent = {}, voiceid, out;
     // Shifts context to a voice with the given id given.  If no id
     // given, then just sticks with the current voice.  If the current
     // voice is unnamed and empty, renames the current voice.
@@ -4084,7 +4171,7 @@ var Instrument = (function() {
         accent = context.accent;
       } else {
         // Start a new voice.
-        context = { id: id, accent: {} };
+        context = { id: id, accent: { slurred: 0 } };
         result.voice[id] = context;
         accent = context.accent;
       }
@@ -4135,20 +4222,24 @@ var Instrument = (function() {
           key = keysig(header[2]);
           startVoiceContext(firstVoiceName());
         }
+      } else if (/^\s*(?:%.*)?$/.test(lines[j])) {
+        // Skip blank and comment lines.
+        continue;
       } else {
-        // Parse a non-header line, looking for notes.
-        out = {};
-        stems = parseABCNotes(lines[j], key, accent, out);
-        if (out.voiceid) {
-          // Handle a note line that starts with [V:voiceid] as speced.
-          // (actually, in practice you see V:voiceid\n lines.)
-          startVoiceContext(out.voiceid);
-        }
-        if (stems && stems.length) {
+        // A non-blank non-header line should have notes.
+        voiceid = peekABCVoice(lines[j]);
+        if (voiceid) {
+          // If it declares a voice id, respect it.
+          startVoiceContext(voiceid);
+        } else {
+          // Otherwise, start a default voice.
           if (context === result) {
-            // If no voice has been selected, then use the first voice.
             startVoiceContext(firstVoiceName());
           }
+        }
+        // Parse the notes.
+        stems = parseABCNotes(lines[j], key, accent);
+        if (stems && stems.length) {
           // Push the line of stems into the voice.
           if (!('stems' in context)) { context.stems = []; }
           context.stems.push.apply(context.stems, stems);
@@ -4313,6 +4404,12 @@ var Instrument = (function() {
     }
     return result;
   }
+  // Peeks and looks for a prefix of the form [V:voiceid].
+  function peekABCVoice(line) {
+    var match = /^\[V:([^\]\s]*)\]/.exec(line);
+    if (!match) return null;
+    return match[1];
+  }
   // Parses a single line of ABC notes (i.e., not a header line).
   //
   // We process an ABC song stream by dividing it into tokens, each of
@@ -4335,7 +4432,7 @@ var Instrument = (function() {
   // Then a song is just a sequence of stems interleaved with other
   // decorations such as dynamics markings and measure delimiters.
   var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
-  function parseABCNotes(str, key, accent, out) {
+  function parseABCNotes(str, key, accent) {
     var tokens = str.match(ABCtoken), result = [], parsed = null,
         index = 0, dotted = 0, beatlet = null, t;
     if (!tokens) {
@@ -4344,9 +4441,8 @@ var Instrument = (function() {
     while (index < tokens.length) {
       // Ignore %comments and !markings!
       if (/^[\s%]/.test(tokens[index])) { index++; continue; }
-      // Grab a voice id out of [V:id]
       if (/^\[V:\S*\]$/.test(tokens[index])) {
-        out.voiceid = tokens[index].substring(3, tokens[index].length - 1);
+        // Voice id from [V:id] is handled in peekABCVoice.
         index++;
         continue;
       }
@@ -4693,10 +4789,12 @@ var Instrument = (function() {
     // Handle mixed frations:
     ilen = 0;
     n = (m[1] ? parseFloat(m[1]) : 1);
-    while (ilen + 1 < m[1].length && n > d) {
-      ilen += 1
-      i = parseFloat(m[1].substring(0, ilen))
-      n = parseFloat(m[1].substring(ilen))
+    if (m[2]) {
+      while (ilen + 1 < m[1].length && n > d) {
+        ilen += 1
+        i = parseFloat(m[1].substring(0, ilen))
+        n = parseFloat(m[1].substring(ilen))
+      }
     }
     return i + (n / d);
   }
@@ -4886,6 +4984,48 @@ function makeWavetable(ac) {
 
 
 //////////////////////////////////////////////////////////////////////////
+// SYNC SUPPORT
+// sync() function
+//////////////////////////////////////////////////////////////////////////
+
+function sync() {
+  var elts = [], j, ready = [], completion = null, argcount = arguments.length;
+  // The optional last argument is a callback when the sync is triggered.
+  if (argcount && $.isFunction(arguments[argcount - 1])) {
+    completion = arguments[--argcount];
+  }
+  // Gather elements passed as arguments.
+  for (j = 0; j < argcount; ++j) {
+    if (arguments[j].constructor === $) {
+      elts.push.apply(elts, arguments[j].toArray());  // Unpack jQuery.
+    } else if ($.isArray(arguments[j])) {
+      elts.push.apply(elts, arguments[j]);  // Accept an array.
+    } else {
+      elts.push(arguments[j]);  // Individual elements.
+    }
+  }
+  elts = $.unique(elts);  // Remove duplicates.
+  function proceed() {
+    var cb = ready, j;
+    ready = null;
+    // Call completion before unblocking animation.
+    if (completion) { completion(); }
+    // Unblock all animation queues.
+    for (j = 0; j < cb.length; ++j) { cb[j](); }
+  }
+  for (j = 0; j < elts.length; ++j) {
+    $(elts[j]).queue(function(next) {
+      if (ready) {
+        ready.push(next);
+        if (ready.length == elts.length) {
+          proceed();
+        }
+      }
+    });
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
 // JQUERY REGISTRATION
 // Register all our hooks.
 //////////////////////////////////////////////////////////////////////////
@@ -4899,8 +5039,8 @@ $.extend(true, $, {
     turtleForward: makeTurtleForwardHook(),
     turtleTurningRadius: makeTurningRadiusHook(),
     turtlePosition: makeTurtleXYHook('turtlePosition', 'tx', 'ty', true),
-    turtlePositionX: makeTurtleHook('tx', identity, 'px', true),
-    turtlePositionY: makeTurtleHook('ty', identity, 'px', true),
+    turtlePositionX: makeTurtleHook('tx', parseFloat, 'px', true),
+    turtlePositionY: makeTurtleHook('ty', parseFloat, 'px', true),
     turtleRotation: makeTurtleHook('rot', maybeArcRotation, 'deg', true),
     turtleScale: makeTurtleXYHook('turtleScale', 'sx', 'sy', false),
     turtleScaleX: makeTurtleHook('sx', identity, '', false),
@@ -6576,6 +6716,9 @@ var dollar_turtle_methods = {
       instrument.silence();
     }
   }),
+  sync: wrapraw('sync',
+  ["<u>sync(t1, t2, t3,...)</u> " +
+      "Selected turtles wait for each other to stop."], sync),
   done: wrapraw('done',
   ["<u>done(fn)</u> Calls fn when animation is complete. Use with await: " +
       "<mark>await done defer()</mark>"],
@@ -6829,6 +6972,10 @@ var dollar_turtle_methods = {
   Piano: wrapraw('Piano',
   ["<u>new Piano(keys)</u> Make a new piano. " +
       "<mark>t = new Piano 88; t.play 'edcdeee'</mark>"], Piano),
+  Webcam: wrapraw('Webcam',
+  ["<u>new Webcam(options)</u> Make a new webcam. " +
+      "<mark>v = new Webcam; v.plan -> pic = new Sprite v</mark>"],
+  Webcam),
   Sprite: wrapraw('Sprite',
   ["<u>new Sprite({width:w,height:h,color:c})</u> " +
       "Make a new sprite to <mark>drawon</mark>. " +
@@ -7031,7 +7178,6 @@ $.turtle = function turtle(id, options) {
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
     global_turtle = selector[0];
-    $(document).on('DOMNodeRemoved.turtle', onDOMNodeRemoved);
   }
   // Set up global objects by id.
   if (!('ids' in options) || options.ids) {
@@ -7126,15 +7272,25 @@ function clearGlobalTurtle() {
   global_turtle_methods.length = 0;
 }
 
-function onDOMNodeRemoved(e) {
-  // Undefine global variable.
-  if (e.target.id && window[e.target.id] && window[e.target.id].jquery &&
-      window[e.target.id].length === 1 && window[e.target.id][0] === e.target) {
-    delete window[e.target.id];
-  }
-  // Clear global turtle.
-  if (e.target === global_turtle) {
-    clearGlobalTurtle();
+// Hook jQuery cleanData.
+var oldCleanData = $.cleanData;
+$.cleanData = function(elems) {
+  for (var i = 0, elem; (elem = elems[i]) !== undefined; i++) {
+    // Clean up media stream.
+    var state = $.data(elem, 'turtleData');
+    if (state && state.stream) {
+      state.stream.stop();
+    }
+    // Undefine global variablelem.
+    if (elem.id && window[elem.id] && window[elem.id].jquery &&
+        window[elem.id].length === 1 &&
+        window[elem.id][0] === elem) {
+      delete window[elem.id];
+    }
+    // Clear global turtlelem.
+    if (elem === global_turtle) {
+      clearGlobalTurtle();
+    }
   }
 }
 
@@ -7479,6 +7635,18 @@ function nameToImg(name, defaultshape) {
     // Deal with unquoted "tan" and "dot".
     name = name.helpname || name.name;
   }
+  if (name.constructor === $) {
+    // Unwrap jquery objects.
+    if (!name.length) { return null; }
+    name = name.get(0);
+  }
+  if (name.tagName) {
+    if (name.tagName != 'CANVAS' && name.tagName != 'IMG' &&
+        name.tagName != 'VIDEO') {
+      return null;
+    }
+    return { img: name, css: { opacity: 1 } };
+  }
   var builtin = name.toString().trim().split(/\s+/),
       color = null,
       shape = null;
@@ -7556,6 +7724,7 @@ var entityMap = {
 };
 
 function escapeHtml(string) {
+  if (string == null) { return ""; }
   return String(string).replace(/[&<>"]/g, function(s) {return entityMap[s];});
 }
 

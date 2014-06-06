@@ -696,19 +696,23 @@ function showShareDialog(opts) {
     });
     var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
     var tooltipTimer = null;
-    clipboardClient.on('complete', function(client, args) {
-      var button = this;
-      // Hide any other copy tooltips in this dialog.
-      dialog.find('button.copy').not(button).tooltipster('hide');
-      // Just flash tooltipster for a couple seconds, because mouseleave
-      // doesn't appear to work.
-      $(button).tooltipster('content', 'Copied!').tooltipster('show');
-      // Select the text in the copied field.
-      $(button).closest('.field').find('input').select();
-      clearTimeout(tooltipTimer);
-      tooltipTimer = setTimeout(function() {
-        $(button).tooltipster('hide');
-      }, 1500);
+    clipboardClient.on('ready', function() {
+      clipboardClient.on('copy', function(event) {
+        var button = event.target;
+        // Hide any other copy tooltips in this dialog.
+        dialog.find('button.copy').not(button).tooltipster('hide');
+        // Just flash tooltipster for a couple seconds, because mouseleave
+        // doesn't appear to work.
+        $(button).tooltipster('content', 'Copied!').tooltipster('show');
+        // Select the text in the copied field.
+        setTimeout(function() {
+          $(button).closest('.field').find('input').select();
+        }, 100);
+        clearTimeout(tooltipTimer);
+        tooltipTimer = setTimeout(function() {
+          $(button).tooltipster('hide');
+        }, 1500);
+      });
     });
     dialog.find('button.ok').focus();
   }

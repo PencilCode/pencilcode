@@ -30,8 +30,8 @@ module.exports = function(grunt) {
           destPrefix: 'site/top/lib/zeroclipboard'
         },
         files: {
-          'ZeroClipboard.js' : 'zeroclipboard/ZeroClipboard.js',
-          'ZeroClipboard.swf' : 'zeroclipboard/ZeroClipboard.swf'
+          'ZeroClipboard.js' : 'zeroclipboard/dist/ZeroClipboard.js',
+          'ZeroClipboard.swf' : 'zeroclipboard/dist/ZeroClipboard.swf'
         }
       },
       tooltipster: {
