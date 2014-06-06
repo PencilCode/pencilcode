@@ -4777,10 +4777,12 @@ var Instrument = (function() {
     // Handle mixed frations:
     ilen = 0;
     n = (m[1] ? parseFloat(m[1]) : 1);
-    while (ilen + 1 < m[1].length && n > d) {
-      ilen += 1
-      i = parseFloat(m[1].substring(0, ilen))
-      n = parseFloat(m[1].substring(ilen))
+    if (m[2]) {
+      while (ilen + 1 < m[1].length && n > d) {
+        ilen += 1
+        i = parseFloat(m[1].substring(0, ilen))
+        n = parseFloat(m[1].substring(ilen))
+      }
     }
     return i + (n / d);
   }
