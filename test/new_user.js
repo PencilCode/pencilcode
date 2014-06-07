@@ -172,7 +172,7 @@ describe('new user', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The message should report that the password is wrong.
-      assert.equal('Name \"bobatmitedu\" reserved.', result.infotext);
+      assert.equal('Name should not end with "edu".', result.infotext);
       done();
     });
   });

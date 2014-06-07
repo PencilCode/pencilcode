@@ -597,12 +597,21 @@ function signUpAndSave() {
           info: 'Invalid username.'
         };
       }
-      if (username && (  // Discourage certain forms of usernames:
-          letterComplexity(username) <= 1 ||             // "aaaaa"
-          /(?:com|org|net|edu|mil)$/.test(username))) {  // "emailschooledu"
+      if (username && letterComplexity(username) <= 1) {
+        // Discourage users from choosing a username "aaaaaa".
         return {
           disable: true,
           info: 'Name "' + username + '" reserved.'
+        };
+      }
+      if (username && username.length >= 8 &&
+          /(?:com|org|net|edu|mil)$/.test(username)) {
+        // Discourage users from choosing a username that looks like
+        // an email address or domain name.
+        return {
+          disable: true,
+          info: 'Name should not end with "' +
+              username.substr(username.length - 3) + '".'
         };
       }
       if (state.username.length < 3) {
