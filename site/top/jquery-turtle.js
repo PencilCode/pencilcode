@@ -2976,7 +2976,9 @@ var Piano = (function(_super) {
       height: Math.ceil(geom.kh + extra)
     });
     // The following is a simplistic wavetable simulation of a Piano sound.
-    this.css({ turtleTimbre: "wave:piano;" });
+    this.css({
+      turtleTimbre: ('timbre' in options) ? options.timbre : "piano"
+    });
     // Hook up events.
     this.on('noteon', function(e) {
       self.drawkey(e.midi, keycolor(e.midi));
@@ -3388,7 +3390,7 @@ function getTurtleInstrument(elem) {
   if (state.instrument) {
     return state.instrument;
   }
-  state.instrument = new Instrument();
+  state.instrument = new Instrument("piano");
   // Hook up noteon and noteoff events.
   var selector = $(elem);
   state.instrument.on('noteon', function(r) {
