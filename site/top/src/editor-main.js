@@ -585,6 +585,12 @@ function signUpAndSave() {
           info: 'Username must start with a letter.'
         };
       }
+      if (username && username.length > 20) {
+        return {
+          disable: true,
+          info: 'Username too long.'
+        };
+      }
       if (username && !/^[a-z][a-z0-9]*$/.test(username)) {
         return {
           disable: true,
@@ -596,6 +602,16 @@ function signUpAndSave() {
         return {
           disable: true,
           info: 'Name "' + username + '" reserved.'
+        };
+      }
+      if (username && username.length >= 8 &&
+          /(?:com|org|net|edu|mil)$/.test(username)) {
+        // Discourage users from choosing a username that looks like
+        // an email address or domain name.
+        return {
+          disable: true,
+          info: 'Name should not end with "' +
+              username.substr(username.length - 3) + '".'
         };
       }
       if (state.username.length < 3) {

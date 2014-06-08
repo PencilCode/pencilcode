@@ -119,7 +119,7 @@ describe('new user', function() {
       done();
     });
   });
-  it('should reject a bad username', function(done) {
+  it('should reject a low-complexity username', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Enter a low-complexity username, and click OK.
       $('.username').val('zkkg');
@@ -135,6 +135,44 @@ describe('new user', function() {
       assert.ifError(err);
       // The message should report that the password is wrong.
       assert.equal('Name \"zkkg\" reserved.', result.infotext);
+      done();
+    });
+  });
+  it('should reject a too-long username', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Enter a low-complexity username, and click OK.
+      $('.username').val('thisusernameistwenty1');
+      $('.username').trigger('keyup');
+    }, function() {
+      // Wait for the info prompt to show a message without "zkkg"
+      if (!$('.info').is(':visible')) return;
+      if ($('.info').text().match(/zkkg/)) return;
+      return {
+        infotext: $('.info').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // The message should report that the password is wrong.
+      assert.equal('Username too long.', result.infotext);
+      done();
+    });
+  });
+  it('should reject an email-looking username', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Enter a low-complexity username, and click OK.
+      $('.username').val('bobatmitedu');
+      $('.username').trigger('keyup');
+    }, function() {
+      // Wait for the info prompt to show a message without "too long"
+      if (!$('.info').is(':visible')) return;
+      if ($('.info').text().match(/too long/)) return;
+      return {
+        infotext: $('.info').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // The message should report that the password is wrong.
+      assert.equal('Name should not end with "edu".', result.infotext);
       done();
     });
   });
