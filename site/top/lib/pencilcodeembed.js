@@ -201,7 +201,6 @@
           var cbarray = that.callbacks[tag];
           for (var j = 0; j < cbarray.length; ++j) {
             var cb = cbarray[j];
-            console.log(tag, j, cb);
             if (cb) {
               cb.apply(that, data.args);
               handled = true;
