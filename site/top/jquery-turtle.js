@@ -367,7 +367,6 @@ THE SOFTWARE.
 var undefined = void 0,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
-    Pencil, Turtle,
     interrupted = false,
     async_pending = 0,
     global_plan_counter = 0;
@@ -2894,12 +2893,13 @@ var Piano = (function(_super) {
   //   lineWidth: the outline line width.
   //   lowest: the lowest key number (as a midi number).
   //   highest: the highest key number (as a midi number).
+  //   timbre: an Instrument timbre object or string.
   // Any subset of these properties may be supplied, and reasonable
   // defaults are chosen for everything else.  For example,
   // new Piano(88) will create a standard 88-key Piano keyboard.
   function Piano(options) {
     var aspect, defwidth, extra, firstwhite, height, width, lastwhite,
-        numwhite = null, self = this;
+        numwhite = null, self = this, key, timbre;
     options = parseOptionString(options, 'keys');
     // The purpose of the logic in the constructor below is to calculate
     // reasonable defaults for the geometry of the keyboard given any
@@ -2976,9 +2976,19 @@ var Piano = (function(_super) {
       height: Math.ceil(geom.kh + extra)
     });
     // The following is a simplistic wavetable simulation of a Piano sound.
-    this.css({
-      turtleTimbre: ('timbre' in options) ? options.timbre : "piano"
-    });
+    if ('timbre' in options) {
+      timbre = options.timbre;
+    } else {
+      // Allow timbre to be passed directly as options params.
+      for (key in Instrument.defaultTimbre) {
+        if (key in options) {
+          if (!timbre) { timbre = {}; }
+          timbre[key] = options[key];
+        }
+      }
+    }
+    if (!timbre) { timbre = 'piano'; }
+    this.css({ turtleTimbre: timbre });
     // Hook up events.
     this.on('noteon', function(e) {
       self.drawkey(e.midi, keycolor(e.midi));
@@ -2987,6 +2997,7 @@ var Piano = (function(_super) {
       self.drawkey(e.midi);
     });
     this.draw();
+    return this;
   }
 
   // Draws the key a midi number n, using the provided fill color
@@ -3468,7 +3479,7 @@ function audioCurrentStartTime() {
   // A delay could be added below to introduce a universal delay in
   // all beginning sounds (without skewing durations for scheduled
   // sequences).
-  atop.currentStart = atop.ac.currentTime /* + 0.0 delay */;
+  atop.currentStart = Math.max(0.25, atop.ac.currentTime /* + 0.0 delay */);
   setTimeout(function() { atop.currentStart = null; }, 0);
   return atop.currentStart;
 }
@@ -3978,6 +3989,15 @@ var Instrument = (function() {
     // If audio is not present, this is a no-op.
     if (!this._atop) { return; }
 
+    // Called with an object instead of listed args.
+    if (typeof(pitch) == 'object') {
+      if (velocity == null) velocity = pitch.velocity;
+      if (duration == null) duration = pitch.duration;
+      if (delay == null) delay = pitch.delay;
+      if (timbre == null) timbre = pitch.timbre;
+      pitch = pitch.pitch;
+    }
+
     // Convert pitch from various formats to Hz frequency and a midi num.
     var midi, frequency;
     if (!pitch) { pitch = 'C'; }
@@ -3991,6 +4011,22 @@ var Instrument = (function() {
         frequency = midiToFrequency(midi);
       } else {
         midi = frequencyToMidi(frequency);
+      }
+    }
+
+    if (!timbre) {
+      timbre = this._timbre;
+    }
+    // If there is a custom timbre, validate and copy it.
+    if (timbre !== this._timbre) {
+      var given = timbre, key;
+      timbre = {}
+      for (key in defaultTimbre) {
+        if (key in given) {
+          timbre[key] = given[key];
+        } else {
+          timbre[key] = defaulTimbre[key];
+        }
       }
     }
 
@@ -4023,7 +4059,6 @@ var Instrument = (function() {
       }
       this._queue.push(record);
       this._minQueueTime = Math.min(this._minQueueTime, record.time);
-
     }
   };
   // The low-level callback scheduling method.
@@ -4053,6 +4088,10 @@ var Instrument = (function() {
         opts[k] = args[0][k];
       }
       argindex = 1;
+      // If a song is supplied by options object, process it.
+      if (opts.song) {
+        args.push(opts.song);
+      }
     }
     // Parse any number of ABC files as input.
     for (; argindex < args.length; ++argindex) {
@@ -4075,6 +4114,8 @@ var Instrument = (function() {
     }
     // Default tempo to 120 if nothing else is specified.
     if (!opts.tempo) { opts.tempo = 120; }
+    // Default volume to 1 if nothing is specified.
+    if (opts.volume == null) { opts.volume = 1; }
     beatsecs = 60.0 / opts.tempo;
     // Schedule all notes from all the files.
     for (k = 0; k < files.length; ++k) {
@@ -4109,7 +4150,7 @@ var Instrument = (function() {
               // Separate unslurred notes by about a 30th of a second.
               secs -= 1/32;
             }
-            v = (note.velocity || 1) * attenuate;
+            v = (note.velocity || 1) * attenuate * opts.volume;
             // This is innsermost part of the inner loop!
             this.tone(                     // Play the tone:
               note.pitch,                  // at the given pitch
@@ -4802,7 +4843,7 @@ var Instrument = (function() {
   }
 
   // The default sound is a square wave with a pretty quick decay to zero.
-  var defaultTimbre = {
+  var defaultTimbre = Instrument.defaultTimbre = {
     wave: 'square',   // Oscillator type.
     gain: 0.1,        // Overall gain at maximum attack.
     attack: 0.002,    // Attack time at the beginning of a tone.
@@ -4842,10 +4883,30 @@ var Instrument = (function() {
     return result;
   }
 
+  var whiteNoiseBuf = null;
+  function getWhiteNoiseBuf() {
+    if (whiteNoiseBuf == null) {
+      var ac = getAudioTop().ac,
+          bufferSize = 2 * ac.sampleRate,
+          whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
+          output = whiteNoiseBuf.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+    }
+    return whiteNoiseBuf;
+  }
+
   // This utility function creates an oscillator at the given frequency
   // and the given wavename.  It supports lookups in a static wavetable,
   // defined right below.
   function makeOscillator(atop, wavename, freq) {
+    if (wavename == 'noise') {
+      var whiteNoise = atop.ac.createBufferSource();
+      whiteNoise.buffer = getWhiteNoiseBuf();
+      whiteNoise.loop = true;
+      return whiteNoise;
+    }
     var wavetable = atop.wavetable, o = atop.ac.createOscillator(),
         k, pwave, bwf, wf;
     try {
@@ -6551,6 +6612,10 @@ function deprecate(map, oldname, newname) {
     }
     // map[oldname] = map[newname];
     return map[newname].apply(this, arguments);
+  }
+  if (map[newname].__super__) {
+    // Handle legacy class names by extending the correct class.
+    __extends(map[oldname], map[newname]);
   }
 }
 deprecate(turtlefn, 'direct', 'plan');
