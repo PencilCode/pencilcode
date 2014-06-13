@@ -73,8 +73,9 @@ var state = {
 //
 
 ZeroClipboard.config({
-   moviePath : '/lib/zeroclipboard/ZeroClipboard.swf',
-   allowScriptAccess : 'always'
+   swfPath: '/lib/zeroclipboard/ZeroClipboard.swf',
+   trustedDomains: [window.location.hostname, window.pencilcode.domain],
+   allowScriptAccess: 'always'
 });
 
 window.pencilcode.view = {
