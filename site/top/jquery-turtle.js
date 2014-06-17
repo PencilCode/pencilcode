@@ -2899,8 +2899,11 @@ var Piano = (function(_super) {
   // new Piano(88) will create a standard 88-key Piano keyboard.
   function Piano(options) {
     var aspect, defwidth, extra, firstwhite, height, width, lastwhite,
-        numwhite = null, self = this, key, timbre;
+        numwhite = null, self = this, key, timbre, lowest, highest;
     options = parseOptionString(options, 'keys');
+    // Convert options lowest and highest to midi numbers, if given.
+    lowest = Instrument.pitchToMidi(options.lowest);
+    highest = Instrument.pitchToMidi(options.highest);
     // The purpose of the logic in the constructor below is to calculate
     // reasonable defaults for the geometry of the keyboard given any
     // subset of options.  The geometric measurments go into _geom.
@@ -2918,8 +2921,8 @@ var Piano = (function(_super) {
     // But if a key count is specified, default width to keep each white
     // key (i.e., 7/12ths of the keys) about 5:1 tall and the total
     // keyboard area about 42000 pixels.
-    if ('lowest' in options && 'highest' in options) {
-      numwhite = wcp(options.highest) - wcp(options.lowest) + 1;
+    if (lowest != null && highest != null) {
+      numwhite = wcp(highest) - wcp(lowest) + 1;
     } else if ('keys' in options) {
       numwhite = Math.ceil(options.keys / 12 * 7);
     }
@@ -2944,11 +2947,14 @@ var Piano = (function(_super) {
     // white key is 42 + (21 - 1) / 2 = 52, the B ten white keys above the F.
     lastwhite = Math.min(wcp(108), Math.ceil(42 + (numwhite - 1) / 2));
     // If the highest midi key is not specified, then use the default.
-    geom.highest = ('highest' in options) ? options.highest :
-      ('lowest' in options && 'keys' in options) ?
-      options.lowest + options.keys - 1 : mcp(lastwhite);
+    geom.highest =
+      (highest != null) ? highest :
+      (lowest != null && 'keys' in options) ? lowest + options.keys - 1 :
+      (lowest != null) ? mcp(wcp(lowest) + numwhite - 1) :
+      mcp(lastwhite);
     // If the lowest midi key is not specified, then pick one.
-    geom.lowest = ('lowest' in options) ? options.lowest :
+    geom.lowest =
+      (lowest != null) ? lowest :
       ('keys' in options) ? geom.highest - options.keys + 1 :
       Math.min(geom.highest, mcp(wcp(geom.highest) - numwhite + 1));
     // Final geometry computation.
@@ -2992,6 +2998,8 @@ var Piano = (function(_super) {
     // Hook up events.
     this.on('noteon', function(e) {
       self.drawkey(e.midi, keycolor(e.midi));
+      var ctx = self.canvas().getContext('2d');
+      drawkeytext(ctx, geom, e.midi, 'white');
     });
     this.on('noteoff', function(e) {
       self.drawkey(e.midi);
@@ -3072,6 +3080,59 @@ var Piano = (function(_super) {
   function keyshape(n) {
     return [1, 8, 2, 9, 3, 4, 10, 5, 11, 6, 12, 7][((n % 12) + 12) % 12];
   };
+
+  function keybottomcenter(ctx, geom, n) {
+    var ks, startx, starty;
+    // The lower-left corner of the nearest (rounding left) white key.
+    startx = geom.halfex + geom.kw * wcp(n) - geom.leftpx;
+    starty = geom.halfex + geom.kh - geom.bkh * 0.1;
+    // Compute the 12 cases of key shapes, plus special cases for the ends.
+    ks = keyshape(n);
+    if (isblackkey(n)) {
+      starty = geom.halfex + geom.bkh - geom.bkh * 0.1;
+      switch (ks) {
+        case 8:  // C#
+          startx += geom.ckw;
+          break;
+        case 9:  // D#
+          startx += 2 * geom.ckw + geom.bkw - geom.kw;
+          break;
+        case 10: // F#
+          startx += geom.fkw;
+          break;
+        case 11: // G#
+          startx += 2 * geom.fkw + geom.bkw - geom.kw;
+          break;
+        case 12: // A#
+          startx += 3 * geom.fkw + 2 * geom.bkw - 2 * geom.kw;
+      }
+      startx += geom.bkw / 2;
+    } else {
+      startx += geom.kw / 2;
+    }
+    return { x: startx, y: starty };
+  }
+
+  function drawkeytext(ctx, geom, n, color) {
+    var fsize = Math.floor(geom.bkw * 0.8),
+        loc = keybottomcenter(ctx, geom, n),
+        text = Instrument.midiToPitch(n);
+    ctx.save();
+    /*
+    ctx.translate(loc.x, loc.y);
+    ctx.rotate(Math.PI / 2);
+    ctx.font = fsize + 'px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = color;
+    ctx.fillText(text, 0, fsize / 2);
+    */
+    ctx.translate(loc.x, loc.y);
+    ctx.font = 'bold ' + fsize + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = color;
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
 
   // Given a 2d drawing context and geometry params, outlines midi key #n.
   function keyoutline(ctx, geom, n) {
@@ -4434,7 +4495,7 @@ var Instrument = (function() {
       key = /^[a-g][#b]?/.exec(k) || '';
     }
     var result = accidentals(sigcodes[key]);
-    var extras = keyname.substr(key.length).match(/(__|_|=|\^\^|\^)[a-g]/ig);
+    var extras = keyname.substr(key.length).match(/(_+|=|\^+)[a-g]/ig);
     if (extras) {
       for (j = 0; j < extras.length; ++j) {
         var note = extras[j].charAt(extras[j].length - 1).toUpperCase();
@@ -4474,7 +4535,7 @@ var Instrument = (function() {
   //
   // Then a song is just a sequence of stems interleaved with other
   // decorations such as dynamics markings and measure delimiters.
-  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|\[|\]|>+|<+|(?:(?:\^\^|\^|__|_|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
+  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|\[|\]|>+|<+|(?:(?:\^+|_+|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
   function parseABCNotes(str, key, accent) {
     var tokens = str.match(ABCtoken), result = [], parsed = null,
         index = 0, dotted = 0, beatlet = null, t;
@@ -4781,7 +4842,7 @@ var Instrument = (function() {
   // that have accumulated within the measure, and also saving
   // explicit accidentals to continue to apply in the measure.
   function applyAccent(pitch, key, accent) {
-    var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])(.*)$/.exec(pitch), letter;
+    var m = /^(\^+|_+|=|)([A-Ga-g])(.*)$/.exec(pitch), letter;
     if (!m) { return pitch; }
     // Note that an accidental in one octave applies in other octaves.
     letter = m[2].toUpperCase();
@@ -4805,19 +4866,38 @@ var Instrument = (function() {
   function midiToFrequency(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
+  // Some constants.
+  var noteNum =
+      {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};
+  var accSym =
+      { '^':1, '': 0, '=':0, '_':-1 };
+  var noteName =
+      ['C', '^C', 'D', '_E', 'E', 'F', '^F', 'G', '_A', 'A', '_B', 'B',
+       'c', '^c', 'd', '_e', 'e', 'f', '^f', 'g', '_a', 'a', '_b', 'b'];
   // Converts a frequency in Hz to the closest midi number.
   function frequencyToMidi(freq) {
     return Math.round(69 + Math.log(freq / 440) * 12 / Math.LN2);
   }
   // Converts an ABC pitch (such as "^G,,") to a midi note number.
   function pitchToMidi(pitch) {
-    var m = /^(\^\^|\^|__|_|=|)([A-Ga-g])([,']*)$/.exec(pitch);
+    var m = /^(\^+|_+|=|)([A-Ga-g])([,']*)$/.exec(pitch);
     if (!m) { return null; }
-    var n = {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};
-    var a = { '^^':2, '^':1, '': 0, '=':0, '_':-1, '__':-2 };
     var octave = m[3].replace(/,/g, '').length - m[3].replace(/'/g, '').length;
-    var semitone = n[m[2]] + a[m[1]] + 12 * octave;
+    var semitone =
+        noteNum[m[2]] + accSym[m[1].charAt(0)] * m[1].length + 12 * octave;
     return semitone + 60; // 60 = midi code middle "C".
+  }
+  // Converts a midi number to an ABC notation pitch.
+  function midiToPitch(midi) {
+    var index = ((midi - 72) % 12);
+    if (midi > 60 || index != 0) { index += 12; }
+    var octaves = Math.round((midi - index - 60) / 12),
+        result = noteName[index];
+    while (octaves != 0) {
+      result += octaves > 0 ? "'" : ",";
+      octaves += octaves > 0 ? -1 : 1;
+    }
+    return result;
   }
   // Converts an ABC pitch to a frequency in Hz.
   function pitchToFrequency(pitch) {
@@ -4942,6 +5022,18 @@ var Instrument = (function() {
     }
     o.frequency.value = freq;
     return o;
+  }
+
+  // Accepts either an ABC pitch or a midi number and converts to midi.
+  Instrument.pitchToMidi = function(n) {
+    if (typeof(n) == 'string') { return pitchToMidi(n); }
+    return n;
+  }
+
+  // Accepts either an ABC pitch or a midi number and converts to ABC pitch.
+  Instrument.midiToPitch = function(n) {
+    if (typeof(n) == 'number') { return midiToPitch(n); }
+    return n;
   }
 
   return Instrument;
@@ -8060,7 +8152,8 @@ function plainTextPrint() {
 // text labels to functions.
 function menu(choices, fn) {
   var result = $('<form>')
-          .css({display:'table'}).submit(function(){return false;}),
+          .css({display:'table',marginLeft:'20px'})
+          .submit(function(){return false;}),
       triggered = false,
       count = 0,
       cursor = 0,
