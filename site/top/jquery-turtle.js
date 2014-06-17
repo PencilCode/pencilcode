@@ -2998,8 +2998,6 @@ var Piano = (function(_super) {
     // Hook up events.
     this.on('noteon', function(e) {
       self.drawkey(e.midi, keycolor(e.midi));
-      var ctx = self.canvas().getContext('2d');
-      drawkeytext(ctx, geom, e.midi, 'white');
     });
     this.on('noteoff', function(e) {
       self.drawkey(e.midi);
@@ -3080,59 +3078,6 @@ var Piano = (function(_super) {
   function keyshape(n) {
     return [1, 8, 2, 9, 3, 4, 10, 5, 11, 6, 12, 7][((n % 12) + 12) % 12];
   };
-
-  function keybottomcenter(ctx, geom, n) {
-    var ks, startx, starty;
-    // The lower-left corner of the nearest (rounding left) white key.
-    startx = geom.halfex + geom.kw * wcp(n) - geom.leftpx;
-    starty = geom.halfex + geom.kh - geom.bkh * 0.1;
-    // Compute the 12 cases of key shapes, plus special cases for the ends.
-    ks = keyshape(n);
-    if (isblackkey(n)) {
-      starty = geom.halfex + geom.bkh - geom.bkh * 0.1;
-      switch (ks) {
-        case 8:  // C#
-          startx += geom.ckw;
-          break;
-        case 9:  // D#
-          startx += 2 * geom.ckw + geom.bkw - geom.kw;
-          break;
-        case 10: // F#
-          startx += geom.fkw;
-          break;
-        case 11: // G#
-          startx += 2 * geom.fkw + geom.bkw - geom.kw;
-          break;
-        case 12: // A#
-          startx += 3 * geom.fkw + 2 * geom.bkw - 2 * geom.kw;
-      }
-      startx += geom.bkw / 2;
-    } else {
-      startx += geom.kw / 2;
-    }
-    return { x: startx, y: starty };
-  }
-
-  function drawkeytext(ctx, geom, n, color) {
-    var fsize = Math.floor(geom.bkw * 0.8),
-        loc = keybottomcenter(ctx, geom, n),
-        text = Instrument.midiToPitch(n);
-    ctx.save();
-    /*
-    ctx.translate(loc.x, loc.y);
-    ctx.rotate(Math.PI / 2);
-    ctx.font = fsize + 'px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillStyle = color;
-    ctx.fillText(text, 0, fsize / 2);
-    */
-    ctx.translate(loc.x, loc.y);
-    ctx.font = 'bold ' + fsize + 'px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = color;
-    ctx.fillText(text, 0, 0);
-    ctx.restore();
-  }
 
   // Given a 2d drawing context and geometry params, outlines midi key #n.
   function keyoutline(ctx, geom, n) {
