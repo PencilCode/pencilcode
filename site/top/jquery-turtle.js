@@ -6784,6 +6784,9 @@ var dollar_turtle_methods = {
     },
     eval: function(code, scope) {
       return debug.eval(code, scope);
+    },
+    addEvalPump: function(name, pump, pumpthis) {
+      return debug.addEvalPump(name, pump, pumpthis);
     }
   }),
   append: wrapraw('append',
@@ -7043,8 +7046,7 @@ var dollar_turtle_methods = {
       "<mark>if pressed 'a' then write 'a was pressed'</mark>",
    "<u>pressed.list()</u> Returns a list of pressed keys, by name. " +
       "<mark>write 'Pressed keys: ' + pressed.list().join(',')</mark>"
-  ], pressedKey),
-  help: globalhelp
+  ], pressedKey)
 };
 
 var extrahelp = {
@@ -8247,18 +8249,17 @@ var debug = {
         this.ide = parent.ide;
         this.ide.bindframe(window);
         this.attached = true;
+        if (window.addEventListener) {
+          window.addEventListener('error', function(event) {
+            // An error event will highlight the error line.
+            debug.reportEvent('error', [event]);
+          });
+        }
       }
     } catch(e) {
+      // Unable to access parent frame - may be cross-domain.
       this.ide = null;
       this.attached = false;
-    }
-    if (this.attached) {
-      if (window.addEventListener) {
-        window.addEventListener('error', function(event) {
-          // An error event will highlight the error line.
-          debug.reportEvent('error', [event]);
-        });
-      }
     }
   },
   attached: false,
@@ -8310,251 +8311,6 @@ function cstring(s) {
     return '\\x' + temp.substring(temp.length - 2);
   }
   return '"' + s.replace(/[\0-\x1f\x7f-\x9f"\\]/g, cescape) + '"';
-}
-
-<<<<<<< HEAD
-function seehide() {
-  $('#_testpanel').hide();
-}
-function seeshow() {
-  $('#_testpanel').show();
-}
-function seevisible() {
-  return $('#_testpanel').is(':visible');
-}
-function seeenter(text) {
-  $('#_testinput').val(text);
-}
-function seeclear() {
-  if (!addedpanel) { return; }
-  $('#_testlog').find('._log').not('#_testpaneltitle').remove();
-}
-function promptcaret(color) {
-  return '<samp class="_logcaret" style="color:' + color + ';"></samp>';
-}
-function getSelectedText(){
-    if(window.getSelection) { return window.getSelection().toString(); }
-    else if(document.getSelection) { return document.getSelection(); }
-    else if(document.selection) {
-        return document.selection.createRange().text; }
-}
-function formattitle(title) {
-  return '<samp class="_log" id="_testpaneltitle" style="font-weight:bold;">' +
-      title + '</samp>';
-}
-var noLocalStorage = null;
-function readlocalstorage() {
-  if (!uselocalstorage) {
-    return;
-  }
-  var state = { height: panelheight, history: [] }, result;
-  try {
-    result = window.JSON.parse(window.localStorage[uselocalstorage]);
-  } catch(e) {
-    result = noLocalStorage || {};
-  }
-  if (result && result.slice && result.length) {
-    // if result is an array, then it's just the history.
-    state.history = result;
-    return state;
-  }
-  $.extend(state, result);
-  return state;
-}
-function updatelocalstorage(state) {
-  if (!uselocalstorage) {
-    return;
-  }
-  var stored = readlocalstorage(), changed = false;
-  if ('history' in state &&
-      state.history.length &&
-      (!stored.history.length ||
-      stored.history[stored.history.length - 1] !==
-      state.history[state.history.length - 1])) {
-    stored.history.push(state.history[state.history.length - 1]);
-    changed = true;
-  }
-  if ('height' in state && state.height !== stored.height) {
-    stored.height = state.height;
-    changed = true;
-  }
-  if (changed) {
-    try {
-      window.localStorage[uselocalstorage] = window.JSON.stringify(stored);
-    } catch(e) {
-      noLocalStorage = stored;
-    }
-  }
-}
-function wheight() {
-  return window.innerHeight || $(window).height();
-}
-function tryinitpanel() {
-  if (addedpanel) {
-    if (paneltitle) {
-      if ($('#_testpaneltitle').length) {
-        $('#_testpaneltitle').html(paneltitle);
-      } else {
-        $('#_testlog').prepend(formattitle(paneltitle));
-      }
-    }
-    $('#_testpanel').show();
-  } else {
-    if (!window.document.getElementById('_testlog') && window.document.body) {
-      initlogcss();
-      var state = readlocalstorage();
-      var titlehtml = (paneltitle ? formattitle(paneltitle) : '');
-      if (state.height > wheight() - 50) {
-        state.height = Math.min(wheight(), Math.max(10, wheight() - 50));
-      }
-      $('body').prepend(
-        '<samp id="_testpanel" class="turtlefield" ' +
-            'style="overflow:hidden;z-index:99;' +
-            'position:fixed;bottom:0;left:0;width:100%;height:' + state.height +
-            'px;background:rgba(240,240,240,0.8);' +
-            'font:10pt monospace;' +
-            // This last bit works around this position:fixed bug in webkit:
-            // https://code.google.com/p/chromium/issues/detail?id=128375
-            '-webkit-transform:translateZ(0);">' +
-          '<samp id="_testdrag" style="' +
-              'cursor:row-resize;height:6px;width:100%;' +
-              'display:block;background:lightgray"></samp>' +
-          '<samp id="_testscroll" style="overflow-y:scroll;overflow-x:hidden;' +
-             'display:block;width:100%;height:' + (state.height - 6) + 'px;">' +
-            '<samp id="_testlog" style="display:block">' +
-            titlehtml + '</samp>' +
-            '<samp class="_log" style="position:relative;display:block;">' +
-            promptcaret('blue') +
-            '<input id="_testinput" class="_log" style="width:100%;' +
-                'margin:0;border:0;font:inherit;' +
-                'background:rgba(255,255,255,0.8);">' +
-           '</samp>' +
-        '</samp>');
-      addedpanel = true;
-      flushqueue();
-      var historyindex = 0;
-      var historyedited = {};
-      $('#_testinput').on('keydown', function(e) {
-        if (e.which == 13) {
-          // Handle the Enter key.
-          var text = $(this).val();
-          $(this).val('');
-          // Save (nonempty, nonrepeated) commands to history and localStorage.
-          if (text.trim().length &&
-              (!state.history.length ||
-               state.history[state.history.length - 1] !== text)) {
-            state.history.push(text);
-            updatelocalstorage({ history: [text] });
-          }
-          // Reset up/down history browse state.
-          historyedited = {};
-          historyindex = 0;
-          // Copy the entered prompt into the log, with a grayed caret.
-          loghtml('<samp class="_log" style="margin-left:-1em;">' +
-                  promptcaret('lightgray') +
-                  htmlescape(text) + '</samp>');
-          $(this).select();
-          // Deal with the ":scope" command
-          if (text.trim().length && text.trim()[0] == ':') {
-            var scopename = text.trim().substring(1).trim();
-            if (!scopename || scopes.hasOwnProperty(scopename)) {
-              currentscope = scopename;
-              var desc = scopename ? 'scope ' + scopename : 'default scope';
-              loghtml('<span style="color:blue">switched to ' + desc + '</span>');
-            } else {
-              loghtml('<span style="color:red">no scope ' + scopename + '</span>');
-            }
-            return;
-          }
-          // When interacting with the see panel, first turn the interrupt
-          // flag off to allow commands to operate after an interrupt.
-          $.turtle.interrupt('reset');
-          // Actually execute the command and log the results (or error).
-          var hooked = false;
-          try {
-            var result;
-            try {
-              result = seeeval(currentscope, text);
-            } finally {
-              if (consolehook && consolehook(text, result)) {
-                hooked = true;
-              } else {
-                // Show the result (unless abbreviated).
-                for (var j = abbreviate.length - 1; j >= 0; --j) {
-                  if (result === abbreviate[j]) break;
-                }
-                if (j < 0) {
-                  loghtml(repr(result));
-                }
-              }
-            }
-          } catch (e) {
-            // Show errors (unless hooked).
-            if (!hooked) {
-              see(e);
-            }
-          }
-        } else if (e.which == 38 || e.which == 40) {
-          // Handle the up and down arrow keys.
-          // Stow away edits in progress (without saving to history).
-          historyedited[historyindex] = $(this).val();
-          // Advance the history index up or down, pegged at the boundaries.
-          historyindex += (e.which == 38 ? 1 : -1);
-          historyindex = Math.max(0, Math.min(state.history.length,
-              historyindex));
-          // Show the remembered command at that slot.
-          var newval = historyedited[historyindex] ||
-              state.history[state.history.length - historyindex];
-          if (typeof newval == 'undefined') { newval = ''; }
-          $(this).val(newval);
-          this.selectionStart = this.selectionEnd = newval.length;
-          e.preventDefault();
-        }
-      });
-      $('#_testdrag').on('mousedown', function(e) {
-        var drag = this,
-            dragsum = $('#_testpanel').height() + e.pageY,
-            barheight = $('#_testdrag').height(),
-            dragwhich = e.which,
-            dragfunc;
-        if (drag.setCapture) { drag.setCapture(true); }
-        dragfunc = function dragresize(e) {
-          if (e.type != 'blur' && e.which == dragwhich) {
-            var winheight = wheight();
-            var newheight = Math.max(barheight, Math.min(winheight,
-                dragsum - e.pageY));
-            var complete = stickscroll();
-            $('#_testpanel').height(newheight);
-            $('#_testscroll').height(newheight - barheight);
-            complete();
-          }
-          if (e.type == 'mouseup' || e.type == 'blur' ||
-              e.type == 'mousemove' && e.which != dragwhich) {
-            $(window).off('mousemove mouseup blur', dragfunc);
-            if (document.releaseCapture) { document.releaseCapture(); }
-            if ($('#_testpanel').height() != state.height) {
-              state.height = $('#_testpanel').height();
-              updatelocalstorage({ height: state.height });
-            }
-          }
-        };
-        $(window).on('mousemove mouseup blur', dragfunc);
-        return false;
-      });
-      $('#_testpanel').on('mouseup', function(e) {
-        if (getSelectedText()) { return; }
-        // Focus without scrolling.
-        var scrollpos = $('#_testscroll').scrollTop();
-        $('#_testinput').focus();
-        $('#_testscroll').scrollTop(scrollpos);
-      });
-    }
-  }
-  if (inittesttimer && addedpanel) {
-    clearTimeout(inittesttimer);
-  } else if (!addedpanel && !inittesttimer) {
-    inittesttimer = setTimeout(tryinitpanel, 100);
-  }
 }
 
 debug.init();

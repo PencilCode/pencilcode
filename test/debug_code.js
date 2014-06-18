@@ -81,6 +81,8 @@ describe('code debugger', function() {
         if (!$('.preview iframe')[0].contentWindow.log) return;
         // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.log.eval;
+        if (!seval) return;
+        if (!seval('window')) return;
         // And also wait for the turtle to start moving.
         if (seval('getxy()')[1] < 10) return;
         return {
@@ -122,6 +124,8 @@ describe('code debugger', function() {
         if (!$('.preview iframe')[0].contentWindow.log) return;
         // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.log.eval;
+        if (!seval) return;
+        if (!seval('window')) return;
         // Reset interrupts so that we can evaluate some expressions.
         seval('interrupt("reset")');
         // And also wait for the turtle to start moving.

@@ -23,6 +23,7 @@ var cachedParsedStack = {}; // parsed stack traces for currently-running code.
 var pollTimer = null;       // poll for stop button.
 var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
 var throwNeeded = !(new Error).stack;
+var evalPumps = {};
 
 Error.stackTraceLimit = 20;
 
@@ -39,6 +40,7 @@ function bindframe(w) {
   everyRecord = [];
   cachedSourceMaps = {};
   cachedParseStack = {};
+  evalPumps = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   firstSessionId = nextDebugId;
@@ -101,6 +103,19 @@ var debug = window.ide = {
   },
   setEditorText: function(text) {
     view.changePaneEditorText(view.paneid('left'), text);
+  },
+  addEvalPump: function(name, pump, pumpthis) {
+    evalPumps[name] = {
+      name: name,
+      pump: pump,
+      pumpthis: pumpthis
+    };
+  },
+  eval: function(code, name) {
+    var pump = evalPumps[name || ''];
+    if (pump) {
+      return pump.pump.call(pump.pumpthis, code);
+    }
   }
 };
 

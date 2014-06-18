@@ -1007,8 +1007,8 @@ function evalInRunningPane(pane, code) {
   var iframe = preview.find('iframe');
   if (!iframe.length) { return [null, 'error: not running (no iframe)']; }
   try {
-    if (typeof(iframe[0].contentWindow.see) == 'function') {
-      return [iframe[0].contentWindow.see.eval(code), null];
+    if (typeof(iframe[0].contentWindow.log) == 'function') {
+      return [iframe[0].contentWindow.log.eval(code), null];
     }
   } catch(e) {
     return [null, 'error: ' + e.message];

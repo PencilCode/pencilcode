@@ -165,11 +165,12 @@ describe('proxy program', function() {
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
+        if (!$('.preview iframe')[0].contentWindow.log) return;
         // Evaluate some expression in the coffeescript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        var seval = $('.preview iframe')[0].contentWindow.log.eval;
         // And also wait for the turtle to start turning, then stop moving.
         if (!seval) return;
+        if (!seval('window')) return;
         if (!seval('window.d')) return;
         var d = seval('window.d');
         return {

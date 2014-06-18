@@ -45,7 +45,7 @@ function wrapTurtle(text, pragmasOnly, setupScript) {
     '<!doctype html>\n<html>\n<body>' +
     scripts.join('') +
     '<script type="text/coffeescript">\n' +
-    'window.see && window.see.init(eval(window.see.cs))\n\n' +
+    'log.addEvalPump("", ((c) -> eval c), this)\n' +
     (pragmasOnly ? '' : text) + '\n<\057script></body></html>');
   return result;
 }

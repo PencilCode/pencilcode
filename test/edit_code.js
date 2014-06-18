@@ -237,6 +237,8 @@ describe('code editor', function() {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.log.eval;
+        if (!seval) return;
+        if (!seval('window')) return;
         // And also wait for the turtle to start turning, then stop moving.
         if (!seval('direction()')) return;
         if (seval('turtle.queue().length')) return;
