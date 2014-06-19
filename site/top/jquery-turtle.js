@@ -2110,7 +2110,7 @@ function touchesPixel(elem, color) {
   if (!elem) { return false; }
   var rgba = rgbaForColor(color),
       canvas = getCanvasForReading(elem);
-  if (!canvas) { return rgba[3] == 0; }
+  if (!canvas) { return rgba && rgba[3] == 0; }
   var trans = computeCanvasPageTransform(canvas),
       originalc = getCornersInPageCoordinates(elem),
       c = transformPoints(trans, originalc),
@@ -2141,7 +2141,7 @@ function touchesPixel(elem, color) {
   }
   octx.closePath();
   octx.clip();
-  if (rgba[3] == 0) {
+  if (rgba && rgba[3] == 0) {
     // If testing for transparent, should clip with black, not transparent.
     octx.fillRect(0, 0, w, h);
   } else {
@@ -5810,7 +5810,7 @@ var turtlefn = {
         this.css('turtlePenDown', penstyle);
         moved = true;
       } else {
-        if (lineWidth !== undefined) {
+        if (lineWidth) {
           penstyle += ";lineWidth:" + lineWidth;
         }
         this.css('turtlePenStyle', penstyle);
