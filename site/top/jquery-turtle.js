@@ -5089,7 +5089,7 @@ function makeWavetable(ac) {
 //////////////////////////////////////////////////////////////////////////
 
 function gatherelts(args) {
-  var elts = [], j, argcount = args.length;
+  var elts = [], j, argcount = args.length, completion;
   // The optional last argument is a callback when the sync is triggered.
   if (argcount && $.isFunction(args[argcount - 1])) {
     completion = args[--argcount];
@@ -5104,11 +5104,15 @@ function gatherelts(args) {
       elts.push(args[j]);  // Individual elements.
     }
   }
-  return $.unique(elts);  // Remove duplicates.
+  return {
+    elts: $.unique(elts),  // Remove duplicates.
+    completion: completion
+  };
 }
 
 function sync() {
-  var elts = gatherelts(arguments), j, ready = [];
+  var a = gatherelts(arguments),
+      elts = a.elts, completion = a.completion, j, ready = [];
   function proceed() {
     var cb = ready, j;
     ready = null;
@@ -5130,10 +5134,13 @@ function sync() {
 }
 
 function remove() {
-  var elts = gatherelts(arguments), j;
+  var a = gatherelts(arguments),
+      elts = a.elts, completion = a.completion, j, count = elts.length;
   for (j = 0; j < elts.length; ++j) {
     $(elts[j]).queue(function(next) {
       $(this).remove();
+      count -= 1;
+      if (completion && count == 0) { completion(); }
       next();
     });
   }
