@@ -5084,27 +5084,31 @@ function makeWavetable(ac) {
 
 
 //////////////////////////////////////////////////////////////////////////
-// SYNC SUPPORT
+// SYNC, REMOVE SUPPORT
 // sync() function
 //////////////////////////////////////////////////////////////////////////
 
-function sync() {
-  var elts = [], j, ready = [], completion = null, argcount = arguments.length;
+function gatherelts(args) {
+  var elts = [], j, argcount = args.length;
   // The optional last argument is a callback when the sync is triggered.
-  if (argcount && $.isFunction(arguments[argcount - 1])) {
-    completion = arguments[--argcount];
+  if (argcount && $.isFunction(args[argcount - 1])) {
+    completion = args[--argcount];
   }
   // Gather elements passed as arguments.
   for (j = 0; j < argcount; ++j) {
-    if (arguments[j].constructor === $) {
-      elts.push.apply(elts, arguments[j].toArray());  // Unpack jQuery.
-    } else if ($.isArray(arguments[j])) {
-      elts.push.apply(elts, arguments[j]);  // Accept an array.
+    if (args[j].constructor === $) {
+      elts.push.apply(elts, args[j].toArray());  // Unpack jQuery.
+    } else if ($.isArray(args[j])) {
+      elts.push.apply(elts, args[j]);  // Accept an array.
     } else {
-      elts.push(arguments[j]);  // Individual elements.
+      elts.push(args[j]);  // Individual elements.
     }
   }
-  elts = $.unique(elts);  // Remove duplicates.
+  return $.unique(elts);  // Remove duplicates.
+}
+
+function sync() {
+  var elts = gatherelts(arguments), j, ready = [];
   function proceed() {
     var cb = ready, j;
     ready = null;
@@ -5121,6 +5125,16 @@ function sync() {
           proceed();
         }
       }
+    });
+  }
+}
+
+function remove() {
+  var elts = gatherelts(arguments), j;
+  for (j = 0; j < elts.length; ++j) {
+    $(elts[j]).queue(function(next) {
+      $(this).remove();
+      next();
     });
   }
 }
@@ -6823,6 +6837,9 @@ var dollar_turtle_methods = {
   sync: wrapraw('sync',
   ["<u>sync(t1, t2, t3,...)</u> " +
       "Selected turtles wait for each other to stop."], sync),
+  remove: wrapraw('remove',
+  ["<u>remove(t)</u> " +
+      "Remove selected turtles."], remove),
   done: wrapraw('done',
   ["<u>done(fn)</u> Calls fn when animation is complete. Use with await: " +
       "<mark>await done defer()</mark>"],
