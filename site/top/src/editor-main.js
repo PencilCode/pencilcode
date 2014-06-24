@@ -1407,8 +1407,9 @@ function cookie(key, value, options) {
   var decode = function(s) {
      try {
         return decodeURIComponent(s.replace(/\+/g, ' '));
-     } catch(e) { }
-     return '';
+     } catch (e) {
+       return '';
+     }
   }
   var converted = function(s) {
     if (s.indexOf('"') === 0) {
