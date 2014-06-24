@@ -1036,6 +1036,9 @@ function readNewUrl(undo) {
   }
   // True if this is the first url load.
   var firsturl = (model.ownername === null),
+  // Firefox incorrectly decodes window.location.hash, so this is consistent:
+      hash = window.location.href.indexOf('#') < 0 ? '' :
+          location.href.substring(window.location.href.indexOf('#')),
   // Owner comes from domain name.
       ownername = window.location.hostname.replace(
           /(?:(.*)\.)?[^.]*.{8}$/, '$1'),
@@ -1045,11 +1048,11 @@ function readNewUrl(undo) {
   // Expect directory if the pathname ends with slash.
       isdir = /\/$/.test(window.location.pathname),
   // Extract login from hash if present.
-      login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(window.location.hash),
+      login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(hash),
   // Extract text from hash if present.
-      text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(window.location.hash),
+      text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(hash),
   // Extract setup script spec from hash if present.
-      setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(window.location.hash),
+      setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname);
   // Give the user a chance to abort navigation.
@@ -1073,7 +1076,7 @@ function readNewUrl(undo) {
     model.passkey = login[2] || null;
   }
   // Clean up the hash if present, and absorb the new auth information.
-  if (window.location.hash.length) {
+  if (hash.length) {
     readNewUrl.suppress = true;
     window.location.replace('#');
     view.setVisibleUrl(window.location.pathname);
@@ -1126,8 +1129,11 @@ function readNewUrl(undo) {
       model.editmode && (model.ownername !== "" || filename !== ""), firsturl);
   // Preload text if specified.
   if (text != null) {
-    createNewFileIntoPosition('left', filename,
-       decodeURIComponent(text[1].replace(/\+/g, ' ')));
+    var code = '';
+    try {
+       code = decodeURIComponent(text[1].replace(/\+/g, ' '));
+    } catch (e) { }
+    createNewFileIntoPosition('left', filename, code);
     updateTopControls(false);
     return;
   }
@@ -1398,7 +1404,12 @@ function cookie(key, value, options) {
   }
 
   // read
-  var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
+  var decode = function(s) {
+     try {
+        return decodeURIComponent(s.replace(/\+/g, ' '));
+     } catch(e) { }
+     return '';
+  }
   var converted = function(s) {
     if (s.indexOf('"') === 0) {
       s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
@@ -1428,11 +1439,16 @@ function cookie(key, value, options) {
 
 // parses window.location.hash params into a dict
 function parseWindowLocationHash() {
-  if (!window.location.hash || window.location.hash.length < 2) {
+  // This is more consistent that window.location.hash because
+  // Firefox partially uri-decodes window.location.hash.
+  var hash = window.location.href.indexOf('#') < 0 ? '' :
+      location.href.substring(window.location.href.indexOf('#'));
+
+  if (!hash || hash.length < 2) {
     return {};
   }
 
-  var hash = window.location.hash.substring(1);
+  hash = hash.substring(1);
   var hashParts = hash.split('&');
   var hashDict = {};
   for (var i = 0; i < hashParts.length; i++) {
@@ -1441,8 +1457,12 @@ function parseWindowLocationHash() {
     }
 
     var separatorLocation = hashParts[i].indexOf('=');
-    hashDict[hashParts[i].substring(0, separatorLocation)] = (
-      decodeURIComponent(hashParts[i].substring(separatorLocation + 1)));
+    var key = hashParts[i].substring(0, separatorLocation);
+    var value = hashParts[i].substring(separatorLocation + 1);
+    try {
+      value = decodeURIComponent(value);
+    } catch (e) { }
+    hashDict[key] = value;
   }
 
   return hashDict;
