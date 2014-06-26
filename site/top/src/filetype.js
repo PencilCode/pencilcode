@@ -13,10 +13,14 @@ function wrapTurtle(text, pragmasOnly, setupScript) {
   var result, j, scripts = [], script_pattern =
     /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g;
   // Add the default turtle script.
+  // Note that we use crossorigin="anonymous" so that we can get
+  // more detailed error information (e.g., CoffeeScript compilation
+  // errors, using CORS rules.)  More discussion:
+  // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
   scripts.push(
     '<script src="//' +
     top.pencilcode.domain + '/turtlebits.js' +
-    '">\n<\057script>');
+    '" crossorigin="anonymous">\n<\057script>');
   // Then add any setupScript supplied.
   if (setupScript) {
     for (j = 0; j < setupScript.length; ++j) {
