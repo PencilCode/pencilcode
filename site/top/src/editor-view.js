@@ -464,11 +464,16 @@ $('#filename').on('keypress keydown keyup input', function(e) {
   if (text == '') { sel.html('&nbsp;'); }
 });
 
+function fixTypedFilename(enteredtext) {
+  if (!enteredtext) { return enteredtext; }
+  return enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
+      .replace(/^\/*/, '').replace(/\/\/+/g, '/');
+}
+
 $('#filename').on('blur', function() {
   var sel = $('#filename');
   var enteredtext = sel.text();
-  var fixedtext = enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
-      .replace(/^\/*/, '').replace(/\/\/+/g, '/');
+  var fixedtext = fixTypedFilename(enteredtext);
   if (!fixedtext) {
     fixedtext = state.nameText;
   }
@@ -856,6 +861,9 @@ function showLoginDialog(opts) {
         'type="password" class="newpass"></div>'
       : '<div class="field">Password:<input ' +
         'type="password" class="password"></div>') +
+      (opts.rename ?
+        '<div class="field">Filename:<input class="rename" value="' +
+         opts.rename + '">' : '') +
     '</div><br>' +
     '<button class="ok">OK</button>' +
     '<button class="cancel">Cancel</button>';
@@ -866,7 +874,18 @@ function showLoginDialog(opts) {
         return false;
       }
     });
-
+    dialog.find('.rename').on('keypress', function(e) {
+      if (e.which >= 20 && e.which <= 127 && !/[-\._A-Za-z0-9\/]/.test(
+            String.fromCharCode(e.which))) {
+        return false;
+      }
+    }).on('keyup blur', function(e) {
+      var val = dialog.find('.rename').val();
+      var fixed = fixTypedFilename(val);
+      if (fixed != val) {
+        dialog.find('.rename').val(fixed);
+      }
+    });
     dialog.find('input:not([disabled])').eq(0).focus();
   }
   opts.onkeydown = function(e, dialog, state) {
@@ -890,6 +909,7 @@ function showLoginDialog(opts) {
       checkbox: dialog.find('.agreetoterms').prop('checked'),
       password: dialog.find('.password').val(),
       newpass: dialog.find('.newpass').val(),
+      rename: fixTypedFilename(dialog.find('.rename').val()),
     };
   }
 
