@@ -59,6 +59,10 @@ function modifyForPreview(text, filename, targetUrl, pragmasOnly, sScript) {
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     text = wrapTurtle(text, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
+  } else if (pragmasOnly) {
+    // For now, we don't support inserting startup script in anything
+    // other than a pencil-code file.
+    return '';
   }
   if (!text) return '';
   if (mimeType && !/^text\/html/.test(mimeType)) {
