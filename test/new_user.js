@@ -46,8 +46,9 @@ describe('new user', function() {
     _ph.exit();
   });
   it('should serve static editor HTML', function(done) {
-    // Visit an example for anonymous users.
-    _page.open('http://pencilcode.net.dev/edit/first',
+    // The #new hash is the magic signup URL: it should
+    // show the "Create account" dialog.
+    _page.open('http://pencilcode.net.dev/edit/intro#new',
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
@@ -80,21 +81,23 @@ describe('new user', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The editor text should contain this line of code.
-      assert.ok(/for \[1..25\]/.test(result.text));
+      assert.ok(/# Welcome/.test(result.text), 'Got ' + result.text);
       // The save button should not be disabled (even though unmodified).
       assert.equal(result.saved, false);
       // There should be no login or logout buton.
       assert.equal(result.login, 0);
       assert.equal(result.logout, 0);
-      // The element with focus should be the editor
-      assert.equal(result.active, 'ace_text-input');
+      // The element with focus should NOT be the editor - it should be
+      // the username field.
+      assert.equal(result.active, 'username');
       done();
     });
   });
   it('should show login prompt when saving', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the save button.
-      $('#save').click();
+      // We should not need to click on the save button:
+      // The signup dialog should show already.
+      // $('#save').click();
     }, function() {
       // Wait for the login dialog to pop up.
       if (!$('.dialog').is(':visible')) return;

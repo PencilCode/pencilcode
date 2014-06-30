@@ -275,36 +275,11 @@ Contribute to the development of Pencil Code at
 <a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
 <br>
 <div class="choices">
-<a href="http://pencilcode.net/edit/first" id="randfirst">I'm new here.
+<a href="http://gym.pencilcode.net/draw/">I'm new here.
 <span class="em">Let's play.</span>
-<span class="extrabutton" id="blank" href="/edit/untitled">start blank</span>
-</a>
-<!--
-<a href="http://guide.pencilcode.net/">Try examples.
-<span class="nw">See the guide.</span></a>
--->
+<span class="extrabutton"
+  id="blank" href="/edit/untitled">blank editor</span></a>
 <script>
-$('#randfirst').mouseenter(function() {
-  var choices = [
-    '/edit/first',
-    '/edit/dandelion',
-    '/edit/rainbow',
-    '/edit/sailboat',
-    '/edit/house',
-    '/edit/square',
-    '/edit/violet',
-    '/edit/polygon',
-    '/edit/movedraw',
-    '/edit/euclidsmethod',
-    '/edit/polygonread',
-    '/edit/guessmynumber',
-    '/edit/hi',
-    '/edit/infinity'
-  ];
-  $('#randfirst').attr('href',
-      choices[Math.floor(Math.pow(Math.random(), 2) * choices.length)]);
-});
-
 function cookie(key) {
   // read
   var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
@@ -335,10 +310,14 @@ var olduser = false;
 if (cookie('recent')) {
   document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
       cookie('recent').replace(/^http:\/\//, '').
-      replace(/\.pencilcode\.net\/edit\//, '&nbsp;/ ').
+      replace(/^(\w+)\.[^\/]*\/edit\//, '$1&nbsp;/ ').
       replace(/\//g, '<wbr>/') +
-      '.  <span class="extrabutton" id="reset">reset this</span></a>');
+      '. <span class="extrabutton" id="reset">reset this</span></a>');
   olduser = true;
+} else {
+  document.write('<a href="/edit/intro#new">' +
+     '<span class="nw">New account.</span>' +
+     '</a>');
 }
 if (!olduser) {
   $('.em').addClass('glow');
@@ -388,8 +367,6 @@ $('a[data-vimeo]').click(function(e) {
   return true;
 });
 
-
-
 $('#clickvideo').click(function() {
   var vimeoFrame = '<iframe src="//player.vimeo.com/video/79743491?autoplay=1" ' +
     'width="640" height="390" frameborder="0" webkitallowfullscreen ' +
@@ -412,10 +389,18 @@ $('#reset').click(function(e) {
   window.location.reload();
 });
 
+document.write('<a href="/edit/">Browse users. ' +
+    '<span class="extrabutton" id="randfirst" ' +
+    'href="/edit/first">random sample</span></a></div>');
+
+if (!olduser) {
+  document.write('<br clear="all">');
+} else {
+  document.write('<div class="new">' +
+     '<a href="/edit/intro#new" class="link">Make new account</a></div>');
+}
 </script>
-<a href="/edit/">Browse users.</a>
-</div>
-<br>
+
 <h2>A Modern Sandbox<br>
 For Little Programs</h2>
 <p align="center" class="whiteback">
@@ -431,6 +416,32 @@ Participate in an open-source Hackathon.</a></p>
 </div>
 
 <script>
+$('#randfirst').mouseenter(function() {
+  var choices = [
+    '/edit/first',
+    '/edit/dandelion',
+    '/edit/rainbow',
+    '/edit/sailboat',
+    '/edit/house',
+    '/edit/square',
+    '/edit/violet',
+    '/edit/polygon',
+    '/edit/movedraw',
+    '/edit/euclidsmethod',
+    '/edit/polygonread',
+    '/edit/guessmynumber',
+    '/edit/hi',
+    '/edit/infinity'
+  ];
+  $('#randfirst').attr('href',
+      choices[Math.floor(Math.random() * choices.length)]);
+});
+
+$('.extrabutton[href]').click(function(e) {
+  e.preventDefault();
+  window.location.href = $(e.target).attr('href');
+});
+
 $('#about').hide();
 </script>
 <script type="text/coffeescript">

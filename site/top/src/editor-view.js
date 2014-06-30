@@ -734,7 +734,9 @@ function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="dialog"><div class="prompt">' +
+  var dialog = $('<div class="dialog' +
+    (opts.center ? ' center' : '' ) +
+    '"><div class="prompt">' +
     (opts.prompt ? opts.prompt : '') +
     '<div class="info">' +
     (opts.info ? opts.info : '') +
@@ -756,6 +758,7 @@ function showDialog(opts) {
     if (up.cancel) {
       dialog.remove();
       overlay.hide();
+      if (opts.cancel) { opts.cancel(); }
       return;
     }
     for (attr in up) {
@@ -886,7 +889,12 @@ function showLoginDialog(opts) {
         dialog.find('.rename').val(fixed);
       }
     });
-    dialog.find('input:not([disabled])').eq(0).focus();
+    // This timeout is added so that in the #new case where
+    // the dialog and ACE editor are competing for focus, the
+    // dialog wins.
+    setTimeout(function() {
+      dialog.find('input:not([disabled])').eq(0).focus();
+    }, 0);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
