@@ -127,6 +127,7 @@ function posofpane(pane) {
 //
 function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
+          model.ownername === 'gymstage' ||
           model.ownername === 'frame' ||
           model.ownername === 'event');
 }
@@ -540,10 +541,7 @@ function letterComplexity(s) {
   return uniqcount && (uniqcount / (maxcount + dupcount));
 }
 
-function signUpAndSave() {
-  if (nosaveowner()) {
-    return;
-  }
+function signUpAndSave(filename) {
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   var mp = modelatpos('left');
   var runtext = mimetext && mimetext.text;
@@ -559,6 +557,7 @@ function signUpAndSave() {
   });
   view.showLoginDialog({
     prompt: 'Choose an account name to save.',
+    rename: filename || mp.filename,
     info: 'Accounts on pencilcode are free.',
     validate: function(state) {
       var username = state.username.toLowerCase();
@@ -625,9 +624,15 @@ function signUpAndSave() {
              'href="/terms.html">the terms of service<label></a>.'
         };
       }
+      if (!state.rename) {
+        return {
+          disable: true,
+          info: 'Choose a file name.'
+        }
+      }
       return {
         disable: false,
-        info: 'Will create ' + state.username.toLowerCase() +
+        info: 'Will create ' + username +
             '.' + window.pencilcode.domain + '.' +
              '<br>When using a Pencil Code account,' +
              '<br>I agree to <a target=_blank ' +
@@ -639,11 +644,12 @@ function signUpAndSave() {
       if (username != model.ownername) {
         view.clearPane(paneatpos('right'), true);
       }
+      var rename = state.rename || mp.filename;
       var forceOverwrite = (username != model.ownername) || specialowner();
       var key = keyFromPassword(username, state.password);
       var step2 = function() {
         storage.saveFile(
-            username, mp.filename, {data: runtext, mtime: 1},
+            username, rename, {data: runtext, mtime: 1},
             forceOverwrite, key, false,
             function(status) {
           console.log('status was', status);
@@ -674,10 +680,11 @@ function signUpAndSave() {
           } else {
             view.notePaneEditorCleanText(paneatpos('left'), runtext);
             storage.deleteBackup(mp.filename);
+            storage.deleteBackup(rename);
             state.update({cancel: true});
             window.location.href =
                 'http://' + username + '.' + window.pencilcode.domain +
-                '/edit/' + mp.filename +
+                '/edit/' + rename +
                 '#login=' + username + ':' + (key ? key : '');
           }
         });
@@ -1480,6 +1487,7 @@ function getCrossFrameContext() {
 
 // processes messages from other frames
 $(window).on('message', function(e) {
+  console.log(e.originalEvent.data);
   // parse event data
   try {
     var data = JSON.parse(e.originalEvent.data);
@@ -1511,6 +1519,9 @@ $(window).on('message', function(e) {
       break;
     case 'beginRun':
       view.run();
+      break;
+    case 'save':
+      signUpAndSave(data.args[0]);
       break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));

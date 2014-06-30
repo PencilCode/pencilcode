@@ -255,6 +255,11 @@
       return this.invokeRemote('beginRun', []);
     };
 
+    // brings up save UI
+    proto.save = function(filename) {
+      return this.invokeRemote('save', [filename]);
+    };
+
     // makes editor editable
     proto.setEditable = function() {
       return this.invokeRemote('setEditable', []);
