@@ -67,7 +67,7 @@ describe('new user', function() {
       // Poll until the element with class="editor" appears on the page.
       if (!$('.editor').length) return;
       // Reach in and return the text that is shown within the editor.
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       return {
         text: ace_editor.getSession().getValue(),
         active: document.activeElement &&
@@ -80,7 +80,7 @@ describe('new user', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The editor text should contain this line of code.
-      assert.ok(/for \[1..25\]/.test(result.text));
+      assert.ok(/for \[1..25\]/.test(result.text), 'got ' + result.text);
       // The save button should not be disabled (even though unmodified).
       assert.equal(result.saved, false);
       // There should be no login or logout buton.
