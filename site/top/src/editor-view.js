@@ -1495,7 +1495,7 @@ var ICE_EDITOR_PALETTE =[
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.block);
+        _results.push(ice.parse(paletteElement).start.next.container);
       }
       return _results;
     })()
@@ -1507,7 +1507,7 @@ var ICE_EDITOR_PALETTE =[
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.block);
+        _results.push(ice.parse(paletteElement).start.next.container);
       }
       return _results;
     })()
@@ -1519,7 +1519,7 @@ var ICE_EDITOR_PALETTE =[
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.block);
+        _results.push(ice.parse(paletteElement).start.next.container);
       }
       return _results;
     })()
@@ -1535,15 +1535,6 @@ var ICE_EDITOR_PALETTE =[
             type: 'socket',
             precedence: 0,
             contents: 'arg'
-          }, {
-            type: 'mutationButton',
-            expand: [
-              ', ', {
-                type: 'socket',
-                precedence: 0,
-                contents: 'arg'
-              }, 0
-            ]
           }, ') ->', {
             type: 'indent',
             depth: 2,
@@ -1563,7 +1554,7 @@ var ICE_EDITOR_PALETTE =[
             ]
           }
         ]
-      }), ice.parse('return arg').start.next.block, ice.parseObj({
+      }), ice.parse('return arg').start.next.container, ice.parseObj({
         type: 'block',
         valueByDefault: false,
         color: '#268bd2',
@@ -1577,15 +1568,6 @@ var ICE_EDITOR_PALETTE =[
             type: 'socket',
             precedence: 0,
             contents: 'arg'
-          }, {
-            type: 'mutationButton',
-            expand: [
-              ', ', {
-                type: 'socket',
-                precedence: 0,
-                contents: 'arg'
-              }, 0
-            ]
           }, ')'
         ]
       })
@@ -1603,18 +1585,9 @@ var ICE_EDITOR_PALETTE =[
             type: 'socket',
             precedence: 0,
             contents: 'el'
-          }, {
-            type: 'mutationButton',
-            expand: [
-              ', ', {
-                type: 'socket',
-                precedence: 0,
-                contents: 'el'
-              }, 0
-            ]
           }, ']'
         ]
-      }), ice.parse("array.push 'hello'").start.next.block, ice.parse("array.sort()").start.next.block, ice.parse('{}').start.next.block, ice.parseObj({
+      }), ice.parse("array.push 'hello'").start.next.container, ice.parse("array.sort()").start.next.container, ice.parse('{}').start.next.container, ice.parseObj({
         type: 'block',
         valueByDefault: true,
         precedence: 32,
@@ -1640,7 +1613,7 @@ var ICE_EDITOR_PALETTE =[
             contents: 'value'
           }
         ]
-      }), ice.parse("obj['hello'] = 'world'").start.next.block
+      }), ice.parse("obj['hello'] = 'world'").start.next.container
     ]
   }, {
     name: 'Logic',
@@ -1650,7 +1623,7 @@ var ICE_EDITOR_PALETTE =[
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.block);
+        _results.push(ice.parse(paletteElement).start.next.container);
       }
       return _results;
     })()
@@ -1662,7 +1635,7 @@ var ICE_EDITOR_PALETTE =[
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.block);
+        _results.push(ice.parse(paletteElement).start.next.container);
       }
       return _results;
     })()

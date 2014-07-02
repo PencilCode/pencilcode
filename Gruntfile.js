@@ -23,7 +23,7 @@ module.exports = function(grunt) {
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
           'seedrandom.js': 'seedrandom/seedrandom.js',
-          'lib/ice.js': 'ice-editor/dist/ice-full.min.js',
+          'lib/ice.js': 'ice-editor/dist/ice-full.js',
           'lib/ice.css': 'ice-editor/dist/ice.min.css'
         }
       },
