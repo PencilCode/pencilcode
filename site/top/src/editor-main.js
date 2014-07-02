@@ -14,6 +14,7 @@ define('jquery', [], function() {
 ///////////////////////////////////////////////////////////////////////////
 require.config({
   baseUrl: '/',
+  urlArgs: "bust=" + (new Date()).getTime(),
   paths: {
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',

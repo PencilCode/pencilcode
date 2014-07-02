@@ -33,11 +33,5031 @@ c.splice(b,1);1<c.length&&(o("META and CMD key combos cannot have more than 1 no
 tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",",":"<","'":'"',";":":","[":"{","]":"}","\\":"|","`":"~","=":"+","-":"_",1:"!",2:"@",3:"#",4:"$",5:"%",6:"^",7:"&",8:"*",9:"(","0":")"};q={"0":"\\",8:"backspace",9:"tab",12:"num",13:"enter",16:"shift",17:"ctrl",18:"alt",19:"pause",20:"caps",27:"esc",32:"space",33:"pageup",34:"pagedown",35:"end",36:"home",37:"left",38:"up",39:"right",40:"down",44:"print",45:"insert",46:"delete",48:"0",49:"1",50:"2",51:"3",52:"4",53:"5",54:"6",
 55:"7",56:"8",57:"9",65:"a",66:"b",67:"c",68:"d",69:"e",70:"f",71:"g",72:"h",73:"i",74:"j",75:"k",76:"l",77:"m",78:"n",79:"o",80:"p",81:"q",82:"r",83:"s",84:"t",85:"u",86:"v",87:"w",88:"x",89:"y",90:"z",91:"cmd",92:"cmd",93:"cmd",96:"num_0",97:"num_1",98:"num_2",99:"num_3",100:"num_4",101:"num_5",102:"num_6",103:"num_7",104:"num_8",105:"num_9",106:"num_multiply",107:"num_add",108:"num_enter",109:"num_subtract",110:"num_decimal",111:"num_divide",124:"print",144:"num",145:"scroll",186:";",187:"=",188:",",
 189:"-",190:".",191:"/",192:"`",219:"[",220:"\\",221:"]",222:"'",223:"`",224:"cmd",225:"alt",57392:"ctrl",63289:"num"};-1!==navigator.userAgent.indexOf("Mac OS X")&&(k="cmd");-1!==navigator.userAgent.indexOf("Opera")&&(q["17"]="cmd")}).call(this);
-;/*! ice-editor 2014-05-10 */
-(function(){var a={}.hasOwnProperty,b=function(b,c){function d(){this.constructor=b}for(var e in c)a.call(c,e)&&(b[e]=c[e]);return d.prototype=c.prototype,b.prototype=new d,b.__super__=c.prototype,b};define("ice-draw",[],function(){var c,d,e,f,g,h,i,j,k,l,m;return l=function(a,b,c){return(b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y)},m=function(a,b,c,d){return l(a,b,c)>0!=l(a,b,d)>0&&l(c,d,a)>0!=l(c,d,b)>0},i={},i.Point=e=function(){function a(a,b){this.x=a,this.y=b}return a.prototype.clone=function(){return new a(this.x,this.y)},a.prototype.magnitude=function(){return Math.sqrt(this.x*this.x+this.y*this.y)},a.prototype.translate=function(a){return this.x+=a.x,this.y+=a.y},a.prototype.add=function(a,b){return this.x+=a,this.y+=b},a.prototype.copy=function(a){return this.x=a.x,this.y=a.y},a.prototype.from=function(b){return new a(this.x-b.x,this.y-b.y)},a.prototype.clear=function(){return this.x=this.y=0},a}(),i.Size=g=function(){function a(a,b){this.width=a,this.height=b}return a}(),i.Rectangle=f=function(){function a(a,b,c,d){this.x=a,this.y=b,this.width=c,this.height=d}return a.prototype.contains=function(a){return null!=this.x&&null!=this.y&&!(a.x<this.x||a.x>this.x+this.width||a.y<this.y||a.y>this.y+this.height)},a.prototype.copy=function(a){return this.x=a.x,this.y=a.y,this.width=a.width,this.height=a.height},a.prototype.clear=function(){return this.width=this.height=0,this.x=this.y=null},a.prototype.bottom=function(){return this.y+this.height},a.prototype.right=function(){return this.x+this.width},a.prototype.fill=function(a,b){return a.fillStyle=b,a.fillRect(this.x,this.y,this.width,this.height)},a.prototype.unite=function(a){return null==this.x||null==this.y?this.copy(a):(this.width=Math.max(this.right(),a.right())-(this.x=Math.min(this.x,a.x)),this.height=Math.max(this.bottom(),a.bottom())-(this.y=Math.min(this.y,a.y)))},a.prototype.swallow=function(b){return null==this.x||null==this.y?this.copy(new a(b.x,b.y,0,0)):(this.width=Math.max(this.right(),b.x)-(this.x=Math.min(this.x,b.x)),this.height=Math.max(this.bottom(),b.y)-(this.y=Math.min(this.y,b.y)))},a.prototype.overlap=function(a){return null!=this.x&&null!=this.y&&!(a.right()<this.x||a.bottom()<this.y||a.x>this.right()||a.y>this.bottom())},a.prototype.translate=function(a){return this.x+=a.x,this.y+=a.y},a.prototype.stroke=function(a,b){return a.strokeStyle=b,a.strokeRect(this.x,this.y,this.width,this.height)},a.prototype.fill=function(a,b){return a.fillStyle=b,a.fillRect(this.x,this.y,this.width,this.height)},a.prototype.upperLeftCorner=function(){return new e(this.x,this.y)},a}(),i.NoRectangle=c=function(a){function c(){c.__super__.constructor.call(this,null,null,0,0)}return b(c,a),c}(f),i.Path=d=function(){function b(){this._points=[],this._cachedTranslation=new e(0,0),this._cacheFlag=!1,this._bounds=new c,this.style={strokeColor:"#000",lineWidth:1,fillColor:null}}return b.prototype._clearCache=function(){var a,b,c,d;if(this._cacheFlag){for(d=this._points,b=0,c=d.length;c>b;b++)a=d[b],a.translate(this._cachedTranslation);return this._bounds.translate(this._cachedTranslation),this._cachedTranslation.clear(),this._cacheFlag=!1}},b.prototype.recompute=function(){var a,b,d,e,f;for(this._bounds=new c,e=this._points,f=[],b=0,d=e.length;d>b;b++)a=e[b],f.push(this._bounds.swallow(a));return f},b.prototype.push=function(a){return this._points.push(a),this._bounds.swallow(a)},b.prototype.unshift=function(a){return this._points.unshift(a),this._bounds.swallow(a)},b.prototype.contains=function(a){var b,c,d,f,g,h,i;for(this._clearCache(),c=new e(this._bounds.x-10,a.y),b=0,f=this._points[this._points.length-1],i=this._points,g=0,h=i.length;h>g;g++)d=i[g],m(f,d,a,c)&&(b+=1),f=d;return b%2===1},b.prototype.intersects=function(a){var b,c,d,f,g,h,i,j,k,l;if(this._clearCache(),!a.overlap(this._bounds))return!1;for(c=this._points[this._points.length-1],f=[new e(a.x,a.y),new e(a.right(),a.y),new e(a.right(),a.bottom()),new e(a.x,a.bottom())],l=this._points,h=0,j=l.length;j>h;h++){for(b=l[h],d=f[f.length-1],i=0,k=f.length;k>i;i++){if(g=f[i],m(c,b,d,g))return!0;d=g}c=b}return this.contains(f[0])?!0:a.contains(this._points[0])?!0:!1},b.prototype.bounds=function(){return this._clearCache(),this._bounds},b.prototype.translate=function(a){return this._cachedTranslation.translate(a),this._cacheFlag=!0},b.prototype.draw=function(a){var b,c,d,e;for(this._clearCache(),a.strokeStyle=this.style.strokeColor,a.lineWidth=this.style.lineWidth,null!=this.style.fillColor&&(a.fillStyle=this.style.fillColor),a.beginPath(),a.moveTo(this._points[0].x,this._points[0].y),e=this._points,c=0,d=e.length;d>c;c++)b=e[c],a.lineTo(b.x,b.y);return a.lineTo(this._points[0].x,this._points[0].y),null!=this.style.fillColor&&a.fill(),a.stroke()},b.prototype.drawShadow=function(b,c,d,e){var f,g,h,i,j,k,l,m;for(this._clearCache(),b.fillStyle=this.style.fillColor,g={shadowColor:b.shadowColor,shadowBlur:b.shadowBlur,shadowOffsetY:b.shadowOffsetY,shadowOffsetX:b.shadowOffsetX,globalAlpha:b.globalAlpha},b.globalAlpha=.5,b.shadowColor="#000",b.shadowBlur=e,b.shadowOffsetX=c,b.shadowOffsetY=d,b.beginPath(),b.moveTo(this._points[0].x,this._points[0].y),l=this._points,j=0,k=l.length;k>j;j++)h=l[j],b.lineTo(h.x,h.y);b.lineTo(this._points[0].x,this._points[0].y),b.fill(),m=[];for(f in g)a.call(g,f)&&(i=g[f],m.push(b[f]=i));return m},b}(),j=null,k=15,i.Text=h=function(){function a(a,b){this.point=a,this.value=b,j.font=k+"px Courier New",this._bounds=new f(this.point.x,this.point.y,j.measureText(this.value).width,k)}return a.prototype.bounds=function(){return this._bounds},a.prototype.contains=function(a){return this._bounds.contains(a)},a.prototype.translate=function(a){return this.point.translate(a),this._bounds.translate(a)},a.prototype.setPosition=function(a){return this.translate(a.from(this.point))},a.prototype.draw=function(a){return a.textBaseline="top",a.font=k+"px Courier New",a.fillStyle="#000",a.fillText(this.value,this.point.x,this.point.y)},a}(),i._setCTX=function(a){return j=a},i._setGlobalFontSize=function(a){return k=a},i._getGlobalFontSize=function(){return k},i})}).call(this),function(){var a={}.hasOwnProperty,b=function(b,c){function d(){this.constructor=b}for(var e in c)a.call(c,e)&&(b[e]=c[e]);return d.prototype=c.prototype,b.prototype=new d,b.__super__=c.prototype,b};define("ice-view",["ice-draw"],function(a){var c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C;return q=5,i=15,A=10,h=20,g=50,l=100,f=30,z=15,x=5,y=10,u=3,t=5,o=n=20,m=5,r=2,C={},C.BoundingBoxState=d=function(){function a(a){this.x=a.x,this.y=a.y}return a}(),C.PathWaypoint=s=function(){function a(a,b){this.left=a,this.right=b}return a}(),C.IceView=j=function(){function b(a){this.block=a,this.children=[],this.lineStart=this.lineEnd=null,this.lineChildren={},this.dimensions={},this.cursors=[],this.dropArea=null,this.highlightArea=null,this.indented={},this.indentEndsOn={},this.indentStartsOn={},this.pathWaypoints={},this.bounds={}}return b.prototype.computeChildren=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F;for(this.children=[],this.lineStart=this.lineEnd=null,this.dropArea=this.highlightArea=null,this.lineChildren={},this.dimensions={},this.indented={},this.indentEndsOn={},this.indentStartsOn={},this.pathWaypoints={},this.bounds={},this.cursors=[],this.lineStart=a,b=this.block.start.next;b!==this.block.end;){switch(b.type){case"blockStart":for(a=b.block.view.computeChildren(a),this.children.push(b.block.view),d=r=w=b.block.view.lineStart,x=b.block.view.lineEnd;x>=w?x>=r:r>=x;d=x>=w?++r:--r)null==(e=this.lineChildren)[d]&&(e[d]=[]),this.lineChildren[d].push(b.block.view),(f=this.indented)[d]||(f[d]=b.block.view.indented[d]),(j=this.indentEndsOn)[d]||(j[d]=b.block.view.indentEndsOn[d]);b=b.block.end;break;case"indentStart":for(a=b.indent.view.computeChildren(a),this.children.push(b.indent.view),d=s=y=b.indent.view.lineStart,z=b.indent.view.lineEnd;z>=y?z>=s:s>=z;d=z>=y?++s:--s)null==(k=this.lineChildren)[d]&&(k[d]=[]),this.lineChildren[d].push(b.indent.view),this.indented[d]=!0;this.indentEndsOn[b.indent.view.lineEnd]=!0,this.indentStartsOn[b.indent.view.lineStart]=!0,b=b.indent.end;break;case"socketStart":for(a=b.socket.view.computeChildren(a),this.children.push(b.socket.view),d=t=A=b.socket.view.lineStart,B=b.socket.view.lineEnd;B>=A?B>=t:t>=B;d=B>=A?++t:--t)null==(l=this.lineChildren)[d]&&(l[d]=[]),this.lineChildren[d].push(b.socket.view),(m=this.indented)[d]||(m[d]=b.socket.view.indented[d]),(n=this.indentEndsOn)[d]||(n[d]=b.socket.view.indentEndsOn[d]);b=b.socket.end;break;case"segmentStart":for(a=b.segment.view.computeChildren(a),this.children.push(b.segment.view),d=u=C=b.segment.view.lineStart,D=b.segment.view.lineEnd;D>=C?D>=u:u>=D;d=D>=C?++u:--u)null==(o=this.lineChildren)[d]&&(o[d]=[]),this.lineChildren[d].push(b.segment.view),(p=this.indented)[d]||(p[d]=b.segment.view.indented[d]),(q=this.indentEndsOn)[d]||(q[d]=b.segment.view.indentEndsOn[d]);b=b.segment.end;break;case"text":b.view.computeChildren(a),this.children.push(b.view),null==(g=this.lineChildren)[a]&&(g[a]=[]),this.lineChildren[a].push(b.view);break;case"mutationButton":b.view.computeChildren(a),this.children.push(b.view),null==(h=this.lineChildren)[a]&&(h[a]=[]),this.lineChildren[a].push(b.view);break;case"cursor":this.cursors.push({token:b,line:a});break;case"newline":a+=1}b=b.next}for(this.lineEnd=a,c=v=E=this.lineStart,F=this.lineEnd;F>=E?F>=v:v>=F;c=F>=E?++v:--v)null==(i=this.lineChildren)[c]&&(i[c]=[]);return a},b.prototype.computeDimensions=function(){var a,b,c,d;for(d=this.children,b=0,c=d.length;c>b;b++)a=d[b],a.computeDimensions();return this.dimensions},b.prototype.computeBoundingBox=function(b,c){var d,e,f,g;for(g=this.lineChildren[b],e=0,f=g.length;f>e;e++)d=g[e],d.computeBoundingBox(b,c);return this.bounds[b]=new a.NoRectangle},b.prototype.computePath=function(){var a,b,c,d;for(d=this.children,b=0,c=d.length;c>b;b++)a=d[b],a.computePath();return this.bounds},b.prototype.drawPath=function(a,b){var c,d,e,f,g,h,i,j;for(h=this.children,d=0,f=h.length;f>d;d++)c=h[d],"block"===c.block.type&&c.block.lineMarkStyles.length>0||c.drawPath(a,b);for(i=this.children,j=[],e=0,g=i.length;g>e;e++)c=i[e],j.push("block"===c.block.type&&c.block.lineMarkStyles.length>0?c.drawPath(a,b):void 0);return j},b.prototype.drawCursor=function(a){var b,c,d,e,f,g,h,i,j,k;for(i=this.children,e=0,g=i.length;g>e;e++)b=i[e],b.drawCursor(a);for(j=this.cursors,k=[],f=0,h=j.length;h>f;f++)c=j[f],d="newline"===c.token.prev.type||"segmentStart"===c.token.prev.type?this.bounds[c.line].y:this.bounds[c.line].bottom(),c.token.view.point.y=d,a.fillStyle="#000",a.strokeSTyle="#000",a.beginPath(),this.bounds[c.line].x>=5?(a.moveTo(this.bounds[c.line].x,d),a.lineTo(this.bounds[c.line].x-5,d-5),a.lineTo(this.bounds[c.line].x-5,d+5)):(a.moveTo(this.bounds[c.line].x,d),a.lineTo(this.bounds[c.line].x+5,d-5),a.lineTo(this.bounds[c.line].x+5,d+5)),a.stroke(),k.push(a.fill());return k},b.prototype.draw=function(a){return this.drawPath(a,{selected:0}),this.drawCursor(a)},b.prototype.drawShadow=function(a,b,c){var d,e,f,g,h;for(g=this.children,h=[],e=0,f=g.length;f>e;e++)d=g[e],h.push(d.drawShadow(a,b,c));return h},b.prototype.computeBoundingBoxes=function(){var b,c,e,f,g;for(b=new a.Point(0,0),c=e=f=this.lineStart,g=this.lineEnd;g>=f?g>=e:e>=g;c=g>=f?++e:--e)this.computeBoundingBox(c,new d(b)),b.y+=this.dimensions[c].height;return this.bounds},b.prototype.getBounds=function(){var b,c,d,e,f;for(b=new a.NoRectangle,c=d=e=this.lineStart,f=this.lineEnd;f>=e?f>=d:d>=f;c=f>=e?++d:--d)b.unite(this.bounds[c]);return b},b.prototype.compute=function(a){return null==a&&(a=0),this.computeChildren(a),this.computeDimensions(),this.computeBoundingBoxes(),this.computePath()},b.prototype.translate=function(a){var b,c,d,e,f,g,h,i;g=this.bounds;for(d in g)b=g[d],b.translate(a);for(h=this.children,i=[],e=0,f=h.length;f>e;e++)c=h[e],i.push(c.translate(a));return i},b}(),C.BlockView=c=function(c){function e(a){e.__super__.constructor.call(this,a),this.path=null}return b(e,c),e.prototype.computeDimensions=function(){var b,c,d,f,g,h,j,k,l,m,n;for(e.__super__.computeDimensions.apply(this,arguments),n=[],d=g=k=this.lineStart,l=this.lineEnd;l>=k?l>=g:g>=l;d=l>=k?++g:--g){for(f=q,c=2*q,m=this.lineChildren[d],h=0,j=m.length;j>h;h++)b=m[h],"indent"===b.block.type?(f+=b.dimensions[d].width+i,c=Math.max(c,b.dimensions[d].height+(b.lineEnd===d?A:0))):b.indented[d]?(f+=b.dimensions[d].width+q,c=Math.max(c,b.dimensions[d].height+(b.lineEnd===d&&b.indentEndsOn[d]?A:0))):(f+=b.dimensions[d].width+q,c=Math.max(c,b.dimensions[d].height+2*q));n.push(this.dimensions[d]=new a.Size(f,c))}return n},e.prototype.computeBoundingBox=function(b,c){var e,f,g,h,j,k,l,m;for(e=c.y+this.dimensions[b].height/2,g=c.x,this.lineChildren[b].length>0&&this.lineChildren[b][0].lineEnd===b&&this.lineChildren[b][0].indentEndsOn[b]&&(e-=A/2),this.bounds[b]=new a.Rectangle(c.x,c.y,this.dimensions[b].width,this.dimensions[b].height),m=this.lineChildren[b],k=0,l=m.length;l>k;k++)f=m[k],"indent"===f.block.type?(g+=i,f.computeBoundingBox(b,new d(new a.Point(g,c.y)))):(g+=q,f.computeBoundingBox(b,new d(new a.Point(g,e-f.dimensions[b].height/2)))),g+=f.dimensions[b].width;return this.lineChildren[b].length>0&&!this.lineChildren[b][0].indented[b]&&"indent"!==this.lineChildren[b][0].block.type?this.pathWaypoints[b]=new s([new a.Point(this.bounds[b].x,this.bounds[b].y),new a.Point(this.bounds[b].x,this.bounds[b].bottom())],[new a.Point(this.bounds[b].right(),this.bounds[b].y),new a.Point(this.bounds[b].right(),this.bounds[b].bottom())]):this.lineChildren[b].length>0?b!==this.lineChildren[b][0].lineEnd||!this.lineChildren[b][0].indentEndsOn[b]&&"indent"!==this.lineChildren[b][0].block.type?this.pathWaypoints[b]=new s([new a.Point(this.bounds[b].x,this.bounds[b].y),new a.Point(this.bounds[b].x,this.bounds[b].bottom())],[new a.Point(this.bounds[b].x+i,this.bounds[b].y),new a.Point(this.bounds[b].x+i,this.bounds[b].bottom())]):(h=this.lineChildren[b][0],j="indent"===this.lineChildren[b][0].block.type?i:q,this.pathWaypoints[b]=1===this.lineChildren[b].length?new s([new a.Point(this.bounds[b].x,this.bounds[b].y),new a.Point(this.bounds[b].x,this.bounds[b].bottom())],[new a.Point(this.bounds[b].x+j,this.bounds[b].y),new a.Point(this.bounds[b].x+j,h.bounds[b].bottom()),new a.Point(h.bounds[b].right(),h.bounds[b].bottom()),new a.Point(this.bounds[b].right(),h.bounds[b].bottom()),new a.Point(this.bounds[b].right(),this.bounds[b].bottom())]):new s([new a.Point(this.bounds[b].x,this.bounds[b].y),new a.Point(this.bounds[b].x,this.bounds[b].bottom())],[new a.Point(this.bounds[b].x+j,this.bounds[b].y),new a.Point(this.bounds[b].x+j,h.bounds[b].bottom()),new a.Point(h.bounds[b].right(),h.bounds[b].bottom()),new a.Point(h.bounds[b].right(),this.bounds[b].y),new a.Point(this.bounds[b].right(),this.bounds[b].y),new a.Point(this.bounds[b].right(),this.bounds[b].bottom())])):void 0},e.prototype.computePath=function(){var b,c,d,g,h,j,k,l,m,n,o,p,q;e.__super__.computePath.apply(this,arguments),this.path=new a.Path,this.dropArea=new a.Rectangle(this.bounds[this.lineEnd].x,this.bounds[this.lineEnd].bottom()-f/2,this.bounds[this.lineEnd].width,f),this.dropHighlightRegion=new a.Rectangle(this.bounds[this.lineEnd].x,this.bounds[this.lineEnd].bottom()-5,this.bounds[this.lineEnd].width,10),(null!=(m=this.block.inSocket())?m:this.block.valueByDefault)||(this.path.push(new a.Point(this.bounds[this.lineStart].x+y,this.bounds[this.lineStart].y)),this.path.push(new a.Point(this.bounds[this.lineStart].x+y+z/8,this.bounds[this.lineStart].y+x)),this.path.push(new a.Point(this.bounds[this.lineStart].x+y+7*z/8,this.bounds[this.lineStart].y+x)),this.path.push(new a.Point(this.bounds[this.lineStart].x+y+z,this.bounds[this.lineStart].y))),n=this.pathWaypoints;for(c in n){for(g=n[c],this.indentStartsOn[c]&&(b=new a.Point(this.bounds[c].x+i+y+z,this.bounds[c].y),this.path._points.length>0&&b.y!==this.path._points[this.path._points.length-1].y&&this.path.push(new a.Point(this.path._points[this.path._points.length-1].x,b.y)),this.path.push(b),this.path.push(new a.Point(this.bounds[c].x+i+y+7*z/8,this.bounds[c].y+x)),this.path.push(new a.Point(this.bounds[c].x+i+y+z/8,this.bounds[c].y+x)),this.path.push(new a.Point(this.bounds[c].x+i+y,this.bounds[c].y))),o=g.left,h=0,k=o.length;k>h;h++)d=o[h],this.path._points.length>0&&d.x!==this.path._points[0].x&&this.path.unshift(new a.Point(d.x,this.path._points[0].y)),this.path.unshift(d);for(p=g.right,j=0,l=p.length;l>j;j++)d=p[j],this.path._points.length>0&&d.y!==this.path._points[this.path._points.length-1].y&&this.path.push(new a.Point(this.path._points[this.path._points.length-1].x,d.y)),this.path.push(d)}return(null!=(q=this.block.inSocket())?q:this.block.valueByDefault)||(this.path.unshift(new a.Point(this.bounds[this.lineEnd].x+y,this.bounds[this.lineEnd].bottom())),this.path.unshift(new a.Point(this.bounds[this.lineEnd].x+y+z/8,this.bounds[this.lineEnd].bottom()+x)),this.path.unshift(new a.Point(this.bounds[this.lineEnd].x+y+7*z/8,this.bounds[this.lineEnd].bottom()+x)),this.path.unshift(new a.Point(this.bounds[this.lineEnd].x+y+z,this.bounds[this.lineEnd].bottom()))),this.path.style.fillColor=this.block.color,this.path.style.lineWidth=this.block.lineMarkStyles.length>0?2:1,this.path.style.strokeColor=this.block.lineMarkStyles.length>0?this.block.lineMarkStyles[0].color:"rgba(0, 0, 0, 0.3)"},e.prototype.drawPath=function(a,b){var c;if(0===this.path._points.length)throw new Error("View error: block has no path.");return this.path.draw(a),b.selected>0&&(this.path.style.fillColor="#00F",this.path.style.strokeColor="#008",c=a.globalAlpha,a.globalAlpha*=.3,this.path.draw(a),a.globalAlpha=c,this.path.style.fillColor=this.block.color,this.path.style.strokeColor=this.block.lineMarkStyles.length>0?this.block.lineMarkStyles[0].color:"#000"),e.__super__.drawPath.apply(this,arguments)},e.prototype.drawShadow=function(a,b,c){if(0===this.path._points.length)throw new Error("View error: block has no path.");return this.path.drawShadow(a,b,c,t),e.__super__.drawShadow.apply(this,arguments)},e.prototype.translate=function(a){return this.path.translate(a),e.__super__.translate.apply(this,arguments)},e}(j),C.TextView=B=function(c){function d(a){d.__super__.constructor.call(this,a),this.textElement=null}return b(d,c),d.prototype.computeChildren=function(a){return this.lineStart=this.lineEnd=a},d.prototype.computeDimensions=function(){return this.textElement=new a.Text(new a.Point(0,0),this.block.value),this.dimensions[this.lineStart]=new a.Size(this.textElement.bounds().width,this.textElement.bounds().height),this.dimesions},d.prototype.computeBoundingBox=function(b,c){return b===this.lineStart?(this.bounds[b]=new a.Rectangle(c.x,c.y,this.dimensions[b].width,this.dimensions[b].height),this.textElement.setPosition(new a.Point(c.x,c.y))):void 0},d.prototype.computePath=function(){},d.prototype.drawPath=function(a){return this.textElement.draw(a)},d.prototype.translate=function(a){return this.textElement.translate(a),d.__super__.translate.apply(this,arguments)},d.prototype.computePlaintextTranslationVector=function(b,c){var d;return d=new a.Point(b.x,b.y),b.x+=c.measureText(this.block.value).width,d.from(new a.Point(this.bounds[this.lineStart].x,this.bounds[this.lineStart].y))},d}(j),C.IndentView=k=function(c){function e(a){e.__super__.constructor.call(this,a)}return b(e,c),e.prototype.computeChildren=function(){return e.__super__.computeChildren.apply(this,arguments),this.lineStart+=1,this.lineEnd},e.prototype.computeDimensions=function(){var b,c,d,f,h,i,j,k,l,m,n;if(e.__super__.computeDimensions.apply(this,arguments),this.lineEnd>=this.lineStart){for(n=[],d=h=k=this.lineStart,l=this.lineEnd;l>=k?l>=h:h>=l;d=l>=k?++h:--h){for(c=f=0,m=this.lineChildren[d],i=0,j=m.length;j>i;i++)b=m[i],f+=b.dimensions[d].width,c=Math.max(c,b.dimensions[d].height);c=Math.max(c,a._getGlobalFontSize()+2*q),f=Math.max(f,g),n.push(this.dimensions[d]=new a.Size(f,c))}return n}},e.prototype.computeBoundingBox=function(b,c){var e,f,g,h,i,j,k;for(f=c.x,g=c.y,this.bounds[b]=new a.Rectangle(c.x,c.y,this.dimensions[b].width,this.dimensions[b].height),j=this.lineChildren[b],k=[],h=0,i=j.length;i>h;h++)e=j[h],e.computeBoundingBox(b,new d(new a.Point(f,g))),k.push(f+=e.dimensions[b].width);return k},e.prototype.computePath=function(){return this.dropArea=new a.Rectangle(this.bounds[this.lineStart].x,this.bounds[this.lineStart].y-f/2,this.bounds[this.lineStart].width,f),this.dropHighlightRegion=new a.Rectangle(this.bounds[this.lineStart].x,this.bounds[this.lineStart].y-5,this.bounds[this.lineStart].width,10),e.__super__.computePath.apply(this,arguments)},e}(j),C.SocketView=w=function(c){function e(a){e.__super__.constructor.call(this,a)}return b(e,c),e.prototype.computeDimensions=function(){var b,c,d,f;if(e.__super__.computeDimensions.apply(this,arguments),null!=(b=this.block.content()))switch(this.block.content().type){case"block":f=b.view.dimensions;for(c in f)d=f[c],this.dimensions[c]=new a.Size(d.width,d.height);break;case"text":this.dimensions[b.view.lineStart]=new a.Size(b.view.dimensions[b.view.lineStart].width+2*q,b.view.dimensions[b.view.lineStart].height+2*q),this.dimensions[b.view.lineStart].width=Math.max(this.dimensions[b.view.lineStart].width,h)}else this.dimensions[this.lineStart]=new a.Size(h,a._getGlobalFontSize()+2*q);return this.dimensions},e.prototype.computeBoundingBox=function(b,c){if(this.bounds[b]=new a.Rectangle(c.x,c.y,this.dimensions[b].width,this.dimensions[b].height),0!==this.lineChildren[b].length){if(this.lineChildren[b].length>1)throw"Error: more than one child inside a socket";return"text"===this.block.content().type?this.lineChildren[b][0].computeBoundingBox(b,new d(new a.Point(c.x+q,c.y+q))):this.lineChildren[b][0].computeBoundingBox(b,c)}},e.prototype.computePath=function(){var b;return"block"!==(null!=(b=this.block.content())?b.type:void 0)&&((this.dropArea=new a.Rectangle).copy(this.bounds[this.lineStart]),this.dropHighlightRegion=new a.Rectangle(this.dropArea.x-u,this.dropArea.y-u,this.dropArea.width+2*u,this.dropArea.height+2*u)),e.__super__.computePath.apply(this,arguments)},e.prototype.drawPath=function(a){return(null==this.block.content()||"text"===this.block.content().type)&&(this.bounds[this.lineStart].stroke(a,"#000"),this.bounds[this.lineStart].fill(a,"#FFF")),e.__super__.drawPath.apply(this,arguments)},e}(j),C.SegmentView=v=function(c){function e(a){e.__super__.constructor.call(this,a)}return b(e,c),e.prototype.computeDimensions=function(){var b,c,d,f,g,h,i,j,k,l,m;for(e.__super__.computeDimensions.apply(this,arguments),m=[],d=g=j=this.lineStart,k=this.lineEnd;k>=j?k>=g:g>=k;d=k>=j?++g:--g){for(c=f=0,l=this.lineChildren[d],h=0,i=l.length;i>h;h++)b=l[h],f+=b.dimensions[d].width,c=Math.max(c,b.dimensions[d].height);m.push(this.dimensions[d]=new a.Size(f,c))}return m},e.prototype.computeBoundingBox=function(b,c){var e,f,g,h,i,j,k;for(f=c.x,g=c.y,this.bounds[b]=new a.Rectangle(c.x,c.y,this.dimensions[b].width,this.dimensions[b].height),j=this.lineChildren[b],k=[],h=0,i=j.length;i>h;h++)e=j[h],e.computeBoundingBox(b,new d(new a.Point(f,g))),k.push(f+=e.dimensions[b].width);return k},e.prototype.drawPath=function(b,c){return this.dropArea=new a.Rectangle(this.bounds[this.lineStart].x,this.bounds[this.lineStart].y,Math.max(this.bounds[this.lineStart].width,l),10),(this.dropHighlightRegion=new a.NoRectangle).copy(this.dropArea),this.block.isLassoSegment&&(c.selected+=1),e.__super__.drawPath.apply(this,arguments),this.block.isLassoSegment?c.selected-=1:void 0},e}(j),C.MutationButtonView=p=function(c){function d(a){d.__super__.constructor.call(this,a)}return b(d,c),d.prototype.computeChildren=function(a){return this.lineStart=this.lineEnd=a},d.prototype.computeDimensions=function(){return d.__super__.computeDimensions.apply(this,arguments),this.dimensions[this.lineStart]=new a.Size(o,n)},d.prototype.computeBoundingBox=function(b,c){return this.bounds[this.lineStart]=new a.Rectangle(c.x,c.y,o,n)},d.prototype.drawPath=function(a){var b,c;return b=this.bounds[this.lineStart],c=m,a.beginPath(),a.moveTo(b.x,b.y+c),a.arc(b.x+c,b.y+c,c,Math.PI,1.5*Math.PI),a.lineTo(b.right()-c,b.y),a.arc(b.right()-c,b.y+c,c,1.5*Math.PI,0),a.lineTo(b.right(),b.bottom()-c),a.arc(b.right()-c,b.bottom()-c,c,0,.5*Math.PI),a.lineTo(b.x+c,b.bottom()),a.arc(b.x+c,b.bottom()-c,c,.5*Math.PI,Math.PI),a.lineTo(b.x,b.y+c),a.strokeStyle="#000",a.fillStyle="#FFF",a.fill(),a.stroke(),a.fillStyle="#000",a.fillRect(b.x+b.width/2-r/2,b.y+5,r,b.height-10),a.fillRect(b.x+5,b.y+b.height/2-r/2,b.width-10,r),d.__super__.drawPath.apply(this,arguments)},d}(j),C.CursorView=e=function(){function b(b){this.block=b,this.point=new a.Point(0,0)}return b}(),C})}.call(this),function(){var a={}.hasOwnProperty,b=function(b,c){function d(){this.constructor=b}for(var e in c)a.call(c,e)&&(b[e]=c[e]);return d.prototype=c.prototype,b.prototype=new d,b.__super__=c.prototype,b};define("ice-model",["ice-view"],function(a){var c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v;return u={},window.printSegment=function(a){var b,c;for(b=a.start,c=[];b!==a.end;)console.log(b),c.push(b=b.next);return c},u.cloneTokens=t=function(a,b){var c,d,e,f,g,h;for(h=a,g=c=new s;;){switch(h.type){case"blockStart":d=h.block.clone(),d.start.prev=g,g.next=d.start,g=d.end,h=h.block.end;break;case"socketStart":d=h.socket.clone(),d.start.prev=g,g.next=d.start,g=d.end,h=h.socket.end;break;case"indentStart":d=h.indent.clone(),d.start.prev=g,g.next=d.start,g=d.end,h=h.indent.end;break;case"segmentStart":d=h.segment.clone(),d.start.prev=g,g.next=d.start,g=d.end,h=h.segment.end;break;default:"cursor"!==h.type&&(g=g.append(h.clone()))}if(h===b)break;h=h.next}return f=c.next,e=g,c.remove(),[f,e]},v=function(a,b){var c,d;for(c=a,d=1;c!==b;)c=c.next,d++;return d},u.Block=c=function(){function b(b,c,f){this.precedence=null!=b?b:0,this.color=null!=c?c:"#ddf",this.valueByDefault=null!=f?f:!1,this.start=new e(this),this.end=new d(this),this.start.next=this.end,this.end.prev=this.start,this.currentlyParenWrapped=!1,this.type="block",this.selected=!1,this.view=new a.BlockView(this),this.lineMarkStyles=[]}return b.prototype.clone=function(){var a,c,d,e;return a=new b(this.precedence,this.color,this.valueByDefault),this.start.next!==this.end&&(e=t(this.start.next,this.end.prev),d=e[0],c=e[1],null!=d&&null!=c&&(a.start.append(d),c.append(a.end))),a},b.prototype.length=function(){return v(this.start,this.end)},b.prototype.inSocket=function(){var a;for(a=this.start.prev;null!=a&&"segmentStart"===a.type;)a=a.prev;return null==a?null:"socketStart"===a.type},b.prototype.moveTo=function(a){for(var b,c,d,e,f,g;null!=this.start.prev&&"segmentStart"===this.start.prev.type&&this.start.prev.segment.end===this.end.next;)this.start.prev.segment.remove();if(null!=this.end.next&&null!=this.start.prev){for(d=this.end.next;null!=d&&("segmentEnd"===d.type||"cursor"===d.type);)d=d.next;for(b=this.start.prev;null!=b&&("segmentStart"===b.type||"cursor"===b.type);)b=b.prev;null==b||"newline"!==b.type||null!=d&&"newline"!==d.type&&"indentEnd"!==d.type||"indentStart"===(null!=(e=b.prev)?e.type:void 0)&&"indentEnd"===d.type?null!=d&&"newline"===d.type&&(null==b||"newline"===b.type)&&d.remove():b.remove()}switch(null!=this.start.prev&&(this.start.prev.next=this.end.next),null!=this.end.next&&(this.end.next.prev=this.start.prev),this.start.prev=this.end.next=null,null!=a?a.type:void 0){case"indentStart":for(c=a.indent.end.prev;"cursor"===(f=c.type)||"segmentEnd"===f||"segmentStart"===f;)c=c.prev;a="newline"===c.type?a.next:a.insert(new k);break;case"blockEnd":a=a.insert(new k);break;case"segmentStart":a.next!==a.segment.end&&a.insert(new k);break;case"socketStart":null!=(g=a.socket.content())&&g.remove()}for(null!=a&&(this.end.next=a.next,null!=a.next&&(a.next.prev=this.end),a.next=this.start,this.start.prev=a);null!=a&&"segmentStart"===a.type;)a=a.prev;if("socketStart"===(null!=a?a.type:void 0)&&a.socket.precedence>=this.precedence){if(!this.currentlyParenWrapped)return this.start.insert(new r("(")),this.end.insertBefore(new r(")")),this.currentlyParenWrapped=!0}else if(this.currentlyParenWrapped){if("text"!==this.start.next.type||"text"!==this.end.prev.type)throw new Error("Cannot unwrap parentheses; parentheses do not exist.");return this.start.next.value=this.start.next.value.slice(1),this.end.prev.value=this.end.prev.value.slice(0,-1),0===this.start.next.value.length&&this.start.next.remove(),0===this.end.prev.value.length&&this.end.prev.remove(),this.currentlyParenWrapped=!1}},b.prototype.checkParenWrap=function(){var a;for(a=this.start.prev;null!=a&&"segmentStart"===a.type;)a=a.prev;if("socketStart"===(null!=a?a.type:void 0)&&a.socket.precedence>this.precedence){if(!this.currentlyParenWrapped)return this.start.insert(new r("(")),this.end.insertBefore(new r(")")),this.currentlyParenWrapped=!0}else if(this.currentlyParenWrapped)return this.start.next.remove(),this.end.prev.remove(),this.currentlyParenWrapped=!1},b.prototype.find=function(a){var b;for(b=this.start.next;b!==this.end;){if("blockStart"===b.type&&a(b.block))return b.block.find(a);if("indentStart"===b.type&&a(b.indent))return b.indent.find(a);if("socketStart"===b.type&&a(b.socket))return b.socket.find(a);b=b.next}return a(this)?this:null},b.prototype.stringify=function(){return this.start.stringify({indent:"",stopToken:this.end})},b}(),u.Indent=g=function(){function b(b){this.depth=b,this.start=new i(this),this.end=new h(this),this.type="indent",this.start.next=this.end,this.end.prev=this.start,this.view=new a.IndentView(this)}return b.prototype.clone=function(){var a,c,d,e;return a=new b(this.depth),this.start.next!==this.end&&(e=t(this.start.next,this.end.prev),d=e[0],c=e[1],null!=d&&null!=c&&(a.start.append(d),c.append(a.end))),a},b.prototype.find=function(a){var b;for(b=this.start.next;b!==this.end;){if("blockStart"===b.type&&a(b.block))return b.block.find(a);if("indentStart"===b.type&&a(b.indent))return b.indent.find(a);if("socketStart"===b.type&&a(b.socket))return b.socket.find(a);b=b.next}return a(this)?this:null},b.prototype.stringify=function(){return this.start.stringify({indent:"",stopToken:this.end})},b}(),u.Segment=l=function(){function b(){this.start=new n(this),this.end=new m(this),this.type="segment",this.isLassoSegment=!1,this.start.next=this.end,this.end.prev=this.start,this.view=new a.SegmentView(this)}return b.prototype.length=function(){return v(this.start,this.end)},b.prototype.clone=function(){var a,c,d,e;return a=new b,this.start.next!==this.end&&(e=t(this.start.next,this.end.prev),d=e[0],c=e[1],null!=d&&null!=c&&(a.start.append(d),c.append(a.end))),a},b.prototype.remove=function(){return this.start.remove(),this.end.remove(),this.start.next=this.end,this.end.prev=this.start},b.prototype.moveTo=function(a){for(var b,c,d,e,f;null!=this.start.prev&&"segmentStart"===this.start.prev.type&&this.start.prev.segment.end===this.end.next;)this.start.prev.segment.remove();if(null!=this.end.next&&null!=this.start.prev){for(d=this.end.next;null!=d&&("segmentEnd"===d.type||"cursor"===d.type);)d=d.next;for(b=this.start.prev;null!=b&&("segmentStart"===b.type||"cursor"===b.type);)b=b.prev;null==b||"newline"!==b.type||null!=d&&"newline"!==d.type&&"indentEnd"!==d.type||"indentStart"===(null!=(e=b.prev)?e.type:void 0)&&"indentEnd"===d.type?null!=d&&"newline"===d.type&&(null==b||"newline"===b.type)&&d.remove():b.remove()}switch(null!=this.start.prev&&(this.start.prev.next=this.end.next),null!=this.end.next&&(this.end.next.prev=this.start.prev),this.start.prev=this.end.next=null,null!=a?a.type:void 0){case"indentStart":for(c=a.indent.end.prev;"cursor"===(f=c.type)||"segmentEnd"===f||"segmentStart"===f;)c=c.prev;a="newline"===c.type?a.next:a.insert(new k);break;case"blockEnd":a=a.insert(new k);break;case"segmentStart":a.next!==a.segment.end&&a.insert(new k);break;case"socketStart":throw new Error("Cannot move Segment into a Socket.")}return null!=a?(this.end.next=a.next,null!=a.next&&(a.next.prev=this.end),a.next=this.start,this.start.prev=a):void 0
-},b.prototype.find=function(a){var b;for(b=this.start.next;b!==this.end;){if("blockStart"===b.type&&a(b.block))return b.block.find(a);if("indentStart"===b.type&&a(b.indent))return b.indent.find(a);if("socketStart"===b.type&&a(b.socket))return b.socket.find(a);b=b.next}return a(this)?this:null},b.prototype.stringify=function(){return this.start.stringify({indent:"",stopToken:this.end})},b.prototype.getTokenAtLocation=function(a){var b,c;if(null==a)return null;if(0===a)return this.start;for(c=this.start,b=1;b!==a&&null!=c;)"cursor"!==(null!=c?c.type:void 0)&&(b+=1),c=c.next;for(;"cursor"===(null!=c?c.type:void 0);)c=c.next;return null==c?this.end:c},b.prototype.getBlockOnLine=function(a){var b,c,d,e;for(b=this.start,c=0,d=[];c!==a&&null!=b;){switch(b.type){case"newline":c++;break;case"blockStart":d.push(b.block);break;case"blockEnd":d.pop()}b=b.next}for(;"newline"===(e=null!=b?b.type:void 0)||"cursor"===e||"segmentStart"===e||"segmentEnd"===e;)b=b.next;return"blockStart"===(null!=b?b.type:void 0)&&d.push(b.block),d[d.length-1]},b}(),u.Socket=o=function(){function b(b,c){this.precedence=null!=c?c:0,this.start=new q(this),this.end=new p(this),null!=b&&null!=b.start?(this.start.next=b.start,b.start.prev=this.start,this.end.prev=b.end,b.end.next=this.end):null!=b?(this.start.next=b,b.prev=this.start,this.end.prev=b,b.next=this.end):(this.start.next=this.end,this.end.prev=this.start),this.type="socket",this.handwritten=!1,this.view=new a.SocketView(this)}return b.prototype.clone=function(){return null!=this.content()?new b(this.content().clone(),this.precedence):new b(null,this.precedence)},b.prototype.content=function(){var a;return a=function(b){switch(b.type){case"blockStart":return b.block;case"segmentStart":return a(b.next);default:return b}},this.start.next!==this.end?a(this.start.next):null},b.prototype.find=function(a){var b;for(b=this.start.next;b!==this.end;){if("blockStart"===b.type&&a(b.block))return b.block.find(a);if("indentStart"===b.type&&a(b.indent))return b.indent.find(a);if("socketStart"===b.type&&a(b.socket))return b.socket.find(a);b=b.next}return a(this)?this:null},b.prototype.stringify=function(){return this.start.stringify({indent:"",stopToken:this.end})},b}(),u.Token=s=function(){function a(){this.prev=this.next=null}return a.prototype.append=function(a){return a.prev=this,this.next=a},a.prototype.insert=function(a){return null!=this.next&&(a.next=this.next,this.next.prev=a),a.prev=this,this.next=a,this.next},a.prototype.insertBefore=function(a){return null!=this.prev&&(a.prev=this.prev,this.prev.next=a),a.next=this,this.prev=a,this.prev},a.prototype.remove=function(){return null!=this.prev&&(this.prev.next=this.next),null!=this.next&&(this.next.prev=this.prev),this.prev=this.next=null},a.prototype.stringify=function(a){return null!=this.next&&this.next!==a.stopToken?this.next.stringify(a):""},a.prototype.getSerializedLocation=function(){var a,b;for(b=this,a=0;null!==b;)"cursor"!==b.type&&(a+=1),b=b.prev;return a},a}(),u.CursorToken=f=function(c){function d(){this.prev=this.next=null,this.view=new a.CursorView(this),this.type="cursor"}return b(d,c),d.prototype.clone=function(){return new d},d}(s),u.TextToken=r=function(c){function d(b){this.value=b,this.prev=this.next=null,this.view=new a.TextView(this),this.type="text"}return b(d,c),d.prototype.clone=function(){return new d(this.value)},d.prototype.stringify=function(a){return this.value+(null!=this.next&&this.next!==a.stopToken?this.next.stringify(a):"")},d}(s),u.MutationButtonToken=j=function(c){function d(b){if(this.expandValue=b,"segment"!==this.expandValue.type)throw new Error("Must instantiate a MutationButton with a Segment object, not "+this.expandValue.type);this.prev=this.next=null,this.view=new a.MutationButtonView(this),this.type="mutationButton"}return b(d,c),d.prototype.clone=function(){return new d(this.expandValue)},d.prototype.expand=function(){var a;return console.log(this.expandValue.stringify()),a=this.expandValue.clone(),this.prev.append(a.start),a.end.append(this.next),a.remove()},d}(s),u.BlockStartToken=e=function(a){function c(a){this.block=a,this.prev=this.next=null,this.type="blockStart"}return b(c,a),c}(s),u.BlockEndToken=d=function(a){function c(a){this.block=a,this.prev=this.next=null,this.type="blockEnd"}return b(c,a),c}(s),u.SocketStartToken=q=function(a){function c(a){this.socket=a,this.prev=this.next=null,this.type="socketStart"}return b(c,a),c}(s),u.SocketEndToken=p=function(a){function c(a){this.socket=a,this.prev=this.next=null,this.type="socketEnd"}return b(c,a),c}(s),u.SegmentStartToken=n=function(a){function c(a){this.segment=a,this.prev=this.next=null,this.type="segmentStart"}return b(c,a),c}(s),u.SegmentEndToken=m=function(a){function c(a){this.segment=a,this.prev=this.next=null,this.type="segmentEnd"}return b(c,a),c}(s),u.IndentStartToken=i=function(a){function c(a){this.indent=a,this.prev=this.next=null,this.type="indentStart"}return b(c,a),c.prototype.stringify=function(a){return a.indent+=function(){var a,b,c;for(c=[],a=1,b=this.indent.depth;b>=1?b>=a:a>=b;b>=1?a++:a--)c.push(" ");return c}.call(this).join(""),this.next&&this.next!==a.stopToken?this.next.stringify(a):""},c}(s),u.IndentEndToken=h=function(a){function c(a){this.indent=a,this.prev=this.next=null,this.type="indentEnd"}return b(c,a),c.prototype.stringify=function(a){return a.indent=a.indent.slice(0,-this.indent.depth),this.next&&this.next!==a.stopToken?this.next.stringify(a):""},c}(s),u.NewlineToken=k=function(a){function c(){this.prev=this.next=null,this.type="newline"}return b(c,a),c.prototype.clone=function(){return new c},c.prototype.stringify=function(a){return"\n"+a.indent+(this.next&&this.next!==a.stopToken?this.next.stringify(a):"")},c}(s),u})}.call(this),function(){define("ice-parser",["ice-model"],function(a){var b,c,d,e,f,g;return d={},f=function(a){return a.sort(function(a,b){return a.location.line>b.location.line?1:b.location.line>a.location.line?-1:a.location.column>b.location.column?1:b.location.column>a.location.column?-1:a.start&&!b.start?1:b.start&&!a.start?-1:a.start&&b.start?a.id>b.id?1:-1:a.start||b.start?void 0:a.id>b.id?-1:1}),a},c=function(b,c){var d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B;for(o={},q=0,t=c.length;t>q;q++)n=c[q],null==o[w=n.location.line]&&(o[w]=[]),o[n.location.line].push(n);for(m=b.split("\n"),j=0,p=[],d=[],g=new a.Segment,h=g.start,i=r=0,u=m.length;u>r;i=++r)if(l=m[i],i in o){for(k=j,x=o[i],s=0,v=x.length;v>s;s++){switch(n=x[s],k>=n.location.column||k>=l.length||(h=h.append(new a.TextToken(l.slice(k,n.location.column)))),n.token.type){case"indentStart":if("block"!==(null!=p&&null!=(y=p[p.length-1])?y.type:void 0))throw new Error("Improper parser: indent must be inside block, but is inside "+(null!=p&&null!=(z=p[p.length-1])?z.type:void 0));p.push(n.token.indent),j+=n.token.indent.depth,h=h.append(n.token);break;case"blockStart":"block"===(null!=(A=p[p.length-1])?A.type:void 0)&&(d.push(n.token.block),f=new a.Socket,h=h.append(f.start),p.push(f)),p.push(n.token.block),h=h.append(n.token);break;case"socketStart":if("block"!==(null!=(B=p[p.length-1])?B.type:void 0)){if(0===p.length)throw new Error("Improper parser: document root cannot be a socket.");"indent"===p[p.length-1].type&&(d.push(n.token.socket),e=new a.Block,h=h.append(e.start),p.push(e))}p.push(n.token.socket),h=h.append(n.token);break;case"indentEnd":if(n.token.indent!==p[p.length-1])throw new Error("Improper parser: indent ended too early.");p.pop(),j-=n.token.indent.depth,h=h.append(n.token);break;case"blockEnd":if(n.token.block!==p[p.length-1])throw new Error("Improper parser: block ended too early.");p.pop(),h=h.append(n.token),n.token.block===d[d.length-1]&&(d.pop(),h=h.append(p.pop().end));break;case"socketEnd":if(n.token.socket!==p[p.length-1])throw new Error("Improper parser: socket ended too early.");p.pop(),h=h.append(n.token),n.token.socket===d[d.length-1]&&(d.pop(),h=h.append(p.pop().end))}k=n.location.column}k>=l.length||(h=h.append(new a.TextToken(l.slice(k,l.length)))),h=h.append(new a.NewlineToken)}else j>=l.length||(h=h.append(new a.TextToken(l.slice(j)))),h=h.append(new a.NewlineToken);return h=h.prev,h.next.remove(),h=h.append(g.end),g},g=function(a){var b,c,d,e,f;for(d="0: ",b=0,e=0,f=a.length;f>e;e++)c=a[e],c.location.line!==b&&(d+="\n"+c.location.line+": ",b=c.location.line),d+="<"+c.token.type+"_"+c.id+">";return d},d.Parser=b=function(){function a(a){this.parseFn=a}return a.prototype.parse=function(a,b){var d;return null==b&&(b=!0),d=this.parseFn(a),f(d),c(a,d)},a}(),d.parseObj=e=function(b){var c,d,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u;if(null==b)return null;if("string"==typeof b||b instanceof String)return"\n"===b?new a.NewlineToken:new a.TextToken(b);switch(b.type){case"block":for(c=new a.Block(b.precedence,b.color,b.valueByDefault),g=c.start,p=b.children,j=0,m=p.length;m>j;j++)f=p[j],i=e(f),"text"===(q=i.type)||"newline"===q||"mutationButton"===q?g=g.append(i):(g.append(i.start),g=i.end);return g.append(c.end),c;case"socket":return new a.Socket(e(b.contents),b.precedence);case"indent":for(c=new a.Indent(b.depth),g=c.start,r=b.children,k=0,n=r.length;n>k;k++)f=r[k],i=e(f),"text"===(s=i.type)||"newline"===s?g=g.append(i):(g.append(i.start),g=i.end);return g.append(c.end),c;case"mutationButton":for(h=new a.Segment,d=new a.MutationButtonToken(h),g=h.start,t=b.expand,l=0,o=t.length;o>l;l++)f=t[l],i=0===f?new a.MutationButtonToken(h):e(f),"text"===(u=i.type)||"newline"===u||"mutationButton"===u?g=g.append(i):(g.append(i.start),g=i.end);return g.append(h.end),d}},d})}.call(this),function(root){var CoffeeScript=function(){function require(a){return require[a]}return require["./helpers"]=function(){var a={},b={exports:a};return function(){var b,c,d,e,f,g,h;a.starts=function(a,b,c){return b===a.substr(c,b.length)},a.ends=function(a,b,c){var d;return d=b.length,b===a.substr(a.length-d-(c||0),d)},a.repeat=f=function(a,b){var c;for(c="";b>0;)1&b&&(c+=a),b>>>=1,a+=a;return c},a.compact=function(a){var b,c,d,e;for(e=[],c=0,d=a.length;d>c;c++)b=a[c],b&&e.push(b);return e},a.count=function(a,b){var c,d;if(c=d=0,!b.length)return 1/0;for(;d=1+a.indexOf(b,d);)c++;return c},a.merge=function(a,b){return c(c({},a),b)},c=a.extend=function(a,b){var c,d;for(c in b)d=b[c],a[c]=d;return a},a.flatten=d=function(a){var b,c,e,f;for(c=[],e=0,f=a.length;f>e;e++)b=a[e],b instanceof Array?c=c.concat(d(b)):c.push(b);return c},a.del=function(a,b){var c;return c=a[b],delete a[b],c},a.last=e=function(a,b){return a[a.length-(b||0)-1]},a.some=null!=(h=Array.prototype.some)?h:function(a){var b,c,d;for(c=0,d=this.length;d>c;c++)if(b=this[c],a(b))return!0;return!1},a.invertLiterate=function(a){var b,c,d;return d=!0,c=function(){var c,e,f,g;for(f=a.split("\n"),g=[],c=0,e=f.length;e>c;c++)b=f[c],g.push(d&&/^([ ]{4}|[ ]{0,3}\t)/.test(b)?b:(d=/^\s*$/.test(b))?b:"# "+b);return g}(),c.join("\n")},b=function(a,b){return b?{first_line:a.first_line,first_column:a.first_column,last_line:b.last_line,last_column:b.last_column}:a},a.addLocationDataFn=function(a,c){return function(d){return"object"==typeof d&&d.updateLocationDataIfMissing&&d.updateLocationDataIfMissing(b(a,c)),d}},a.locationDataToString=function(a){var b;return"2"in a&&"first_line"in a[2]?b=a[2]:"first_line"in a&&(b=a),b?""+(b.first_line+1)+":"+(b.first_column+1)+"-"+(""+(b.last_line+1)+":"+(b.last_column+1)):"No location data"},a.baseFileName=function(a,b,c){var d,e;return null==b&&(b=!1),null==c&&(c=!1),e=c?/\\|\//:/\//,d=a.split(e),a=d[d.length-1],b&&a.indexOf(".")>=0?(d=a.split("."),d.pop(),"coffee"===d[d.length-1]&&d.length>1&&d.pop(),d.join(".")):a},a.isCoffee=function(a){return/\.((lit)?coffee|coffee\.md)$/.test(a)},a.isLiterate=function(a){return/\.(litcoffee|coffee\.md)$/.test(a)},a.throwSyntaxError=function(a,b){var c;throw c=new SyntaxError(a),c.location=b,c.toString=g,c.stack=""+c,c},a.updateSyntaxError=function(a,b,c){return a.toString===g&&(a.code||(a.code=b),a.filename||(a.filename=c),a.stack=""+a),a},g=function(){var a,b,c,d,e,g,h,i,j,k,l,m,n;return this.code&&this.location?(m=this.location,h=m.first_line,g=m.first_column,j=m.last_line,i=m.last_column,null==j&&(j=h),null==i&&(i=g),e=this.filename||"[stdin]",a=this.code.split("\n")[h],l=g,d=h===j?i+1:a.length,k=f(" ",l)+f("^",d-l),"undefined"!=typeof process&&null!==process&&(c=process.stdout.isTTY&&!process.env.NODE_DISABLE_COLORS),(null!=(n=this.colorful)?n:c)&&(b=function(a){return"[1;31m"+a+"[0m"},a=a.slice(0,l)+b(a.slice(l,d))+a.slice(d),k=b(k)),""+e+":"+(h+1)+":"+(g+1)+": error: "+this.message+"\n"+a+"\n"+k):Error.prototype.toString.call(this)},a.nameWhitespaceCharacter=function(a){switch(a){case" ":return"space";case"\n":return"newline";case"\r":return"carriage return";case"	":return"tab";default:return a}}}.call(this),b.exports}(),require["./rewriter"]=function(){var a={},b={exports:a};return function(){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1},v=[].slice;for(o=function(a,b,c){var d;return d=[a,b],d.generated=!0,c&&(d.origin=c),d},a.Rewriter=function(){function a(){}return a.prototype.rewrite=function(a){return this.tokens=a,this.removeLeadingNewlines(),this.closeOpenCalls(),this.closeOpenIndexes(),this.normalizeLines(),this.tagPostfixConditionals(),this.addImplicitBracesAndParens(),this.addLocationDataToGeneratedTokens(),this.tokens},a.prototype.scanTokens=function(a){var b,c,d;for(d=this.tokens,b=0;c=d[b];)b+=a.call(this,c,b,d);return!0},a.prototype.detectEnd=function(a,b,c){var d,g,h,i,j;for(h=this.tokens,d=0;g=h[a];){if(0===d&&b.call(this,g,a))return c.call(this,g,a);if(!g||0>d)return c.call(this,g,a-1);i=g[0],u.call(f,i)>=0?d+=1:(j=g[0],u.call(e,j)>=0&&(d-=1)),a+=1}return a-1},a.prototype.removeLeadingNewlines=function(){var a,b,c,d,e;for(e=this.tokens,a=c=0,d=e.length;d>c&&(b=e[a][0],"TERMINATOR"===b);a=++c);return a?this.tokens.splice(0,a):void 0},a.prototype.closeOpenCalls=function(){var a,b;return b=function(a,b){var c;return")"===(c=a[0])||"CALL_END"===c||"OUTDENT"===a[0]&&")"===this.tag(b-1)},a=function(a,b){return this.tokens["OUTDENT"===a[0]?b-1:b][0]="CALL_END"},this.scanTokens(function(c,d){return"CALL_START"===c[0]&&this.detectEnd(d+1,b,a),1})},a.prototype.closeOpenIndexes=function(){var a,b;return b=function(a){var b;return"]"===(b=a[0])||"INDEX_END"===b},a=function(a){return a[0]="INDEX_END"},this.scanTokens(function(c,d){return"INDEX_START"===c[0]&&this.detectEnd(d+1,b,a),1})},a.prototype.matchTags=function(){var a,b,c,d,e,f,g;for(b=arguments[0],d=arguments.length>=2?v.call(arguments,1):[],a=0,c=e=0,f=d.length;f>=0?f>e:e>f;c=f>=0?++e:--e){for(;"HERECOMMENT"===this.tag(b+c+a);)a+=2;if(null!=d[c]&&("string"==typeof d[c]&&(d[c]=[d[c]]),g=this.tag(b+c+a),0>u.call(d[c],g)))return!1}return!0},a.prototype.looksObjectish=function(a){return this.matchTags(a,"@",null,":")||this.matchTags(a,null,":")},a.prototype.findTagsBackwards=function(a,b){var c,d,g,h,i,j,k;for(c=[];a>=0&&(c.length||(h=this.tag(a),0>u.call(b,h)&&(i=this.tag(a),0>u.call(f,i)||this.tokens[a].generated)&&(j=this.tag(a),0>u.call(l,j))));)d=this.tag(a),u.call(e,d)>=0&&c.push(this.tag(a)),g=this.tag(a),u.call(f,g)>=0&&c.length&&c.pop(),a-=1;return k=this.tag(a),u.call(b,k)>=0},a.prototype.addImplicitBracesAndParens=function(){var a;return a=[],this.scanTokens(function(b,d,k){var m,n,p,q,r,s,t,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P;if(J=b[0],y=(z=d>0?k[d-1]:[])[0],w=(k.length-1>d?k[d+1]:[])[0],E=function(){return a[a.length-1]},F=d,p=function(a){return d-F+a},q=function(){var a,b;return null!=(a=E())&&null!=(b=a[2])?b.ours:void 0},r=function(){var a;return q()&&"("===(null!=(a=E())?a[0]:void 0)},t=function(){var a;return q()&&"{"===(null!=(a=E())?a[0]:void 0)},s=function(){var a;return q&&"CONTROL"===(null!=(a=E())?a[0]:void 0)},G=function(b){var c;return c=null!=b?b:d,a.push(["(",c,{ours:!0}]),k.splice(c,0,o("CALL_START","(")),null==b?d+=1:void 0},m=function(){return a.pop(),k.splice(d,0,o("CALL_END",")")),d+=1},H=function(c,e){var f;return null==e&&(e=!0),f=null!=c?c:d,a.push(["{",f,{sameLine:!0,startsLine:e,ours:!0}]),k.splice(f,0,o("{",o(new String("{")),b)),null==c?d+=1:void 0},n=function(c){return c=null!=c?c:d,a.pop(),k.splice(c,0,o("}","}",b)),d+=1},!r()||"IF"!==J&&"TRY"!==J&&"FINALLY"!==J&&"CATCH"!==J&&"CLASS"!==J&&"SWITCH"!==J){if("INDENT"===J&&q()){if("=>"!==y&&"->"!==y&&"["!==y&&"("!==y&&","!==y&&"{"!==y&&"TRY"!==y&&"ELSE"!==y&&"="!==y)for(;r();)m();return s()&&a.pop(),a.push([J,d]),p(1)}if(u.call(f,J)>=0)return a.push([J,d]),p(1);if(u.call(e,J)>=0){for(;q();)r()?m():t()?n():a.pop();a.pop()}if((u.call(i,J)>=0&&b.spaced&&!b.stringEnd||"?"===J&&d>0&&!k[d-1].spaced)&&(u.call(g,w)>=0||u.call(j,w)>=0&&(null!=(K=k[d+1])?!K.spaced:!0)&&(null!=(L=k[d+1])?!L.newLine:!0)))return"?"===J&&(J=b[0]="FUNC_EXIST"),G(d+1),p(2);if(u.call(i,J)>=0&&this.matchTags(d+1,"INDENT",null,":")&&!this.findTagsBackwards(d,["CLASS","EXTENDS","IF","CATCH","SWITCH","LEADING_WHEN","FOR","WHILE","UNTIL"]))return G(d+1),a.push(["INDENT",d+2]),p(3);if(":"===J){for(A="@"===this.tag(d-2)?d-2:d-1;"HERECOMMENT"===this.tag(A-2);)A-=2;return this.insideForDeclaration="FOR"===w,I=0===A||(M=this.tag(A-1),u.call(l,M)>=0)||k[A-1].newLine,E()&&(N=E(),D=N[0],C=N[1],("{"===D||"INDENT"===D&&"{"===this.tag(C-1))&&(I||","===this.tag(A-1)||"{"===this.tag(A-1)))?p(1):(H(A,!!I),p(2))}if(t()&&u.call(l,J)>=0&&(E()[2].sameLine=!1),v="OUTDENT"===y||z.newLine,u.call(h,J)>=0||u.call(c,J)>=0&&v)for(;q();)if(O=E(),D=O[0],C=O[1],P=O[2],B=P.sameLine,I=P.startsLine,r()&&","!==y)m();else if(!t()||this.insideForDeclaration||!B||"TERMINATOR"===J||":"===y||!n()){if(!t()||"TERMINATOR"!==J||","===y||I&&this.looksObjectish(d+1))break;n()}if(!(","!==J||this.looksObjectish(d+1)||!t()||this.insideForDeclaration||"TERMINATOR"===w&&this.looksObjectish(d+2)))for(x="OUTDENT"===w?1:0;t();)n(d+x);return p(1)}return a.push(["CONTROL",d,{ours:!0}]),p(1)})},a.prototype.addLocationDataToGeneratedTokens=function(){return this.scanTokens(function(a,b,c){var d,e,f,g,h,i;return a[2]?1:a.generated||a.explicit?("{"===a[0]&&(f=null!=(h=c[b+1])?h[2]:void 0)?(e=f.first_line,d=f.first_column):(g=null!=(i=c[b-1])?i[2]:void 0)?(e=g.last_line,d=g.last_column):e=d=0,a[2]={first_line:e,first_column:d,last_line:e,last_column:d},1):1})},a.prototype.normalizeLines=function(){var a,b,e,f,g;return g=e=f=null,b=function(a,b){var e,f,h,i;return";"!==a[1]&&(e=a[0],u.call(m,e)>=0)&&!("TERMINATOR"===a[0]&&(f=this.tag(b+1),u.call(d,f)>=0))&&("ELSE"!==a[0]||"THEN"===g)&&("CATCH"!==(h=a[0])&&"FINALLY"!==h||"->"!==g&&"=>"!==g)||(i=a[0],u.call(c,i)>=0&&this.tokens[b-1].newLine)},a=function(a,b){return this.tokens.splice(","===this.tag(b-1)?b-1:b,0,f)},this.scanTokens(function(c,h,i){var j,k,l,m,o,p;if(k=c[0],"TERMINATOR"===k){if("ELSE"===this.tag(h+1)&&"OUTDENT"!==this.tag(h-1))return i.splice.apply(i,[h,1].concat(v.call(this.indentation()))),1;if(m=this.tag(h+1),u.call(d,m)>=0)return i.splice(h,1),0}if("CATCH"===k)for(j=l=1;2>=l;j=++l)if("OUTDENT"===(o=this.tag(h+j))||"TERMINATOR"===o||"FINALLY"===o)return i.splice.apply(i,[h+j,0].concat(v.call(this.indentation()))),2+j;return u.call(n,k)>=0&&"INDENT"!==this.tag(h+1)&&("ELSE"!==k||"IF"!==this.tag(h+1))?(g=k,p=this.indentation(i[h]),e=p[0],f=p[1],"THEN"===g&&(e.fromThen=!0),i.splice(h+1,0,e),this.detectEnd(h+2,b,a),"THEN"===k&&i.splice(h,1),1):1})},a.prototype.tagPostfixConditionals=function(){var a,b,c;return c=null,b=function(a,b){var c,d;return d=a[0],c=this.tokens[b-1][0],"TERMINATOR"===d||"INDENT"===d&&0>u.call(n,c)},a=function(a){return"INDENT"!==a[0]||a.generated&&!a.fromThen?c[0]="POST_"+c[0]:void 0},this.scanTokens(function(d,e){return"IF"!==d[0]?1:(c=d,this.detectEnd(e+1,b,a),1)})},a.prototype.indentation=function(a){var b,c;return b=["INDENT",2],c=["OUTDENT",2],a?(b.generated=c.generated=!0,b.origin=c.origin=a):b.explicit=c.explicit=!0,[b,c]},a.prototype.generate=o,a.prototype.tag=function(a){var b;return null!=(b=this.tokens[a])?b[0]:void 0},a}(),b=[["(",")"],["[","]"],["{","}"],["INDENT","OUTDENT"],["CALL_START","CALL_END"],["PARAM_START","PARAM_END"],["INDEX_START","INDEX_END"]],a.INVERSES=k={},f=[],e=[],r=0,s=b.length;s>r;r++)t=b[r],p=t[0],q=t[1],f.push(k[q]=p),e.push(k[p]=q);d=["CATCH","THEN","ELSE","FINALLY"].concat(e),i=["IDENTIFIER","SUPER",")","CALL_END","]","INDEX_END","@","THIS"],g=["IDENTIFIER","NUMBER","STRING","JS","REGEX","NEW","PARAM_START","CLASS","IF","TRY","SWITCH","THIS","BOOL","NULL","UNDEFINED","UNARY","UNARY_MATH","SUPER","THROW","@","->","=>","[","(","{","--","++"],j=["+","-"],h=["POST_IF","FOR","WHILE","UNTIL","WHEN","BY","LOOP","TERMINATOR"],n=["ELSE","->","=>","TRY","FINALLY","THEN"],m=["TERMINATOR","CATCH","FINALLY","ELSE","OUTDENT","LEADING_WHEN"],l=["TERMINATOR","INDENT","OUTDENT"],c=[".","?.","::","?::"]}.call(this),b.exports}(),require["./lexer"]=function(){var a={},b={exports:a};return function(){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,_,ab,bb,cb=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1};ab=require("./rewriter"),L=ab.Rewriter,t=ab.INVERSES,bb=require("./helpers"),U=bb.count,$=bb.starts,T=bb.compact,X=bb.last,Z=bb.repeat,V=bb.invertLiterate,Y=bb.locationDataToString,_=bb.throwSyntaxError,a.Lexer=A=function(){function a(){}return a.prototype.tokenize=function(a,b){var c,d,e,f;for(null==b&&(b={}),this.literate=b.literate,this.indent=0,this.baseIndent=0,this.indebt=0,this.outdebt=0,this.indents=[],this.ends=[],this.tokens=[],this.chunkLine=b.line||0,this.chunkColumn=b.column||0,a=this.clean(a),d=0;this.chunk=a.slice(d);)c=this.identifierToken()||this.commentToken()||this.whitespaceToken()||this.lineToken()||this.heredocToken()||this.stringToken()||this.numberToken()||this.regexToken()||this.jsToken()||this.literalToken(),f=this.getLineAndColumnFromChunk(c),this.chunkLine=f[0],this.chunkColumn=f[1],d+=c;return this.closeIndentation(),(e=this.ends.pop())&&this.error("missing "+e),b.rewrite===!1?this.tokens:(new L).rewrite(this.tokens)},a.prototype.clean=function(a){return a.charCodeAt(0)===b&&(a=a.slice(1)),a=a.replace(/\r/g,"").replace(P,""),S.test(a)&&(a="\n"+a,this.chunkLine--),this.literate&&(a=V(a)),a},a.prototype.identifierToken=function(){var a,b,c,d,e,i,j,k,l,m,n,o,p,r;return(j=q.exec(this.chunk))?(i=j[0],d=j[1],a=j[2],e=d.length,k=void 0,"own"===d&&"FOR"===this.tag()?(this.token("OWN",d),d.length):(c=a||(l=X(this.tokens))&&("."===(o=l[0])||"?."===o||"::"===o||"?::"===o||!l.spaced&&"@"===l[0]),m="IDENTIFIER",!c&&(cb.call(w,d)>=0||cb.call(h,d)>=0)&&(m=d.toUpperCase(),"WHEN"===m&&(p=this.tag(),cb.call(x,p)>=0)?m="LEADING_WHEN":"FOR"===m?this.seenFor=!0:"UNLESS"===m?m="IF":cb.call(Q,m)>=0?m="UNARY":cb.call(J,m)>=0&&("INSTANCEOF"!==m&&this.seenFor?(m="FOR"+m,this.seenFor=!1):(m="RELATION","!"===this.value()&&(k=this.tokens.pop(),d="!"+d)))),cb.call(v,d)>=0&&(c?(m="IDENTIFIER",d=new String(d),d.reserved=!0):cb.call(K,d)>=0&&this.error('reserved word "'+d+'"')),c||(cb.call(f,d)>=0&&(d=g[d]),m=function(){switch(d){case"!":return"UNARY";case"==":case"!=":return"COMPARE";case"&&":case"||":return"LOGIC";case"true":case"false":return"BOOL";case"break":case"continue":return"STATEMENT";default:return m}}()),n=this.token(m,d,0,e),k&&(r=[k[2].first_line,k[2].first_column],n[2].first_line=r[0],n[2].first_column=r[1]),a&&(b=i.lastIndexOf(":"),this.token(":",":",b,a.length)),i.length)):0},a.prototype.numberToken=function(){var a,b,c,d,e;return(c=G.exec(this.chunk))?(d=c[0],/^0[BOX]/.test(d)?this.error("radix prefix '"+d+"' must be lowercase"):/E/.test(d)&&!/^0x/.test(d)?this.error("exponential notation '"+d+"' must be indicated with a lowercase 'e'"):/^0\d*[89]/.test(d)?this.error("decimal literal '"+d+"' must not be prefixed with '0'"):/^0\d+/.test(d)&&this.error("octal literal '"+d+"' must be prefixed with '0o'"),b=d.length,(e=/^0o([0-7]+)/.exec(d))&&(d="0x"+parseInt(e[1],8).toString(16)),(a=/^0b([01]+)/.exec(d))&&(d="0x"+parseInt(a[1],2).toString(16)),this.token("NUMBER",d,0,b),b):0},a.prototype.stringToken=function(){var a,b,c,d;switch(b=this.chunk.charAt(0)){case"'":c=(N.exec(this.chunk)||[])[0];break;case'"':c=this.balancedString(this.chunk,'"')}return c?(d=this.removeNewlines(c.slice(1,-1)),'"'===b&&c.indexOf("#{",1)>0?this.interpolateString(d,{strOffset:1,lexedLength:c.length}):this.token("STRING",b+this.escapeLines(d)+b,0,c.length),(a=/^(?:\\.|[^\\])*\\(?:0[0-7]|[1-7])/.test(c))&&this.error("octal escape sequences "+c+" are not allowed"),c.length):0},a.prototype.heredocToken=function(){var a,b,c,d;return(c=l.exec(this.chunk))?(b=c[0],d=b.charAt(0),a=this.sanitizeHeredoc(c[2],{quote:d,indent:null}),'"'===d&&a.indexOf("#{")>=0?this.interpolateString(a,{heredoc:!0,strOffset:3,lexedLength:b.length}):this.token("STRING",this.makeString(a,d,!0),0,b.length),b.length):0},a.prototype.commentToken=function(){var a,b,c;return(c=this.chunk.match(i))?(a=c[0],b=c[1],b&&this.token("HERECOMMENT",this.sanitizeHeredoc(b,{herecomment:!0,indent:Z(" ",this.indent)}),0,a.length),a.length):0},a.prototype.jsToken=function(){var a,b;return"`"===this.chunk.charAt(0)&&(a=u.exec(this.chunk))?(this.token("JS",(b=a[0]).slice(1,-1),0,b.length),b.length):0},a.prototype.regexToken=function(){var a,b,c,d,e,f,g;return"/"!==this.chunk.charAt(0)?0:(b=this.heregexToken())?b:(d=X(this.tokens),d&&(f=d[0],cb.call(d.spaced?E:F,f)>=0)?0:(c=I.exec(this.chunk))?(g=c,c=g[0],e=g[1],a=g[2],"//"===e?0:("/*"===e.slice(0,2)&&this.error("regular expressions cannot begin with `*`"),this.token("REGEX",""+e+a,0,c.length),c.length)):0)},a.prototype.heregexToken=function(){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,q,r,s;if(!(e=o.exec(this.chunk)))return 0;if(d=e[0],a=e[1],b=e[2],0>a.indexOf("#{"))return h=this.escapeLines(a.replace(p,"$1$2").replace(/\//g,"\\/"),!0),h.match(/^\*/)&&this.error("regular expressions cannot begin with `*`"),this.token("REGEX","/"+(h||"(?:)")+"/"+b,0,d.length),d.length;for(this.token("IDENTIFIER","RegExp",0,0),this.token("CALL_START","(",0,0),k=[],q=this.interpolateString(a,{regex:!0}),m=0,n=q.length;n>m;m++){if(j=q[m],i=j[0],l=j[1],"TOKENS"===i)k.push.apply(k,l);else if("NEOSTRING"===i){if(!(l=l.replace(p,"$1$2")))continue;l=l.replace(/\\/g,"\\\\"),j[0]="STRING",j[1]=this.makeString(l,'"',!0),k.push(j)}else this.error("Unexpected "+i);g=X(this.tokens),f=["+","+"],f[2]=g[2],k.push(f)}return k.pop(),"STRING"!==(null!=(r=k[0])?r[0]:void 0)&&(this.token("STRING",'""',0,0),this.token("+","+",0,0)),(s=this.tokens).push.apply(s,k),b&&(c=d.lastIndexOf(b),this.token(",",",",c,0),this.token("STRING",'"'+b+'"',c,b.length)),this.token(")",")",d.length-1,0),d.length},a.prototype.lineToken=function(){var a,b,c,d,e;if(!(c=D.exec(this.chunk)))return 0;if(b=c[0],this.seenFor=!1,e=b.length-1-b.lastIndexOf("\n"),d=this.unfinished(),e-this.indebt===this.indent)return d?this.suppressNewlines():this.newlineToken(0),b.length;if(e>this.indent){if(d)return this.indebt=e-this.indent,this.suppressNewlines(),b.length;if(!this.tokens.length)return this.baseIndent=this.indent=e,b.length;a=e-this.indent+this.outdebt,this.token("INDENT",a,b.length-e,e),this.indents.push(a),this.ends.push("OUTDENT"),this.outdebt=this.indebt=0,this.indent=e}else this.baseIndent>e?this.error("missing indentation",b.length):(this.indebt=0,this.outdentToken(this.indent-e,d,b.length));return b.length},a.prototype.outdentToken=function(a,b,c){var d,e,f,g;for(d=this.indent-a;a>0;)f=this.indents[this.indents.length-1],f?f===this.outdebt?(a-=this.outdebt,this.outdebt=0):this.outdebt>f?(this.outdebt-=f,a-=f):(e=this.indents.pop()+this.outdebt,c&&(g=this.chunk[c],cb.call(r,g)>=0)&&(d-=e-a,a=e),this.outdebt=0,this.pair("OUTDENT"),this.token("OUTDENT",a,0,c),a-=e):a=0;for(e&&(this.outdebt-=a);";"===this.value();)this.tokens.pop();return"TERMINATOR"===this.tag()||b||this.token("TERMINATOR","\n",c,0),this.indent=d,this},a.prototype.whitespaceToken=function(){var a,b,c;return(a=S.exec(this.chunk))||(b="\n"===this.chunk.charAt(0))?(c=X(this.tokens),c&&(c[a?"spaced":"newLine"]=!0),a?a[0].length:0):0},a.prototype.newlineToken=function(a){for(;";"===this.value();)this.tokens.pop();return"TERMINATOR"!==this.tag()&&this.token("TERMINATOR","\n",a,0),this},a.prototype.suppressNewlines=function(){return"\\"===this.value()&&this.tokens.pop(),this},a.prototype.literalToken=function(){var a,b,c,f,g,h,i,l;if((a=H.exec(this.chunk))?(f=a[0],e.test(f)&&this.tagParameters()):f=this.chunk.charAt(0),c=f,b=X(this.tokens),"="===f&&b&&(!b[1].reserved&&(g=b[1],cb.call(v,g)>=0)&&this.error('reserved word "'+this.value()+"\" can't be assigned"),"||"===(h=b[1])||"&&"===h))return b[0]="COMPOUND_ASSIGN",b[1]+="=",f.length;if(";"===f)this.seenFor=!1,c="TERMINATOR";else if(cb.call(B,f)>=0)c="MATH";else if(cb.call(j,f)>=0)c="COMPARE";else if(cb.call(k,f)>=0)c="COMPOUND_ASSIGN";else if(cb.call(Q,f)>=0)c="UNARY";else if(cb.call(R,f)>=0)c="UNARY_MATH";else if(cb.call(M,f)>=0)c="SHIFT";else if(cb.call(z,f)>=0||"?"===f&&(null!=b?b.spaced:void 0))c="LOGIC";else if(b&&!b.spaced)if("("===f&&(i=b[0],cb.call(d,i)>=0))"?"===b[0]&&(b[0]="FUNC_EXIST"),c="CALL_START";else if("["===f&&(l=b[0],cb.call(s,l)>=0))switch(c="INDEX_START",b[0]){case"?":b[0]="INDEX_SOAK"}switch(f){case"(":case"{":case"[":this.ends.push(t[f]);break;case")":case"}":case"]":this.pair(f)}return this.token(c,f),f.length},a.prototype.sanitizeHeredoc=function(a,b){var c,d,e,f,g;if(e=b.indent,d=b.herecomment){if(m.test(a)&&this.error('block comment cannot contain "*/", starting'),0>a.indexOf("\n"))return a}else for(;f=n.exec(a);)c=f[1],(null===e||(g=c.length)>0&&e.length>g)&&(e=c);return e&&(a=a.replace(RegExp("\\n"+e,"g"),"\n")),d||(a=a.replace(/^\n/,"")),a},a.prototype.tagParameters=function(){var a,b,c,d;if(")"!==this.tag())return this;for(b=[],d=this.tokens,a=d.length,d[--a][0]="PARAM_END";c=d[--a];)switch(c[0]){case")":b.push(c);break;case"(":case"CALL_START":if(!b.length)return"("===c[0]?(c[0]="PARAM_START",this):this;b.pop()}return this},a.prototype.closeIndentation=function(){return this.outdentToken(this.indent)},a.prototype.balancedString=function(a,b){var c,d,e,f,g,h,i,j;for(c=0,h=[b],d=i=1,j=a.length;j>=1?j>i:i>j;d=j>=1?++i:--i)if(c)--c;else{switch(e=a.charAt(d)){case"\\":++c;continue;case b:if(h.pop(),!h.length)return a.slice(0,+d+1||9e9);b=h[h.length-1];continue}"}"!==b||'"'!==e&&"'"!==e?"}"===b&&"/"===e&&(f=o.exec(a.slice(d))||I.exec(a.slice(d)))?c+=f[0].length-1:"}"===b&&"{"===e?h.push(b="}"):'"'===b&&"#"===g&&"{"===e&&h.push(b="}"):h.push(b=e),g=e}return this.error("missing "+h.pop()+", starting")},a.prototype.interpolateString=function(b,c){var d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F;for(null==c&&(c={}),g=c.heredoc,u=c.regex,q=c.offsetInChunk,w=c.strOffset,m=c.lexedLength,q||(q=0),w||(w=0),m||(m=b.length),z=[],r=0,h=-1;l=b.charAt(h+=1);)"\\"!==l?"#"===l&&"{"===b.charAt(h+1)&&(f=this.balancedString(b.slice(h+1),"}"))&&(h>r&&z.push(this.makeToken("NEOSTRING",b.slice(r,h),w+r)),e||(e=this.makeToken("","string interpolation",q+h+1,2)),i=f.slice(1,-1),i.length&&(D=this.getLineAndColumnFromChunk(w+h+1),n=D[0],d=D[1],p=(new a).tokenize(i,{line:n,column:d,rewrite:!1}),t=p.pop(),"TERMINATOR"===(null!=(E=p[0])?E[0]:void 0)&&(t=p.shift()),(k=p.length)&&(k>1&&(p.unshift(this.makeToken("(","(",w+h+1,0)),p.push(this.makeToken(")",")",w+h+1+i.length,0))),z.push(["TOKENS",p]))),h+=f.length,r=h+1):h+=1;if(h>r&&b.length>r&&z.push(this.makeToken("NEOSTRING",b.slice(r),w+r)),u)return z;if(!z.length)return this.token("STRING",'""',q,m);for("NEOSTRING"!==z[0][0]&&z.unshift(this.makeToken("NEOSTRING","",q)),(j=z.length>1)&&this.token("(","(",q,0,e),h=B=0,C=z.length;C>B;h=++B)y=z[h],x=y[0],A=y[1],h&&(h&&(s=this.token("+","+")),o="TOKENS"===x?A[0]:y,s[2]={first_line:o[2].first_line,first_column:o[2].first_column,last_line:o[2].first_line,last_column:o[2].first_column}),"TOKENS"===x?(F=this.tokens).push.apply(F,A):"NEOSTRING"===x?(y[0]="STRING",y[1]=this.makeString(A,'"',g),this.tokens.push(y)):this.error("Unexpected "+x);return j&&(v=this.makeToken(")",")",q+m,0),v.stringEnd=!0,this.tokens.push(v)),z
-},a.prototype.pair=function(a){var b;return a!==(b=X(this.ends))?("OUTDENT"!==b&&this.error("unmatched "+a),this.outdentToken(X(this.indents),!0),this.pair(a)):this.ends.pop()},a.prototype.getLineAndColumnFromChunk=function(a){var b,c,d,e;return 0===a?[this.chunkLine,this.chunkColumn]:(e=a>=this.chunk.length?this.chunk:this.chunk.slice(0,+(a-1)+1||9e9),c=U(e,"\n"),b=this.chunkColumn,c>0?(d=e.split("\n"),b=X(d).length):b+=e.length,[this.chunkLine+c,b])},a.prototype.makeToken=function(a,b,c,d){var e,f,g,h,i;return null==c&&(c=0),null==d&&(d=b.length),f={},h=this.getLineAndColumnFromChunk(c),f.first_line=h[0],f.first_column=h[1],e=Math.max(0,d-1),i=this.getLineAndColumnFromChunk(c+e),f.last_line=i[0],f.last_column=i[1],g=[a,b,f]},a.prototype.token=function(a,b,c,d,e){var f;return f=this.makeToken(a,b,c,d),e&&(f.origin=e),this.tokens.push(f),f},a.prototype.tag=function(a,b){var c;return(c=X(this.tokens,a))&&(b?c[0]=b:c[0])},a.prototype.value=function(a,b){var c;return(c=X(this.tokens,a))&&(b?c[1]=b:c[1])},a.prototype.unfinished=function(){var a;return y.test(this.chunk)||"\\"===(a=this.tag())||"."===a||"?."===a||"?::"===a||"UNARY"===a||"MATH"===a||"UNARY_MATH"===a||"+"===a||"-"===a||"**"===a||"SHIFT"===a||"RELATION"===a||"COMPARE"===a||"LOGIC"===a||"THROW"===a||"EXTENDS"===a},a.prototype.removeNewlines=function(a){return a.replace(/^\s*\n\s*/,"").replace(/([^\\]|\\\\)\s*\n\s*$/,"$1")},a.prototype.escapeLines=function(a,b){return a=a.replace(/\\[^\S\n]*(\n|\\)\s*/g,function(a,b){return"\n"===b?"":a}),b?a.replace(C,"\\n"):a.replace(/\s*\n\s*/g," ")},a.prototype.makeString=function(a,b,c){return a?(a=a.replace(RegExp("\\\\("+b+"|\\\\)","g"),function(a,c){return c===b?c:a}),a=a.replace(RegExp(""+b,"g"),"\\$&"),b+this.escapeLines(a,c)+b):b+b},a.prototype.error=function(a,b){var c,d,e;return null==b&&(b=0),e=this.getLineAndColumnFromChunk(b),d=e[0],c=e[1],_(a,{first_line:d,first_column:c})},a}(),w=["true","false","null","this","new","delete","typeof","in","instanceof","return","throw","break","continue","debugger","if","else","switch","for","while","do","try","catch","finally","class","extends","super"],h=["undefined","then","unless","until","loop","of","by","when"],g={and:"&&",or:"||",is:"==",isnt:"!=",not:"!",yes:"true",no:"false",on:"true",off:"false"},f=function(){var a;a=[];for(W in g)a.push(W);return a}(),h=h.concat(f),K=["case","default","function","var","void","with","const","let","enum","export","import","native","__hasProp","__extends","__slice","__bind","__indexOf","implements","interface","package","private","protected","public","static","yield"],O=["arguments","eval"],v=w.concat(K).concat(O),a.RESERVED=K.concat(w).concat(h).concat(O),a.STRICT_PROSCRIBED=O,b=65279,q=/^([$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)([^\n\S]*:(?!:))?/,G=/^0b[01]+|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i,l=/^("""|''')((?:\\[\s\S]|[^\\])*?)(?:\n[^\n\S]*)?\1/,H=/^(?:[-=]>|[-+*\/%<>&|^!?=]=|>>>=?|([-+:])\1|([&|<>*\/%])\2=?|\?(\.|::)|\.{2,3})/,S=/^[^\n\S]+/,i=/^###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#]).*)+/,e=/^[-=]>/,D=/^(?:\n[^\n\S]*)+/,N=/^'[^\\']*(?:\\[\s\S][^\\']*)*'/,u=/^`[^\\`]*(?:\\.[^\\`]*)*`/,I=/^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/,o=/^\/{3}((?:\\?[\s\S])+?)\/{3}([imgy]{0,4})(?!\w)/,p=/((?:\\\\)+)|\\(\s|\/)|\s+(?:#.*)?/g,C=/\n/g,n=/\n+([^\n\S]*)/g,m=/\*\//,y=/^\s*(?:,|\??\.(?![.\d])|::)/,P=/\s+$/,k=["-=","+=","/=","*=","%=","||=","&&=","?=","<<=",">>=",">>>=","&=","^=","|=","**=","//=","%%="],Q=["NEW","TYPEOF","DELETE","DO"],R=["!","~"],z=["&&","||","&","|","^"],M=["<<",">>",">>>"],j=["==","!=","<",">","<=",">="],B=["*","/","%","//","%%"],J=["IN","OF","INSTANCEOF"],c=["TRUE","FALSE"],E=["NUMBER","REGEX","BOOL","NULL","UNDEFINED","++","--"],F=E.concat(")","}","THIS","IDENTIFIER","STRING","]"),d=["IDENTIFIER","STRING","REGEX",")","]","}","?","::","@","THIS","SUPER"],s=d.concat("NUMBER","BOOL","NULL","UNDEFINED"),x=["INDENT","OUTDENT","TERMINATOR"],r=[")","}","]"]}.call(this),b.exports}(),require["./parser"]=function(){var a={},b={exports:a},c=function(){function a(){this.yy={}}var b={trace:function(){},yy:{},symbols_:{error:2,Root:3,Body:4,Line:5,TERMINATOR:6,Expression:7,Statement:8,Return:9,Comment:10,STATEMENT:11,Value:12,Invocation:13,Code:14,Operation:15,Assign:16,If:17,Try:18,While:19,For:20,Switch:21,Class:22,Throw:23,Block:24,INDENT:25,OUTDENT:26,Identifier:27,IDENTIFIER:28,AlphaNumeric:29,NUMBER:30,STRING:31,Literal:32,JS:33,REGEX:34,DEBUGGER:35,UNDEFINED:36,NULL:37,BOOL:38,Assignable:39,"=":40,AssignObj:41,ObjAssignable:42,":":43,ThisProperty:44,RETURN:45,HERECOMMENT:46,PARAM_START:47,ParamList:48,PARAM_END:49,FuncGlyph:50,"->":51,"=>":52,OptComma:53,",":54,Param:55,ParamVar:56,"...":57,Array:58,Object:59,Splat:60,SimpleAssignable:61,Accessor:62,Parenthetical:63,Range:64,This:65,".":66,"?.":67,"::":68,"?::":69,Index:70,INDEX_START:71,IndexValue:72,INDEX_END:73,INDEX_SOAK:74,Slice:75,"{":76,AssignList:77,"}":78,CLASS:79,EXTENDS:80,OptFuncExist:81,Arguments:82,SUPER:83,FUNC_EXIST:84,CALL_START:85,CALL_END:86,ArgList:87,THIS:88,"@":89,"[":90,"]":91,RangeDots:92,"..":93,Arg:94,SimpleArgs:95,TRY:96,Catch:97,FINALLY:98,CATCH:99,THROW:100,"(":101,")":102,WhileSource:103,WHILE:104,WHEN:105,UNTIL:106,Loop:107,LOOP:108,ForBody:109,FOR:110,ForStart:111,ForSource:112,ForVariables:113,OWN:114,ForValue:115,FORIN:116,FOROF:117,BY:118,SWITCH:119,Whens:120,ELSE:121,When:122,LEADING_WHEN:123,IfBlock:124,IF:125,POST_IF:126,UNARY:127,UNARY_MATH:128,"-":129,"+":130,"--":131,"++":132,"?":133,MATH:134,"**":135,SHIFT:136,COMPARE:137,LOGIC:138,RELATION:139,COMPOUND_ASSIGN:140,$accept:0,$end:1},terminals_:{2:"error",6:"TERMINATOR",11:"STATEMENT",25:"INDENT",26:"OUTDENT",28:"IDENTIFIER",30:"NUMBER",31:"STRING",33:"JS",34:"REGEX",35:"DEBUGGER",36:"UNDEFINED",37:"NULL",38:"BOOL",40:"=",43:":",45:"RETURN",46:"HERECOMMENT",47:"PARAM_START",49:"PARAM_END",51:"->",52:"=>",54:",",57:"...",66:".",67:"?.",68:"::",69:"?::",71:"INDEX_START",73:"INDEX_END",74:"INDEX_SOAK",76:"{",78:"}",79:"CLASS",80:"EXTENDS",83:"SUPER",84:"FUNC_EXIST",85:"CALL_START",86:"CALL_END",88:"THIS",89:"@",90:"[",91:"]",93:"..",96:"TRY",98:"FINALLY",99:"CATCH",100:"THROW",101:"(",102:")",104:"WHILE",105:"WHEN",106:"UNTIL",108:"LOOP",110:"FOR",114:"OWN",116:"FORIN",117:"FOROF",118:"BY",119:"SWITCH",121:"ELSE",123:"LEADING_WHEN",125:"IF",126:"POST_IF",127:"UNARY",128:"UNARY_MATH",129:"-",130:"+",131:"--",132:"++",133:"?",134:"MATH",135:"**",136:"SHIFT",137:"COMPARE",138:"LOGIC",139:"RELATION",140:"COMPOUND_ASSIGN"},productions_:[0,[3,0],[3,1],[4,1],[4,3],[4,2],[5,1],[5,1],[8,1],[8,1],[8,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[24,2],[24,3],[27,1],[29,1],[29,1],[32,1],[32,1],[32,1],[32,1],[32,1],[32,1],[32,1],[16,3],[16,4],[16,5],[41,1],[41,3],[41,5],[41,1],[42,1],[42,1],[42,1],[9,2],[9,1],[10,1],[14,5],[14,2],[50,1],[50,1],[53,0],[53,1],[48,0],[48,1],[48,3],[48,4],[48,6],[55,1],[55,2],[55,3],[55,1],[56,1],[56,1],[56,1],[56,1],[60,2],[61,1],[61,2],[61,2],[61,1],[39,1],[39,1],[39,1],[12,1],[12,1],[12,1],[12,1],[12,1],[62,2],[62,2],[62,2],[62,2],[62,1],[62,1],[70,3],[70,2],[72,1],[72,1],[59,4],[77,0],[77,1],[77,3],[77,4],[77,6],[22,1],[22,2],[22,3],[22,4],[22,2],[22,3],[22,4],[22,5],[13,3],[13,3],[13,1],[13,2],[81,0],[81,1],[82,2],[82,4],[65,1],[65,1],[44,2],[58,2],[58,4],[92,1],[92,1],[64,5],[75,3],[75,2],[75,2],[75,1],[87,1],[87,3],[87,4],[87,4],[87,6],[94,1],[94,1],[94,1],[95,1],[95,3],[18,2],[18,3],[18,4],[18,5],[97,3],[97,3],[97,2],[23,2],[63,3],[63,5],[103,2],[103,4],[103,2],[103,4],[19,2],[19,2],[19,2],[19,1],[107,2],[107,2],[20,2],[20,2],[20,2],[109,2],[109,2],[111,2],[111,3],[115,1],[115,1],[115,1],[115,1],[113,1],[113,3],[112,2],[112,2],[112,4],[112,4],[112,4],[112,6],[112,6],[21,5],[21,7],[21,4],[21,6],[120,1],[120,2],[122,3],[122,4],[124,3],[124,5],[17,1],[17,3],[17,3],[17,3],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,5],[15,4],[15,3]],performAction:function(a,b,c,d,e,f,g){var h=f.length-1;switch(e){case 1:return this.$=d.addLocationDataFn(g[h],g[h])(new d.Block);case 2:return this.$=f[h];case 3:this.$=d.addLocationDataFn(g[h],g[h])(d.Block.wrap([f[h]]));break;case 4:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-2].push(f[h]));break;case 5:this.$=f[h-1];break;case 6:this.$=f[h];break;case 7:this.$=f[h];break;case 8:this.$=f[h];break;case 9:this.$=f[h];break;case 10:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 11:this.$=f[h];break;case 12:this.$=f[h];break;case 13:this.$=f[h];break;case 14:this.$=f[h];break;case 15:this.$=f[h];break;case 16:this.$=f[h];break;case 17:this.$=f[h];break;case 18:this.$=f[h];break;case 19:this.$=f[h];break;case 20:this.$=f[h];break;case 21:this.$=f[h];break;case 22:this.$=f[h];break;case 23:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Block);break;case 24:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-1]);break;case 25:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 26:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 27:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 28:this.$=f[h];break;case 29:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 30:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 31:this.$=d.addLocationDataFn(g[h],g[h])(new d.Literal(f[h]));break;case 32:this.$=d.addLocationDataFn(g[h],g[h])(new d.Undefined);break;case 33:this.$=d.addLocationDataFn(g[h],g[h])(new d.Null);break;case 34:this.$=d.addLocationDataFn(g[h],g[h])(new d.Bool(f[h]));break;case 35:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Assign(f[h-2],f[h]));break;case 36:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Assign(f[h-3],f[h]));break;case 37:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Assign(f[h-4],f[h-1]));break;case 38:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 39:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Assign(d.addLocationDataFn(g[h-2])(new d.Value(f[h-2])),f[h],"object"));break;case 40:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Assign(d.addLocationDataFn(g[h-4])(new d.Value(f[h-4])),f[h-1],"object"));break;case 41:this.$=f[h];break;case 42:this.$=f[h];break;case 43:this.$=f[h];break;case 44:this.$=f[h];break;case 45:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Return(f[h]));break;case 46:this.$=d.addLocationDataFn(g[h],g[h])(new d.Return);break;case 47:this.$=d.addLocationDataFn(g[h],g[h])(new d.Comment(f[h]));break;case 48:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Code(f[h-3],f[h],f[h-1]));break;case 49:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Code([],f[h],f[h-1]));break;case 50:this.$=d.addLocationDataFn(g[h],g[h])("func");break;case 51:this.$=d.addLocationDataFn(g[h],g[h])("boundfunc");break;case 52:this.$=f[h];break;case 53:this.$=f[h];break;case 54:this.$=d.addLocationDataFn(g[h],g[h])([]);break;case 55:this.$=d.addLocationDataFn(g[h],g[h])([f[h]]);break;case 56:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-2].concat(f[h]));break;case 57:this.$=d.addLocationDataFn(g[h-3],g[h])(f[h-3].concat(f[h]));break;case 58:this.$=d.addLocationDataFn(g[h-5],g[h])(f[h-5].concat(f[h-2]));break;case 59:this.$=d.addLocationDataFn(g[h],g[h])(new d.Param(f[h]));break;case 60:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Param(f[h-1],null,!0));break;case 61:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Param(f[h-2],f[h]));break;case 62:this.$=d.addLocationDataFn(g[h],g[h])(new d.Expansion);break;case 63:this.$=f[h];break;case 64:this.$=f[h];break;case 65:this.$=f[h];break;case 66:this.$=f[h];break;case 67:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Splat(f[h-1]));break;case 68:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 69:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h-1].add(f[h]));break;case 70:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Value(f[h-1],[].concat(f[h])));break;case 71:this.$=f[h];break;case 72:this.$=f[h];break;case 73:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 74:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 75:this.$=f[h];break;case 76:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 77:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 78:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 79:this.$=f[h];break;case 80:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Access(f[h]));break;case 81:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Access(f[h],"soak"));break;case 82:this.$=d.addLocationDataFn(g[h-1],g[h])([d.addLocationDataFn(g[h-1])(new d.Access(new d.Literal("prototype"))),d.addLocationDataFn(g[h])(new d.Access(f[h]))]);break;case 83:this.$=d.addLocationDataFn(g[h-1],g[h])([d.addLocationDataFn(g[h-1])(new d.Access(new d.Literal("prototype"),"soak")),d.addLocationDataFn(g[h])(new d.Access(f[h]))]);break;case 84:this.$=d.addLocationDataFn(g[h],g[h])(new d.Access(new d.Literal("prototype")));break;case 85:this.$=f[h];break;case 86:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-1]);break;case 87:this.$=d.addLocationDataFn(g[h-1],g[h])(d.extend(f[h],{soak:!0}));break;case 88:this.$=d.addLocationDataFn(g[h],g[h])(new d.Index(f[h]));break;case 89:this.$=d.addLocationDataFn(g[h],g[h])(new d.Slice(f[h]));break;case 90:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Obj(f[h-2],f[h-3].generated));break;case 91:this.$=d.addLocationDataFn(g[h],g[h])([]);break;case 92:this.$=d.addLocationDataFn(g[h],g[h])([f[h]]);break;case 93:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-2].concat(f[h]));break;case 94:this.$=d.addLocationDataFn(g[h-3],g[h])(f[h-3].concat(f[h]));break;case 95:this.$=d.addLocationDataFn(g[h-5],g[h])(f[h-5].concat(f[h-2]));break;case 96:this.$=d.addLocationDataFn(g[h],g[h])(new d.Class);break;case 97:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Class(null,null,f[h]));break;case 98:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Class(null,f[h]));break;case 99:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Class(null,f[h-1],f[h]));break;case 100:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Class(f[h]));break;case 101:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Class(f[h-1],null,f[h]));break;case 102:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Class(f[h-2],f[h]));break;case 103:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Class(f[h-3],f[h-1],f[h]));break;case 104:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Call(f[h-2],f[h],f[h-1]));break;case 105:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Call(f[h-2],f[h],f[h-1]));break;case 106:this.$=d.addLocationDataFn(g[h],g[h])(new d.Call("super",[new d.Splat(new d.Literal("arguments"))]));break;case 107:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Call("super",f[h]));break;case 108:this.$=d.addLocationDataFn(g[h],g[h])(!1);break;case 109:this.$=d.addLocationDataFn(g[h],g[h])(!0);break;case 110:this.$=d.addLocationDataFn(g[h-1],g[h])([]);break;case 111:this.$=d.addLocationDataFn(g[h-3],g[h])(f[h-2]);break;case 112:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(new d.Literal("this")));break;case 113:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(new d.Literal("this")));break;case 114:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Value(d.addLocationDataFn(g[h-1])(new d.Literal("this")),[d.addLocationDataFn(g[h])(new d.Access(f[h]))],"this"));break;case 115:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Arr([]));break;case 116:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Arr(f[h-2]));break;case 117:this.$=d.addLocationDataFn(g[h],g[h])("inclusive");break;case 118:this.$=d.addLocationDataFn(g[h],g[h])("exclusive");break;case 119:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Range(f[h-3],f[h-1],f[h-2]));break;case 120:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Range(f[h-2],f[h],f[h-1]));break;case 121:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Range(f[h-1],null,f[h]));break;case 122:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Range(null,f[h],f[h-1]));break;case 123:this.$=d.addLocationDataFn(g[h],g[h])(new d.Range(null,null,f[h]));break;case 124:this.$=d.addLocationDataFn(g[h],g[h])([f[h]]);break;case 125:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-2].concat(f[h]));break;case 126:this.$=d.addLocationDataFn(g[h-3],g[h])(f[h-3].concat(f[h]));break;case 127:this.$=d.addLocationDataFn(g[h-3],g[h])(f[h-2]);break;case 128:this.$=d.addLocationDataFn(g[h-5],g[h])(f[h-5].concat(f[h-2]));break;case 129:this.$=f[h];break;case 130:this.$=f[h];break;case 131:this.$=d.addLocationDataFn(g[h],g[h])(new d.Expansion);break;case 132:this.$=f[h];break;case 133:this.$=d.addLocationDataFn(g[h-2],g[h])([].concat(f[h-2],f[h]));break;case 134:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Try(f[h]));break;case 135:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Try(f[h-1],f[h][0],f[h][1]));break;case 136:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Try(f[h-2],null,null,f[h]));break;case 137:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Try(f[h-3],f[h-2][0],f[h-2][1],f[h]));break;case 138:this.$=d.addLocationDataFn(g[h-2],g[h])([f[h-1],f[h]]);break;case 139:this.$=d.addLocationDataFn(g[h-2],g[h])([d.addLocationDataFn(g[h-1])(new d.Value(f[h-1])),f[h]]);break;case 140:this.$=d.addLocationDataFn(g[h-1],g[h])([null,f[h]]);break;case 141:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Throw(f[h]));break;case 142:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Parens(f[h-1]));break;case 143:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Parens(f[h-2]));break;case 144:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.While(f[h]));break;case 145:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.While(f[h-2],{guard:f[h]}));break;case 146:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.While(f[h],{invert:!0}));break;case 147:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.While(f[h-2],{invert:!0,guard:f[h]}));break;case 148:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h-1].addBody(f[h]));break;case 149:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h].addBody(d.addLocationDataFn(g[h-1])(d.Block.wrap([f[h-1]]))));break;case 150:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h].addBody(d.addLocationDataFn(g[h-1])(d.Block.wrap([f[h-1]]))));break;case 151:this.$=d.addLocationDataFn(g[h],g[h])(f[h]);break;case 152:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.While(d.addLocationDataFn(g[h-1])(new d.Literal("true"))).addBody(f[h]));break;case 153:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.While(d.addLocationDataFn(g[h-1])(new d.Literal("true"))).addBody(d.addLocationDataFn(g[h])(d.Block.wrap([f[h]]))));break;case 154:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.For(f[h-1],f[h]));break;case 155:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.For(f[h-1],f[h]));break;case 156:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.For(f[h],f[h-1]));break;case 157:this.$=d.addLocationDataFn(g[h-1],g[h])({source:d.addLocationDataFn(g[h])(new d.Value(f[h]))});break;case 158:this.$=d.addLocationDataFn(g[h-1],g[h])(function(){return f[h].own=f[h-1].own,f[h].name=f[h-1][0],f[h].index=f[h-1][1],f[h]}());break;case 159:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h]);break;case 160:this.$=d.addLocationDataFn(g[h-2],g[h])(function(){return f[h].own=!0,f[h]}());break;case 161:this.$=f[h];break;case 162:this.$=f[h];break;case 163:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 164:this.$=d.addLocationDataFn(g[h],g[h])(new d.Value(f[h]));break;case 165:this.$=d.addLocationDataFn(g[h],g[h])([f[h]]);break;case 166:this.$=d.addLocationDataFn(g[h-2],g[h])([f[h-2],f[h]]);break;case 167:this.$=d.addLocationDataFn(g[h-1],g[h])({source:f[h]});break;case 168:this.$=d.addLocationDataFn(g[h-1],g[h])({source:f[h],object:!0});break;case 169:this.$=d.addLocationDataFn(g[h-3],g[h])({source:f[h-2],guard:f[h]});break;case 170:this.$=d.addLocationDataFn(g[h-3],g[h])({source:f[h-2],guard:f[h],object:!0});break;case 171:this.$=d.addLocationDataFn(g[h-3],g[h])({source:f[h-2],step:f[h]});break;case 172:this.$=d.addLocationDataFn(g[h-5],g[h])({source:f[h-4],guard:f[h-2],step:f[h]});break;case 173:this.$=d.addLocationDataFn(g[h-5],g[h])({source:f[h-4],step:f[h-2],guard:f[h]});break;case 174:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Switch(f[h-3],f[h-1]));break;case 175:this.$=d.addLocationDataFn(g[h-6],g[h])(new d.Switch(f[h-5],f[h-3],f[h-1]));break;case 176:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Switch(null,f[h-1]));break;case 177:this.$=d.addLocationDataFn(g[h-5],g[h])(new d.Switch(null,f[h-3],f[h-1]));break;case 178:this.$=f[h];break;case 179:this.$=d.addLocationDataFn(g[h-1],g[h])(f[h-1].concat(f[h]));break;case 180:this.$=d.addLocationDataFn(g[h-2],g[h])([[f[h-1],f[h]]]);break;case 181:this.$=d.addLocationDataFn(g[h-3],g[h])([[f[h-2],f[h-1]]]);break;case 182:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.If(f[h-1],f[h],{type:f[h-2]}));break;case 183:this.$=d.addLocationDataFn(g[h-4],g[h])(f[h-4].addElse(d.addLocationDataFn(g[h-2],g[h])(new d.If(f[h-1],f[h],{type:f[h-2]}))));break;case 184:this.$=f[h];break;case 185:this.$=d.addLocationDataFn(g[h-2],g[h])(f[h-2].addElse(f[h]));break;case 186:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.If(f[h],d.addLocationDataFn(g[h-2])(d.Block.wrap([f[h-2]])),{type:f[h-1],statement:!0}));break;case 187:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.If(f[h],d.addLocationDataFn(g[h-2])(d.Block.wrap([f[h-2]])),{type:f[h-1],statement:!0}));break;case 188:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op(f[h-1],f[h]));break;case 189:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op(f[h-1],f[h]));break;case 190:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("-",f[h]));break;case 191:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("+",f[h]));break;case 192:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("--",f[h]));break;case 193:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("++",f[h]));break;case 194:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("--",f[h-1],null,!0));break;case 195:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Op("++",f[h-1],null,!0));break;case 196:this.$=d.addLocationDataFn(g[h-1],g[h])(new d.Existence(f[h-1]));break;case 197:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op("+",f[h-2],f[h]));break;case 198:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op("-",f[h-2],f[h]));break;case 199:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op(f[h-1],f[h-2],f[h]));break;case 200:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op(f[h-1],f[h-2],f[h]));break;case 201:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op(f[h-1],f[h-2],f[h]));break;case 202:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op(f[h-1],f[h-2],f[h]));break;case 203:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Op(f[h-1],f[h-2],f[h]));break;case 204:this.$=d.addLocationDataFn(g[h-2],g[h])(function(){return"!"===f[h-1].charAt(0)?new d.Op(f[h-1].slice(1),f[h-2],f[h]).invert():new d.Op(f[h-1],f[h-2],f[h])}());break;case 205:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Assign(f[h-2],f[h],f[h-1]));break;case 206:this.$=d.addLocationDataFn(g[h-4],g[h])(new d.Assign(f[h-4],f[h-1],f[h-3]));break;case 207:this.$=d.addLocationDataFn(g[h-3],g[h])(new d.Assign(f[h-3],f[h],f[h-2]));break;case 208:this.$=d.addLocationDataFn(g[h-2],g[h])(new d.Extends(f[h-2],f[h]))}},table:[{1:[2,1],3:1,4:2,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[3]},{1:[2,2],6:[1,73]},{1:[2,3],6:[2,3],26:[2,3],102:[2,3]},{1:[2,6],6:[2,6],26:[2,6],102:[2,6],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,7],6:[2,7],26:[2,7],102:[2,7],103:87,104:[1,64],106:[1,65],109:88,110:[1,67],111:68,126:[1,86]},{1:[2,11],6:[2,11],25:[2,11],26:[2,11],49:[2,11],54:[2,11],57:[2,11],62:90,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],73:[2,11],74:[1,98],78:[2,11],81:89,84:[1,91],85:[2,108],86:[2,11],91:[2,11],93:[2,11],102:[2,11],104:[2,11],105:[2,11],106:[2,11],110:[2,11],118:[2,11],126:[2,11],129:[2,11],130:[2,11],133:[2,11],134:[2,11],135:[2,11],136:[2,11],137:[2,11],138:[2,11],139:[2,11]},{1:[2,12],6:[2,12],25:[2,12],26:[2,12],49:[2,12],54:[2,12],57:[2,12],62:100,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],73:[2,12],74:[1,98],78:[2,12],81:99,84:[1,91],85:[2,108],86:[2,12],91:[2,12],93:[2,12],102:[2,12],104:[2,12],105:[2,12],106:[2,12],110:[2,12],118:[2,12],126:[2,12],129:[2,12],130:[2,12],133:[2,12],134:[2,12],135:[2,12],136:[2,12],137:[2,12],138:[2,12],139:[2,12]},{1:[2,13],6:[2,13],25:[2,13],26:[2,13],49:[2,13],54:[2,13],57:[2,13],73:[2,13],78:[2,13],86:[2,13],91:[2,13],93:[2,13],102:[2,13],104:[2,13],105:[2,13],106:[2,13],110:[2,13],118:[2,13],126:[2,13],129:[2,13],130:[2,13],133:[2,13],134:[2,13],135:[2,13],136:[2,13],137:[2,13],138:[2,13],139:[2,13]},{1:[2,14],6:[2,14],25:[2,14],26:[2,14],49:[2,14],54:[2,14],57:[2,14],73:[2,14],78:[2,14],86:[2,14],91:[2,14],93:[2,14],102:[2,14],104:[2,14],105:[2,14],106:[2,14],110:[2,14],118:[2,14],126:[2,14],129:[2,14],130:[2,14],133:[2,14],134:[2,14],135:[2,14],136:[2,14],137:[2,14],138:[2,14],139:[2,14]},{1:[2,15],6:[2,15],25:[2,15],26:[2,15],49:[2,15],54:[2,15],57:[2,15],73:[2,15],78:[2,15],86:[2,15],91:[2,15],93:[2,15],102:[2,15],104:[2,15],105:[2,15],106:[2,15],110:[2,15],118:[2,15],126:[2,15],129:[2,15],130:[2,15],133:[2,15],134:[2,15],135:[2,15],136:[2,15],137:[2,15],138:[2,15],139:[2,15]},{1:[2,16],6:[2,16],25:[2,16],26:[2,16],49:[2,16],54:[2,16],57:[2,16],73:[2,16],78:[2,16],86:[2,16],91:[2,16],93:[2,16],102:[2,16],104:[2,16],105:[2,16],106:[2,16],110:[2,16],118:[2,16],126:[2,16],129:[2,16],130:[2,16],133:[2,16],134:[2,16],135:[2,16],136:[2,16],137:[2,16],138:[2,16],139:[2,16]},{1:[2,17],6:[2,17],25:[2,17],26:[2,17],49:[2,17],54:[2,17],57:[2,17],73:[2,17],78:[2,17],86:[2,17],91:[2,17],93:[2,17],102:[2,17],104:[2,17],105:[2,17],106:[2,17],110:[2,17],118:[2,17],126:[2,17],129:[2,17],130:[2,17],133:[2,17],134:[2,17],135:[2,17],136:[2,17],137:[2,17],138:[2,17],139:[2,17]},{1:[2,18],6:[2,18],25:[2,18],26:[2,18],49:[2,18],54:[2,18],57:[2,18],73:[2,18],78:[2,18],86:[2,18],91:[2,18],93:[2,18],102:[2,18],104:[2,18],105:[2,18],106:[2,18],110:[2,18],118:[2,18],126:[2,18],129:[2,18],130:[2,18],133:[2,18],134:[2,18],135:[2,18],136:[2,18],137:[2,18],138:[2,18],139:[2,18]},{1:[2,19],6:[2,19],25:[2,19],26:[2,19],49:[2,19],54:[2,19],57:[2,19],73:[2,19],78:[2,19],86:[2,19],91:[2,19],93:[2,19],102:[2,19],104:[2,19],105:[2,19],106:[2,19],110:[2,19],118:[2,19],126:[2,19],129:[2,19],130:[2,19],133:[2,19],134:[2,19],135:[2,19],136:[2,19],137:[2,19],138:[2,19],139:[2,19]},{1:[2,20],6:[2,20],25:[2,20],26:[2,20],49:[2,20],54:[2,20],57:[2,20],73:[2,20],78:[2,20],86:[2,20],91:[2,20],93:[2,20],102:[2,20],104:[2,20],105:[2,20],106:[2,20],110:[2,20],118:[2,20],126:[2,20],129:[2,20],130:[2,20],133:[2,20],134:[2,20],135:[2,20],136:[2,20],137:[2,20],138:[2,20],139:[2,20]},{1:[2,21],6:[2,21],25:[2,21],26:[2,21],49:[2,21],54:[2,21],57:[2,21],73:[2,21],78:[2,21],86:[2,21],91:[2,21],93:[2,21],102:[2,21],104:[2,21],105:[2,21],106:[2,21],110:[2,21],118:[2,21],126:[2,21],129:[2,21],130:[2,21],133:[2,21],134:[2,21],135:[2,21],136:[2,21],137:[2,21],138:[2,21],139:[2,21]},{1:[2,22],6:[2,22],25:[2,22],26:[2,22],49:[2,22],54:[2,22],57:[2,22],73:[2,22],78:[2,22],86:[2,22],91:[2,22],93:[2,22],102:[2,22],104:[2,22],105:[2,22],106:[2,22],110:[2,22],118:[2,22],126:[2,22],129:[2,22],130:[2,22],133:[2,22],134:[2,22],135:[2,22],136:[2,22],137:[2,22],138:[2,22],139:[2,22]},{1:[2,8],6:[2,8],26:[2,8],102:[2,8],104:[2,8],106:[2,8],110:[2,8],126:[2,8]},{1:[2,9],6:[2,9],26:[2,9],102:[2,9],104:[2,9],106:[2,9],110:[2,9],126:[2,9]},{1:[2,10],6:[2,10],26:[2,10],102:[2,10],104:[2,10],106:[2,10],110:[2,10],126:[2,10]},{1:[2,75],6:[2,75],25:[2,75],26:[2,75],40:[1,101],49:[2,75],54:[2,75],57:[2,75],66:[2,75],67:[2,75],68:[2,75],69:[2,75],71:[2,75],73:[2,75],74:[2,75],78:[2,75],84:[2,75],85:[2,75],86:[2,75],91:[2,75],93:[2,75],102:[2,75],104:[2,75],105:[2,75],106:[2,75],110:[2,75],118:[2,75],126:[2,75],129:[2,75],130:[2,75],133:[2,75],134:[2,75],135:[2,75],136:[2,75],137:[2,75],138:[2,75],139:[2,75]},{1:[2,76],6:[2,76],25:[2,76],26:[2,76],49:[2,76],54:[2,76],57:[2,76],66:[2,76],67:[2,76],68:[2,76],69:[2,76],71:[2,76],73:[2,76],74:[2,76],78:[2,76],84:[2,76],85:[2,76],86:[2,76],91:[2,76],93:[2,76],102:[2,76],104:[2,76],105:[2,76],106:[2,76],110:[2,76],118:[2,76],126:[2,76],129:[2,76],130:[2,76],133:[2,76],134:[2,76],135:[2,76],136:[2,76],137:[2,76],138:[2,76],139:[2,76]},{1:[2,77],6:[2,77],25:[2,77],26:[2,77],49:[2,77],54:[2,77],57:[2,77],66:[2,77],67:[2,77],68:[2,77],69:[2,77],71:[2,77],73:[2,77],74:[2,77],78:[2,77],84:[2,77],85:[2,77],86:[2,77],91:[2,77],93:[2,77],102:[2,77],104:[2,77],105:[2,77],106:[2,77],110:[2,77],118:[2,77],126:[2,77],129:[2,77],130:[2,77],133:[2,77],134:[2,77],135:[2,77],136:[2,77],137:[2,77],138:[2,77],139:[2,77]},{1:[2,78],6:[2,78],25:[2,78],26:[2,78],49:[2,78],54:[2,78],57:[2,78],66:[2,78],67:[2,78],68:[2,78],69:[2,78],71:[2,78],73:[2,78],74:[2,78],78:[2,78],84:[2,78],85:[2,78],86:[2,78],91:[2,78],93:[2,78],102:[2,78],104:[2,78],105:[2,78],106:[2,78],110:[2,78],118:[2,78],126:[2,78],129:[2,78],130:[2,78],133:[2,78],134:[2,78],135:[2,78],136:[2,78],137:[2,78],138:[2,78],139:[2,78]},{1:[2,79],6:[2,79],25:[2,79],26:[2,79],49:[2,79],54:[2,79],57:[2,79],66:[2,79],67:[2,79],68:[2,79],69:[2,79],71:[2,79],73:[2,79],74:[2,79],78:[2,79],84:[2,79],85:[2,79],86:[2,79],91:[2,79],93:[2,79],102:[2,79],104:[2,79],105:[2,79],106:[2,79],110:[2,79],118:[2,79],126:[2,79],129:[2,79],130:[2,79],133:[2,79],134:[2,79],135:[2,79],136:[2,79],137:[2,79],138:[2,79],139:[2,79]},{1:[2,106],6:[2,106],25:[2,106],26:[2,106],49:[2,106],54:[2,106],57:[2,106],66:[2,106],67:[2,106],68:[2,106],69:[2,106],71:[2,106],73:[2,106],74:[2,106],78:[2,106],82:102,84:[2,106],85:[1,103],86:[2,106],91:[2,106],93:[2,106],102:[2,106],104:[2,106],105:[2,106],106:[2,106],110:[2,106],118:[2,106],126:[2,106],129:[2,106],130:[2,106],133:[2,106],134:[2,106],135:[2,106],136:[2,106],137:[2,106],138:[2,106],139:[2,106]},{6:[2,54],25:[2,54],27:108,28:[1,72],44:109,48:104,49:[2,54],54:[2,54],55:105,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{24:114,25:[1,115]},{7:116,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:118,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:119,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:120,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{12:122,13:123,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,58:46,59:47,61:121,63:23,64:24,65:25,76:[1,69],83:[1,26],88:[1,57],89:[1,58],90:[1,56],101:[1,55]},{12:122,13:123,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,58:46,59:47,61:125,63:23,64:24,65:25,76:[1,69],83:[1,26],88:[1,57],89:[1,58],90:[1,56],101:[1,55]},{1:[2,72],6:[2,72],25:[2,72],26:[2,72],40:[2,72],49:[2,72],54:[2,72],57:[2,72],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,72],74:[2,72],78:[2,72],80:[1,129],84:[2,72],85:[2,72],86:[2,72],91:[2,72],93:[2,72],102:[2,72],104:[2,72],105:[2,72],106:[2,72],110:[2,72],118:[2,72],126:[2,72],129:[2,72],130:[2,72],131:[1,126],132:[1,127],133:[2,72],134:[2,72],135:[2,72],136:[2,72],137:[2,72],138:[2,72],139:[2,72],140:[1,128]},{1:[2,184],6:[2,184],25:[2,184],26:[2,184],49:[2,184],54:[2,184],57:[2,184],73:[2,184],78:[2,184],86:[2,184],91:[2,184],93:[2,184],102:[2,184],104:[2,184],105:[2,184],106:[2,184],110:[2,184],118:[2,184],121:[1,130],126:[2,184],129:[2,184],130:[2,184],133:[2,184],134:[2,184],135:[2,184],136:[2,184],137:[2,184],138:[2,184],139:[2,184]},{24:131,25:[1,115]},{24:132,25:[1,115]},{1:[2,151],6:[2,151],25:[2,151],26:[2,151],49:[2,151],54:[2,151],57:[2,151],73:[2,151],78:[2,151],86:[2,151],91:[2,151],93:[2,151],102:[2,151],104:[2,151],105:[2,151],106:[2,151],110:[2,151],118:[2,151],126:[2,151],129:[2,151],130:[2,151],133:[2,151],134:[2,151],135:[2,151],136:[2,151],137:[2,151],138:[2,151],139:[2,151]},{24:133,25:[1,115]},{7:134,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,135],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,96],6:[2,96],12:122,13:123,24:136,25:[1,115],26:[2,96],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,49:[2,96],54:[2,96],57:[2,96],58:46,59:47,61:138,63:23,64:24,65:25,73:[2,96],76:[1,69],78:[2,96],80:[1,137],83:[1,26],86:[2,96],88:[1,57],89:[1,58],90:[1,56],91:[2,96],93:[2,96],101:[1,55],102:[2,96],104:[2,96],105:[2,96],106:[2,96],110:[2,96],118:[2,96],126:[2,96],129:[2,96],130:[2,96],133:[2,96],134:[2,96],135:[2,96],136:[2,96],137:[2,96],138:[2,96],139:[2,96]},{7:139,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,46],6:[2,46],7:140,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[2,46],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],102:[2,46],103:38,104:[2,46],106:[2,46],107:39,108:[1,66],109:40,110:[2,46],111:68,119:[1,41],124:36,125:[1,63],126:[2,46],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,47],6:[2,47],25:[2,47],26:[2,47],54:[2,47],78:[2,47],102:[2,47],104:[2,47],106:[2,47],110:[2,47],126:[2,47]},{1:[2,73],6:[2,73],25:[2,73],26:[2,73],40:[2,73],49:[2,73],54:[2,73],57:[2,73],66:[2,73],67:[2,73],68:[2,73],69:[2,73],71:[2,73],73:[2,73],74:[2,73],78:[2,73],84:[2,73],85:[2,73],86:[2,73],91:[2,73],93:[2,73],102:[2,73],104:[2,73],105:[2,73],106:[2,73],110:[2,73],118:[2,73],126:[2,73],129:[2,73],130:[2,73],133:[2,73],134:[2,73],135:[2,73],136:[2,73],137:[2,73],138:[2,73],139:[2,73]},{1:[2,74],6:[2,74],25:[2,74],26:[2,74],40:[2,74],49:[2,74],54:[2,74],57:[2,74],66:[2,74],67:[2,74],68:[2,74],69:[2,74],71:[2,74],73:[2,74],74:[2,74],78:[2,74],84:[2,74],85:[2,74],86:[2,74],91:[2,74],93:[2,74],102:[2,74],104:[2,74],105:[2,74],106:[2,74],110:[2,74],118:[2,74],126:[2,74],129:[2,74],130:[2,74],133:[2,74],134:[2,74],135:[2,74],136:[2,74],137:[2,74],138:[2,74],139:[2,74]},{1:[2,28],6:[2,28],25:[2,28],26:[2,28],49:[2,28],54:[2,28],57:[2,28],66:[2,28],67:[2,28],68:[2,28],69:[2,28],71:[2,28],73:[2,28],74:[2,28],78:[2,28],84:[2,28],85:[2,28],86:[2,28],91:[2,28],93:[2,28],102:[2,28],104:[2,28],105:[2,28],106:[2,28],110:[2,28],118:[2,28],126:[2,28],129:[2,28],130:[2,28],133:[2,28],134:[2,28],135:[2,28],136:[2,28],137:[2,28],138:[2,28],139:[2,28]},{1:[2,29],6:[2,29],25:[2,29],26:[2,29],49:[2,29],54:[2,29],57:[2,29],66:[2,29],67:[2,29],68:[2,29],69:[2,29],71:[2,29],73:[2,29],74:[2,29],78:[2,29],84:[2,29],85:[2,29],86:[2,29],91:[2,29],93:[2,29],102:[2,29],104:[2,29],105:[2,29],106:[2,29],110:[2,29],118:[2,29],126:[2,29],129:[2,29],130:[2,29],133:[2,29],134:[2,29],135:[2,29],136:[2,29],137:[2,29],138:[2,29],139:[2,29]},{1:[2,30],6:[2,30],25:[2,30],26:[2,30],49:[2,30],54:[2,30],57:[2,30],66:[2,30],67:[2,30],68:[2,30],69:[2,30],71:[2,30],73:[2,30],74:[2,30],78:[2,30],84:[2,30],85:[2,30],86:[2,30],91:[2,30],93:[2,30],102:[2,30],104:[2,30],105:[2,30],106:[2,30],110:[2,30],118:[2,30],126:[2,30],129:[2,30],130:[2,30],133:[2,30],134:[2,30],135:[2,30],136:[2,30],137:[2,30],138:[2,30],139:[2,30]},{1:[2,31],6:[2,31],25:[2,31],26:[2,31],49:[2,31],54:[2,31],57:[2,31],66:[2,31],67:[2,31],68:[2,31],69:[2,31],71:[2,31],73:[2,31],74:[2,31],78:[2,31],84:[2,31],85:[2,31],86:[2,31],91:[2,31],93:[2,31],102:[2,31],104:[2,31],105:[2,31],106:[2,31],110:[2,31],118:[2,31],126:[2,31],129:[2,31],130:[2,31],133:[2,31],134:[2,31],135:[2,31],136:[2,31],137:[2,31],138:[2,31],139:[2,31]},{1:[2,32],6:[2,32],25:[2,32],26:[2,32],49:[2,32],54:[2,32],57:[2,32],66:[2,32],67:[2,32],68:[2,32],69:[2,32],71:[2,32],73:[2,32],74:[2,32],78:[2,32],84:[2,32],85:[2,32],86:[2,32],91:[2,32],93:[2,32],102:[2,32],104:[2,32],105:[2,32],106:[2,32],110:[2,32],118:[2,32],126:[2,32],129:[2,32],130:[2,32],133:[2,32],134:[2,32],135:[2,32],136:[2,32],137:[2,32],138:[2,32],139:[2,32]},{1:[2,33],6:[2,33],25:[2,33],26:[2,33],49:[2,33],54:[2,33],57:[2,33],66:[2,33],67:[2,33],68:[2,33],69:[2,33],71:[2,33],73:[2,33],74:[2,33],78:[2,33],84:[2,33],85:[2,33],86:[2,33],91:[2,33],93:[2,33],102:[2,33],104:[2,33],105:[2,33],106:[2,33],110:[2,33],118:[2,33],126:[2,33],129:[2,33],130:[2,33],133:[2,33],134:[2,33],135:[2,33],136:[2,33],137:[2,33],138:[2,33],139:[2,33]},{1:[2,34],6:[2,34],25:[2,34],26:[2,34],49:[2,34],54:[2,34],57:[2,34],66:[2,34],67:[2,34],68:[2,34],69:[2,34],71:[2,34],73:[2,34],74:[2,34],78:[2,34],84:[2,34],85:[2,34],86:[2,34],91:[2,34],93:[2,34],102:[2,34],104:[2,34],105:[2,34],106:[2,34],110:[2,34],118:[2,34],126:[2,34],129:[2,34],130:[2,34],133:[2,34],134:[2,34],135:[2,34],136:[2,34],137:[2,34],138:[2,34],139:[2,34]},{4:141,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,142],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:143,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:145,88:[1,57],89:[1,58],90:[1,56],91:[1,144],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,112],6:[2,112],25:[2,112],26:[2,112],49:[2,112],54:[2,112],57:[2,112],66:[2,112],67:[2,112],68:[2,112],69:[2,112],71:[2,112],73:[2,112],74:[2,112],78:[2,112],84:[2,112],85:[2,112],86:[2,112],91:[2,112],93:[2,112],102:[2,112],104:[2,112],105:[2,112],106:[2,112],110:[2,112],118:[2,112],126:[2,112],129:[2,112],130:[2,112],133:[2,112],134:[2,112],135:[2,112],136:[2,112],137:[2,112],138:[2,112],139:[2,112]},{1:[2,113],6:[2,113],25:[2,113],26:[2,113],27:150,28:[1,72],49:[2,113],54:[2,113],57:[2,113],66:[2,113],67:[2,113],68:[2,113],69:[2,113],71:[2,113],73:[2,113],74:[2,113],78:[2,113],84:[2,113],85:[2,113],86:[2,113],91:[2,113],93:[2,113],102:[2,113],104:[2,113],105:[2,113],106:[2,113],110:[2,113],118:[2,113],126:[2,113],129:[2,113],130:[2,113],133:[2,113],134:[2,113],135:[2,113],136:[2,113],137:[2,113],138:[2,113],139:[2,113]},{25:[2,50]},{25:[2,51]},{1:[2,68],6:[2,68],25:[2,68],26:[2,68],40:[2,68],49:[2,68],54:[2,68],57:[2,68],66:[2,68],67:[2,68],68:[2,68],69:[2,68],71:[2,68],73:[2,68],74:[2,68],78:[2,68],80:[2,68],84:[2,68],85:[2,68],86:[2,68],91:[2,68],93:[2,68],102:[2,68],104:[2,68],105:[2,68],106:[2,68],110:[2,68],118:[2,68],126:[2,68],129:[2,68],130:[2,68],131:[2,68],132:[2,68],133:[2,68],134:[2,68],135:[2,68],136:[2,68],137:[2,68],138:[2,68],139:[2,68],140:[2,68]},{1:[2,71],6:[2,71],25:[2,71],26:[2,71],40:[2,71],49:[2,71],54:[2,71],57:[2,71],66:[2,71],67:[2,71],68:[2,71],69:[2,71],71:[2,71],73:[2,71],74:[2,71],78:[2,71],80:[2,71],84:[2,71],85:[2,71],86:[2,71],91:[2,71],93:[2,71],102:[2,71],104:[2,71],105:[2,71],106:[2,71],110:[2,71],118:[2,71],126:[2,71],129:[2,71],130:[2,71],131:[2,71],132:[2,71],133:[2,71],134:[2,71],135:[2,71],136:[2,71],137:[2,71],138:[2,71],139:[2,71],140:[2,71]},{7:151,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:152,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:153,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:155,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,24:154,25:[1,115],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{27:160,28:[1,72],44:161,58:162,59:163,64:156,76:[1,69],89:[1,112],90:[1,56],113:157,114:[1,158],115:159},{112:164,116:[1,165],117:[1,166]},{6:[2,91],10:170,25:[2,91],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:168,42:169,44:173,46:[1,45],54:[2,91],77:167,78:[2,91],89:[1,112]},{1:[2,26],6:[2,26],25:[2,26],26:[2,26],43:[2,26],49:[2,26],54:[2,26],57:[2,26],66:[2,26],67:[2,26],68:[2,26],69:[2,26],71:[2,26],73:[2,26],74:[2,26],78:[2,26],84:[2,26],85:[2,26],86:[2,26],91:[2,26],93:[2,26],102:[2,26],104:[2,26],105:[2,26],106:[2,26],110:[2,26],118:[2,26],126:[2,26],129:[2,26],130:[2,26],133:[2,26],134:[2,26],135:[2,26],136:[2,26],137:[2,26],138:[2,26],139:[2,26]},{1:[2,27],6:[2,27],25:[2,27],26:[2,27],43:[2,27],49:[2,27],54:[2,27],57:[2,27],66:[2,27],67:[2,27],68:[2,27],69:[2,27],71:[2,27],73:[2,27],74:[2,27],78:[2,27],84:[2,27],85:[2,27],86:[2,27],91:[2,27],93:[2,27],102:[2,27],104:[2,27],105:[2,27],106:[2,27],110:[2,27],118:[2,27],126:[2,27],129:[2,27],130:[2,27],133:[2,27],134:[2,27],135:[2,27],136:[2,27],137:[2,27],138:[2,27],139:[2,27]},{1:[2,25],6:[2,25],25:[2,25],26:[2,25],40:[2,25],43:[2,25],49:[2,25],54:[2,25],57:[2,25],66:[2,25],67:[2,25],68:[2,25],69:[2,25],71:[2,25],73:[2,25],74:[2,25],78:[2,25],80:[2,25],84:[2,25],85:[2,25],86:[2,25],91:[2,25],93:[2,25],102:[2,25],104:[2,25],105:[2,25],106:[2,25],110:[2,25],116:[2,25],117:[2,25],118:[2,25],126:[2,25],129:[2,25],130:[2,25],131:[2,25],132:[2,25],133:[2,25],134:[2,25],135:[2,25],136:[2,25],137:[2,25],138:[2,25],139:[2,25],140:[2,25]},{1:[2,5],5:174,6:[2,5],7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[2,5],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],102:[2,5],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,196],6:[2,196],25:[2,196],26:[2,196],49:[2,196],54:[2,196],57:[2,196],73:[2,196],78:[2,196],86:[2,196],91:[2,196],93:[2,196],102:[2,196],104:[2,196],105:[2,196],106:[2,196],110:[2,196],118:[2,196],126:[2,196],129:[2,196],130:[2,196],133:[2,196],134:[2,196],135:[2,196],136:[2,196],137:[2,196],138:[2,196],139:[2,196]},{7:175,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:176,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:177,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:178,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:179,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:180,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:181,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:182,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:183,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,150],6:[2,150],25:[2,150],26:[2,150],49:[2,150],54:[2,150],57:[2,150],73:[2,150],78:[2,150],86:[2,150],91:[2,150],93:[2,150],102:[2,150],104:[2,150],105:[2,150],106:[2,150],110:[2,150],118:[2,150],126:[2,150],129:[2,150],130:[2,150],133:[2,150],134:[2,150],135:[2,150],136:[2,150],137:[2,150],138:[2,150],139:[2,150]},{1:[2,155],6:[2,155],25:[2,155],26:[2,155],49:[2,155],54:[2,155],57:[2,155],73:[2,155],78:[2,155],86:[2,155],91:[2,155],93:[2,155],102:[2,155],104:[2,155],105:[2,155],106:[2,155],110:[2,155],118:[2,155],126:[2,155],129:[2,155],130:[2,155],133:[2,155],134:[2,155],135:[2,155],136:[2,155],137:[2,155],138:[2,155],139:[2,155]},{7:184,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,149],6:[2,149],25:[2,149],26:[2,149],49:[2,149],54:[2,149],57:[2,149],73:[2,149],78:[2,149],86:[2,149],91:[2,149],93:[2,149],102:[2,149],104:[2,149],105:[2,149],106:[2,149],110:[2,149],118:[2,149],126:[2,149],129:[2,149],130:[2,149],133:[2,149],134:[2,149],135:[2,149],136:[2,149],137:[2,149],138:[2,149],139:[2,149]},{1:[2,154],6:[2,154],25:[2,154],26:[2,154],49:[2,154],54:[2,154],57:[2,154],73:[2,154],78:[2,154],86:[2,154],91:[2,154],93:[2,154],102:[2,154],104:[2,154],105:[2,154],106:[2,154],110:[2,154],118:[2,154],126:[2,154],129:[2,154],130:[2,154],133:[2,154],134:[2,154],135:[2,154],136:[2,154],137:[2,154],138:[2,154],139:[2,154]},{82:185,85:[1,103]},{1:[2,69],6:[2,69],25:[2,69],26:[2,69],40:[2,69],49:[2,69],54:[2,69],57:[2,69],66:[2,69],67:[2,69],68:[2,69],69:[2,69],71:[2,69],73:[2,69],74:[2,69],78:[2,69],80:[2,69],84:[2,69],85:[2,69],86:[2,69],91:[2,69],93:[2,69],102:[2,69],104:[2,69],105:[2,69],106:[2,69],110:[2,69],118:[2,69],126:[2,69],129:[2,69],130:[2,69],131:[2,69],132:[2,69],133:[2,69],134:[2,69],135:[2,69],136:[2,69],137:[2,69],138:[2,69],139:[2,69],140:[2,69]},{85:[2,109]},{27:186,28:[1,72]},{27:187,28:[1,72]},{1:[2,84],6:[2,84],25:[2,84],26:[2,84],27:188,28:[1,72],40:[2,84],49:[2,84],54:[2,84],57:[2,84],66:[2,84],67:[2,84],68:[2,84],69:[2,84],71:[2,84],73:[2,84],74:[2,84],78:[2,84],80:[2,84],84:[2,84],85:[2,84],86:[2,84],91:[2,84],93:[2,84],102:[2,84],104:[2,84],105:[2,84],106:[2,84],110:[2,84],118:[2,84],126:[2,84],129:[2,84],130:[2,84],131:[2,84],132:[2,84],133:[2,84],134:[2,84],135:[2,84],136:[2,84],137:[2,84],138:[2,84],139:[2,84],140:[2,84]},{27:189,28:[1,72]},{1:[2,85],6:[2,85],25:[2,85],26:[2,85],40:[2,85],49:[2,85],54:[2,85],57:[2,85],66:[2,85],67:[2,85],68:[2,85],69:[2,85],71:[2,85],73:[2,85],74:[2,85],78:[2,85],80:[2,85],84:[2,85],85:[2,85],86:[2,85],91:[2,85],93:[2,85],102:[2,85],104:[2,85],105:[2,85],106:[2,85],110:[2,85],118:[2,85],126:[2,85],129:[2,85],130:[2,85],131:[2,85],132:[2,85],133:[2,85],134:[2,85],135:[2,85],136:[2,85],137:[2,85],138:[2,85],139:[2,85],140:[2,85]},{7:191,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,195],58:46,59:47,61:35,63:23,64:24,65:25,72:190,75:192,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],92:193,93:[1,194],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{70:196,71:[1,97],74:[1,98]},{82:197,85:[1,103]},{1:[2,70],6:[2,70],25:[2,70],26:[2,70],40:[2,70],49:[2,70],54:[2,70],57:[2,70],66:[2,70],67:[2,70],68:[2,70],69:[2,70],71:[2,70],73:[2,70],74:[2,70],78:[2,70],80:[2,70],84:[2,70],85:[2,70],86:[2,70],91:[2,70],93:[2,70],102:[2,70],104:[2,70],105:[2,70],106:[2,70],110:[2,70],118:[2,70],126:[2,70],129:[2,70],130:[2,70],131:[2,70],132:[2,70],133:[2,70],134:[2,70],135:[2,70],136:[2,70],137:[2,70],138:[2,70],139:[2,70],140:[2,70]},{6:[1,199],7:198,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,200],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,107],6:[2,107],25:[2,107],26:[2,107],49:[2,107],54:[2,107],57:[2,107],66:[2,107],67:[2,107],68:[2,107],69:[2,107],71:[2,107],73:[2,107],74:[2,107],78:[2,107],84:[2,107],85:[2,107],86:[2,107],91:[2,107],93:[2,107],102:[2,107],104:[2,107],105:[2,107],106:[2,107],110:[2,107],118:[2,107],126:[2,107],129:[2,107],130:[2,107],133:[2,107],134:[2,107],135:[2,107],136:[2,107],137:[2,107],138:[2,107],139:[2,107]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],86:[1,201],87:202,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],49:[1,204],53:206,54:[1,205]},{6:[2,55],25:[2,55],26:[2,55],49:[2,55],54:[2,55]},{6:[2,59],25:[2,59],26:[2,59],40:[1,208],49:[2,59],54:[2,59],57:[1,207]},{6:[2,62],25:[2,62],26:[2,62],49:[2,62],54:[2,62]},{6:[2,63],25:[2,63],26:[2,63],40:[2,63],49:[2,63],54:[2,63],57:[2,63]},{6:[2,64],25:[2,64],26:[2,64],40:[2,64],49:[2,64],54:[2,64],57:[2,64]},{6:[2,65],25:[2,65],26:[2,65],40:[2,65],49:[2,65],54:[2,65],57:[2,65]},{6:[2,66],25:[2,66],26:[2,66],40:[2,66],49:[2,66],54:[2,66],57:[2,66]},{27:150,28:[1,72]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:145,88:[1,57],89:[1,58],90:[1,56],91:[1,144],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,49],6:[2,49],25:[2,49],26:[2,49],49:[2,49],54:[2,49],57:[2,49],73:[2,49],78:[2,49],86:[2,49],91:[2,49],93:[2,49],102:[2,49],104:[2,49],105:[2,49],106:[2,49],110:[2,49],118:[2,49],126:[2,49],129:[2,49],130:[2,49],133:[2,49],134:[2,49],135:[2,49],136:[2,49],137:[2,49],138:[2,49],139:[2,49]},{4:210,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[1,209],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,188],6:[2,188],25:[2,188],26:[2,188],49:[2,188],54:[2,188],57:[2,188],73:[2,188],78:[2,188],86:[2,188],91:[2,188],93:[2,188],102:[2,188],103:84,104:[2,188],105:[2,188],106:[2,188],109:85,110:[2,188],111:68,118:[2,188],126:[2,188],129:[2,188],130:[2,188],133:[1,74],134:[2,188],135:[2,188],136:[2,188],137:[2,188],138:[2,188],139:[2,188]},{103:87,104:[1,64],106:[1,65],109:88,110:[1,67],111:68,126:[1,86]},{1:[2,189],6:[2,189],25:[2,189],26:[2,189],49:[2,189],54:[2,189],57:[2,189],73:[2,189],78:[2,189],86:[2,189],91:[2,189],93:[2,189],102:[2,189],103:84,104:[2,189],105:[2,189],106:[2,189],109:85,110:[2,189],111:68,118:[2,189],126:[2,189],129:[2,189],130:[2,189],133:[1,74],134:[2,189],135:[1,78],136:[2,189],137:[2,189],138:[2,189],139:[2,189]},{1:[2,190],6:[2,190],25:[2,190],26:[2,190],49:[2,190],54:[2,190],57:[2,190],73:[2,190],78:[2,190],86:[2,190],91:[2,190],93:[2,190],102:[2,190],103:84,104:[2,190],105:[2,190],106:[2,190],109:85,110:[2,190],111:68,118:[2,190],126:[2,190],129:[2,190],130:[2,190],133:[1,74],134:[2,190],135:[1,78],136:[2,190],137:[2,190],138:[2,190],139:[2,190]},{1:[2,191],6:[2,191],25:[2,191],26:[2,191],49:[2,191],54:[2,191],57:[2,191],73:[2,191],78:[2,191],86:[2,191],91:[2,191],93:[2,191],102:[2,191],103:84,104:[2,191],105:[2,191],106:[2,191],109:85,110:[2,191],111:68,118:[2,191],126:[2,191],129:[2,191],130:[2,191],133:[1,74],134:[2,191],135:[1,78],136:[2,191],137:[2,191],138:[2,191],139:[2,191]},{1:[2,192],6:[2,192],25:[2,192],26:[2,192],49:[2,192],54:[2,192],57:[2,192],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,192],74:[2,72],78:[2,192],84:[2,72],85:[2,72],86:[2,192],91:[2,192],93:[2,192],102:[2,192],104:[2,192],105:[2,192],106:[2,192],110:[2,192],118:[2,192],126:[2,192],129:[2,192],130:[2,192],133:[2,192],134:[2,192],135:[2,192],136:[2,192],137:[2,192],138:[2,192],139:[2,192]},{62:90,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],74:[1,98],81:89,84:[1,91],85:[2,108]},{62:100,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],74:[1,98],81:99,84:[1,91],85:[2,108]},{66:[2,75],67:[2,75],68:[2,75],69:[2,75],71:[2,75],74:[2,75],84:[2,75],85:[2,75]},{1:[2,193],6:[2,193],25:[2,193],26:[2,193],49:[2,193],54:[2,193],57:[2,193],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,193],74:[2,72],78:[2,193],84:[2,72],85:[2,72],86:[2,193],91:[2,193],93:[2,193],102:[2,193],104:[2,193],105:[2,193],106:[2,193],110:[2,193],118:[2,193],126:[2,193],129:[2,193],130:[2,193],133:[2,193],134:[2,193],135:[2,193],136:[2,193],137:[2,193],138:[2,193],139:[2,193]},{1:[2,194],6:[2,194],25:[2,194],26:[2,194],49:[2,194],54:[2,194],57:[2,194],73:[2,194],78:[2,194],86:[2,194],91:[2,194],93:[2,194],102:[2,194],104:[2,194],105:[2,194],106:[2,194],110:[2,194],118:[2,194],126:[2,194],129:[2,194],130:[2,194],133:[2,194],134:[2,194],135:[2,194],136:[2,194],137:[2,194],138:[2,194],139:[2,194]},{1:[2,195],6:[2,195],25:[2,195],26:[2,195],49:[2,195],54:[2,195],57:[2,195],73:[2,195],78:[2,195],86:[2,195],91:[2,195],93:[2,195],102:[2,195],104:[2,195],105:[2,195],106:[2,195],110:[2,195],118:[2,195],126:[2,195],129:[2,195],130:[2,195],133:[2,195],134:[2,195],135:[2,195],136:[2,195],137:[2,195],138:[2,195],139:[2,195]},{6:[1,213],7:211,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,212],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:214,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{24:215,25:[1,115],125:[1,216]},{1:[2,134],6:[2,134],25:[2,134],26:[2,134],49:[2,134],54:[2,134],57:[2,134],73:[2,134],78:[2,134],86:[2,134],91:[2,134],93:[2,134],97:217,98:[1,218],99:[1,219],102:[2,134],104:[2,134],105:[2,134],106:[2,134],110:[2,134],118:[2,134],126:[2,134],129:[2,134],130:[2,134],133:[2,134],134:[2,134],135:[2,134],136:[2,134],137:[2,134],138:[2,134],139:[2,134]},{1:[2,148],6:[2,148],25:[2,148],26:[2,148],49:[2,148],54:[2,148],57:[2,148],73:[2,148],78:[2,148],86:[2,148],91:[2,148],93:[2,148],102:[2,148],104:[2,148],105:[2,148],106:[2,148],110:[2,148],118:[2,148],126:[2,148],129:[2,148],130:[2,148],133:[2,148],134:[2,148],135:[2,148],136:[2,148],137:[2,148],138:[2,148],139:[2,148]},{1:[2,156],6:[2,156],25:[2,156],26:[2,156],49:[2,156],54:[2,156],57:[2,156],73:[2,156],78:[2,156],86:[2,156],91:[2,156],93:[2,156],102:[2,156],104:[2,156],105:[2,156],106:[2,156],110:[2,156],118:[2,156],126:[2,156],129:[2,156],130:[2,156],133:[2,156],134:[2,156],135:[2,156],136:[2,156],137:[2,156],138:[2,156],139:[2,156]},{25:[1,220],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{120:221,122:222,123:[1,223]},{1:[2,97],6:[2,97],25:[2,97],26:[2,97],49:[2,97],54:[2,97],57:[2,97],73:[2,97],78:[2,97],86:[2,97],91:[2,97],93:[2,97],102:[2,97],104:[2,97],105:[2,97],106:[2,97],110:[2,97],118:[2,97],126:[2,97],129:[2,97],130:[2,97],133:[2,97],134:[2,97],135:[2,97],136:[2,97],137:[2,97],138:[2,97],139:[2,97]},{7:224,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,100],6:[2,100],24:225,25:[1,115],26:[2,100],49:[2,100],54:[2,100],57:[2,100],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,100],74:[2,72],78:[2,100],80:[1,226],84:[2,72],85:[2,72],86:[2,100],91:[2,100],93:[2,100],102:[2,100],104:[2,100],105:[2,100],106:[2,100],110:[2,100],118:[2,100],126:[2,100],129:[2,100],130:[2,100],133:[2,100],134:[2,100],135:[2,100],136:[2,100],137:[2,100],138:[2,100],139:[2,100]},{1:[2,141],6:[2,141],25:[2,141],26:[2,141],49:[2,141],54:[2,141],57:[2,141],73:[2,141],78:[2,141],86:[2,141],91:[2,141],93:[2,141],102:[2,141],103:84,104:[2,141],105:[2,141],106:[2,141],109:85,110:[2,141],111:68,118:[2,141],126:[2,141],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,45],6:[2,45],26:[2,45],102:[2,45],103:84,104:[2,45],106:[2,45],109:85,110:[2,45],111:68,126:[2,45],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,73],102:[1,227]},{4:228,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,129],25:[2,129],54:[2,129],57:[1,230],91:[2,129],92:229,93:[1,194],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,115],6:[2,115],25:[2,115],26:[2,115],40:[2,115],49:[2,115],54:[2,115],57:[2,115],66:[2,115],67:[2,115],68:[2,115],69:[2,115],71:[2,115],73:[2,115],74:[2,115],78:[2,115],84:[2,115],85:[2,115],86:[2,115],91:[2,115],93:[2,115],102:[2,115],104:[2,115],105:[2,115],106:[2,115],110:[2,115],116:[2,115],117:[2,115],118:[2,115],126:[2,115],129:[2,115],130:[2,115],133:[2,115],134:[2,115],135:[2,115],136:[2,115],137:[2,115],138:[2,115],139:[2,115]},{6:[2,52],25:[2,52],53:231,54:[1,232],91:[2,52]},{6:[2,124],25:[2,124],26:[2,124],54:[2,124],86:[2,124],91:[2,124]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:233,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,130],25:[2,130],26:[2,130],54:[2,130],86:[2,130],91:[2,130]},{6:[2,131],25:[2,131],26:[2,131],54:[2,131],86:[2,131],91:[2,131]},{1:[2,114],6:[2,114],25:[2,114],26:[2,114],40:[2,114],43:[2,114],49:[2,114],54:[2,114],57:[2,114],66:[2,114],67:[2,114],68:[2,114],69:[2,114],71:[2,114],73:[2,114],74:[2,114],78:[2,114],80:[2,114],84:[2,114],85:[2,114],86:[2,114],91:[2,114],93:[2,114],102:[2,114],104:[2,114],105:[2,114],106:[2,114],110:[2,114],116:[2,114],117:[2,114],118:[2,114],126:[2,114],129:[2,114],130:[2,114],131:[2,114],132:[2,114],133:[2,114],134:[2,114],135:[2,114],136:[2,114],137:[2,114],138:[2,114],139:[2,114],140:[2,114]},{24:234,25:[1,115],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,144],6:[2,144],25:[2,144],26:[2,144],49:[2,144],54:[2,144],57:[2,144],73:[2,144],78:[2,144],86:[2,144],91:[2,144],93:[2,144],102:[2,144],103:84,104:[1,64],105:[1,235],106:[1,65],109:85,110:[1,67],111:68,118:[2,144],126:[2,144],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,146],6:[2,146],25:[2,146],26:[2,146],49:[2,146],54:[2,146],57:[2,146],73:[2,146],78:[2,146],86:[2,146],91:[2,146],93:[2,146],102:[2,146],103:84,104:[1,64],105:[1,236],106:[1,65],109:85,110:[1,67],111:68,118:[2,146],126:[2,146],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,152],6:[2,152],25:[2,152],26:[2,152],49:[2,152],54:[2,152],57:[2,152],73:[2,152],78:[2,152],86:[2,152],91:[2,152],93:[2,152],102:[2,152],104:[2,152],105:[2,152],106:[2,152],110:[2,152],118:[2,152],126:[2,152],129:[2,152],130:[2,152],133:[2,152],134:[2,152],135:[2,152],136:[2,152],137:[2,152],138:[2,152],139:[2,152]},{1:[2,153],6:[2,153],25:[2,153],26:[2,153],49:[2,153],54:[2,153],57:[2,153],73:[2,153],78:[2,153],86:[2,153],91:[2,153],93:[2,153],102:[2,153],103:84,104:[1,64],105:[2,153],106:[1,65],109:85,110:[1,67],111:68,118:[2,153],126:[2,153],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,157],6:[2,157],25:[2,157],26:[2,157],49:[2,157],54:[2,157],57:[2,157],73:[2,157],78:[2,157],86:[2,157],91:[2,157],93:[2,157],102:[2,157],104:[2,157],105:[2,157],106:[2,157],110:[2,157],118:[2,157],126:[2,157],129:[2,157],130:[2,157],133:[2,157],134:[2,157],135:[2,157],136:[2,157],137:[2,157],138:[2,157],139:[2,157]},{116:[2,159],117:[2,159]},{27:160,28:[1,72],44:161,58:162,59:163,76:[1,69],89:[1,112],90:[1,113],113:237,115:159},{54:[1,238],116:[2,165],117:[2,165]},{54:[2,161],116:[2,161],117:[2,161]},{54:[2,162],116:[2,162],117:[2,162]},{54:[2,163],116:[2,163],117:[2,163]},{54:[2,164],116:[2,164],117:[2,164]},{1:[2,158],6:[2,158],25:[2,158],26:[2,158],49:[2,158],54:[2,158],57:[2,158],73:[2,158],78:[2,158],86:[2,158],91:[2,158],93:[2,158],102:[2,158],104:[2,158],105:[2,158],106:[2,158],110:[2,158],118:[2,158],126:[2,158],129:[2,158],130:[2,158],133:[2,158],134:[2,158],135:[2,158],136:[2,158],137:[2,158],138:[2,158],139:[2,158]},{7:239,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:240,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],53:241,54:[1,242],78:[2,52]},{6:[2,92],25:[2,92],26:[2,92],54:[2,92],78:[2,92]},{6:[2,38],25:[2,38],26:[2,38],43:[1,243],54:[2,38],78:[2,38]},{6:[2,41],25:[2,41],26:[2,41],54:[2,41],78:[2,41]},{6:[2,42],25:[2,42],26:[2,42],43:[2,42],54:[2,42],78:[2,42]},{6:[2,43],25:[2,43],26:[2,43],43:[2,43],54:[2,43],78:[2,43]},{6:[2,44],25:[2,44],26:[2,44],43:[2,44],54:[2,44],78:[2,44]},{1:[2,4],6:[2,4],26:[2,4],102:[2,4]},{1:[2,197],6:[2,197],25:[2,197],26:[2,197],49:[2,197],54:[2,197],57:[2,197],73:[2,197],78:[2,197],86:[2,197],91:[2,197],93:[2,197],102:[2,197],103:84,104:[2,197],105:[2,197],106:[2,197],109:85,110:[2,197],111:68,118:[2,197],126:[2,197],129:[2,197],130:[2,197],133:[1,74],134:[1,77],135:[1,78],136:[2,197],137:[2,197],138:[2,197],139:[2,197]},{1:[2,198],6:[2,198],25:[2,198],26:[2,198],49:[2,198],54:[2,198],57:[2,198],73:[2,198],78:[2,198],86:[2,198],91:[2,198],93:[2,198],102:[2,198],103:84,104:[2,198],105:[2,198],106:[2,198],109:85,110:[2,198],111:68,118:[2,198],126:[2,198],129:[2,198],130:[2,198],133:[1,74],134:[1,77],135:[1,78],136:[2,198],137:[2,198],138:[2,198],139:[2,198]},{1:[2,199],6:[2,199],25:[2,199],26:[2,199],49:[2,199],54:[2,199],57:[2,199],73:[2,199],78:[2,199],86:[2,199],91:[2,199],93:[2,199],102:[2,199],103:84,104:[2,199],105:[2,199],106:[2,199],109:85,110:[2,199],111:68,118:[2,199],126:[2,199],129:[2,199],130:[2,199],133:[1,74],134:[2,199],135:[1,78],136:[2,199],137:[2,199],138:[2,199],139:[2,199]},{1:[2,200],6:[2,200],25:[2,200],26:[2,200],49:[2,200],54:[2,200],57:[2,200],73:[2,200],78:[2,200],86:[2,200],91:[2,200],93:[2,200],102:[2,200],103:84,104:[2,200],105:[2,200],106:[2,200],109:85,110:[2,200],111:68,118:[2,200],126:[2,200],129:[2,200],130:[2,200],133:[1,74],134:[2,200],135:[1,78],136:[2,200],137:[2,200],138:[2,200],139:[2,200]},{1:[2,201],6:[2,201],25:[2,201],26:[2,201],49:[2,201],54:[2,201],57:[2,201],73:[2,201],78:[2,201],86:[2,201],91:[2,201],93:[2,201],102:[2,201],103:84,104:[2,201],105:[2,201],106:[2,201],109:85,110:[2,201],111:68,118:[2,201],126:[2,201],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[2,201],137:[2,201],138:[2,201],139:[2,201]},{1:[2,202],6:[2,202],25:[2,202],26:[2,202],49:[2,202],54:[2,202],57:[2,202],73:[2,202],78:[2,202],86:[2,202],91:[2,202],93:[2,202],102:[2,202],103:84,104:[2,202],105:[2,202],106:[2,202],109:85,110:[2,202],111:68,118:[2,202],126:[2,202],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[2,202],138:[2,202],139:[1,82]},{1:[2,203],6:[2,203],25:[2,203],26:[2,203],49:[2,203],54:[2,203],57:[2,203],73:[2,203],78:[2,203],86:[2,203],91:[2,203],93:[2,203],102:[2,203],103:84,104:[2,203],105:[2,203],106:[2,203],109:85,110:[2,203],111:68,118:[2,203],126:[2,203],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[2,203],139:[1,82]},{1:[2,204],6:[2,204],25:[2,204],26:[2,204],49:[2,204],54:[2,204],57:[2,204],73:[2,204],78:[2,204],86:[2,204],91:[2,204],93:[2,204],102:[2,204],103:84,104:[2,204],105:[2,204],106:[2,204],109:85,110:[2,204],111:68,118:[2,204],126:[2,204],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[2,204],138:[2,204],139:[2,204]},{1:[2,187],6:[2,187],25:[2,187],26:[2,187],49:[2,187],54:[2,187],57:[2,187],73:[2,187],78:[2,187],86:[2,187],91:[2,187],93:[2,187],102:[2,187],103:84,104:[1,64],105:[2,187],106:[1,65],109:85,110:[1,67],111:68,118:[2,187],126:[2,187],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,186],6:[2,186],25:[2,186],26:[2,186],49:[2,186],54:[2,186],57:[2,186],73:[2,186],78:[2,186],86:[2,186],91:[2,186],93:[2,186],102:[2,186],103:84,104:[1,64],105:[2,186],106:[1,65],109:85,110:[1,67],111:68,118:[2,186],126:[2,186],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,104],6:[2,104],25:[2,104],26:[2,104],49:[2,104],54:[2,104],57:[2,104],66:[2,104],67:[2,104],68:[2,104],69:[2,104],71:[2,104],73:[2,104],74:[2,104],78:[2,104],84:[2,104],85:[2,104],86:[2,104],91:[2,104],93:[2,104],102:[2,104],104:[2,104],105:[2,104],106:[2,104],110:[2,104],118:[2,104],126:[2,104],129:[2,104],130:[2,104],133:[2,104],134:[2,104],135:[2,104],136:[2,104],137:[2,104],138:[2,104],139:[2,104]},{1:[2,80],6:[2,80],25:[2,80],26:[2,80],40:[2,80],49:[2,80],54:[2,80],57:[2,80],66:[2,80],67:[2,80],68:[2,80],69:[2,80],71:[2,80],73:[2,80],74:[2,80],78:[2,80],80:[2,80],84:[2,80],85:[2,80],86:[2,80],91:[2,80],93:[2,80],102:[2,80],104:[2,80],105:[2,80],106:[2,80],110:[2,80],118:[2,80],126:[2,80],129:[2,80],130:[2,80],131:[2,80],132:[2,80],133:[2,80],134:[2,80],135:[2,80],136:[2,80],137:[2,80],138:[2,80],139:[2,80],140:[2,80]},{1:[2,81],6:[2,81],25:[2,81],26:[2,81],40:[2,81],49:[2,81],54:[2,81],57:[2,81],66:[2,81],67:[2,81],68:[2,81],69:[2,81],71:[2,81],73:[2,81],74:[2,81],78:[2,81],80:[2,81],84:[2,81],85:[2,81],86:[2,81],91:[2,81],93:[2,81],102:[2,81],104:[2,81],105:[2,81],106:[2,81],110:[2,81],118:[2,81],126:[2,81],129:[2,81],130:[2,81],131:[2,81],132:[2,81],133:[2,81],134:[2,81],135:[2,81],136:[2,81],137:[2,81],138:[2,81],139:[2,81],140:[2,81]},{1:[2,82],6:[2,82],25:[2,82],26:[2,82],40:[2,82],49:[2,82],54:[2,82],57:[2,82],66:[2,82],67:[2,82],68:[2,82],69:[2,82],71:[2,82],73:[2,82],74:[2,82],78:[2,82],80:[2,82],84:[2,82],85:[2,82],86:[2,82],91:[2,82],93:[2,82],102:[2,82],104:[2,82],105:[2,82],106:[2,82],110:[2,82],118:[2,82],126:[2,82],129:[2,82],130:[2,82],131:[2,82],132:[2,82],133:[2,82],134:[2,82],135:[2,82],136:[2,82],137:[2,82],138:[2,82],139:[2,82],140:[2,82]},{1:[2,83],6:[2,83],25:[2,83],26:[2,83],40:[2,83],49:[2,83],54:[2,83],57:[2,83],66:[2,83],67:[2,83],68:[2,83],69:[2,83],71:[2,83],73:[2,83],74:[2,83],78:[2,83],80:[2,83],84:[2,83],85:[2,83],86:[2,83],91:[2,83],93:[2,83],102:[2,83],104:[2,83],105:[2,83],106:[2,83],110:[2,83],118:[2,83],126:[2,83],129:[2,83],130:[2,83],131:[2,83],132:[2,83],133:[2,83],134:[2,83],135:[2,83],136:[2,83],137:[2,83],138:[2,83],139:[2,83],140:[2,83]},{73:[1,244]},{57:[1,195],73:[2,88],92:245,93:[1,194],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{73:[2,89]},{7:246,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,73:[2,123],76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{11:[2,117],28:[2,117],30:[2,117],31:[2,117],33:[2,117],34:[2,117],35:[2,117],36:[2,117],37:[2,117],38:[2,117],45:[2,117],46:[2,117],47:[2,117],51:[2,117],52:[2,117],73:[2,117],76:[2,117],79:[2,117],83:[2,117],88:[2,117],89:[2,117],90:[2,117],96:[2,117],100:[2,117],101:[2,117],104:[2,117],106:[2,117],108:[2,117],110:[2,117],119:[2,117],125:[2,117],127:[2,117],128:[2,117],129:[2,117],130:[2,117],131:[2,117],132:[2,117]},{11:[2,118],28:[2,118],30:[2,118],31:[2,118],33:[2,118],34:[2,118],35:[2,118],36:[2,118],37:[2,118],38:[2,118],45:[2,118],46:[2,118],47:[2,118],51:[2,118],52:[2,118],73:[2,118],76:[2,118],79:[2,118],83:[2,118],88:[2,118],89:[2,118],90:[2,118],96:[2,118],100:[2,118],101:[2,118],104:[2,118],106:[2,118],108:[2,118],110:[2,118],119:[2,118],125:[2,118],127:[2,118],128:[2,118],129:[2,118],130:[2,118],131:[2,118],132:[2,118]},{1:[2,87],6:[2,87],25:[2,87],26:[2,87],40:[2,87],49:[2,87],54:[2,87],57:[2,87],66:[2,87],67:[2,87],68:[2,87],69:[2,87],71:[2,87],73:[2,87],74:[2,87],78:[2,87],80:[2,87],84:[2,87],85:[2,87],86:[2,87],91:[2,87],93:[2,87],102:[2,87],104:[2,87],105:[2,87],106:[2,87],110:[2,87],118:[2,87],126:[2,87],129:[2,87],130:[2,87],131:[2,87],132:[2,87],133:[2,87],134:[2,87],135:[2,87],136:[2,87],137:[2,87],138:[2,87],139:[2,87],140:[2,87]},{1:[2,105],6:[2,105],25:[2,105],26:[2,105],49:[2,105],54:[2,105],57:[2,105],66:[2,105],67:[2,105],68:[2,105],69:[2,105],71:[2,105],73:[2,105],74:[2,105],78:[2,105],84:[2,105],85:[2,105],86:[2,105],91:[2,105],93:[2,105],102:[2,105],104:[2,105],105:[2,105],106:[2,105],110:[2,105],118:[2,105],126:[2,105],129:[2,105],130:[2,105],133:[2,105],134:[2,105],135:[2,105],136:[2,105],137:[2,105],138:[2,105],139:[2,105]},{1:[2,35],6:[2,35],25:[2,35],26:[2,35],49:[2,35],54:[2,35],57:[2,35],73:[2,35],78:[2,35],86:[2,35],91:[2,35],93:[2,35],102:[2,35],103:84,104:[2,35],105:[2,35],106:[2,35],109:85,110:[2,35],111:68,118:[2,35],126:[2,35],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:247,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:248,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,110],6:[2,110],25:[2,110],26:[2,110],49:[2,110],54:[2,110],57:[2,110],66:[2,110],67:[2,110],68:[2,110],69:[2,110],71:[2,110],73:[2,110],74:[2,110],78:[2,110],84:[2,110],85:[2,110],86:[2,110],91:[2,110],93:[2,110],102:[2,110],104:[2,110],105:[2,110],106:[2,110],110:[2,110],118:[2,110],126:[2,110],129:[2,110],130:[2,110],133:[2,110],134:[2,110],135:[2,110],136:[2,110],137:[2,110],138:[2,110],139:[2,110]},{6:[2,52],25:[2,52],53:249,54:[1,232],86:[2,52]},{6:[2,129],25:[2,129],26:[2,129],54:[2,129],57:[1,250],86:[2,129],91:[2,129],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{50:251,51:[1,59],52:[1,60]},{6:[2,53],25:[2,53],26:[2,53],27:108,28:[1,72],44:109,55:252,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[1,253],25:[1,254]},{6:[2,60],25:[2,60],26:[2,60],49:[2,60],54:[2,60]},{7:255,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,23],6:[2,23],25:[2,23],26:[2,23],49:[2,23],54:[2,23],57:[2,23],73:[2,23],78:[2,23],86:[2,23],91:[2,23],93:[2,23],98:[2,23],99:[2,23],102:[2,23],104:[2,23],105:[2,23],106:[2,23],110:[2,23],118:[2,23],121:[2,23],123:[2,23],126:[2,23],129:[2,23],130:[2,23],133:[2,23],134:[2,23],135:[2,23],136:[2,23],137:[2,23],138:[2,23],139:[2,23]},{6:[1,73],26:[1,256]},{1:[2,205],6:[2,205],25:[2,205],26:[2,205],49:[2,205],54:[2,205],57:[2,205],73:[2,205],78:[2,205],86:[2,205],91:[2,205],93:[2,205],102:[2,205],103:84,104:[2,205],105:[2,205],106:[2,205],109:85,110:[2,205],111:68,118:[2,205],126:[2,205],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:257,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:258,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,208],6:[2,208],25:[2,208],26:[2,208],49:[2,208],54:[2,208],57:[2,208],73:[2,208],78:[2,208],86:[2,208],91:[2,208],93:[2,208],102:[2,208],103:84,104:[2,208],105:[2,208],106:[2,208],109:85,110:[2,208],111:68,118:[2,208],126:[2,208],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,185],6:[2,185],25:[2,185],26:[2,185],49:[2,185],54:[2,185],57:[2,185],73:[2,185],78:[2,185],86:[2,185],91:[2,185],93:[2,185],102:[2,185],104:[2,185],105:[2,185],106:[2,185],110:[2,185],118:[2,185],126:[2,185],129:[2,185],130:[2,185],133:[2,185],134:[2,185],135:[2,185],136:[2,185],137:[2,185],138:[2,185],139:[2,185]},{7:259,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,135],6:[2,135],25:[2,135],26:[2,135],49:[2,135],54:[2,135],57:[2,135],73:[2,135],78:[2,135],86:[2,135],91:[2,135],93:[2,135],98:[1,260],102:[2,135],104:[2,135],105:[2,135],106:[2,135],110:[2,135],118:[2,135],126:[2,135],129:[2,135],130:[2,135],133:[2,135],134:[2,135],135:[2,135],136:[2,135],137:[2,135],138:[2,135],139:[2,135]},{24:261,25:[1,115]},{24:264,25:[1,115],27:262,28:[1,72],59:263,76:[1,69]},{120:265,122:222,123:[1,223]},{26:[1,266],121:[1,267],122:268,123:[1,223]},{26:[2,178],121:[2,178],123:[2,178]},{7:270,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],95:269,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,98],6:[2,98],24:271,25:[1,115],26:[2,98],49:[2,98],54:[2,98],57:[2,98],73:[2,98],78:[2,98],86:[2,98],91:[2,98],93:[2,98],102:[2,98],103:84,104:[1,64],105:[2,98],106:[1,65],109:85,110:[1,67],111:68,118:[2,98],126:[2,98],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,101],6:[2,101],25:[2,101],26:[2,101],49:[2,101],54:[2,101],57:[2,101],73:[2,101],78:[2,101],86:[2,101],91:[2,101],93:[2,101],102:[2,101],104:[2,101],105:[2,101],106:[2,101],110:[2,101],118:[2,101],126:[2,101],129:[2,101],130:[2,101],133:[2,101],134:[2,101],135:[2,101],136:[2,101],137:[2,101],138:[2,101],139:[2,101]},{7:272,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,142],6:[2,142],25:[2,142],26:[2,142],49:[2,142],54:[2,142],57:[2,142],66:[2,142],67:[2,142],68:[2,142],69:[2,142],71:[2,142],73:[2,142],74:[2,142],78:[2,142],84:[2,142],85:[2,142],86:[2,142],91:[2,142],93:[2,142],102:[2,142],104:[2,142],105:[2,142],106:[2,142],110:[2,142],118:[2,142],126:[2,142],129:[2,142],130:[2,142],133:[2,142],134:[2,142],135:[2,142],136:[2,142],137:[2,142],138:[2,142],139:[2,142]},{6:[1,73],26:[1,273]},{7:274,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,67],11:[2,118],25:[2,67],28:[2,118],30:[2,118],31:[2,118],33:[2,118],34:[2,118],35:[2,118],36:[2,118],37:[2,118],38:[2,118],45:[2,118],46:[2,118],47:[2,118],51:[2,118],52:[2,118],54:[2,67],76:[2,118],79:[2,118],83:[2,118],88:[2,118],89:[2,118],90:[2,118],91:[2,67],96:[2,118],100:[2,118],101:[2,118],104:[2,118],106:[2,118],108:[2,118],110:[2,118],119:[2,118],125:[2,118],127:[2,118],128:[2,118],129:[2,118],130:[2,118],131:[2,118],132:[2,118]},{6:[1,276],25:[1,277],91:[1,275]},{6:[2,53],7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[2,53],26:[2,53],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],86:[2,53],88:[1,57],89:[1,58],90:[1,56],91:[2,53],94:278,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],26:[2,52],53:279,54:[1,232]},{1:[2,182],6:[2,182],25:[2,182],26:[2,182],49:[2,182],54:[2,182],57:[2,182],73:[2,182],78:[2,182],86:[2,182],91:[2,182],93:[2,182],102:[2,182],104:[2,182],105:[2,182],106:[2,182],110:[2,182],118:[2,182],121:[2,182],126:[2,182],129:[2,182],130:[2,182],133:[2,182],134:[2,182],135:[2,182],136:[2,182],137:[2,182],138:[2,182],139:[2,182]},{7:280,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:281,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{116:[2,160],117:[2,160]},{27:160,28:[1,72],44:161,58:162,59:163,76:[1,69],89:[1,112],90:[1,113],115:282},{1:[2,167],6:[2,167],25:[2,167],26:[2,167],49:[2,167],54:[2,167],57:[2,167],73:[2,167],78:[2,167],86:[2,167],91:[2,167],93:[2,167],102:[2,167],103:84,104:[2,167],105:[1,283],106:[2,167],109:85,110:[2,167],111:68,118:[1,284],126:[2,167],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,168],6:[2,168],25:[2,168],26:[2,168],49:[2,168],54:[2,168],57:[2,168],73:[2,168],78:[2,168],86:[2,168],91:[2,168],93:[2,168],102:[2,168],103:84,104:[2,168],105:[1,285],106:[2,168],109:85,110:[2,168],111:68,118:[2,168],126:[2,168],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,287],25:[1,288],78:[1,286]},{6:[2,53],10:170,25:[2,53],26:[2,53],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:289,42:169,44:173,46:[1,45],78:[2,53],89:[1,112]},{7:290,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,291],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,86],6:[2,86],25:[2,86],26:[2,86],40:[2,86],49:[2,86],54:[2,86],57:[2,86],66:[2,86],67:[2,86],68:[2,86],69:[2,86],71:[2,86],73:[2,86],74:[2,86],78:[2,86],80:[2,86],84:[2,86],85:[2,86],86:[2,86],91:[2,86],93:[2,86],102:[2,86],104:[2,86],105:[2,86],106:[2,86],110:[2,86],118:[2,86],126:[2,86],129:[2,86],130:[2,86],131:[2,86],132:[2,86],133:[2,86],134:[2,86],135:[2,86],136:[2,86],137:[2,86],138:[2,86],139:[2,86],140:[2,86]},{7:292,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,73:[2,121],76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{73:[2,122],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,36],6:[2,36],25:[2,36],26:[2,36],49:[2,36],54:[2,36],57:[2,36],73:[2,36],78:[2,36],86:[2,36],91:[2,36],93:[2,36],102:[2,36],103:84,104:[2,36],105:[2,36],106:[2,36],109:85,110:[2,36],111:68,118:[2,36],126:[2,36],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{26:[1,293],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,276],25:[1,277],86:[1,294]},{6:[2,67],25:[2,67],26:[2,67],54:[2,67],86:[2,67],91:[2,67]},{24:295,25:[1,115]},{6:[2,56],25:[2,56],26:[2,56],49:[2,56],54:[2,56]},{27:108,28:[1,72],44:109,55:296,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[2,54],25:[2,54],26:[2,54],27:108,28:[1,72],44:109,48:297,54:[2,54],55:105,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[2,61],25:[2,61],26:[2,61],49:[2,61],54:[2,61],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,24],6:[2,24],25:[2,24],26:[2,24],49:[2,24],54:[2,24],57:[2,24],73:[2,24],78:[2,24],86:[2,24],91:[2,24],93:[2,24],98:[2,24],99:[2,24],102:[2,24],104:[2,24],105:[2,24],106:[2,24],110:[2,24],118:[2,24],121:[2,24],123:[2,24],126:[2,24],129:[2,24],130:[2,24],133:[2,24],134:[2,24],135:[2,24],136:[2,24],137:[2,24],138:[2,24],139:[2,24]},{26:[1,298],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,207],6:[2,207],25:[2,207],26:[2,207],49:[2,207],54:[2,207],57:[2,207],73:[2,207],78:[2,207],86:[2,207],91:[2,207],93:[2,207],102:[2,207],103:84,104:[2,207],105:[2,207],106:[2,207],109:85,110:[2,207],111:68,118:[2,207],126:[2,207],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{24:299,25:[1,115],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{24:300,25:[1,115]},{1:[2,136],6:[2,136],25:[2,136],26:[2,136],49:[2,136],54:[2,136],57:[2,136],73:[2,136],78:[2,136],86:[2,136],91:[2,136],93:[2,136],102:[2,136],104:[2,136],105:[2,136],106:[2,136],110:[2,136],118:[2,136],126:[2,136],129:[2,136],130:[2,136],133:[2,136],134:[2,136],135:[2,136],136:[2,136],137:[2,136],138:[2,136],139:[2,136]},{24:301,25:[1,115]},{24:302,25:[1,115]},{1:[2,140],6:[2,140],25:[2,140],26:[2,140],49:[2,140],54:[2,140],57:[2,140],73:[2,140],78:[2,140],86:[2,140],91:[2,140],93:[2,140],98:[2,140],102:[2,140],104:[2,140],105:[2,140],106:[2,140],110:[2,140],118:[2,140],126:[2,140],129:[2,140],130:[2,140],133:[2,140],134:[2,140],135:[2,140],136:[2,140],137:[2,140],138:[2,140],139:[2,140]},{26:[1,303],121:[1,304],122:268,123:[1,223]},{1:[2,176],6:[2,176],25:[2,176],26:[2,176],49:[2,176],54:[2,176],57:[2,176],73:[2,176],78:[2,176],86:[2,176],91:[2,176],93:[2,176],102:[2,176],104:[2,176],105:[2,176],106:[2,176],110:[2,176],118:[2,176],126:[2,176],129:[2,176],130:[2,176],133:[2,176],134:[2,176],135:[2,176],136:[2,176],137:[2,176],138:[2,176],139:[2,176]},{24:305,25:[1,115]},{26:[2,179],121:[2,179],123:[2,179]},{24:306,25:[1,115],54:[1,307]},{25:[2,132],54:[2,132],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,99],6:[2,99],25:[2,99],26:[2,99],49:[2,99],54:[2,99],57:[2,99],73:[2,99],78:[2,99],86:[2,99],91:[2,99],93:[2,99],102:[2,99],104:[2,99],105:[2,99],106:[2,99],110:[2,99],118:[2,99],126:[2,99],129:[2,99],130:[2,99],133:[2,99],134:[2,99],135:[2,99],136:[2,99],137:[2,99],138:[2,99],139:[2,99]},{1:[2,102],6:[2,102],24:308,25:[1,115],26:[2,102],49:[2,102],54:[2,102],57:[2,102],73:[2,102],78:[2,102],86:[2,102],91:[2,102],93:[2,102],102:[2,102],103:84,104:[1,64],105:[2,102],106:[1,65],109:85,110:[1,67],111:68,118:[2,102],126:[2,102],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{102:[1,309]},{91:[1,310],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,116],6:[2,116],25:[2,116],26:[2,116],40:[2,116],49:[2,116],54:[2,116],57:[2,116],66:[2,116],67:[2,116],68:[2,116],69:[2,116],71:[2,116],73:[2,116],74:[2,116],78:[2,116],84:[2,116],85:[2,116],86:[2,116],91:[2,116],93:[2,116],102:[2,116],104:[2,116],105:[2,116],106:[2,116],110:[2,116],116:[2,116],117:[2,116],118:[2,116],126:[2,116],129:[2,116],130:[2,116],133:[2,116],134:[2,116],135:[2,116],136:[2,116],137:[2,116],138:[2,116],139:[2,116]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],94:311,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:312,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,125],25:[2,125],26:[2,125],54:[2,125],86:[2,125],91:[2,125]},{6:[1,276],25:[1,277],26:[1,313]},{1:[2,145],6:[2,145],25:[2,145],26:[2,145],49:[2,145],54:[2,145],57:[2,145],73:[2,145],78:[2,145],86:[2,145],91:[2,145],93:[2,145],102:[2,145],103:84,104:[1,64],105:[2,145],106:[1,65],109:85,110:[1,67],111:68,118:[2,145],126:[2,145],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,147],6:[2,147],25:[2,147],26:[2,147],49:[2,147],54:[2,147],57:[2,147],73:[2,147],78:[2,147],86:[2,147],91:[2,147],93:[2,147],102:[2,147],103:84,104:[1,64],105:[2,147],106:[1,65],109:85,110:[1,67],111:68,118:[2,147],126:[2,147],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{116:[2,166],117:[2,166]},{7:314,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:315,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:316,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,90],6:[2,90],25:[2,90],26:[2,90],40:[2,90],49:[2,90],54:[2,90],57:[2,90],66:[2,90],67:[2,90],68:[2,90],69:[2,90],71:[2,90],73:[2,90],74:[2,90],78:[2,90],84:[2,90],85:[2,90],86:[2,90],91:[2,90],93:[2,90],102:[2,90],104:[2,90],105:[2,90],106:[2,90],110:[2,90],116:[2,90],117:[2,90],118:[2,90],126:[2,90],129:[2,90],130:[2,90],133:[2,90],134:[2,90],135:[2,90],136:[2,90],137:[2,90],138:[2,90],139:[2,90]},{10:170,27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:317,42:169,44:173,46:[1,45],89:[1,112]},{6:[2,91],10:170,25:[2,91],26:[2,91],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:168,42:169,44:173,46:[1,45],54:[2,91],77:318,89:[1,112]},{6:[2,93],25:[2,93],26:[2,93],54:[2,93],78:[2,93]},{6:[2,39],25:[2,39],26:[2,39],54:[2,39],78:[2,39],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:319,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{73:[2,120],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,37],6:[2,37],25:[2,37],26:[2,37],49:[2,37],54:[2,37],57:[2,37],73:[2,37],78:[2,37],86:[2,37],91:[2,37],93:[2,37],102:[2,37],104:[2,37],105:[2,37],106:[2,37],110:[2,37],118:[2,37],126:[2,37],129:[2,37],130:[2,37],133:[2,37],134:[2,37],135:[2,37],136:[2,37],137:[2,37],138:[2,37],139:[2,37]},{1:[2,111],6:[2,111],25:[2,111],26:[2,111],49:[2,111],54:[2,111],57:[2,111],66:[2,111],67:[2,111],68:[2,111],69:[2,111],71:[2,111],73:[2,111],74:[2,111],78:[2,111],84:[2,111],85:[2,111],86:[2,111],91:[2,111],93:[2,111],102:[2,111],104:[2,111],105:[2,111],106:[2,111],110:[2,111],118:[2,111],126:[2,111],129:[2,111],130:[2,111],133:[2,111],134:[2,111],135:[2,111],136:[2,111],137:[2,111],138:[2,111],139:[2,111]},{1:[2,48],6:[2,48],25:[2,48],26:[2,48],49:[2,48],54:[2,48],57:[2,48],73:[2,48],78:[2,48],86:[2,48],91:[2,48],93:[2,48],102:[2,48],104:[2,48],105:[2,48],106:[2,48],110:[2,48],118:[2,48],126:[2,48],129:[2,48],130:[2,48],133:[2,48],134:[2,48],135:[2,48],136:[2,48],137:[2,48],138:[2,48],139:[2,48]},{6:[2,57],25:[2,57],26:[2,57],49:[2,57],54:[2,57]},{6:[2,52],25:[2,52],26:[2,52],53:320,54:[1,205]},{1:[2,206],6:[2,206],25:[2,206],26:[2,206],49:[2,206],54:[2,206],57:[2,206],73:[2,206],78:[2,206],86:[2,206],91:[2,206],93:[2,206],102:[2,206],104:[2,206],105:[2,206],106:[2,206],110:[2,206],118:[2,206],126:[2,206],129:[2,206],130:[2,206],133:[2,206],134:[2,206],135:[2,206],136:[2,206],137:[2,206],138:[2,206],139:[2,206]},{1:[2,183],6:[2,183],25:[2,183],26:[2,183],49:[2,183],54:[2,183],57:[2,183],73:[2,183],78:[2,183],86:[2,183],91:[2,183],93:[2,183],102:[2,183],104:[2,183],105:[2,183],106:[2,183],110:[2,183],118:[2,183],121:[2,183],126:[2,183],129:[2,183],130:[2,183],133:[2,183],134:[2,183],135:[2,183],136:[2,183],137:[2,183],138:[2,183],139:[2,183]},{1:[2,137],6:[2,137],25:[2,137],26:[2,137],49:[2,137],54:[2,137],57:[2,137],73:[2,137],78:[2,137],86:[2,137],91:[2,137],93:[2,137],102:[2,137],104:[2,137],105:[2,137],106:[2,137],110:[2,137],118:[2,137],126:[2,137],129:[2,137],130:[2,137],133:[2,137],134:[2,137],135:[2,137],136:[2,137],137:[2,137],138:[2,137],139:[2,137]},{1:[2,138],6:[2,138],25:[2,138],26:[2,138],49:[2,138],54:[2,138],57:[2,138],73:[2,138],78:[2,138],86:[2,138],91:[2,138],93:[2,138],98:[2,138],102:[2,138],104:[2,138],105:[2,138],106:[2,138],110:[2,138],118:[2,138],126:[2,138],129:[2,138],130:[2,138],133:[2,138],134:[2,138],135:[2,138],136:[2,138],137:[2,138],138:[2,138],139:[2,138]},{1:[2,139],6:[2,139],25:[2,139],26:[2,139],49:[2,139],54:[2,139],57:[2,139],73:[2,139],78:[2,139],86:[2,139],91:[2,139],93:[2,139],98:[2,139],102:[2,139],104:[2,139],105:[2,139],106:[2,139],110:[2,139],118:[2,139],126:[2,139],129:[2,139],130:[2,139],133:[2,139],134:[2,139],135:[2,139],136:[2,139],137:[2,139],138:[2,139],139:[2,139]},{1:[2,174],6:[2,174],25:[2,174],26:[2,174],49:[2,174],54:[2,174],57:[2,174],73:[2,174],78:[2,174],86:[2,174],91:[2,174],93:[2,174],102:[2,174],104:[2,174],105:[2,174],106:[2,174],110:[2,174],118:[2,174],126:[2,174],129:[2,174],130:[2,174],133:[2,174],134:[2,174],135:[2,174],136:[2,174],137:[2,174],138:[2,174],139:[2,174]},{24:321,25:[1,115]},{26:[1,322]},{6:[1,323],26:[2,180],121:[2,180],123:[2,180]},{7:324,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,103],6:[2,103],25:[2,103],26:[2,103],49:[2,103],54:[2,103],57:[2,103],73:[2,103],78:[2,103],86:[2,103],91:[2,103],93:[2,103],102:[2,103],104:[2,103],105:[2,103],106:[2,103],110:[2,103],118:[2,103],126:[2,103],129:[2,103],130:[2,103],133:[2,103],134:[2,103],135:[2,103],136:[2,103],137:[2,103],138:[2,103],139:[2,103]},{1:[2,143],6:[2,143],25:[2,143],26:[2,143],49:[2,143],54:[2,143],57:[2,143],66:[2,143],67:[2,143],68:[2,143],69:[2,143],71:[2,143],73:[2,143],74:[2,143],78:[2,143],84:[2,143],85:[2,143],86:[2,143],91:[2,143],93:[2,143],102:[2,143],104:[2,143],105:[2,143],106:[2,143],110:[2,143],118:[2,143],126:[2,143],129:[2,143],130:[2,143],133:[2,143],134:[2,143],135:[2,143],136:[2,143],137:[2,143],138:[2,143],139:[2,143]},{1:[2,119],6:[2,119],25:[2,119],26:[2,119],49:[2,119],54:[2,119],57:[2,119],66:[2,119],67:[2,119],68:[2,119],69:[2,119],71:[2,119],73:[2,119],74:[2,119],78:[2,119],84:[2,119],85:[2,119],86:[2,119],91:[2,119],93:[2,119],102:[2,119],104:[2,119],105:[2,119],106:[2,119],110:[2,119],118:[2,119],126:[2,119],129:[2,119],130:[2,119],133:[2,119],134:[2,119],135:[2,119],136:[2,119],137:[2,119],138:[2,119],139:[2,119]},{6:[2,126],25:[2,126],26:[2,126],54:[2,126],86:[2,126],91:[2,126]},{6:[2,52],25:[2,52],26:[2,52],53:325,54:[1,232]},{6:[2,127],25:[2,127],26:[2,127],54:[2,127],86:[2,127],91:[2,127]},{1:[2,169],6:[2,169],25:[2,169],26:[2,169],49:[2,169],54:[2,169],57:[2,169],73:[2,169],78:[2,169],86:[2,169],91:[2,169],93:[2,169],102:[2,169],103:84,104:[2,169],105:[2,169],106:[2,169],109:85,110:[2,169],111:68,118:[1,326],126:[2,169],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,171],6:[2,171],25:[2,171],26:[2,171],49:[2,171],54:[2,171],57:[2,171],73:[2,171],78:[2,171],86:[2,171],91:[2,171],93:[2,171],102:[2,171],103:84,104:[2,171],105:[1,327],106:[2,171],109:85,110:[2,171],111:68,118:[2,171],126:[2,171],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,170],6:[2,170],25:[2,170],26:[2,170],49:[2,170],54:[2,170],57:[2,170],73:[2,170],78:[2,170],86:[2,170],91:[2,170],93:[2,170],102:[2,170],103:84,104:[2,170],105:[2,170],106:[2,170],109:85,110:[2,170],111:68,118:[2,170],126:[2,170],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[2,94],25:[2,94],26:[2,94],54:[2,94],78:[2,94]},{6:[2,52],25:[2,52],26:[2,52],53:328,54:[1,242]},{26:[1,329],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,253],25:[1,254],26:[1,330]},{26:[1,331]},{1:[2,177],6:[2,177],25:[2,177],26:[2,177],49:[2,177],54:[2,177],57:[2,177],73:[2,177],78:[2,177],86:[2,177],91:[2,177],93:[2,177],102:[2,177],104:[2,177],105:[2,177],106:[2,177],110:[2,177],118:[2,177],126:[2,177],129:[2,177],130:[2,177],133:[2,177],134:[2,177],135:[2,177],136:[2,177],137:[2,177],138:[2,177],139:[2,177]},{26:[2,181],121:[2,181],123:[2,181]},{25:[2,133],54:[2,133],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,276],25:[1,277],26:[1,332]},{7:333,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:334,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[1,287],25:[1,288],26:[1,335]},{6:[2,40],25:[2,40],26:[2,40],54:[2,40],78:[2,40]},{6:[2,58],25:[2,58],26:[2,58],49:[2,58],54:[2,58]},{1:[2,175],6:[2,175],25:[2,175],26:[2,175],49:[2,175],54:[2,175],57:[2,175],73:[2,175],78:[2,175],86:[2,175],91:[2,175],93:[2,175],102:[2,175],104:[2,175],105:[2,175],106:[2,175],110:[2,175],118:[2,175],126:[2,175],129:[2,175],130:[2,175],133:[2,175],134:[2,175],135:[2,175],136:[2,175],137:[2,175],138:[2,175],139:[2,175]},{6:[2,128],25:[2,128],26:[2,128],54:[2,128],86:[2,128],91:[2,128]},{1:[2,172],6:[2,172],25:[2,172],26:[2,172],49:[2,172],54:[2,172],57:[2,172],73:[2,172],78:[2,172],86:[2,172],91:[2,172],93:[2,172],102:[2,172],103:84,104:[2,172],105:[2,172],106:[2,172],109:85,110:[2,172],111:68,118:[2,172],126:[2,172],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,173],6:[2,173],25:[2,173],26:[2,173],49:[2,173],54:[2,173],57:[2,173],73:[2,173],78:[2,173],86:[2,173],91:[2,173],93:[2,173],102:[2,173],103:84,104:[2,173],105:[2,173],106:[2,173],109:85,110:[2,173],111:68,118:[2,173],126:[2,173],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[2,95],25:[2,95],26:[2,95],54:[2,95],78:[2,95]}],defaultActions:{59:[2,50],60:[2,51],91:[2,109],192:[2,89]},parseError:function(a,b){if(!b.recoverable)throw Error(a);
-this.trace(a)},parse:function(a){function b(){var a;return a=c.lexer.lex()||m,"number"!=typeof a&&(a=c.symbols_[a]||a),a}var c=this,d=[0],e=[null],f=[],g=this.table,h="",i=0,j=0,k=0,l=2,m=1,n=f.slice.call(arguments,1);this.lexer.setInput(a),this.lexer.yy=this.yy,this.yy.lexer=this.lexer,this.yy.parser=this,void 0===this.lexer.yylloc&&(this.lexer.yylloc={});var o=this.lexer.yylloc;f.push(o);var p=this.lexer.options&&this.lexer.options.ranges;this.parseError="function"==typeof this.yy.parseError?this.yy.parseError:Object.getPrototypeOf(this).parseError;for(var q,r,s,t,u,v,w,x,y,z={};;){if(s=d[d.length-1],this.defaultActions[s]?t=this.defaultActions[s]:((null===q||void 0===q)&&(q=b()),t=g[s]&&g[s][q]),void 0===t||!t.length||!t[0]){var A="";y=[];for(v in g[s])this.terminals_[v]&&v>l&&y.push("'"+this.terminals_[v]+"'");A=this.lexer.showPosition?"Parse error on line "+(i+1)+":\n"+this.lexer.showPosition()+"\nExpecting "+y.join(", ")+", got '"+(this.terminals_[q]||q)+"'":"Parse error on line "+(i+1)+": Unexpected "+(q==m?"end of input":"'"+(this.terminals_[q]||q)+"'"),this.parseError(A,{text:this.lexer.match,token:this.terminals_[q]||q,line:this.lexer.yylineno,loc:o,expected:y})}if(t[0]instanceof Array&&t.length>1)throw Error("Parse Error: multiple actions possible at state: "+s+", token: "+q);switch(t[0]){case 1:d.push(q),e.push(this.lexer.yytext),f.push(this.lexer.yylloc),d.push(t[1]),q=null,r?(q=r,r=null):(j=this.lexer.yyleng,h=this.lexer.yytext,i=this.lexer.yylineno,o=this.lexer.yylloc,k>0&&k--);break;case 2:if(w=this.productions_[t[1]][1],z.$=e[e.length-w],z._$={first_line:f[f.length-(w||1)].first_line,last_line:f[f.length-1].last_line,first_column:f[f.length-(w||1)].first_column,last_column:f[f.length-1].last_column},p&&(z._$.range=[f[f.length-(w||1)].range[0],f[f.length-1].range[1]]),u=this.performAction.apply(z,[h,j,i,this.yy,t[1],e,f].concat(n)),void 0!==u)return u;w&&(d=d.slice(0,-2*w),e=e.slice(0,-1*w),f=f.slice(0,-1*w)),d.push(this.productions_[t[1]][0]),e.push(z.$),f.push(z._$),x=g[d[d.length-2]][d[d.length-1]],d.push(x);break;case 3:return!0}}return!0}};return a.prototype=b,b.Parser=a,new a}();return void 0!==require&&void 0!==a&&(a.parser=c,a.Parser=c.Parser,a.parse=function(){return c.parse.apply(c,arguments)},a.main=function(b){b[1]||(console.log("Usage: "+b[0]+" FILE"),process.exit(1));var c=require("fs").readFileSync(require("path").normalize(b[1]),"utf8");return a.parser.parse(c)},void 0!==b&&require.main===b&&a.main(process.argv.slice(1))),b.exports}(),require["./scope"]=function(){var a={},b={exports:a};return function(){var b,c,d,e;e=require("./helpers"),c=e.extend,d=e.last,a.Scope=b=function(){function a(b,c,d){this.parent=b,this.expressions=c,this.method=d,this.variables=[{name:"arguments",type:"arguments"}],this.positions={},this.parent||(a.root=this)}return a.root=null,a.prototype.add=function(a,b,c){return this.shared&&!c?this.parent.add(a,b,c):Object.prototype.hasOwnProperty.call(this.positions,a)?this.variables[this.positions[a]].type=b:this.positions[a]=this.variables.push({name:a,type:b})-1},a.prototype.namedMethod=function(){var a;return(null!=(a=this.method)?a.name:void 0)||!this.parent?this.method:this.parent.namedMethod()},a.prototype.find=function(a){return this.check(a)?!0:(this.add(a,"var"),!1)},a.prototype.parameter=function(a){return this.shared&&this.parent.check(a,!0)?void 0:this.add(a,"param")},a.prototype.check=function(a){var b;return!!(this.type(a)||(null!=(b=this.parent)?b.check(a):void 0))},a.prototype.temporary=function(a,b){return a.length>1?"_"+a+(b>1?b-1:""):"_"+(b+parseInt(a,36)).toString(36).replace(/\d/g,"a")},a.prototype.type=function(a){var b,c,d,e;for(e=this.variables,c=0,d=e.length;d>c;c++)if(b=e[c],b.name===a)return b.type;return null},a.prototype.freeVariable=function(a,b){var c,d;for(null==b&&(b=!0),c=0;this.check(d=this.temporary(a,c));)c++;return b&&this.add(d,"var",!0),d},a.prototype.assign=function(a,b){return this.add(a,{value:b,assigned:!0},!0),this.hasAssignments=!0},a.prototype.hasDeclarations=function(){return!!this.declaredVariables().length},a.prototype.declaredVariables=function(){var a,b,c,d,e,f;for(a=[],b=[],f=this.variables,d=0,e=f.length;e>d;d++)c=f[d],"var"===c.type&&("_"===c.name.charAt(0)?b:a).push(c.name);return a.sort().concat(b.sort())},a.prototype.assignedVariables=function(){var a,b,c,d,e;for(d=this.variables,e=[],b=0,c=d.length;c>b;b++)a=d[b],a.type.assigned&&e.push(""+a.name+" = "+a.type.value);return e},a}()}.call(this),b.exports}(),require["./nodes"]=function(){var a={},b={exports:a};return function(){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,$,_,ab,bb,cb,db,eb,fb,gb,hb,ib,jb,kb,lb,mb,nb,ob,pb,qb,rb,sb,tb,ub,vb,wb={}.hasOwnProperty,xb=function(a,b){function c(){this.constructor=a}for(var d in b)wb.call(b,d)&&(a[d]=b[d]);return c.prototype=b.prototype,a.prototype=new c,a.__super__=b.prototype,a},yb=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1},zb=[].slice;Error.stackTraceLimit=1/0,R=require("./scope").Scope,ub=require("./lexer"),M=ub.RESERVED,Q=ub.STRICT_PROSCRIBED,vb=require("./helpers"),cb=vb.compact,gb=vb.flatten,fb=vb.extend,mb=vb.merge,db=vb.del,qb=vb.starts,eb=vb.ends,kb=vb.last,pb=vb.some,bb=vb.addLocationDataFn,lb=vb.locationDataToString,rb=vb.throwSyntaxError,a.extend=fb,a.addLocationDataFn=bb,ab=function(){return!0},G=function(){return!1},W=function(){return this},F=function(){return this.negated=!this.negated,this},a.CodeFragment=j=function(){function a(a,b){var c;this.code=""+b,this.locationData=null!=a?a.locationData:void 0,this.type=(null!=a&&null!=(c=a.constructor)?c.name:void 0)||"unknown"}return a.prototype.nodeType=function(){return"CodeFragment"},a.prototype.toString=function(){return""+this.code+(this.locationData?": "+lb(this.locationData):"")},a}(),hb=function(a){var b;return function(){var c,d,e;for(e=[],c=0,d=a.length;d>c;c++)b=a[c],e.push(b.code);return e}().join("")},a.Base=e=function(){function a(){}return a.prototype.nodeType=function(){return"Base"},a.prototype.compile=function(a,b){return hb(this.compileToFragments(a,b))},a.prototype.compileToFragments=function(a,b){var c;return a=fb({},a),b&&(a.level=b),c=this.unfoldSoak(a)||this,c.tab=a.indent,a.level!==C&&c.isStatement(a)?c.compileClosure(a):c.compileNode(a)},a.prototype.compileClosure=function(a){var c,d,e,h,j;return(h=this.jumps())&&h.error("cannot use a pure statement in an expression"),a.sharedScope=!0,e=new i([],f.wrap([this])),c=[],((d=this.contains(ib))||this.contains(jb))&&(c=[new D("this")],d?(j="apply",c.push(new D("arguments"))):j="call",e=new $(e,[new b(new D(j))])),new g(e,c).compileNode(a)},a.prototype.cache=function(a,b,c){var e,f;return this.isComplex()?(e=new D(c||a.scope.freeVariable("ref")),f=new d(e,this),b?[f.compileToFragments(a,b),[this.makeCode(e.value)]]:[f,e]):(e=b?this.compileToFragments(a,b):this,[e,e])},a.prototype.cacheToCodeFragments=function(a){return[hb(a[0]),hb(a[1])]},a.prototype.makeReturn=function(a){var b;return b=this.unwrapAll(),a?new g(new D(""+a+".push"),[b]):new O(b)},a.prototype.contains=function(a){var b;return b=void 0,this.traverseChildren(!1,function(c){return a(c)?(b=c,!1):void 0}),b},a.prototype.lastNonComment=function(a){var b;for(b=a.length;b--;)if(!(a[b]instanceof k))return a[b];return null},a.prototype.toString=function(a,b){var c;return null==a&&(a=""),null==b&&(b=this.constructor.name),c="\n"+a+b,this.soak&&(c+="?"),this.eachChild(function(b){return c+=b.toString(a+V)}),c},a.prototype.eachChild=function(a){var b,c,d,e,f,g,h,i;if(!this.children)return this;for(h=this.children,d=0,f=h.length;f>d;d++)if(b=h[d],this[b])for(i=gb([this[b]]),e=0,g=i.length;g>e;e++)if(c=i[e],a(c)===!1)return this;return this},a.prototype.traverseChildren=function(a,b){return this.eachChild(function(c){var d;return d=b(c),d!==!1?c.traverseChildren(a,b):void 0})},a.prototype.invert=function(){return new J("!",this)},a.prototype.unwrapAll=function(){var a;for(a=this;a!==(a=a.unwrap()););return a},a.prototype.children=[],a.prototype.isStatement=G,a.prototype.jumps=G,a.prototype.isComplex=ab,a.prototype.isChainable=G,a.prototype.isAssignable=G,a.prototype.unwrap=W,a.prototype.unfoldSoak=G,a.prototype.assigns=G,a.prototype.updateLocationDataIfMissing=function(a){return this.locationData?this:(this.locationData=a,this.eachChild(function(b){return b.updateLocationDataIfMissing(a)}))},a.prototype.error=function(a){return rb(a,this.locationData)},a.prototype.makeCode=function(a){return new j(this,a)},a.prototype.wrapInBraces=function(a){return[].concat(this.makeCode("("),a,this.makeCode(")"))},a.prototype.joinFragmentArrays=function(a,b){var c,d,e,f,g;for(c=[],e=f=0,g=a.length;g>f;e=++f)d=a[e],e&&c.push(this.makeCode(b)),c=c.concat(d);return c},a}(),a.Block=f=function(a){function b(a){this.expressions=cb(gb(a||[]))}return xb(b,a),b.prototype.nodeType=function(){return"Block"},b.prototype.children=["expressions"],b.prototype.push=function(a){return this.expressions.push(a),this},b.prototype.pop=function(){return this.expressions.pop()},b.prototype.unshift=function(a){return this.expressions.unshift(a),this},b.prototype.unwrap=function(){return 1===this.expressions.length?this.expressions[0]:this},b.prototype.isEmpty=function(){return!this.expressions.length},b.prototype.isStatement=function(a){var b,c,d,e;for(e=this.expressions,c=0,d=e.length;d>c;c++)if(b=e[c],b.isStatement(a))return!0;return!1},b.prototype.jumps=function(a){var b,c,d,e,f;for(f=this.expressions,d=0,e=f.length;e>d;d++)if(b=f[d],c=b.jumps(a))return c},b.prototype.makeReturn=function(a){var b,c;for(c=this.expressions.length;c--;)if(b=this.expressions[c],!(b instanceof k)){this.expressions[c]=b.makeReturn(a),b instanceof O&&!b.expression&&this.expressions.splice(c,1);break}return this},b.prototype.compileToFragments=function(a,c){return null==a&&(a={}),a.scope?b.__super__.compileToFragments.call(this,a,c):this.compileRoot(a)},b.prototype.compileNode=function(a){var c,d,e,f,g,h,i,j,k;for(this.tab=a.indent,h=a.level===C,d=[],k=this.expressions,f=i=0,j=k.length;j>i;f=++i)g=k[f],g=g.unwrapAll(),g=g.unfoldSoak(a)||g,g instanceof b?d.push(g.compileNode(a)):h?(g.front=!0,e=g.compileToFragments(a),g.isStatement(a)||(e.unshift(this.makeCode(""+this.tab)),e.push(this.makeCode(";"))),d.push(e)):d.push(g.compileToFragments(a,z));return h?this.spaced?[].concat(this.joinFragmentArrays(d,"\n\n"),this.makeCode("\n")):this.joinFragmentArrays(d,"\n"):(c=d.length?this.joinFragmentArrays(d,", "):[this.makeCode("void 0")],d.length>1&&a.level>=z?this.wrapInBraces(c):c)},b.prototype.compileRoot=function(a){var b,c,d,e,f,g,h,i,j,l;for(a.indent=a.bare?"":V,a.level=C,this.spaced=!0,a.scope=new R(null,this,null),l=a.locals||[],i=0,j=l.length;j>i;i++)e=l[i],a.scope.parameter(e);return f=[],a.bare||(g=function(){var a,c,e,f;for(e=this.expressions,f=[],d=a=0,c=e.length;c>a&&(b=e[d],b.unwrap()instanceof k);d=++a)f.push(b);return f}.call(this),h=this.expressions.slice(g.length),this.expressions=g,g.length&&(f=this.compileNode(mb(a,{indent:""})),f.push(this.makeCode("\n"))),this.expressions=h),c=this.compileWithDeclarations(a),a.bare?c:[].concat(f,this.makeCode("(function() {\n"),c,this.makeCode("\n}).call(this);\n"))},b.prototype.compileWithDeclarations=function(a){var b,c,d,e,f,g,h,i,j,l,m,n,o,p;for(e=[],g=[],n=this.expressions,f=l=0,m=n.length;m>l&&(d=n[f],d=d.unwrap(),d instanceof k||d instanceof D);f=++l);return a=mb(a,{level:C}),f&&(h=this.expressions.splice(f,9e9),o=[this.spaced,!1],j=o[0],this.spaced=o[1],p=[this.compileNode(a),j],e=p[0],this.spaced=p[1],this.expressions=h),g=this.compileNode(a),i=a.scope,i.expressions===this&&(c=a.scope.hasDeclarations(),b=i.hasAssignments,c||b?(f&&e.push(this.makeCode("\n")),e.push(this.makeCode(""+this.tab+"var ")),c&&e.push(this.makeCode(i.declaredVariables().join(", "))),b&&(c&&e.push(this.makeCode(",\n"+(this.tab+V))),e.push(this.makeCode(i.assignedVariables().join(",\n"+(this.tab+V))))),e.push(this.makeCode(";\n"+(this.spaced?"\n":"")))):e.length&&g.length&&e.push(this.makeCode("\n"))),e.concat(g)},b.wrap=function(a){return 1===a.length&&a[0]instanceof b?a[0]:new b(a)},b}(e),a.Literal=D=function(a){function b(a){this.value=a}return xb(b,a),b.prototype.nodeType=function(){return"Literal"},b.prototype.makeReturn=function(){return this.isStatement()?this:b.__super__.makeReturn.apply(this,arguments)},b.prototype.isAssignable=function(){return q.test(this.value)},b.prototype.isStatement=function(){var a;return"break"===(a=this.value)||"continue"===a||"debugger"===a},b.prototype.isComplex=G,b.prototype.assigns=function(a){return a===this.value},b.prototype.jumps=function(a){return("break"!==this.value||(null!=a?a.loop:void 0)||(null!=a?a.block:void 0))&&("continue"!==this.value||(null!=a?a.loop:void 0))?void 0:this},b.prototype.compileNode=function(a){var b,c,d;return c="this"===this.value?(null!=(d=a.scope.method)?d.bound:void 0)?a.scope.method.context:this.value:this.value.reserved?'"'+this.value+'"':this.value,b=this.isStatement()?""+this.tab+c+";":c,[this.makeCode(b)]},b.prototype.toString=function(){return' "'+this.value+'"'},b}(e),a.Undefined=function(a){function b(){return b.__super__.constructor.apply(this,arguments)}return xb(b,a),b.prototype.isAssignable=G,b.prototype.isComplex=G,b.prototype.compileNode=function(a){return[this.makeCode(a.level>=x?"(void 0)":"void 0")]},b}(e),a.Null=function(a){function b(){return b.__super__.constructor.apply(this,arguments)}return xb(b,a),b.prototype.isAssignable=G,b.prototype.isComplex=G,b.prototype.compileNode=function(){return[this.makeCode("null")]},b}(e),a.Bool=function(a){function b(a){this.val=a}return xb(b,a),b.prototype.isAssignable=G,b.prototype.isComplex=G,b.prototype.compileNode=function(){return[this.makeCode(this.val)]},b}(e),a.Return=O=function(a){function b(a){this.expression=a}return xb(b,a),b.prototype.nodeType=function(){return"Return"},b.prototype.children=["expression"],b.prototype.isStatement=ab,b.prototype.makeReturn=W,b.prototype.jumps=W,b.prototype.compileToFragments=function(a,c){var d,e;return d=null!=(e=this.expression)?e.makeReturn():void 0,!d||d instanceof b?b.__super__.compileToFragments.call(this,a,c):d.compileToFragments(a,c)},b.prototype.compileNode=function(a){var b;return b=[],b.push(this.makeCode(this.tab+("return"+(this.expression?" ":"")))),this.expression&&(b=b.concat(this.expression.compileToFragments(a,B))),b.push(this.makeCode(";")),b},b}(e),a.Value=$=function(a){function b(a,c,d){return!c&&a instanceof b?a:(this.base=a,this.properties=c||[],d&&(this[d]=!0),this)}return xb(b,a),b.prototype.nodeType=function(){return"Value"},b.prototype.children=["base","properties"],b.prototype.add=function(a){return this.properties=this.properties.concat(a),this},b.prototype.hasProperties=function(){return!!this.properties.length},b.prototype.bareLiteral=function(a){return!this.properties.length&&this.base instanceof a},b.prototype.isArray=function(){return this.bareLiteral(c)},b.prototype.isRange=function(){return this.bareLiteral(N)},b.prototype.isComplex=function(){return this.hasProperties()||this.base.isComplex()},b.prototype.isAssignable=function(){return this.hasProperties()||this.base.isAssignable()},b.prototype.isSimpleNumber=function(){return this.bareLiteral(D)&&P.test(this.base.value)},b.prototype.isString=function(){return this.bareLiteral(D)&&t.test(this.base.value)},b.prototype.isRegex=function(){return this.bareLiteral(D)&&s.test(this.base.value)},b.prototype.isAtomic=function(){var a,b,c,d;for(d=this.properties.concat(this.base),b=0,c=d.length;c>b;b++)if(a=d[b],a.soak||a instanceof g)return!1;return!0},b.prototype.isNotCallable=function(){return this.isSimpleNumber()||this.isString()||this.isRegex()||this.isArray()||this.isRange()||this.isSplice()||this.isObject()},b.prototype.isStatement=function(a){return!this.properties.length&&this.base.isStatement(a)},b.prototype.assigns=function(a){return!this.properties.length&&this.base.assigns(a)},b.prototype.jumps=function(a){return!this.properties.length&&this.base.jumps(a)},b.prototype.isObject=function(a){return this.properties.length?!1:this.base instanceof I&&(!a||this.base.generated)},b.prototype.isSplice=function(){return kb(this.properties)instanceof S},b.prototype.looksStatic=function(a){var b;return this.base.value===a&&this.properties.length&&"prototype"!==(null!=(b=this.properties[0].name)?b.value:void 0)},b.prototype.unwrap=function(){return this.properties.length?this:this.base},b.prototype.cacheReference=function(a){var c,e,f,g;return f=kb(this.properties),2>this.properties.length&&!this.base.isComplex()&&(null!=f?!f.isComplex():!0)?[this,this]:(c=new b(this.base,this.properties.slice(0,-1)),c.isComplex()&&(e=new D(a.scope.freeVariable("base")),c=new b(new L(new d(e,c)))),f?(f.isComplex()&&(g=new D(a.scope.freeVariable("name")),f=new w(new d(g,f.index)),g=new w(g)),[c.add(f),new b(e||c.base,[g||f])]):[c,e])},b.prototype.compileNode=function(a){var b,c,d,e,f;for(this.base.front=this.front,d=this.properties,b=this.base.compileToFragments(a,d.length?x:null),(this.base instanceof L||d.length)&&P.test(hb(b))&&b.push(this.makeCode(".")),e=0,f=d.length;f>e;e++)c=d[e],b.push.apply(b,c.compileToFragments(a));return b},b.prototype.unfoldSoak=function(a){return null!=this.unfoldedSoak?this.unfoldedSoak:this.unfoldedSoak=function(c){return function(){var e,f,g,h,i,j,k,m,n,o;if(g=c.base.unfoldSoak(a))return(n=g.body.properties).push.apply(n,c.properties),g;for(o=c.properties,f=k=0,m=o.length;m>k;f=++k)if(h=o[f],h.soak)return h.soak=!1,e=new b(c.base,c.properties.slice(0,f)),j=new b(c.base,c.properties.slice(f)),e.isComplex()&&(i=new D(a.scope.freeVariable("ref")),e=new L(new d(i,e)),j.base=i),new u(new l(e),j,{soak:!0});return!1}}(this)()},b}(e),a.Comment=k=function(a){function b(a){this.comment=a}return xb(b,a),b.prototype.nodeType=function(){return"Comment"},b.prototype.isStatement=ab,b.prototype.makeReturn=W,b.prototype.compileNode=function(a,b){var c,d;return d=this.comment.replace(/^(\s*)#/gm,"$1 *"),c="/*"+nb(d,this.tab)+(yb.call(d,"\n")>=0?"\n"+this.tab:"")+" */",(b||a.level)===C&&(c=a.indent+c),[this.makeCode("\n"),this.makeCode(c)]},b}(e),a.Call=g=function(a){function c(a,b,c){this.args=null!=b?b:[],this.soak=c,this.isNew=!1,this.isSuper="super"===a,this.variable=this.isSuper?null:a,a instanceof $&&a.isNotCallable()&&a.error("literal is not a function")}return xb(c,a),c.prototype.nodeType=function(){return"Call"},c.prototype.children=["variable","args"],c.prototype.newInstance=function(){var a,b;return a=(null!=(b=this.variable)?b.base:void 0)||this.variable,a instanceof c&&!a.isNew?a.newInstance():this.isNew=!0,this},c.prototype.superReference=function(a){var c,d;return d=a.scope.namedMethod(),(null!=d?d.klass:void 0)?(c=[new b(new D("__super__"))],d["static"]&&c.push(new b(new D("constructor"))),c.push(new b(new D(d.name))),new $(new D(d.klass),c).compile(a)):(null!=d?d.ctor:void 0)?""+d.name+".__super__.constructor":this.error("cannot call super outside of an instance method.")},c.prototype.superThis=function(a){var b;return b=a.scope.method,b&&!b.klass&&b.context||"this"},c.prototype.unfoldSoak=function(a){var b,d,e,f,g,h,i,j,k;if(this.soak){if(this.variable){if(d=sb(a,this,"variable"))return d;j=new $(this.variable).cacheReference(a),e=j[0],g=j[1]}else e=new D(this.superReference(a)),g=new $(e);return g=new c(g,this.args),g.isNew=this.isNew,e=new D("typeof "+e.compile(a)+' === "function"'),new u(e,new $(g),{soak:!0})}for(b=this,f=[];;)if(b.variable instanceof c)f.push(b),b=b.variable;else{if(!(b.variable instanceof $))break;if(f.push(b),!((b=b.variable.base)instanceof c))break}for(k=f.reverse(),h=0,i=k.length;i>h;h++)b=k[h],d&&(b.variable instanceof c?b.variable=d:b.variable.base=d),d=sb(a,b,"variable");return d},c.prototype.compileNode=function(a){var b,c,d,e,f,g,h,i,j,k;if(null!=(j=this.variable)&&(j.front=this.front),e=T.compileSplattedArray(a,this.args,!0),e.length)return this.compileSplat(a,e);for(d=[],k=this.args,c=h=0,i=k.length;i>h;c=++h)b=k[c],c&&d.push(this.makeCode(", ")),d.push.apply(d,b.compileToFragments(a,z));return f=[],this.isSuper?(g=this.superReference(a)+(".call("+this.superThis(a)),d.length&&(g+=", "),f.push(this.makeCode(g))):(this.isNew&&f.push(this.makeCode("new ")),f.push.apply(f,this.variable.compileToFragments(a,x)),f.push(this.makeCode("("))),f.push.apply(f,d),f.push(this.makeCode(")")),f},c.prototype.compileSplat=function(a,b){var c,d,e,f,g,h;return this.isSuper?[].concat(this.makeCode(""+this.superReference(a)+".apply("+this.superThis(a)+", "),b,this.makeCode(")")):this.isNew?(f=this.tab+V,[].concat(this.makeCode("(function(func, args, ctor) {\n"+f+"ctor.prototype = func.prototype;\n"+f+"var child = new ctor, result = func.apply(child, args);\n"+f+"return Object(result) === result ? result : child;\n"+this.tab+"})("),this.variable.compileToFragments(a,z),this.makeCode(", "),b,this.makeCode(", function(){})"))):(c=[],d=new $(this.variable),(g=d.properties.pop())&&d.isComplex()?(h=a.scope.freeVariable("ref"),c=c.concat(this.makeCode("("+h+" = "),d.compileToFragments(a,z),this.makeCode(")"),g.compileToFragments(a))):(e=d.compileToFragments(a,x),P.test(hb(e))&&(e=this.wrapInBraces(e)),g?(h=hb(e),e.push.apply(e,g.compileToFragments(a))):h="null",c=c.concat(e)),c=c.concat(this.makeCode(".apply("+h+", "),b,this.makeCode(")")))},c}(e),a.Extends=n=function(a){function b(a,b){this.child=a,this.parent=b}return xb(b,a),b.prototype.nodeType=function(){return"Extends"},b.prototype.children=["child","parent"],b.prototype.compileToFragments=function(a){return new g(new $(new D(tb("extends"))),[this.child,this.parent]).compileToFragments(a)},b}(e),a.Access=b=function(a){function b(a,b){this.name=a,this.name.asKey=!0,this.soak="soak"===b}return xb(b,a),b.prototype.nodeType=function(){return"Access"},b.prototype.children=["name"],b.prototype.compileToFragments=function(a){var b;return b=this.name.compileToFragments(a),q.test(hb(b))?b.unshift(this.makeCode(".")):(b.unshift(this.makeCode("[")),b.push(this.makeCode("]"))),b},b.prototype.isComplex=G,b}(e),a.Index=w=function(a){function b(a){this.index=a}return xb(b,a),b.prototype.nodeType=function(){return"Index"},b.prototype.children=["index"],b.prototype.compileToFragments=function(a){return[].concat(this.makeCode("["),this.index.compileToFragments(a,B),this.makeCode("]"))},b.prototype.isComplex=function(){return this.index.isComplex()},b}(e),a.Range=N=function(a){function b(a,b,c){this.from=a,this.to=b,this.exclusive="exclusive"===c,this.equals=this.exclusive?"":"="}return xb(b,a),b.prototype.nodeType=function(){return"Range"},b.prototype.children=["from","to"],b.prototype.compileVariables=function(a){var b,c,d,e,f;return a=mb(a,{top:!0}),c=this.cacheToCodeFragments(this.from.cache(a,z)),this.fromC=c[0],this.fromVar=c[1],d=this.cacheToCodeFragments(this.to.cache(a,z)),this.toC=d[0],this.toVar=d[1],(b=db(a,"step"))&&(e=this.cacheToCodeFragments(b.cache(a,z)),this.step=e[0],this.stepVar=e[1]),f=[this.fromVar.match(H),this.toVar.match(H)],this.fromNum=f[0],this.toNum=f[1],this.stepVar?this.stepNum=this.stepVar.match(H):void 0},b.prototype.compileNode=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n,o;return this.fromVar||this.compileVariables(a),a.index?(h=this.fromNum&&this.toNum,f=db(a,"index"),g=db(a,"name"),j=g&&g!==f,m=""+f+" = "+this.fromC,this.toC!==this.toVar&&(m+=", "+this.toC),this.step!==this.stepVar&&(m+=", "+this.step),n=[""+f+" <"+this.equals,""+f+" >"+this.equals],i=n[0],e=n[1],c=this.stepNum?ob(this.stepNum[0])>0?""+i+" "+this.toVar:""+e+" "+this.toVar:h?(o=[ob(this.fromNum[0]),ob(this.toNum[0])],d=o[0],l=o[1],l>=d?""+i+" "+l:""+e+" "+l):(b=this.stepVar?""+this.stepVar+" > 0":""+this.fromVar+" <= "+this.toVar,""+b+" ? "+i+" "+this.toVar+" : "+e+" "+this.toVar),k=this.stepVar?""+f+" += "+this.stepVar:h?j?l>=d?"++"+f:"--"+f:l>=d?""+f+"++":""+f+"--":j?""+b+" ? ++"+f+" : --"+f:""+b+" ? "+f+"++ : "+f+"--",j&&(m=""+g+" = "+m),j&&(k=""+g+" = "+k),[this.makeCode(""+m+"; "+c+"; "+k)]):this.compileArray(a)},b.prototype.compileArray=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n;return this.fromNum&&this.toNum&&20>=Math.abs(this.fromNum-this.toNum)?(j=function(){n=[];for(var a=m=+this.fromNum,b=+this.toNum;b>=m?b>=a:a>=b;b>=m?a++:a--)n.push(a);return n}.apply(this),this.exclusive&&j.pop(),[this.makeCode("["+j.join(", ")+"]")]):(g=this.tab+V,f=a.scope.freeVariable("i"),k=a.scope.freeVariable("results"),i="\n"+g+k+" = [];",this.fromNum&&this.toNum?(a.index=f,c=hb(this.compileNode(a))):(l=""+f+" = "+this.fromC+(this.toC!==this.toVar?", "+this.toC:""),d=""+this.fromVar+" <= "+this.toVar,c="var "+l+"; "+d+" ? "+f+" <"+this.equals+" "+this.toVar+" : "+f+" >"+this.equals+" "+this.toVar+"; "+d+" ? "+f+"++ : "+f+"--"),h="{ "+k+".push("+f+"); }\n"+g+"return "+k+";\n"+a.indent,e=function(a){return null!=a?a.contains(ib):void 0},(e(this.from)||e(this.to))&&(b=", arguments"),[this.makeCode("(function() {"+i+"\n"+g+"for ("+c+")"+h+"}).apply(this"+(null!=b?b:"")+")")])},b}(e),a.Slice=S=function(a){function b(a){this.range=a,b.__super__.constructor.call(this)}return xb(b,a),b.prototype.nodeType=function(){return"Slice"},b.prototype.children=["range"],b.prototype.compileNode=function(a){var b,c,d,e,f,g,h;return h=this.range,f=h.to,d=h.from,e=d&&d.compileToFragments(a,B)||[this.makeCode("0")],f&&(b=f.compileToFragments(a,B),c=hb(b),(this.range.exclusive||-1!==+c)&&(g=", "+(this.range.exclusive?c:P.test(c)?""+(+c+1):(b=f.compileToFragments(a,x),"+"+hb(b)+" + 1 || 9e9")))),[this.makeCode(".slice("+hb(e)+(g||"")+")")]},b}(e),a.Obj=I=function(a){function b(a,b){this.generated=null!=b?b:!1,this.objects=this.properties=a||[]}return xb(b,a),b.prototype.nodeType=function(){return"Obj"},b.prototype.children=["properties"],b.prototype.compileNode=function(a){var b,c,e,f,g,h,i,j,l,m,n,o,p;if(l=this.properties,!l.length)return[this.makeCode(this.front?"({})":"{}")];if(this.generated)for(m=0,o=l.length;o>m;m++)i=l[m],i instanceof $&&i.error("cannot have an implicit value in an implicit object");for(e=a.indent+=V,h=this.lastNonComment(this.properties),b=[],c=n=0,p=l.length;p>n;c=++n)j=l[c],g=c===l.length-1?"":j===h||j instanceof k?"\n":",\n",f=j instanceof k?"":e,j instanceof d&&j.variable instanceof $&&j.variable.hasProperties()&&j.variable.error("Invalid object key"),j instanceof $&&j["this"]&&(j=new d(j.properties[0].name,j,"object")),j instanceof k||(j instanceof d||(j=new d(j,j,"object")),(j.variable.base||j.variable).asKey=!0),f&&b.push(this.makeCode(f)),b.push.apply(b,j.compileToFragments(a,C)),g&&b.push(this.makeCode(g));return b.unshift(this.makeCode("{"+(l.length&&"\n"))),b.push(this.makeCode(""+(l.length&&"\n"+this.tab)+"}")),this.front?this.wrapInBraces(b):b},b.prototype.assigns=function(a){var b,c,d,e;for(e=this.properties,c=0,d=e.length;d>c;c++)if(b=e[c],b.assigns(a))return!0;return!1},b}(e),a.Arr=c=function(a){function b(a){this.objects=a||[]}return xb(b,a),b.prototype.nodeType=function(){return"Arr"},b.prototype.children=["objects"],b.prototype.compileNode=function(a){var b,c,d,e,f,g,h;if(!this.objects.length)return[this.makeCode("[]")];if(a.indent+=V,b=T.compileSplattedArray(a,this.objects),b.length)return b;for(b=[],c=function(){var b,c,d,e;for(d=this.objects,e=[],b=0,c=d.length;c>b;b++)f=d[b],e.push(f.compileToFragments(a,z));return e}.call(this),e=g=0,h=c.length;h>g;e=++g)d=c[e],e&&b.push(this.makeCode(", ")),b.push.apply(b,d);return hb(b).indexOf("\n")>=0?(b.unshift(this.makeCode("[\n"+a.indent)),b.push(this.makeCode("\n"+this.tab+"]"))):(b.unshift(this.makeCode("[")),b.push(this.makeCode("]"))),b},b.prototype.assigns=function(a){var b,c,d,e;for(e=this.objects,c=0,d=e.length;d>c;c++)if(b=e[c],b.assigns(a))return!0;return!1},b}(e),a.Class=h=function(a){function c(a,b,c){this.variable=a,this.parent=b,this.body=null!=c?c:new f,this.boundFuncs=[],this.body.classBody=!0}return xb(c,a),c.prototype.nodeType=function(){return"Class"},c.prototype.children=["variable","parent","body"],c.prototype.determineName=function(){var a,c;return this.variable?(a=(c=kb(this.variable.properties))?c instanceof b&&c.name.value:this.variable.base.value,yb.call(Q,a)>=0&&this.variable.error("class variable name may not be "+a),a&&(a=q.test(a)&&a)):null},c.prototype.setContext=function(a){return this.body.traverseChildren(!1,function(b){return b.classBody?!1:b instanceof D&&"this"===b.value?b.value=a:b instanceof i&&(b.klass=a,b.bound)?b.context=a:void 0})},c.prototype.addBoundFunctions=function(a){var c,d,e,f,g;for(g=this.boundFuncs,e=0,f=g.length;f>e;e++)c=g[e],d=new $(new D("this"),[new b(c)]).compile(a),this.ctor.body.unshift(new D(""+d+" = "+tb("bind")+"("+d+", this)"))},c.prototype.addProperties=function(a,c,e){var f,g,h,j,k;return k=a.base.properties.slice(0),h=function(){var a;for(a=[];f=k.shift();)f instanceof d&&(g=f.variable.base,delete f.context,j=f.value,"constructor"===g.value?(this.ctor&&f.error("cannot define more than one constructor in a class"),j.bound&&f.error("cannot define a constructor as a bound function"),j instanceof i?f=this.ctor=j:(this.externalCtor=e.classScope.freeVariable("class"),f=new d(new D(this.externalCtor),j))):f.variable["this"]?j["static"]=!0:(f.variable=new $(new D(c),[new b(new D("prototype")),new b(g)]),j instanceof i&&j.bound&&(this.boundFuncs.push(g),j.bound=!1))),a.push(f);return a}.call(this),cb(h)},c.prototype.walkBody=function(a,b){return this.traverseChildren(!1,function(e){return function(g){var h,i,j,k,l,m,n;if(h=!0,g instanceof c)return!1;if(g instanceof f){for(n=i=g.expressions,j=l=0,m=n.length;m>l;j=++l)k=n[j],k instanceof d&&k.variable.looksStatic(a)?k.value["static"]=!0:k instanceof $&&k.isObject(!0)&&(h=!1,i[j]=e.addProperties(k,a,b));g.expressions=i=gb(i)}return h&&!(g instanceof c)}}(this))},c.prototype.hoistDirectivePrologue=function(){var a,b,c;for(b=0,a=this.body.expressions;(c=a[b])&&c instanceof k||c instanceof $&&c.isString();)++b;return this.directives=a.splice(0,b)},c.prototype.ensureConstructor=function(a){return this.ctor||(this.ctor=new i,this.externalCtor?this.ctor.body.push(new D(""+this.externalCtor+".apply(this, arguments)")):this.parent&&this.ctor.body.push(new D(""+a+".__super__.constructor.apply(this, arguments)")),this.ctor.body.makeReturn(),this.body.expressions.unshift(this.ctor)),this.ctor.ctor=this.ctor.name=a,this.ctor.klass=null,this.ctor.noReturn=!0},c.prototype.compileNode=function(a){var b,c,e,h,j,k,l,m,o;return(h=this.body.jumps())&&h.error("Class bodies cannot contain pure statements"),(c=this.body.contains(ib))&&c.error("Class bodies shouldn't reference arguments"),l=this.determineName()||"_Class",l.reserved&&(l="_"+l),k=new D(l),e=new i([],f.wrap([this.body])),b=[],a.classScope=e.makeScope(a.scope),this.hoistDirectivePrologue(),this.setContext(l),this.walkBody(l,a),this.ensureConstructor(l),this.addBoundFunctions(a),this.body.spaced=!0,this.body.expressions.push(k),this.parent&&(m=new D(a.classScope.freeVariable("super",!1)),this.body.expressions.unshift(new n(k,m)),e.params.push(new K(m)),b.push(this.parent)),(o=this.body.expressions).unshift.apply(o,this.directives),j=new L(new g(e,b)),this.variable&&(j=new d(this.variable,j)),j.compileToFragments(a)},c}(e),a.Assign=d=function(a){function c(a,b,c,d){var e,f,g;this.variable=a,this.value=b,this.context=c,this.param=d&&d.param,this.subpattern=d&&d.subpattern,g=f=this.variable.unwrapAll().value,e=yb.call(Q,g)>=0,e&&"object"!==this.context&&this.variable.error('variable name may not be "'+f+'"')}return xb(c,a),c.prototype.nodeType=function(){return"Assign"},c.prototype.children=["variable","value"],c.prototype.isStatement=function(a){return(null!=a?a.level:void 0)===C&&null!=this.context&&yb.call(this.context,"?")>=0},c.prototype.assigns=function(a){return this["object"===this.context?"value":"variable"].assigns(a)},c.prototype.unfoldSoak=function(a){return sb(a,this,"variable")},c.prototype.compileNode=function(a){var b,c,d,e,f,g,h,j,k,l,m;if(d=this.variable instanceof $){if(this.variable.isArray()||this.variable.isObject())return this.compilePatternMatch(a);
-if(this.variable.isSplice())return this.compileSplice(a);if("||="===(j=this.context)||"&&="===j||"?="===j)return this.compileConditional(a);if("**="===(k=this.context)||"//="===k||"%%="===k)return this.compileSpecialMath(a)}return c=this.variable.compileToFragments(a,z),f=hb(c),this.context||(h=this.variable.unwrapAll(),h.isAssignable()||this.variable.error('"'+this.variable.compile(a)+'" cannot be assigned'),("function"==typeof h.hasProperties?h.hasProperties():void 0)||(this.param?a.scope.add(f,"var"):a.scope.find(f))),this.value instanceof i&&(e=E.exec(f))&&(e[2]&&(this.value.klass=e[1]),this.value.name=null!=(l=null!=(m=e[3])?m:e[4])?l:e[5]),g=this.value.compileToFragments(a,z),"object"===this.context?c.concat(this.makeCode(": "),g):(b=c.concat(this.makeCode(" "+(this.context||"=")+" "),g),z>=a.level?b:this.wrapInBraces(b))},c.prototype.compilePatternMatch=function(a){var d,e,f,g,h,i,j,k,l,n,o,p,r,s,t,u,v,x,y,B,E,F,G,H,I,J,K,N;if(u=a.level===C,x=this.value,p=this.variable.base.objects,!(r=p.length))return f=x.compileToFragments(a),a.level>=A?this.wrapInBraces(f):f;if(k=this.variable.isObject(),!u||1!==r||(o=p[0])instanceof T){for(y=x.compileToFragments(a,z),B=hb(y),e=[],g=!1,(!q.test(B)||this.variable.assigns(B))&&(e.push([this.makeCode(""+(s=a.scope.freeVariable("ref"))+" = ")].concat(zb.call(y))),y=[this.makeCode(s)],B=s),i=E=0,F=p.length;F>E;i=++E){if(o=p[i],j=i,k&&(o instanceof c?(J=o,K=J.variable,j=K.base,o=J.value):o.base instanceof L?(N=new $(o.unwrapAll()).cacheReference(a),o=N[0],j=N[1]):j=o["this"]?o.properties[0].name:o),!g&&o instanceof T)n=o.name.unwrap().value,o=o.unwrap(),v=""+r+" <= "+B+".length ? "+tb("slice")+".call("+B+", "+i,(t=r-i-1)?(l=a.scope.freeVariable("i"),v+=", "+l+" = "+B+".length - "+t+") : ("+l+" = "+i+", [])"):v+=") : []",v=new D(v),g=""+l+"++";else{if(!g&&o instanceof m){(t=r-i-1)&&(1===t?g=""+B+".length - 1":(l=a.scope.freeVariable("i"),v=new D(""+l+" = "+B+".length - "+t),g=""+l+"++",e.push(v.compileToFragments(a,z))));continue}n=o.unwrap().value,(o instanceof T||o instanceof m)&&o.error("multiple splats/expansions are disallowed in an assignment"),"number"==typeof j?(j=new D(g||j),d=!1):d=k&&q.test(j.unwrap().value||0),v=new $(new D(B),[new(d?b:w)(j)])}null!=n&&yb.call(M,n)>=0&&o.error("assignment to a reserved word: "+o.compile(a)),e.push(new c(o,v,null,{param:this.param,subpattern:!0}).compileToFragments(a,z))}return u||this.subpattern||e.push(y),h=this.joinFragmentArrays(e,", "),z>a.level?h:this.wrapInBraces(h)}return o instanceof c?(G=o,H=G.variable,j=H.base,o=G.value):j=k?o["this"]?o.properties[0].name:o:new D(0),d=q.test(j.unwrap().value||0),x=new $(x),x.properties.push(new(d?b:w)(j)),I=o.unwrap().value,yb.call(M,I)>=0&&o.error("assignment to a reserved word: "+o.compile(a)),new c(o,x,null,{param:this.param}).compileToFragments(a,C)},c.prototype.compileConditional=function(a){var b,d,e,f;return f=this.variable.cacheReference(a),d=f[0],e=f[1],!d.properties.length&&d.base instanceof D&&"this"!==d.base.value&&!a.scope.check(d.base.value)&&this.variable.error('the variable "'+d.base.value+"\" can't be assigned with "+this.context+" because it has not been declared before"),yb.call(this.context,"?")>=0?(a.isExistentialEquals=!0,new u(new l(d),e,{type:"if"}).addElse(new c(e,this.value,"=")).compileToFragments(a)):(b=new J(this.context.slice(0,-1),d,new c(e,this.value,"=")).compileToFragments(a),z>=a.level?b:this.wrapInBraces(b))},c.prototype.compileSpecialMath=function(a){var b,d,e;return e=this.variable.cacheReference(a),b=e[0],d=e[1],new c(b,new J(this.context.slice(0,-1),d,this.value)).compileToFragments(a)},c.prototype.compileSplice=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;return k=this.variable.properties.pop().range,d=k.from,h=k.to,c=k.exclusive,g=this.variable.compile(a),d?(l=this.cacheToCodeFragments(d.cache(a,A)),e=l[0],f=l[1]):e=f="0",h?d instanceof $&&d.isSimpleNumber()&&h instanceof $&&h.isSimpleNumber()?(h=h.compile(a)-f,c||(h+=1)):(h=h.compile(a,x)+" - "+f,c||(h+=" + 1")):h="9e9",m=this.value.cache(a,z),i=m[0],j=m[1],b=[].concat(this.makeCode("[].splice.apply("+g+", ["+e+", "+h+"].concat("),i,this.makeCode(")), "),j),a.level>C?this.wrapInBraces(b):b},c}(e),a.Code=i=function(a){function b(a,b,c){this.params=a||[],this.body=b||new f,this.bound="boundfunc"===c}return xb(b,a),b.prototype.nodeType=function(){return"Code"},b.prototype.children=["params","body"],b.prototype.isStatement=function(){return!!this.ctor},b.prototype.jumps=G,b.prototype.makeScope=function(a){return new R(a,this.body,this)},b.prototype.compileNode=function(a){var e,h,i,j,k,l,n,o,p,q,r,s,t,v,w,y,z,A,B,C,E,F,G,H,I,L,M,N,O,P,Q,R,S;if(this.bound&&(null!=(N=a.scope.method)?N.bound:void 0)&&(this.context=a.scope.method.context),this.bound&&!this.context)return this.context="_this",w=new b([new K(new D(this.context))],new f([this])),h=new g(w,[new D("this")]),h.updateLocationDataIfMissing(this.locationData),h.compileNode(a);for(a.scope=db(a,"classScope")||this.makeScope(a.scope),a.scope.shared=db(a,"sharedScope"),a.indent+=V,delete a.bare,delete a.isExistentialEquals,p=[],j=[],O=this.params,y=0,C=O.length;C>y;y++)o=O[y],o instanceof m||a.scope.parameter(o.asReference(a));for(P=this.params,z=0,E=P.length;E>z;z++)if(o=P[z],o.splat||o instanceof m){for(Q=this.params,A=0,F=Q.length;F>A;A++)n=Q[A].name,o instanceof m||(n["this"]&&(n=n.properties[0].name),n.value&&a.scope.add(n.value,"var",!0));r=new d(new $(new c(function(){var b,c,d,e;for(d=this.params,e=[],b=0,c=d.length;c>b;b++)n=d[b],e.push(n.asReference(a));return e}.call(this))),new $(new D("arguments")));break}for(R=this.params,B=0,G=R.length;G>B;B++)o=R[B],o.isComplex()?(t=q=o.asReference(a),o.value&&(t=new J("?",q,o.value)),j.push(new d(new $(o.name),t,"=",{param:!0}))):(q=o,o.value&&(l=new D(q.name.value+" == null"),t=new d(new $(o.name),o.value,"="),j.push(new u(l,t)))),r||p.push(q);for(v=this.body.isEmpty(),r&&j.unshift(r),j.length&&(S=this.body.expressions).unshift.apply(S,j),k=L=0,H=p.length;H>L;k=++L)n=p[k],p[k]=n.compileToFragments(a),a.scope.parameter(hb(p[k]));for(s=[],this.eachParamName(function(a,b){return yb.call(s,a)>=0&&b.error("multiple parameters named '"+a+"'"),s.push(a)}),v||this.noReturn||this.body.makeReturn(),i="function",this.ctor&&(i+=" "+this.name),i+="(",e=[this.makeCode(i)],k=M=0,I=p.length;I>M;k=++M)n=p[k],k&&e.push(this.makeCode(", ")),e.push.apply(e,n);return e.push(this.makeCode(") {")),this.body.isEmpty()||(e=e.concat(this.makeCode("\n"),this.body.compileWithDeclarations(a),this.makeCode("\n"+this.tab))),e.push(this.makeCode("}")),this.ctor?[this.makeCode(this.tab)].concat(zb.call(e)):this.front||a.level>=x?this.wrapInBraces(e):e},b.prototype.eachParamName=function(a){var b,c,d,e,f;for(e=this.params,f=[],c=0,d=e.length;d>c;c++)b=e[c],f.push(b.eachName(a));return f},b.prototype.traverseChildren=function(a,c){return a?b.__super__.traverseChildren.call(this,a,c):void 0},b}(e),a.Param=K=function(a){function b(a,b,c){var d;this.name=a,this.value=b,this.splat=c,d=a=this.name.unwrapAll().value,yb.call(Q,d)>=0&&this.name.error('parameter name "'+a+'" is not allowed')}return xb(b,a),b.prototype.nodeType=function(){return"Param"},b.prototype.children=["name","value"],b.prototype.compileToFragments=function(a){return this.name.compileToFragments(a,z)},b.prototype.asReference=function(a){var b;return this.reference?this.reference:(b=this.name,b["this"]?(b=b.properties[0].name,b.value.reserved&&(b=new D(a.scope.freeVariable(b.value)))):b.isComplex()&&(b=new D(a.scope.freeVariable("arg"))),b=new $(b),this.splat&&(b=new T(b)),b.updateLocationDataIfMissing(this.locationData),this.reference=b)},b.prototype.isComplex=function(){return this.name.isComplex()},b.prototype.eachName=function(a,b){var c,e,f,g,h,i;if(null==b&&(b=this.name),c=function(b){var c;return c=b.properties[0].name,c.value.reserved?void 0:a(c.value,c)},b instanceof D)return a(b.value,b);if(b instanceof $)return c(b);for(i=b.objects,g=0,h=i.length;h>g;g++)f=i[g],f instanceof d?this.eachName(a,f.value.unwrap()):f instanceof T?(e=f.name.unwrap(),a(e.value,e)):f instanceof $?f.isArray()||f.isObject()?this.eachName(a,f.base):f["this"]?c(f):a(f.base.value,f.base):f instanceof m||f.error("illegal parameter "+f.compile())},b}(e),a.Splat=T=function(a){function b(a){this.name=a.compile?a:new D(a)}return xb(b,a),b.prototype.nodeType=function(){return"Splat"},b.prototype.children=["name"],b.prototype.isAssignable=ab,b.prototype.assigns=function(a){return this.name.assigns(a)},b.prototype.compileToFragments=function(a){return this.name.compileToFragments(a)},b.prototype.unwrap=function(){return this.name},b.compileSplattedArray=function(a,c,d){var e,f,g,h,i,j,k,l,m,n;for(k=-1;(l=c[++k])&&!(l instanceof b););if(k>=c.length)return[];if(1===c.length)return l=c[0],i=l.compileToFragments(a,z),d?i:[].concat(l.makeCode(""+tb("slice")+".call("),i,l.makeCode(")"));for(e=c.slice(k),j=m=0,n=e.length;n>m;j=++m)l=e[j],g=l.compileToFragments(a,z),e[j]=l instanceof b?[].concat(l.makeCode(""+tb("slice")+".call("),g,l.makeCode(")")):[].concat(l.makeCode("["),g,l.makeCode("]"));return 0===k?(l=c[0],h=l.joinFragmentArrays(e.slice(1),", "),e[0].concat(l.makeCode(".concat("),h,l.makeCode(")"))):(f=function(){var b,d,e,f;for(e=c.slice(0,k),f=[],b=0,d=e.length;d>b;b++)l=e[b],f.push(l.compileToFragments(a,z));return f}(),f=c[0].joinFragmentArrays(f,", "),h=c[k].joinFragmentArrays(e,", "),[].concat(c[0].makeCode("["),f,c[k].makeCode("].concat("),h,kb(c).makeCode(")")))},b}(e),a.Expansion=m=function(a){function b(){return b.__super__.constructor.apply(this,arguments)}return xb(b,a),b.prototype.nodeType=function(){return"Expansion"},b.prototype.isComplex=G,b.prototype.compileNode=function(){return this.error("Expansion must be used inside a destructuring assignment or parameter list")},b.prototype.asReference=function(){return this},b.prototype.eachName=function(){},b}(e),a.While=_=function(a){function b(a,b){this.condition=(null!=b?b.invert:void 0)?a.invert():a,this.guard=null!=b?b.guard:void 0}return xb(b,a),b.prototype.nodeType=function(){return"While"},b.prototype.children=["condition","guard","body"],b.prototype.isStatement=ab,b.prototype.makeReturn=function(a){return a?b.__super__.makeReturn.apply(this,arguments):(this.returns=!this.jumps({loop:!0}),this)},b.prototype.addBody=function(a){return this.body=a,this},b.prototype.jumps=function(){var a,b,c,d,e;if(a=this.body.expressions,!a.length)return!1;for(d=0,e=a.length;e>d;d++)if(c=a[d],b=c.jumps({loop:!0}))return b;return!1},b.prototype.compileNode=function(a){var b,c,d,e;return a.indent+=V,e="",c=this.body,c.isEmpty()?c=this.makeCode(""):(this.returns&&(c.makeReturn(d=a.scope.freeVariable("results")),e=""+this.tab+d+" = [];\n"),this.guard&&(c.expressions.length>1?c.expressions.unshift(new u(new L(this.guard).invert(),new D("continue"))):this.guard&&(c=f.wrap([new u(this.guard,c)]))),c=[].concat(this.makeCode("\n"),c.compileToFragments(a,C),this.makeCode("\n"+this.tab))),b=[].concat(this.makeCode(e+this.tab+"while ("),this.condition.compileToFragments(a,B),this.makeCode(") {"),c,this.makeCode("}")),this.returns&&b.push(this.makeCode("\n"+this.tab+"return "+d+";")),b},b}(e),a.Op=J=function(a){function c(a,b,c,d){if("in"===a)return new v(b,c);if("do"===a)return this.generateDo(b);if("new"===a){if(b instanceof g&&!b["do"]&&!b.isNew)return b.newInstance();(b instanceof i&&b.bound||b["do"])&&(b=new L(b))}return this.operator=e[a]||a,this.first=b,this.second=c,this.flip=!!d,this}var e,f;return xb(c,a),c.prototype.nodeType=function(){return"Op"},e={"==":"===","!=":"!==",of:"in"},f={"!==":"===","===":"!=="},c.prototype.children=["first","second"],c.prototype.isSimpleNumber=G,c.prototype.isUnary=function(){return!this.second},c.prototype.isComplex=function(){var a;return!this.isUnary()||"+"!==(a=this.operator)&&"-"!==a||this.first.isComplex()},c.prototype.isChainable=function(){var a;return"<"===(a=this.operator)||">"===a||">="===a||"<="===a||"==="===a||"!=="===a},c.prototype.invert=function(){var a,b,d,e,g;if(this.isChainable()&&this.first.isChainable()){for(a=!0,b=this;b&&b.operator;)a&&(a=b.operator in f),b=b.first;if(!a)return new L(this).invert();for(b=this;b&&b.operator;)b.invert=!b.invert,b.operator=f[b.operator],b=b.first;return this}return(e=f[this.operator])?(this.operator=e,this.first.unwrap()instanceof c&&this.first.invert(),this):this.second?new L(this).invert():"!"===this.operator&&(d=this.first.unwrap())instanceof c&&("!"===(g=d.operator)||"in"===g||"instanceof"===g)?d:new c("!",this)},c.prototype.unfoldSoak=function(a){var b;return("++"===(b=this.operator)||"--"===b||"delete"===b)&&sb(a,this,"first")},c.prototype.generateDo=function(a){var b,c,e,f,h,j,k,l;for(f=[],c=a instanceof d&&(h=a.value.unwrap())instanceof i?h:a,l=c.params||[],j=0,k=l.length;k>j;j++)e=l[j],e.value?(f.push(e.value),delete e.value):f.push(e);return b=new g(a,f),b["do"]=!0,b},c.prototype.compileNode=function(a){var b,c,d,e,f,g;if(c=this.isChainable()&&this.first.isChainable(),c||(this.first.front=this.front),"delete"===this.operator&&a.scope.check(this.first.unwrapAll().value)&&this.error("delete operand may not be argument or var"),("--"===(f=this.operator)||"++"===f)&&(g=this.first.unwrapAll().value,yb.call(Q,g)>=0)&&this.error('cannot increment/decrement "'+this.first.unwrapAll().value+'"'),this.isUnary())return this.compileUnary(a);if(c)return this.compileChain(a);switch(this.operator){case"?":return this.compileExistence(a);case"**":return this.compilePower(a);case"//":return this.compileFloorDivision(a);case"%%":return this.compileModulo(a);default:return d=this.first.compileToFragments(a,A),e=this.second.compileToFragments(a,A),b=[].concat(d,this.makeCode(" "+this.operator+" "),e),A>=a.level?b:this.wrapInBraces(b)}},c.prototype.compileChain=function(a){var b,c,d,e;return e=this.first.second.cache(a),this.first.second=e[0],d=e[1],c=this.first.compileToFragments(a,A),b=c.concat(this.makeCode(" "+(this.invert?"&&":"||")+" "),d.compileToFragments(a),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(a,A)),this.wrapInBraces(b)},c.prototype.compileExistence=function(a){var b,c;return this.first.isComplex()?(c=new D(a.scope.freeVariable("ref")),b=new L(new d(c,this.first))):(b=this.first,c=b),new u(new l(b),c,{type:"if"}).addElse(this.second).compileToFragments(a)},c.prototype.compileUnary=function(a){var b,d,e;return d=[],b=this.operator,d.push([this.makeCode(b)]),"!"===b&&this.first instanceof l?(this.first.negated=!this.first.negated,this.first.compileToFragments(a)):a.level>=x?new L(this).compileToFragments(a):(e="+"===b||"-"===b,("new"===b||"typeof"===b||"delete"===b||e&&this.first instanceof c&&this.first.operator===b)&&d.push([this.makeCode(" ")]),(e&&this.first instanceof c||"new"===b&&this.first.isStatement(a))&&(this.first=new L(this.first)),d.push(this.first.compileToFragments(a,A)),this.flip&&d.reverse(),this.joinFragmentArrays(d,""))},c.prototype.compilePower=function(a){var c;return c=new $(new D("Math"),[new b(new D("pow"))]),new g(c,[this.first,this.second]).compileToFragments(a)},c.prototype.compileFloorDivision=function(a){var d,e;return e=new $(new D("Math"),[new b(new D("floor"))]),d=new c("/",this.first,this.second),new g(e,[d]).compileToFragments(a)},c.prototype.compileModulo=function(a){var b;return b=new $(new D(tb("modulo"))),new g(b,[this.first,this.second]).compileToFragments(a)},c.prototype.toString=function(a){return c.__super__.toString.call(this,a,this.constructor.name+" "+this.operator)},c}(e),a.In=v=function(a){function b(a,b){this.object=a,this.array=b}return xb(b,a),b.prototype.nodeType=function(){return"In"},b.prototype.children=["object","array"],b.prototype.invert=F,b.prototype.compileNode=function(a){var b,c,d,e,f;if(this.array instanceof $&&this.array.isArray()&&this.array.base.objects.length){for(f=this.array.base.objects,d=0,e=f.length;e>d;d++)if(c=f[d],c instanceof T){b=!0;break}if(!b)return this.compileOrTest(a)}return this.compileLoopTest(a)},b.prototype.compileOrTest=function(a){var b,c,d,e,f,g,h,i,j,k,l,m;for(k=this.object.cache(a,A),g=k[0],f=k[1],l=this.negated?[" !== "," && "]:[" === "," || "],b=l[0],c=l[1],h=[],m=this.array.base.objects,d=i=0,j=m.length;j>i;d=++i)e=m[d],d&&h.push(this.makeCode(c)),h=h.concat(d?f:g,this.makeCode(b),e.compileToFragments(a,x));return A>a.level?h:this.wrapInBraces(h)},b.prototype.compileLoopTest=function(a){var b,c,d,e;return e=this.object.cache(a,z),d=e[0],c=e[1],b=[].concat(this.makeCode(tb("indexOf")+".call("),this.array.compileToFragments(a,z),this.makeCode(", "),c,this.makeCode(") "+(this.negated?"< 0":">= 0"))),hb(d)===hb(c)?b:(b=d.concat(this.makeCode(", "),b),z>a.level?b:this.wrapInBraces(b))},b.prototype.toString=function(a){return b.__super__.toString.call(this,a,this.constructor.name+(this.negated?"!":""))},b}(e),a.Try=Y=function(a){function b(a,b,c,d){this.attempt=a,this.errorVariable=b,this.recovery=c,this.ensure=d}return xb(b,a),b.prototype.nodeType=function(){return"Try"},b.prototype.children=["attempt","recovery","ensure"],b.prototype.isStatement=ab,b.prototype.jumps=function(a){var b;return this.attempt.jumps(a)||(null!=(b=this.recovery)?b.jumps(a):void 0)},b.prototype.makeReturn=function(a){return this.attempt&&(this.attempt=this.attempt.makeReturn(a)),this.recovery&&(this.recovery=this.recovery.makeReturn(a)),this},b.prototype.compileNode=function(a){var b,c,e,f;return a.indent+=V,f=this.attempt.compileToFragments(a,C),b=this.recovery?(e=new D("_error"),this.errorVariable?this.recovery.unshift(new d(this.errorVariable,e)):void 0,[].concat(this.makeCode(" catch ("),e.compileToFragments(a),this.makeCode(") {\n"),this.recovery.compileToFragments(a,C),this.makeCode("\n"+this.tab+"}"))):this.ensure||this.recovery?[]:[this.makeCode(" catch (_error) {}")],c=this.ensure?[].concat(this.makeCode(" finally {\n"),this.ensure.compileToFragments(a,C),this.makeCode("\n"+this.tab+"}")):[],[].concat(this.makeCode(""+this.tab+"try {\n"),f,this.makeCode("\n"+this.tab+"}"),b,c)},b}(e),a.Throw=X=function(a){function b(a){this.expression=a}return xb(b,a),b.prototype.nodeType=function(){return"Throw"},b.prototype.children=["expression"],b.prototype.isStatement=ab,b.prototype.jumps=G,b.prototype.makeReturn=W,b.prototype.compileNode=function(a){return[].concat(this.makeCode(this.tab+"throw "),this.expression.compileToFragments(a),this.makeCode(";"))},b}(e),a.Existence=l=function(a){function b(a){this.expression=a}return xb(b,a),b.prototype.nodeType=function(){return"Existence"},b.prototype.children=["expression"],b.prototype.invert=F,b.prototype.compileNode=function(a){var b,c,d,e;return this.expression.front=this.front,d=this.expression.compile(a,A),q.test(d)&&!a.scope.check(d)?(e=this.negated?["===","||"]:["!==","&&"],b=e[0],c=e[1],d="typeof "+d+" "+b+' "undefined" '+c+" "+d+" "+b+" null"):d=""+d+" "+(this.negated?"==":"!=")+" null",[this.makeCode(y>=a.level?d:"("+d+")")]},b}(e),a.Parens=L=function(a){function b(a){this.body=a}return xb(b,a),b.prototype.nodeType=function(){return"Parens"},b.prototype.children=["body"],b.prototype.unwrap=function(){return this.body},b.prototype.isComplex=function(){return this.body.isComplex()},b.prototype.compileNode=function(a){var b,c,d;return c=this.body.unwrap(),c instanceof $&&c.isAtomic()?(c.front=this.front,c.compileToFragments(a)):(d=c.compileToFragments(a,B),b=A>a.level&&(c instanceof J||c instanceof g||c instanceof o&&c.returns),b?d:this.wrapInBraces(d))},b}(e),a.For=o=function(a){function b(a,b){var c;this.source=b.source,this.guard=b.guard,this.step=b.step,this.name=b.name,this.index=b.index,this.body=f.wrap([a]),this.own=!!b.own,this.object=!!b.object,this.object&&(c=[this.index,this.name],this.name=c[0],this.index=c[1]),this.index instanceof $&&this.index.error("index cannot be a pattern matching expression"),this.range=this.source instanceof $&&this.source.base instanceof N&&!this.source.properties.length,this.pattern=this.name instanceof $,this.range&&this.index&&this.index.error("indexes do not apply to range loops"),this.range&&this.pattern&&this.name.error("cannot pattern match over range loops"),this.own&&!this.object&&this.name.error("cannot use own with for-in"),this.returns=!1}return xb(b,a),b.prototype.nodeType=function(){return"For"},b.prototype.children=["body","source","guard","step"],b.prototype.compileNode=function(a){var b,c,e,g,h,i,j,k,l,m,n,o,p,r,s,t,v,w,x,y,A,B,E,F,G,I,J,K,M,N,P,Q,R,S;return b=f.wrap([this.body]),w=null!=(R=kb(b.expressions))?R.jumps():void 0,w&&w instanceof O&&(this.returns=!1),J=this.range?this.source.base:this.source,I=a.scope,this.pattern||(y=this.name&&this.name.compile(a,z)),r=this.index&&this.index.compile(a,z),y&&!this.pattern&&I.find(y),r&&I.find(r),this.returns&&(G=I.freeVariable("results")),s=this.object&&r||I.freeVariable("i"),t=this.range&&y||r||s,v=t!==s?""+t+" = ":"",this.step&&!this.range&&(S=this.cacheToCodeFragments(this.step.cache(a,z)),K=S[0],N=S[1],M=N.match(H)),this.pattern&&(y=s),Q="",n="",j="",o=this.tab+V,this.range?m=J.compileToFragments(mb(a,{index:s,name:y,step:this.step})):(P=this.source.compile(a,z),!y&&!this.own||q.test(P)||(j+=""+this.tab+(B=I.freeVariable("ref"))+" = "+P+";\n",P=B),y&&!this.pattern&&(A=""+y+" = "+P+"["+t+"]"),this.object||(K!==N&&(j+=""+this.tab+K+";\n"),this.step&&M&&(l=0>ob(M[0]))||(x=I.freeVariable("len")),h=""+v+s+" = 0, "+x+" = "+P+".length",i=""+v+s+" = "+P+".length - 1",e=""+s+" < "+x,g=""+s+" >= 0",this.step?(M?l&&(e=g,h=i):(e=""+N+" > 0 ? "+e+" : "+g,h="("+N+" > 0 ? ("+h+") : "+i+")"),p=""+s+" += "+N):p=""+(t!==s?"++"+s:""+s+"++"),m=[this.makeCode(""+h+"; "+e+"; "+v+p)])),this.returns&&(E=""+this.tab+G+" = [];\n",F="\n"+this.tab+"return "+G+";",b.makeReturn(G)),this.guard&&(b.expressions.length>1?b.expressions.unshift(new u(new L(this.guard).invert(),new D("continue"))):this.guard&&(b=f.wrap([new u(this.guard,b)]))),this.pattern&&b.expressions.unshift(new d(this.name,new D(""+P+"["+t+"]"))),k=[].concat(this.makeCode(j),this.pluckDirectCall(a,b)),A&&(Q="\n"+o+A+";"),this.object&&(m=[this.makeCode(""+t+" in "+P)],this.own&&(n="\n"+o+"if (!"+tb("hasProp")+".call("+P+", "+t+")) continue;")),c=b.compileToFragments(mb(a,{indent:o}),C),c&&c.length>0&&(c=[].concat(this.makeCode("\n"),c,this.makeCode("\n"))),[].concat(k,this.makeCode(""+(E||"")+this.tab+"for ("),m,this.makeCode(") {"+n+Q),c,this.makeCode(""+this.tab+"}"+(F||"")))},b.prototype.pluckDirectCall=function(a,b){var c,e,f,h,j,k,l,m,n,o,p,q,r,s,t,u;for(e=[],o=b.expressions,j=m=0,n=o.length;n>m;j=++m)f=o[j],f=f.unwrapAll(),f instanceof g&&(l=null!=(p=f.variable)?p.unwrapAll():void 0,(l instanceof i||l instanceof $&&(null!=(q=l.base)?q.unwrapAll():void 0)instanceof i&&1===l.properties.length&&("call"===(r=null!=(s=l.properties[0].name)?s.value:void 0)||"apply"===r))&&(h=(null!=(t=l.base)?t.unwrapAll():void 0)||l,k=new D(a.scope.freeVariable("fn")),c=new $(k),l.base&&(u=[c,l],l.base=u[0],c=u[1]),b.expressions[j]=new g(c,f.args),e=e.concat(this.makeCode(this.tab),new d(k,h).compileToFragments(a,C),this.makeCode(";\n"))));return e},b}(_),a.Switch=U=function(a){function b(a,b,c){this.subject=a,this.cases=b,this.otherwise=c}return xb(b,a),b.prototype.nodeType=function(){return"Switch"},b.prototype.children=["subject","cases","otherwise"],b.prototype.isStatement=ab,b.prototype.jumps=function(a){var b,c,d,e,f,g,h,i;for(null==a&&(a={block:!0}),g=this.cases,e=0,f=g.length;f>e;e++)if(h=g[e],c=h[0],b=h[1],d=b.jumps(a))return d;return null!=(i=this.otherwise)?i.jumps(a):void 0},b.prototype.makeReturn=function(a){var b,c,d,e,g;for(e=this.cases,c=0,d=e.length;d>c;c++)b=e[c],b[1].makeReturn(a);return a&&(this.otherwise||(this.otherwise=new f([new D("void 0")]))),null!=(g=this.otherwise)&&g.makeReturn(a),this},b.prototype.compileNode=function(a){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q;for(i=a.indent+V,j=a.indent=i+V,g=[].concat(this.makeCode(this.tab+"switch ("),this.subject?this.subject.compileToFragments(a,B):this.makeCode("false"),this.makeCode(") {\n")),o=this.cases,h=k=0,m=o.length;m>k;h=++k){for(p=o[h],e=p[0],b=p[1],q=gb([e]),l=0,n=q.length;n>l;l++)d=q[l],this.subject||(d=d.invert()),g=g.concat(this.makeCode(i+"case "),d.compileToFragments(a,B),this.makeCode(":\n"));if((c=b.compileToFragments(a,C)).length>0&&(g=g.concat(c,this.makeCode("\n"))),h===this.cases.length-1&&!this.otherwise)break;f=this.lastNonComment(b.expressions),f instanceof O||f instanceof D&&f.jumps()&&"debugger"!==f.value||g.push(d.makeCode(j+"break;\n"))}return this.otherwise&&this.otherwise.expressions.length&&g.push.apply(g,[this.makeCode(i+"default:\n")].concat(zb.call(this.otherwise.compileToFragments(a,C)),[this.makeCode("\n")])),g.push(this.makeCode(this.tab+"}")),g},b}(e),a.If=u=function(a){function b(a,b,c){this.body=b,null==c&&(c={}),this.condition="unless"===c.type?a.invert():a,this.elseBody=null,this.isChain=!1,this.soak=c.soak}return xb(b,a),b.prototype.nodeType=function(){return"If"},b.prototype.children=["condition","body","elseBody"],b.prototype.bodyNode=function(){var a;return null!=(a=this.body)?a.unwrap():void 0},b.prototype.elseBodyNode=function(){var a;return null!=(a=this.elseBody)?a.unwrap():void 0},b.prototype.addElse=function(a){return this.isChain?this.elseBodyNode().addElse(a):(this.isChain=a instanceof b,this.elseBody=this.ensureBlock(a),this.elseBody.updateLocationDataIfMissing(a.locationData)),this},b.prototype.isStatement=function(a){var b;return(null!=a?a.level:void 0)===C||this.bodyNode().isStatement(a)||(null!=(b=this.elseBodyNode())?b.isStatement(a):void 0)},b.prototype.jumps=function(a){var b;return this.body.jumps(a)||(null!=(b=this.elseBody)?b.jumps(a):void 0)},b.prototype.compileNode=function(a){return this.isStatement(a)?this.compileStatement(a):this.compileExpression(a)},b.prototype.makeReturn=function(a){return a&&(this.elseBody||(this.elseBody=new f([new D("void 0")]))),this.body&&(this.body=new f([this.body.makeReturn(a)])),this.elseBody&&(this.elseBody=new f([this.elseBody.makeReturn(a)])),this},b.prototype.ensureBlock=function(a){return a instanceof f?a:new f([a])},b.prototype.compileStatement=function(a){var c,d,e,f,g,h,i;return e=db(a,"chainChild"),(g=db(a,"isExistentialEquals"))?new b(this.condition.invert(),this.elseBodyNode(),{type:"if"}).compileToFragments(a):(i=a.indent+V,f=this.condition.compileToFragments(a,B),d=this.ensureBlock(this.body).compileToFragments(mb(a,{indent:i})),h=[].concat(this.makeCode("if ("),f,this.makeCode(") {\n"),d,this.makeCode("\n"+this.tab+"}")),e||h.unshift(this.makeCode(this.tab)),this.elseBody?(c=h.concat(this.makeCode(" else ")),this.isChain?(a.chainChild=!0,c=c.concat(this.elseBody.unwrap().compileToFragments(a,C))):c=c.concat(this.makeCode("{\n"),this.elseBody.compileToFragments(mb(a,{indent:i}),C),this.makeCode("\n"+this.tab+"}")),c):h)},b.prototype.compileExpression=function(a){var b,c,d,e;return d=this.condition.compileToFragments(a,y),c=this.bodyNode().compileToFragments(a,z),b=this.elseBodyNode()?this.elseBodyNode().compileToFragments(a,z):[this.makeCode("void 0")],e=d.concat(this.makeCode(" ? "),c,this.makeCode(" : "),b),a.level>=y?this.wrapInBraces(e):e},b.prototype.unfoldSoak=function(){return this.soak&&this},b}(e),Z={"extends":function(){return"function(child, parent) { for (var key in parent) { if ("+tb("hasProp")+".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }"},bind:function(){return"function(fn, me){ return function(){ return fn.apply(me, arguments); }; }"},indexOf:function(){return"[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }"},modulo:function(){return"function(a, b) { return (+a % (b = +b) + b) % b; }"},hasProp:function(){return"{}.hasOwnProperty"},slice:function(){return"[].slice"}},C=1,B=2,z=3,y=4,A=5,x=6,V="  ",r="[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*",q=RegExp("^"+r+"$"),P=/^[+-]?\d+$/,p=/^[+-]?0x[\da-f]+/i,H=/^[+-]?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)$/i,E=RegExp("^("+r+")(\\.prototype)?(?:\\.("+r+")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\])$"),t=/^['"]/,s=/^\//,tb=function(a){var b;return b="__"+a,R.root.assign(b,Z[a]()),b},nb=function(a,b){return a=a.replace(/\n/g,"$&"+b),a.replace(/\s+$/,"")},ob=function(a){return null==a?0:a.match(p)?parseInt(a,16):parseFloat(a)},ib=function(a){return a instanceof D&&"arguments"===a.value&&!a.asKey},jb=function(a){return a instanceof D&&"this"===a.value&&!a.asKey||a instanceof i&&a.bound||a instanceof g&&a.isSuper},sb=function(a,b,c){var d;return(d=b[c].unfoldSoak(a))?(b[c]=d.body,d.body=new $(b),d):void 0}}.call(this),b.exports}(),require["./sourcemap"]=function(){var a={},b={exports:a};return function(){var a,c;a=function(){function a(a){this.line=a,this.columns=[]}return a.prototype.add=function(a,b,c){var d,e;return e=b[0],d=b[1],null==c&&(c={}),this.columns[a]&&c.noReplace?void 0:this.columns[a]={line:this.line,column:a,sourceLine:e,sourceColumn:d}},a.prototype.sourceLocation=function(a){for(var b;!((b=this.columns[a])||0>=a);)a--;return b&&[b.sourceLine,b.sourceColumn]},a}(),c=function(){function b(){this.lines=[]}var c,d,e,f;return b.prototype.add=function(b,c,d){var e,f,g,h;return null==d&&(d={}),f=c[0],e=c[1],g=(h=this.lines)[f]||(h[f]=new a(f)),g.add(e,b,d)},b.prototype.sourceLocation=function(a){var b,c,d;for(c=a[0],b=a[1];!((d=this.lines[c])||0>=c);)c--;return d&&d.sourceLocation(b)},b.prototype.generate=function(a,b){var c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r;for(null==a&&(a={}),null==b&&(b=null),l=0,d=0,f=0,e=0,j=!1,c="",q=this.lines,h=m=0,o=q.length;o>m;h=++m)if(g=q[h])for(r=g.columns,n=0,p=r.length;p>n;n++)if(i=r[n]){for(;i.line>l;)d=0,j=!1,c+=";",l++;j&&(c+=",",j=!1),c+=this.encodeVlq(i.column-d),d=i.column,c+=this.encodeVlq(0),c+=this.encodeVlq(i.sourceLine-f),f=i.sourceLine,c+=this.encodeVlq(i.sourceColumn-e),e=i.sourceColumn,j=!0}return k={version:3,file:a.generatedFile||"",sourceRoot:a.sourceRoot||"",sources:a.sourceFiles||[""],names:[],mappings:c},a.inline&&(k.sourcesContent=[b]),JSON.stringify(k,null,2)},e=5,d=1<<e,f=d-1,b.prototype.encodeVlq=function(a){var b,c,g,h;for(b="",g=0>a?1:0,h=(Math.abs(a)<<1)+g;h||!b;)c=h&f,h>>=e,h&&(c|=d),b+=this.encodeBase64(c);return b},c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",b.prototype.encodeBase64=function(a){return c[a]||function(){throw Error("Cannot Base64 encode value: "+a)}()},b}(),b.exports=c}.call(this),b.exports}(),require["./coffee-script"]=function(){var a={},b={exports:a};return function(){var b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t={}.hasOwnProperty,u=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1};if(g=require("fs"),n=require("vm"),l=require("path"),b=require("./lexer").Lexer,k=require("./parser").parser,i=require("./helpers"),c=require("./sourcemap"),a.VERSION="1.7.1",a.FILE_EXTENSIONS=[".coffee",".litcoffee",".coffee.md"],a.helpers=i,o=function(a){return function(b,c){var d;null==c&&(c={});try{return a.call(this,b,c)}catch(e){throw d=e,i.updateSyntaxError(d,b,c.filename)}}},a.compile=d=o(function(a,b){var d,e,f,g,h,l,m,n,o,p,q,r,s;for(p=i.merge,g=i.extend,b=g({},b),b.sourceMap&&(o=new c),l=k.parse(j.tokenize(a,b)).compileToFragments(b),f=0,b.header&&(f+=1),b.shiftLine&&(f+=1),e=0,n="",r=0,s=l.length;s>r;r++)h=l[r],b.sourceMap&&(h.locationData&&o.add([h.locationData.first_line,h.locationData.first_column],[f,e],{noReplace:!0}),q=i.count(h.code,"\n"),f+=q,q?e=h.code.length-(h.code.lastIndexOf("\n")+1):e+=h.code.length),n+=h.code;return b.header&&(m="Generated by CoffeeScript "+this.VERSION,n="// "+m+"\n"+n),b.sourceMap?(d={js:n},d.sourceMap=o,d.v3SourceMap=o.generate(b,a),d):n}),a.tokens=o(function(a,b){return j.tokenize(a,b)}),a.nodes=o(function(a,b){return k.parse("string"==typeof a?j.tokenize(a,b):a)}),a.run=function(a,b){var c,e,f,h;return null==b&&(b={}),f=require.main,f.filename=process.argv[1]=b.filename?g.realpathSync(b.filename):".",f.moduleCache&&(f.moduleCache={}),e=b.filename?l.dirname(g.realpathSync(b.filename)):g.realpathSync("."),f.paths=require("module")._nodeModulePaths(e),(!i.isCoffee(f.filename)||require.extensions)&&(c=d(a,b),a=null!=(h=c.js)?h:c),f._compile(a,f.filename)
-},a.eval=function(a,b){var c,e,f,g,h,i,j,k,m,o,p,q,r,s;if(null==b&&(b={}),a=a.trim()){if(e=n.Script){if(null!=b.sandbox){if(b.sandbox instanceof e.createContext().constructor)j=b.sandbox;else{j=e.createContext(),q=b.sandbox;for(g in q)t.call(q,g)&&(k=q[g],j[g]=k)}j.global=j.root=j.GLOBAL=j}else j=global;if(j.__filename=b.filename||"eval",j.__dirname=l.dirname(j.__filename),j===global&&!j.module&&!j.require){for(c=require("module"),j.module=p=new c(b.modulename||"eval"),j.require=s=function(a){return c._load(a,p,!0)},p.filename=j.__filename,r=Object.getOwnPropertyNames(require),m=0,o=r.length;o>m;m++)i=r[m],"paths"!==i&&(s[i]=require[i]);s.paths=p.paths=c._nodeModulePaths(process.cwd()),s.resolve=function(a){return c._resolveFilename(a,p)}}}h={};for(g in b)t.call(b,g)&&(k=b[g],h[g]=k);return h.bare=!0,f=d(a,h),j===global?n.runInThisContext(f):n.runInContext(f,j)}},a.register=function(){return require("./register")},require.extensions)for(s=this.FILE_EXTENSIONS,q=0,r=s.length;r>q;q++)e=s[q],null==(p=require.extensions)[e]&&(p[e]=function(){throw Error("Use CoffeeScript.register() or require the coffee-script/register module to require "+e+" files.")});a._compileFile=function(a,b){var c,e,f,h;null==b&&(b=!1),f=g.readFileSync(a,"utf8"),h=65279===f.charCodeAt(0)?f.substring(1):f;try{c=d(h,{filename:a,sourceMap:b,literate:i.isLiterate(a)})}catch(j){throw e=j,i.updateSyntaxError(e,h,a)}return c},j=new b,k.lexer={lex:function(){var a,b;return b=this.tokens[this.pos++],b?(a=b[0],this.yytext=b[1],this.yylloc=b[2],this.errorToken=b.origin||b,this.yylineno=this.yylloc.first_line):a="",a},setInput:function(a){return this.tokens=a,this.pos=0},upcomingInput:function(){return""}},k.yy=require("./nodes"),k.yy.parseError=function(a,b){var c,d,e,f,g,h,j;return g=b.token,j=k.lexer,f=j.errorToken,h=j.tokens,d=f[0],e=f[1],c=f[2],e=f===h[h.length-1]?"end of input":"INDENT"===d||"OUTDENT"===d?"indentation":i.nameWhitespaceCharacter(e),i.throwSyntaxError("unexpected "+e,c)},f=function(a,b){var c,d,e,f,g,h,i,j,k,l,m,n;return f=void 0,e="",a.isNative()?e="native":(a.isEval()?(f=a.getScriptNameOrSourceURL(),f||(e=""+a.getEvalOrigin()+", ")):f=a.getFileName(),f||(f="<anonymous>"),j=a.getLineNumber(),d=a.getColumnNumber(),l=b(f,j,d),e=l?""+f+":"+l[0]+":"+l[1]:""+f+":"+j+":"+d),g=a.getFunctionName(),h=a.isConstructor(),i=!a.isToplevel()&&!h,i?(k=a.getMethodName(),n=a.getTypeName(),g?(m=c="",n&&g.indexOf(n)&&(m=""+n+"."),k&&g.indexOf("."+k)!==g.length-k.length-1&&(c=" [as "+k+"]"),""+m+g+c+" ("+e+")"):""+n+"."+(k||"<anonymous>")+" ("+e+")"):h?"new "+(g||"<anonymous>")+" ("+e+")":g?""+g+" ("+e+")":e},m={},h=function(b){var c,d;return m[b]?m[b]:(d=null!=l?l.extname(b):void 0,0>u.call(a.FILE_EXTENSIONS,d)?void 0:(c=a._compileFile(b,!0),m[b]=c.sourceMap))},Error.prepareStackTrace=function(b,c){var d,e,g;return g=function(a,b,c){var d,e;return e=h(a),e&&(d=e.sourceLocation([b-1,c-1])),d?[d[0]+1,d[1]+1]:null},e=function(){var b,e,h;for(h=[],b=0,e=c.length;e>b&&(d=c[b],d.getFunction()!==a.run);b++)h.push("  at "+f(d,g));return h}(),""+b+"\n"+e.join("\n")+"\n"}}.call(this),b.exports}(),require["./browser"]=function(){var exports={},module={exports:exports};return function(){var CoffeeScript,compile,runScripts,__indexOf=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1};CoffeeScript=require("./coffee-script"),CoffeeScript.require=require,compile=CoffeeScript.compile,CoffeeScript.eval=function(code,options){return null==options&&(options={}),null==options.bare&&(options.bare=!0),eval(compile(code,options))},CoffeeScript.run=function(a,b){return null==b&&(b={}),b.bare=!0,b.shiftLine=!0,Function(compile(a,b))()},"undefined"!=typeof window&&null!==window&&("undefined"!=typeof btoa&&null!==btoa&&"undefined"!=typeof JSON&&null!==JSON&&"undefined"!=typeof unescape&&null!==unescape&&"undefined"!=typeof encodeURIComponent&&null!==encodeURIComponent&&(compile=function(a,b){var c,d,e;return null==b&&(b={}),b.sourceMap=!0,b.inline=!0,e=CoffeeScript.compile(a,b),c=e.js,d=e.v3SourceMap,""+c+"\n//# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(d)))+"\n//# sourceURL=coffeescript"}),CoffeeScript.load=function(a,b,c,d){var e;return null==c&&(c={}),null==d&&(d=!1),c.sourceFiles=[a],e=window.ActiveXObject?new window.ActiveXObject("Microsoft.XMLHTTP"):new window.XMLHttpRequest,e.open("GET",a,!0),"overrideMimeType"in e&&e.overrideMimeType("text/plain"),e.onreadystatechange=function(){var f,g;if(4===e.readyState){if(0!==(g=e.status)&&200!==g)throw Error("Could not load "+a);if(f=[e.responseText,c],d||CoffeeScript.run.apply(CoffeeScript,f),b)return b(f)}},e.send(null)},runScripts=function(){var a,b,c,d,e,f,g,h,i,j,k;for(h=window.document.getElementsByTagName("script"),b=["text/coffeescript","text/literate-coffeescript"],a=function(){var a,c,d,e;for(e=[],a=0,c=h.length;c>a;a++)f=h[a],d=f.type,__indexOf.call(b,d)>=0&&e.push(f);return e}(),e=0,c=function(){var b;return b=a[e],b instanceof Array?(CoffeeScript.run.apply(CoffeeScript,b),e++,c()):void 0},i=function(d,e){var f;return f={literate:d.type===b[1]},d.src?CoffeeScript.load(d.src,function(b){return a[e]=b,c()},f,!0):(f.sourceFiles=["embedded"],a[e]=[d.innerHTML,f])},d=j=0,k=a.length;k>j;d=++j)g=a[d],i(g,d);return c()},window.addEventListener?window.addEventListener("DOMContentLoaded",runScripts,!1):window.attachEvent("onload",runScripts))}.call(this),module.exports}(),require["./coffee-script"]}();"function"==typeof define&&define.amd?define("coffee-script",[],function(){return CoffeeScript}):root.CoffeeScript=CoffeeScript}(this),function(){define("ice-coffee",["ice-model","ice-parser","coffee-script"],function(a,b,c){var d,e,f;return d={COMMAND:"#268bd2",CONTROL:"#daa520",VALUE:"#26cf3c",RETURN:"#dc322f"},e={},f={"||":1,"&&":2,"===":3,"!==":3,">":3,"<":3,">=":3,"<=":3,"+":4,"-":4,"*":5,"/":5,"%":6},e.mark=function(b,c){var e,g,h,i,j,k,l,m,n,o;for(j=1,l=[],c=c.split("\n"),g=function(a,b,c){var d;return d=i(null!=c?c:b),l.push({token:a.start,location:d.start,id:j,start:!0}),l.push({token:a.end,location:d.end,id:j,start:!1}),j+=1},i=function(a){var b,d;return d={line:a.locationData.first_line,column:a.locationData.first_column},b={line:a.locationData.last_line,column:a.locationData.last_column+1},"Block"===a.nodeType()&&(0!==d.line&&(d.line-=1,d.column=c[d.line].length),b=i(a.expressions[a.expressions.length-1]).end),"If"===a.nodeType()&&null!=a.elseBody&&(b=i(a.elseBody).end),"While"===a.nodeType()&&(b=i(a.body).end),0===c[b.line].slice(0,b.column).trim().length&&(b.line-=1,b.column=c[b.line].length),{start:d,end:b}},e=function(b,c,e,f){var h;return h=new a.Block(c,e,e===d.VALUE),g(h,b,f),null!=f?h.currentlyParenWrapped=!0:void 0},h=function(b,c,d){var e;return null==c&&(c=0),null==d&&(d=null),e=new a.Socket(null,c),g(e,b,d),k(b)},k=function(b,m,n){var o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T;switch(null==m&&(m=0),null==n&&(n=null),b.nodeType()){case"Block":for(r=new a.Indent(2),g(r,b,n),I=b.expressions,P=[],w=0,A=I.length;A>w;w++)q=I[w],P.push(k(q));return P;case"Op":if(e(b,f[b.operator],d.VALUE,n),h(b.first,f[b.operator]),null!=b.second)return h(b.second,f[b.operator]);break;case"Existence":return e(b,7,d.VALUE,n),h(b.expression,7);case"In":return e(b,0,d.VALUE,n),h(b.object,0),h(b.array,0);case"Value":return k(b.base,m,n);case"Literal":case"Bool":case"Undefined":case"Null":return 0;case"Call":for(e(b,m,d.COMMAND,n),"Literal"!==(null!=(J=b.variable.base)?J.constructor.name:void 0)&&h(b.variable),K=b.args,Q=[],x=0,B=K.length;B>x;x++)o=K[x],Q.push(h(o));return Q;case"Code":for(e(b,m,d.VALUE,n),L=b.params,y=0,C=L.length;C>y;y++)t=L[y],h(t);return i(b.body).end.line===i(b).start.line?h(b.body.unwrap()):k(b.body);case"Param":return k(b.name);case"Assign":return e(b,m,d.COMMAND,n),h(b.variable),h(b.value);case"For":return e(b,m,d.CONTROL,n),null!=b.index&&h(b.index),null!=b.source&&h(b.source),null!=b.name&&h(b.name),null!=b.from&&h(b.from),i(b.body).end.line===i(b).start.line?h(b.body.unwrap()):k(b.body);case"Range":return e(b,7,d.VALUE,n),h(b.from),h(b.to);case"If":if(e(b,m,d.CONTROL,n),h(b.condition),i(b.body).end.line===i(b).start.line?h(b.body.unwrap()):k(b.body),null!=b.elseBody)return i(b.elseBody).end.line===i(b).start.line?h(b.elseBody.unwrap()):k(b.elseBody);break;case"Arr":for(e(b,m,d.VALUE,n),M=b.objects,R=[],z=0,D=M.length;D>z;z++)s=M[z],R.push(k(s));return R;case"Return":if(e(b,m,d.RETURN,n),null!=b.expression)return h(b.expression);break;case"While":return e(b,m,d.CONTROL,n),h(b.condition),k(i(b.body).end.line===i(b).start.line?b.body.unwrap():b.body);case"Parens":if(null!=b.body)return k(b.body.unwrap(),0,b);break;case"Obj":if(e(b,m,d.VALUE,n),0===b.properties.length?p=v=i(b):(v=i(b.properties[0]),p=i(b.properties[b.properties.length-1])),p.end.line!==v.start.line){for(r=new a.Indent(2),l.push({token:r.start,location:{line:v.start.line-1,column:c[v.start.line-1].length},id:j,start:!0}),l.push({token:r.end,location:p.end,id:j,start:!1}),j+=1,N=b.properties,S=[],G=0,E=N.length;E>G;G++)u=N[G],S.push(k(u));return S}for(O=b.properties,T=[],H=0,F=O.length;F>H;H++)u=O[H],T.push(h(u));return T}},n=0,o=b.length;o>n;n++)m=b[n],k(m);return l},b=new b.Parser(function(a){return e.mark(c.nodes(a).expressions,a)}),e.parse=function(a){return b.parse(a)},e})}.call(this),function(){var a={}.hasOwnProperty,b=function(b,c){function d(){this.constructor=b}for(var e in c)a.call(c,e)&&(b[e]=c[e]);return d.prototype=c.prototype,b.prototype=new d,b.__super__=c.prototype,b},c=[].indexOf||function(a){for(var b=0,c=this.length;c>b;b++)if(b in this&&this[b]===a)return b;return-1};define("ice-controller",["ice-coffee","ice-draw","ice-model"],function(a,d,e){var f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W;u=5,t=5,q=5,s=5,v=300,j=2,f=60,G={},O={populate:[],resize:[],redraw_main:[],redraw_palette:[],mousedown:[],mousemove:[],mouseup:[],mutation:[]},P={},F={},L=function(a,b,c){var d;return"key."===a.slice(0,4)?(null==P[d=a.slice(4)]&&(P[d]=[]),P[a.slice(4)].push({priority:b,fn:c})):O[a].push({priority:b,fn:c})},G.Editor=n=function(){function a(a,b){var c,d,f,g,h,i,j,k,l,m,n,o,p,q,r=this;for(this.wrapperElement=a,this.paletteGroups=b,this.iceElement=document.createElement("div"),this.iceElement.className="ice-wrapper-div",this.iceElement.tabIndex=0,this.wrapperElement.appendChild(this.iceElement),this.tracker=document.createElement("div"),this.tracker.className="ice-track-area",this.iceElement.appendChild(this.tracker),this.mainCanvas=document.createElement("canvas"),this.mainCanvas.className="ice-main-canvas",this.mainCtx=this.mainCanvas.getContext("2d"),this.iceElement.appendChild(this.mainCanvas),this.paletteCanvas=document.createElement("canvas"),this.paletteCanvas.className="ice-palette-canvas",this.paletteCtx=this.paletteCanvas.getContext("2d"),this.iceElement.appendChild(this.paletteCanvas),o=F.populate,k=0,m=o.length;m>k;k++)c=o[k],c.call(this);for(window.addEventListener("resize",function(){return r.resize(),r.redrawMain(),r.redrawPalette()}),this.resize(),p=["mousedown","mouseup","mousemove"],i=function(a){return r.tracker.addEventListener(a,function(b){var c,d,e,f,g,h,i;for(e=r.getPointRelativeToTracker(b),d={},h=F[a],i=[],f=0,g=h.length;g>f;f++)c=h[f],i.push(c.call(r,e,b,d));return i})},l=0,n=p.length;n>l;l++)g=p[l],i(g);this.keyListener=new window.keypress.Listener(this.iceElement),d=[],q=F.key,j=function(a){return r.keyListener.simple_combo(f,function(){var b,c,d,e,f,g,h;for(e={},b=!0,f=0,g=a.length;g>f;f++)c=a[f],d=null!=(h=c.call(r,e))?h:!0,b&&(b=d);return b})};for(f in q)h=q[f],j(h);this.tree=new e.Segment,this.redrawMain(),this.redrawPalette()}return a.prototype.resize=function(){var a,b,c,d,e;for(this.iceElement.style.height=""+this.wrapperElement.offsetHeight+"px",this.iceElement.style.width=""+this.wrapperElement.offsetWidth+"px",this.mainCanvas.height=this.iceElement.offsetHeight,this.mainCanvas.width=this.iceElement.offsetWidth,this.mainCanvas.style.height=""+this.mainCanvas.height+"px",this.mainCanvas.style.width=""+this.mainCanvas.width+"px",this.paletteCanvas.style.top=""+this.paletteHeaderHeight+"px",this.paletteCanvas.height=this.iceElement.offsetHeight-this.paletteHeaderHeight,this.paletteCanvas.width=v,this.paletteCanvas.style.height=""+this.paletteCanvas.height+"px",this.paletteCanvas.style.width=""+this.paletteCanvas.width+"px",d=F.resize,e=[],b=0,c=d.length;c>b;b++)a=d[b],e.push(a.call(this));return e},a}(),n.prototype.clearMain=function(){return this.mainCtx.clearRect(this.scrollOffsets.main.x,this.scrollOffsets.main.y,this.mainCanvas.width,this.mainCanvas.height)},n.prototype.redrawMain=function(){var a,b,c,e,f;if(!this.currentlyAnimating){for(d._setGlobalFontSize(this.fontSize),d._setCTX(this.mainCtx),this.clearMain(),this.tree.view.compute(),this.tree.view.draw(this.mainCtx),e=F.redraw_main,f=[],b=0,c=e.length;c>b;b++)a=e[b],f.push(a.call(this));return f}},n.prototype.clearPalette=function(){return this.paletteCtx.clearRect(this.scrollOffsets.palette.x,this.scrollOffsets.palette.y,this.paletteCanvas.width,this.paletteCanvas.height)},n.prototype.redrawPalette=function(){var a,b,c,e,f,g,h,i,j,k;for(this.clearPalette(),d._setCTX(this.paletteCtx),d._setGlobalFontSize(this.fontSize),b=u,i=this.currentPaletteBlocks,e=0,g=i.length;g>e;e++)c=i[e],c.view.compute(),c.view.translate(new d.Point(s,b)),c.view.draw(this.paletteCtx),b=c.view.getBounds().bottom()+t;for(j=F.redraw_palette,k=[],f=0,h=j.length;h>f;f++)a=j[f],k.push(a.call(this));return k},n.prototype.getPointRelativeToTracker=function(a){var b,c;for(b=null!=a.offsetX?new d.Point(a.offsetX,a.offsetY):new d.Point(a.layerX,a.layerY),c=a.target;c!==this.tracker;)b.x+=c.offsetLeft-c.scrollLeft,b.y+=c.offsetTop-c.scrollTop,c=c.offsetParent;return b},n.prototype.trackerPointToMain=function(a){return new d.Point(a.x-this.mainCanvas.offsetLeft+this.scrollOffsets.main.x,a.y-this.mainCanvas.offsetTop+this.scrollOffsets.main.y)},n.prototype.trackerPointToPalette=function(a){return new d.Point(a.x-this.paletteCanvas.offsetLeft+this.scrollOffsets.palette.x,a.y-this.paletteCanvas.offsetTop+this.scrollOffsets.palette.y)},J=function(a,b){var c,d;for(c=b.start,d=b.end;c!==d;)"blockStart"===c.type&&c.block.view.path.contains(a)&&(d=c.block.end),c=c.next;return c!==b.end?c.block:"block"===b.type&&b.view.path.contains(a)?b:null},L("populate",0,function(){return this.undoStack=[]}),C=function(){function a(){}return a.prototype.undo=function(a){return a.tree.start},a.prototype.redo=function(a){return a.tree.start},a}(),n.prototype.addMicroUndoOperation=function(a){var b,c,d,e;for(this.undoStack.push(a),e=F.mutation,c=0,d=e.length;d>c;c++)b=e[c],b.call(this);return this.fireEvent("change",[a])},n.prototype.undo=function(){var a;if(0!==this.undoStack.length&&(a=this.undoStack.pop(),"CAPTURE_POINT"!==a))return this.moveCursorTo(a.undo(this)),this.undo(),this.redrawMain()},n.prototype.clearUndoStack=function(){return this.undoStack.length=0},L("key.meta z",0,function(){return this.undo()}),w=function(a){function c(a){var b,c,d;for(this.block=a.clone(),b=a.start.prev;null!=(null!=b?b.prev:void 0)&&("newline"===(c=b.type)||"segmentStart"===c||"cursor"===c);)b=b.prev;this.before=null!=(d=null!=b?b.getSerializedLocation():void 0)?d:null}return b(c,a),c.prototype.undo=function(a){var b;if(null!=this.before)return(b=this.block.clone()).moveTo(a.tree.getTokenAtLocation(this.before)),b.end},c.prototype.redo=function(a){var b;if(null!=this.before){for(b=a.tree.getTokenAtLocation(this.before);b.type!==this.block.start.type;)b=b.next;return"segment"===this.block.start.type?b.segment.moveTo(null):b.block.moveTo(null),a.tree.getTokenAtLocation(this.before)}},c}(C),m=function(a){function c(a,b){var c,d,e;this.block=a.clone(),this.dest=null!=(c=null!=b?b.getSerializedLocation():void 0)?c:null,this.displacedSocketText="socketStart"===(null!=b?b.type:void 0)&&null!=(d=null!=(e=b.socket.content())?e.clone():void 0)?d:null}return b(c,a),c.prototype.undo=function(a){var b;if(null!=this.dest){for(b=a.tree.getTokenAtLocation(this.dest);b.type!==this.block.start.type;)b=b.next;return"segment"===this.block.type?b.segment.moveTo(null):b.block.moveTo(null),null!=this.displacedSocketText&&a.tree.getTokenAtLocation(this.dest).insert(this.displacedSocketText.clone()),a.tree.getTokenAtLocation(this.dest)}},c.prototype.redo=function(a){var b;if(null!=this.dest)return(b=this.block.clone()).moveTo(a.tree.getTokenAtLocation(this.dest)),b.end},c}(C),L("populate",0,function(){return this.clickedPoint=null,this.clickedBlock=null,this.draggingBlock=null,this.draggingOffset=null,this.lastHighlight=null,this.dragCanvas=document.createElement("canvas"),this.dragCanvas.className="ice-drag-canvas",this.dragCtx=this.dragCanvas.getContext("2d"),this.tracker.appendChild(this.dragCanvas)}),n.prototype.clearDrag=function(){return this.dragCtx.clearRect(0,0,this.dragCanvas.width,this.dragCanvas.height)},L("resize",0,function(){return this.dragCanvas.width=2*this.iceElement.offsetWidth-v,this.dragCanvas.height=this.iceElement.offsetHeight}),L("mousedown",3,function(a,b,c){var d;if(!c.consumedHitTest)return d=J(this.trackerPointToMain(a),this.tree),null!=d?(this.clickedBlock=d,this.moveCursorTo(this.clickedBlock.end),this.clickedPoint=a,c.consumedHitTest=!0):void 0}),L("mouseup",0,function(){return null!=this.clickedBlock?(this.clickedBlock=null,this.clickedPoint=null):void 0}),L("mousemove",1,function(a,b,c){var e;return!c.capturedPickup&&null!=this.clickedBlock&&a.from(this.clickedPoint).magnitude()>q?(this.draggingBlock=this.clickedBlock,this.clickedBlockIsPaletteBlock?(this.draggingOffset=this.draggingBlock.view.bounds[this.draggingBlock.view.lineStart].upperLeftCorner().from(this.trackerPointToPalette(this.clickedPoint)),this.draggingBlock=this.draggingBlock.clone()):(this.draggingOffset=this.draggingBlock.view.bounds[this.draggingBlock.view.lineStart].upperLeftCorner().from(this.trackerPointToMain(this.clickedPoint)),c.addedCapturePoint||(this.addMicroUndoOperation("CAPTURE_POINT"),c.addedCapturePoint=!0),this.addMicroUndoOperation(new w(this.draggingBlock))),this.draggingBlock.moveTo(null),this.draggingBlock.view.compute(),this.draggingBlock.view.translate(new d.Point(1,1)),this.draggingBlock.view.drawShadow(this.dragCtx,5,5),this.draggingBlock.view.draw(this.dragCtx),e=new d.Point(a.x+this.draggingOffset.x,a.y+this.draggingOffset.y),this.dragCanvas.style.top=""+e.y+"px",this.dragCanvas.style.left=""+e.x+"px",this.clickedPoint=this.clickedBlock=null,this.redrawMain()):void 0}),L("mousemove",0,function(a){var b,c,e,f;if(null!=this.draggingBlock){if(f=new d.Point(a.x+this.draggingOffset.x,a.y+this.draggingOffset.y),this.dragCanvas.style.top=""+f.y+"px",this.dragCanvas.style.left=""+f.x+"px",e=this.trackerPointToMain(f),e.y>this.tree.view.getBounds().bottom()&&e.x>0){for(b=this.tree.end;"blockEnd"!==b.type&&b!==this.tree.start;)b=b.prev;c=b===this.tree.start?this.tree:b.block}else"block"===this.draggingBlock.type?c=this.tree.find(function(a){var b;return(null!=(b="function"==typeof a.inSocket?a.inSocket():void 0)?!b:!0)&&null!=a.view.dropArea&&a.view.dropArea.contains(e)}):"segment"===this.draggingBlock.type&&(c=this.tree.find(function(a){var b;return"socket"!==a.type&&(null!=(b="function"==typeof a.inSocket?a.inSocket():void 0)?!b:!0)&&null!=a.view.dropArea&&a.view.dropArea.contains(e)}));if(c!==this.lastHighlight)return this.redrawMain(),null!=c&&c.view.dropHighlightRegion.fill(this.mainCtx,"#fff"),this.lastHighlight=c}}),L("mouseup",0,function(){if(null!=this.draggingBlock&&null!=this.lastHighlight){switch(this.lastHighlight.type){case"indent":case"socket":this.addMicroUndoOperation(new m(this.draggingBlock,this.lastHighlight.start)),this.draggingBlock.moveTo(this.lastHighlight.start);break;case"block":this.addMicroUndoOperation(new m(this.draggingBlock,this.lastHighlight.end)),this.draggingBlock.moveTo(this.lastHighlight.end);break;default:this.lastHighlight===this.tree&&(this.addMicroUndoOperation(new m(this.draggingBlock,this.tree.start)),this.draggingBlock.moveTo(this.tree.start))}return this.moveCursorTo(this.draggingBlock.end,!0),this.draggingBlock=null,this.draggingOffset=null,this.lastHighlight=null,this.clearDrag(),this.redrawMain()}}),L("populate",0,function(){return this.floatingBlocks=[]}),o=function(){function a(a,b){this.block=a,this.position=b}return a}(),B=function(a){function c(a,b){this.position=new d.Point(b.x,b.y),c.__super__.constructor.call(this,a,null)}return b(c,a),c.prototype.undo=function(a){return a.floatingBlocks.pop(),c.__super__.undo.apply(this,arguments)},c.prototype.redo=function(a){return a.floatingBlocks.push(new o(this.block.clone(),this.position)),c.__super__.redo.apply(this,arguments)},c}(m),p=function(){function a(a){this.position=new d.Point(a.position.x,a.position.y),this.block=a.block.clone()}return a.prototype.undo=function(a){return a.floatingBlocks.push(new o(this.block.clone(),this.position)),null},a.prototype.redo=function(a){return a.floatingBlocks.pop(),null},a}(),L("mouseup",0,function(a){var b,c;if(null!=this.draggingBlock&&null==this.lastHighlight){if(b=this.trackerPointToMain(a),c=new d.Point(b.x+this.draggingOffset.x,b.y+this.draggingOffset.y),c.x<0)return;return this.addMicroUndoOperation(new B(this.draggingBlock,c)),this.floatingBlocks.push(new o(this.draggingBlock,c)),this.draggingBlock=null,this.draggingOffset=null,this.lastHighlight=null,this.clearDrag(),this.redrawMain()}}),L("mousedown",7,function(a,b,c){var d,e,f,g,h,i,j;if(!c.consumedHitTest){for(i=this.floatingBlocks,j=[],e=g=0,h=i.length;h>g;e=++g)f=i[e],d=J(this.trackerPointToMain(a),f.block),null!=d?(this.clickedBlock=f.block,this.clickedPoint=a,c.consumedHitTest=!0,j.push(this.redrawMain())):j.push(void 0);return j}}),L("mousemove",7,function(a,b,c){var d,e,f,g,h;if(null!=this.clickedBlock&&a.from(this.clickedPoint).magnitude()>q)for(h=this.floatingBlocks,d=f=0,g=h.length;g>f;d=++f)if(e=h[d],e.block===this.clickedBlock)return c.addedCapturePoint||(this.addMicroUndoOperation("CAPTURE_POINT"),c.addedCapturePoint=!0),this.addMicroUndoOperation(new p(e)),this.floatingBlocks.splice(d,1),this.redrawMain(),void 0}),L("redraw_main",7,function(){var a,b,c,d,e;for(d=this.floatingBlocks,e=[],b=0,c=d.length;c>b;b++)a=d[b],a.block.view.compute(),a.block.view.translate(a.position),e.push(a.block.view.draw(this.mainCtx));return e}),L("populate",0,function(){var a,b,c,d,e,f,g,h=this;for(this.currentPaletteBlocks=[],this.clickedBlockIsPaletteBlock=!1,this.paletteHeader=document.createElement("div"),this.paletteHeader.className="ice-palette-header",this.paletteHeaderHeight=30*Math.ceil(this.paletteGroups.length/2),this.iceElement.appendChild(this.paletteHeader),c=document.createElement("div"),c.className="ice-palette-header-row",this.paletteHeader.appendChild(c),f=this.paletteGroups,g=[],a=d=0,e=f.length;e>d;a=++d)b=f[a],g.push(function(b){var d,e;return b.blocks=function(){var a,c,e,f;for(e=b.blocks,f=[],a=0,c=e.length;c>a;a++)d=e[a],f.push(d.clone());return f}(),e=document.createElement("div"),e.className="ice-palette-group-header",e.innerText=e.textContent=b.name,c.appendChild(e),a%2===1&&(c=document.createElement("div"),c.className="ice-palette-header-row",h.paletteHeader.appendChild(c)),e.addEventListener("click",function(){return h.currentPaletteGroup=b.name,h.currentPaletteBlocks=b.blocks,h.currentPaletteGroupHeader.className="ice-palette-group-header",h.currentPaletteGroupHeader=e,h.currentPaletteGroupHeader.className="ice-palette-group-header ice-palette-group-header-selected",h.redrawPalette()}),0===a?(h.currentPaletteGroup=b.name,h.currentPaletteBlocks=b.blocks,h.currentPaletteGroupHeader=e,h.currentPaletteGroupHeader.className="ice-palette-group-header ice-palette-group-header-selected"):void 0}(b));return g}),L("mousedown",0,function(){return this.paletteHeader.style.zIndex=0}),L("mouseup",0,function(){return this.paletteHeader.style.zIndex=257}),L("mousedown",7,function(a,b,c){var d,e,f,g,h,i;if(!c.consumedHitTest){for(f=this.trackerPointToPalette(a),i=this.currentPaletteBlocks,g=0,h=i.length;h>g;g++)if(d=i[g],e=J(f,d),null!=e)return this.clickedBlock=d,this.clickedPoint=a,this.clickedBlockIsPaletteBlock=!0,void 0;return this.clickedBlockIsPaletteBlock=!1}}),L("mouseup",0,function(a){return a.x<v&&null==this.lastHighlight?(this.draggingBlock=null,this.draggingOffset=null,this.clearDrag()):void 0}),L("redraw_palette",0,function(){var a,b,c,d,e,f,g;for(this.paletteScrollerStuffing.innerHTML="",f=this.currentPaletteBlocks,g=[],d=0,e=f.length;e>d;d++)a=f[d],c=document.createElement("div"),c.className="ice-hover-div",c.title=a.stringify(),b=a.view.getBounds(),c.style.top=""+b.y+"px",c.style.left=""+b.x+"px",c.style.width=""+Math.min(b.width,this.paletteScroller.offsetWidth-s)+"px",c.style.height=""+b.height+"px",g.push(this.paletteScrollerStuffing.appendChild(c));return g}),z=function(a){function c(a,b){this.before=b,this.after=a.stringify(),this.socket=a.start.getSerializedLocation()}return b(c,a),c.prototype.undo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.socket).socket,null!=(c=b.content())&&c.remove(),b.start.insert(new e.TextToken(this.before))},c.prototype.redo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.socket).socket,null!=(c=b.content())&&c.remove(),b.start.insert(new e.TextToken(this.after))},c}(C),A=function(a){function c(a,b){this.before=b,this.after=a.content().clone(),this.socket=a.start.getSerializedLocation()}return b(c,a),c.prototype.undo=function(a){var b;return b=a.tree.getTokenAtLocation(this.socket).socket,b.content().moveTo(null),b.start.insert(new e.TextToken(this.before))},c.prototype.redo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.socket).socket,null!=(c=b.content())&&c.remove(),this.after.clone().moveTo(b)},c}(C),L("populate",1,function(){var a,b,c,d,e,f=this;for(this.hiddenInput=document.createElement("input"),this.hiddenInput.className="ice-hidden-input",this.iceElement.appendChild(this.hiddenInput),this.socketFocus=null,this.textFocus=null,this.textInputAnchor=null,this.textInputSelecting=!1,this.oldFocusValue=null,d=["input","keyup","keydown"],e=[],b=0,c=d.length;c>b;b++)a=d[b],e.push(this.hiddenInput.addEventListener(a,function(){return null!=f.textFocus?(f.textFocus.value=f.hiddenInput.value,f.redrawTextInput()):void 0}));return e}),L("resize",0,function(){return this.aceElement.style.width=""+this.iceElement.offsetWidth+"px",this.aceElement.style.height=""+this.iceElement.offsetHeight+"px"}),n.prototype.redrawTextInput=function(){var a,b;return this.textFocus.value=this.hiddenInput.value,this.redrawMain(),b=this.textFocus.view.bounds[this.textFocus.view.lineStart].x+this.mainCtx.measureText(this.hiddenInput.value.slice(0,this.hiddenInput.selectionStart)).width,a=this.textFocus.view.bounds[this.textFocus.view.lineStart].x+this.mainCtx.measureText(this.hiddenInput.value.slice(0,this.hiddenInput.selectionEnd)).width,b===a?this.mainCtx.strokeRect(b,this.textFocus.view.bounds[this.textFocus.view.lineStart].y,0,this.fontSize):(this.mainCtx.fillStyle="rgba(0, 0, 256, 0.3)",this.mainCtx.fillRect(b,this.textFocus.view.bounds[this.textFocus.view.lineStart].y,a-b,this.fontSize))},n.prototype.setTextInputFocus=function(b,c,d){var f,g,h,i=this;if(null==c&&(c=0),null==d&&(d=0),null!=this.socketFocus&&this.socketFocus!==b){this.addMicroUndoOperation("CAPTURE_POINT"),this.addMicroUndoOperation(new z(this.socketFocus,this.oldFocusValue)),this.oldFocusValue=null;try{f=a.parse(g=this.socketFocus.stringify()).start.next,"blockStart"===f.type&&(f.block.moveTo(this.socketFocus.start),this.addMicroUndoOperation(new A(this.socketFocus,g)))}catch(j){}}return this.socketFocus=b,null==b?(this.textFocus=null,this.hiddenInput.blur(),this.iceElement.focus(),void 0):(this.oldFocusValue=b.stringify(),this.textFocus=new e.TextToken(b.stringify()),null!=(h=b.content())&&h.remove(),b.start.insert(this.textFocus),this.moveCursorTo(b.end),this.hiddenInput.value=this.textFocus.value,0>c&&(c=this.textFocus.value.length-c),0>d&&(d=this.textFocus.value.length-d),setTimeout(function(){return i.hiddenInput.focus(),i.hiddenInput.setSelectionRange(c,d)},0),this.redrawMain())},K=function(a,b){var c,d;for(c=b.start;null!=c;){if("socketStart"===c.type&&("text"===(d=c.next.type)||"socketEnd"===d)&&c.socket.view.bounds[c.socket.view.lineStart].contains(a))return c.socket;c=c.next}return null},n.prototype.setTextInputAnchor=function(a){return this.textInputAnchor=this.textInputHead=Math.round((a.x-this.textFocus.view.bounds[this.textFocus.view.lineStart].x)/this.mainCtx.measureText(" ").width),this.hiddenInput.setSelectionRange(this.textInputAnchor,this.textInputHead)},n.prototype.setTextInputHead=function(a){return this.textInputHead=Math.round((a.x-this.textFocus.view.bounds[this.textFocus.view.lineStart].x)/this.mainCtx.measureText(" ").width),this.hiddenInput.setSelectionRange(Math.min(this.textInputAnchor,this.textInputHead),Math.max(this.textInputAnchor,this.textInputHead))},L("mousedown",6,function(a,b,c){var d,e,f=this;if(!c.consumedHitTest)return e=this.trackerPointToMain(a),d=K(e,this.tree),null!=d?(this.setTextInputFocus(d),setTimeout(function(){return f.setTextInputAnchor(e),f.redrawTextInput(),f.textInputSelecting=!0},0),c.consumedHitTest=!0):void 0}),L("mousemove",0,function(a){var b;return this.textInputSelecting?(b=this.trackerPointToMain(a),this.setTextInputHead(b),this.redrawTextInput()):void 0}),L("mouseup",0,function(){return this.textInputSelecting=!1}),i=function(a){function c(a){this.first=a.start.getSerializedLocation(),this.last=a.end.getSerializedLocation(),this.lassoSelect=a.isLassoSelect}return b(c,a),c.prototype.undo=function(a){return a.tree.getTokenAtLocation(this.first).segment.remove(),a.tree.getTokenAtLocation(this.first)},c.prototype.redo=function(a){var b;return b=new e.Segment,b.lassoSelect=this.lassoSelect,a.tree.getTokenAtLocation(this.first).insertBefore(b.start),a.tree.getTokenAtLocation(this.last).insertBefore(b.end),b.end},c}(C),l=function(a){function c(a){this.first=a.start.getSerializedLocation(),this.last=a.end.getSerializedLocation(),this.lassoSelect=a.isLassoSelect}return b(c,a),c.prototype.undo=function(a){var b;return b=new e.Segment,b.lassoSelect=this.lassoSelect,a.tree.getTokenAtLocation(this.first).insertBefore(b.start),a.tree.getTokenAtLocation(this.last).insertBefore(b.end),b.end},c.prototype.redo=function(a){return a.tree.getTokenAtLocation(this.first).segment.remove(),a.tree.getTokenAtLocation(this.first)},c}(C),L("populate",0,function(){return this.lassoSelectCanvas=document.createElement("canvas"),this.lassoSelectCanvas.className="ice-lasso-select-canvas",this.lassoSelectCtx=this.lassoSelectCanvas.getContext("2d"),this.lassoSelectAnchor=null,this.lassoSegment=null,this.iceElement.appendChild(this.lassoSelectCanvas)}),n.prototype.clearLassoSelectCanvas=function(){return this.lassoSelectCtx.clearRect(0,0,this.lassoSelectCanvas.width,this.lassoSelectCanvas.height)},L("resize",0,function(){return this.lassoSelectCanvas.width=this.iceElement.offsetWidth-v,this.lassoSelectCanvas.style.width=""+this.lassoSelectCanvas.width+"px",this.lassoSelectCanvas.height=this.iceElement.offsetHeight,this.lassoSelectCanvas.style.height=""+this.lassoSelectCanvas.height+"px"}),n.prototype.clearLassoSelection=function(){var a,b,c;for(this.lassoSegment=null,a=this.tree.start,b=!1;a!==this.tree.end;)"segmentStart"===a.type&&a.segment.isLassoSegment?(c=a.next,this.addMicroUndoOperation(new l(a.segment)),a.segment.remove(),b=!0,a=c):a=a.next;return b?this.redrawMain():void 0},L("mousedown",0,function(a,b,c){return c.clickedLassoSegment||this.clearLassoSelection(),c.consumedHitTest?void 0:a.x>v?this.lassoSelectAnchor=this.trackerPointToMain(a):void 0}),L("mousemove",0,function(a){var b,c,e;return null!=this.lassoSelectAnchor?(b=this.trackerPointToMain(a),this.clearLassoSelectCanvas(),e=new d.Point(Math.min(this.lassoSelectAnchor.x,b.x)-this.scrollOffsets.main.x,Math.min(this.lassoSelectAnchor.y,b.y)-this.scrollOffsets.main.y),c=new d.Size(Math.abs(this.lassoSelectAnchor.x-b.x),Math.abs(this.lassoSelectAnchor.y-b.y)),this.lassoSelectCtx.strokeStyle="#00f",this.lassoSelectCtx.strokeRect(e.x,e.y,c.width,c.height)):void 0
-}),Q=function(a,b,d){var e,f;for(f=[],e=b;e!==d.next;){switch(e.type){case"blockStart":case"blockEnd":f.push(e.block.start),f.push(e.block.end);break;case"indentStart":case"indentEnd":f.push(e.indent.start),f.push(e.indent.end);break;case"segmentStart":case"segmentEnd":f.push(e.segment.start),f.push(e.segment.end)}e=e.next}for(b=a.start;c.call(f,b)<0;)b=b.next;for(d=a.end;c.call(f,d)<0;)d=d.prev;for(;"blockStart"!==b.type;)b=b.prev,"blockEnd"===b.type&&(b=b.block.start.prev);for(;"blockEnd"!==d.type;)d=d.next,"blockStart"===d.type&&(d=d.block.end.next);return[b,d]},L("mouseup",0,function(a){var b,c,f,g,h;if(null!=this.lassoSelectAnchor){for(g=this.trackerPointToMain(a),c=new d.Rectangle(Math.min(this.lassoSelectAnchor.x,g.x),Math.min(this.lassoSelectAnchor.y,g.y),Math.abs(this.lassoSelectAnchor.x-g.x),Math.abs(this.lassoSelectAnchor.y-g.y)),this.lassoSelectAnchor=null,this.clearLassoSelectCanvas(),b=this.tree.start;!(null==b||"blockStart"===b.type&&b.block.view.path.intersects(c));)b=b.next;for(f=this.tree.end;!(null==f||"blockEnd"===f.type&&f.block.view.path.intersects(c));)f=f.prev;if(null==b||null==f)return;return h=Q(this.tree,b,f),b=h[0],f=h[1],this.lassoSegment=new e.Segment,this.lassoSegment.isLassoSegment=!0,b.insertBefore(this.lassoSegment.start),f.insert(this.lassoSegment.end),this.addMicroUndoOperation(new i(this.lassoSegment)),this.moveCursorTo(this.lassoSegment.end,!0),this.redrawMain()}}),L("mousedown",6.5,function(a,b,c){return c.consumedHitTest?void 0:null!=this.lassoSegment&&null!=J(this.trackerPointToMain(a),this.lassoSegment)?(this.clickedBlock=this.lassoSegment,this.clickedPoint=a,c.consumedHitTest=!0,c.clickedLassoSegment=!0):void 0}),L("populate",0,function(){return this.cursor=new e.CursorToken}),M=function(a){var b,c;for(b=0;(0!==b||"blockStart"!==(c=a.type)&&"indentStart"!==c)&&null!=a.prev;){switch(a.type){case"blockStart":case"indentStart":case"socketStart":b--;break;case"blockEnd":case"indentEnd":case"socketEnd":b++}a=a.prev}return"indentStart"===a.type||null==a.prev},n.prototype.moveCursorTo=function(a,b){var c,d;if(null==b&&(b=!1),null!=a){for(c=a;null!==c&&c!==this.tree.end;)c=c.next;if(null!=c){if(this.cursor.remove(),a===this.tree.start)a.insert(this.cursor);else{for(c=a;"newline"!==(d=c.type)&&"indentEnd"!==d&&c!==this.tree.end;)c=c.next;"newline"===c.type?c.insert(this.cursor):c.insertBefore(this.cursor)}return M(this.cursor)||this.moveCursorTo(this.cursor.next),b&&this.reparseHandwrittenBlocks(),this.redrawMain()}}},n.prototype.moveCursorUp=function(){var a,b,c;if(a=null!=(b=this.cursor.prev)?b.prev:void 0,null!=a){for(;"newline"!==(c=a.type)&&"indentEnd"!==c&&a!==this.tree.start;)a=a.prev;return this.cursor.remove(),"newline"===a.type||a===this.tree.start?a.insert(this.cursor):a.insertBefore(this.cursor),M(this.cursor)||this.moveCursorUp(),this.reparseHandwrittenBlocks(),this.redrawMain()}},L("key.up",0,function(){return this.clearLassoSelection(),this.setTextInputFocus(null),this.moveCursorUp()}),L("key.down",0,function(){return this.clearLassoSelection(),this.setTextInputFocus(null),this.reparseHandwrittenBlocks(),this.moveCursorTo(this.cursor.next.next)}),L("key.left",0,function(){var a;if(null!=this.socketFocus){if(0!==this.hiddenInput.selectionEnd)return;a=this.socketFocus.start}else a=this.cursor;for(;null!=a&&("socketEnd"!==a.type||"text"!==a.socket.content().type);)a=a.prev;return null!=a?this.setTextInputFocus(a.socket,-1,-1):void 0}),L("key.right",0,function(){var a;if(null!=this.socketFocus){if(this.hiddenInput.selectionEnd!==this.hiddenInput.value.length)return;a=this.socketFocus.end}else a=this.cursor;for(;null!=a&&("socketStart"!==a.type||"text"!==a.socket.content().type);)a=a.next;return null!=a?this.setTextInputFocus(a.socket):void 0}),n.prototype.deleteAtCursor=function(){var a,b;for(this.setTextInputFocus(null),a=this.cursor.prev;"blockEnd"!==(b=a.type)&&"indentStart"!==b;)a=a.prev;return"blockEnd"===a.type?(this.addMicroUndoOperation("CAPTURE_POINT"),this.addMicroUndoOperation(new w(a.block)),a.block.moveTo(null),this.redrawMain()):void 0},L("key.backspace",0,function(a){return a.capturedBackspace?void 0:null==this.textFocus||0===this.hiddenInput.value.length&&this.socketFocus.handwritten?(this.deleteAtCursor(),a.capturedBackspace=!0,!1):!0}),L("populate",0,function(){return this.handwrittenBlocks=[]}),L("key.enter",0,function(){var a,b,c,d;for(this.setTextInputFocus(null),b=new e.Block,c=new e.Socket(null,-1/0),b.start.insert(c.start),b.end.prev.insert(c.end),c.handwritten=!0,this.handwrittenBlocks.push(b),a=this.cursor.prev;("newline"===(d=a.type)||"cursor"===d||"segmentStart"===d||"segmentEnd"===d)&&a!==this.tree.start;)a=a.prev;return this.addMicroUndoOperation("CAPTURE_POINT"),this.addMicroUndoOperation(new m(b,a)),b.moveTo(a),this.redrawMain(),this.reparseHandwrittenBlocks(),this.setTextInputFocus(c)}),E=function(a){var b;for(b=a.start;b!==a.end;){if("cursor"===b.type)return!0;b=b.next}return!1},x=function(a){function c(a,b){this.before=a.clone(),this.location=a.start.getSerializedLocation(),this.after=b.clone()}return b(c,a),c.prototype.undo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.location).block,c=this.before.clone(),b.start.prev.append(c.start),c.end.append(b.end.next)},c.prototype.redo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.location).block,c=this.after.clone(),b.prev.append(c.start),c.end.append(b.end.next)},c}(C),n.prototype.reparseHandwrittenBlocks=function(){var b,c;for(this.setTextInputFocus(null),b=this.tree.start;b!==this.tree.end;){if("blockStart"===b.type&&"socketStart"===b.next.type&&b.next.socket.handwritten&&!E(b.block))try{c=a.parse(b.block.stringify()).start.next,"blockStart"===c.type&&(this.addMicroUndoOperation(new x(b.block,c.block)),b.prev.append(c),c.block.end.append(b.block.end.next),b=c.block.end)}catch(d){}b=b.next}return null},h=function(a){function c(a,b){this.depth=b,this.location=a.getSerializedLocation()}return b(c,a),c.prototype.undo=function(a){var b;return b=a.tree.getTokenAtLocation(this.location).indent,b.start.prev.append(b.end.next)},c.prototype.redo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.location),c=new e.Indent(j),b.prev.append(c.start).append(new e.NewlineToken).append(c.end).append(b)},c}(C),k=function(a){function c(a){this.location=a.start.getSerializedLocation(),this.indent=a.clone()}return b(c,a),c.prototype.undo=function(a){var b,c;return b=a.tree.getTokenAtLocation(this.location),c=this.indent.clone(),b.prev.append(c.start),c.end.append(b)},c.prototype.redo=function(a){var b;return b=a.tree.getTokenAtLocation(this.location).indent,b.start.prev.append(b.end.next)},c}(C),L("key.tab",0,function(){var a,b,c;if(null!=this.socketFocus&&this.socketFocus.handwritten){for(this.addMicroUndoOperation("CAPTURE_POINT"),a=this.socketFocus.start;"blockEnd"!==a.type;)a=a.prev;if("indentEnd"===a.prev.type)for(;"blockEnd"!==(c=a.type)&&"indentStart"!==c;)a=a.prev;else this.addMicroUndoOperation(new h(a,j)),b=new e.Indent(j),a.prev.append(b.start).append(new e.NewlineToken).append(b.end).append(a),a=b.start;return this.addMicroUndoOperation(new w(this.socketFocus.start.prev.block)),this.socketFocus.start.prev.block.moveTo(null),this.addMicroUndoOperation(new m(this.socketFocus.start.prev.block,a)),this.socketFocus.start.prev.block.moveTo(a),this.moveCursorTo(this.socketFocus.start.prev.block.end),this.redrawMain()}}),L("key.backspace",0,function(a){var b,c,d;if(!a.capturedBackspace)return null==this.socketFocus&&"indentStart"===(null!=(c=this.cursor.prev)&&null!=(d=c.prev)?d.type:void 0)&&0===(b=this.cursor.prev.prev.indent).stringify().trim().length?(this.addMicroUndoOperation(new k(b)),b.start.prev.append(b.end.next),this.moveCursorTo(b.end.next),a.capturedBackspace=!0,this.redrawMain()):void 0}),L("populate",0,function(){var a=this;return this.aceElement=document.createElement("div"),this.aceElement.className="ice-ace",this.wrapperElement.appendChild(this.aceElement),this.aceEditor=ace.edit(this.aceElement),this.aceEditor.setTheme("ace/theme/chrome"),this.aceEditor.setFontSize(15),this.aceEditor.getSession().setMode("ace/mode/coffee"),this.aceEditor.getSession().setTabSize(2),this.aceEditor.on("change",function(){return a.setFontSize(a.aceEditor.getFontSize())}),this.currentlyUsingBlocks=!0,this.currentlyAnimating=!1}),I=function(a){var b;for(b=a.offsetTop;null!=(a=a.offsetParent);)b+=a.offsetTop;return b},H=function(a){var b;for(b=a.offsetLeft;null!=(a=a.offsetParent);)b+=a.offsetLeft;return b},n.prototype.computePlaintextTranslationVectors=function(){var a,b,c,d;for(c=[],d=[],a=this.tree.start,b={x:this.aceEditor.container.getBoundingClientRect().left-H(this.aceElement)+this.aceEditor.renderer.$gutterLayer.gutterWidth,y:this.aceEditor.container.getBoundingClientRect().top-I(this.aceElement),indent:0,lineHeight:this.aceEditor.renderer.layerConfig.lineHeight,leftEdge:this.aceEditor.container.getBoundingClientRect().left-H(this.aceElement)+this.aceEditor.renderer.$gutterLayer.gutterWidth};a!==this.tree.end;){switch(a.type){case"text":d.push(a.view.computePlaintextTranslationVector(b,this.mainCtx)),c.push(a);break;case"newline":b.y+=b.lineHeight,b.x=b.indent*this.mainCtx.measureText(" ").width+b.leftEdge;break;case"indentStart":b.indent+=a.indent.depth;break;case"indentEnd":b.indent-=a.indent.depth}a=a.next}return{textElements:c,translationVectors:d}},g=function(){function a(a,b,c){this.start=a,this.end=b,this.time=c,this.currentRGB=[parseInt(this.start.slice(1,3),16),parseInt(this.start.slice(3,5),16),parseInt(this.start.slice(5,7),16)],this.step=[(parseInt(this.end.slice(1,3),16)-this.currentRGB[0])/this.time,(parseInt(this.end.slice(3,5),16)-this.currentRGB[1])/this.time,(parseInt(this.end.slice(5,7),16)-this.currentRGB[2])/this.time]}return a.prototype.advance=function(){var a,b,c,d,e;for(e=this.currentRGB,a=c=0,d=e.length;d>c;a=++c)b=e[a],this.currentRGB[a]+=this.step[a];return"rgb("+Math.round(this.currentRGB[0])+","+Math.round(this.currentRGB[1])+","+Math.round(this.currentRGB[2])+")"},a}(),n.prototype.performMeltAnimation=function(){var a,b,c,e,h,i,j=this;return this.currentlyUsingBlocks&&!this.currentlyAnimating?(this.aceEditor.setValue(this.getValue(),-1),this.currentlyUsingBlocks=!1,this.currentlyAnimating=!0,this.redrawMain(),this.paletteHeader.style.zIndex=0,i=this.computePlaintextTranslationVectors(),c=i.textElements,h=i.translationVectors,a=new g("#CCCCCC","#FFFFFF",f),b=this.scrollOffsets.main.y,e=function(g){var i,k,l,m;for(f>g&&setTimeout(function(){return e(g+1)},1e3/f),j.mainCtx.globalAlpha=Math.max(0,1-2*g/f),j.iceElement.style.backgroundColor=j.mainCanvas.style.backgroundColor=a.advance(),j.mainCanvas.style.left=""+v*(1-g/f)+"px",j.paletteCanvas.style.opacity=j.paletteHeader.style.opacity=Math.max(0,1-2*(g/f)),j.clearMain(),j.mainCtx.translate(0,b/f),j.scrollOffsets.main.y-=b/f,j.tree.view.draw(j.mainCtx),j.mainCtx.globalAlpha=1,k=l=0,m=c.length;m>l;k=++l)i=c[k],i.view.textElement.draw(j.mainCtx),i.view.translate(new d.Point(h[k].x/f,h[k].y/f));return g===f?(j.iceElement.style.top="-9999px",j.iceElement.style.left="-9999px",j.aceElement.style.top="0px",j.aceElement.style.left="0px",j.currentlyAnimating=!1,j.scrollOffsets.main.y=0,j.mainCtx.setTransform(1,0,0,1,0,0)):void 0},e(0),{success:!0}):void 0},n.prototype.performFreezeAnimation=function(){var a,b,c,e,h,i,j,k,l,m,n=this;if(!this.currentlyUsingBlocks&&!this.currentlyAnimating){if(e=this.setValue(this.aceEditor.getValue()),!e.success)return e;for(this.setFontSize(this.aceEditor.getFontSize()),this.redrawMain(),this.currentlyUsingBlocks=!0,this.currentlyAnimating=!0,this.aceElement.style.top="-9999px",this.aceElement.style.left="-9999px",this.iceElement.style.top="0px",this.iceElement.style.left="0px",this.paletteHeader.style.zIndex=0,m=this.computePlaintextTranslationVectors(),h=m.textElements,j=m.translationVectors,c=k=0,l=h.length;l>k;c=++k)b=h[c],b.view.translate(j[c]);return a=new g("#FFFFFF","#CCCCCC",f),i=function(e){var g,k;for(f>e&&setTimeout(function(){return i(e+1)},1e3/f),n.mainCanvas.style.left=""+v*(e/f)+"px",n.iceElement.style.backgroundColor=n.mainCanvas.style.backgroundColor=a.advance(),n.paletteCanvas.style.opacity=n.paletteHeader.style.opacity=Math.max(0,1-2*(1-e/f)),n.clearMain(),n.mainCtx.globalAlpha=Math.max(0,1-2*(1-e/f)),n.tree.view.draw(n.mainCtx),n.mainCtx.globalAlpha=1,c=g=0,k=h.length;k>g;c=++g)b=h[c],b.view.textElement.draw(n.mainCtx),b.view.translate(new d.Point(-j[c].x/f,-j[c].y/f));return e===f?(n.currentlyAnimating=!1,n.redrawMain(),n.paletteHeader.style.zIndex=257):void 0},i(0),{success:!0}}},n.prototype.toggleBlocks=function(){return this.currentlyUsingBlocks?this.performMeltAnimation():this.performFreezeAnimation()},L("populate",0,function(){var a=this;return this.scrollOffsets={main:new d.Point(0,0),palette:new d.Point(0,0)},this.mainScroller=document.createElement("div"),this.mainScroller.className="ice-main-scroller",this.mainScrollerStuffing=document.createElement("div"),this.mainScrollerStuffing.className="ice-main-scroller-stuffing",this.mainScroller.appendChild(this.mainScrollerStuffing),this.tracker.appendChild(this.mainScroller),this.mainScroller.addEventListener("scroll",function(){return a.scrollOffsets.main.y=a.mainScroller.scrollTop,a.scrollOffsets.main.x=a.mainScroller.scrollLeft,a.mainCtx.setTransform(1,0,0,1,-a.scrollOffsets.main.x,-a.scrollOffsets.main.y),a.redrawMain()}),this.paletteScroller=document.createElement("div"),this.paletteScroller.className="ice-palette-scroller",this.paletteScrollerStuffing=document.createElement("div"),this.paletteScrollerStuffing.className="ice-palette-scroller-stuffing",this.paletteScroller.appendChild(this.paletteScrollerStuffing),this.tracker.appendChild(this.paletteScroller),this.paletteScroller.addEventListener("scroll",function(){return a.scrollOffsets.palette.y=a.paletteScroller.scrollTop,a.paletteCtx.setTransform(1,0,0,1,-a.scrollOffsets.palette.x,-a.scrollOffsets.palette.y),a.redrawPalette()})}),L("resize",0,function(){return this.mainScroller.style.width=""+(this.iceElement.offsetWidth-v)+"px",this.mainScroller.style.height=""+this.iceElement.offsetHeight+"px",this.paletteScroller.style.top=""+this.paletteHeaderHeight+"px",this.paletteScroller.style.width=""+v+"px",this.paletteScroller.style.height=""+(this.iceElement.offsetHeight-this.paletteHeaderHeight)+"px"}),L("redraw_main",0,function(){var a,b,c,d,e;for(a=this.tree.view.getBounds(),e=this.floatingBlocks,c=0,d=e.length;d>c;c++)b=e[c],a.unite(b.block.view.getBounds());return this.mainScrollerStuffing.style.width=""+a.right()+"px",this.mainScrollerStuffing.style.height=""+a.bottom()+"px"}),L("redraw_palette",0,function(){var a,b,c,e,f;for(b=new d.NoRectangle,f=this.currentPaletteBlocks,c=0,e=f.length;e>c;c++)a=f[c],b.unite(a.view.getBounds());return this.paletteScrollerStuffing.style.height=""+b.bottom()+"px"}),L("populate",0,function(){return this.fontSize=15}),n.prototype.setFontSize=function(a){return this.fontSize=a,this.paletteHeader.style.fontSize=""+a+"px",this.redrawMain(),this.redrawPalette()},r=function(a){function c(a){this.button=a.clone(),this.location=a.getSerializedLocation()}return b(c,a),c.prototype.undo=function(a){var b,c,d,e;for(c=e=a.tree.getTokenAtLocation(this.location),d=this.button.expandValue.start.next;d!==this.button.expandValue.end;)d=d.next,c=c.next;return e.prev.append(b=this.button.clone()).append(c),b},c.prototype.redo=function(a){return a.tree.getTokenAtLocation(this.location).expand()},c}(C),L("mousedown",6.9,function(a,b,c){var d,e;if(!c.consumedHitTest)for(e=this.trackerPointToMain(a),d=this.tree.start;d!==this.tree.end;){if("mutationButton"===d.type&&d.view.bounds[d.view.lineStart].contains(e))return this.addMicroUndoOperation(new r(d)),d.expand(),this.redrawMain(),c.consumedHitTest=!0,void 0;d=d.next}}),n.prototype.markLine=function(a,b){var c;return null!=(c=this.tree.getBlockOnLine(a))&&c.lineMarkStyles.push(b),this.redrawMain()},n.prototype.unmarkLine=function(a,b){var c,d,e,f,g,h;if(null!=(c=this.tree.getBlockOnLine(a))){for(h=c.lineMarkStyles,d=f=0,g=h.length;g>f;d=++f)if(e=h[d],e.tag===b){c.lineMarkStyles.splice(d,1);break}return this.redrawMain()}},n.prototype.clearLineMarks=function(a){var b,c,d,e,f,g;for(b=this.tree.start;b!==this.tree.end;){if("blockStart"===b.type)if(null==a)b.block.lineMarkStyles.length=0;else for(g=b.block.lineMarkStyles,c=e=0,f=g.length;f>e;c=++e)if(d=g[c],d.tag===a){b.block.lineMarkStyles.splice(c,1);break}b=b.next}return this.redrawMain()},L("populate",0,function(){return this.lastHoveredLine=null}),L("mousemove",0,function(a){var b,c,d,e,f;if(null==this.draggingBlock&&null==this.clickedBlock&&this.hasEvent("linehover")){for(c=this.trackerPointToMain(a),b=d=e=this.tree.view.lineStart,f=this.tree.view.lineEnd;f>=e?f>=d:d>=f;b=f>=e?++d:--d)if(this.tree.view.bounds[b].contains(c))return b!==this.lastHoveredLine&&this.fireEvent("linehover",[{line:b}]),void(this.lastHoveredLine=b);return null!==this.lastHoveredLine&&this.fireEvent("linehover",[{line:null}]),this.lastHoveredLine=null}}),y=function(a){function c(a,b){this.oldValue=a,this.newValue=b}return b(c,a),c.prototype.undo=function(a){return a.tree=this.oldValue.clone(),a.tree.start},c.prototype.redo=function(a){return a.tree=this.newValue.clone(),a.tree.start},c}(C),L("populate",0,function(){return this.trimWhitespace=!1}),n.prototype.setTrimWhitespace=function(a){return this.trimWhitespace=a},n.prototype.setValue=function(b){var c,d;try{return this.trimWhitespace&&(b=b.trim()),d=a.parse(b),b!==this.tree.stringify()&&this.addMicroUndoOperation("CAPTURE_POINT"),this.addMicroUndoOperation(new y(this.tree,d)),this.tree=d,this.tree.start.insert(this.cursor),this.redrawMain(),{success:!0}}catch(e){return c=e,{success:!1,error:c}}},n.prototype.getValue=function(){return this.currentlyUsingBlocks?this.tree.stringify():this.aceEditor.getValue()},L("populate",0,function(){return this.bindings={}}),n.prototype.on=function(a,b){return this.bindings[a]=b},n.prototype.once=function(a,b){return this.bindings[a]=function(){return b.apply(this,arguments),this.bindings[a]=null}},n.prototype.fireEvent=function(a,b){return a in this.bindings?this.bindings[a].apply(this,b):void 0},n.prototype.hasEvent=function(a){return a in this.bindings&&null!=this.bindings[a]},n.prototype.setEditorState=function(a){return a?(this.setValue(this.aceEditor.getValue()),this.iceElement.style.top=this.iceElement.style.left="0px",this.aceElement.style.top=this.aceElement.style.left="-9999px",this.currentlyUsingBlocks=!0,this.resize(),this.redrawMain()):(this.aceEditor.setValue(this.getValue(),-1),this.iceElement.style.top=this.iceElement.style.left="-9999px",this.aceElement.style.top=this.aceElement.style.left="0px",this.currentlyUsingBlocks=!1,this.resize())},L("mousedown",0,function(){return this.dragCanvas.style.zIndex=300}),L("mouseup",0,function(){return this.dragCanvas.style.top=this.dragCanvas.style.left="-9999px",this.dragCanvas.style.zIndex=0});for(N in O)for(O[N].sort(function(a,b){return a.priority>b.priority?-1:1}),F[N]=[],V=O[N],R=0,T=V.length;T>R;R++)D=V[R],F[N].push(D.fn);F.key={};for(N in P)for(P[N].sort(function(a,b){return a.priority>b.priority?-1:1}),F.key[N]=[],W=P[N],S=0,U=W.length;U>S;S++)D=W[S],F.key[N].push(D.fn);return G})}.call(this),function(){define("ice",["ice-coffee","ice-controller","ice-parser"],function(a,b,c){return{parse:a.parse,parseObj:c.parseObj,Editor:b.Editor}})}.call(this);}).call(this);;
+;(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  define('ice-draw',[],function() {
+    var NoRectangle, Path, Point, Rectangle, Size, Text, exports, _CTX, _FONT_SIZE, _area, _intersects;
+    _area = function(a, b, c) {
+      return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+    };
+    _intersects = function(a, b, c, d) {
+      return ((_area(a, b, c) > 0) !== (_area(a, b, d) > 0)) && ((_area(c, d, a) > 0) !== (_area(c, d, b) > 0));
+    };
+    exports = {};
+    exports.Point = Point = (function() {
+      function Point(x, y) {
+        this.x = x;
+        this.y = y;
+      }
+
+      Point.prototype.clone = function() {
+        return new Point(this.x, this.y);
+      };
+
+      Point.prototype.magnitude = function() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+      };
+
+      Point.prototype.translate = function(vector) {
+        this.x += vector.x;
+        return this.y += vector.y;
+      };
+
+      Point.prototype.add = function(x, y) {
+        this.x += x;
+        return this.y += y;
+      };
+
+      Point.prototype.copy = function(point) {
+        this.x = point.x;
+        return this.y = point.y;
+      };
+
+      Point.prototype.from = function(point) {
+        return new Point(this.x - point.x, this.y - point.y);
+      };
+
+      Point.prototype.clear = function() {
+        return this.x = this.y = 0;
+      };
+
+      return Point;
+
+    })();
+    exports.Size = Size = (function() {
+      function Size(width, height) {
+        this.width = width;
+        this.height = height;
+      }
+
+      return Size;
+
+    })();
+    exports.Rectangle = Rectangle = (function() {
+      function Rectangle(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+      }
+
+      Rectangle.prototype.contains = function(point) {
+        return (this.x != null) && (this.y != null) && !((point.x < this.x) || (point.x > this.x + this.width) || (point.y < this.y) || (point.y > this.y + this.height));
+      };
+
+      Rectangle.prototype.identical = function(other) {
+        return this.x === other.x && this.y === other.y && this.width === other.width && this.height === other.height;
+      };
+
+      Rectangle.prototype.copy = function(rect) {
+        this.x = rect.x;
+        this.y = rect.y;
+        this.width = rect.width;
+        return this.height = rect.height;
+      };
+
+      Rectangle.prototype.clear = function() {
+        this.width = this.height = 0;
+        return this.x = this.y = null;
+      };
+
+      Rectangle.prototype.bottom = function() {
+        return this.y + this.height;
+      };
+
+      Rectangle.prototype.right = function() {
+        return this.x + this.width;
+      };
+
+      Rectangle.prototype.fill = function(ctx, style) {
+        ctx.fillStyle = style;
+        return ctx.fillRect(this.x, this.y, this.width, this.height);
+      };
+
+      Rectangle.prototype.unite = function(rectangle) {
+        if (!((this.x != null) && (this.y != null))) {
+          return this.copy(rectangle);
+        } else {
+          this.width = Math.max(this.right(), rectangle.right()) - (this.x = Math.min(this.x, rectangle.x));
+          return this.height = Math.max(this.bottom(), rectangle.bottom()) - (this.y = Math.min(this.y, rectangle.y));
+        }
+      };
+
+      Rectangle.prototype.swallow = function(point) {
+        if (!((this.x != null) && (this.y != null))) {
+          return this.copy(new Rectangle(point.x, point.y, 0, 0));
+        } else {
+          this.width = Math.max(this.right(), point.x) - (this.x = Math.min(this.x, point.x));
+          return this.height = Math.max(this.bottom(), point.y) - (this.y = Math.min(this.y, point.y));
+        }
+      };
+
+      Rectangle.prototype.overlap = function(rectangle) {
+        return (this.x != null) && (this.y != null) && !((rectangle.right()) < this.x || (rectangle.bottom() < this.y) || (rectangle.x > this.right()) || (rectangle.y > this.bottom()));
+      };
+
+      Rectangle.prototype.translate = function(vector) {
+        this.x += vector.x;
+        return this.y += vector.y;
+      };
+
+      Rectangle.prototype.stroke = function(ctx, style) {
+        ctx.strokeStyle = style;
+        return ctx.strokeRect(this.x, this.y, this.width, this.height);
+      };
+
+      Rectangle.prototype.fill = function(ctx, style) {
+        ctx.fillStyle = style;
+        return ctx.fillRect(this.x, this.y, this.width, this.height);
+      };
+
+      Rectangle.prototype.upperLeftCorner = function() {
+        return new Point(this.x, this.y);
+      };
+
+      Rectangle.prototype.toPath = function() {
+        var path, point, _i, _len, _ref;
+        path = new Path();
+        _ref = [[this.x, this.y], [this.x, this.bottom()], [this.right(), this.bottom()], [this.right(), this.y]];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          point = _ref[_i];
+          path.push(new Point(point[0], point[1]));
+        }
+        return path;
+      };
+
+      return Rectangle;
+
+    })();
+    exports.NoRectangle = NoRectangle = (function(_super) {
+      __extends(NoRectangle, _super);
+
+      function NoRectangle() {
+        NoRectangle.__super__.constructor.call(this, null, null, 0, 0);
+      }
+
+      return NoRectangle;
+
+    })(Rectangle);
+    exports.Path = Path = (function() {
+      function Path() {
+        this._points = [];
+        this._cachedTranslation = new Point(0, 0);
+        this._cacheFlag = false;
+        this._bounds = new NoRectangle();
+        this.style = {
+          'strokeColor': '#000',
+          'lineWidth': 1,
+          'fillColor': null
+        };
+      }
+
+      Path.prototype._clearCache = function() {
+        var point, _i, _len, _ref;
+        if (this._cacheFlag) {
+          _ref = this._points;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            point = _ref[_i];
+            point.translate(this._cachedTranslation);
+          }
+          this._bounds.translate(this._cachedTranslation);
+          this._cachedTranslation.clear();
+          return this._cacheFlag = false;
+        }
+      };
+
+      Path.prototype.recompute = function() {
+        var point, _i, _len, _ref, _results;
+        this._bounds = new NoRectangle();
+        _ref = this._points;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          point = _ref[_i];
+          _results.push(this._bounds.swallow(point));
+        }
+        return _results;
+      };
+
+      Path.prototype.push = function(point) {
+        this._points.push(point);
+        return this._bounds.swallow(point);
+      };
+
+      Path.prototype.unshift = function(point) {
+        this._points.unshift(point);
+        return this._bounds.swallow(point);
+      };
+
+      Path.prototype.contains = function(point) {
+        var count, dest, end, last, _i, _len, _ref;
+        this._clearCache();
+        if (this._points.length === 0) {
+          return false;
+        }
+        dest = new Point(this._bounds.x - 10, point.y);
+        count = 0;
+        last = this._points[this._points.length - 1];
+        _ref = this._points;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          end = _ref[_i];
+          if (_intersects(last, end, point, dest)) {
+            count += 1;
+          }
+          last = end;
+        }
+        return count % 2 === 1;
+      };
+
+      Path.prototype.intersects = function(rectangle) {
+        var end, last, lastSide, rectSides, side, _i, _j, _len, _len1, _ref;
+        this._clearCache();
+        if (this._points.length === 0) {
+          return false;
+        }
+        if (!rectangle.overlap(this._bounds)) {
+          return false;
+        } else {
+          last = this._points[this._points.length - 1];
+          rectSides = [new Point(rectangle.x, rectangle.y), new Point(rectangle.right(), rectangle.y), new Point(rectangle.right(), rectangle.bottom()), new Point(rectangle.x, rectangle.bottom())];
+          _ref = this._points;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            end = _ref[_i];
+            lastSide = rectSides[rectSides.length - 1];
+            for (_j = 0, _len1 = rectSides.length; _j < _len1; _j++) {
+              side = rectSides[_j];
+              if (_intersects(last, end, lastSide, side)) {
+                return true;
+              }
+              lastSide = side;
+            }
+            last = end;
+          }
+          if (this.contains(rectSides[0])) {
+            return true;
+          }
+          if (rectangle.contains(this._points[0])) {
+            return true;
+          }
+          return false;
+        }
+      };
+
+      Path.prototype.bounds = function() {
+        this._clearCache();
+        return this._bounds;
+      };
+
+      Path.prototype.translate = function(vector) {
+        this._cachedTranslation.translate(vector);
+        return this._cacheFlag = true;
+      };
+
+      Path.prototype.draw = function(ctx) {
+        var point, _i, _len, _ref;
+        this._clearCache();
+        if (this._points.length === 0) {
+          return;
+        }
+        ctx.strokeStyle = this.style.strokeColor;
+        ctx.lineWidth = this.style.lineWidth;
+        if (this.style.fillColor != null) {
+          ctx.fillStyle = this.style.fillColor;
+        }
+        ctx.beginPath();
+        ctx.moveTo(this._points[0].x, this._points[0].y);
+        _ref = this._points;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          point = _ref[_i];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineTo(this._points[0].x, this._points[0].y);
+        if (this.style.fillColor != null) {
+          ctx.fill();
+        }
+        return ctx.stroke();
+      };
+
+      Path.prototype.clone = function() {
+        var clone, el, _i, _len, _ref;
+        clone = new Path();
+        _ref = this._points;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          el = _ref[_i];
+          clone.push(el);
+        }
+        return clone;
+      };
+
+      Path.prototype.drawShadow = function(ctx, offsetX, offsetY, blur) {
+        var key, oldValues, point, value, _i, _len, _ref, _results;
+        this._clearCache();
+        ctx.fillStyle = this.style.fillColor;
+        if (this._points.length === 0) {
+          return;
+        }
+        oldValues = {
+          shadowColor: ctx.shadowColor,
+          shadowBlur: ctx.shadowBlur,
+          shadowOffsetY: ctx.shadowOffsetY,
+          shadowOffsetX: ctx.shadowOffsetX,
+          globalAlpha: ctx.globalAlpha
+        };
+        ctx.globalAlpha = 0.5;
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = blur;
+        ctx.shadowOffsetX = offsetX;
+        ctx.shadowOffsetY = offsetY;
+        ctx.beginPath();
+        ctx.moveTo(this._points[0].x, this._points[0].y);
+        _ref = this._points;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          point = _ref[_i];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineTo(this._points[0].x, this._points[0].y);
+        ctx.fill();
+        _results = [];
+        for (key in oldValues) {
+          if (!__hasProp.call(oldValues, key)) continue;
+          value = oldValues[key];
+          _results.push(ctx[key] = value);
+        }
+        return _results;
+      };
+
+      return Path;
+
+    })();
+    _CTX = null;
+    _FONT_SIZE = 15;
+    exports.Text = Text = (function() {
+      function Text(point, value) {
+        this.point = point;
+        this.value = value;
+        this.wantedFont = _FONT_SIZE + 'px Courier New';
+        if (_CTX.font !== this.wantedFont) {
+          _CTX.font = _FONT_SIZE + 'px Courier New';
+        }
+        this._bounds = new Rectangle(this.point.x, this.point.y, _CTX.measureText(this.value).width, _FONT_SIZE);
+      }
+
+      Text.prototype.bounds = function() {
+        return this._bounds;
+      };
+
+      Text.prototype.contains = function(point) {
+        return this._bounds.contains(point);
+      };
+
+      Text.prototype.translate = function(vector) {
+        this.point.translate(vector);
+        return this._bounds.translate(vector);
+      };
+
+      Text.prototype.setPosition = function(point) {
+        return this.translate(point.from(this.point));
+      };
+
+      Text.prototype.draw = function(ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = _FONT_SIZE + 'px Courier New';
+        ctx.fillStyle = '#000';
+        return ctx.fillText(this.value, this.point.x, this.point.y);
+      };
+
+      return Text;
+
+    })();
+    exports._setCTX = function(ctx) {
+      return _CTX = ctx;
+    };
+    exports._setGlobalFontSize = function(size) {
+      return _FONT_SIZE = size;
+    };
+    exports._getGlobalFontSize = function() {
+      return _FONT_SIZE;
+    };
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=draw.js.map
+*/;
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  define('ice-model',[],function() {
+    var Block, BlockEndToken, BlockStartToken, Container, CursorToken, EndToken, Indent, IndentEndToken, IndentStartToken, NO, NewlineToken, Segment, SegmentEndToken, SegmentStartToken, Socket, SocketEndToken, SocketStartToken, StartToken, TextToken, Token, YES, exports, traverseOneLevel, _id;
+    exports = {};
+    YES = function() {
+      return true;
+    };
+    NO = function() {
+      return false;
+    };
+    _id = 0;
+    Function.prototype.trigger = function(prop, get, set) {
+      return Object.defineProperty(this.prototype, prop, {
+        get: get,
+        set: set
+      });
+    };
+    exports.Container = Container = (function() {
+      function Container() {
+        if (!((this.start != null) || (this.end != null))) {
+          this.start = new StartToken(this);
+          this.end = new EndToken(this);
+          this.type = 'container';
+        }
+        this.id = ++_id;
+        this.parent = null;
+        this.version = 0;
+        this.start.append(this.end);
+        this.lineMarkStyles = [];
+      }
+
+      Container.prototype._cloneEmpty = function() {
+        return new Container();
+      };
+
+      Container.prototype.clone = function() {
+        var assembler, selfClone,
+          _this = this;
+        selfClone = this._cloneEmpty();
+        assembler = selfClone.start;
+        this.traverseOneLevel(function(head, isContainer) {
+          var clone;
+          if (isContainer) {
+            clone = head.clone();
+            assembler.append(clone.start);
+            return assembler = clone.end;
+          } else if (head.type !== 'cursor') {
+            return assembler = assembler.append(head.clone());
+          }
+        });
+        assembler.append(selfClone.end);
+        selfClone.correctParentTree();
+        return selfClone;
+      };
+
+      Container.prototype.stringify = function() {
+        var head, state, str;
+        str = '';
+        head = this.start.next;
+        state = {
+          indent: ''
+        };
+        while (head !== this.end) {
+          str += head.stringify(state);
+          head = head.next;
+        }
+        return str;
+      };
+
+      Container.prototype.serialize = function() {
+        var head, str;
+        str = '';
+        head = this.start.next;
+        while (head !== this.end) {
+          str += head.serialize();
+          head = head.next;
+        }
+        return str;
+      };
+
+      Container.prototype.contents = function() {
+        var clone;
+        clone = this.clone();
+        if (clone.start.next === clone.end) {
+          return null;
+        } else {
+          clone.start.next.prev = null;
+          clone.end.prev.next = null;
+          return clone.start.next;
+        }
+      };
+
+      Container.prototype.spliceOut = function() {
+        var first, last, _ref, _ref1;
+        first = this.start.previousVisibleToken();
+        last = this.end.nextVisibleToken();
+        if ((first != null ? first.type : void 0) === 'newline' && ((_ref = last != null ? last.type : void 0) === (void 0) || _ref === 'newline' || _ref === 'indentEnd') && !(((_ref1 = first.prev) != null ? _ref1.type : void 0) === 'indentStart' && last.type === 'indentEnd')) {
+          first.remove();
+        } else if ((last != null ? last.type : void 0) === 'newline' && (first == null)) {
+          last.remove();
+        }
+        this.notifyChange();
+        this.start.prev.append(this.end.next);
+        this.start.prev = this.end.next = null;
+        return this.start.parent = this.end.parent = this.parent = null;
+      };
+
+      Container.prototype.spliceIn = function(token) {
+        var head, last, _ref;
+        while (token.type === 'cursor') {
+          token = token.prev;
+        }
+        switch (token.type) {
+          case 'indentStart':
+            head = token.container.end.prev;
+            while ((_ref = head.type) === 'cursor' || _ref === 'segmentEnd' || _ref === 'segmentStart') {
+              head = head.prev;
+            }
+            if (head.type === 'newline') {
+              token = token.next;
+            } else {
+              token = token.insert(new NewlineToken());
+            }
+            break;
+          case 'blockEnd':
+            token = token.insert(new NewlineToken());
+            break;
+          case 'segmentStart':
+            if (token.next !== token.container.end) {
+              token.insert(new NewlineToken);
+            }
+            break;
+          case 'socketStart':
+            token.append(token.container.end);
+        }
+        last = token.next;
+        token.append(this.start);
+        this.start.parent = this.end.parent = this.parent;
+        this.end.append(last);
+        return this.notifyChange();
+      };
+
+      Container.prototype.moveTo = function(token) {
+        if ((this.start.prev != null) || (this.end.next != null)) {
+          this.spliceOut();
+        }
+        if (token != null) {
+          return this.spliceIn(token);
+        }
+      };
+
+      Container.prototype.notifyChange = function() {
+        var head, _results;
+        head = this;
+        _results = [];
+        while (head != null) {
+          head.version++;
+          _results.push(head = head.parent);
+        }
+        return _results;
+      };
+
+      Container.prototype.wrap = function(first, last) {
+        var _this = this;
+        first.prev.append(this.start);
+        this.start.append(first);
+        this.end.append(last.next);
+        last.append(this.end);
+        traverseOneLevel(first, function(head, isContainer) {
+          return head.parent = _this;
+        });
+        return this.notifyChange();
+      };
+
+      Container.prototype.correctParentTree = function() {
+        var _this = this;
+        return this.traverseOneLevel(function(head, isContainer) {
+          head.parent = _this;
+          if (isContainer) {
+            head.start.parent = head.end.parent = _this;
+            return head.correctParentTree();
+          }
+        });
+      };
+
+      Container.prototype.find = function(fn) {
+        var examined, head, _ref;
+        head = this.start;
+        while (head !== this.end) {
+          examined = head instanceof StartToken ? head.container : head;
+          if (!(head instanceof EndToken || ((_ref = head.type) === 'newline' || _ref === 'cursor'))) {
+            if (fn(examined)) {
+              return examined;
+            }
+          }
+          head = head.next;
+        }
+        if (fn(this)) {
+          return this;
+        }
+      };
+
+      Container.prototype.getTokenAtLocation = function(loc) {
+        var count, head;
+        if (loc == null) {
+          return null;
+        } else if (loc === 0) {
+          return this.start;
+        } else {
+          head = this.start;
+          count = 1;
+          while (!(count === loc || head === this.end)) {
+            if ((head != null ? head.type : void 0) !== 'cursor') {
+              count++;
+            }
+            head = head.next;
+          }
+          while ((head != null ? head.type : void 0) === 'cursor') {
+            head = head.next;
+          }
+          return head;
+        }
+      };
+
+      Container.prototype.getBlockOnLine = function(line) {
+        var head, lineCount, stack, _ref;
+        head = this.start;
+        lineCount = 0;
+        stack = [];
+        while (!(lineCount === line || (head == null))) {
+          switch (head.type) {
+            case 'newline':
+              lineCount++;
+              break;
+            case 'blockStart':
+              stack.push(head.container);
+              break;
+            case 'blockEnd':
+              stack.pop();
+          }
+          head = head.next;
+        }
+        while ((_ref = head != null ? head.type : void 0) === 'newline' || _ref === 'cursor' || _ref === 'segmentStart' || _ref === 'segmentEnd') {
+          head = head.next;
+        }
+        if ((head != null ? head.type : void 0) === 'blockStart') {
+          stack.push(head.container);
+        }
+        return stack[stack.length - 1];
+      };
+
+      Container.prototype.traverseOneLevel = function(fn) {
+        return traverseOneLevel(this.start.next, fn);
+      };
+
+      return Container;
+
+    })();
+    exports.Token = Token = (function() {
+      function Token() {
+        this.id = ++_id;
+        this.prev = this.next = this.parent = null;
+        this.version = 0;
+      }
+
+      Token.prototype.append = function(token) {
+        var _this = this;
+        this.next = token;
+        if (!token) {
+          return;
+        }
+        token.prev = this;
+        if (token.parent !== this.parent) {
+          traverseOneLevel(token, function(head) {
+            return head.parent = _this.parent;
+          });
+        }
+        return token;
+      };
+
+      Token.prototype.insert = function(token) {
+        if (token instanceof StartToken || token instanceof EndToken) {
+          console.warn('"insert"-ing a container can cause problems');
+        }
+        token.next = this.next;
+        token.prev = this;
+        this.next.prev = token;
+        this.next = token;
+        token.parent = this.parent;
+        return token;
+      };
+
+      Token.prototype.insertBefore = function(token) {
+        if (this.prev != null) {
+          return this.prev.insert(token);
+        } else {
+          this.prev = token;
+          token.next = this;
+          return token.parent = this.parent;
+        }
+      };
+
+      Token.prototype.remove = function() {
+        if (this.prev != null) {
+          this.prev.append(this.next);
+        } else {
+          this.next.prev = null;
+        }
+        return this.prev = this.next = this.parent = null;
+      };
+
+      Token.prototype.isVisible = YES;
+
+      Token.prototype.previousVisibleToken = function() {
+        var head;
+        head = this.prev;
+        while (!((head == null) || head.isVisible())) {
+          head = head.prev;
+        }
+        return head;
+      };
+
+      Token.prototype.nextVisibleToken = function() {
+        var head;
+        head = this.next;
+        while (!((head == null) || head.isVisible())) {
+          head = head.next;
+        }
+        return head;
+      };
+
+      Token.prototype.notifyChange = function() {
+        var head, _results;
+        head = this;
+        _results = [];
+        while (head != null) {
+          head.version++;
+          _results.push(head = head.parent);
+        }
+        return _results;
+      };
+
+      Token.prototype.getSerializedLocation = function() {
+        var count, head;
+        head = this;
+        count = 0;
+        while (head !== null) {
+          if (head.type !== 'cursor') {
+            count++;
+          }
+          head = head.prev;
+        }
+        return count;
+      };
+
+      Token.prototype.stringify = function() {
+        return '';
+      };
+
+      Token.prototype.serialize = function() {
+        return '';
+      };
+
+      return Token;
+
+    })();
+    exports.StartToken = StartToken = (function(_super) {
+      __extends(StartToken, _super);
+
+      function StartToken(container) {
+        this.container = container;
+        StartToken.__super__.constructor.apply(this, arguments);
+        this.markup = 'begin';
+      }
+
+      StartToken.prototype.append = function(token) {
+        var _this = this;
+        this.next = token;
+        if (token == null) {
+          return;
+        }
+        token.prev = this;
+        traverseOneLevel(token, function(head) {
+          return head.parent = _this.container;
+        });
+        return token;
+      };
+
+      StartToken.prototype.insert = function(token) {
+        if (token instanceof StartToken || token instanceof EndToken) {
+          throw new Error('"insert"-ing a container can cause problems');
+        }
+        token.next = this.next;
+        token.prev = this;
+        this.next.prev = token;
+        this.next = token;
+        token.parent = this.container;
+        return token;
+      };
+
+      StartToken.prototype.serialize = function() {
+        return '<container>';
+      };
+
+      return StartToken;
+
+    })(Token);
+    exports.EndToken = EndToken = (function(_super) {
+      __extends(EndToken, _super);
+
+      function EndToken(container) {
+        this.container = container;
+        EndToken.__super__.constructor.apply(this, arguments);
+        this.markup = 'end';
+      }
+
+      EndToken.prototype.append = function(token) {
+        var _this = this;
+        this.next = token;
+        if (token == null) {
+          return;
+        }
+        token.prev = this;
+        traverseOneLevel(token, function(head) {
+          return head.parent = _this.container.parent;
+        });
+        return token;
+      };
+
+      EndToken.prototype.insert = function(token) {
+        if (token instanceof StartToken || token instanceof EndToken) {
+          throw new Error('"insert"-ing a container can cause problems');
+        }
+        token.next = this.next;
+        token.prev = this;
+        this.next.prev = token;
+        this.next = token;
+        token.parent = this.container.parent;
+        return token;
+      };
+
+      EndToken.prototype.serialize = function() {
+        return '</container>';
+      };
+
+      return EndToken;
+
+    })(Token);
+    exports.BlockStartToken = BlockStartToken = (function(_super) {
+      __extends(BlockStartToken, _super);
+
+      function BlockStartToken(container) {
+        this.container = container;
+        BlockStartToken.__super__.constructor.apply(this, arguments);
+        this.type = 'blockStart';
+      }
+
+      BlockStartToken.prototype.serialize = function() {
+        return "<block color=\"" + this.container.color + "\" precedence=\"" + this.container.precedence + "\">";
+      };
+
+      return BlockStartToken;
+
+    })(StartToken);
+    exports.BlockEndToken = BlockEndToken = (function(_super) {
+      __extends(BlockEndToken, _super);
+
+      function BlockEndToken(container) {
+        this.container = container;
+        BlockEndToken.__super__.constructor.apply(this, arguments);
+        this.type = 'blockEnd';
+      }
+
+      BlockEndToken.prototype.serialize = function() {
+        return "</block>";
+      };
+
+      return BlockEndToken;
+
+    })(EndToken);
+    exports.Block = Block = (function(_super) {
+      __extends(Block, _super);
+
+      function Block(precedence, color, valueByDefault) {
+        this.precedence = precedence != null ? precedence : 0;
+        this.color = color != null ? color : '#ddf';
+        this.valueByDefault = valueByDefault != null ? valueByDefault : false;
+        this.start = new BlockStartToken(this);
+        this.end = new BlockEndToken(this);
+        this.type = 'block';
+        Block.__super__.constructor.apply(this, arguments);
+      }
+
+      Block.prototype._cloneEmpty = function() {
+        var clone;
+        clone = new Block(this.precedence, this.color, this.valueByDefault);
+        clone.currentlyParenWrapped = this.currentlyParenWrapped;
+        return clone;
+      };
+
+      Block.prototype.checkParenWrap = function() {
+        var _ref;
+        if (((_ref = this.parent) != null ? _ref.type : void 0) === 'socket' && this.parent.precedence >= this.precedence) {
+          if (!this.currentlyParenWrapped) {
+            this.start.insert(new TextToken('('));
+            this.end.insertBefore(new TextToken(')'));
+            return this.currentlyParenWrapped = true;
+          }
+        } else if (this.currentlyParenWrapped) {
+          this.start.next.value = this.start.next.value.slice(1);
+          this.end.prev.value = this.end.prev.value.slice(0, -1);
+          if (this.start.next.value.length === 0) {
+            this.start.next.remove();
+          }
+          if (this.end.prev.value.length === 0) {
+            this.end.prev.remove();
+          }
+          return this.currentlyParenWrapped = false;
+        }
+      };
+
+      Block.prototype.spliceOut = function() {
+        Block.__super__.spliceOut.apply(this, arguments);
+        return this.checkParenWrap();
+      };
+
+      Block.prototype.spliceIn = function() {
+        Block.__super__.spliceIn.apply(this, arguments);
+        return this.checkParenWrap();
+      };
+
+      return Block;
+
+    })(Container);
+    exports.SocketStartToken = SocketStartToken = (function(_super) {
+      __extends(SocketStartToken, _super);
+
+      function SocketStartToken(container) {
+        this.container = container;
+        SocketStartToken.__super__.constructor.apply(this, arguments);
+        this.type = 'socketStart';
+      }
+
+      SocketStartToken.prototype.serialize = function() {
+        return "<socket precedence=\"" + this.container.precedence + "\">";
+      };
+
+      return SocketStartToken;
+
+    })(StartToken);
+    exports.SocketEndToken = SocketEndToken = (function(_super) {
+      __extends(SocketEndToken, _super);
+
+      function SocketEndToken(container) {
+        this.container = container;
+        SocketEndToken.__super__.constructor.apply(this, arguments);
+        this.type = 'socketEnd';
+      }
+
+      SocketEndToken.prototype.serialize = function() {
+        return "</socket>";
+      };
+
+      return SocketEndToken;
+
+    })(EndToken);
+    exports.Socket = Socket = (function(_super) {
+      __extends(Socket, _super);
+
+      function Socket(precedence, handwritten) {
+        this.precedence = precedence != null ? precedence : 0;
+        this.handwritten = handwritten != null ? handwritten : false;
+        this.start = new SocketStartToken(this);
+        this.end = new SocketEndToken(this);
+        this.type = 'socket';
+        Socket.__super__.constructor.apply(this, arguments);
+      }
+
+      Socket.prototype._cloneEmpty = function() {
+        return new Socket(this.precedence, this.handwritten);
+      };
+
+      return Socket;
+
+    })(Container);
+    exports.IndentStartToken = IndentStartToken = (function(_super) {
+      __extends(IndentStartToken, _super);
+
+      function IndentStartToken(container) {
+        this.container = container;
+        IndentStartToken.__super__.constructor.apply(this, arguments);
+        this.type = 'indentStart';
+      }
+
+      IndentStartToken.prototype.stringify = function(state) {
+        state.indent += this.container.prefix;
+        return '';
+      };
+
+      IndentStartToken.prototype.serialize = function() {
+        return "<indent depth=\"" + this.container.depth + "\">";
+      };
+
+      return IndentStartToken;
+
+    })(StartToken);
+    exports.IndentEndToken = IndentEndToken = (function(_super) {
+      __extends(IndentEndToken, _super);
+
+      function IndentEndToken(container) {
+        this.container = container;
+        IndentEndToken.__super__.constructor.apply(this, arguments);
+        this.type = 'indentEnd';
+      }
+
+      IndentEndToken.prototype.stringify = function(state) {
+        state.indent = state.indent.slice(0, -this.container.depth);
+        return '';
+      };
+
+      IndentEndToken.prototype.serialize = function() {
+        return "</indent>";
+      };
+
+      return IndentEndToken;
+
+    })(EndToken);
+    exports.Indent = Indent = (function(_super) {
+      __extends(Indent, _super);
+
+      function Indent(prefix) {
+        this.prefix = prefix != null ? prefix : '';
+        this.start = new IndentStartToken(this);
+        this.end = new IndentEndToken(this);
+        this.type = 'indent';
+        this.depth = this.prefix.length;
+        Indent.__super__.constructor.apply(this, arguments);
+      }
+
+      Indent.prototype._cloneEmpty = function() {
+        return new Indent(this.prefix);
+      };
+
+      return Indent;
+
+    })(Container);
+    exports.SegmentStartToken = SegmentStartToken = (function(_super) {
+      __extends(SegmentStartToken, _super);
+
+      function SegmentStartToken(container) {
+        this.container = container;
+        SegmentStartToken.__super__.constructor.apply(this, arguments);
+        this.type = 'segmentStart';
+      }
+
+      SegmentStartToken.prototype.isVisible = NO;
+
+      SegmentStartToken.prototype.serialize = function() {
+        return "<segment>";
+      };
+
+      return SegmentStartToken;
+
+    })(StartToken);
+    exports.SegmentEndToken = SegmentEndToken = (function(_super) {
+      __extends(SegmentEndToken, _super);
+
+      function SegmentEndToken(container) {
+        this.container = container;
+        SegmentEndToken.__super__.constructor.apply(this, arguments);
+        this.type = 'segmentStart';
+      }
+
+      SegmentEndToken.prototype.isVisible = NO;
+
+      SegmentEndToken.prototype.serialize = function() {
+        return "</segment>";
+      };
+
+      return SegmentEndToken;
+
+    })(EndToken);
+    exports.Segment = Segment = (function(_super) {
+      __extends(Segment, _super);
+
+      function Segment(isLassoSegment) {
+        this.isLassoSegment = isLassoSegment != null ? isLassoSegment : false;
+        this.start = new SegmentStartToken(this);
+        this.end = new SegmentEndToken(this);
+        this.type = 'segment';
+        Segment.__super__.constructor.apply(this, arguments);
+      }
+
+      Segment.prototype._cloneEmpty = function() {
+        return new Segment(this.isLassoSegment);
+      };
+
+      Segment.prototype.remove = function() {
+        var _this = this;
+        this.notifyChange();
+        this.traverseOneLevel(function(head, isContainer) {
+          return head.parent = _this.parent;
+        });
+        this.start.remove();
+        return this.end.remove();
+      };
+
+      return Segment;
+
+    })(Container);
+    exports.TextToken = TextToken = (function(_super) {
+      __extends(TextToken, _super);
+
+      function TextToken(_value) {
+        this._value = _value;
+        TextToken.__super__.constructor.apply(this, arguments);
+        this.type = 'text';
+      }
+
+      TextToken.trigger('value', (function() {
+        return this._value;
+      }), function(value) {
+        this._value = value;
+        return this.notifyChange();
+      });
+
+      TextToken.prototype.stringify = function(state) {
+        return this._value;
+      };
+
+      TextToken.prototype.serialize = function() {
+        return this._value;
+      };
+
+      TextToken.prototype.clone = function() {
+        return new TextToken(this._value);
+      };
+
+      return TextToken;
+
+    })(Token);
+    exports.NewlineToken = NewlineToken = (function(_super) {
+      __extends(NewlineToken, _super);
+
+      function NewlineToken(specialIndent) {
+        this.specialIndent = specialIndent;
+        NewlineToken.__super__.constructor.apply(this, arguments);
+        this.type = 'newline';
+      }
+
+      NewlineToken.prototype.stringify = function(state) {
+        var _ref;
+        return '\n' + ((_ref = this.specialIndent) != null ? _ref : state.indent);
+      };
+
+      NewlineToken.prototype.serialize = function() {
+        return '\n';
+      };
+
+      NewlineToken.prototype.clone = function() {
+        return new NewlineToken(this.specialIndent);
+      };
+
+      return NewlineToken;
+
+    })(Token);
+    exports.CursorToken = CursorToken = (function(_super) {
+      __extends(CursorToken, _super);
+
+      function CursorToken() {
+        CursorToken.__super__.constructor.apply(this, arguments);
+        this.type = 'cursor';
+      }
+
+      CursorToken.prototype.isVisible = NO;
+
+      CursorToken.prototype.serialize = function() {
+        return '<cursor/>';
+      };
+
+      CursorToken.prototype.clone = function() {
+        return new CursorToken();
+      };
+
+      return CursorToken;
+
+    })(Token);
+    traverseOneLevel = function(head, fn) {
+      var _results;
+      _results = [];
+      while (true) {
+        if (head instanceof EndToken || (head == null)) {
+          break;
+        } else if (head instanceof StartToken) {
+          fn(head.container, true);
+          head = head.container.end;
+        } else {
+          fn(head, false);
+        }
+        _results.push(head = head.next);
+      }
+      return _results;
+    };
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=model.js.map
+*/;
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  define('ice-view',['ice-draw', 'ice-model'], function(draw, model) {
+    var INDENT_END, INDENT_MIDDLE, INDENT_START, NO, NO_INDENT, View, YES, exports;
+    NO_INDENT = 0;
+    INDENT_START = 1;
+    INDENT_MIDDLE = 2;
+    INDENT_END = 3;
+    YES = function() {
+      return true;
+    };
+    NO = function() {
+      return false;
+    };
+    window.drawNumber = 0;
+    exports = {};
+    exports.View = View = (function() {
+      var BlockView, ContainerView, CursorView, GenericView, IndentView, SegmentView, SocketView, TextView, map, self;
+
+      map = {};
+
+      self = null;
+
+      function View(opts) {
+        this.opts = opts;
+        self = this;
+        draw._setCTX(this.opts.ctx);
+      }
+
+      View.prototype.clearCache = function() {
+        return map = {};
+      };
+
+      GenericView = (function() {
+        function GenericView(model) {
+          this.model = model;
+          map[this.model.id] = this;
+          this.lineLength = 0;
+          this.children = [];
+          this.lineChildren = [];
+          this.indentData = [];
+          this.parentStack = [];
+          this.dimensions = [];
+          this.bounds = [];
+          this.totalBounds = new draw.NoRectangle();
+          this.path = new draw.Path();
+          this.versions = {
+            children: -1,
+            dimensions: -1,
+            path: -1,
+            bounds: {}
+          };
+          this.dropArea = this.highlightArea = null;
+          this.boundingBoxFlag = true;
+          this.padding = self.opts.padding;
+        }
+
+        GenericView.prototype.computeChildren = function() {
+          return this.lineLength;
+        };
+
+        GenericView.prototype.computeDimensions = function() {
+          return this.dimensions;
+        };
+
+        GenericView.prototype.computeBoundingBox = function(upperLeft, line) {
+          var _ref, _ref1;
+          if (this.versions.bounds[line] === this.model.version && upperLeft.x === ((_ref = this.bounds[line]) != null ? _ref.x : void 0) && upperLeft.y === ((_ref1 = this.bounds[line]) != null ? _ref1.y : void 0)) {
+            return this.bounds[line];
+          } else {
+            this.versions.bounds[line] = this.model.version;
+          }
+          this.bounds[line] = new draw.Rectangle(upperLeft.x, upperLeft.y, this.dimensions[line].width, this.dimensions[line].height);
+          this.totalBounds.unite(this.bounds[line]);
+          return this.bounds[line];
+        };
+
+        GenericView.prototype.getBounds = function() {
+          return this.totalBounds;
+        };
+
+        GenericView.prototype.computeOwnPath = function() {
+          return this.path = new draw.Path();
+        };
+
+        GenericView.prototype.computeDropAreas = function() {
+          var childObj, _i, _len, _ref;
+          if (this.boundingBoxFlag) {
+            this.computeOwnDropArea();
+            _ref = this.children;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              childObj = _ref[_i];
+              self.getViewFor(childObj.child).computeDropAreas();
+            }
+          }
+          return null;
+        };
+
+        GenericView.prototype.computeOwnDropArea = function() {};
+
+        GenericView.prototype.computePath = function() {
+          var childObj, _i, _len, _ref;
+          if (this.versions.path === this.model.version && !this.boundingBoxFlag) {
+            return null;
+          } else {
+            this.versions.path = this.model.version;
+          }
+          if (this.boundingBoxFlag) {
+            this.computeOwnPath();
+          }
+          this.totalBounds.unite(this.path.bounds());
+          _ref = this.children;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            childObj = _ref[_i];
+            self.getViewFor(childObj.child).computePath();
+          }
+          return null;
+        };
+
+        GenericView.prototype.drawSelf = function(ctx, style) {};
+
+        GenericView.prototype.draw = function(ctx, boundingRect, style) {
+          var childObj, _i, _len, _ref;
+          if (this.totalBounds.overlap(boundingRect)) {
+            window.drawNumber++;
+            if (style == null) {
+              style = {
+                selected: 0
+              };
+            }
+            this.drawSelf(ctx, style);
+            _ref = this.children;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              childObj = _ref[_i];
+              self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+            }
+          }
+          return null;
+        };
+
+        GenericView.prototype.drawShadow = function() {};
+
+        return GenericView;
+
+      })();
+
+      ContainerView = (function(_super) {
+        __extends(ContainerView, _super);
+
+        function ContainerView(model) {
+          this.model = model;
+          ContainerView.__super__.constructor.apply(this, arguments);
+        }
+
+        ContainerView.prototype.computeChildren = function() {
+          var i, line, _base, _i, _ref,
+            _this = this;
+          if (this.versions.children === this.model.version) {
+            return this.lineLength;
+          } else {
+            this.versions.children = this.model.version;
+          }
+          line = 0;
+          this.lineLength = 0;
+          this.lineChildren = [[]];
+          this.children = [];
+          this.indentData = [];
+          this.model.traverseOneLevel(function(head, isContainer) {
+            var childLength, childObject, i, view, _base, _base1, _base2, _i, _j, _k, _ref, _ref1, _ref2, _ref3;
+            if (head.type === 'newline') {
+              line += 1;
+              return (_base = _this.lineChildren)[line] != null ? (_base = _this.lineChildren)[line] : _base[line] = [];
+            } else {
+              view = self.getViewFor(head);
+              childLength = view.computeChildren();
+              childObject = {
+                child: head,
+                startLine: line,
+                endLine: line + childLength - 1
+              };
+              _this.children.push(childObject);
+              for (i = _i = line, _ref = line + childLength; line <= _ref ? _i < _ref : _i > _ref; i = line <= _ref ? ++_i : --_i) {
+                if ((_base1 = _this.lineChildren)[i] == null) {
+                  _base1[i] = [];
+                }
+                if (head.type !== 'cursor') {
+                  _this.lineChildren[i].push(childObject);
+                }
+              }
+              if (head.type === 'indent') {
+                _this.indentData[line] = INDENT_START;
+                for (i = _j = _ref1 = line + 1, _ref2 = line + childLength - 1; _ref1 <= _ref2 ? _j < _ref2 : _j > _ref2; i = _ref1 <= _ref2 ? ++_j : --_j) {
+                  _this.indentData[i] = INDENT_MIDDLE;
+                }
+                _this.indentData[line + childLength - 1] = INDENT_END;
+              } else {
+                for (i = _k = line, _ref3 = line + childLength; line <= _ref3 ? _k < _ref3 : _k > _ref3; i = line <= _ref3 ? ++_k : --_k) {
+                  if ((_base2 = _this.indentData)[i] == null) {
+                    _base2[i] = view.indentData[i - line];
+                  }
+                }
+              }
+              return line += childLength - 1;
+            }
+          });
+          this.lineLength = line + 1;
+          if (this.bounds.length !== this.lineLength) {
+            this.boundingBoxFlag = true;
+            this.bounds = this.bounds.slice(0, this.lineLength);
+          }
+          for (i = _i = 0, _ref = this.lineLength; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+            if ((_base = this.indentData)[i] == null) {
+              _base[i] = NO_INDENT;
+            }
+          }
+          return this.lineLength;
+        };
+
+        ContainerView.prototype.computeDimensions = function() {
+          var childObject, desiredLine, dimensions, line, size, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
+          if (this.versions.dimensions === this.model.version) {
+            return this.dimensions;
+          } else {
+            this.versions.dimensions = this.model.version;
+          }
+          this.dimensions = (function() {
+            var _i, _ref, _results;
+            _results = [];
+            for (_i = 0, _ref = this.lineLength; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--) {
+              _results.push(new draw.Size(this.padding, 2 * this.padding));
+            }
+            return _results;
+          }).call(this);
+          _ref = this.children;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            childObject = _ref[_i];
+            dimensions = self.getViewFor(childObject.child).computeDimensions();
+            if (childObject.child.type === 'indent') {
+              for (line = _j = 0, _len1 = dimensions.length; _j < _len1; line = ++_j) {
+                size = dimensions[line];
+                desiredLine = line + childObject.startLine;
+                this.dimensions[desiredLine].width += size.width + self.opts.indentWidth + (line === (dimensions.length - 1) ? this.padding : 0);
+                this.dimensions[desiredLine].height = Math.max(this.dimensions[desiredLine].height, size.height + (line === (dimensions.length - 1) ? self.opts.indentToungeHeight : 0));
+              }
+            } else {
+              for (line = _k = 0, _len2 = dimensions.length; _k < _len2; line = ++_k) {
+                size = dimensions[line];
+                desiredLine = line + childObject.startLine;
+                this.dimensions[desiredLine].width += size.width + this.padding;
+                this.dimensions[desiredLine].height = Math.max(this.dimensions[desiredLine].height, size.height + ((_ref1 = this.indentData[line]) === NO_INDENT || _ref1 === INDENT_START ? 2 * this.padding : this.indentData[line] === INDENT_END ? this.padding : 0));
+              }
+            }
+          }
+          return this.dimensions;
+        };
+
+        ContainerView.prototype.parentStackMatches = function() {
+          var head, parent, _i, _len, _ref;
+          head = this.model.parent;
+          _ref = this.parentStack;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            parent = _ref[_i];
+            if (head !== parent) {
+              return false;
+            } else {
+              head = head.parent;
+            }
+          }
+          return head == null;
+        };
+
+        ContainerView.prototype.updateParentStack = function() {
+          var head, _results;
+          this.parentStack.length = 0;
+          head = this.model.parent;
+          _results = [];
+          while (head != null) {
+            this.parentStack.push(head);
+            _results.push(head = head.parent);
+          }
+          return _results;
+        };
+
+        ContainerView.prototype.getBounds = function() {
+          return this.totalBounds;
+        };
+
+        ContainerView.prototype.computeBoundingBox = function(upperLeft, line) {
+          var axis, childLine, childView, i, leftX, lineChild, _i, _len, _ref, _ref1, _ref2;
+          if (this.versions.bounds[line] === this.model.version && upperLeft.x === ((_ref = this.bounds[line]) != null ? _ref.x : void 0) && upperLeft.y === ((_ref1 = this.bounds[line]) != null ? _ref1.y : void 0)) {
+            return this.bounds[line];
+          } else {
+            this.versions.bounds[line] = this.model.version;
+          }
+          if (!((this.bounds[line] != null) && this.bounds[line].x === upperLeft.x && this.bounds[line].y === upperLeft.y && this.bounds[line].width === this.dimensions[line].width && this.bounds[line].height === this.dimensions[line].height)) {
+            this.bounds[line] = new draw.Rectangle(upperLeft.x, upperLeft.y, this.dimensions[line].width, this.dimensions[line].height);
+            this.boundingBoxFlag = true;
+          }
+          this.totalBounds.unite(this.bounds[line]);
+          leftX = upperLeft.x + this.padding;
+          axis = upperLeft.y + this.dimensions[line].height / 2;
+          _ref2 = this.lineChildren[line];
+          for (i = _i = 0, _len = _ref2.length; _i < _len; i = ++_i) {
+            lineChild = _ref2[i];
+            childView = self.getViewFor(lineChild.child);
+            childLine = line - lineChild.startLine;
+            if (lineChild.child.type === 'indent') {
+              childView.computeBoundingBox(new draw.Point(leftX + self.opts.indentWidth, upperLeft.y), childLine);
+              leftX += self.opts.indentWidth + childView.dimensions[childLine].width;
+            } else if (this.indentData[line] === INDENT_END && i === 0) {
+              childView.computeBoundingBox(new draw.Point(leftX, upperLeft.y), childLine);
+              leftX += this.padding + childView.dimensions[childLine].width;
+            } else {
+              childView.computeBoundingBox(new draw.Point(leftX, axis - childView.dimensions[childLine].height / 2), childLine);
+              leftX += this.padding + childView.dimensions[childLine].width;
+            }
+          }
+          this.updateParentStack();
+          return this.bounds[line];
+        };
+
+        ContainerView.prototype.computeBoundingBoxes = function(left, top) {
+          var line, size, _i, _len, _ref;
+          if (left == null) {
+            left = 0;
+          }
+          if (top == null) {
+            top = 0;
+          }
+          _ref = this.dimensions;
+          for (line = _i = 0, _len = _ref.length; _i < _len; line = ++_i) {
+            size = _ref[line];
+            this.computeBoundingBox(new draw.Point(left, top), line);
+            top += size.height;
+          }
+          return true;
+        };
+
+        ContainerView.prototype.layout = function(left, top) {
+          if (left == null) {
+            left = 0;
+          }
+          if (top == null) {
+            top = 0;
+          }
+          this.computeChildren();
+          this.computeDimensions();
+          this.computeBoundingBoxes(left, top);
+          this.computePath();
+          this.computeDropAreas();
+          this.boundingBoxFlag = false;
+          return null;
+        };
+
+        ContainerView.prototype.addTab = function(array, point, invert) {
+          if (invert == null) {
+            invert = false;
+          }
+          this.addRectilinear(array, new draw.Point(point.x + self.opts.tabOffset + self.opts.tabWidth, point.y), invert ? 'y' : 'x');
+          array.push(new draw.Point(point.x + self.opts.tabOffset + self.opts.tabWidth * (1 - self.opts.tabSideWidth), point.y + self.opts.tabHeight));
+          array.push(new draw.Point(point.x + self.opts.tabOffset + self.opts.tabWidth * self.opts.tabSideWidth, point.y + self.opts.tabHeight));
+          array.push(new draw.Point(point.x + self.opts.tabOffset, point.y));
+          return array.push(point);
+        };
+
+        ContainerView.prototype.addRectilinear = function(array, point, first) {
+          if (first == null) {
+            first = 'x';
+          }
+          if (array.length > 0 && array[array.length - 1].x !== point.x) {
+            if (first === 'x') {
+              array.push(new draw.Point(point.x, array[array.length - 1].y));
+            } else if (first === 'y') {
+              array.push(new draw.Point(array[array.length - 1].x, point.y));
+            }
+          }
+          return array.push(point);
+        };
+
+        ContainerView.prototype.computeOwnPath = function() {
+          var bounds, el, indentBounds, indentChild, left, line, path, right, _i, _j, _len, _len1, _ref, _ref1;
+          left = [];
+          right = [];
+          if (this.shouldAddTab()) {
+            this.addTab(left, new draw.Point(this.bounds[0].x, this.bounds[0].y));
+          }
+          _ref = this.bounds;
+          for (line = _i = 0, _len = _ref.length; _i < _len; line = ++_i) {
+            bounds = _ref[line];
+            if ((_ref1 = this.indentData[line]) === NO_INDENT || _ref1 === INDENT_START) {
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.y));
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.bottom()));
+              this.addRectilinear(right, new draw.Point(bounds.right(), bounds.y));
+              this.addRectilinear(right, new draw.Point(bounds.right(), bounds.bottom()));
+              if (this.indentData[line] === INDENT_START) {
+                this.addTab(right, new draw.Point(this.bounds[line + 1].x + self.opts.indentWidth + this.padding, this.bounds[line + 1].y), true);
+              }
+            }
+            if (this.indentData[line] === INDENT_MIDDLE) {
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.y));
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.bottom()));
+              this.addRectilinear(right, new draw.Point(bounds.x + self.opts.indentWidth + this.padding, bounds.y));
+              this.addRectilinear(right, new draw.Point(bounds.x + self.opts.indentWidth + this.padding, bounds.bottom()));
+            }
+            if (this.indentData[line] === INDENT_END) {
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.y));
+              this.addRectilinear(left, new draw.Point(bounds.x, bounds.bottom()));
+              indentChild = this.lineChildren[line][0];
+              indentBounds = self.getViewFor(indentChild.child).bounds[line - indentChild.startLine];
+              this.addRectilinear(right, new draw.Point(indentBounds.x, indentBounds.y));
+              this.addRectilinear(right, new draw.Point(indentBounds.x, indentBounds.bottom()));
+              this.addRectilinear(right, new draw.Point(indentBounds.right(), indentBounds.bottom()));
+              if (this.lineChildren[line].length > 1) {
+                this.addRectilinear(right, new draw.Point(indentBounds.right(), indentBounds.y));
+                this.addRectilinear(right, new draw.Point(bounds.right(), bounds.y));
+              } else {
+                this.addRectilinear(right, new draw.Point(bounds.right(), indentBounds.bottom()));
+              }
+              this.addRectilinear(right, new draw.Point(bounds.right(), bounds.bottom()));
+            }
+          }
+          if (this.shouldAddTab()) {
+            this.addTab(right, new draw.Point(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom()));
+          }
+          path = left.reverse().concat(right);
+          this.path = new draw.Path();
+          for (_j = 0, _len1 = path.length; _j < _len1; _j++) {
+            el = path[_j];
+            this.path.push(el);
+          }
+          return this.path;
+        };
+
+        ContainerView.prototype.computeOwnDropArea = function() {
+          return this.dropArea = this.highlightArea = null;
+        };
+
+        ContainerView.prototype.shouldAddTab = NO;
+
+        ContainerView.prototype.drawSelf = function(ctx, style) {
+          var oldAlpha, oldFill, oldStroke;
+          this.path.draw(ctx);
+          if (style.selected > 0) {
+            oldFill = this.path.style.fillColor;
+            this.path.style.fillColor = '#00F';
+            oldStroke = this.path.style.strokeColor;
+            this.path.style.strokeColor = '#008';
+            oldAlpha = ctx.globalAlpha;
+            ctx.globalAlpha *= 0.3;
+            this.path.draw(ctx);
+            ctx.globalAlpha = oldAlpha;
+            this.path.style.fillColor = oldFill;
+            this.path.style.strokeColor = oldStroke;
+          }
+          return null;
+        };
+
+        ContainerView.prototype.drawShadow = function(ctx, x, y) {
+          var childObj, _i, _len, _ref;
+          this.path.drawShadow(ctx, x, y, self.opts.shadowBlur);
+          _ref = this.children;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            childObj = _ref[_i];
+            self.getViewFor(childObj.child).drawShadow(ctx, x, y);
+          }
+          return null;
+        };
+
+        return ContainerView;
+
+      })(GenericView);
+
+      BlockView = (function(_super) {
+        __extends(BlockView, _super);
+
+        function BlockView() {
+          BlockView.__super__.constructor.apply(this, arguments);
+        }
+
+        BlockView.prototype.shouldAddTab = function() {
+          if (this.model.parent != null) {
+            return this.model.parent.type !== 'socket';
+          } else {
+            return !this.model.valueByDefault;
+          }
+        };
+
+        BlockView.prototype.computeOwnPath = function() {
+          BlockView.__super__.computeOwnPath.apply(this, arguments);
+          this.path.style.fillColor = this.model.color;
+          this.path.style.strokeColor = '#888';
+          return this.path;
+        };
+
+        BlockView.prototype.computeOwnDropArea = function() {
+          this.dropArea = new draw.Rectangle(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom() - self.opts.dropAreaHeight / 2, this.bounds[this.lineLength - 1].width, self.opts.dropAreaHeight).toPath();
+          this.highlightArea = new draw.Rectangle(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom() - self.opts.highlightAreaHeight / 2, this.bounds[this.lineLength - 1].width, self.opts.highlightAreaHeight).toPath();
+          this.highlightArea.style.lineWidth = 0;
+          this.highlightArea.style.strokeColor = '#fff';
+          return this.highlightArea.style.fillColor = '#fff';
+        };
+
+        return BlockView;
+
+      })(ContainerView);
+
+      SocketView = (function(_super) {
+        __extends(SocketView, _super);
+
+        function SocketView() {
+          SocketView.__super__.constructor.apply(this, arguments);
+        }
+
+        SocketView.prototype.shouldAddTab = NO;
+
+        SocketView.prototype.computeDimensions = function() {
+          var childDimensions, k, view;
+          if (this.versions.dimensions === this.model.version) {
+            return this.bounds;
+          } else {
+            this.versions.dimensions = this.model.version;
+          }
+          if (this.model.start.nextVisibleToken() === this.model.end) {
+            return this.dimensions = [new draw.Size(self.opts.emptySocketWidth, self.opts.emptySocketHeight)];
+          } else if (this.model.start.next.type === 'blockStart') {
+            view = self.getViewFor(this.model.start.next.container);
+            childDimensions = view.computeDimensions();
+            return this.dimensions = (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = childDimensions.length; _i < _len; _i++) {
+                k = childDimensions[_i];
+                _results.push(k);
+              }
+              return _results;
+            })();
+          } else {
+            this.versions.dimensions--;
+            return SocketView.__super__.computeDimensions.apply(this, arguments);
+          }
+        };
+
+        SocketView.prototype.computeBoundingBox = function(upperLeft, line) {
+          var _ref, _ref1;
+          if (this.versions.bounds[line] === this.model.version && upperLeft.x === ((_ref = this.bounds[line]) != null ? _ref.x : void 0) && upperLeft.y === ((_ref1 = this.bounds[line]) != null ? _ref1.y : void 0)) {
+            if (this.model.stringify() === '') {
+              debugger;
+            }
+            return this.bounds[line];
+          }
+          if (this.model.start.next.type === 'blockStart') {
+            this.boundingBoxFlag = true;
+            this.bounds[line] = self.getViewFor(this.model.start.next.container).computeBoundingBox(upperLeft, line);
+          } else {
+            SocketView.__super__.computeBoundingBox.apply(this, arguments);
+          }
+          return this.bounds[line];
+        };
+
+        SocketView.prototype.computeOwnPath = function() {
+          var view;
+          if (this.model.start.next.type === 'blockStart') {
+            view = self.getViewFor(this.model.start.next.container);
+            this.path = view.computeOwnPath().clone();
+          } else {
+            SocketView.__super__.computeOwnPath.apply(this, arguments);
+          }
+          this.path.style.fillColor = '#FFF';
+          this.path.style.strokeColor = '#888';
+          return this.path;
+        };
+
+        SocketView.prototype.computeOwnDropArea = function() {
+          if (this.model.start.next.type === 'blockStart') {
+            return this.dropArea = this.highlightArea = null;
+          } else {
+            return this.dropArea = this.highlightArea = this.path;
+          }
+        };
+
+        return SocketView;
+
+      })(ContainerView);
+
+      IndentView = (function(_super) {
+        __extends(IndentView, _super);
+
+        function IndentView() {
+          IndentView.__super__.constructor.apply(this, arguments);
+          this.padding = 0;
+        }
+
+        IndentView.prototype.computeOwnPath = function() {
+          return this.path = new draw.Path();
+        };
+
+        IndentView.prototype.computeDimensions = function() {
+          var line, size;
+          IndentView.__super__.computeDimensions.apply(this, arguments);
+          line = this.dimensions.length - 1;
+          size = this.dimensions[line];
+          if (this.lineChildren[line].length === 0) {
+            size.height = self.opts.emptyLineHeight;
+            size.width = self.opts.indentDropAreaMinWidth;
+          }
+          return this.dimensions;
+        };
+
+        IndentView.prototype.drawSelf = function() {
+          return null;
+        };
+
+        IndentView.prototype.computeOwnDropArea = function() {
+          this.dropArea = new draw.Rectangle(this.bounds[1].x, this.bounds[1].y - self.opts.dropAreaHeight / 2, Math.max(this.bounds[1].width, self.opts.indentDropAreaMinWidth), self.opts.dropAreaHeight).toPath();
+          this.highlightArea = new draw.Rectangle(this.bounds[1].x, this.bounds[1].y - self.opts.highlightAreaHeight / 2, Math.max(this.bounds[1].width, self.opts.indentDropAreaMinWidth), self.opts.highlightAreaHeight).toPath();
+          this.highlightArea.style.lineWidth = 0;
+          this.highlightArea.style.strokeColor = '#fff';
+          return this.highlightArea.style.fillColor = '#fff';
+        };
+
+        return IndentView;
+
+      })(ContainerView);
+
+      SegmentView = (function(_super) {
+        __extends(SegmentView, _super);
+
+        function SegmentView() {
+          SegmentView.__super__.constructor.apply(this, arguments);
+          this.padding = 0;
+        }
+
+        SegmentView.prototype.computeOwnPath = function() {
+          return this.path = new draw.Path();
+        };
+
+        SegmentView.prototype.drawSelf = function(ctx, style) {
+          return null;
+        };
+
+        SegmentView.prototype.draw = function(ctx, boundingRect, style) {
+          var childObj, _i, _len, _ref;
+          if (this.totalBounds.overlap(boundingRect)) {
+            if (style == null) {
+              style = {
+                selected: 0
+              };
+            }
+            this.drawSelf(ctx, style);
+            if (this.model.isLassoSegment) {
+              style.selected++;
+            }
+            _ref = this.children;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              childObj = _ref[_i];
+              self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+            }
+            if (this.model.isLassoSegment) {
+              style.selected--;
+            }
+          }
+          return null;
+        };
+
+        SegmentView.prototype.computeOwnDropArea = function() {
+          return this.dropArea = this.highlightArea = null;
+        };
+
+        return SegmentView;
+
+      })(ContainerView);
+
+      TextView = (function(_super) {
+        __extends(TextView, _super);
+
+        function TextView(model) {
+          this.model = model;
+          TextView.__super__.constructor.apply(this, arguments);
+        }
+
+        TextView.prototype.computeChildren = function() {
+          this.indentData = [0];
+          return 1;
+        };
+
+        TextView.prototype.computeDimensions = function() {
+          if (this.versions.dimensions === this.model.version) {
+            return this.bounds;
+          } else {
+            this.versions.dimensions = this.model.version;
+          }
+          this.textElement = new draw.Text(new draw.Point(0, 0), this.model.value);
+          this.dimensions[0] = new draw.Size(this.textElement.bounds().width, this.textElement.bounds().height);
+          return this.dimensions;
+        };
+
+        TextView.prototype.computeBoundingBox = function(upperLeft, line) {
+          this.textElement.point = upperLeft;
+          return TextView.__super__.computeBoundingBox.apply(this, arguments);
+        };
+
+        TextView.prototype.drawSelf = function(ctx, style) {
+          this.textElement.draw(ctx);
+          return null;
+        };
+
+        return TextView;
+
+      })(GenericView);
+
+      CursorView = (function(_super) {
+        __extends(CursorView, _super);
+
+        function CursorView(model) {
+          this.model = model;
+          CursorView.__super__.constructor.apply(this, arguments);
+        }
+
+        CursorView.prototype.computeChildren = function() {
+          this.indentData = [0];
+          return 1;
+        };
+
+        CursorView.prototype.computeDimensions = function() {
+          this.dimensions[0] = new draw.Size(0, 0);
+          return this.dimensions;
+        };
+
+        CursorView.prototype.computeBoundingBox = function() {};
+
+        return CursorView;
+
+      })(GenericView);
+
+      View.prototype.getViewFor = function(model) {
+        if (model.id in map) {
+          return map[model.id];
+        } else {
+          return this.createView(model);
+        }
+      };
+
+      View.prototype.createView = function(model) {
+        switch (model.type) {
+          case 'text':
+            return new TextView(model);
+          case 'block':
+            return new BlockView(model);
+          case 'indent':
+            return new IndentView(model);
+          case 'socket':
+            return new SocketView(model);
+          case 'segment':
+            return new SegmentView(model);
+          case 'cursor':
+            return new CursorView(model);
+        }
+      };
+
+      return View;
+
+    })();
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=view.js.map
+*/;
+(function() {
+  define('ice-parser',['ice-model'], function(model) {
+    var Parser, applyMarkup, exports, parseObj, regenerateMarkup, sortMarkup;
+    exports = {};
+    sortMarkup = function(unsortedMarkup) {
+      unsortedMarkup.sort(function(a, b) {
+        if (a.location.line > b.location.line) {
+          return 1;
+        }
+        if (b.location.line > a.location.line) {
+          return -1;
+        }
+        if (a.location.column > b.location.column) {
+          return 1;
+        }
+        if (b.location.column > a.location.column) {
+          return -1;
+        }
+        if (a.start && !b.start) {
+          return 1;
+        }
+        if (b.start && !a.start) {
+          return -1;
+        }
+        if (a.start && b.start) {
+          if (a.depth > b.depth) {
+            return 1;
+          } else {
+            return -1;
+          }
+        }
+        if ((!a.start) && (!b.start)) {
+          if (a.depth > b.depth) {
+            return -1;
+          } else {
+            return 1;
+          }
+        }
+      });
+      return unsortedMarkup;
+    };
+    applyMarkup = function(text, sortedMarkup, opts) {
+      var block, document, head, i, indentDepth, lastIndex, line, lines, mark, markupOnLines, stack, _i, _j, _k, _len, _len1, _len2, _name, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+      markupOnLines = {};
+      for (_i = 0, _len = sortedMarkup.length; _i < _len; _i++) {
+        mark = sortedMarkup[_i];
+        if (markupOnLines[_name = mark.location.line] == null) {
+          markupOnLines[_name] = [];
+        }
+        markupOnLines[mark.location.line].push(mark);
+      }
+      lines = text.split('\n');
+      indentDepth = 0;
+      stack = [];
+      document = new model.Segment();
+      head = document.start;
+      for (i = _j = 0, _len1 = lines.length; _j < _len1; i = ++_j) {
+        line = lines[i];
+        if (!(i in markupOnLines)) {
+          if (indentDepth >= line.length || line.slice(0, +indentDepth + 1 || 9e9).trim().length > 0) {
+            head.specialIndent = ((function() {
+              var _k, _ref, _results;
+              _results = [];
+              for (_k = 0, _ref = line.length - line.trimLeft().length; 0 <= _ref ? _k < _ref : _k > _ref; 0 <= _ref ? _k++ : _k--) {
+                _results.push(' ');
+              }
+              return _results;
+            })()).join('');
+            line = line.trimLeft();
+          } else {
+            line = line.slice(indentDepth);
+          }
+          if (line.length > 0) {
+            if ((opts.wrapAtRoot && stack.length === 0) || ((_ref = stack[stack.length - 1]) != null ? _ref.type : void 0) === 'indent') {
+              block = new model.Block(0, '#ffffff', false);
+              head = head.append(block.start);
+              head = head.append(new model.TextToken(line));
+              head = head.append(block.end);
+            } else {
+              head = head.append(new model.TextToken(line));
+            }
+          }
+          head = head.append(new model.NewlineToken());
+        } else {
+          lastIndex = indentDepth;
+          _ref1 = markupOnLines[i];
+          for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
+            mark = _ref1[_k];
+            if (!(lastIndex >= mark.location.column || lastIndex >= line.length)) {
+              if ((opts.wrapAtRoot && stack.length === 0) || ((_ref2 = stack[stack.length - 1]) != null ? _ref2.type : void 0) === 'indent') {
+                block = new model.Block(0, '#ffffff', false);
+                head = head.append(block.start);
+                head = head.append(new model.TextToken(line.slice(lastIndex, mark.location.column)));
+                head = head.append(block.end);
+              } else {
+                head = head.append(new model.TextToken(line.slice(lastIndex, mark.location.column)));
+              }
+            }
+            switch (mark.token.type) {
+              case 'indentStart':
+                if ((stack != null ? (_ref3 = stack[stack.length - 1]) != null ? _ref3.type : void 0 : void 0) !== 'block') {
+                  throw new Error('Improper parser: indent must be inside block, but is inside ' + (stack != null ? (_ref4 = stack[stack.length - 1]) != null ? _ref4.type : void 0 : void 0));
+                }
+                stack.push(mark.token.container);
+                indentDepth += mark.token.container.depth;
+                head = head.append(mark.token);
+                break;
+              case 'blockStart':
+                if (((_ref5 = stack[stack.length - 1]) != null ? _ref5.type : void 0) === 'block') {
+                  throw new Error('Improper parser: block cannot nest immediately inside another block.');
+                }
+                stack.push(mark.token.container);
+                head = head.append(mark.token);
+                break;
+              case 'socketStart':
+                if (((_ref6 = stack[stack.length - 1]) != null ? _ref6.type : void 0) !== 'block') {
+                  throw new Error('Improper parser: socket must be immediately insode a block.');
+                }
+                stack.push(mark.token.container);
+                head = head.append(mark.token);
+                break;
+              case 'indentEnd':
+                if (mark.token.container !== stack[stack.length - 1]) {
+                  throw new Error('Improper parser: indent ended too early.');
+                }
+                stack.pop();
+                indentDepth -= mark.token.container.depth;
+                head = head.append(mark.token);
+                break;
+              case 'blockEnd':
+                if (mark.token.container !== stack[stack.length - 1]) {
+                  debugger;
+                  throw new Error('Improper parser: block ended too early.');
+                }
+                stack.pop();
+                head = head.append(mark.token);
+                break;
+              case 'socketEnd':
+                if (mark.token.container !== stack[stack.length - 1]) {
+                  throw new Error('Improper parser: socket ended too early.');
+                }
+                stack.pop();
+                head = head.append(mark.token);
+            }
+            lastIndex = mark.location.column;
+          }
+          if (!(lastIndex >= line.length)) {
+            head = head.append(new model.TextToken(line.slice(lastIndex, line.length)));
+          }
+          head = head.append(new model.NewlineToken());
+        }
+      }
+      head = head.prev;
+      head.next.remove();
+      head = head.append(document.end);
+      return document;
+    };
+    regenerateMarkup = function(markup) {
+      var mark, tags, _i, _len;
+      tags = [];
+      for (_i = 0, _len = markup.length; _i < _len; _i++) {
+        mark = markup[_i];
+        tags.push({
+          token: mark.container.start,
+          location: mark.bounds.start,
+          depth: mark.depth,
+          start: true
+        });
+        tags.push({
+          token: mark.container.end,
+          location: mark.bounds.end,
+          depth: mark.depth,
+          start: false
+        });
+      }
+      return tags;
+    };
+    exports.Parser = Parser = (function() {
+      function Parser(parseFn) {
+        this.parseFn = parseFn;
+      }
+
+      Parser.prototype.parse = function(text, opts) {
+        var markup, segment;
+        markup = regenerateMarkup(this.parseFn(text));
+        sortMarkup(markup);
+        segment = applyMarkup(text, markup, opts);
+        segment.correctParentTree();
+        return segment;
+      };
+
+      return Parser;
+
+    })();
+    exports.parseObj = parseObj = function(object) {
+      var block, button, child, head, segment, subBlock, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      if (object == null) {
+        return null;
+      }
+      if (typeof object === 'string' || object instanceof String) {
+        if (object === '\n') {
+          return new model.NewlineToken();
+        } else {
+          return new model.TextToken(object);
+        }
+      } else {
+        switch (object.type) {
+          case 'block':
+            block = new model.Block(object.precedence, object.color, object.valueByDefault);
+            head = block.start;
+            _ref = object.children;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              child = _ref[_i];
+              subBlock = parseObj(child);
+              if ((_ref1 = subBlock.type) === 'text' || _ref1 === 'newline' || _ref1 === 'mutationButton') {
+                head = head.append(subBlock);
+              } else {
+                head.append(subBlock.start);
+                head = subBlock.end;
+              }
+            }
+            head.append(block.end);
+            return block;
+          case 'socket':
+            return new model.Socket(parseObj(object.contents), object.precedence);
+          case 'indent':
+            block = new model.Indent(((function() {
+              var _j, _ref2, _results;
+              _results = [];
+              for (_j = 1, _ref2 = object.depth; 1 <= _ref2 ? _j <= _ref2 : _j >= _ref2; 1 <= _ref2 ? _j++ : _j--) {
+                _results.push(' ');
+              }
+              return _results;
+            })()).join(''));
+            head = block.start;
+            _ref2 = object.children;
+            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+              child = _ref2[_j];
+              subBlock = parseObj(child);
+              if ((_ref3 = subBlock.type) === 'text' || _ref3 === 'newline') {
+                head = head.append(subBlock);
+              } else {
+                head.append(subBlock.start);
+                head = subBlock.end;
+              }
+            }
+            head.append(block.end);
+            return block;
+          case 'mutationButton':
+            segment = new model.Segment();
+            button = new model.MutationButtonToken(segment);
+            head = segment.start;
+            _ref4 = object.expand;
+            for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
+              child = _ref4[_k];
+              if (child === 0) {
+                subBlock = new model.MutationButtonToken(segment);
+              } else {
+                subBlock = parseObj(child);
+              }
+              if ((_ref5 = subBlock.type) === 'text' || _ref5 === 'newline' || _ref5 === 'mutationButton') {
+                head = head.append(subBlock);
+              } else {
+                head.append(subBlock.start);
+                head = subBlock.end;
+              }
+            }
+            head.append(segment.end);
+            return button;
+        }
+      }
+    };
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=parser.js.map
+*/;
+/**
+ * CoffeeScript Compiler v1.7.1
+ * http://coffeescript.org
+ *
+ * Copyright 2011, Jeremy Ashkenas
+ * Released under the MIT License
+ */
+(function(root){var CoffeeScript=function(){function require(e){return require[e]}return require["./helpers"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a;e.starts=function(e,t,n){return t===e.substr(n,t.length)},e.ends=function(e,t,n){var i;return i=t.length,t===e.substr(e.length-i-(n||0),i)},e.repeat=o=function(e,t){var n;for(n="";t>0;)1&t&&(n+=e),t>>>=1,e+=e;return n},e.compact=function(e){var t,n,i,r;for(r=[],n=0,i=e.length;i>n;n++)t=e[n],t&&r.push(t);return r},e.count=function(e,t){var n,i;if(n=i=0,!t.length)return 1/0;for(;i=1+e.indexOf(t,i);)n++;return n},e.merge=function(e,t){return n(n({},e),t)},n=e.extend=function(e,t){var n,i;for(n in t)i=t[n],e[n]=i;return e},e.flatten=i=function(e){var t,n,r,o;for(n=[],r=0,o=e.length;o>r;r++)t=e[r],t instanceof Array?n=n.concat(i(t)):n.push(t);return n},e.del=function(e,t){var n;return n=e[t],delete e[t],n},e.last=r=function(e,t){return e[e.length-(t||0)-1]},e.some=null!=(a=Array.prototype.some)?a:function(e){var t,n,i;for(n=0,i=this.length;i>n;n++)if(t=this[n],e(t))return!0;return!1},e.invertLiterate=function(e){var t,n,i;return i=!0,n=function(){var n,r,o,s;for(o=e.split("\n"),s=[],n=0,r=o.length;r>n;n++)t=o[n],i&&/^([ ]{4}|[ ]{0,3}\t)/.test(t)?s.push(t):(i=/^\s*$/.test(t))?s.push(t):s.push("# "+t);return s}(),n.join("\n")},t=function(e,t){return t?{first_line:e.first_line,first_column:e.first_column,last_line:t.last_line,last_column:t.last_column}:e},e.addLocationDataFn=function(e,n){return function(i){return"object"==typeof i&&i.updateLocationDataIfMissing&&i.updateLocationDataIfMissing(t(e,n)),i}},e.locationDataToString=function(e){var t;return"2"in e&&"first_line"in e[2]?t=e[2]:"first_line"in e&&(t=e),t?""+(t.first_line+1)+":"+(t.first_column+1)+"-"+(""+(t.last_line+1)+":"+(t.last_column+1)):"No location data"},e.baseFileName=function(e,t,n){var i,r;return null==t&&(t=!1),null==n&&(n=!1),r=n?/\\|\//:/\//,i=e.split(r),e=i[i.length-1],t&&e.indexOf(".")>=0?(i=e.split("."),i.pop(),"coffee"===i[i.length-1]&&i.length>1&&i.pop(),i.join(".")):e},e.isCoffee=function(e){return/\.((lit)?coffee|coffee\.md)$/.test(e)},e.isLiterate=function(e){return/\.(litcoffee|coffee\.md)$/.test(e)},e.throwSyntaxError=function(e,t){var n;throw n=new SyntaxError(e),n.location=t,n.toString=s,n.stack=""+n,n},e.updateSyntaxError=function(e,t,n){return e.toString===s&&(e.code||(e.code=t),e.filename||(e.filename=n),e.stack=""+e),e},s=function(){var e,t,n,i,r,s,a,c,h,u,l,p,d;return this.code&&this.location?(p=this.location,a=p.first_line,s=p.first_column,h=p.last_line,c=p.last_column,null==h&&(h=a),null==c&&(c=s),r=this.filename||"[stdin]",e=this.code.split("\n")[a],l=s,i=a===h?c+1:e.length,u=o(" ",l)+o("^",i-l),"undefined"!=typeof process&&null!==process&&(n=process.stdout.isTTY&&!process.env.NODE_DISABLE_COLORS),(null!=(d=this.colorful)?d:n)&&(t=function(e){return"[1;31m"+e+"[0m"},e=e.slice(0,l)+t(e.slice(l,i))+e.slice(i),u=t(u)),""+r+":"+(a+1)+":"+(s+1)+": error: "+this.message+"\n"+e+"\n"+u):Error.prototype.toString.call(this)},e.nameWhitespaceCharacter=function(e){switch(e){case" ":return"space";case"\n":return"newline";case"\r":return"carriage return";case"	":return"tab";default:return e}}}.call(this),t.exports}(),require["./rewriter"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k,v=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1},w=[].slice;for(f=function(e,t,n){var i;return i=[e,t],i.generated=!0,n&&(i.origin=n),i},e.Rewriter=function(){function e(){}return e.prototype.rewrite=function(e){return this.tokens=e,this.removeLeadingNewlines(),this.closeOpenCalls(),this.closeOpenIndexes(),this.normalizeLines(),this.tagPostfixConditionals(),this.addImplicitBracesAndParens(),this.addLocationDataToGeneratedTokens(),this.tokens},e.prototype.scanTokens=function(e){var t,n,i;for(i=this.tokens,t=0;n=i[t];)t+=e.call(this,n,t,i);return!0},e.prototype.detectEnd=function(e,t,n){var i,s,a,c,h;for(a=this.tokens,i=0;s=a[e];){if(0===i&&t.call(this,s,e))return n.call(this,s,e);if(!s||0>i)return n.call(this,s,e-1);c=s[0],v.call(o,c)>=0?i+=1:(h=s[0],v.call(r,h)>=0&&(i-=1)),e+=1}return e-1},e.prototype.removeLeadingNewlines=function(){var e,t,n,i,r;for(r=this.tokens,e=n=0,i=r.length;i>n&&(t=r[e][0],"TERMINATOR"===t);e=++n);return e?this.tokens.splice(0,e):void 0},e.prototype.closeOpenCalls=function(){var e,t;return t=function(e,t){var n;return")"===(n=e[0])||"CALL_END"===n||"OUTDENT"===e[0]&&")"===this.tag(t-1)},e=function(e,t){return this.tokens["OUTDENT"===e[0]?t-1:t][0]="CALL_END"},this.scanTokens(function(n,i){return"CALL_START"===n[0]&&this.detectEnd(i+1,t,e),1})},e.prototype.closeOpenIndexes=function(){var e,t;return t=function(e){var t;return"]"===(t=e[0])||"INDEX_END"===t},e=function(e){return e[0]="INDEX_END"},this.scanTokens(function(n,i){return"INDEX_START"===n[0]&&this.detectEnd(i+1,t,e),1})},e.prototype.matchTags=function(){var e,t,n,i,r,o,s;for(t=arguments[0],i=arguments.length>=2?w.call(arguments,1):[],e=0,n=r=0,o=i.length;o>=0?o>r:r>o;n=o>=0?++r:--r){for(;"HERECOMMENT"===this.tag(t+n+e);)e+=2;if(null!=i[n]&&("string"==typeof i[n]&&(i[n]=[i[n]]),s=this.tag(t+n+e),0>v.call(i[n],s)))return!1}return!0},e.prototype.looksObjectish=function(e){return this.matchTags(e,"@",null,":")||this.matchTags(e,null,":")},e.prototype.findTagsBackwards=function(e,t){var n,i,s,a,c,h,u;for(n=[];e>=0&&(n.length||(a=this.tag(e),0>v.call(t,a)&&(c=this.tag(e),0>v.call(o,c)||this.tokens[e].generated)&&(h=this.tag(e),0>v.call(l,h))));)i=this.tag(e),v.call(r,i)>=0&&n.push(this.tag(e)),s=this.tag(e),v.call(o,s)>=0&&n.length&&n.pop(),e-=1;return u=this.tag(e),v.call(t,u)>=0},e.prototype.addImplicitBracesAndParens=function(){var e;return e=[],this.scanTokens(function(t,i,u){var p,d,m,y,b,g,k,w,T,C,F,L,N,E,x,D,S,R,A,I,_,$,O,j,M,B,V,P;if($=t[0],F=(L=i>0?u[i-1]:[])[0],T=(u.length-1>i?u[i+1]:[])[0],S=function(){return e[e.length-1]},R=i,m=function(e){return i-R+e},y=function(){var e,t;return null!=(e=S())?null!=(t=e[2])?t.ours:void 0:void 0},b=function(){var e;return y()&&"("===(null!=(e=S())?e[0]:void 0)},k=function(){var e;return y()&&"{"===(null!=(e=S())?e[0]:void 0)},g=function(){var e;return y&&"CONTROL"===(null!=(e=S())?e[0]:void 0)},A=function(t){var n;return n=null!=t?t:i,e.push(["(",n,{ours:!0}]),u.splice(n,0,f("CALL_START","(")),null==t?i+=1:void 0},p=function(){return e.pop(),u.splice(i,0,f("CALL_END",")")),i+=1},I=function(n,r){var o;return null==r&&(r=!0),o=null!=n?n:i,e.push(["{",o,{sameLine:!0,startsLine:r,ours:!0}]),u.splice(o,0,f("{",f(new String("{")),t)),null==n?i+=1:void 0},d=function(n){return n=null!=n?n:i,e.pop(),u.splice(n,0,f("}","}",t)),i+=1},b()&&("IF"===$||"TRY"===$||"FINALLY"===$||"CATCH"===$||"CLASS"===$||"SWITCH"===$))return e.push(["CONTROL",i,{ours:!0}]),m(1);if("INDENT"===$&&y()){if("=>"!==F&&"->"!==F&&"["!==F&&"("!==F&&","!==F&&"{"!==F&&"TRY"!==F&&"ELSE"!==F&&"="!==F)for(;b();)p();return g()&&e.pop(),e.push([$,i]),m(1)}if(v.call(o,$)>=0)return e.push([$,i]),m(1);if(v.call(r,$)>=0){for(;y();)b()?p():k()?d():e.pop();e.pop()}if((v.call(c,$)>=0&&t.spaced&&!t.stringEnd||"?"===$&&i>0&&!u[i-1].spaced)&&(v.call(s,T)>=0||v.call(h,T)>=0&&!(null!=(O=u[i+1])?O.spaced:void 0)&&!(null!=(j=u[i+1])?j.newLine:void 0)))return"?"===$&&($=t[0]="FUNC_EXIST"),A(i+1),m(2);if(v.call(c,$)>=0&&this.matchTags(i+1,"INDENT",null,":")&&!this.findTagsBackwards(i,["CLASS","EXTENDS","IF","CATCH","SWITCH","LEADING_WHEN","FOR","WHILE","UNTIL"]))return A(i+1),e.push(["INDENT",i+2]),m(3);if(":"===$){for(N="@"===this.tag(i-2)?i-2:i-1;"HERECOMMENT"===this.tag(N-2);)N-=2;return this.insideForDeclaration="FOR"===T,_=0===N||(M=this.tag(N-1),v.call(l,M)>=0)||u[N-1].newLine,S()&&(B=S(),D=B[0],x=B[1],("{"===D||"INDENT"===D&&"{"===this.tag(x-1))&&(_||","===this.tag(N-1)||"{"===this.tag(N-1)))?m(1):(I(N,!!_),m(2))}if(k()&&v.call(l,$)>=0&&(S()[2].sameLine=!1),w="OUTDENT"===F||L.newLine,v.call(a,$)>=0||v.call(n,$)>=0&&w)for(;y();)if(V=S(),D=V[0],x=V[1],P=V[2],E=P.sameLine,_=P.startsLine,b()&&","!==F)p();else if(k()&&!this.insideForDeclaration&&E&&"TERMINATOR"!==$&&":"!==F&&d());else{if(!k()||"TERMINATOR"!==$||","===F||_&&this.looksObjectish(i+1))break;d()}if(!(","!==$||this.looksObjectish(i+1)||!k()||this.insideForDeclaration||"TERMINATOR"===T&&this.looksObjectish(i+2)))for(C="OUTDENT"===T?1:0;k();)d(i+C);return m(1)})},e.prototype.addLocationDataToGeneratedTokens=function(){return this.scanTokens(function(e,t,n){var i,r,o,s,a,c;return e[2]?1:e.generated||e.explicit?("{"===e[0]&&(o=null!=(a=n[t+1])?a[2]:void 0)?(r=o.first_line,i=o.first_column):(s=null!=(c=n[t-1])?c[2]:void 0)?(r=s.last_line,i=s.last_column):r=i=0,e[2]={first_line:r,first_column:i,last_line:r,last_column:i},1):1})},e.prototype.normalizeLines=function(){var e,t,r,o,s;return s=r=o=null,t=function(e,t){var r,o,a,c;return";"!==e[1]&&(r=e[0],v.call(p,r)>=0)&&!("TERMINATOR"===e[0]&&(o=this.tag(t+1),v.call(i,o)>=0))&&!("ELSE"===e[0]&&"THEN"!==s)&&!!("CATCH"!==(a=e[0])&&"FINALLY"!==a||"->"!==s&&"=>"!==s)||(c=e[0],v.call(n,c)>=0&&this.tokens[t-1].newLine)},e=function(e,t){return this.tokens.splice(","===this.tag(t-1)?t-1:t,0,o)},this.scanTokens(function(n,a,c){var h,u,l,p,f,m;if(u=n[0],"TERMINATOR"===u){if("ELSE"===this.tag(a+1)&&"OUTDENT"!==this.tag(a-1))return c.splice.apply(c,[a,1].concat(w.call(this.indentation()))),1;if(p=this.tag(a+1),v.call(i,p)>=0)return c.splice(a,1),0}if("CATCH"===u)for(h=l=1;2>=l;h=++l)if("OUTDENT"===(f=this.tag(a+h))||"TERMINATOR"===f||"FINALLY"===f)return c.splice.apply(c,[a+h,0].concat(w.call(this.indentation()))),2+h;return v.call(d,u)>=0&&"INDENT"!==this.tag(a+1)&&("ELSE"!==u||"IF"!==this.tag(a+1))?(s=u,m=this.indentation(c[a]),r=m[0],o=m[1],"THEN"===s&&(r.fromThen=!0),c.splice(a+1,0,r),this.detectEnd(a+2,t,e),"THEN"===u&&c.splice(a,1),1):1})},e.prototype.tagPostfixConditionals=function(){var e,t,n;return n=null,t=function(e,t){var n,i;return i=e[0],n=this.tokens[t-1][0],"TERMINATOR"===i||"INDENT"===i&&0>v.call(d,n)},e=function(e){return"INDENT"!==e[0]||e.generated&&!e.fromThen?n[0]="POST_"+n[0]:void 0},this.scanTokens(function(i,r){return"IF"!==i[0]?1:(n=i,this.detectEnd(r+1,t,e),1)})},e.prototype.indentation=function(e){var t,n;return t=["INDENT",2],n=["OUTDENT",2],e?(t.generated=n.generated=!0,t.origin=n.origin=e):t.explicit=n.explicit=!0,[t,n]},e.prototype.generate=f,e.prototype.tag=function(e){var t;return null!=(t=this.tokens[e])?t[0]:void 0},e}(),t=[["(",")"],["[","]"],["{","}"],["INDENT","OUTDENT"],["CALL_START","CALL_END"],["PARAM_START","PARAM_END"],["INDEX_START","INDEX_END"]],e.INVERSES=u={},o=[],r=[],b=0,g=t.length;g>b;b++)k=t[b],m=k[0],y=k[1],o.push(u[y]=m),r.push(u[m]=y);i=["CATCH","THEN","ELSE","FINALLY"].concat(r),c=["IDENTIFIER","SUPER",")","CALL_END","]","INDEX_END","@","THIS"],s=["IDENTIFIER","NUMBER","STRING","JS","REGEX","NEW","PARAM_START","CLASS","IF","TRY","SWITCH","THIS","BOOL","NULL","UNDEFINED","UNARY","UNARY_MATH","SUPER","THROW","@","->","=>","[","(","{","--","++"],h=["+","-"],a=["POST_IF","FOR","WHILE","UNTIL","WHEN","BY","LOOP","TERMINATOR"],d=["ELSE","->","=>","TRY","FINALLY","THEN"],p=["TERMINATOR","CATCH","FINALLY","ELSE","OUTDENT","LEADING_WHEN"],l=["TERMINATOR","INDENT","OUTDENT"],n=[".","?.","::","?::"]}.call(this),t.exports}(),require["./lexer"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k,v,w,T,C,F,L,N,E,x,D,S,R,A,I,_,$,O,j,M,B,V,P,U,H,q,G,W,X,Y,z,K,J,Z,Q,et,tt,nt=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};et=require("./rewriter"),j=et.Rewriter,k=et.INVERSES,tt=require("./helpers"),W=tt.count,Z=tt.starts,G=tt.compact,z=tt.last,J=tt.repeat,X=tt.invertLiterate,K=tt.locationDataToString,Q=tt.throwSyntaxError,e.Lexer=N=function(){function e(){}return e.prototype.tokenize=function(e,t){var n,i,r,o,s;for(null==t&&(t={}),this.literate=t.literate,this.preserveComments=null!=(o=t.preserveComments)?o:!1,this.indent=0,this.baseIndent=0,this.indebt=0,this.outdebt=0,this.indents=[],this.ends=[],this.tokens=[],this.chunkLine=t.line||0,this.chunkColumn=t.column||0,e=this.clean(e),i=0;this.chunk=e.slice(i);)n=this.identifierToken()||this.commentToken()||this.whitespaceToken()||this.lineToken()||this.heredocToken()||this.stringToken()||this.numberToken()||this.regexToken()||this.jsToken()||this.literalToken(),s=this.getLineAndColumnFromChunk(n),this.chunkLine=s[0],this.chunkColumn=s[1],i+=n;return this.closeIndentation(),(r=this.ends.pop())&&this.error("missing "+r),t.rewrite===!1?this.tokens:(new j).rewrite(this.tokens)},e.prototype.clean=function(e){return e.charCodeAt(0)===t&&(e=e.slice(1)),e=e.replace(/\r/g,"").replace(P,""),q.test(e)&&(e="\n"+e,this.chunkLine--),this.literate&&(e=X(e)),e},e.prototype.identifierToken=function(){var e,t,n,i,r,c,h,u,l,p,d,f,m,b;return(h=y.exec(this.chunk))?(c=h[0],i=h[1],e=h[2],r=i.length,u=void 0,"own"===i&&"FOR"===this.tag()?(this.token("OWN",i),i.length):(n=e||(l=z(this.tokens))&&("."===(f=l[0])||"?."===f||"::"===f||"?::"===f||!l.spaced&&"@"===l[0]),p="IDENTIFIER",!n&&(nt.call(T,i)>=0||nt.call(a,i)>=0)&&(p=i.toUpperCase(),"WHEN"===p&&(m=this.tag(),nt.call(C,m)>=0)?p="LEADING_WHEN":"FOR"===p?this.seenFor=!0:"UNLESS"===p?p="IF":nt.call(U,p)>=0?p="UNARY":nt.call($,p)>=0&&("INSTANCEOF"!==p&&this.seenFor?(p="FOR"+p,this.seenFor=!1):(p="RELATION","!"===this.value()&&(u=this.tokens.pop(),i="!"+i)))),nt.call(w,i)>=0&&(n?(p="IDENTIFIER",i=new String(i),i.reserved=!0):nt.call(O,i)>=0&&this.error('reserved word "'+i+'"')),n||(nt.call(o,i)>=0&&(i=s[i]),p=function(){switch(i){case"!":return"UNARY";case"==":case"!=":return"COMPARE";case"&&":case"||":return"LOGIC";case"true":case"false":return"BOOL";case"break":case"continue":return"STATEMENT";default:return p}}()),d=this.token(p,i,0,r),u&&(b=[u[2].first_line,u[2].first_column],d[2].first_line=b[0],d[2].first_column=b[1]),e&&(t=c.lastIndexOf(":"),this.token(":",":",t,e.length)),c.length)):0},e.prototype.numberToken=function(){var e,t,n,i,r;return(n=A.exec(this.chunk))?(i=n[0],/^0[BOX]/.test(i)?this.error("radix prefix '"+i+"' must be lowercase"):/E/.test(i)&&!/^0x/.test(i)?this.error("exponential notation '"+i+"' must be indicated with a lowercase 'e'"):/^0\d*[89]/.test(i)?this.error("decimal literal '"+i+"' must not be prefixed with '0'"):/^0\d+/.test(i)&&this.error("octal literal '"+i+"' must be prefixed with '0o'"),t=i.length,(r=/^0o([0-7]+)/.exec(i))&&(i="0x"+parseInt(r[1],8).toString(16)),(e=/^0b([01]+)/.exec(i))&&(i="0x"+parseInt(e[1],2).toString(16)),this.token("NUMBER",i,0,t),t):0},e.prototype.stringToken=function(){var e,t,n,i;switch(t=this.chunk.charAt(0)){case"'":n=(B.exec(this.chunk)||[])[0];break;case'"':n=this.balancedString(this.chunk,'"')}return n?(i=this.removeNewlines(n.slice(1,-1)),'"'===t&&n.indexOf("#{",1)>0?this.interpolateString(i,{strOffset:1,lexedLength:n.length}):this.token("STRING",t+this.escapeLines(i)+t,0,n.length),(e=/^(?:\\.|[^\\])*\\(?:0[0-7]|[1-7])/.test(n))&&this.error("octal escape sequences "+n+" are not allowed"),n.length):0},e.prototype.heredocToken=function(){var e,t,n,i;return(n=l.exec(this.chunk))?(t=n[0],i=t.charAt(0),e=this.sanitizeHeredoc(n[2],{quote:i,indent:null}),'"'===i&&e.indexOf("#{")>=0?this.interpolateString(e,{heredoc:!0,strOffset:3,lexedLength:t.length}):this.token("STRING",this.makeString(e,i,!0),0,t.length),t.length):0},e.prototype.commentToken=function(){var e,t,n;return(n=this.chunk.match(c))?(e=n[0],t=n[1],t?this.token("HERECOMMENT",this.sanitizeHeredoc(t,{herecomment:!0,indent:J(" ",this.indent)}),0,e.length):this.preserveComments&&this.token("COMMENT",e,0,e.length),e.length):0},e.prototype.jsToken=function(){var e,t;return"`"===this.chunk.charAt(0)&&(e=v.exec(this.chunk))?(this.token("JS",(t=e[0]).slice(1,-1),0,t.length),t.length):0},e.prototype.regexToken=function(){var e,t,n,i,r,o,s;return"/"!==this.chunk.charAt(0)?0:(t=this.heregexToken())?t:(i=z(this.tokens),i&&(o=i[0],nt.call(i.spaced?S:R,o)>=0)?0:(n=_.exec(this.chunk))?(s=n,n=s[0],r=s[1],e=s[2],"//"===r?0:("/*"===r.slice(0,2)&&this.error("regular expressions cannot begin with `*`"),this.token("REGEX",""+r+e,0,n.length),n.length)):0)},e.prototype.heregexToken=function(){var e,t,n,i,r,o,s,a,c,h,u,l,p,d,y,b,g;if(!(r=f.exec(this.chunk)))return 0;if(i=r[0],e=r[1],t=r[2],0>e.indexOf("#{"))return a=this.escapeLines(e.replace(m,"$1$2").replace(/\//g,"\\/"),!0),a.match(/^\*/)&&this.error("regular expressions cannot begin with `*`"),this.token("REGEX","/"+(a||"(?:)")+"/"+t,0,i.length),i.length;for(this.token("IDENTIFIER","RegExp",0,0),this.token("CALL_START","(",0,0),u=[],y=this.interpolateString(e,{regex:!0}),p=0,d=y.length;d>p;p++){if(h=y[p],c=h[0],l=h[1],"TOKENS"===c)u.push.apply(u,l);else if("NEOSTRING"===c){if(!(l=l.replace(m,"$1$2")))continue;l=l.replace(/\\/g,"\\\\"),h[0]="STRING",h[1]=this.makeString(l,'"',!0),u.push(h)}else this.error("Unexpected "+c);s=z(this.tokens),o=["+","+"],o[2]=s[2],u.push(o)}return u.pop(),"STRING"!==(null!=(b=u[0])?b[0]:void 0)&&(this.token("STRING",'""',0,0),this.token("+","+",0,0)),(g=this.tokens).push.apply(g,u),t&&(n=i.lastIndexOf(t),this.token(",",",",n,0),this.token("STRING",'"'+t+'"',n,t.length)),this.token(")",")",i.length-1,0),i.length},e.prototype.lineToken=function(){var e,t,n,i,r;if(!(n=D.exec(this.chunk)))return 0;if(t=n[0],this.seenFor=!1,r=t.length-1-t.lastIndexOf("\n"),i=this.unfinished(),r-this.indebt===this.indent)return i?this.suppressNewlines():this.newlineToken(0),t.length;if(r>this.indent){if(i)return this.indebt=r-this.indent,this.suppressNewlines(),t.length;if(!this.tokens.length)return this.baseIndent=this.indent=r,t.length;e=r-this.indent+this.outdebt,this.token("INDENT",e,t.length-r,r),this.indents.push(e),this.ends.push("OUTDENT"),this.outdebt=this.indebt=0,this.indent=r}else this.baseIndent>r?this.error("missing indentation",t.length):(this.indebt=0,this.outdentToken(this.indent-r,i,t.length));return t.length},e.prototype.outdentToken=function(e,t,n){var i,r,o,s;for(i=this.indent-e;e>0;)o=this.indents[this.indents.length-1],o?o===this.outdebt?(e-=this.outdebt,this.outdebt=0):this.outdebt>o?(this.outdebt-=o,e-=o):(r=this.indents.pop()+this.outdebt,n&&(s=this.chunk[n],nt.call(b,s)>=0)&&(i-=r-e,e=r),this.outdebt=0,this.pair("OUTDENT"),this.token("OUTDENT",e,0,1),e-=r):e=0;for(r&&(this.outdebt-=e);";"===this.value();)this.tokens.pop();return"TERMINATOR"===this.tag()||t||this.token("TERMINATOR","\n",n,0),this.indent=i,this},e.prototype.whitespaceToken=function(){var e,t,n;return(e=q.exec(this.chunk))||(t="\n"===this.chunk.charAt(0))?(n=z(this.tokens),n&&(n[e?"spaced":"newLine"]=!0),e?e[0].length:0):0},e.prototype.newlineToken=function(e){for(;";"===this.value();)this.tokens.pop();return"TERMINATOR"!==this.tag()&&this.token("TERMINATOR","\n",e,0),this},e.prototype.suppressNewlines=function(){return"\\"===this.value()&&this.tokens.pop(),this},e.prototype.literalToken=function(){var e,t,n,o,s,a,c,l;if((e=I.exec(this.chunk))?(o=e[0],r.test(o)&&this.tagParameters()):o=this.chunk.charAt(0),n=o,t=z(this.tokens),"="===o&&t&&(!t[1].reserved&&(s=t[1],nt.call(w,s)>=0)&&this.error('reserved word "'+this.value()+"\" can't be assigned"),"||"===(a=t[1])||"&&"===a))return t[0]="COMPOUND_ASSIGN",t[1]+="=",o.length;if(";"===o)this.seenFor=!1,n="TERMINATOR";else if(nt.call(E,o)>=0)n="MATH";else if(nt.call(h,o)>=0)n="COMPARE";else if(nt.call(u,o)>=0)n="COMPOUND_ASSIGN";else if(nt.call(U,o)>=0)n="UNARY";else if(nt.call(H,o)>=0)n="UNARY_MATH";else if(nt.call(M,o)>=0)n="SHIFT";else if(nt.call(L,o)>=0||"?"===o&&(null!=t?t.spaced:void 0))n="LOGIC";else if(t&&!t.spaced)if("("===o&&(c=t[0],nt.call(i,c)>=0))"?"===t[0]&&(t[0]="FUNC_EXIST"),n="CALL_START";else if("["===o&&(l=t[0],nt.call(g,l)>=0))switch(n="INDEX_START",t[0]){case"?":t[0]="INDEX_SOAK"}switch(o){case"(":case"{":case"[":this.ends.push(k[o]);break;case")":case"}":case"]":this.pair(o)}return this.token(n,o),o.length},e.prototype.sanitizeHeredoc=function(e,t){var n,i,r,o,s;if(r=t.indent,i=t.herecomment){if(p.test(e)&&this.error('block comment cannot contain "*/", starting'),0>e.indexOf("\n"))return e}else for(;o=d.exec(e);)n=o[1],(null===r||(s=n.length)>0&&r.length>s)&&(r=n);return r&&(e=e.replace(RegExp("\\n"+r,"g"),"\n")),i||(e=e.replace(/^\n/,"")),e},e.prototype.tagParameters=function(){var e,t,n,i;if(")"!==this.tag())return this;for(t=[],i=this.tokens,e=i.length,i[--e][0]="PARAM_END";n=i[--e];)switch(n[0]){case")":t.push(n);break;case"(":case"CALL_START":if(!t.length)return"("===n[0]?(n[0]="PARAM_START",this):this;t.pop()}return this},e.prototype.closeIndentation=function(){return this.outdentToken(this.indent)},e.prototype.balancedString=function(e,t){var n,i,r,o,s,a,c,h;for(n=0,a=[t],i=c=1,h=e.length;h>=1?h>c:c>h;i=h>=1?++c:--c)if(n)--n;else{switch(r=e.charAt(i)){case"\\":++n;continue;case t:if(a.pop(),!a.length)return e.slice(0,+i+1||9e9);t=a[a.length-1];continue}"}"!==t||'"'!==r&&"'"!==r?"}"===t&&"/"===r&&(o=f.exec(e.slice(i))||_.exec(e.slice(i)))?n+=o[0].length-1:"}"===t&&"{"===r?a.push(t="}"):'"'===t&&"#"===s&&"{"===r&&a.push(t="}"):a.push(t=r),s=r}return this.error("missing "+a.pop()+", starting")},e.prototype.interpolateString=function(t,n){var i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k,v,w,T,C,F,L,N,E,x,D,S,R;for(null==n&&(n={}),s=n.heredoc,v=n.regex,y=n.offsetInChunk,T=n.strOffset,p=n.lexedLength,y||(y=0),T||(T=0),p||(p=t.length),L=[],b=0,a=-1;l=t.charAt(a+=1);)"\\"!==l?"#"===l&&"{"===t.charAt(a+1)&&(o=this.balancedString(t.slice(a+1),"}"))&&(a>b&&L.push(this.makeToken("NEOSTRING",t.slice(b,a),T+b)),r||(r=this.makeToken("","string interpolation",y+a+1,2)),c=o.slice(1,-1),c.length&&(D=this.getLineAndColumnFromChunk(T+a+2),d=D[0],i=D[1],m=(new e).tokenize(c,{line:d,column:i,rewrite:!1}),k=m.pop(),"TERMINATOR"===(null!=(S=m[0])?S[0]:void 0)&&(k=m.shift()),(u=m.length)&&(u>1&&(m.unshift(this.makeToken("(","(",T+a+1,0)),m.push(this.makeToken(")",")",T+a+1+c.length,0))),L.push(["TOKENS",m]))),a+=o.length,b=a+1):a+=1;if(a>b&&t.length>b&&L.push(this.makeToken("NEOSTRING",t.slice(b),T+b)),v)return L;if(!L.length)return this.token("STRING",'""',y,p);for("NEOSTRING"!==L[0][0]&&L.unshift(this.makeToken("NEOSTRING","",y)),(h=L.length>1)&&this.token("(","(",y,0,r),a=E=0,x=L.length;x>E;a=++E)F=L[a],C=F[0],N=F[1],a&&(a&&(g=this.token("+","+")),f="TOKENS"===C?N[0]:F,g[2]={first_line:f[2].first_line,first_column:f[2].first_column,last_line:f[2].first_line,last_column:f[2].first_column}),"TOKENS"===C?(R=this.tokens).push.apply(R,N):"NEOSTRING"===C?(F[0]="STRING",F[1]=this.makeString(N,'"',s),this.tokens.push(F)):this.error("Unexpected "+C);return h&&(w=this.makeToken(")",")",y+p,0),w.stringEnd=!0,this.tokens.push(w)),L},e.prototype.pair=function(e){var t;return e!==(t=z(this.ends))?("OUTDENT"!==t&&this.error("unmatched "+e),this.outdentToken(z(this.indents),!0),this.pair(e)):this.ends.pop()},e.prototype.getLineAndColumnFromChunk=function(e){var t,n,i,r;return 0===e?[this.chunkLine,this.chunkColumn]:(r=e>=this.chunk.length?this.chunk:this.chunk.slice(0,+(e-1)+1||9e9),n=W(r,"\n"),t=this.chunkColumn,n>0?(i=r.split("\n"),t=z(i).length):t+=r.length,[this.chunkLine+n,t])},e.prototype.makeToken=function(e,t,n,i){var r,o,s,a,c;return null==n&&(n=0),null==i&&(i=t.length),o={},a=this.getLineAndColumnFromChunk(n),o.first_line=a[0],o.first_column=a[1],r=Math.max(0,i-1),c=this.getLineAndColumnFromChunk(n+r),o.last_line=c[0],o.last_column=c[1],s=[e,t,o]},e.prototype.token=function(e,t,n,i,r){var o;return o=this.makeToken(e,t,n,i),r&&(o.origin=r),this.tokens.push(o),o},e.prototype.tag=function(e,t){var n;return(n=z(this.tokens,e))&&(t?n[0]=t:n[0])},e.prototype.value=function(e,t){var n;return(n=z(this.tokens,e))&&(t?n[1]=t:n[1])},e.prototype.unfinished=function(){var e;return F.test(this.chunk)||"\\"===(e=this.tag())||"."===e||"?."===e||"?::"===e||"UNARY"===e||"MATH"===e||"UNARY_MATH"===e||"+"===e||"-"===e||"**"===e||"SHIFT"===e||"RELATION"===e||"COMPARE"===e||"LOGIC"===e||"THROW"===e||"EXTENDS"===e},e.prototype.removeNewlines=function(e){return e.replace(/^\s*\n\s*/,"").replace(/([^\\]|\\\\)\s*\n\s*$/,"$1")},e.prototype.escapeLines=function(e,t){return e=e.replace(/\\[^\S\n]*(\n|\\)\s*/g,function(e,t){return"\n"===t?"":e}),t?e.replace(x,"\\n"):e.replace(/\s*\n\s*/g," ")},e.prototype.makeString=function(e,t,n){return e?(e=e.replace(RegExp("\\\\("+t+"|\\\\)","g"),function(e,n){return n===t?n:e}),e=e.replace(RegExp(""+t,"g"),"\\$&"),t+this.escapeLines(e,n)+t):t+t},e.prototype.error=function(e,t){var n,i,r;return null==t&&(t=0),r=this.getLineAndColumnFromChunk(t),i=r[0],n=r[1],Q(e,{first_line:i,first_column:n})},e}(),T=["true","false","null","this","new","delete","typeof","in","instanceof","return","throw","break","continue","debugger","if","else","switch","for","while","do","try","catch","finally","class","extends","super"],a=["undefined","then","unless","until","loop","of","by","when"],s={and:"&&",or:"||",is:"==",isnt:"!=",not:"!",yes:"true",no:"false",on:"true",off:"false"},o=function(){var e;e=[];for(Y in s)e.push(Y);return e}(),a=a.concat(o),O=["case","default","function","var","void","with","const","let","enum","export","import","native","__hasProp","__extends","__slice","__bind","__indexOf","implements","interface","package","private","protected","public","static","yield"],V=["arguments","eval"],w=T.concat(O).concat(V),e.RESERVED=O.concat(T).concat(a).concat(V),e.STRICT_PROSCRIBED=V,t=65279,y=/^([$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)([^\n\S]*:(?!:))?/,A=/^0b[01]+|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i,l=/^("""|''')((?:\\[\s\S]|[^\\])*?)(?:\n[^\n\S]*)?\1/,I=/^(?:[-=]>|[-+*\/%<>&|^!?=]=|>>>=?|([-+:])\1|([&|<>*\/%])\2=?|\?(\.|::)|\.{2,3})/,q=/^[^\n\S]+/,c=/^###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#]).*)+/,r=/^[-=]>/,D=/^(?:\n[^\n\S]*)+/,B=/^'[^\\']*(?:\\[\s\S][^\\']*)*'/,v=/^`[^\\`]*(?:\\.[^\\`]*)*`/,_=/^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/,f=/^\/{3}((?:\\?[\s\S])+?)\/{3}([imgy]{0,4})(?!\w)/,m=/((?:\\\\)+)|\\(\s|\/)|\s+(?:#.*)?/g,x=/\n/g,d=/\n+([^\n\S]*)/g,p=/\*\//,F=/^\s*(?:,|\??\.(?![.\d])|::)/,P=/\s+$/,u=["-=","+=","/=","*=","%=","||=","&&=","?=","<<=",">>=",">>>=","&=","^=","|=","**=","//=","%%="],U=["NEW","TYPEOF","DELETE","DO"],H=["!","~"],L=["&&","||","&","|","^"],M=["<<",">>",">>>"],h=["==","!=","<",">","<=",">="],E=["*","/","%","//","%%"],$=["IN","OF","INSTANCEOF"],n=["TRUE","FALSE"],S=["NUMBER","REGEX","BOOL","NULL","UNDEFINED","++","--"],R=S.concat(")","}","THIS","IDENTIFIER","STRING","]"),i=["IDENTIFIER","STRING","REGEX",")","]","}","?","::","@","THIS","SUPER"],g=i.concat("NUMBER","BOOL","NULL","UNDEFINED"),C=["INDENT","OUTDENT","TERMINATOR"],b=[")","}","]"]}.call(this),t.exports}(),require["./parser"]=function(){var e={},t={exports:e},n=function(){function e(){this.yy={}}var t={trace:function(){},yy:{},symbols_:{error:2,Root:3,Body:4,Line:5,TERMINATOR:6,Expression:7,Statement:8,Return:9,Comment:10,STATEMENT:11,Value:12,Invocation:13,Code:14,Operation:15,Assign:16,If:17,Try:18,While:19,For:20,Switch:21,Class:22,Throw:23,Block:24,INDENT:25,OUTDENT:26,Identifier:27,IDENTIFIER:28,AlphaNumeric:29,NUMBER:30,STRING:31,Literal:32,JS:33,REGEX:34,DEBUGGER:35,UNDEFINED:36,NULL:37,BOOL:38,Assignable:39,"=":40,AssignObj:41,ObjAssignable:42,":":43,ThisProperty:44,RETURN:45,HERECOMMENT:46,PARAM_START:47,ParamList:48,PARAM_END:49,FuncGlyph:50,"->":51,"=>":52,OptComma:53,",":54,Param:55,ParamVar:56,"...":57,Array:58,Object:59,Splat:60,SimpleAssignable:61,Accessor:62,Parenthetical:63,Range:64,This:65,".":66,"?.":67,"::":68,"?::":69,Index:70,INDEX_START:71,IndexValue:72,INDEX_END:73,INDEX_SOAK:74,Slice:75,"{":76,AssignList:77,"}":78,CLASS:79,EXTENDS:80,OptFuncExist:81,Arguments:82,SUPER:83,FUNC_EXIST:84,CALL_START:85,CALL_END:86,ArgList:87,THIS:88,"@":89,"[":90,"]":91,RangeDots:92,"..":93,Arg:94,SimpleArgs:95,TRY:96,Catch:97,FINALLY:98,CATCH:99,THROW:100,"(":101,")":102,WhileSource:103,WHILE:104,WHEN:105,UNTIL:106,Loop:107,LOOP:108,ForBody:109,FOR:110,ForStart:111,ForSource:112,ForVariables:113,OWN:114,ForValue:115,FORIN:116,FOROF:117,BY:118,SWITCH:119,Whens:120,ELSE:121,When:122,LEADING_WHEN:123,IfBlock:124,IF:125,POST_IF:126,UNARY:127,UNARY_MATH:128,"-":129,"+":130,"--":131,"++":132,"?":133,MATH:134,"**":135,SHIFT:136,COMPARE:137,LOGIC:138,RELATION:139,COMPOUND_ASSIGN:140,$accept:0,$end:1},terminals_:{2:"error",6:"TERMINATOR",11:"STATEMENT",25:"INDENT",26:"OUTDENT",28:"IDENTIFIER",30:"NUMBER",31:"STRING",33:"JS",34:"REGEX",35:"DEBUGGER",36:"UNDEFINED",37:"NULL",38:"BOOL",40:"=",43:":",45:"RETURN",46:"HERECOMMENT",47:"PARAM_START",49:"PARAM_END",51:"->",52:"=>",54:",",57:"...",66:".",67:"?.",68:"::",69:"?::",71:"INDEX_START",73:"INDEX_END",74:"INDEX_SOAK",76:"{",78:"}",79:"CLASS",80:"EXTENDS",83:"SUPER",84:"FUNC_EXIST",85:"CALL_START",86:"CALL_END",88:"THIS",89:"@",90:"[",91:"]",93:"..",96:"TRY",98:"FINALLY",99:"CATCH",100:"THROW",101:"(",102:")",104:"WHILE",105:"WHEN",106:"UNTIL",108:"LOOP",110:"FOR",114:"OWN",116:"FORIN",117:"FOROF",118:"BY",119:"SWITCH",121:"ELSE",123:"LEADING_WHEN",125:"IF",126:"POST_IF",127:"UNARY",128:"UNARY_MATH",129:"-",130:"+",131:"--",132:"++",133:"?",134:"MATH",135:"**",136:"SHIFT",137:"COMPARE",138:"LOGIC",139:"RELATION",140:"COMPOUND_ASSIGN"},productions_:[0,[3,0],[3,1],[4,1],[4,3],[4,2],[5,1],[5,1],[8,1],[8,1],[8,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[7,1],[24,2],[24,3],[27,1],[29,1],[29,1],[32,1],[32,1],[32,1],[32,1],[32,1],[32,1],[32,1],[16,3],[16,4],[16,5],[41,1],[41,3],[41,5],[41,1],[42,1],[42,1],[42,1],[9,2],[9,1],[10,1],[14,5],[14,2],[50,1],[50,1],[53,0],[53,1],[48,0],[48,1],[48,3],[48,4],[48,6],[55,1],[55,2],[55,3],[55,1],[56,1],[56,1],[56,1],[56,1],[60,2],[61,1],[61,2],[61,2],[61,1],[39,1],[39,1],[39,1],[12,1],[12,1],[12,1],[12,1],[12,1],[62,2],[62,2],[62,2],[62,2],[62,1],[62,1],[70,3],[70,2],[72,1],[72,1],[59,4],[77,0],[77,1],[77,3],[77,4],[77,6],[22,1],[22,2],[22,3],[22,4],[22,2],[22,3],[22,4],[22,5],[13,3],[13,3],[13,1],[13,2],[81,0],[81,1],[82,2],[82,4],[65,1],[65,1],[44,2],[58,2],[58,4],[92,1],[92,1],[64,5],[75,3],[75,2],[75,2],[75,1],[87,1],[87,3],[87,4],[87,4],[87,6],[94,1],[94,1],[94,1],[95,1],[95,3],[18,2],[18,3],[18,4],[18,5],[97,3],[97,3],[97,2],[23,2],[63,3],[63,5],[103,2],[103,4],[103,2],[103,4],[19,2],[19,2],[19,2],[19,1],[107,2],[107,2],[20,2],[20,2],[20,2],[109,2],[109,2],[111,2],[111,3],[115,1],[115,1],[115,1],[115,1],[113,1],[113,3],[112,2],[112,2],[112,4],[112,4],[112,4],[112,6],[112,6],[21,5],[21,7],[21,4],[21,6],[120,1],[120,2],[122,3],[122,4],[124,3],[124,5],[17,1],[17,3],[17,3],[17,3],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,2],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,3],[15,5],[15,4],[15,3]],performAction:function(e,t,n,i,r,o,s){var a=o.length-1;switch(r){case 1:return this.$=i.addLocationDataFn(s[a],s[a])(new i.Block);case 2:return this.$=o[a];case 3:this.$=i.addLocationDataFn(s[a],s[a])(i.Block.wrap([o[a]]));break;case 4:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-2].push(o[a]));break;case 5:this.$=o[a-1];break;case 6:this.$=o[a];break;case 7:this.$=o[a];break;case 8:this.$=o[a];break;case 9:this.$=o[a];break;case 10:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 11:this.$=o[a];break;case 12:this.$=o[a];break;case 13:this.$=o[a];break;case 14:this.$=o[a];break;case 15:this.$=o[a];break;case 16:this.$=o[a];break;case 17:this.$=o[a];break;case 18:this.$=o[a];break;case 19:this.$=o[a];break;case 20:this.$=o[a];break;case 21:this.$=o[a];break;case 22:this.$=o[a];break;case 23:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Block);break;case 24:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-1]);break;case 25:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 26:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 27:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 28:this.$=o[a];break;case 29:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 30:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));break;case 31:this.$=i.addLocationDataFn(s[a],s[a])(new i.Literal(o[a]));
+break;case 32:this.$=i.addLocationDataFn(s[a],s[a])(new i.Undefined);break;case 33:this.$=i.addLocationDataFn(s[a],s[a])(new i.Null);break;case 34:this.$=i.addLocationDataFn(s[a],s[a])(new i.Bool(o[a]));break;case 35:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Assign(o[a-2],o[a]));break;case 36:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Assign(o[a-3],o[a]));break;case 37:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Assign(o[a-4],o[a-1]));break;case 38:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 39:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Assign(i.addLocationDataFn(s[a-2])(new i.Value(o[a-2])),o[a],"object"));break;case 40:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Assign(i.addLocationDataFn(s[a-4])(new i.Value(o[a-4])),o[a-1],"object"));break;case 41:this.$=o[a];break;case 42:this.$=o[a];break;case 43:this.$=o[a];break;case 44:this.$=o[a];break;case 45:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Return(o[a]));break;case 46:this.$=i.addLocationDataFn(s[a],s[a])(new i.Return);break;case 47:this.$=i.addLocationDataFn(s[a],s[a])(new i.Comment(o[a]));break;case 48:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Code(o[a-3],o[a],o[a-1]));break;case 49:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Code([],o[a],o[a-1]));break;case 50:this.$=i.addLocationDataFn(s[a],s[a])("func");break;case 51:this.$=i.addLocationDataFn(s[a],s[a])("boundfunc");break;case 52:this.$=o[a];break;case 53:this.$=o[a];break;case 54:this.$=i.addLocationDataFn(s[a],s[a])([]);break;case 55:this.$=i.addLocationDataFn(s[a],s[a])([o[a]]);break;case 56:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-2].concat(o[a]));break;case 57:this.$=i.addLocationDataFn(s[a-3],s[a])(o[a-3].concat(o[a]));break;case 58:this.$=i.addLocationDataFn(s[a-5],s[a])(o[a-5].concat(o[a-2]));break;case 59:this.$=i.addLocationDataFn(s[a],s[a])(new i.Param(o[a]));break;case 60:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Param(o[a-1],null,!0));break;case 61:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Param(o[a-2],o[a]));break;case 62:this.$=i.addLocationDataFn(s[a],s[a])(new i.Expansion);break;case 63:this.$=o[a];break;case 64:this.$=o[a];break;case 65:this.$=o[a];break;case 66:this.$=o[a];break;case 67:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Splat(o[a-1]));break;case 68:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 69:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a-1].add(o[a]));break;case 70:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Value(o[a-1],[].concat(o[a])));break;case 71:this.$=o[a];break;case 72:this.$=o[a];break;case 73:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 74:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 75:this.$=o[a];break;case 76:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 77:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 78:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 79:this.$=o[a];break;case 80:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Access(o[a]));break;case 81:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Access(o[a],"soak"));break;case 82:this.$=i.addLocationDataFn(s[a-1],s[a])([i.addLocationDataFn(s[a-1])(new i.Access(new i.Literal("prototype"))),i.addLocationDataFn(s[a])(new i.Access(o[a]))]);break;case 83:this.$=i.addLocationDataFn(s[a-1],s[a])([i.addLocationDataFn(s[a-1])(new i.Access(new i.Literal("prototype"),"soak")),i.addLocationDataFn(s[a])(new i.Access(o[a]))]);break;case 84:this.$=i.addLocationDataFn(s[a],s[a])(new i.Access(new i.Literal("prototype")));break;case 85:this.$=o[a];break;case 86:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-1]);break;case 87:this.$=i.addLocationDataFn(s[a-1],s[a])(i.extend(o[a],{soak:!0}));break;case 88:this.$=i.addLocationDataFn(s[a],s[a])(new i.Index(o[a]));break;case 89:this.$=i.addLocationDataFn(s[a],s[a])(new i.Slice(o[a]));break;case 90:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Obj(o[a-2],o[a-3].generated));break;case 91:this.$=i.addLocationDataFn(s[a],s[a])([]);break;case 92:this.$=i.addLocationDataFn(s[a],s[a])([o[a]]);break;case 93:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-2].concat(o[a]));break;case 94:this.$=i.addLocationDataFn(s[a-3],s[a])(o[a-3].concat(o[a]));break;case 95:this.$=i.addLocationDataFn(s[a-5],s[a])(o[a-5].concat(o[a-2]));break;case 96:this.$=i.addLocationDataFn(s[a],s[a])(new i.Class);break;case 97:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Class(null,null,o[a]));break;case 98:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Class(null,o[a]));break;case 99:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Class(null,o[a-1],o[a]));break;case 100:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Class(o[a]));break;case 101:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Class(o[a-1],null,o[a]));break;case 102:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Class(o[a-2],o[a]));break;case 103:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Class(o[a-3],o[a-1],o[a]));break;case 104:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Call(o[a-2],o[a],o[a-1]));break;case 105:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Call(o[a-2],o[a],o[a-1]));break;case 106:this.$=i.addLocationDataFn(s[a],s[a])(new i.Call("super",[new i.Splat(new i.Literal("arguments"))]));break;case 107:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Call("super",o[a]));break;case 108:this.$=i.addLocationDataFn(s[a],s[a])(!1);break;case 109:this.$=i.addLocationDataFn(s[a],s[a])(!0);break;case 110:this.$=i.addLocationDataFn(s[a-1],s[a])([]);break;case 111:this.$=i.addLocationDataFn(s[a-3],s[a])(o[a-2]);break;case 112:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(new i.Literal("this")));break;case 113:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(new i.Literal("this")));break;case 114:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Value(i.addLocationDataFn(s[a-1])(new i.Literal("this")),[i.addLocationDataFn(s[a])(new i.Access(o[a]))],"this"));break;case 115:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Arr([]));break;case 116:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Arr(o[a-2]));break;case 117:this.$=i.addLocationDataFn(s[a],s[a])("inclusive");break;case 118:this.$=i.addLocationDataFn(s[a],s[a])("exclusive");break;case 119:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Range(o[a-3],o[a-1],o[a-2]));break;case 120:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Range(o[a-2],o[a],o[a-1]));break;case 121:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Range(o[a-1],null,o[a]));break;case 122:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Range(null,o[a],o[a-1]));break;case 123:this.$=i.addLocationDataFn(s[a],s[a])(new i.Range(null,null,o[a]));break;case 124:this.$=i.addLocationDataFn(s[a],s[a])([o[a]]);break;case 125:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-2].concat(o[a]));break;case 126:this.$=i.addLocationDataFn(s[a-3],s[a])(o[a-3].concat(o[a]));break;case 127:this.$=i.addLocationDataFn(s[a-3],s[a])(o[a-2]);break;case 128:this.$=i.addLocationDataFn(s[a-5],s[a])(o[a-5].concat(o[a-2]));break;case 129:this.$=o[a];break;case 130:this.$=o[a];break;case 131:this.$=i.addLocationDataFn(s[a],s[a])(new i.Expansion);break;case 132:this.$=o[a];break;case 133:this.$=i.addLocationDataFn(s[a-2],s[a])([].concat(o[a-2],o[a]));break;case 134:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Try(o[a]));break;case 135:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Try(o[a-1],o[a][0],o[a][1]));break;case 136:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Try(o[a-2],null,null,o[a]));break;case 137:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Try(o[a-3],o[a-2][0],o[a-2][1],o[a]));break;case 138:this.$=i.addLocationDataFn(s[a-2],s[a])([o[a-1],o[a]]);break;case 139:this.$=i.addLocationDataFn(s[a-2],s[a])([i.addLocationDataFn(s[a-1])(new i.Value(o[a-1])),o[a]]);break;case 140:this.$=i.addLocationDataFn(s[a-1],s[a])([null,o[a]]);break;case 141:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Throw(o[a]));break;case 142:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Parens(o[a-1]));break;case 143:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Parens(o[a-2]));break;case 144:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.While(o[a]));break;case 145:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.While(o[a-2],{guard:o[a]}));break;case 146:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.While(o[a],{invert:!0}));break;case 147:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.While(o[a-2],{invert:!0,guard:o[a]}));break;case 148:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a-1].addBody(o[a]));break;case 149:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a].addBody(i.addLocationDataFn(s[a-1])(i.Block.wrap([o[a-1]]))));break;case 150:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a].addBody(i.addLocationDataFn(s[a-1])(i.Block.wrap([o[a-1]]))));break;case 151:this.$=i.addLocationDataFn(s[a],s[a])(o[a]);break;case 152:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.While(i.addLocationDataFn(s[a-1])(new i.Literal("true"))).addBody(o[a]));break;case 153:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.While(i.addLocationDataFn(s[a-1])(new i.Literal("true"))).addBody(i.addLocationDataFn(s[a])(i.Block.wrap([o[a]]))));break;case 154:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.For(o[a-1],o[a]));break;case 155:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.For(o[a-1],o[a]));break;case 156:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.For(o[a],o[a-1]));break;case 157:this.$=i.addLocationDataFn(s[a-1],s[a])({source:i.addLocationDataFn(s[a])(new i.Value(o[a]))});break;case 158:this.$=i.addLocationDataFn(s[a-1],s[a])(function(){return o[a].own=o[a-1].own,o[a].name=o[a-1][0],o[a].index=o[a-1][1],o[a]}());break;case 159:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a]);break;case 160:this.$=i.addLocationDataFn(s[a-2],s[a])(function(){return o[a].own=!0,o[a]}());break;case 161:this.$=o[a];break;case 162:this.$=o[a];break;case 163:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 164:this.$=i.addLocationDataFn(s[a],s[a])(new i.Value(o[a]));break;case 165:this.$=i.addLocationDataFn(s[a],s[a])([o[a]]);break;case 166:this.$=i.addLocationDataFn(s[a-2],s[a])([o[a-2],o[a]]);break;case 167:this.$=i.addLocationDataFn(s[a-1],s[a])({source:o[a]});break;case 168:this.$=i.addLocationDataFn(s[a-1],s[a])({source:o[a],object:!0});break;case 169:this.$=i.addLocationDataFn(s[a-3],s[a])({source:o[a-2],guard:o[a]});break;case 170:this.$=i.addLocationDataFn(s[a-3],s[a])({source:o[a-2],guard:o[a],object:!0});break;case 171:this.$=i.addLocationDataFn(s[a-3],s[a])({source:o[a-2],step:o[a]});break;case 172:this.$=i.addLocationDataFn(s[a-5],s[a])({source:o[a-4],guard:o[a-2],step:o[a]});break;case 173:this.$=i.addLocationDataFn(s[a-5],s[a])({source:o[a-4],step:o[a-2],guard:o[a]});break;case 174:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Switch(o[a-3],o[a-1]));break;case 175:this.$=i.addLocationDataFn(s[a-6],s[a])(new i.Switch(o[a-5],o[a-3],o[a-1]));break;case 176:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Switch(null,o[a-1]));break;case 177:this.$=i.addLocationDataFn(s[a-5],s[a])(new i.Switch(null,o[a-3],o[a-1]));break;case 178:this.$=o[a];break;case 179:this.$=i.addLocationDataFn(s[a-1],s[a])(o[a-1].concat(o[a]));break;case 180:this.$=i.addLocationDataFn(s[a-2],s[a])([[o[a-1],o[a]]]);break;case 181:this.$=i.addLocationDataFn(s[a-3],s[a])([[o[a-2],o[a-1]]]);break;case 182:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.If(o[a-1],o[a],{type:o[a-2]}));break;case 183:this.$=i.addLocationDataFn(s[a-4],s[a])(o[a-4].addElse(i.addLocationDataFn(s[a-2],s[a])(new i.If(o[a-1],o[a],{type:o[a-2]})),s[a-3]));break;case 184:this.$=o[a];break;case 185:this.$=i.addLocationDataFn(s[a-2],s[a])(o[a-2].addElse(o[a],s[a-1]));break;case 186:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.If(o[a],i.addLocationDataFn(s[a-2])(i.Block.wrap([o[a-2]])),{type:o[a-1],statement:!0}));break;case 187:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.If(o[a],i.addLocationDataFn(s[a-2])(i.Block.wrap([o[a-2]])),{type:o[a-1],statement:!0}));break;case 188:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op(o[a-1],o[a]));break;case 189:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op(o[a-1],o[a]));break;case 190:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("-",o[a]));break;case 191:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("+",o[a]));break;case 192:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("--",o[a]));break;case 193:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("++",o[a]));break;case 194:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("--",o[a-1],null,!0));break;case 195:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Op("++",o[a-1],null,!0));break;case 196:this.$=i.addLocationDataFn(s[a-1],s[a])(new i.Existence(o[a-1]));break;case 197:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op("+",o[a-2],o[a]));break;case 198:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op("-",o[a-2],o[a]));break;case 199:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op(o[a-1],o[a-2],o[a]));break;case 200:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op(o[a-1],o[a-2],o[a]));break;case 201:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op(o[a-1],o[a-2],o[a]));break;case 202:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op(o[a-1],o[a-2],o[a]));break;case 203:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Op(o[a-1],o[a-2],o[a]));break;case 204:this.$=i.addLocationDataFn(s[a-2],s[a])(function(){return"!"===o[a-1].charAt(0)?new i.Op(o[a-1].slice(1),o[a-2],o[a]).invert():new i.Op(o[a-1],o[a-2],o[a])}());break;case 205:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Assign(o[a-2],o[a],o[a-1]));break;case 206:this.$=i.addLocationDataFn(s[a-4],s[a])(new i.Assign(o[a-4],o[a-1],o[a-3]));break;case 207:this.$=i.addLocationDataFn(s[a-3],s[a])(new i.Assign(o[a-3],o[a],o[a-2]));break;case 208:this.$=i.addLocationDataFn(s[a-2],s[a])(new i.Extends(o[a-2],o[a]))}},table:[{1:[2,1],3:1,4:2,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[3]},{1:[2,2],6:[1,73]},{1:[2,3],6:[2,3],26:[2,3],102:[2,3]},{1:[2,6],6:[2,6],26:[2,6],102:[2,6],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,7],6:[2,7],26:[2,7],102:[2,7],103:87,104:[1,64],106:[1,65],109:88,110:[1,67],111:68,126:[1,86]},{1:[2,11],6:[2,11],25:[2,11],26:[2,11],49:[2,11],54:[2,11],57:[2,11],62:90,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],73:[2,11],74:[1,98],78:[2,11],81:89,84:[1,91],85:[2,108],86:[2,11],91:[2,11],93:[2,11],102:[2,11],104:[2,11],105:[2,11],106:[2,11],110:[2,11],118:[2,11],126:[2,11],129:[2,11],130:[2,11],133:[2,11],134:[2,11],135:[2,11],136:[2,11],137:[2,11],138:[2,11],139:[2,11]},{1:[2,12],6:[2,12],25:[2,12],26:[2,12],49:[2,12],54:[2,12],57:[2,12],62:100,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],73:[2,12],74:[1,98],78:[2,12],81:99,84:[1,91],85:[2,108],86:[2,12],91:[2,12],93:[2,12],102:[2,12],104:[2,12],105:[2,12],106:[2,12],110:[2,12],118:[2,12],126:[2,12],129:[2,12],130:[2,12],133:[2,12],134:[2,12],135:[2,12],136:[2,12],137:[2,12],138:[2,12],139:[2,12]},{1:[2,13],6:[2,13],25:[2,13],26:[2,13],49:[2,13],54:[2,13],57:[2,13],73:[2,13],78:[2,13],86:[2,13],91:[2,13],93:[2,13],102:[2,13],104:[2,13],105:[2,13],106:[2,13],110:[2,13],118:[2,13],126:[2,13],129:[2,13],130:[2,13],133:[2,13],134:[2,13],135:[2,13],136:[2,13],137:[2,13],138:[2,13],139:[2,13]},{1:[2,14],6:[2,14],25:[2,14],26:[2,14],49:[2,14],54:[2,14],57:[2,14],73:[2,14],78:[2,14],86:[2,14],91:[2,14],93:[2,14],102:[2,14],104:[2,14],105:[2,14],106:[2,14],110:[2,14],118:[2,14],126:[2,14],129:[2,14],130:[2,14],133:[2,14],134:[2,14],135:[2,14],136:[2,14],137:[2,14],138:[2,14],139:[2,14]},{1:[2,15],6:[2,15],25:[2,15],26:[2,15],49:[2,15],54:[2,15],57:[2,15],73:[2,15],78:[2,15],86:[2,15],91:[2,15],93:[2,15],102:[2,15],104:[2,15],105:[2,15],106:[2,15],110:[2,15],118:[2,15],126:[2,15],129:[2,15],130:[2,15],133:[2,15],134:[2,15],135:[2,15],136:[2,15],137:[2,15],138:[2,15],139:[2,15]},{1:[2,16],6:[2,16],25:[2,16],26:[2,16],49:[2,16],54:[2,16],57:[2,16],73:[2,16],78:[2,16],86:[2,16],91:[2,16],93:[2,16],102:[2,16],104:[2,16],105:[2,16],106:[2,16],110:[2,16],118:[2,16],126:[2,16],129:[2,16],130:[2,16],133:[2,16],134:[2,16],135:[2,16],136:[2,16],137:[2,16],138:[2,16],139:[2,16]},{1:[2,17],6:[2,17],25:[2,17],26:[2,17],49:[2,17],54:[2,17],57:[2,17],73:[2,17],78:[2,17],86:[2,17],91:[2,17],93:[2,17],102:[2,17],104:[2,17],105:[2,17],106:[2,17],110:[2,17],118:[2,17],126:[2,17],129:[2,17],130:[2,17],133:[2,17],134:[2,17],135:[2,17],136:[2,17],137:[2,17],138:[2,17],139:[2,17]},{1:[2,18],6:[2,18],25:[2,18],26:[2,18],49:[2,18],54:[2,18],57:[2,18],73:[2,18],78:[2,18],86:[2,18],91:[2,18],93:[2,18],102:[2,18],104:[2,18],105:[2,18],106:[2,18],110:[2,18],118:[2,18],126:[2,18],129:[2,18],130:[2,18],133:[2,18],134:[2,18],135:[2,18],136:[2,18],137:[2,18],138:[2,18],139:[2,18]},{1:[2,19],6:[2,19],25:[2,19],26:[2,19],49:[2,19],54:[2,19],57:[2,19],73:[2,19],78:[2,19],86:[2,19],91:[2,19],93:[2,19],102:[2,19],104:[2,19],105:[2,19],106:[2,19],110:[2,19],118:[2,19],126:[2,19],129:[2,19],130:[2,19],133:[2,19],134:[2,19],135:[2,19],136:[2,19],137:[2,19],138:[2,19],139:[2,19]},{1:[2,20],6:[2,20],25:[2,20],26:[2,20],49:[2,20],54:[2,20],57:[2,20],73:[2,20],78:[2,20],86:[2,20],91:[2,20],93:[2,20],102:[2,20],104:[2,20],105:[2,20],106:[2,20],110:[2,20],118:[2,20],126:[2,20],129:[2,20],130:[2,20],133:[2,20],134:[2,20],135:[2,20],136:[2,20],137:[2,20],138:[2,20],139:[2,20]},{1:[2,21],6:[2,21],25:[2,21],26:[2,21],49:[2,21],54:[2,21],57:[2,21],73:[2,21],78:[2,21],86:[2,21],91:[2,21],93:[2,21],102:[2,21],104:[2,21],105:[2,21],106:[2,21],110:[2,21],118:[2,21],126:[2,21],129:[2,21],130:[2,21],133:[2,21],134:[2,21],135:[2,21],136:[2,21],137:[2,21],138:[2,21],139:[2,21]},{1:[2,22],6:[2,22],25:[2,22],26:[2,22],49:[2,22],54:[2,22],57:[2,22],73:[2,22],78:[2,22],86:[2,22],91:[2,22],93:[2,22],102:[2,22],104:[2,22],105:[2,22],106:[2,22],110:[2,22],118:[2,22],126:[2,22],129:[2,22],130:[2,22],133:[2,22],134:[2,22],135:[2,22],136:[2,22],137:[2,22],138:[2,22],139:[2,22]},{1:[2,8],6:[2,8],26:[2,8],102:[2,8],104:[2,8],106:[2,8],110:[2,8],126:[2,8]},{1:[2,9],6:[2,9],26:[2,9],102:[2,9],104:[2,9],106:[2,9],110:[2,9],126:[2,9]},{1:[2,10],6:[2,10],26:[2,10],102:[2,10],104:[2,10],106:[2,10],110:[2,10],126:[2,10]},{1:[2,75],6:[2,75],25:[2,75],26:[2,75],40:[1,101],49:[2,75],54:[2,75],57:[2,75],66:[2,75],67:[2,75],68:[2,75],69:[2,75],71:[2,75],73:[2,75],74:[2,75],78:[2,75],84:[2,75],85:[2,75],86:[2,75],91:[2,75],93:[2,75],102:[2,75],104:[2,75],105:[2,75],106:[2,75],110:[2,75],118:[2,75],126:[2,75],129:[2,75],130:[2,75],133:[2,75],134:[2,75],135:[2,75],136:[2,75],137:[2,75],138:[2,75],139:[2,75]},{1:[2,76],6:[2,76],25:[2,76],26:[2,76],49:[2,76],54:[2,76],57:[2,76],66:[2,76],67:[2,76],68:[2,76],69:[2,76],71:[2,76],73:[2,76],74:[2,76],78:[2,76],84:[2,76],85:[2,76],86:[2,76],91:[2,76],93:[2,76],102:[2,76],104:[2,76],105:[2,76],106:[2,76],110:[2,76],118:[2,76],126:[2,76],129:[2,76],130:[2,76],133:[2,76],134:[2,76],135:[2,76],136:[2,76],137:[2,76],138:[2,76],139:[2,76]},{1:[2,77],6:[2,77],25:[2,77],26:[2,77],49:[2,77],54:[2,77],57:[2,77],66:[2,77],67:[2,77],68:[2,77],69:[2,77],71:[2,77],73:[2,77],74:[2,77],78:[2,77],84:[2,77],85:[2,77],86:[2,77],91:[2,77],93:[2,77],102:[2,77],104:[2,77],105:[2,77],106:[2,77],110:[2,77],118:[2,77],126:[2,77],129:[2,77],130:[2,77],133:[2,77],134:[2,77],135:[2,77],136:[2,77],137:[2,77],138:[2,77],139:[2,77]},{1:[2,78],6:[2,78],25:[2,78],26:[2,78],49:[2,78],54:[2,78],57:[2,78],66:[2,78],67:[2,78],68:[2,78],69:[2,78],71:[2,78],73:[2,78],74:[2,78],78:[2,78],84:[2,78],85:[2,78],86:[2,78],91:[2,78],93:[2,78],102:[2,78],104:[2,78],105:[2,78],106:[2,78],110:[2,78],118:[2,78],126:[2,78],129:[2,78],130:[2,78],133:[2,78],134:[2,78],135:[2,78],136:[2,78],137:[2,78],138:[2,78],139:[2,78]},{1:[2,79],6:[2,79],25:[2,79],26:[2,79],49:[2,79],54:[2,79],57:[2,79],66:[2,79],67:[2,79],68:[2,79],69:[2,79],71:[2,79],73:[2,79],74:[2,79],78:[2,79],84:[2,79],85:[2,79],86:[2,79],91:[2,79],93:[2,79],102:[2,79],104:[2,79],105:[2,79],106:[2,79],110:[2,79],118:[2,79],126:[2,79],129:[2,79],130:[2,79],133:[2,79],134:[2,79],135:[2,79],136:[2,79],137:[2,79],138:[2,79],139:[2,79]},{1:[2,106],6:[2,106],25:[2,106],26:[2,106],49:[2,106],54:[2,106],57:[2,106],66:[2,106],67:[2,106],68:[2,106],69:[2,106],71:[2,106],73:[2,106],74:[2,106],78:[2,106],82:102,84:[2,106],85:[1,103],86:[2,106],91:[2,106],93:[2,106],102:[2,106],104:[2,106],105:[2,106],106:[2,106],110:[2,106],118:[2,106],126:[2,106],129:[2,106],130:[2,106],133:[2,106],134:[2,106],135:[2,106],136:[2,106],137:[2,106],138:[2,106],139:[2,106]},{6:[2,54],25:[2,54],27:108,28:[1,72],44:109,48:104,49:[2,54],54:[2,54],55:105,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{24:114,25:[1,115]},{7:116,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:118,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:119,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:120,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{12:122,13:123,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,58:46,59:47,61:121,63:23,64:24,65:25,76:[1,69],83:[1,26],88:[1,57],89:[1,58],90:[1,56],101:[1,55]},{12:122,13:123,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,58:46,59:47,61:125,63:23,64:24,65:25,76:[1,69],83:[1,26],88:[1,57],89:[1,58],90:[1,56],101:[1,55]},{1:[2,72],6:[2,72],25:[2,72],26:[2,72],40:[2,72],49:[2,72],54:[2,72],57:[2,72],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,72],74:[2,72],78:[2,72],80:[1,129],84:[2,72],85:[2,72],86:[2,72],91:[2,72],93:[2,72],102:[2,72],104:[2,72],105:[2,72],106:[2,72],110:[2,72],118:[2,72],126:[2,72],129:[2,72],130:[2,72],131:[1,126],132:[1,127],133:[2,72],134:[2,72],135:[2,72],136:[2,72],137:[2,72],138:[2,72],139:[2,72],140:[1,128]},{1:[2,184],6:[2,184],25:[2,184],26:[2,184],49:[2,184],54:[2,184],57:[2,184],73:[2,184],78:[2,184],86:[2,184],91:[2,184],93:[2,184],102:[2,184],104:[2,184],105:[2,184],106:[2,184],110:[2,184],118:[2,184],121:[1,130],126:[2,184],129:[2,184],130:[2,184],133:[2,184],134:[2,184],135:[2,184],136:[2,184],137:[2,184],138:[2,184],139:[2,184]},{24:131,25:[1,115]},{24:132,25:[1,115]},{1:[2,151],6:[2,151],25:[2,151],26:[2,151],49:[2,151],54:[2,151],57:[2,151],73:[2,151],78:[2,151],86:[2,151],91:[2,151],93:[2,151],102:[2,151],104:[2,151],105:[2,151],106:[2,151],110:[2,151],118:[2,151],126:[2,151],129:[2,151],130:[2,151],133:[2,151],134:[2,151],135:[2,151],136:[2,151],137:[2,151],138:[2,151],139:[2,151]},{24:133,25:[1,115]},{7:134,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,135],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,96],6:[2,96],12:122,13:123,24:136,25:[1,115],26:[2,96],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:124,44:62,49:[2,96],54:[2,96],57:[2,96],58:46,59:47,61:138,63:23,64:24,65:25,73:[2,96],76:[1,69],78:[2,96],80:[1,137],83:[1,26],86:[2,96],88:[1,57],89:[1,58],90:[1,56],91:[2,96],93:[2,96],101:[1,55],102:[2,96],104:[2,96],105:[2,96],106:[2,96],110:[2,96],118:[2,96],126:[2,96],129:[2,96],130:[2,96],133:[2,96],134:[2,96],135:[2,96],136:[2,96],137:[2,96],138:[2,96],139:[2,96]},{7:139,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,46],6:[2,46],7:140,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[2,46],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],102:[2,46],103:38,104:[2,46],106:[2,46],107:39,108:[1,66],109:40,110:[2,46],111:68,119:[1,41],124:36,125:[1,63],126:[2,46],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,47],6:[2,47],25:[2,47],26:[2,47],54:[2,47],78:[2,47],102:[2,47],104:[2,47],106:[2,47],110:[2,47],126:[2,47]},{1:[2,73],6:[2,73],25:[2,73],26:[2,73],40:[2,73],49:[2,73],54:[2,73],57:[2,73],66:[2,73],67:[2,73],68:[2,73],69:[2,73],71:[2,73],73:[2,73],74:[2,73],78:[2,73],84:[2,73],85:[2,73],86:[2,73],91:[2,73],93:[2,73],102:[2,73],104:[2,73],105:[2,73],106:[2,73],110:[2,73],118:[2,73],126:[2,73],129:[2,73],130:[2,73],133:[2,73],134:[2,73],135:[2,73],136:[2,73],137:[2,73],138:[2,73],139:[2,73]},{1:[2,74],6:[2,74],25:[2,74],26:[2,74],40:[2,74],49:[2,74],54:[2,74],57:[2,74],66:[2,74],67:[2,74],68:[2,74],69:[2,74],71:[2,74],73:[2,74],74:[2,74],78:[2,74],84:[2,74],85:[2,74],86:[2,74],91:[2,74],93:[2,74],102:[2,74],104:[2,74],105:[2,74],106:[2,74],110:[2,74],118:[2,74],126:[2,74],129:[2,74],130:[2,74],133:[2,74],134:[2,74],135:[2,74],136:[2,74],137:[2,74],138:[2,74],139:[2,74]},{1:[2,28],6:[2,28],25:[2,28],26:[2,28],49:[2,28],54:[2,28],57:[2,28],66:[2,28],67:[2,28],68:[2,28],69:[2,28],71:[2,28],73:[2,28],74:[2,28],78:[2,28],84:[2,28],85:[2,28],86:[2,28],91:[2,28],93:[2,28],102:[2,28],104:[2,28],105:[2,28],106:[2,28],110:[2,28],118:[2,28],126:[2,28],129:[2,28],130:[2,28],133:[2,28],134:[2,28],135:[2,28],136:[2,28],137:[2,28],138:[2,28],139:[2,28]},{1:[2,29],6:[2,29],25:[2,29],26:[2,29],49:[2,29],54:[2,29],57:[2,29],66:[2,29],67:[2,29],68:[2,29],69:[2,29],71:[2,29],73:[2,29],74:[2,29],78:[2,29],84:[2,29],85:[2,29],86:[2,29],91:[2,29],93:[2,29],102:[2,29],104:[2,29],105:[2,29],106:[2,29],110:[2,29],118:[2,29],126:[2,29],129:[2,29],130:[2,29],133:[2,29],134:[2,29],135:[2,29],136:[2,29],137:[2,29],138:[2,29],139:[2,29]},{1:[2,30],6:[2,30],25:[2,30],26:[2,30],49:[2,30],54:[2,30],57:[2,30],66:[2,30],67:[2,30],68:[2,30],69:[2,30],71:[2,30],73:[2,30],74:[2,30],78:[2,30],84:[2,30],85:[2,30],86:[2,30],91:[2,30],93:[2,30],102:[2,30],104:[2,30],105:[2,30],106:[2,30],110:[2,30],118:[2,30],126:[2,30],129:[2,30],130:[2,30],133:[2,30],134:[2,30],135:[2,30],136:[2,30],137:[2,30],138:[2,30],139:[2,30]},{1:[2,31],6:[2,31],25:[2,31],26:[2,31],49:[2,31],54:[2,31],57:[2,31],66:[2,31],67:[2,31],68:[2,31],69:[2,31],71:[2,31],73:[2,31],74:[2,31],78:[2,31],84:[2,31],85:[2,31],86:[2,31],91:[2,31],93:[2,31],102:[2,31],104:[2,31],105:[2,31],106:[2,31],110:[2,31],118:[2,31],126:[2,31],129:[2,31],130:[2,31],133:[2,31],134:[2,31],135:[2,31],136:[2,31],137:[2,31],138:[2,31],139:[2,31]},{1:[2,32],6:[2,32],25:[2,32],26:[2,32],49:[2,32],54:[2,32],57:[2,32],66:[2,32],67:[2,32],68:[2,32],69:[2,32],71:[2,32],73:[2,32],74:[2,32],78:[2,32],84:[2,32],85:[2,32],86:[2,32],91:[2,32],93:[2,32],102:[2,32],104:[2,32],105:[2,32],106:[2,32],110:[2,32],118:[2,32],126:[2,32],129:[2,32],130:[2,32],133:[2,32],134:[2,32],135:[2,32],136:[2,32],137:[2,32],138:[2,32],139:[2,32]},{1:[2,33],6:[2,33],25:[2,33],26:[2,33],49:[2,33],54:[2,33],57:[2,33],66:[2,33],67:[2,33],68:[2,33],69:[2,33],71:[2,33],73:[2,33],74:[2,33],78:[2,33],84:[2,33],85:[2,33],86:[2,33],91:[2,33],93:[2,33],102:[2,33],104:[2,33],105:[2,33],106:[2,33],110:[2,33],118:[2,33],126:[2,33],129:[2,33],130:[2,33],133:[2,33],134:[2,33],135:[2,33],136:[2,33],137:[2,33],138:[2,33],139:[2,33]},{1:[2,34],6:[2,34],25:[2,34],26:[2,34],49:[2,34],54:[2,34],57:[2,34],66:[2,34],67:[2,34],68:[2,34],69:[2,34],71:[2,34],73:[2,34],74:[2,34],78:[2,34],84:[2,34],85:[2,34],86:[2,34],91:[2,34],93:[2,34],102:[2,34],104:[2,34],105:[2,34],106:[2,34],110:[2,34],118:[2,34],126:[2,34],129:[2,34],130:[2,34],133:[2,34],134:[2,34],135:[2,34],136:[2,34],137:[2,34],138:[2,34],139:[2,34]},{4:141,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,142],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:143,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:145,88:[1,57],89:[1,58],90:[1,56],91:[1,144],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,112],6:[2,112],25:[2,112],26:[2,112],49:[2,112],54:[2,112],57:[2,112],66:[2,112],67:[2,112],68:[2,112],69:[2,112],71:[2,112],73:[2,112],74:[2,112],78:[2,112],84:[2,112],85:[2,112],86:[2,112],91:[2,112],93:[2,112],102:[2,112],104:[2,112],105:[2,112],106:[2,112],110:[2,112],118:[2,112],126:[2,112],129:[2,112],130:[2,112],133:[2,112],134:[2,112],135:[2,112],136:[2,112],137:[2,112],138:[2,112],139:[2,112]},{1:[2,113],6:[2,113],25:[2,113],26:[2,113],27:150,28:[1,72],49:[2,113],54:[2,113],57:[2,113],66:[2,113],67:[2,113],68:[2,113],69:[2,113],71:[2,113],73:[2,113],74:[2,113],78:[2,113],84:[2,113],85:[2,113],86:[2,113],91:[2,113],93:[2,113],102:[2,113],104:[2,113],105:[2,113],106:[2,113],110:[2,113],118:[2,113],126:[2,113],129:[2,113],130:[2,113],133:[2,113],134:[2,113],135:[2,113],136:[2,113],137:[2,113],138:[2,113],139:[2,113]},{25:[2,50]},{25:[2,51]},{1:[2,68],6:[2,68],25:[2,68],26:[2,68],40:[2,68],49:[2,68],54:[2,68],57:[2,68],66:[2,68],67:[2,68],68:[2,68],69:[2,68],71:[2,68],73:[2,68],74:[2,68],78:[2,68],80:[2,68],84:[2,68],85:[2,68],86:[2,68],91:[2,68],93:[2,68],102:[2,68],104:[2,68],105:[2,68],106:[2,68],110:[2,68],118:[2,68],126:[2,68],129:[2,68],130:[2,68],131:[2,68],132:[2,68],133:[2,68],134:[2,68],135:[2,68],136:[2,68],137:[2,68],138:[2,68],139:[2,68],140:[2,68]},{1:[2,71],6:[2,71],25:[2,71],26:[2,71],40:[2,71],49:[2,71],54:[2,71],57:[2,71],66:[2,71],67:[2,71],68:[2,71],69:[2,71],71:[2,71],73:[2,71],74:[2,71],78:[2,71],80:[2,71],84:[2,71],85:[2,71],86:[2,71],91:[2,71],93:[2,71],102:[2,71],104:[2,71],105:[2,71],106:[2,71],110:[2,71],118:[2,71],126:[2,71],129:[2,71],130:[2,71],131:[2,71],132:[2,71],133:[2,71],134:[2,71],135:[2,71],136:[2,71],137:[2,71],138:[2,71],139:[2,71],140:[2,71]},{7:151,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:152,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:153,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:155,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,24:154,25:[1,115],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{27:160,28:[1,72],44:161,58:162,59:163,64:156,76:[1,69],89:[1,112],90:[1,56],113:157,114:[1,158],115:159},{112:164,116:[1,165],117:[1,166]},{6:[2,91],10:170,25:[2,91],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:168,42:169,44:173,46:[1,45],54:[2,91],77:167,78:[2,91],89:[1,112]},{1:[2,26],6:[2,26],25:[2,26],26:[2,26],43:[2,26],49:[2,26],54:[2,26],57:[2,26],66:[2,26],67:[2,26],68:[2,26],69:[2,26],71:[2,26],73:[2,26],74:[2,26],78:[2,26],84:[2,26],85:[2,26],86:[2,26],91:[2,26],93:[2,26],102:[2,26],104:[2,26],105:[2,26],106:[2,26],110:[2,26],118:[2,26],126:[2,26],129:[2,26],130:[2,26],133:[2,26],134:[2,26],135:[2,26],136:[2,26],137:[2,26],138:[2,26],139:[2,26]},{1:[2,27],6:[2,27],25:[2,27],26:[2,27],43:[2,27],49:[2,27],54:[2,27],57:[2,27],66:[2,27],67:[2,27],68:[2,27],69:[2,27],71:[2,27],73:[2,27],74:[2,27],78:[2,27],84:[2,27],85:[2,27],86:[2,27],91:[2,27],93:[2,27],102:[2,27],104:[2,27],105:[2,27],106:[2,27],110:[2,27],118:[2,27],126:[2,27],129:[2,27],130:[2,27],133:[2,27],134:[2,27],135:[2,27],136:[2,27],137:[2,27],138:[2,27],139:[2,27]},{1:[2,25],6:[2,25],25:[2,25],26:[2,25],40:[2,25],43:[2,25],49:[2,25],54:[2,25],57:[2,25],66:[2,25],67:[2,25],68:[2,25],69:[2,25],71:[2,25],73:[2,25],74:[2,25],78:[2,25],80:[2,25],84:[2,25],85:[2,25],86:[2,25],91:[2,25],93:[2,25],102:[2,25],104:[2,25],105:[2,25],106:[2,25],110:[2,25],116:[2,25],117:[2,25],118:[2,25],126:[2,25],129:[2,25],130:[2,25],131:[2,25],132:[2,25],133:[2,25],134:[2,25],135:[2,25],136:[2,25],137:[2,25],138:[2,25],139:[2,25],140:[2,25]},{1:[2,5],5:174,6:[2,5],7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[2,5],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],102:[2,5],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,196],6:[2,196],25:[2,196],26:[2,196],49:[2,196],54:[2,196],57:[2,196],73:[2,196],78:[2,196],86:[2,196],91:[2,196],93:[2,196],102:[2,196],104:[2,196],105:[2,196],106:[2,196],110:[2,196],118:[2,196],126:[2,196],129:[2,196],130:[2,196],133:[2,196],134:[2,196],135:[2,196],136:[2,196],137:[2,196],138:[2,196],139:[2,196]},{7:175,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:176,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:177,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:178,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:179,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:180,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:181,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:182,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:183,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,150],6:[2,150],25:[2,150],26:[2,150],49:[2,150],54:[2,150],57:[2,150],73:[2,150],78:[2,150],86:[2,150],91:[2,150],93:[2,150],102:[2,150],104:[2,150],105:[2,150],106:[2,150],110:[2,150],118:[2,150],126:[2,150],129:[2,150],130:[2,150],133:[2,150],134:[2,150],135:[2,150],136:[2,150],137:[2,150],138:[2,150],139:[2,150]},{1:[2,155],6:[2,155],25:[2,155],26:[2,155],49:[2,155],54:[2,155],57:[2,155],73:[2,155],78:[2,155],86:[2,155],91:[2,155],93:[2,155],102:[2,155],104:[2,155],105:[2,155],106:[2,155],110:[2,155],118:[2,155],126:[2,155],129:[2,155],130:[2,155],133:[2,155],134:[2,155],135:[2,155],136:[2,155],137:[2,155],138:[2,155],139:[2,155]},{7:184,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,149],6:[2,149],25:[2,149],26:[2,149],49:[2,149],54:[2,149],57:[2,149],73:[2,149],78:[2,149],86:[2,149],91:[2,149],93:[2,149],102:[2,149],104:[2,149],105:[2,149],106:[2,149],110:[2,149],118:[2,149],126:[2,149],129:[2,149],130:[2,149],133:[2,149],134:[2,149],135:[2,149],136:[2,149],137:[2,149],138:[2,149],139:[2,149]},{1:[2,154],6:[2,154],25:[2,154],26:[2,154],49:[2,154],54:[2,154],57:[2,154],73:[2,154],78:[2,154],86:[2,154],91:[2,154],93:[2,154],102:[2,154],104:[2,154],105:[2,154],106:[2,154],110:[2,154],118:[2,154],126:[2,154],129:[2,154],130:[2,154],133:[2,154],134:[2,154],135:[2,154],136:[2,154],137:[2,154],138:[2,154],139:[2,154]},{82:185,85:[1,103]},{1:[2,69],6:[2,69],25:[2,69],26:[2,69],40:[2,69],49:[2,69],54:[2,69],57:[2,69],66:[2,69],67:[2,69],68:[2,69],69:[2,69],71:[2,69],73:[2,69],74:[2,69],78:[2,69],80:[2,69],84:[2,69],85:[2,69],86:[2,69],91:[2,69],93:[2,69],102:[2,69],104:[2,69],105:[2,69],106:[2,69],110:[2,69],118:[2,69],126:[2,69],129:[2,69],130:[2,69],131:[2,69],132:[2,69],133:[2,69],134:[2,69],135:[2,69],136:[2,69],137:[2,69],138:[2,69],139:[2,69],140:[2,69]},{85:[2,109]},{27:186,28:[1,72]},{27:187,28:[1,72]},{1:[2,84],6:[2,84],25:[2,84],26:[2,84],27:188,28:[1,72],40:[2,84],49:[2,84],54:[2,84],57:[2,84],66:[2,84],67:[2,84],68:[2,84],69:[2,84],71:[2,84],73:[2,84],74:[2,84],78:[2,84],80:[2,84],84:[2,84],85:[2,84],86:[2,84],91:[2,84],93:[2,84],102:[2,84],104:[2,84],105:[2,84],106:[2,84],110:[2,84],118:[2,84],126:[2,84],129:[2,84],130:[2,84],131:[2,84],132:[2,84],133:[2,84],134:[2,84],135:[2,84],136:[2,84],137:[2,84],138:[2,84],139:[2,84],140:[2,84]},{27:189,28:[1,72]},{1:[2,85],6:[2,85],25:[2,85],26:[2,85],40:[2,85],49:[2,85],54:[2,85],57:[2,85],66:[2,85],67:[2,85],68:[2,85],69:[2,85],71:[2,85],73:[2,85],74:[2,85],78:[2,85],80:[2,85],84:[2,85],85:[2,85],86:[2,85],91:[2,85],93:[2,85],102:[2,85],104:[2,85],105:[2,85],106:[2,85],110:[2,85],118:[2,85],126:[2,85],129:[2,85],130:[2,85],131:[2,85],132:[2,85],133:[2,85],134:[2,85],135:[2,85],136:[2,85],137:[2,85],138:[2,85],139:[2,85],140:[2,85]},{7:191,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,195],58:46,59:47,61:35,63:23,64:24,65:25,72:190,75:192,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],92:193,93:[1,194],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{70:196,71:[1,97],74:[1,98]},{82:197,85:[1,103]},{1:[2,70],6:[2,70],25:[2,70],26:[2,70],40:[2,70],49:[2,70],54:[2,70],57:[2,70],66:[2,70],67:[2,70],68:[2,70],69:[2,70],71:[2,70],73:[2,70],74:[2,70],78:[2,70],80:[2,70],84:[2,70],85:[2,70],86:[2,70],91:[2,70],93:[2,70],102:[2,70],104:[2,70],105:[2,70],106:[2,70],110:[2,70],118:[2,70],126:[2,70],129:[2,70],130:[2,70],131:[2,70],132:[2,70],133:[2,70],134:[2,70],135:[2,70],136:[2,70],137:[2,70],138:[2,70],139:[2,70],140:[2,70]},{6:[1,199],7:198,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,200],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,107],6:[2,107],25:[2,107],26:[2,107],49:[2,107],54:[2,107],57:[2,107],66:[2,107],67:[2,107],68:[2,107],69:[2,107],71:[2,107],73:[2,107],74:[2,107],78:[2,107],84:[2,107],85:[2,107],86:[2,107],91:[2,107],93:[2,107],102:[2,107],104:[2,107],105:[2,107],106:[2,107],110:[2,107],118:[2,107],126:[2,107],129:[2,107],130:[2,107],133:[2,107],134:[2,107],135:[2,107],136:[2,107],137:[2,107],138:[2,107],139:[2,107]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],86:[1,201],87:202,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],49:[1,204],53:206,54:[1,205]},{6:[2,55],25:[2,55],26:[2,55],49:[2,55],54:[2,55]},{6:[2,59],25:[2,59],26:[2,59],40:[1,208],49:[2,59],54:[2,59],57:[1,207]},{6:[2,62],25:[2,62],26:[2,62],49:[2,62],54:[2,62]},{6:[2,63],25:[2,63],26:[2,63],40:[2,63],49:[2,63],54:[2,63],57:[2,63]},{6:[2,64],25:[2,64],26:[2,64],40:[2,64],49:[2,64],54:[2,64],57:[2,64]},{6:[2,65],25:[2,65],26:[2,65],40:[2,65],49:[2,65],54:[2,65],57:[2,65]},{6:[2,66],25:[2,66],26:[2,66],40:[2,66],49:[2,66],54:[2,66],57:[2,66]},{27:150,28:[1,72]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:145,88:[1,57],89:[1,58],90:[1,56],91:[1,144],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,49],6:[2,49],25:[2,49],26:[2,49],49:[2,49],54:[2,49],57:[2,49],73:[2,49],78:[2,49],86:[2,49],91:[2,49],93:[2,49],102:[2,49],104:[2,49],105:[2,49],106:[2,49],110:[2,49],118:[2,49],126:[2,49],129:[2,49],130:[2,49],133:[2,49],134:[2,49],135:[2,49],136:[2,49],137:[2,49],138:[2,49],139:[2,49]},{4:210,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,26:[1,209],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,188],6:[2,188],25:[2,188],26:[2,188],49:[2,188],54:[2,188],57:[2,188],73:[2,188],78:[2,188],86:[2,188],91:[2,188],93:[2,188],102:[2,188],103:84,104:[2,188],105:[2,188],106:[2,188],109:85,110:[2,188],111:68,118:[2,188],126:[2,188],129:[2,188],130:[2,188],133:[1,74],134:[2,188],135:[2,188],136:[2,188],137:[2,188],138:[2,188],139:[2,188]},{103:87,104:[1,64],106:[1,65],109:88,110:[1,67],111:68,126:[1,86]},{1:[2,189],6:[2,189],25:[2,189],26:[2,189],49:[2,189],54:[2,189],57:[2,189],73:[2,189],78:[2,189],86:[2,189],91:[2,189],93:[2,189],102:[2,189],103:84,104:[2,189],105:[2,189],106:[2,189],109:85,110:[2,189],111:68,118:[2,189],126:[2,189],129:[2,189],130:[2,189],133:[1,74],134:[2,189],135:[1,78],136:[2,189],137:[2,189],138:[2,189],139:[2,189]},{1:[2,190],6:[2,190],25:[2,190],26:[2,190],49:[2,190],54:[2,190],57:[2,190],73:[2,190],78:[2,190],86:[2,190],91:[2,190],93:[2,190],102:[2,190],103:84,104:[2,190],105:[2,190],106:[2,190],109:85,110:[2,190],111:68,118:[2,190],126:[2,190],129:[2,190],130:[2,190],133:[1,74],134:[2,190],135:[1,78],136:[2,190],137:[2,190],138:[2,190],139:[2,190]},{1:[2,191],6:[2,191],25:[2,191],26:[2,191],49:[2,191],54:[2,191],57:[2,191],73:[2,191],78:[2,191],86:[2,191],91:[2,191],93:[2,191],102:[2,191],103:84,104:[2,191],105:[2,191],106:[2,191],109:85,110:[2,191],111:68,118:[2,191],126:[2,191],129:[2,191],130:[2,191],133:[1,74],134:[2,191],135:[1,78],136:[2,191],137:[2,191],138:[2,191],139:[2,191]},{1:[2,192],6:[2,192],25:[2,192],26:[2,192],49:[2,192],54:[2,192],57:[2,192],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,192],74:[2,72],78:[2,192],84:[2,72],85:[2,72],86:[2,192],91:[2,192],93:[2,192],102:[2,192],104:[2,192],105:[2,192],106:[2,192],110:[2,192],118:[2,192],126:[2,192],129:[2,192],130:[2,192],133:[2,192],134:[2,192],135:[2,192],136:[2,192],137:[2,192],138:[2,192],139:[2,192]},{62:90,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],74:[1,98],81:89,84:[1,91],85:[2,108]},{62:100,66:[1,92],67:[1,93],68:[1,94],69:[1,95],70:96,71:[1,97],74:[1,98],81:99,84:[1,91],85:[2,108]},{66:[2,75],67:[2,75],68:[2,75],69:[2,75],71:[2,75],74:[2,75],84:[2,75],85:[2,75]},{1:[2,193],6:[2,193],25:[2,193],26:[2,193],49:[2,193],54:[2,193],57:[2,193],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,193],74:[2,72],78:[2,193],84:[2,72],85:[2,72],86:[2,193],91:[2,193],93:[2,193],102:[2,193],104:[2,193],105:[2,193],106:[2,193],110:[2,193],118:[2,193],126:[2,193],129:[2,193],130:[2,193],133:[2,193],134:[2,193],135:[2,193],136:[2,193],137:[2,193],138:[2,193],139:[2,193]},{1:[2,194],6:[2,194],25:[2,194],26:[2,194],49:[2,194],54:[2,194],57:[2,194],73:[2,194],78:[2,194],86:[2,194],91:[2,194],93:[2,194],102:[2,194],104:[2,194],105:[2,194],106:[2,194],110:[2,194],118:[2,194],126:[2,194],129:[2,194],130:[2,194],133:[2,194],134:[2,194],135:[2,194],136:[2,194],137:[2,194],138:[2,194],139:[2,194]},{1:[2,195],6:[2,195],25:[2,195],26:[2,195],49:[2,195],54:[2,195],57:[2,195],73:[2,195],78:[2,195],86:[2,195],91:[2,195],93:[2,195],102:[2,195],104:[2,195],105:[2,195],106:[2,195],110:[2,195],118:[2,195],126:[2,195],129:[2,195],130:[2,195],133:[2,195],134:[2,195],135:[2,195],136:[2,195],137:[2,195],138:[2,195],139:[2,195]},{6:[1,213],7:211,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,212],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:214,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{24:215,25:[1,115],125:[1,216]},{1:[2,134],6:[2,134],25:[2,134],26:[2,134],49:[2,134],54:[2,134],57:[2,134],73:[2,134],78:[2,134],86:[2,134],91:[2,134],93:[2,134],97:217,98:[1,218],99:[1,219],102:[2,134],104:[2,134],105:[2,134],106:[2,134],110:[2,134],118:[2,134],126:[2,134],129:[2,134],130:[2,134],133:[2,134],134:[2,134],135:[2,134],136:[2,134],137:[2,134],138:[2,134],139:[2,134]},{1:[2,148],6:[2,148],25:[2,148],26:[2,148],49:[2,148],54:[2,148],57:[2,148],73:[2,148],78:[2,148],86:[2,148],91:[2,148],93:[2,148],102:[2,148],104:[2,148],105:[2,148],106:[2,148],110:[2,148],118:[2,148],126:[2,148],129:[2,148],130:[2,148],133:[2,148],134:[2,148],135:[2,148],136:[2,148],137:[2,148],138:[2,148],139:[2,148]},{1:[2,156],6:[2,156],25:[2,156],26:[2,156],49:[2,156],54:[2,156],57:[2,156],73:[2,156],78:[2,156],86:[2,156],91:[2,156],93:[2,156],102:[2,156],104:[2,156],105:[2,156],106:[2,156],110:[2,156],118:[2,156],126:[2,156],129:[2,156],130:[2,156],133:[2,156],134:[2,156],135:[2,156],136:[2,156],137:[2,156],138:[2,156],139:[2,156]},{25:[1,220],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{120:221,122:222,123:[1,223]},{1:[2,97],6:[2,97],25:[2,97],26:[2,97],49:[2,97],54:[2,97],57:[2,97],73:[2,97],78:[2,97],86:[2,97],91:[2,97],93:[2,97],102:[2,97],104:[2,97],105:[2,97],106:[2,97],110:[2,97],118:[2,97],126:[2,97],129:[2,97],130:[2,97],133:[2,97],134:[2,97],135:[2,97],136:[2,97],137:[2,97],138:[2,97],139:[2,97]},{7:224,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,100],6:[2,100],24:225,25:[1,115],26:[2,100],49:[2,100],54:[2,100],57:[2,100],66:[2,72],67:[2,72],68:[2,72],69:[2,72],71:[2,72],73:[2,100],74:[2,72],78:[2,100],80:[1,226],84:[2,72],85:[2,72],86:[2,100],91:[2,100],93:[2,100],102:[2,100],104:[2,100],105:[2,100],106:[2,100],110:[2,100],118:[2,100],126:[2,100],129:[2,100],130:[2,100],133:[2,100],134:[2,100],135:[2,100],136:[2,100],137:[2,100],138:[2,100],139:[2,100]},{1:[2,141],6:[2,141],25:[2,141],26:[2,141],49:[2,141],54:[2,141],57:[2,141],73:[2,141],78:[2,141],86:[2,141],91:[2,141],93:[2,141],102:[2,141],103:84,104:[2,141],105:[2,141],106:[2,141],109:85,110:[2,141],111:68,118:[2,141],126:[2,141],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,45],6:[2,45],26:[2,45],102:[2,45],103:84,104:[2,45],106:[2,45],109:85,110:[2,45],111:68,126:[2,45],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,73],102:[1,227]},{4:228,5:3,7:4,8:5,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,129],25:[2,129],54:[2,129],57:[1,230],91:[2,129],92:229,93:[1,194],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,115],6:[2,115],25:[2,115],26:[2,115],40:[2,115],49:[2,115],54:[2,115],57:[2,115],66:[2,115],67:[2,115],68:[2,115],69:[2,115],71:[2,115],73:[2,115],74:[2,115],78:[2,115],84:[2,115],85:[2,115],86:[2,115],91:[2,115],93:[2,115],102:[2,115],104:[2,115],105:[2,115],106:[2,115],110:[2,115],116:[2,115],117:[2,115],118:[2,115],126:[2,115],129:[2,115],130:[2,115],133:[2,115],134:[2,115],135:[2,115],136:[2,115],137:[2,115],138:[2,115],139:[2,115]},{6:[2,52],25:[2,52],53:231,54:[1,232],91:[2,52]},{6:[2,124],25:[2,124],26:[2,124],54:[2,124],86:[2,124],91:[2,124]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:233,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,130],25:[2,130],26:[2,130],54:[2,130],86:[2,130],91:[2,130]},{6:[2,131],25:[2,131],26:[2,131],54:[2,131],86:[2,131],91:[2,131]},{1:[2,114],6:[2,114],25:[2,114],26:[2,114],40:[2,114],43:[2,114],49:[2,114],54:[2,114],57:[2,114],66:[2,114],67:[2,114],68:[2,114],69:[2,114],71:[2,114],73:[2,114],74:[2,114],78:[2,114],80:[2,114],84:[2,114],85:[2,114],86:[2,114],91:[2,114],93:[2,114],102:[2,114],104:[2,114],105:[2,114],106:[2,114],110:[2,114],116:[2,114],117:[2,114],118:[2,114],126:[2,114],129:[2,114],130:[2,114],131:[2,114],132:[2,114],133:[2,114],134:[2,114],135:[2,114],136:[2,114],137:[2,114],138:[2,114],139:[2,114],140:[2,114]},{24:234,25:[1,115],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,144],6:[2,144],25:[2,144],26:[2,144],49:[2,144],54:[2,144],57:[2,144],73:[2,144],78:[2,144],86:[2,144],91:[2,144],93:[2,144],102:[2,144],103:84,104:[1,64],105:[1,235],106:[1,65],109:85,110:[1,67],111:68,118:[2,144],126:[2,144],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,146],6:[2,146],25:[2,146],26:[2,146],49:[2,146],54:[2,146],57:[2,146],73:[2,146],78:[2,146],86:[2,146],91:[2,146],93:[2,146],102:[2,146],103:84,104:[1,64],105:[1,236],106:[1,65],109:85,110:[1,67],111:68,118:[2,146],126:[2,146],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,152],6:[2,152],25:[2,152],26:[2,152],49:[2,152],54:[2,152],57:[2,152],73:[2,152],78:[2,152],86:[2,152],91:[2,152],93:[2,152],102:[2,152],104:[2,152],105:[2,152],106:[2,152],110:[2,152],118:[2,152],126:[2,152],129:[2,152],130:[2,152],133:[2,152],134:[2,152],135:[2,152],136:[2,152],137:[2,152],138:[2,152],139:[2,152]},{1:[2,153],6:[2,153],25:[2,153],26:[2,153],49:[2,153],54:[2,153],57:[2,153],73:[2,153],78:[2,153],86:[2,153],91:[2,153],93:[2,153],102:[2,153],103:84,104:[1,64],105:[2,153],106:[1,65],109:85,110:[1,67],111:68,118:[2,153],126:[2,153],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,157],6:[2,157],25:[2,157],26:[2,157],49:[2,157],54:[2,157],57:[2,157],73:[2,157],78:[2,157],86:[2,157],91:[2,157],93:[2,157],102:[2,157],104:[2,157],105:[2,157],106:[2,157],110:[2,157],118:[2,157],126:[2,157],129:[2,157],130:[2,157],133:[2,157],134:[2,157],135:[2,157],136:[2,157],137:[2,157],138:[2,157],139:[2,157]},{116:[2,159],117:[2,159]},{27:160,28:[1,72],44:161,58:162,59:163,76:[1,69],89:[1,112],90:[1,113],113:237,115:159},{54:[1,238],116:[2,165],117:[2,165]},{54:[2,161],116:[2,161],117:[2,161]},{54:[2,162],116:[2,162],117:[2,162]},{54:[2,163],116:[2,163],117:[2,163]},{54:[2,164],116:[2,164],117:[2,164]},{1:[2,158],6:[2,158],25:[2,158],26:[2,158],49:[2,158],54:[2,158],57:[2,158],73:[2,158],78:[2,158],86:[2,158],91:[2,158],93:[2,158],102:[2,158],104:[2,158],105:[2,158],106:[2,158],110:[2,158],118:[2,158],126:[2,158],129:[2,158],130:[2,158],133:[2,158],134:[2,158],135:[2,158],136:[2,158],137:[2,158],138:[2,158],139:[2,158]},{7:239,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:240,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],53:241,54:[1,242],78:[2,52]},{6:[2,92],25:[2,92],26:[2,92],54:[2,92],78:[2,92]},{6:[2,38],25:[2,38],26:[2,38],43:[1,243],54:[2,38],78:[2,38]},{6:[2,41],25:[2,41],26:[2,41],54:[2,41],78:[2,41]},{6:[2,42],25:[2,42],26:[2,42],43:[2,42],54:[2,42],78:[2,42]},{6:[2,43],25:[2,43],26:[2,43],43:[2,43],54:[2,43],78:[2,43]},{6:[2,44],25:[2,44],26:[2,44],43:[2,44],54:[2,44],78:[2,44]},{1:[2,4],6:[2,4],26:[2,4],102:[2,4]},{1:[2,197],6:[2,197],25:[2,197],26:[2,197],49:[2,197],54:[2,197],57:[2,197],73:[2,197],78:[2,197],86:[2,197],91:[2,197],93:[2,197],102:[2,197],103:84,104:[2,197],105:[2,197],106:[2,197],109:85,110:[2,197],111:68,118:[2,197],126:[2,197],129:[2,197],130:[2,197],133:[1,74],134:[1,77],135:[1,78],136:[2,197],137:[2,197],138:[2,197],139:[2,197]},{1:[2,198],6:[2,198],25:[2,198],26:[2,198],49:[2,198],54:[2,198],57:[2,198],73:[2,198],78:[2,198],86:[2,198],91:[2,198],93:[2,198],102:[2,198],103:84,104:[2,198],105:[2,198],106:[2,198],109:85,110:[2,198],111:68,118:[2,198],126:[2,198],129:[2,198],130:[2,198],133:[1,74],134:[1,77],135:[1,78],136:[2,198],137:[2,198],138:[2,198],139:[2,198]},{1:[2,199],6:[2,199],25:[2,199],26:[2,199],49:[2,199],54:[2,199],57:[2,199],73:[2,199],78:[2,199],86:[2,199],91:[2,199],93:[2,199],102:[2,199],103:84,104:[2,199],105:[2,199],106:[2,199],109:85,110:[2,199],111:68,118:[2,199],126:[2,199],129:[2,199],130:[2,199],133:[1,74],134:[2,199],135:[1,78],136:[2,199],137:[2,199],138:[2,199],139:[2,199]},{1:[2,200],6:[2,200],25:[2,200],26:[2,200],49:[2,200],54:[2,200],57:[2,200],73:[2,200],78:[2,200],86:[2,200],91:[2,200],93:[2,200],102:[2,200],103:84,104:[2,200],105:[2,200],106:[2,200],109:85,110:[2,200],111:68,118:[2,200],126:[2,200],129:[2,200],130:[2,200],133:[1,74],134:[2,200],135:[1,78],136:[2,200],137:[2,200],138:[2,200],139:[2,200]},{1:[2,201],6:[2,201],25:[2,201],26:[2,201],49:[2,201],54:[2,201],57:[2,201],73:[2,201],78:[2,201],86:[2,201],91:[2,201],93:[2,201],102:[2,201],103:84,104:[2,201],105:[2,201],106:[2,201],109:85,110:[2,201],111:68,118:[2,201],126:[2,201],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[2,201],137:[2,201],138:[2,201],139:[2,201]},{1:[2,202],6:[2,202],25:[2,202],26:[2,202],49:[2,202],54:[2,202],57:[2,202],73:[2,202],78:[2,202],86:[2,202],91:[2,202],93:[2,202],102:[2,202],103:84,104:[2,202],105:[2,202],106:[2,202],109:85,110:[2,202],111:68,118:[2,202],126:[2,202],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[2,202],138:[2,202],139:[1,82]},{1:[2,203],6:[2,203],25:[2,203],26:[2,203],49:[2,203],54:[2,203],57:[2,203],73:[2,203],78:[2,203],86:[2,203],91:[2,203],93:[2,203],102:[2,203],103:84,104:[2,203],105:[2,203],106:[2,203],109:85,110:[2,203],111:68,118:[2,203],126:[2,203],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[2,203],139:[1,82]},{1:[2,204],6:[2,204],25:[2,204],26:[2,204],49:[2,204],54:[2,204],57:[2,204],73:[2,204],78:[2,204],86:[2,204],91:[2,204],93:[2,204],102:[2,204],103:84,104:[2,204],105:[2,204],106:[2,204],109:85,110:[2,204],111:68,118:[2,204],126:[2,204],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[2,204],138:[2,204],139:[2,204]},{1:[2,187],6:[2,187],25:[2,187],26:[2,187],49:[2,187],54:[2,187],57:[2,187],73:[2,187],78:[2,187],86:[2,187],91:[2,187],93:[2,187],102:[2,187],103:84,104:[1,64],105:[2,187],106:[1,65],109:85,110:[1,67],111:68,118:[2,187],126:[2,187],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,186],6:[2,186],25:[2,186],26:[2,186],49:[2,186],54:[2,186],57:[2,186],73:[2,186],78:[2,186],86:[2,186],91:[2,186],93:[2,186],102:[2,186],103:84,104:[1,64],105:[2,186],106:[1,65],109:85,110:[1,67],111:68,118:[2,186],126:[2,186],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,104],6:[2,104],25:[2,104],26:[2,104],49:[2,104],54:[2,104],57:[2,104],66:[2,104],67:[2,104],68:[2,104],69:[2,104],71:[2,104],73:[2,104],74:[2,104],78:[2,104],84:[2,104],85:[2,104],86:[2,104],91:[2,104],93:[2,104],102:[2,104],104:[2,104],105:[2,104],106:[2,104],110:[2,104],118:[2,104],126:[2,104],129:[2,104],130:[2,104],133:[2,104],134:[2,104],135:[2,104],136:[2,104],137:[2,104],138:[2,104],139:[2,104]},{1:[2,80],6:[2,80],25:[2,80],26:[2,80],40:[2,80],49:[2,80],54:[2,80],57:[2,80],66:[2,80],67:[2,80],68:[2,80],69:[2,80],71:[2,80],73:[2,80],74:[2,80],78:[2,80],80:[2,80],84:[2,80],85:[2,80],86:[2,80],91:[2,80],93:[2,80],102:[2,80],104:[2,80],105:[2,80],106:[2,80],110:[2,80],118:[2,80],126:[2,80],129:[2,80],130:[2,80],131:[2,80],132:[2,80],133:[2,80],134:[2,80],135:[2,80],136:[2,80],137:[2,80],138:[2,80],139:[2,80],140:[2,80]},{1:[2,81],6:[2,81],25:[2,81],26:[2,81],40:[2,81],49:[2,81],54:[2,81],57:[2,81],66:[2,81],67:[2,81],68:[2,81],69:[2,81],71:[2,81],73:[2,81],74:[2,81],78:[2,81],80:[2,81],84:[2,81],85:[2,81],86:[2,81],91:[2,81],93:[2,81],102:[2,81],104:[2,81],105:[2,81],106:[2,81],110:[2,81],118:[2,81],126:[2,81],129:[2,81],130:[2,81],131:[2,81],132:[2,81],133:[2,81],134:[2,81],135:[2,81],136:[2,81],137:[2,81],138:[2,81],139:[2,81],140:[2,81]},{1:[2,82],6:[2,82],25:[2,82],26:[2,82],40:[2,82],49:[2,82],54:[2,82],57:[2,82],66:[2,82],67:[2,82],68:[2,82],69:[2,82],71:[2,82],73:[2,82],74:[2,82],78:[2,82],80:[2,82],84:[2,82],85:[2,82],86:[2,82],91:[2,82],93:[2,82],102:[2,82],104:[2,82],105:[2,82],106:[2,82],110:[2,82],118:[2,82],126:[2,82],129:[2,82],130:[2,82],131:[2,82],132:[2,82],133:[2,82],134:[2,82],135:[2,82],136:[2,82],137:[2,82],138:[2,82],139:[2,82],140:[2,82]},{1:[2,83],6:[2,83],25:[2,83],26:[2,83],40:[2,83],49:[2,83],54:[2,83],57:[2,83],66:[2,83],67:[2,83],68:[2,83],69:[2,83],71:[2,83],73:[2,83],74:[2,83],78:[2,83],80:[2,83],84:[2,83],85:[2,83],86:[2,83],91:[2,83],93:[2,83],102:[2,83],104:[2,83],105:[2,83],106:[2,83],110:[2,83],118:[2,83],126:[2,83],129:[2,83],130:[2,83],131:[2,83],132:[2,83],133:[2,83],134:[2,83],135:[2,83],136:[2,83],137:[2,83],138:[2,83],139:[2,83],140:[2,83]},{73:[1,244]},{57:[1,195],73:[2,88],92:245,93:[1,194],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{73:[2,89]},{7:246,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,73:[2,123],76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{11:[2,117],28:[2,117],30:[2,117],31:[2,117],33:[2,117],34:[2,117],35:[2,117],36:[2,117],37:[2,117],38:[2,117],45:[2,117],46:[2,117],47:[2,117],51:[2,117],52:[2,117],73:[2,117],76:[2,117],79:[2,117],83:[2,117],88:[2,117],89:[2,117],90:[2,117],96:[2,117],100:[2,117],101:[2,117],104:[2,117],106:[2,117],108:[2,117],110:[2,117],119:[2,117],125:[2,117],127:[2,117],128:[2,117],129:[2,117],130:[2,117],131:[2,117],132:[2,117]},{11:[2,118],28:[2,118],30:[2,118],31:[2,118],33:[2,118],34:[2,118],35:[2,118],36:[2,118],37:[2,118],38:[2,118],45:[2,118],46:[2,118],47:[2,118],51:[2,118],52:[2,118],73:[2,118],76:[2,118],79:[2,118],83:[2,118],88:[2,118],89:[2,118],90:[2,118],96:[2,118],100:[2,118],101:[2,118],104:[2,118],106:[2,118],108:[2,118],110:[2,118],119:[2,118],125:[2,118],127:[2,118],128:[2,118],129:[2,118],130:[2,118],131:[2,118],132:[2,118]},{1:[2,87],6:[2,87],25:[2,87],26:[2,87],40:[2,87],49:[2,87],54:[2,87],57:[2,87],66:[2,87],67:[2,87],68:[2,87],69:[2,87],71:[2,87],73:[2,87],74:[2,87],78:[2,87],80:[2,87],84:[2,87],85:[2,87],86:[2,87],91:[2,87],93:[2,87],102:[2,87],104:[2,87],105:[2,87],106:[2,87],110:[2,87],118:[2,87],126:[2,87],129:[2,87],130:[2,87],131:[2,87],132:[2,87],133:[2,87],134:[2,87],135:[2,87],136:[2,87],137:[2,87],138:[2,87],139:[2,87],140:[2,87]},{1:[2,105],6:[2,105],25:[2,105],26:[2,105],49:[2,105],54:[2,105],57:[2,105],66:[2,105],67:[2,105],68:[2,105],69:[2,105],71:[2,105],73:[2,105],74:[2,105],78:[2,105],84:[2,105],85:[2,105],86:[2,105],91:[2,105],93:[2,105],102:[2,105],104:[2,105],105:[2,105],106:[2,105],110:[2,105],118:[2,105],126:[2,105],129:[2,105],130:[2,105],133:[2,105],134:[2,105],135:[2,105],136:[2,105],137:[2,105],138:[2,105],139:[2,105]},{1:[2,35],6:[2,35],25:[2,35],26:[2,35],49:[2,35],54:[2,35],57:[2,35],73:[2,35],78:[2,35],86:[2,35],91:[2,35],93:[2,35],102:[2,35],103:84,104:[2,35],105:[2,35],106:[2,35],109:85,110:[2,35],111:68,118:[2,35],126:[2,35],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:247,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:248,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,110],6:[2,110],25:[2,110],26:[2,110],49:[2,110],54:[2,110],57:[2,110],66:[2,110],67:[2,110],68:[2,110],69:[2,110],71:[2,110],73:[2,110],74:[2,110],78:[2,110],84:[2,110],85:[2,110],86:[2,110],91:[2,110],93:[2,110],102:[2,110],104:[2,110],105:[2,110],106:[2,110],110:[2,110],118:[2,110],126:[2,110],129:[2,110],130:[2,110],133:[2,110],134:[2,110],135:[2,110],136:[2,110],137:[2,110],138:[2,110],139:[2,110]},{6:[2,52],25:[2,52],53:249,54:[1,232],86:[2,52]},{6:[2,129],25:[2,129],26:[2,129],54:[2,129],57:[1,250],86:[2,129],91:[2,129],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{50:251,51:[1,59],52:[1,60]},{6:[2,53],25:[2,53],26:[2,53],27:108,28:[1,72],44:109,55:252,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[1,253],25:[1,254]},{6:[2,60],25:[2,60],26:[2,60],49:[2,60],54:[2,60]},{7:255,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,23],6:[2,23],25:[2,23],26:[2,23],49:[2,23],54:[2,23],57:[2,23],73:[2,23],78:[2,23],86:[2,23],91:[2,23],93:[2,23],98:[2,23],99:[2,23],102:[2,23],104:[2,23],105:[2,23],106:[2,23],110:[2,23],118:[2,23],121:[2,23],123:[2,23],126:[2,23],129:[2,23],130:[2,23],133:[2,23],134:[2,23],135:[2,23],136:[2,23],137:[2,23],138:[2,23],139:[2,23]},{6:[1,73],26:[1,256]},{1:[2,205],6:[2,205],25:[2,205],26:[2,205],49:[2,205],54:[2,205],57:[2,205],73:[2,205],78:[2,205],86:[2,205],91:[2,205],93:[2,205],102:[2,205],103:84,104:[2,205],105:[2,205],106:[2,205],109:85,110:[2,205],111:68,118:[2,205],126:[2,205],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:257,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:258,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,208],6:[2,208],25:[2,208],26:[2,208],49:[2,208],54:[2,208],57:[2,208],73:[2,208],78:[2,208],86:[2,208],91:[2,208],93:[2,208],102:[2,208],103:84,104:[2,208],105:[2,208],106:[2,208],109:85,110:[2,208],111:68,118:[2,208],126:[2,208],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,185],6:[2,185],25:[2,185],26:[2,185],49:[2,185],54:[2,185],57:[2,185],73:[2,185],78:[2,185],86:[2,185],91:[2,185],93:[2,185],102:[2,185],104:[2,185],105:[2,185],106:[2,185],110:[2,185],118:[2,185],126:[2,185],129:[2,185],130:[2,185],133:[2,185],134:[2,185],135:[2,185],136:[2,185],137:[2,185],138:[2,185],139:[2,185]},{7:259,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,135],6:[2,135],25:[2,135],26:[2,135],49:[2,135],54:[2,135],57:[2,135],73:[2,135],78:[2,135],86:[2,135],91:[2,135],93:[2,135],98:[1,260],102:[2,135],104:[2,135],105:[2,135],106:[2,135],110:[2,135],118:[2,135],126:[2,135],129:[2,135],130:[2,135],133:[2,135],134:[2,135],135:[2,135],136:[2,135],137:[2,135],138:[2,135],139:[2,135]},{24:261,25:[1,115]},{24:264,25:[1,115],27:262,28:[1,72],59:263,76:[1,69]},{120:265,122:222,123:[1,223]},{26:[1,266],121:[1,267],122:268,123:[1,223]},{26:[2,178],121:[2,178],123:[2,178]},{7:270,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],95:269,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,98],6:[2,98],24:271,25:[1,115],26:[2,98],49:[2,98],54:[2,98],57:[2,98],73:[2,98],78:[2,98],86:[2,98],91:[2,98],93:[2,98],102:[2,98],103:84,104:[1,64],105:[2,98],106:[1,65],109:85,110:[1,67],111:68,118:[2,98],126:[2,98],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,101],6:[2,101],25:[2,101],26:[2,101],49:[2,101],54:[2,101],57:[2,101],73:[2,101],78:[2,101],86:[2,101],91:[2,101],93:[2,101],102:[2,101],104:[2,101],105:[2,101],106:[2,101],110:[2,101],118:[2,101],126:[2,101],129:[2,101],130:[2,101],133:[2,101],134:[2,101],135:[2,101],136:[2,101],137:[2,101],138:[2,101],139:[2,101]},{7:272,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,142],6:[2,142],25:[2,142],26:[2,142],49:[2,142],54:[2,142],57:[2,142],66:[2,142],67:[2,142],68:[2,142],69:[2,142],71:[2,142],73:[2,142],74:[2,142],78:[2,142],84:[2,142],85:[2,142],86:[2,142],91:[2,142],93:[2,142],102:[2,142],104:[2,142],105:[2,142],106:[2,142],110:[2,142],118:[2,142],126:[2,142],129:[2,142],130:[2,142],133:[2,142],134:[2,142],135:[2,142],136:[2,142],137:[2,142],138:[2,142],139:[2,142]},{6:[1,73],26:[1,273]},{7:274,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,67],11:[2,118],25:[2,67],28:[2,118],30:[2,118],31:[2,118],33:[2,118],34:[2,118],35:[2,118],36:[2,118],37:[2,118],38:[2,118],45:[2,118],46:[2,118],47:[2,118],51:[2,118],52:[2,118],54:[2,67],76:[2,118],79:[2,118],83:[2,118],88:[2,118],89:[2,118],90:[2,118],91:[2,67],96:[2,118],100:[2,118],101:[2,118],104:[2,118],106:[2,118],108:[2,118],110:[2,118],119:[2,118],125:[2,118],127:[2,118],128:[2,118],129:[2,118],130:[2,118],131:[2,118],132:[2,118]},{6:[1,276],25:[1,277],91:[1,275]},{6:[2,53],7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[2,53],26:[2,53],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],86:[2,53],88:[1,57],89:[1,58],90:[1,56],91:[2,53],94:278,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,52],25:[2,52],26:[2,52],53:279,54:[1,232]},{1:[2,182],6:[2,182],25:[2,182],26:[2,182],49:[2,182],54:[2,182],57:[2,182],73:[2,182],78:[2,182],86:[2,182],91:[2,182],93:[2,182],102:[2,182],104:[2,182],105:[2,182],106:[2,182],110:[2,182],118:[2,182],121:[2,182],126:[2,182],129:[2,182],130:[2,182],133:[2,182],134:[2,182],135:[2,182],136:[2,182],137:[2,182],138:[2,182],139:[2,182]},{7:280,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:281,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{116:[2,160],117:[2,160]},{27:160,28:[1,72],44:161,58:162,59:163,76:[1,69],89:[1,112],90:[1,113],115:282},{1:[2,167],6:[2,167],25:[2,167],26:[2,167],49:[2,167],54:[2,167],57:[2,167],73:[2,167],78:[2,167],86:[2,167],91:[2,167],93:[2,167],102:[2,167],103:84,104:[2,167],105:[1,283],106:[2,167],109:85,110:[2,167],111:68,118:[1,284],126:[2,167],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,168],6:[2,168],25:[2,168],26:[2,168],49:[2,168],54:[2,168],57:[2,168],73:[2,168],78:[2,168],86:[2,168],91:[2,168],93:[2,168],102:[2,168],103:84,104:[2,168],105:[1,285],106:[2,168],109:85,110:[2,168],111:68,118:[2,168],126:[2,168],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,287],25:[1,288],78:[1,286]},{6:[2,53],10:170,25:[2,53],26:[2,53],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:289,42:169,44:173,46:[1,45],78:[2,53],89:[1,112]},{7:290,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,291],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,86],6:[2,86],25:[2,86],26:[2,86],40:[2,86],49:[2,86],54:[2,86],57:[2,86],66:[2,86],67:[2,86],68:[2,86],69:[2,86],71:[2,86],73:[2,86],74:[2,86],78:[2,86],80:[2,86],84:[2,86],85:[2,86],86:[2,86],91:[2,86],93:[2,86],102:[2,86],104:[2,86],105:[2,86],106:[2,86],110:[2,86],118:[2,86],126:[2,86],129:[2,86],130:[2,86],131:[2,86],132:[2,86],133:[2,86],134:[2,86],135:[2,86],136:[2,86],137:[2,86],138:[2,86],139:[2,86],140:[2,86]},{7:292,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,73:[2,121],76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{73:[2,122],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,36],6:[2,36],25:[2,36],26:[2,36],49:[2,36],54:[2,36],57:[2,36],73:[2,36],78:[2,36],86:[2,36],91:[2,36],93:[2,36],102:[2,36],103:84,104:[2,36],105:[2,36],106:[2,36],109:85,110:[2,36],111:68,118:[2,36],126:[2,36],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{26:[1,293],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,276],25:[1,277],86:[1,294]},{6:[2,67],25:[2,67],26:[2,67],54:[2,67],86:[2,67],91:[2,67]},{24:295,25:[1,115]},{6:[2,56],25:[2,56],26:[2,56],49:[2,56],54:[2,56]},{27:108,28:[1,72],44:109,55:296,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[2,54],25:[2,54],26:[2,54],27:108,28:[1,72],44:109,48:297,54:[2,54],55:105,56:106,57:[1,107],58:110,59:111,76:[1,69],89:[1,112],90:[1,113]},{6:[2,61],25:[2,61],26:[2,61],49:[2,61],54:[2,61],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,24],6:[2,24],25:[2,24],26:[2,24],49:[2,24],54:[2,24],57:[2,24],73:[2,24],78:[2,24],86:[2,24],91:[2,24],93:[2,24],98:[2,24],99:[2,24],102:[2,24],104:[2,24],105:[2,24],106:[2,24],110:[2,24],118:[2,24],121:[2,24],123:[2,24],126:[2,24],129:[2,24],130:[2,24],133:[2,24],134:[2,24],135:[2,24],136:[2,24],137:[2,24],138:[2,24],139:[2,24]},{26:[1,298],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,207],6:[2,207],25:[2,207],26:[2,207],49:[2,207],54:[2,207],57:[2,207],73:[2,207],78:[2,207],86:[2,207],91:[2,207],93:[2,207],102:[2,207],103:84,104:[2,207],105:[2,207],106:[2,207],109:85,110:[2,207],111:68,118:[2,207],126:[2,207],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{24:299,25:[1,115],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{24:300,25:[1,115]},{1:[2,136],6:[2,136],25:[2,136],26:[2,136],49:[2,136],54:[2,136],57:[2,136],73:[2,136],78:[2,136],86:[2,136],91:[2,136],93:[2,136],102:[2,136],104:[2,136],105:[2,136],106:[2,136],110:[2,136],118:[2,136],126:[2,136],129:[2,136],130:[2,136],133:[2,136],134:[2,136],135:[2,136],136:[2,136],137:[2,136],138:[2,136],139:[2,136]},{24:301,25:[1,115]},{24:302,25:[1,115]},{1:[2,140],6:[2,140],25:[2,140],26:[2,140],49:[2,140],54:[2,140],57:[2,140],73:[2,140],78:[2,140],86:[2,140],91:[2,140],93:[2,140],98:[2,140],102:[2,140],104:[2,140],105:[2,140],106:[2,140],110:[2,140],118:[2,140],126:[2,140],129:[2,140],130:[2,140],133:[2,140],134:[2,140],135:[2,140],136:[2,140],137:[2,140],138:[2,140],139:[2,140]},{26:[1,303],121:[1,304],122:268,123:[1,223]},{1:[2,176],6:[2,176],25:[2,176],26:[2,176],49:[2,176],54:[2,176],57:[2,176],73:[2,176],78:[2,176],86:[2,176],91:[2,176],93:[2,176],102:[2,176],104:[2,176],105:[2,176],106:[2,176],110:[2,176],118:[2,176],126:[2,176],129:[2,176],130:[2,176],133:[2,176],134:[2,176],135:[2,176],136:[2,176],137:[2,176],138:[2,176],139:[2,176]},{24:305,25:[1,115]},{26:[2,179],121:[2,179],123:[2,179]},{24:306,25:[1,115],54:[1,307]},{25:[2,132],54:[2,132],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,99],6:[2,99],25:[2,99],26:[2,99],49:[2,99],54:[2,99],57:[2,99],73:[2,99],78:[2,99],86:[2,99],91:[2,99],93:[2,99],102:[2,99],104:[2,99],105:[2,99],106:[2,99],110:[2,99],118:[2,99],126:[2,99],129:[2,99],130:[2,99],133:[2,99],134:[2,99],135:[2,99],136:[2,99],137:[2,99],138:[2,99],139:[2,99]},{1:[2,102],6:[2,102],24:308,25:[1,115],26:[2,102],49:[2,102],54:[2,102],57:[2,102],73:[2,102],78:[2,102],86:[2,102],91:[2,102],93:[2,102],102:[2,102],103:84,104:[1,64],105:[2,102],106:[1,65],109:85,110:[1,67],111:68,118:[2,102],126:[2,102],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{102:[1,309]},{91:[1,310],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,116],6:[2,116],25:[2,116],26:[2,116],40:[2,116],49:[2,116],54:[2,116],57:[2,116],66:[2,116],67:[2,116],68:[2,116],69:[2,116],71:[2,116],73:[2,116],74:[2,116],78:[2,116],84:[2,116],85:[2,116],86:[2,116],91:[2,116],93:[2,116],102:[2,116],104:[2,116],105:[2,116],106:[2,116],110:[2,116],116:[2,116],117:[2,116],118:[2,116],126:[2,116],129:[2,116],130:[2,116],133:[2,116],134:[2,116],135:[2,116],136:[2,116],137:[2,116],138:[2,116],139:[2,116]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],94:311,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:203,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,25:[1,147],27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],57:[1,149],58:46,59:47,60:148,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],87:312,88:[1,57],89:[1,58],90:[1,56],94:146,96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[2,125],25:[2,125],26:[2,125],54:[2,125],86:[2,125],91:[2,125]},{6:[1,276],25:[1,277],26:[1,313]},{1:[2,145],6:[2,145],25:[2,145],26:[2,145],49:[2,145],54:[2,145],57:[2,145],73:[2,145],78:[2,145],86:[2,145],91:[2,145],93:[2,145],102:[2,145],103:84,104:[1,64],105:[2,145],106:[1,65],109:85,110:[1,67],111:68,118:[2,145],126:[2,145],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,147],6:[2,147],25:[2,147],26:[2,147],49:[2,147],54:[2,147],57:[2,147],73:[2,147],78:[2,147],86:[2,147],91:[2,147],93:[2,147],102:[2,147],103:84,104:[1,64],105:[2,147],106:[1,65],109:85,110:[1,67],111:68,118:[2,147],126:[2,147],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{116:[2,166],117:[2,166]},{7:314,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:315,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:316,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,90],6:[2,90],25:[2,90],26:[2,90],40:[2,90],49:[2,90],54:[2,90],57:[2,90],66:[2,90],67:[2,90],68:[2,90],69:[2,90],71:[2,90],73:[2,90],74:[2,90],78:[2,90],84:[2,90],85:[2,90],86:[2,90],91:[2,90],93:[2,90],102:[2,90],104:[2,90],105:[2,90],106:[2,90],110:[2,90],116:[2,90],117:[2,90],118:[2,90],126:[2,90],129:[2,90],130:[2,90],133:[2,90],134:[2,90],135:[2,90],136:[2,90],137:[2,90],138:[2,90],139:[2,90]},{10:170,27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:317,42:169,44:173,46:[1,45],89:[1,112]},{6:[2,91],10:170,25:[2,91],26:[2,91],27:171,28:[1,72],29:172,30:[1,70],31:[1,71],41:168,42:169,44:173,46:[1,45],54:[2,91],77:318,89:[1,112]},{6:[2,93],25:[2,93],26:[2,93],54:[2,93],78:[2,93]},{6:[2,39],25:[2,39],26:[2,39],54:[2,39],78:[2,39],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{7:319,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{73:[2,120],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,37],6:[2,37],25:[2,37],26:[2,37],49:[2,37],54:[2,37],57:[2,37],73:[2,37],78:[2,37],86:[2,37],91:[2,37],93:[2,37],102:[2,37],104:[2,37],105:[2,37],106:[2,37],110:[2,37],118:[2,37],126:[2,37],129:[2,37],130:[2,37],133:[2,37],134:[2,37],135:[2,37],136:[2,37],137:[2,37],138:[2,37],139:[2,37]},{1:[2,111],6:[2,111],25:[2,111],26:[2,111],49:[2,111],54:[2,111],57:[2,111],66:[2,111],67:[2,111],68:[2,111],69:[2,111],71:[2,111],73:[2,111],74:[2,111],78:[2,111],84:[2,111],85:[2,111],86:[2,111],91:[2,111],93:[2,111],102:[2,111],104:[2,111],105:[2,111],106:[2,111],110:[2,111],118:[2,111],126:[2,111],129:[2,111],130:[2,111],133:[2,111],134:[2,111],135:[2,111],136:[2,111],137:[2,111],138:[2,111],139:[2,111]},{1:[2,48],6:[2,48],25:[2,48],26:[2,48],49:[2,48],54:[2,48],57:[2,48],73:[2,48],78:[2,48],86:[2,48],91:[2,48],93:[2,48],102:[2,48],104:[2,48],105:[2,48],106:[2,48],110:[2,48],118:[2,48],126:[2,48],129:[2,48],130:[2,48],133:[2,48],134:[2,48],135:[2,48],136:[2,48],137:[2,48],138:[2,48],139:[2,48]},{6:[2,57],25:[2,57],26:[2,57],49:[2,57],54:[2,57]},{6:[2,52],25:[2,52],26:[2,52],53:320,54:[1,205]},{1:[2,206],6:[2,206],25:[2,206],26:[2,206],49:[2,206],54:[2,206],57:[2,206],73:[2,206],78:[2,206],86:[2,206],91:[2,206],93:[2,206],102:[2,206],104:[2,206],105:[2,206],106:[2,206],110:[2,206],118:[2,206],126:[2,206],129:[2,206],130:[2,206],133:[2,206],134:[2,206],135:[2,206],136:[2,206],137:[2,206],138:[2,206],139:[2,206]},{1:[2,183],6:[2,183],25:[2,183],26:[2,183],49:[2,183],54:[2,183],57:[2,183],73:[2,183],78:[2,183],86:[2,183],91:[2,183],93:[2,183],102:[2,183],104:[2,183],105:[2,183],106:[2,183],110:[2,183],118:[2,183],121:[2,183],126:[2,183],129:[2,183],130:[2,183],133:[2,183],134:[2,183],135:[2,183],136:[2,183],137:[2,183],138:[2,183],139:[2,183]},{1:[2,137],6:[2,137],25:[2,137],26:[2,137],49:[2,137],54:[2,137],57:[2,137],73:[2,137],78:[2,137],86:[2,137],91:[2,137],93:[2,137],102:[2,137],104:[2,137],105:[2,137],106:[2,137],110:[2,137],118:[2,137],126:[2,137],129:[2,137],130:[2,137],133:[2,137],134:[2,137],135:[2,137],136:[2,137],137:[2,137],138:[2,137],139:[2,137]},{1:[2,138],6:[2,138],25:[2,138],26:[2,138],49:[2,138],54:[2,138],57:[2,138],73:[2,138],78:[2,138],86:[2,138],91:[2,138],93:[2,138],98:[2,138],102:[2,138],104:[2,138],105:[2,138],106:[2,138],110:[2,138],118:[2,138],126:[2,138],129:[2,138],130:[2,138],133:[2,138],134:[2,138],135:[2,138],136:[2,138],137:[2,138],138:[2,138],139:[2,138]},{1:[2,139],6:[2,139],25:[2,139],26:[2,139],49:[2,139],54:[2,139],57:[2,139],73:[2,139],78:[2,139],86:[2,139],91:[2,139],93:[2,139],98:[2,139],102:[2,139],104:[2,139],105:[2,139],106:[2,139],110:[2,139],118:[2,139],126:[2,139],129:[2,139],130:[2,139],133:[2,139],134:[2,139],135:[2,139],136:[2,139],137:[2,139],138:[2,139],139:[2,139]},{1:[2,174],6:[2,174],25:[2,174],26:[2,174],49:[2,174],54:[2,174],57:[2,174],73:[2,174],78:[2,174],86:[2,174],91:[2,174],93:[2,174],102:[2,174],104:[2,174],105:[2,174],106:[2,174],110:[2,174],118:[2,174],126:[2,174],129:[2,174],130:[2,174],133:[2,174],134:[2,174],135:[2,174],136:[2,174],137:[2,174],138:[2,174],139:[2,174]},{24:321,25:[1,115]},{26:[1,322]},{6:[1,323],26:[2,180],121:[2,180],123:[2,180]},{7:324,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{1:[2,103],6:[2,103],25:[2,103],26:[2,103],49:[2,103],54:[2,103],57:[2,103],73:[2,103],78:[2,103],86:[2,103],91:[2,103],93:[2,103],102:[2,103],104:[2,103],105:[2,103],106:[2,103],110:[2,103],118:[2,103],126:[2,103],129:[2,103],130:[2,103],133:[2,103],134:[2,103],135:[2,103],136:[2,103],137:[2,103],138:[2,103],139:[2,103]},{1:[2,143],6:[2,143],25:[2,143],26:[2,143],49:[2,143],54:[2,143],57:[2,143],66:[2,143],67:[2,143],68:[2,143],69:[2,143],71:[2,143],73:[2,143],74:[2,143],78:[2,143],84:[2,143],85:[2,143],86:[2,143],91:[2,143],93:[2,143],102:[2,143],104:[2,143],105:[2,143],106:[2,143],110:[2,143],118:[2,143],126:[2,143],129:[2,143],130:[2,143],133:[2,143],134:[2,143],135:[2,143],136:[2,143],137:[2,143],138:[2,143],139:[2,143]},{1:[2,119],6:[2,119],25:[2,119],26:[2,119],49:[2,119],54:[2,119],57:[2,119],66:[2,119],67:[2,119],68:[2,119],69:[2,119],71:[2,119],73:[2,119],74:[2,119],78:[2,119],84:[2,119],85:[2,119],86:[2,119],91:[2,119],93:[2,119],102:[2,119],104:[2,119],105:[2,119],106:[2,119],110:[2,119],118:[2,119],126:[2,119],129:[2,119],130:[2,119],133:[2,119],134:[2,119],135:[2,119],136:[2,119],137:[2,119],138:[2,119],139:[2,119]},{6:[2,126],25:[2,126],26:[2,126],54:[2,126],86:[2,126],91:[2,126]},{6:[2,52],25:[2,52],26:[2,52],53:325,54:[1,232]},{6:[2,127],25:[2,127],26:[2,127],54:[2,127],86:[2,127],91:[2,127]},{1:[2,169],6:[2,169],25:[2,169],26:[2,169],49:[2,169],54:[2,169],57:[2,169],73:[2,169],78:[2,169],86:[2,169],91:[2,169],93:[2,169],102:[2,169],103:84,104:[2,169],105:[2,169],106:[2,169],109:85,110:[2,169],111:68,118:[1,326],126:[2,169],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,171],6:[2,171],25:[2,171],26:[2,171],49:[2,171],54:[2,171],57:[2,171],73:[2,171],78:[2,171],86:[2,171],91:[2,171],93:[2,171],102:[2,171],103:84,104:[2,171],105:[1,327],106:[2,171],109:85,110:[2,171],111:68,118:[2,171],126:[2,171],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,170],6:[2,170],25:[2,170],26:[2,170],49:[2,170],54:[2,170],57:[2,170],73:[2,170],78:[2,170],86:[2,170],91:[2,170],93:[2,170],102:[2,170],103:84,104:[2,170],105:[2,170],106:[2,170],109:85,110:[2,170],111:68,118:[2,170],126:[2,170],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[2,94],25:[2,94],26:[2,94],54:[2,94],78:[2,94]},{6:[2,52],25:[2,52],26:[2,52],53:328,54:[1,242]},{26:[1,329],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,253],25:[1,254],26:[1,330]},{26:[1,331]},{1:[2,177],6:[2,177],25:[2,177],26:[2,177],49:[2,177],54:[2,177],57:[2,177],73:[2,177],78:[2,177],86:[2,177],91:[2,177],93:[2,177],102:[2,177],104:[2,177],105:[2,177],106:[2,177],110:[2,177],118:[2,177],126:[2,177],129:[2,177],130:[2,177],133:[2,177],134:[2,177],135:[2,177],136:[2,177],137:[2,177],138:[2,177],139:[2,177]},{26:[2,181],121:[2,181],123:[2,181]},{25:[2,133],54:[2,133],103:84,104:[1,64],106:[1,65],109:85,110:[1,67],111:68,126:[1,83],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[1,276],25:[1,277],26:[1,332]},{7:333,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{7:334,8:117,9:18,10:19,11:[1,20],12:6,13:7,14:8,15:9,16:10,17:11,18:12,19:13,20:14,21:15,22:16,23:17,27:61,28:[1,72],29:48,30:[1,70],31:[1,71],32:22,33:[1,49],34:[1,50],35:[1,51],36:[1,52],37:[1,53],38:[1,54],39:21,44:62,45:[1,44],46:[1,45],47:[1,27],50:28,51:[1,59],52:[1,60],58:46,59:47,61:35,63:23,64:24,65:25,76:[1,69],79:[1,42],83:[1,26],88:[1,57],89:[1,58],90:[1,56],96:[1,37],100:[1,43],101:[1,55],103:38,104:[1,64],106:[1,65],107:39,108:[1,66],109:40,110:[1,67],111:68,119:[1,41],124:36,125:[1,63],127:[1,29],128:[1,30],129:[1,31],130:[1,32],131:[1,33],132:[1,34]},{6:[1,287],25:[1,288],26:[1,335]},{6:[2,40],25:[2,40],26:[2,40],54:[2,40],78:[2,40]},{6:[2,58],25:[2,58],26:[2,58],49:[2,58],54:[2,58]},{1:[2,175],6:[2,175],25:[2,175],26:[2,175],49:[2,175],54:[2,175],57:[2,175],73:[2,175],78:[2,175],86:[2,175],91:[2,175],93:[2,175],102:[2,175],104:[2,175],105:[2,175],106:[2,175],110:[2,175],118:[2,175],126:[2,175],129:[2,175],130:[2,175],133:[2,175],134:[2,175],135:[2,175],136:[2,175],137:[2,175],138:[2,175],139:[2,175]},{6:[2,128],25:[2,128],26:[2,128],54:[2,128],86:[2,128],91:[2,128]},{1:[2,172],6:[2,172],25:[2,172],26:[2,172],49:[2,172],54:[2,172],57:[2,172],73:[2,172],78:[2,172],86:[2,172],91:[2,172],93:[2,172],102:[2,172],103:84,104:[2,172],105:[2,172],106:[2,172],109:85,110:[2,172],111:68,118:[2,172],126:[2,172],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{1:[2,173],6:[2,173],25:[2,173],26:[2,173],49:[2,173],54:[2,173],57:[2,173],73:[2,173],78:[2,173],86:[2,173],91:[2,173],93:[2,173],102:[2,173],103:84,104:[2,173],105:[2,173],106:[2,173],109:85,110:[2,173],111:68,118:[2,173],126:[2,173],129:[1,76],130:[1,75],133:[1,74],134:[1,77],135:[1,78],136:[1,79],137:[1,80],138:[1,81],139:[1,82]},{6:[2,95],25:[2,95],26:[2,95],54:[2,95],78:[2,95]}],defaultActions:{59:[2,50],60:[2,51],91:[2,109],192:[2,89]},parseError:function(e,t){if(!t.recoverable)throw Error(e);
+this.trace(e)},parse:function(e){function t(){var e;return e=n.lexer.lex()||p,"number"!=typeof e&&(e=n.symbols_[e]||e),e}var n=this,i=[0],r=[null],o=[],s=this.table,a="",c=0,h=0,u=0,l=2,p=1,d=o.slice.call(arguments,1);this.lexer.setInput(e),this.lexer.yy=this.yy,this.yy.lexer=this.lexer,this.yy.parser=this,this.lexer.yylloc===void 0&&(this.lexer.yylloc={});var f=this.lexer.yylloc;o.push(f);var m=this.lexer.options&&this.lexer.options.ranges;this.parseError="function"==typeof this.yy.parseError?this.yy.parseError:Object.getPrototypeOf(this).parseError;for(var y,b,g,k,v,w,T,C,F,L={};;){if(g=i[i.length-1],this.defaultActions[g]?k=this.defaultActions[g]:((null===y||y===void 0)&&(y=t()),k=s[g]&&s[g][y]),k===void 0||!k.length||!k[0]){var N="";F=[];for(w in s[g])this.terminals_[w]&&w>l&&F.push("'"+this.terminals_[w]+"'");N=this.lexer.showPosition?"Parse error on line "+(c+1)+":\n"+this.lexer.showPosition()+"\nExpecting "+F.join(", ")+", got '"+(this.terminals_[y]||y)+"'":"Parse error on line "+(c+1)+": Unexpected "+(y==p?"end of input":"'"+(this.terminals_[y]||y)+"'"),this.parseError(N,{text:this.lexer.match,token:this.terminals_[y]||y,line:this.lexer.yylineno,loc:f,expected:F})}if(k[0]instanceof Array&&k.length>1)throw Error("Parse Error: multiple actions possible at state: "+g+", token: "+y);switch(k[0]){case 1:i.push(y),r.push(this.lexer.yytext),o.push(this.lexer.yylloc),i.push(k[1]),y=null,b?(y=b,b=null):(h=this.lexer.yyleng,a=this.lexer.yytext,c=this.lexer.yylineno,f=this.lexer.yylloc,u>0&&u--);break;case 2:if(T=this.productions_[k[1]][1],L.$=r[r.length-T],L._$={first_line:o[o.length-(T||1)].first_line,last_line:o[o.length-1].last_line,first_column:o[o.length-(T||1)].first_column,last_column:o[o.length-1].last_column},m&&(L._$.range=[o[o.length-(T||1)].range[0],o[o.length-1].range[1]]),v=this.performAction.apply(L,[a,h,c,this.yy,k[1],r,o].concat(d)),v!==void 0)return v;T&&(i=i.slice(0,2*-1*T),r=r.slice(0,-1*T),o=o.slice(0,-1*T)),i.push(this.productions_[k[1]][0]),r.push(L.$),o.push(L._$),C=s[i[i.length-2]][i[i.length-1]],i.push(C);break;case 3:return!0}}return!0}};return e.prototype=t,t.Parser=e,new e}();return require!==void 0&&e!==void 0&&(e.parser=n,e.Parser=n.Parser,e.parse=function(){return n.parse.apply(n,arguments)},e.main=function(t){t[1]||(console.log("Usage: "+t[0]+" FILE"),process.exit(1));var n=require("fs").readFileSync(require("path").normalize(t[1]),"utf8");return e.parser.parse(n)},t!==void 0&&require.main===t&&e.main(process.argv.slice(1))),t.exports}(),require["./scope"]=function(){var e={},t={exports:e};return function(){var t,n,i,r;r=require("./helpers"),n=r.extend,i=r.last,e.Scope=t=function(){function e(t,n,i){this.parent=t,this.expressions=n,this.method=i,this.variables=[{name:"arguments",type:"arguments"}],this.positions={},this.parent||(e.root=this)}return e.root=null,e.prototype.add=function(e,t,n){return this.shared&&!n?this.parent.add(e,t,n):Object.prototype.hasOwnProperty.call(this.positions,e)?this.variables[this.positions[e]].type=t:this.positions[e]=this.variables.push({name:e,type:t})-1},e.prototype.namedMethod=function(){var e;return(null!=(e=this.method)?e.name:void 0)||!this.parent?this.method:this.parent.namedMethod()},e.prototype.find=function(e){return this.check(e)?!0:(this.add(e,"var"),!1)},e.prototype.parameter=function(e){return this.shared&&this.parent.check(e,!0)?void 0:this.add(e,"param")},e.prototype.check=function(e){var t;return!!(this.type(e)||(null!=(t=this.parent)?t.check(e):void 0))},e.prototype.temporary=function(e,t){return e.length>1?"_"+e+(t>1?t-1:""):"_"+(t+parseInt(e,36)).toString(36).replace(/\d/g,"a")},e.prototype.type=function(e){var t,n,i,r;for(r=this.variables,n=0,i=r.length;i>n;n++)if(t=r[n],t.name===e)return t.type;return null},e.prototype.freeVariable=function(e,t){var n,i;for(null==t&&(t=!0),n=0;this.check(i=this.temporary(e,n));)n++;return t&&this.add(i,"var",!0),i},e.prototype.assign=function(e,t){return this.add(e,{value:t,assigned:!0},!0),this.hasAssignments=!0},e.prototype.hasDeclarations=function(){return!!this.declaredVariables().length},e.prototype.declaredVariables=function(){var e,t,n,i,r,o;for(e=[],t=[],o=this.variables,i=0,r=o.length;r>i;i++)n=o[i],"var"===n.type&&("_"===n.name.charAt(0)?t:e).push(n.name);return e.sort().concat(t.sort())},e.prototype.assignedVariables=function(){var e,t,n,i,r;for(i=this.variables,r=[],t=0,n=i.length;n>t;t++)e=i[t],e.type.assigned&&r.push(""+e.name+" = "+e.type.value);return r},e}()}.call(this),t.exports}(),require["./nodes"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k,v,w,T,C,F,L,N,E,x,D,S,R,A,I,_,$,O,j,M,B,V,P,U,H,q,G,W,X,Y,z,K,J,Z,Q,et,tt,nt,it,rt,ot,st,at,ct,ht,ut,lt,pt,dt,ft,mt,yt,bt,gt,kt,vt,wt,Tt={}.hasOwnProperty,Ct=function(e,t){function n(){this.constructor=e}for(var i in t)Tt.call(t,i)&&(e[i]=t[i]);return n.prototype=t.prototype,e.prototype=new n,e.__super__=t.prototype,e},Ft=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1},Lt=[].slice;Error.stackTraceLimit=1/0,H=require("./scope").Scope,vt=require("./lexer"),M=vt.RESERVED,U=vt.STRICT_PROSCRIBED,wt=require("./helpers"),nt=wt.compact,st=wt.flatten,ot=wt.extend,pt=wt.merge,it=wt.del,yt=wt.starts,rt=wt.ends,ut=wt.last,mt=wt.some,tt=wt.addLocationDataFn,lt=wt.locationDataToString,bt=wt.throwSyntaxError,e.extend=ot,e.addLocationDataFn=tt,et=function(){return!0},A=function(){return!1},Y=function(){return this},R=function(){return this.negated=!this.negated,this},e.CodeFragment=h=function(){function e(e,t){var n;this.code=""+t,this.locationData=null!=e?e.locationData:void 0,this.type=(null!=e?null!=(n=e.constructor)?n.name:void 0:void 0)||"unknown"}return e.prototype.nodeType=function(){return"CodeFragment"},e.prototype.toString=function(){return""+this.code+(this.locationData?": "+lt(this.locationData):"")},e}(),at=function(e){var t;return function(){var n,i,r;for(r=[],n=0,i=e.length;i>n;n++)t=e[n],r.push(t.code);return r}().join("")},e.Base=r=function(){function e(){}return e.prototype.nodeType=function(){return"Base"},e.prototype.compile=function(e,t){return at(this.compileToFragments(e,t))},e.prototype.compileToFragments=function(e,t){var n;return e=ot({},e),t&&(e.level=t),n=this.unfoldSoak(e)||this,n.tab=e.indent,e.level!==x&&n.isStatement(e)?n.compileClosure(e):n.compileNode(e)},e.prototype.compileClosure=function(e){var n,i,r,a,h;return(a=this.jumps())&&a.error("cannot use a pure statement in an expression"),e.sharedScope=!0,r=new c([],o.wrap([this])),n=[],((i=this.contains(ct))||this.contains(ht))&&(n=[new D("this")],i?(h="apply",n.push(new D("arguments"))):h="call",r=new Z(r,[new t(new D(h))])),new s(r,n).compileNode(e)},e.prototype.cache=function(e,t,n){var r,o;return this.isComplex()?(r=new D(n||e.scope.freeVariable("ref")),o=new i(r,this),t?[o.compileToFragments(e,t),[this.makeCode(r.value)]]:[o,r]):(r=t?this.compileToFragments(e,t):this,[r,r])},e.prototype.cacheToCodeFragments=function(e){return[at(e[0]),at(e[1])]},e.prototype.makeReturn=function(e){var t;return t=this.unwrapAll(),e?new s(new D(""+e+".push"),[t]):new V(t)},e.prototype.contains=function(e){var t;return t=void 0,this.traverseChildren(!1,function(n){return e(n)?(t=n,!1):void 0}),t},e.prototype.lastNonComment=function(e){var t;for(t=e.length;t--;)if(!(e[t]instanceof u))return e[t];return null},e.prototype.toString=function(e,t){var n;return null==e&&(e=""),null==t&&(t=this.constructor.name),n="\n"+e+t,this.soak&&(n+="?"),this.eachChild(function(t){return n+=t.toString(e+X)}),n},e.prototype.eachChild=function(e){var t,n,i,r,o,s,a,c;if(!this.children)return this;for(a=this.children,i=0,o=a.length;o>i;i++)if(t=a[i],this[t])for(c=st([this[t]]),r=0,s=c.length;s>r;r++)if(n=c[r],e(n)===!1)return this;return this},e.prototype.traverseChildren=function(e,t){return this.eachChild(function(n){var i;return i=t(n),i!==!1?n.traverseChildren(e,t):void 0})},e.prototype.invert=function(){return new $("!",this)},e.prototype.unwrapAll=function(){var e;for(e=this;e!==(e=e.unwrap()););return e},e.prototype.children=[],e.prototype.isStatement=A,e.prototype.jumps=A,e.prototype.isComplex=et,e.prototype.isChainable=A,e.prototype.isAssignable=A,e.prototype.unwrap=Y,e.prototype.unfoldSoak=A,e.prototype.assigns=A,e.prototype.updateLocationDataIfMissing=function(e){return this.locationData?this:(this.locationData=e,this.eachChild(function(t){return t.updateLocationDataIfMissing(e)}))},e.prototype.error=function(e){return bt(e,this.locationData)},e.prototype.makeCode=function(e){return new h(this,e)},e.prototype.wrapInBraces=function(e){return[].concat(this.makeCode("("),e,this.makeCode(")"))},e.prototype.joinFragmentArrays=function(e,t){var n,i,r,o,s;for(n=[],r=o=0,s=e.length;s>o;r=++o)i=e[r],r&&n.push(this.makeCode(t)),n=n.concat(i);return n},e}(),e.Block=o=function(e){function t(e){this.expressions=nt(st(e||[]))}return Ct(t,e),t.prototype.nodeType=function(){return"Block"},t.prototype.children=["expressions"],t.prototype.push=function(e){return this.expressions.push(e),this},t.prototype.pop=function(){return this.expressions.pop()},t.prototype.unshift=function(e){return this.expressions.unshift(e),this},t.prototype.unwrap=function(){return 1===this.expressions.length?this.expressions[0]:this},t.prototype.isEmpty=function(){return!this.expressions.length},t.prototype.isStatement=function(e){var t,n,i,r;for(r=this.expressions,n=0,i=r.length;i>n;n++)if(t=r[n],t.isStatement(e))return!0;return!1},t.prototype.jumps=function(e){var t,n,i,r,o;for(o=this.expressions,i=0,r=o.length;r>i;i++)if(t=o[i],n=t.jumps(e))return n},t.prototype.makeReturn=function(e){var t,n;for(n=this.expressions.length;n--;)if(t=this.expressions[n],!(t instanceof u)){this.expressions[n]=t.makeReturn(e),t instanceof V&&!t.expression&&this.expressions.splice(n,1);break}return this},t.prototype.compileToFragments=function(e,n){return null==e&&(e={}),e.scope?t.__super__.compileToFragments.call(this,e,n):this.compileRoot(e)},t.prototype.compileNode=function(e){var n,i,r,o,s,a,c,h,u;for(this.tab=e.indent,a=e.level===x,i=[],u=this.expressions,o=c=0,h=u.length;h>c;o=++c)s=u[o],s=s.unwrapAll(),s=s.unfoldSoak(e)||s,s instanceof t?i.push(s.compileNode(e)):a?(s.front=!0,r=s.compileToFragments(e),s.isStatement(e)||(r.unshift(this.makeCode(""+this.tab)),r.push(this.makeCode(";"))),i.push(r)):i.push(s.compileToFragments(e,L));return a?this.spaced?[].concat(this.joinFragmentArrays(i,"\n\n"),this.makeCode("\n")):this.joinFragmentArrays(i,"\n"):(n=i.length?this.joinFragmentArrays(i,", "):[this.makeCode("void 0")],i.length>1&&e.level>=L?this.wrapInBraces(n):n)},t.prototype.compileRoot=function(e){var t,n,i,r,o,s,a,c,h,l;for(e.indent=e.bare?"":X,e.level=x,this.spaced=!0,e.scope=new H(null,this,null),l=e.locals||[],c=0,h=l.length;h>c;c++)r=l[c],e.scope.parameter(r);return o=[],e.bare||(s=function(){var e,n,r,o;for(r=this.expressions,o=[],i=e=0,n=r.length;n>e&&(t=r[i],t.unwrap()instanceof u);i=++e)o.push(t);return o}.call(this),a=this.expressions.slice(s.length),this.expressions=s,s.length&&(o=this.compileNode(pt(e,{indent:""})),o.push(this.makeCode("\n"))),this.expressions=a),n=this.compileWithDeclarations(e),e.bare?n:[].concat(o,this.makeCode("(function() {\n"),n,this.makeCode("\n}).call(this);\n"))},t.prototype.compileWithDeclarations=function(e){var t,n,i,r,o,s,a,c,h,l,p,d,f,m;for(r=[],s=[],d=this.expressions,o=l=0,p=d.length;p>l&&(i=d[o],i=i.unwrap(),i instanceof u||i instanceof D);o=++l);return e=pt(e,{level:x}),o&&(a=this.expressions.splice(o,9e9),f=[this.spaced,!1],h=f[0],this.spaced=f[1],m=[this.compileNode(e),h],r=m[0],this.spaced=m[1],this.expressions=a),s=this.compileNode(e),c=e.scope,c.expressions===this&&(n=e.scope.hasDeclarations(),t=c.hasAssignments,n||t?(o&&r.push(this.makeCode("\n")),r.push(this.makeCode(""+this.tab+"var ")),n&&r.push(this.makeCode(c.declaredVariables().join(", "))),t&&(n&&r.push(this.makeCode(",\n"+(this.tab+X))),r.push(this.makeCode(c.assignedVariables().join(",\n"+(this.tab+X))))),r.push(this.makeCode(";\n"+(this.spaced?"\n":"")))):r.length&&s.length&&r.push(this.makeCode("\n"))),r.concat(s)},t.wrap=function(e){return 1===e.length&&e[0]instanceof t?e[0]:new t(e)},t}(r),e.Literal=D=function(e){function t(e){this.value=e}return Ct(t,e),t.prototype.nodeType=function(){return"Literal"},t.prototype.makeReturn=function(){return this.isStatement()?this:t.__super__.makeReturn.apply(this,arguments)},t.prototype.isAssignable=function(){return y.test(this.value)},t.prototype.isStatement=function(){var e;return"break"===(e=this.value)||"continue"===e||"debugger"===e},t.prototype.isComplex=A,t.prototype.assigns=function(e){return e===this.value},t.prototype.jumps=function(e){return"break"!==this.value||(null!=e?e.loop:void 0)||(null!=e?e.block:void 0)?"continue"!==this.value||(null!=e?e.loop:void 0)?void 0:this:this},t.prototype.compileNode=function(e){var t,n,i;return n="this"===this.value?(null!=(i=e.scope.method)?i.bound:void 0)?e.scope.method.context:this.value:this.value.reserved?'"'+this.value+'"':this.value,t=this.isStatement()?""+this.tab+n+";":n,[this.makeCode(t)]},t.prototype.toString=function(){return' "'+this.value+'"'},t}(r),e.Undefined=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return Ct(t,e),t.prototype.isAssignable=A,t.prototype.isComplex=A,t.prototype.compileNode=function(e){return[this.makeCode(e.level>=C?"(void 0)":"void 0")]},t}(r),e.Null=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return Ct(t,e),t.prototype.isAssignable=A,t.prototype.isComplex=A,t.prototype.compileNode=function(){return[this.makeCode("null")]},t}(r),e.Bool=function(e){function t(e){this.val=e}return Ct(t,e),t.prototype.isAssignable=A,t.prototype.isComplex=A,t.prototype.compileNode=function(){return[this.makeCode(this.val)]},t}(r),e.Return=V=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Return"},t.prototype.children=["expression"],t.prototype.isStatement=et,t.prototype.makeReturn=Y,t.prototype.jumps=Y,t.prototype.compileToFragments=function(e,n){var i,r;return i=null!=(r=this.expression)?r.makeReturn():void 0,!i||i instanceof t?t.__super__.compileToFragments.call(this,e,n):i.compileToFragments(e,n)},t.prototype.compileNode=function(e){var t;return t=[],t.push(this.makeCode(this.tab+("return"+(this.expression?" ":"")))),this.expression&&(t=t.concat(this.expression.compileToFragments(e,E))),t.push(this.makeCode(";")),t},t}(r),e.Value=Z=function(e){function t(e,n,i){return!n&&e instanceof t?e:(this.base=e,this.properties=n||[],i&&(this[i]=!0),this)}return Ct(t,e),t.prototype.nodeType=function(){return"Value"},t.prototype.children=["base","properties"],t.prototype.add=function(e){return this.properties=this.properties.concat(e),this},t.prototype.hasProperties=function(){return!!this.properties.length},t.prototype.bareLiteral=function(e){return!this.properties.length&&this.base instanceof e},t.prototype.isArray=function(){return this.bareLiteral(n)},t.prototype.isRange=function(){return this.bareLiteral(B)},t.prototype.isComplex=function(){return this.hasProperties()||this.base.isComplex()},t.prototype.isAssignable=function(){return this.hasProperties()||this.base.isAssignable()},t.prototype.isSimpleNumber=function(){return this.bareLiteral(D)&&P.test(this.base.value)},t.prototype.isString=function(){return this.bareLiteral(D)&&k.test(this.base.value)},t.prototype.isRegex=function(){return this.bareLiteral(D)&&g.test(this.base.value)},t.prototype.isAtomic=function(){var e,t,n,i;for(i=this.properties.concat(this.base),t=0,n=i.length;n>t;t++)if(e=i[t],e.soak||e instanceof s)return!1;return!0},t.prototype.isNotCallable=function(){return this.isSimpleNumber()||this.isString()||this.isRegex()||this.isArray()||this.isRange()||this.isSplice()||this.isObject()},t.prototype.isStatement=function(e){return!this.properties.length&&this.base.isStatement(e)},t.prototype.assigns=function(e){return!this.properties.length&&this.base.assigns(e)},t.prototype.jumps=function(e){return!this.properties.length&&this.base.jumps(e)},t.prototype.isObject=function(e){return this.properties.length?!1:this.base instanceof _&&(!e||this.base.generated)},t.prototype.isSplice=function(){return ut(this.properties)instanceof q},t.prototype.looksStatic=function(e){var t;return this.base.value===e&&this.properties.length&&"prototype"!==(null!=(t=this.properties[0].name)?t.value:void 0)},t.prototype.unwrap=function(){return this.properties.length?this:this.base},t.prototype.cacheReference=function(e){var n,r,o,s;return o=ut(this.properties),2>this.properties.length&&!this.base.isComplex()&&!(null!=o?o.isComplex():void 0)?[this,this]:(n=new t(this.base,this.properties.slice(0,-1)),n.isComplex()&&(r=new D(e.scope.freeVariable("base")),n=new t(new j(new i(r,n)))),o?(o.isComplex()&&(s=new D(e.scope.freeVariable("name")),o=new T(new i(s,o.index)),s=new T(s)),[n.add(o),new t(r||n.base,[s||o])]):[n,r])},t.prototype.compileNode=function(e){var t,n,i,r,o;for(this.base.front=this.front,i=this.properties,t=this.base.compileToFragments(e,i.length?C:null),(this.base instanceof j||i.length)&&P.test(at(t))&&t.push(this.makeCode(".")),r=0,o=i.length;o>r;r++)n=i[r],t.push.apply(t,n.compileToFragments(e));return t},t.prototype.unfoldSoak=function(e){return null!=this.unfoldedSoak?this.unfoldedSoak:this.unfoldedSoak=function(n){return function(){var r,o,s,a,c,h,u,p,d,f;if(s=n.base.unfoldSoak(e))return(d=s.body.properties).push.apply(d,n.properties),s;for(f=n.properties,o=u=0,p=f.length;p>u;o=++u)if(a=f[o],a.soak)return a.soak=!1,r=new t(n.base,n.properties.slice(0,o)),h=new t(n.base,n.properties.slice(o)),r.isComplex()&&(c=new D(e.scope.freeVariable("ref")),r=new j(new i(c,r)),h.base=c),new v(new l(r),h,{soak:!0});return!1}}(this)()},t}(r),e.Comment=u=function(e){function t(e){this.comment=e}return Ct(t,e),t.prototype.nodeType=function(){return"Comment"},t.prototype.isStatement=et,t.prototype.makeReturn=Y,t.prototype.compileNode=function(e,t){var n,i;return i=this.comment.replace(/^(\s*)#/gm,"$1 *"),n="/*"+dt(i,this.tab)+(Ft.call(i,"\n")>=0?"\n"+this.tab:"")+" */",(t||e.level)===x&&(n=e.indent+n),[this.makeCode("\n"),this.makeCode(n)]},t}(r),e.Call=s=function(e){function n(e,t,n){this.args=null!=t?t:[],this.soak=n,this.isNew=!1,this.isSuper="super"===e,this.variable=this.isSuper?null:e,e instanceof Z&&e.isNotCallable()&&e.error("literal is not a function")}return Ct(n,e),n.prototype.nodeType=function(){return"Call"},n.prototype.children=["variable","args"],n.prototype.newInstance=function(){var e,t;return e=(null!=(t=this.variable)?t.base:void 0)||this.variable,e instanceof n&&!e.isNew?e.newInstance():this.isNew=!0,this},n.prototype.superReference=function(e){var n,i;return i=e.scope.namedMethod(),(null!=i?i.klass:void 0)?(n=[new t(new D("__super__"))],i["static"]&&n.push(new t(new D("constructor"))),n.push(new t(new D(i.name))),new Z(new D(i.klass),n).compile(e)):(null!=i?i.ctor:void 0)?""+i.name+".__super__.constructor":this.error("cannot call super outside of an instance method.")},n.prototype.superThis=function(e){var t;return t=e.scope.method,t&&!t.klass&&t.context||"this"},n.prototype.unfoldSoak=function(e){var t,i,r,o,s,a,c,h,u;if(this.soak){if(this.variable){if(i=gt(e,this,"variable"))return i;h=new Z(this.variable).cacheReference(e),r=h[0],s=h[1]}else r=new D(this.superReference(e)),s=new Z(r);return s=new n(s,this.args),s.isNew=this.isNew,r=new D("typeof "+r.compile(e)+' === "function"'),new v(r,new Z(s),{soak:!0})}for(t=this,o=[];;)if(t.variable instanceof n)o.push(t),t=t.variable;else{if(!(t.variable instanceof Z))break;if(o.push(t),!((t=t.variable.base)instanceof n))break}for(u=o.reverse(),a=0,c=u.length;c>a;a++)t=u[a],i&&(t.variable instanceof n?t.variable=i:t.variable.base=i),i=gt(e,t,"variable");return i},n.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,h,u;if(null!=(h=this.variable)&&(h.front=this.front),r=G.compileSplattedArray(e,this.args,!0),r.length)return this.compileSplat(e,r);for(i=[],u=this.args,n=a=0,c=u.length;c>a;n=++a)t=u[n],n&&i.push(this.makeCode(", ")),i.push.apply(i,t.compileToFragments(e,L));return o=[],this.isSuper?(s=this.superReference(e)+(".call("+this.superThis(e)),i.length&&(s+=", "),o.push(this.makeCode(s))):(this.isNew&&o.push(this.makeCode("new ")),o.push.apply(o,this.variable.compileToFragments(e,C)),o.push(this.makeCode("("))),o.push.apply(o,i),o.push(this.makeCode(")")),o},n.prototype.compileSplat=function(e,t){var n,i,r,o,s,a;return this.isSuper?[].concat(this.makeCode(""+this.superReference(e)+".apply("+this.superThis(e)+", "),t,this.makeCode(")")):this.isNew?(o=this.tab+X,[].concat(this.makeCode("(function(func, args, ctor) {\n"+o+"ctor.prototype = func.prototype;\n"+o+"var child = new ctor, result = func.apply(child, args);\n"+o+"return Object(result) === result ? result : child;\n"+this.tab+"})("),this.variable.compileToFragments(e,L),this.makeCode(", "),t,this.makeCode(", function(){})"))):(n=[],i=new Z(this.variable),(s=i.properties.pop())&&i.isComplex()?(a=e.scope.freeVariable("ref"),n=n.concat(this.makeCode("("+a+" = "),i.compileToFragments(e,L),this.makeCode(")"),s.compileToFragments(e))):(r=i.compileToFragments(e,C),P.test(at(r))&&(r=this.wrapInBraces(r)),s?(a=at(r),r.push.apply(r,s.compileToFragments(e))):a="null",n=n.concat(r)),n=n.concat(this.makeCode(".apply("+a+", "),t,this.makeCode(")")))},n}(r),e.Extends=d=function(e){function t(e,t){this.child=e,this.parent=t}return Ct(t,e),t.prototype.nodeType=function(){return"Extends"},t.prototype.children=["child","parent"],t.prototype.compileToFragments=function(e){return new s(new Z(new D(kt("extends"))),[this.child,this.parent]).compileToFragments(e)},t}(r),e.Access=t=function(e){function t(e,t){this.name=e,this.name.asKey=!0,this.soak="soak"===t}return Ct(t,e),t.prototype.nodeType=function(){return"Access"},t.prototype.children=["name"],t.prototype.compileToFragments=function(e){var t;return t=this.name.compileToFragments(e),y.test(at(t))?t.unshift(this.makeCode(".")):(t.unshift(this.makeCode("[")),t.push(this.makeCode("]"))),t},t.prototype.isComplex=A,t}(r),e.Index=T=function(e){function t(e){this.index=e}return Ct(t,e),t.prototype.nodeType=function(){return"Index"},t.prototype.children=["index"],t.prototype.compileToFragments=function(e){return[].concat(this.makeCode("["),this.index.compileToFragments(e,E),this.makeCode("]"))},t.prototype.isComplex=function(){return this.index.isComplex()},t}(r),e.Range=B=function(e){function t(e,t,n){this.from=e,this.to=t,this.exclusive="exclusive"===n,this.equals=this.exclusive?"":"="}return Ct(t,e),t.prototype.nodeType=function(){return"Range"},t.prototype.children=["from","to"],t.prototype.compileVariables=function(e){var t,n,i,r,o;return e=pt(e,{top:!0}),n=this.cacheToCodeFragments(this.from.cache(e,L)),this.fromC=n[0],this.fromVar=n[1],i=this.cacheToCodeFragments(this.to.cache(e,L)),this.toC=i[0],this.toVar=i[1],(t=it(e,"step"))&&(r=this.cacheToCodeFragments(t.cache(e,L)),this.step=r[0],this.stepVar=r[1]),o=[this.fromVar.match(I),this.toVar.match(I)],this.fromNum=o[0],this.toNum=o[1],this.stepVar?this.stepNum=this.stepVar.match(I):void 0},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,h,u,l,p,d,f;return this.fromVar||this.compileVariables(e),e.index?(a=this.fromNum&&this.toNum,o=it(e,"index"),s=it(e,"name"),h=s&&s!==o,p=""+o+" = "+this.fromC,this.toC!==this.toVar&&(p+=", "+this.toC),this.step!==this.stepVar&&(p+=", "+this.step),d=[""+o+" <"+this.equals,""+o+" >"+this.equals],c=d[0],r=d[1],n=this.stepNum?ft(this.stepNum[0])>0?""+c+" "+this.toVar:""+r+" "+this.toVar:a?(f=[ft(this.fromNum[0]),ft(this.toNum[0])],i=f[0],l=f[1],f,l>=i?""+c+" "+l:""+r+" "+l):(t=this.stepVar?""+this.stepVar+" > 0":""+this.fromVar+" <= "+this.toVar,""+t+" ? "+c+" "+this.toVar+" : "+r+" "+this.toVar),u=this.stepVar?""+o+" += "+this.stepVar:a?h?l>=i?"++"+o:"--"+o:l>=i?""+o+"++":""+o+"--":h?""+t+" ? ++"+o+" : --"+o:""+t+" ? "+o+"++ : "+o+"--",h&&(p=""+s+" = "+p),h&&(u=""+s+" = "+u),[this.makeCode(""+p+"; "+n+"; "+u)]):this.compileArray(e)},t.prototype.compileArray=function(e){var t,n,i,r,o,s,a,c,h,u,l,p,d;return this.fromNum&&this.toNum&&20>=Math.abs(this.fromNum-this.toNum)?(h=function(){d=[];for(var e=p=+this.fromNum,t=+this.toNum;t>=p?t>=e:e>=t;t>=p?e++:e--)d.push(e);return d}.apply(this),this.exclusive&&h.pop(),[this.makeCode("["+h.join(", ")+"]")]):(s=this.tab+X,o=e.scope.freeVariable("i"),u=e.scope.freeVariable("results"),c="\n"+s+u+" = [];",this.fromNum&&this.toNum?(e.index=o,n=at(this.compileNode(e))):(l=""+o+" = "+this.fromC+(this.toC!==this.toVar?", "+this.toC:""),i=""+this.fromVar+" <= "+this.toVar,n="var "+l+"; "+i+" ? "+o+" <"+this.equals+" "+this.toVar+" : "+o+" >"+this.equals+" "+this.toVar+"; "+i+" ? "+o+"++ : "+o+"--"),a="{ "+u+".push("+o+"); }\n"+s+"return "+u+";\n"+e.indent,r=function(e){return null!=e?e.contains(ct):void 0},(r(this.from)||r(this.to))&&(t=", arguments"),[this.makeCode("(function() {"+c+"\n"+s+"for ("+n+")"+a+"}).apply(this"+(null!=t?t:"")+")")])},t}(r),e.Slice=q=function(e){function t(e){this.range=e,t.__super__.constructor.call(this)}return Ct(t,e),t.prototype.nodeType=function(){return"Slice"},t.prototype.children=["range"],t.prototype.compileNode=function(e){var t,n,i,r,o,s,a;return a=this.range,o=a.to,i=a.from,r=i&&i.compileToFragments(e,E)||[this.makeCode("0")],o&&(t=o.compileToFragments(e,E),n=at(t),(this.range.exclusive||-1!==+n)&&(s=", "+(this.range.exclusive?n:P.test(n)?""+(+n+1):(t=o.compileToFragments(e,C),"+"+at(t)+" + 1 || 9e9")))),[this.makeCode(".slice("+at(r)+(s||"")+")")]},t}(r),e.Obj=_=function(e){function t(e,t){this.generated=null!=t?t:!1,this.objects=this.properties=e||[]}return Ct(t,e),t.prototype.nodeType=function(){return"Obj"},t.prototype.children=["properties"],t.prototype.compileNode=function(e){var t,n,r,o,s,a,c,h,l,p,d,f,m;if(l=this.properties,!l.length)return[this.makeCode(this.front?"({})":"{}")];if(this.generated)for(p=0,f=l.length;f>p;p++)c=l[p],c instanceof Z&&c.error("cannot have an implicit value in an implicit object");for(r=e.indent+=X,a=this.lastNonComment(this.properties),t=[],n=d=0,m=l.length;m>d;n=++d)h=l[n],s=n===l.length-1?"":h===a||h instanceof u?"\n":",\n",o=h instanceof u?"":r,h instanceof i&&h.variable instanceof Z&&h.variable.hasProperties()&&h.variable.error("Invalid object key"),h instanceof Z&&h["this"]&&(h=new i(h.properties[0].name,h,"object")),h instanceof u||(h instanceof i||(h=new i(h,h,"object")),(h.variable.base||h.variable).asKey=!0),o&&t.push(this.makeCode(o)),t.push.apply(t,h.compileToFragments(e,x)),s&&t.push(this.makeCode(s));return t.unshift(this.makeCode("{"+(l.length&&"\n"))),t.push(this.makeCode(""+(l.length&&"\n"+this.tab)+"}")),this.front?this.wrapInBraces(t):t},t.prototype.assigns=function(e){var t,n,i,r;for(r=this.properties,n=0,i=r.length;i>n;n++)if(t=r[n],t.assigns(e))return!0;return!1},t}(r),e.Arr=n=function(e){function t(e){this.objects=e||[]}return Ct(t,e),t.prototype.nodeType=function(){return"Arr"},t.prototype.children=["objects"],t.prototype.compileNode=function(e){var t,n,i,r,o,s,a;if(!this.objects.length)return[this.makeCode("[]")];if(e.indent+=X,t=G.compileSplattedArray(e,this.objects),t.length)return t;for(t=[],n=function(){var t,n,i,r;for(i=this.objects,r=[],t=0,n=i.length;n>t;t++)o=i[t],r.push(o.compileToFragments(e,L));return r}.call(this),r=s=0,a=n.length;a>s;r=++s)i=n[r],r&&t.push(this.makeCode(", ")),t.push.apply(t,i);return at(t).indexOf("\n")>=0?(t.unshift(this.makeCode("[\n"+e.indent)),t.push(this.makeCode("\n"+this.tab+"]"))):(t.unshift(this.makeCode("[")),t.push(this.makeCode("]"))),t},t.prototype.assigns=function(e){var t,n,i,r;for(r=this.objects,n=0,i=r.length;i>n;n++)if(t=r[n],t.assigns(e))return!0;return!1},t}(r),e.Class=a=function(e){function n(e,t,n){this.variable=e,this.parent=t,this.body=null!=n?n:new o,this.boundFuncs=[],this.body.classBody=!0}return Ct(n,e),n.prototype.nodeType=function(){return"Class"},n.prototype.children=["variable","parent","body"],n.prototype.determineName=function(){var e,n;return this.variable?(e=(n=ut(this.variable.properties))?n instanceof t&&n.name.value:this.variable.base.value,Ft.call(U,e)>=0&&this.variable.error("class variable name may not be "+e),e&&(e=y.test(e)&&e)):null},n.prototype.setContext=function(e){return this.body.traverseChildren(!1,function(t){return t.classBody?!1:t instanceof D&&"this"===t.value?t.value=e:t instanceof c&&(t.klass=e,t.bound)?t.context=e:void 0})},n.prototype.addBoundFunctions=function(e){var n,i,r,o,s;for(s=this.boundFuncs,r=0,o=s.length;o>r;r++)n=s[r],i=new Z(new D("this"),[new t(n)]).compile(e),this.ctor.body.unshift(new D(""+i+" = "+kt("bind")+"("+i+", this)"))},n.prototype.addProperties=function(e,n,r){var o,s,a,h,u;return u=e.base.properties.slice(0),a=function(){var e;for(e=[];o=u.shift();)o instanceof i&&(s=o.variable.base,delete o.context,h=o.value,"constructor"===s.value?(this.ctor&&o.error("cannot define more than one constructor in a class"),h.bound&&o.error("cannot define a constructor as a bound function"),h instanceof c?o=this.ctor=h:(this.externalCtor=r.classScope.freeVariable("class"),o=new i(new D(this.externalCtor),h))):o.variable["this"]?h["static"]=!0:(o.variable=new Z(new D(n),[new t(new D("prototype")),new t(s)]),h instanceof c&&h.bound&&(this.boundFuncs.push(s),h.bound=!1))),e.push(o);return e}.call(this),nt(a)},n.prototype.walkBody=function(e,t){return this.traverseChildren(!1,function(r){return function(s){var a,c,h,u,l,p,d;if(a=!0,s instanceof n)return!1;if(s instanceof o){for(d=c=s.expressions,h=l=0,p=d.length;p>l;h=++l)u=d[h],u instanceof i&&u.variable.looksStatic(e)?u.value["static"]=!0:u instanceof Z&&u.isObject(!0)&&(a=!1,c[h]=r.addProperties(u,e,t));s.expressions=c=st(c)}return a&&!(s instanceof n)}}(this))},n.prototype.hoistDirectivePrologue=function(){var e,t,n;for(t=0,e=this.body.expressions;(n=e[t])&&n instanceof u||n instanceof Z&&n.isString();)++t;return this.directives=e.splice(0,t)},n.prototype.ensureConstructor=function(e){return this.ctor||(this.ctor=new c,this.externalCtor?this.ctor.body.push(new D(""+this.externalCtor+".apply(this, arguments)")):this.parent&&this.ctor.body.push(new D(""+e+".__super__.constructor.apply(this, arguments)")),this.ctor.body.makeReturn(),this.body.expressions.unshift(this.ctor)),this.ctor.ctor=this.ctor.name=e,this.ctor.klass=null,this.ctor.noReturn=!0},n.prototype.compileNode=function(e){var t,n,r,a,h,u,l,p,f;return(a=this.body.jumps())&&a.error("Class bodies cannot contain pure statements"),(n=this.body.contains(ct))&&n.error("Class bodies shouldn't reference arguments"),l=this.determineName()||"_Class",l.reserved&&(l="_"+l),u=new D(l),r=new c([],o.wrap([this.body])),t=[],e.classScope=r.makeScope(e.scope),this.hoistDirectivePrologue(),this.setContext(l),this.walkBody(l,e),this.ensureConstructor(l),this.addBoundFunctions(e),this.body.spaced=!0,this.body.expressions.push(u),this.parent&&(p=new D(e.classScope.freeVariable("super",!1)),this.body.expressions.unshift(new d(u,p)),r.params.push(new O(p)),t.push(this.parent)),(f=this.body.expressions).unshift.apply(f,this.directives),h=new j(new s(r,t)),this.variable&&(h=new i(this.variable,h)),h.compileToFragments(e)},n}(r),e.Assign=i=function(e){function n(e,t,n,i){var r,o,s;this.variable=e,this.value=t,this.context=n,this.param=i&&i.param,this.subpattern=i&&i.subpattern,s=o=this.variable.unwrapAll().value,r=Ft.call(U,s)>=0,r&&"object"!==this.context&&this.variable.error('variable name may not be "'+o+'"')}return Ct(n,e),n.prototype.nodeType=function(){return"Assign"},n.prototype.children=["variable","value"],n.prototype.isStatement=function(e){return(null!=e?e.level:void 0)===x&&null!=this.context&&Ft.call(this.context,"?")>=0},n.prototype.assigns=function(e){return this["object"===this.context?"value":"variable"].assigns(e)},n.prototype.unfoldSoak=function(e){return gt(e,this,"variable")},n.prototype.compileNode=function(e){var t,n,i,r,o,s,a,h,u,l,p;if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObject())return this.compilePatternMatch(e);
+if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.context)||"&&="===h||"?="===h)return this.compileConditional(e);if("**="===(u=this.context)||"//="===u||"%%="===u)return this.compileSpecialMath(e)}return n=this.variable.compileToFragments(e,L),o=at(n),this.context||(a=this.variable.unwrapAll(),a.isAssignable()||this.variable.error('"'+this.variable.compile(e)+'" cannot be assigned'),("function"==typeof a.hasProperties?a.hasProperties():void 0)||(this.param?e.scope.add(o,"var"):e.scope.find(o))),this.value instanceof c&&(r=S.exec(o))&&(r[2]&&(this.value.klass=r[1]),this.value.name=null!=(l=null!=(p=r[3])?p:r[4])?l:r[5]),s=this.value.compileToFragments(e,L),"object"===this.context?n.concat(this.makeCode(": "),s):(t=n.concat(this.makeCode(" "+(this.context||"=")+" "),s),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compilePatternMatch=function(e){var i,r,o,s,a,c,h,u,l,d,f,m,b,g,k,v,w,C,F,E,S,R,A,I,_,$,O,B;if(v=e.level===x,C=this.value,m=this.variable.base.objects,!(b=m.length))return o=C.compileToFragments(e),e.level>=N?this.wrapInBraces(o):o;if(u=this.variable.isObject(),v&&1===b&&!((f=m[0])instanceof G))return f instanceof n?(A=f,I=A.variable,h=I.base,f=A.value):h=u?f["this"]?f.properties[0].name:f:new D(0),i=y.test(h.unwrap().value||0),C=new Z(C),C.properties.push(new(i?t:T)(h)),_=f.unwrap().value,Ft.call(M,_)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),new n(f,C,null,{param:this.param}).compileToFragments(e,x);for(F=C.compileToFragments(e,L),E=at(F),r=[],s=!1,(!y.test(E)||this.variable.assigns(E))&&(r.push([this.makeCode(""+(g=e.scope.freeVariable("ref"))+" = ")].concat(Lt.call(F))),F=[this.makeCode(g)],E=g),c=S=0,R=m.length;R>S;c=++S){if(f=m[c],h=c,u&&(f instanceof n?($=f,O=$.variable,h=O.base,f=$.value):f.base instanceof j?(B=new Z(f.unwrapAll()).cacheReference(e),f=B[0],h=B[1]):h=f["this"]?f.properties[0].name:f),!s&&f instanceof G)d=f.name.unwrap().value,f=f.unwrap(),w=""+b+" <= "+E+".length ? "+kt("slice")+".call("+E+", "+c,(k=b-c-1)?(l=e.scope.freeVariable("i"),w+=", "+l+" = "+E+".length - "+k+") : ("+l+" = "+c+", [])"):w+=") : []",w=new D(w),s=""+l+"++";else{if(!s&&f instanceof p){(k=b-c-1)&&(1===k?s=""+E+".length - 1":(l=e.scope.freeVariable("i"),w=new D(""+l+" = "+E+".length - "+k),s=""+l+"++",r.push(w.compileToFragments(e,L))));continue}d=f.unwrap().value,(f instanceof G||f instanceof p)&&f.error("multiple splats/expansions are disallowed in an assignment"),"number"==typeof h?(h=new D(s||h),i=!1):i=u&&y.test(h.unwrap().value||0),w=new Z(new D(E),[new(i?t:T)(h)])}null!=d&&Ft.call(M,d)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),r.push(new n(f,w,null,{param:this.param,subpattern:!0}).compileToFragments(e,L))}return v||this.subpattern||r.push(F),a=this.joinFragmentArrays(r,", "),L>e.level?a:this.wrapInBraces(a)},n.prototype.compileConditional=function(e){var t,i,r,o;return o=this.variable.cacheReference(e),i=o[0],r=o[1],!i.properties.length&&i.base instanceof D&&"this"!==i.base.value&&!e.scope.check(i.base.value)&&this.variable.error('the variable "'+i.base.value+"\" can't be assigned with "+this.context+" because it has not been declared before"),Ft.call(this.context,"?")>=0?(e.isExistentialEquals=!0,new v(new l(i),r,{type:"if"}).addElse(new n(r,this.value,"=")).compileToFragments(e)):(t=new $(this.context.slice(0,-1),i,new n(r,this.value,"=")).compileToFragments(e),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compileSpecialMath=function(e){var t,i,r;return r=this.variable.cacheReference(e),t=r[0],i=r[1],new n(t,new $(this.context.slice(0,-1),i,this.value)).compileToFragments(e)},n.prototype.compileSplice=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;return u=this.variable.properties.pop().range,i=u.from,a=u.to,n=u.exclusive,s=this.variable.compile(e),i?(l=this.cacheToCodeFragments(i.cache(e,N)),r=l[0],o=l[1]):r=o="0",a?i instanceof Z&&i.isSimpleNumber()&&a instanceof Z&&a.isSimpleNumber()?(a=a.compile(e)-o,n||(a+=1)):(a=a.compile(e,C)+" - "+o,n||(a+=" + 1")):a="9e9",p=this.value.cache(e,L),c=p[0],h=p[1],t=[].concat(this.makeCode("[].splice.apply("+s+", ["+r+", "+a+"].concat("),c,this.makeCode(")), "),h),e.level>x?this.wrapInBraces(t):t},n}(r),e.Code=c=function(e){function t(e,t,n){this.params=e||[],this.body=t||new o,this.bound="boundfunc"===n}return Ct(t,e),t.prototype.nodeType=function(){return"Code"},t.prototype.children=["params","body"],t.prototype.isStatement=function(){return!!this.ctor},t.prototype.jumps=A,t.prototype.makeScope=function(e){return new H(e,this.body,this)},t.prototype.compileNode=function(e){var r,a,c,h,u,l,d,f,m,y,b,g,k,w,T,F,L,N,E,x,S,R,A,I,_,j,M,B,V,P,U,H,q;if(this.bound&&(null!=(B=e.scope.method)?B.bound:void 0)&&(this.context=e.scope.method.context),this.bound&&!this.context)return this.context="_this",T=new t([new O(new D(this.context))],new o([this])),a=new s(T,[new D("this")]),a.updateLocationDataIfMissing(this.locationData),a.compileNode(e);for(e.scope=it(e,"classScope")||this.makeScope(e.scope),e.scope.shared=it(e,"sharedScope"),e.indent+=X,delete e.bare,delete e.isExistentialEquals,m=[],h=[],V=this.params,F=0,x=V.length;x>F;F++)f=V[F],f instanceof p||e.scope.parameter(f.asReference(e));for(P=this.params,L=0,S=P.length;S>L;L++)if(f=P[L],f.splat||f instanceof p){for(U=this.params,N=0,R=U.length;R>N;N++)d=U[N].name,f instanceof p||(d["this"]&&(d=d.properties[0].name),d.value&&e.scope.add(d.value,"var",!0));b=new i(new Z(new n(function(){var t,n,i,r;for(i=this.params,r=[],t=0,n=i.length;n>t;t++)d=i[t],r.push(d.asReference(e));return r}.call(this))),new Z(new D("arguments")));break}for(H=this.params,E=0,A=H.length;A>E;E++)f=H[E],f.isComplex()?(k=y=f.asReference(e),f.value&&(k=new $("?",y,f.value)),h.push(new i(new Z(f.name),k,"=",{param:!0}))):(y=f,f.value&&(l=new D(y.name.value+" == null"),k=new i(new Z(f.name),f.value,"="),h.push(new v(l,k)))),b||m.push(y);for(w=this.body.isEmpty(),b&&h.unshift(b),h.length&&(q=this.body.expressions).unshift.apply(q,h),u=j=0,I=m.length;I>j;u=++j)d=m[u],m[u]=d.compileToFragments(e),e.scope.parameter(at(m[u]));for(g=[],this.eachParamName(function(e,t){return Ft.call(g,e)>=0&&t.error("multiple parameters named '"+e+"'"),g.push(e)}),w||this.noReturn||this.body.makeReturn(),c="function",this.ctor&&(c+=" "+this.name),c+="(",r=[this.makeCode(c)],u=M=0,_=m.length;_>M;u=++M)d=m[u],u&&r.push(this.makeCode(", ")),r.push.apply(r,d);return r.push(this.makeCode(") {")),this.body.isEmpty()||(r=r.concat(this.makeCode("\n"),this.body.compileWithDeclarations(e),this.makeCode("\n"+this.tab))),r.push(this.makeCode("}")),this.ctor?[this.makeCode(this.tab)].concat(Lt.call(r)):this.front||e.level>=C?this.wrapInBraces(r):r},t.prototype.eachParamName=function(e){var t,n,i,r,o;for(r=this.params,o=[],n=0,i=r.length;i>n;n++)t=r[n],o.push(t.eachName(e));return o},t.prototype.traverseChildren=function(e,n){return e?t.__super__.traverseChildren.call(this,e,n):void 0},t}(r),e.Param=O=function(e){function t(e,t,n){var i;this.name=e,this.value=t,this.splat=n,i=e=this.name.unwrapAll().value,Ft.call(U,i)>=0&&this.name.error('parameter name "'+e+'" is not allowed')}return Ct(t,e),t.prototype.nodeType=function(){return"Param"},t.prototype.children=["name","value"],t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e,L)},t.prototype.asReference=function(e){var t;return this.reference?this.reference:(t=this.name,t["this"]?(t=t.properties[0].name,t.value.reserved&&(t=new D(e.scope.freeVariable(t.value)))):t.isComplex()&&(t=new D(e.scope.freeVariable("arg"))),t=new Z(t),this.splat&&(t=new G(t)),t.updateLocationDataIfMissing(this.locationData),this.reference=t)},t.prototype.isComplex=function(){return this.name.isComplex()},t.prototype.eachName=function(e,t){var n,r,o,s,a,c;if(null==t&&(t=this.name),n=function(t){var n;return n=t.properties[0].name,n.value.reserved?void 0:e(n.value,n)},t instanceof D)return e(t.value,t);if(t instanceof Z)return n(t);for(c=t.objects,s=0,a=c.length;a>s;s++)o=c[s],o instanceof i?this.eachName(e,o.value.unwrap()):o instanceof G?(r=o.name.unwrap(),e(r.value,r)):o instanceof Z?o.isArray()||o.isObject()?this.eachName(e,o.base):o["this"]?n(o):e(o.base.value,o.base):o instanceof p||o.error("illegal parameter "+o.compile())},t}(r),e.Splat=G=function(e){function t(e){this.name=e.compile?e:new D(e)}return Ct(t,e),t.prototype.nodeType=function(){return"Splat"},t.prototype.children=["name"],t.prototype.isAssignable=et,t.prototype.assigns=function(e){return this.name.assigns(e)},t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e)},t.prototype.unwrap=function(){return this.name},t.compileSplattedArray=function(e,n,i){var r,o,s,a,c,h,u,l,p,d;for(u=-1;(l=n[++u])&&!(l instanceof t););if(u>=n.length)return[];if(1===n.length)return l=n[0],c=l.compileToFragments(e,L),i?c:[].concat(l.makeCode(""+kt("slice")+".call("),c,l.makeCode(")"));for(r=n.slice(u),h=p=0,d=r.length;d>p;h=++p)l=r[h],s=l.compileToFragments(e,L),r[h]=l instanceof t?[].concat(l.makeCode(""+kt("slice")+".call("),s,l.makeCode(")")):[].concat(l.makeCode("["),s,l.makeCode("]"));return 0===u?(l=n[0],a=l.joinFragmentArrays(r.slice(1),", "),r[0].concat(l.makeCode(".concat("),a,l.makeCode(")"))):(o=function(){var t,i,r,o;for(r=n.slice(0,u),o=[],t=0,i=r.length;i>t;t++)l=r[t],o.push(l.compileToFragments(e,L));return o}(),o=n[0].joinFragmentArrays(o,", "),a=n[u].joinFragmentArrays(r,", "),[].concat(n[0].makeCode("["),o,n[u].makeCode("].concat("),a,ut(n).makeCode(")")))},t}(r),e.Expansion=p=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return Ct(t,e),t.prototype.nodeType=function(){return"Expansion"},t.prototype.isComplex=A,t.prototype.compileNode=function(){return this.error("Expansion must be used inside a destructuring assignment or parameter list")},t.prototype.asReference=function(){return this},t.prototype.eachName=function(){},t}(r),e.While=Q=function(e){function t(e,t){this.rawCondition=e,this.condition=(null!=t?t.invert:void 0)?e.invert():e,this.guard=null!=t?t.guard:void 0}return Ct(t,e),t.prototype.nodeType=function(){return"While"},t.prototype.children=["condition","guard","body"],t.prototype.isStatement=et,t.prototype.makeReturn=function(e){return e?t.__super__.makeReturn.apply(this,arguments):(this.returns=!this.jumps({loop:!0}),this)},t.prototype.addBody=function(e){return this.body=e,this},t.prototype.jumps=function(){var e,t,n,i,r;if(e=this.body.expressions,!e.length)return!1;for(i=0,r=e.length;r>i;i++)if(n=e[i],t=n.jumps({loop:!0}))return t;return!1},t.prototype.compileNode=function(e){var t,n,i,r;return e.indent+=X,r="",n=this.body,n.isEmpty()?n=this.makeCode(""):(this.returns&&(n.makeReturn(i=e.scope.freeVariable("results")),r=""+this.tab+i+" = [];\n"),this.guard&&(n.expressions.length>1?n.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(n=o.wrap([new v(this.guard,n)]))),n=[].concat(this.makeCode("\n"),n.compileToFragments(e,x),this.makeCode("\n"+this.tab))),t=[].concat(this.makeCode(r+this.tab+"while ("),this.condition.compileToFragments(e,E),this.makeCode(") {"),n,this.makeCode("}")),this.returns&&t.push(this.makeCode("\n"+this.tab+"return "+i+";")),t},t}(r),e.Op=$=function(e){function n(e,t,n,i){if("in"===e)return new w(t,n);if("do"===e)return this.generateDo(t);if("new"===e){if(t instanceof s&&!t["do"]&&!t.isNew)return t.newInstance();(t instanceof c&&t.bound||t["do"])&&(t=new j(t))}return this.operator=r[e]||e,this.first=t,this.second=n,this.flip=!!i,this}var r,o;return Ct(n,e),n.prototype.nodeType=function(){return"Op"},r={"==":"===","!=":"!==",of:"in"},o={"!==":"===","===":"!=="},n.prototype.children=["first","second"],n.prototype.isSimpleNumber=A,n.prototype.isUnary=function(){return!this.second},n.prototype.isComplex=function(){var e;return!(this.isUnary()&&("+"===(e=this.operator)||"-"===e))||this.first.isComplex()},n.prototype.isChainable=function(){var e;return"<"===(e=this.operator)||">"===e||">="===e||"<="===e||"==="===e||"!=="===e},n.prototype.invert=function(){var e,t,i,r,s;if(this.isChainable()&&this.first.isChainable()){for(e=!0,t=this;t&&t.operator;)e&&(e=t.operator in o),t=t.first;if(!e)return new j(this).invert();for(t=this;t&&t.operator;)t.invert=!t.invert,t.operator=o[t.operator],t=t.first;return this}return(r=o[this.operator])?(this.operator=r,this.first.unwrap()instanceof n&&this.first.invert(),this):this.second?new j(this).invert():"!"===this.operator&&(i=this.first.unwrap())instanceof n&&("!"===(s=i.operator)||"in"===s||"instanceof"===s)?i:new n("!",this)},n.prototype.unfoldSoak=function(e){var t;return("++"===(t=this.operator)||"--"===t||"delete"===t)&&gt(e,this,"first")},n.prototype.generateDo=function(e){var t,n,r,o,a,h,u,l;for(o=[],n=e instanceof i&&(a=e.value.unwrap())instanceof c?a:e,l=n.params||[],h=0,u=l.length;u>h;h++)r=l[h],r.value?(o.push(r.value),delete r.value):o.push(r);return t=new s(e,o),t["do"]=!0,t},n.prototype.compileNode=function(e){var t,n,i,r,o,s;if(n=this.isChainable()&&this.first.isChainable(),n||(this.first.front=this.front),"delete"===this.operator&&e.scope.check(this.first.unwrapAll().value)&&this.error("delete operand may not be argument or var"),("--"===(o=this.operator)||"++"===o)&&(s=this.first.unwrapAll().value,Ft.call(U,s)>=0)&&this.error('cannot increment/decrement "'+this.first.unwrapAll().value+'"'),this.isUnary())return this.compileUnary(e);if(n)return this.compileChain(e);switch(this.operator){case"?":return this.compileExistence(e);case"**":return this.compilePower(e);case"//":return this.compileFloorDivision(e);case"%%":return this.compileModulo(e);default:return i=this.first.compileToFragments(e,N),r=this.second.compileToFragments(e,N),t=[].concat(i,this.makeCode(" "+this.operator+" "),r),N>=e.level?t:this.wrapInBraces(t)}},n.prototype.compileChain=function(e){var t,n,i,r;return r=this.first.second.cache(e),this.first.second=r[0],i=r[1],n=this.first.compileToFragments(e,N),t=n.concat(this.makeCode(" "+(this.invert?"&&":"||")+" "),i.compileToFragments(e),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(e,N)),this.wrapInBraces(t)},n.prototype.compileExistence=function(e){var t,n;return this.first.isComplex()?(n=new D(e.scope.freeVariable("ref")),t=new j(new i(n,this.first))):(t=this.first,n=t),new v(new l(t),n,{type:"if"}).addElse(this.second).compileToFragments(e)},n.prototype.compileUnary=function(e){var t,i,r;return i=[],t=this.operator,i.push([this.makeCode(t)]),"!"===t&&this.first instanceof l?(this.first.negated=!this.first.negated,this.first.compileToFragments(e)):e.level>=C?new j(this).compileToFragments(e):(r="+"===t||"-"===t,("new"===t||"typeof"===t||"delete"===t||r&&this.first instanceof n&&this.first.operator===t)&&i.push([this.makeCode(" ")]),(r&&this.first instanceof n||"new"===t&&this.first.isStatement(e))&&(this.first=new j(this.first)),i.push(this.first.compileToFragments(e,N)),this.flip&&i.reverse(),this.joinFragmentArrays(i,""))},n.prototype.compilePower=function(e){var n;return n=new Z(new D("Math"),[new t(new D("pow"))]),new s(n,[this.first,this.second]).compileToFragments(e)},n.prototype.compileFloorDivision=function(e){var i,r;return r=new Z(new D("Math"),[new t(new D("floor"))]),i=new n("/",this.first,this.second),new s(r,[i]).compileToFragments(e)},n.prototype.compileModulo=function(e){var t;return t=new Z(new D(kt("modulo"))),new s(t,[this.first,this.second]).compileToFragments(e)},n.prototype.toString=function(e){return n.__super__.toString.call(this,e,this.constructor.name+" "+this.operator)},n}(r),e.In=w=function(e){function t(e,t){this.object=e,this.array=t}return Ct(t,e),t.prototype.nodeType=function(){return"In"},t.prototype.children=["object","array"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r,o;if(this.array instanceof Z&&this.array.isArray()&&this.array.base.objects.length){for(o=this.array.base.objects,i=0,r=o.length;r>i;i++)if(n=o[i],n instanceof G){t=!0;break}if(!t)return this.compileOrTest(e)}return this.compileLoopTest(e)},t.prototype.compileOrTest=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;for(u=this.object.cache(e,N),s=u[0],o=u[1],l=this.negated?[" !== "," && "]:[" === "," || "],t=l[0],n=l[1],a=[],p=this.array.base.objects,i=c=0,h=p.length;h>c;i=++c)r=p[i],i&&a.push(this.makeCode(n)),a=a.concat(i?o:s,this.makeCode(t),r.compileToFragments(e,C));return N>e.level?a:this.wrapInBraces(a)},t.prototype.compileLoopTest=function(e){var t,n,i,r;return r=this.object.cache(e,L),i=r[0],n=r[1],t=[].concat(this.makeCode(kt("indexOf")+".call("),this.array.compileToFragments(e,L),this.makeCode(", "),n,this.makeCode(") "+(this.negated?"< 0":">= 0"))),at(i)===at(n)?t:(t=i.concat(this.makeCode(", "),t),L>e.level?t:this.wrapInBraces(t))},t.prototype.toString=function(e){return t.__super__.toString.call(this,e,this.constructor.name+(this.negated?"!":""))},t}(r),e.Try=K=function(e){function t(e,t,n,i){this.attempt=e,this.errorVariable=t,this.recovery=n,this.ensure=i}return Ct(t,e),t.prototype.nodeType=function(){return"Try"},t.prototype.children=["attempt","recovery","ensure"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t;return this.attempt.jumps(e)||(null!=(t=this.recovery)?t.jumps(e):void 0)},t.prototype.makeReturn=function(e){return this.attempt&&(this.attempt=this.attempt.makeReturn(e)),this.recovery&&(this.recovery=this.recovery.makeReturn(e)),this},t.prototype.compileNode=function(e){var t,n,r,o;return e.indent+=X,o=this.attempt.compileToFragments(e,x),t=this.recovery?(r=new D("_error"),this.errorVariable?this.recovery.unshift(new i(this.errorVariable,r)):void 0,[].concat(this.makeCode(" catch ("),r.compileToFragments(e),this.makeCode(") {\n"),this.recovery.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}"))):this.ensure||this.recovery?[]:[this.makeCode(" catch (_error) {}")],n=this.ensure?[].concat(this.makeCode(" finally {\n"),this.ensure.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}")):[],[].concat(this.makeCode(""+this.tab+"try {\n"),o,this.makeCode("\n"+this.tab+"}"),t,n)},t}(r),e.Throw=z=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Throw"},t.prototype.children=["expression"],t.prototype.isStatement=et,t.prototype.jumps=A,t.prototype.makeReturn=Y,t.prototype.compileNode=function(e){return[].concat(this.makeCode(this.tab+"throw "),this.expression.compileToFragments(e),this.makeCode(";"))},t}(r),e.Existence=l=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Existence"},t.prototype.children=["expression"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r;return this.expression.front=this.front,i=this.expression.compile(e,N),y.test(i)&&!e.scope.check(i)?(r=this.negated?["===","||"]:["!==","&&"],t=r[0],n=r[1],i="typeof "+i+" "+t+' "undefined" '+n+" "+i+" "+t+" null"):i=""+i+" "+(this.negated?"==":"!=")+" null",[this.makeCode(F>=e.level?i:"("+i+")")]},t}(r),e.Parens=j=function(e){function t(e){this.body=e}return Ct(t,e),t.prototype.nodeType=function(){return"Parens"},t.prototype.children=["body"],t.prototype.unwrap=function(){return this.body},t.prototype.isComplex=function(){return this.body.isComplex()},t.prototype.compileNode=function(e){var t,n,i;return n=this.body.unwrap(),n instanceof Z&&n.isAtomic()?(n.front=this.front,n.compileToFragments(e)):(i=n.compileToFragments(e,E),t=N>e.level&&(n instanceof $||n instanceof s||n instanceof f&&n.returns),t?i:this.wrapInBraces(i))},t}(r),e.For=f=function(e){function t(e,t){var n;this.source=t.source,this.guard=t.guard,this.step=t.step,this.name=t.name,this.index=t.index,this.body=o.wrap([e]),this.own=!!t.own,this.object=!!t.object,this.object&&(n=[this.index,this.name],this.name=n[0],this.index=n[1]),this.index instanceof Z&&this.index.error("index cannot be a pattern matching expression"),this.range=this.source instanceof Z&&this.source.base instanceof B&&!this.source.properties.length,this.pattern=this.name instanceof Z,this.range&&this.index&&this.index.error("indexes do not apply to range loops"),this.range&&this.pattern&&this.name.error("cannot pattern match over range loops"),this.own&&!this.object&&this.name.error("cannot use own with for-in"),this.returns=!1}return Ct(t,e),t.prototype.nodeType=function(){return"For"},t.prototype.children=["body","source","guard","step"],t.prototype.compileNode=function(e){var t,n,r,s,a,c,h,u,l,p,d,f,m,b,g,k,w,T,C,F,N,E,S,R,A,_,$,O,M,B,P,U,H,q;return t=o.wrap([this.body]),T=null!=(H=ut(t.expressions))?H.jumps():void 0,T&&T instanceof V&&(this.returns=!1),$=this.range?this.source.base:this.source,_=e.scope,this.pattern||(F=this.name&&this.name.compile(e,L)),b=this.index&&this.index.compile(e,L),F&&!this.pattern&&_.find(F),b&&_.find(b),this.returns&&(A=_.freeVariable("results")),g=this.object&&b||_.freeVariable("i"),k=this.range&&F||b||g,w=k!==g?""+k+" = ":"",this.step&&!this.range&&(q=this.cacheToCodeFragments(this.step.cache(e,L)),O=q[0],B=q[1],M=B.match(I)),this.pattern&&(F=g),U="",d="",h="",f=this.tab+X,this.range?p=$.compileToFragments(pt(e,{index:g,name:F,step:this.step})):(P=this.source.compile(e,L),!F&&!this.own||y.test(P)||(h+=""+this.tab+(E=_.freeVariable("ref"))+" = "+P+";\n",P=E),F&&!this.pattern&&(N=""+F+" = "+P+"["+k+"]"),this.object||(O!==B&&(h+=""+this.tab+O+";\n"),this.step&&M&&(l=0>ft(M[0]))||(C=_.freeVariable("len")),a=""+w+g+" = 0, "+C+" = "+P+".length",c=""+w+g+" = "+P+".length - 1",r=""+g+" < "+C,s=""+g+" >= 0",this.step?(M?l&&(r=s,a=c):(r=""+B+" > 0 ? "+r+" : "+s,a="("+B+" > 0 ? ("+a+") : "+c+")"),m=""+g+" += "+B):m=""+(k!==g?"++"+g:""+g+"++"),p=[this.makeCode(""+a+"; "+r+"; "+w+m)])),this.returns&&(S=""+this.tab+A+" = [];\n",R="\n"+this.tab+"return "+A+";",t.makeReturn(A)),this.guard&&(t.expressions.length>1?t.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(t=o.wrap([new v(this.guard,t)]))),this.pattern&&t.expressions.unshift(new i(this.name,new D(""+P+"["+k+"]"))),u=[].concat(this.makeCode(h),this.pluckDirectCall(e,t)),N&&(U="\n"+f+N+";"),this.object&&(p=[this.makeCode(""+k+" in "+P)],this.own&&(d="\n"+f+"if (!"+kt("hasProp")+".call("+P+", "+k+")) continue;")),n=t.compileToFragments(pt(e,{indent:f}),x),n&&n.length>0&&(n=[].concat(this.makeCode("\n"),n,this.makeCode("\n"))),[].concat(u,this.makeCode(""+(S||"")+this.tab+"for ("),p,this.makeCode(") {"+d+U),n,this.makeCode(""+this.tab+"}"+(R||"")))},t.prototype.pluckDirectCall=function(e,t){var n,r,o,a,h,u,l,p,d,f,m,y,b,g,k,v;for(r=[],f=t.expressions,h=p=0,d=f.length;d>p;h=++p)o=f[h],o=o.unwrapAll(),o instanceof s&&(l=null!=(m=o.variable)?m.unwrapAll():void 0,(l instanceof c||l instanceof Z&&(null!=(y=l.base)?y.unwrapAll():void 0)instanceof c&&1===l.properties.length&&("call"===(b=null!=(g=l.properties[0].name)?g.value:void 0)||"apply"===b))&&(a=(null!=(k=l.base)?k.unwrapAll():void 0)||l,u=new D(e.scope.freeVariable("fn")),n=new Z(u),l.base&&(v=[n,l],l.base=v[0],n=v[1]),t.expressions[h]=new s(n,o.args),r=r.concat(this.makeCode(this.tab),new i(u,a).compileToFragments(e,x),this.makeCode(";\n"))));return r},t}(Q),e.Switch=W=function(e){function t(e,t,n){this.subject=e,this.cases=t,this.otherwise=n}return Ct(t,e),t.prototype.nodeType=function(){return"Switch"},t.prototype.children=["subject","cases","otherwise"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t,n,i,r,o,s,a,c;for(null==e&&(e={block:!0}),s=this.cases,r=0,o=s.length;o>r;r++)if(a=s[r],n=a[0],t=a[1],i=t.jumps(e))return i;return null!=(c=this.otherwise)?c.jumps(e):void 0},t.prototype.makeReturn=function(e){var t,n,i,r,s;for(r=this.cases,n=0,i=r.length;i>n;n++)t=r[n],t[1].makeReturn(e);return e&&(this.otherwise||(this.otherwise=new o([new D("void 0")]))),null!=(s=this.otherwise)&&s.makeReturn(e),this},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y;for(c=e.indent+X,h=e.indent=c+X,s=[].concat(this.makeCode(this.tab+"switch ("),this.subject?this.subject.compileToFragments(e,E):this.makeCode("false"),this.makeCode(") {\n")),f=this.cases,a=u=0,p=f.length;p>u;a=++u){for(m=f[a],r=m[0],t=m[1],y=st([r]),l=0,d=y.length;d>l;l++)i=y[l],this.subject||(i=i.invert()),s=s.concat(this.makeCode(c+"case "),i.compileToFragments(e,E),this.makeCode(":\n"));if((n=t.compileToFragments(e,x)).length>0&&(s=s.concat(n,this.makeCode("\n"))),a===this.cases.length-1&&!this.otherwise)break;o=this.lastNonComment(t.expressions),o instanceof V||o instanceof D&&o.jumps()&&"debugger"!==o.value||s.push(i.makeCode(h+"break;\n"))}return this.otherwise&&this.otherwise.expressions.length&&s.push.apply(s,[this.makeCode(c+"default:\n")].concat(Lt.call(this.otherwise.compileToFragments(e,x)),[this.makeCode("\n")])),s.push(this.makeCode(this.tab+"}")),s},t}(r),e.If=v=function(e){function t(e,t,n){this.body=t,null==n&&(n={}),this.rawCondition=e,this.condition="unless"===n.type?e.invert():e,this.elseBody=null,this.elseToken=null,this.isChain=!1,this.soak=n.soak}return Ct(t,e),t.prototype.nodeType=function(){return"If"},t.prototype.children=["condition","body","elseBody"],t.prototype.bodyNode=function(){var e;return null!=(e=this.body)?e.unwrap():void 0},t.prototype.elseBodyNode=function(){var e;return null!=(e=this.elseBody)?e.unwrap():void 0},t.prototype.addElse=function(e,n){return this.isChain?this.elseBodyNode().addElse(e,n):(this.isChain=e instanceof t,this.elseBody=this.ensureBlock(e),this.elseBody.updateLocationDataIfMissing(e.locationData),this.elseToken=n),this},t.prototype.isStatement=function(e){var t;return(null!=e?e.level:void 0)===x||this.bodyNode().isStatement(e)||(null!=(t=this.elseBodyNode())?t.isStatement(e):void 0)},t.prototype.jumps=function(e){var t;return this.body.jumps(e)||(null!=(t=this.elseBody)?t.jumps(e):void 0)},t.prototype.compileNode=function(e){return this.isStatement(e)?this.compileStatement(e):this.compileExpression(e)},t.prototype.makeReturn=function(e){return e&&(this.elseBody||(this.elseBody=new o([new D("void 0")]))),this.body&&(this.body=new o([this.body.makeReturn(e)])),this.elseBody&&(this.elseBody=new o([this.elseBody.makeReturn(e)])),this},t.prototype.ensureBlock=function(e){return e instanceof o?e:new o([e])},t.prototype.compileStatement=function(e){var n,i,r,o,s,a,c;return r=it(e,"chainChild"),(s=it(e,"isExistentialEquals"))?new t(this.condition.invert(),this.elseBodyNode(),{type:"if"}).compileToFragments(e):(c=e.indent+X,o=this.condition.compileToFragments(e,E),i=this.ensureBlock(this.body).compileToFragments(pt(e,{indent:c})),a=[].concat(this.makeCode("if ("),o,this.makeCode(") {\n"),i,this.makeCode("\n"+this.tab+"}")),r||a.unshift(this.makeCode(this.tab)),this.elseBody?(n=a.concat(this.makeCode(" else ")),this.isChain?(e.chainChild=!0,n=n.concat(this.elseBody.unwrap().compileToFragments(e,x))):n=n.concat(this.makeCode("{\n"),this.elseBody.compileToFragments(pt(e,{indent:c}),x),this.makeCode("\n"+this.tab+"}")),n):a)},t.prototype.compileExpression=function(e){var t,n,i,r;return i=this.condition.compileToFragments(e,F),n=this.bodyNode().compileToFragments(e,L),t=this.elseBodyNode()?this.elseBodyNode().compileToFragments(e,L):[this.makeCode("void 0")],r=i.concat(this.makeCode(" ? "),n,this.makeCode(" : "),t),e.level>=F?this.wrapInBraces(r):r},t.prototype.unfoldSoak=function(){return this.soak&&this},t}(r),J={"extends":function(){return"function(child, parent) { for (var key in parent) { if ("+kt("hasProp")+".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }"},bind:function(){return"function(fn, me){ return function(){ return fn.apply(me, arguments); }; }"},indexOf:function(){return"[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }"},modulo:function(){return"function(a, b) { return (+a % (b = +b) + b) % b; }"},hasProp:function(){return"{}.hasOwnProperty"},slice:function(){return"[].slice"}},x=1,E=2,L=3,F=4,N=5,C=6,X="  ",b="[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*",y=RegExp("^"+b+"$"),P=/^[+-]?\d+$/,m=/^[+-]?0x[\da-f]+/i,I=/^[+-]?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)$/i,S=RegExp("^("+b+")(\\.prototype)?(?:\\.("+b+")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\])$"),k=/^['"]/,g=/^\//,kt=function(e){var t;return t="__"+e,H.root.assign(t,J[e]()),t},dt=function(e,t){return e=e.replace(/\n/g,"$&"+t),e.replace(/\s+$/,"")},ft=function(e){return null==e?0:e.match(m)?parseInt(e,16):parseFloat(e)},ct=function(e){return e instanceof D&&"arguments"===e.value&&!e.asKey},ht=function(e){return e instanceof D&&"this"===e.value&&!e.asKey||e instanceof c&&e.bound||e instanceof s&&e.isSuper},gt=function(e,t,n){var i;if(i=t[n].unfoldSoak(e))return t[n]=i.body,i.body=new Z(t),i}}.call(this),t.exports}(),require["./sourcemap"]=function(){var e={},t={exports:e};return function(){var e,n;e=function(){function e(e){this.line=e,this.columns=[]}return e.prototype.add=function(e,t,n){var i,r;return r=t[0],i=t[1],null==n&&(n={}),this.columns[e]&&n.noReplace?void 0:this.columns[e]={line:this.line,column:e,sourceLine:r,sourceColumn:i}},e.prototype.sourceLocation=function(e){for(var t;!((t=this.columns[e])||0>=e);)e--;return t&&[t.sourceLine,t.sourceColumn]},e}(),n=function(){function t(){this.lines=[]}var n,i,r,o;return t.prototype.add=function(t,n,i){var r,o,s,a;return null==i&&(i={}),o=n[0],r=n[1],s=(a=this.lines)[o]||(a[o]=new e(o)),s.add(r,t,i)},t.prototype.sourceLocation=function(e){var t,n,i;for(n=e[0],t=e[1];!((i=this.lines[n])||0>=n);)n--;return i&&i.sourceLocation(t)},t.prototype.generate=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b;for(null==e&&(e={}),null==t&&(t=null),l=0,i=0,o=0,r=0,h=!1,n="",y=this.lines,a=p=0,f=y.length;f>p;a=++p)if(s=y[a])for(b=s.columns,d=0,m=b.length;m>d;d++)if(c=b[d]){for(;c.line>l;)i=0,h=!1,n+=";",l++;h&&(n+=",",h=!1),n+=this.encodeVlq(c.column-i),i=c.column,n+=this.encodeVlq(0),n+=this.encodeVlq(c.sourceLine-o),o=c.sourceLine,n+=this.encodeVlq(c.sourceColumn-r),r=c.sourceColumn,h=!0}return u={version:3,file:e.generatedFile||"",sourceRoot:e.sourceRoot||"",sources:e.sourceFiles||[""],names:[],mappings:n},e.inline&&(u.sourcesContent=[t]),JSON.stringify(u,null,2)},r=5,i=1<<r,o=i-1,t.prototype.encodeVlq=function(e){var t,n,s,a;for(t="",s=0>e?1:0,a=(Math.abs(e)<<1)+s;a||!t;)n=a&o,a>>=r,a&&(n|=i),t+=this.encodeBase64(n);return t},n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",t.prototype.encodeBase64=function(e){return n[e]||function(){throw Error("Cannot Base64 encode value: "+e)}()},t}(),t.exports=n}.call(this),t.exports}(),require["./coffee-script"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k={}.hasOwnProperty,v=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};if(s=require("fs"),d=require("vm"),l=require("path"),t=require("./lexer").Lexer,u=require("./parser").parser,c=require("./helpers"),n=require("./sourcemap"),e.VERSION="1.7.1",e.FILE_EXTENSIONS=[".coffee",".litcoffee",".coffee.md"],e.helpers=c,f=function(e){return function(t,n){var i;null==n&&(n={});try{return e.call(this,t,n)}catch(r){throw i=r,c.updateSyntaxError(i,t,n.filename)}}},e.compile=i=f(function(e,t){var i,r,o,s,a,l,p,d,f,m,y,b,g;for(m=c.merge,s=c.extend,t=s({},t),t.sourceMap&&(f=new n),l=u.parse(h.tokenize(e,t)).compileToFragments(t),o=0,t.header&&(o+=1),t.shiftLine&&(o+=1),r=0,d="",b=0,g=l.length;g>b;b++)a=l[b],t.sourceMap&&(a.locationData&&f.add([a.locationData.first_line,a.locationData.first_column],[o,r],{noReplace:!0}),y=c.count(a.code,"\n"),o+=y,y?r=a.code.length-(a.code.lastIndexOf("\n")+1):r+=a.code.length),d+=a.code;return t.header&&(p="Generated by CoffeeScript "+this.VERSION,d="// "+p+"\n"+d),t.sourceMap?(i={js:d},i.sourceMap=f,i.v3SourceMap=f.generate(t,e),i):d}),e.tokens=f(function(e,t){return h.tokenize(e,t)}),e.nodes=f(function(e,t){return"string"==typeof e?u.parse(h.tokenize(e,t)):u.parse(e)
+}),e.run=function(e,t){var n,r,o,a;return null==t&&(t={}),o=require.main,o.filename=process.argv[1]=t.filename?s.realpathSync(t.filename):".",o.moduleCache&&(o.moduleCache={}),r=t.filename?l.dirname(s.realpathSync(t.filename)):s.realpathSync("."),o.paths=require("module")._nodeModulePaths(r),(!c.isCoffee(o.filename)||require.extensions)&&(n=i(e,t),e=null!=(a=n.js)?a:n),o._compile(e,o.filename)},e.eval=function(e,t){var n,r,o,s,a,c,h,u,p,f,m,y,b,g;if(null==t&&(t={}),e=e.trim()){if(r=d.Script){if(null!=t.sandbox){if(t.sandbox instanceof r.createContext().constructor)h=t.sandbox;else{h=r.createContext(),y=t.sandbox;for(s in y)k.call(y,s)&&(u=y[s],h[s]=u)}h.global=h.root=h.GLOBAL=h}else h=global;if(h.__filename=t.filename||"eval",h.__dirname=l.dirname(h.__filename),h===global&&!h.module&&!h.require){for(n=require("module"),h.module=m=new n(t.modulename||"eval"),h.require=g=function(e){return n._load(e,m,!0)},m.filename=h.__filename,b=Object.getOwnPropertyNames(require),p=0,f=b.length;f>p;p++)c=b[p],"paths"!==c&&(g[c]=require[c]);g.paths=m.paths=n._nodeModulePaths(process.cwd()),g.resolve=function(e){return n._resolveFilename(e,m)}}}a={};for(s in t)k.call(t,s)&&(u=t[s],a[s]=u);return a.bare=!0,o=i(e,a),h===global?d.runInThisContext(o):d.runInContext(o,h)}},e.register=function(){return require("./register")},require.extensions)for(g=this.FILE_EXTENSIONS,y=0,b=g.length;b>y;y++)r=g[y],null==(m=require.extensions)[r]&&(m[r]=function(){throw Error("Use CoffeeScript.register() or require the coffee-script/register module to require "+r+" files.")});e._compileFile=function(e,t){var n,r,o,a;null==t&&(t=!1),o=s.readFileSync(e,"utf8"),a=65279===o.charCodeAt(0)?o.substring(1):o;try{n=i(a,{filename:e,sourceMap:t,literate:c.isLiterate(e)})}catch(h){throw r=h,c.updateSyntaxError(r,a,e)}return n},h=new t,u.lexer={lex:function(){var e,t;return t=this.tokens[this.pos++],t?(e=t[0],this.yytext=t[1],this.yylloc=t[2],this.errorToken=t.origin||t,this.yylineno=this.yylloc.first_line):e="",e},setInput:function(e){return this.tokens=e,this.pos=0},upcomingInput:function(){return""}},u.yy=require("./nodes"),u.yy.parseError=function(e,t){var n,i,r,o,s,a,h;return s=t.token,h=u.lexer,o=h.errorToken,a=h.tokens,i=o[0],r=o[1],n=o[2],r=o===a[a.length-1]?"end of input":"INDENT"===i||"OUTDENT"===i?"indentation":c.nameWhitespaceCharacter(r),c.throwSyntaxError("unexpected "+r,n)},o=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d;return o=void 0,r="",e.isNative()?r="native":(e.isEval()?(o=e.getScriptNameOrSourceURL(),o||(r=""+e.getEvalOrigin()+", ")):o=e.getFileName(),o||(o="<anonymous>"),h=e.getLineNumber(),i=e.getColumnNumber(),l=t(o,h,i),r=l?""+o+":"+l[0]+":"+l[1]:""+o+":"+h+":"+i),s=e.getFunctionName(),a=e.isConstructor(),c=!(e.isToplevel()||a),c?(u=e.getMethodName(),d=e.getTypeName(),s?(p=n="",d&&s.indexOf(d)&&(p=""+d+"."),u&&s.indexOf("."+u)!==s.length-u.length-1&&(n=" [as "+u+"]"),""+p+s+n+" ("+r+")"):""+d+"."+(u||"<anonymous>")+" ("+r+")"):a?"new "+(s||"<anonymous>")+" ("+r+")":s?""+s+" ("+r+")":r},p={},a=function(t){var n,i;if(p[t])return p[t];if(i=null!=l?l.extname(t):void 0,!(0>v.call(e.FILE_EXTENSIONS,i)))return n=e._compileFile(t,!0),p[t]=n.sourceMap},Error.prepareStackTrace=function(t,n){var i,r,s;return s=function(e,t,n){var i,r;return r=a(e),r&&(i=r.sourceLocation([t-1,n-1])),i?[i[0]+1,i[1]+1]:null},r=function(){var t,r,a;for(a=[],t=0,r=n.length;r>t&&(i=n[t],i.getFunction()!==e.run);t++)a.push("  at "+o(i,s));return a}(),""+(""+t)+"\n"+r.join("\n")+"\n"}}.call(this),t.exports}(),require["./browser"]=function(){var exports={},module={exports:exports};return function(){var CoffeeScript,compile,runScripts,__indexOf=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};CoffeeScript=require("./coffee-script"),CoffeeScript.require=require,compile=CoffeeScript.compile,CoffeeScript.eval=function(code,options){return null==options&&(options={}),null==options.bare&&(options.bare=!0),eval(compile(code,options))},CoffeeScript.run=function(e,t){return null==t&&(t={}),t.bare=!0,t.shiftLine=!0,Function(compile(e,t))()},"undefined"!=typeof window&&null!==window&&("undefined"!=typeof btoa&&null!==btoa&&"undefined"!=typeof JSON&&null!==JSON&&"undefined"!=typeof unescape&&null!==unescape&&"undefined"!=typeof encodeURIComponent&&null!==encodeURIComponent&&(compile=function(e,t){var n,i,r;return null==t&&(t={}),t.sourceMap=!0,t.inline=!0,r=CoffeeScript.compile(e,t),n=r.js,i=r.v3SourceMap,""+n+"\n//# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(i)))+"\n//# sourceURL=coffeescript"}),CoffeeScript.load=function(e,t,n,i){var r;return null==n&&(n={}),null==i&&(i=!1),n.sourceFiles=[e],r=window.ActiveXObject?new window.ActiveXObject("Microsoft.XMLHTTP"):new window.XMLHttpRequest,r.open("GET",e,!0),"overrideMimeType"in r&&r.overrideMimeType("text/plain"),r.onreadystatechange=function(){var o,s;if(4===r.readyState){if(0!==(s=r.status)&&200!==s)throw Error("Could not load "+e);if(o=[r.responseText,n],i||CoffeeScript.run.apply(CoffeeScript,o),t)return t(o)}},r.send(null)},runScripts=function(){var e,t,n,i,r,o,s,a,c,h,u;for(a=window.document.getElementsByTagName("script"),t=["text/coffeescript","text/literate-coffeescript"],e=function(){var e,n,i,r;for(r=[],e=0,n=a.length;n>e;e++)o=a[e],i=o.type,__indexOf.call(t,i)>=0&&r.push(o);return r}(),r=0,n=function(){var t;return t=e[r],t instanceof Array?(CoffeeScript.run.apply(CoffeeScript,t),r++,n()):void 0},c=function(i,r){var o;return o={literate:i.type===t[1]},i.src?CoffeeScript.load(i.src,function(t){return e[r]=t,n()},o,!0):(o.sourceFiles=["embedded"],e[r]=[i.innerHTML,o])},i=h=0,u=e.length;u>h;i=++h)s=e[i],c(s,i);return n()},window.addEventListener?window.addEventListener("DOMContentLoaded",runScripts,!1):window.attachEvent("onload",runScripts))}.call(this),module.exports}(),require["./coffee-script"]}();"function"==typeof define&&define.amd?define('coffee-script',[],function(){return CoffeeScript}):root.CoffeeScript=CoffeeScript})(this);
+(function() {
+  define('ice-coffee',['ice-model', 'ice-parser', 'coffee-script'], function(model, parser, CoffeeScript) {
+    var COLORS, CoffeeScriptTranspiler, OPERATOR_PRECEDENCES, coffeeScriptParser, exports;
+    exports = {};
+    COLORS = {
+      COMMAND: '#268bd2',
+      CONTROL: '#daa520',
+      VALUE: '#26cf3c',
+      RETURN: '#dc322f'
+    };
+    OPERATOR_PRECEDENCES = {
+      '||': 1,
+      '&&': 2,
+      'instanceof': 3,
+      '===': 3,
+      '!==': 3,
+      '>': 3,
+      '<': 3,
+      '>=': 3,
+      '<=': 3,
+      '+': 4,
+      '-': 4,
+      '*': 5,
+      '/': 5,
+      '%': 6,
+      '**': 7,
+      '%%': 7
+    };
+    CoffeeScriptTranspiler = (function() {
+      function CoffeeScriptTranspiler(text) {
+        var i, line, token, tokens, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2;
+        this.text = text;
+        this.markup = [];
+        this.lines = this.text.split('\n');
+        tokens = CoffeeScript.tokens(this.text, {
+          rewrite: false,
+          preserveComments: true
+        });
+        for (_i = 0, _len = tokens.length; _i < _len; _i++) {
+          token = tokens[_i];
+          if (token[0] === 'COMMENT') {
+            if (token[2].first_line === token[2].last_line) {
+              line = this.lines[token[2].first_line];
+              this.lines[token[2].first_line] = line.slice(0, token[2].first_column) + ((function() {
+                var _j, _ref, _ref1, _results;
+                _results = [];
+                for (_j = _ref = token[2].first_column, _ref1 = token[2].last_column; _ref <= _ref1 ? _j <= _ref1 : _j >= _ref1; _ref <= _ref1 ? _j++ : _j--) {
+                  _results.push(' ');
+                }
+                return _results;
+              })()).join('') + line.slice(token[2].last_column);
+            } else {
+              line = this.lines[token[2].first_line];
+              this.lines[token[2].first_line] = line.slice(0, token[2].first_column) + ((function() {
+                var _j, _ref, _ref1, _results;
+                _results = [];
+                for (_j = _ref = token[2].first_column, _ref1 = line.length; _ref <= _ref1 ? _j <= _ref1 : _j >= _ref1; _ref <= _ref1 ? _j++ : _j--) {
+                  _results.push(' ');
+                }
+                return _results;
+              })()).join('');
+              this.lines[token[2].last_line] = ((function() {
+                var _j, _ref, _results;
+                _results = [];
+                for (_j = 1, _ref = this.lines[token[2].last_line].length; 1 <= _ref ? _j <= _ref : _j >= _ref; 1 <= _ref ? _j++ : _j--) {
+                  _results.push(' ');
+                }
+                return _results;
+              }).call(this)).join('');
+              for (i = _j = _ref = token[2].first_line + 1, _ref1 = token[2].last_line; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
+                this.lines[i] = this.lines[i].replace(/./g, ' ');
+              }
+            }
+          }
+        }
+        this.hasLineBeenMarked = {};
+        _ref2 = this.lines;
+        for (i = _k = 0, _len1 = _ref2.length; _k < _len1; i = ++_k) {
+          line = _ref2[i];
+          this.hasLineBeenMarked[i] = false;
+        }
+      }
+
+      CoffeeScriptTranspiler.prototype.locationsAreIdentical = function(a, b) {
+        return a.line === b.line && a.column === b.column;
+      };
+
+      CoffeeScriptTranspiler.prototype.boundMin = function(a, b) {
+        if (a.line < b.line) {
+          return a;
+        } else if (b.line < a.line) {
+          return b;
+        } else if (a.column < b.column) {
+          return a;
+        } else {
+          return b;
+        }
+      };
+
+      CoffeeScriptTranspiler.prototype.boundMax = function(a, b) {
+        if (a.line < b.line) {
+          return b;
+        } else if (b.line < a.line) {
+          return a;
+        } else if (a.column < b.column) {
+          return b;
+        } else {
+          return a;
+        }
+      };
+
+      CoffeeScriptTranspiler.prototype.getBounds = function(node) {
+        var bounds;
+        bounds = {
+          start: {
+            line: node.locationData.first_line,
+            column: node.locationData.first_column
+          },
+          end: {
+            line: node.locationData.last_line,
+            column: node.locationData.last_column + 1
+          }
+        };
+        if (node.nodeType() === 'Block') {
+          if (node.expressions.length > 0) {
+            bounds.end = this.getBounds(node.expressions[node.expressions.length - 1]).end;
+          } else {
+            bounds.start = bounds.end;
+          }
+        }
+        if (node.nodeType() === 'If') {
+          bounds.start = this.boundMin(bounds.start, this.getBounds(node.body).start);
+          bounds.end = this.boundMax(this.getBounds(node.rawCondition).end, this.getBounds(node.body).end);
+          if (node.elseBody != null) {
+            bounds.end = this.boundMax(bounds.end, this.getBounds(node.elseBody).end);
+          }
+        }
+        if (node.nodeType() === 'While') {
+          bounds.start = this.boundMin(bounds.start, this.getBounds(node.body).start);
+          bounds.end = this.boundMax(bounds.end, this.getBounds(node.body).end);
+          if (node.guard != null) {
+            bounds.end = this.boundMax(bounds.end, this.getBounds(node.guard).end);
+          }
+        }
+        if (node.nodeType() === 'Code' && (node.body != null)) {
+          bounds.end = this.getBounds(node.body).end;
+        }
+        while (this.lines[bounds.end.line].slice(0, bounds.end.column).trim().length === 0) {
+          bounds.end.line -= 1;
+          bounds.end.column = this.lines[bounds.end.line].length + 1;
+        }
+        if (node.nodeType() === 'Value') {
+          return this.getBounds(node.base);
+        }
+        return bounds;
+      };
+
+      CoffeeScriptTranspiler.prototype.flagLineAsMarked = function(line) {
+        var _results;
+        this.hasLineBeenMarked[line] = true;
+        _results = [];
+        while (this.lines[line][this.lines[line].length - 1] === '\\') {
+          line += 1;
+          _results.push(this.hasLineBeenMarked[line] = true);
+        }
+        return _results;
+      };
+
+      CoffeeScriptTranspiler.prototype.addMarkupAtLocation = function(container, bounds, depth) {
+        this.flagLineAsMarked(bounds.start.line);
+        return this.markup.push({
+          container: container,
+          bounds: bounds,
+          depth: depth
+        });
+      };
+
+      CoffeeScriptTranspiler.prototype.addMarkup = function(container, node, wrappingParen, depth) {
+        var bounds;
+        bounds = this.getBounds(wrappingParen != null ? wrappingParen : node);
+        return this.addMarkupAtLocation(container, bounds, depth);
+      };
+
+      CoffeeScriptTranspiler.prototype.addBlock = function(node, depth, precedence, color, wrappingParen) {
+        var block;
+        block = new model.Block(precedence, color, color === COLORS.VALUE);
+        this.addMarkup(block, node, wrappingParen, depth);
+        return block.currentlyParenWrapped = wrappingParen != null;
+      };
+
+      CoffeeScriptTranspiler.prototype.addSocket = function(node, depth, precedence) {
+        var socket;
+        socket = new model.Socket(precedence);
+        return this.addMarkup(socket, node, null, depth);
+      };
+
+      CoffeeScriptTranspiler.prototype.addSocketAndMark = function(node, depth, precedence, indentDepth) {
+        this.addSocket(node, depth, precedence);
+        return this.mark(node, depth + 1, precedence, null, indentDepth);
+      };
+
+      CoffeeScriptTranspiler.prototype.wrapSemicolonLine = function(firstBounds, lastBounds, expressions, depth) {
+        var block, child, surroundingBounds, _i, _len, _results;
+        block = new model.Block(0, COLORS.COMMAND, false);
+        surroundingBounds = {
+          start: firstBounds.start,
+          end: lastBounds.end
+        };
+        this.addMarkupAtLocation(block, surroundingBounds, depth + 1);
+        _results = [];
+        for (_i = 0, _len = expressions.length; _i < _len; _i++) {
+          child = expressions[_i];
+          _results.push(this.addSocket(child, depth + 2, 0));
+        }
+        return _results;
+      };
+
+      CoffeeScriptTranspiler.prototype.wrapSemicolons = function(expressions, depth) {
+        var bounds, expr, firstBounds, firstNode, lastBounds, lastNode, nodesOnCurrentLine, _i, _len;
+        firstNode = lastNode = firstBounds = lastBounds = null;
+        nodesOnCurrentLine = [];
+        for (_i = 0, _len = expressions.length; _i < _len; _i++) {
+          expr = expressions[_i];
+          bounds = this.getBounds(expr);
+          if (bounds.start.line === (firstBounds != null ? firstBounds.end.line : void 0)) {
+            lastNode = expr;
+            lastBounds = bounds;
+            nodesOnCurrentLine.push(expr);
+          } else {
+            if (lastNode != null) {
+              this.wrapSemicolonLine(firstBounds, lastBounds, nodesOnCurrentLine, depth);
+            }
+            firstNode = expr;
+            lastNode = null;
+            firstBounds = this.getBounds(expr);
+            lastBounds = null;
+            nodesOnCurrentLine = [expr];
+          }
+        }
+        if (lastNode != null) {
+          return this.wrapSemicolonLine(firstBounds, lastBounds, nodesOnCurrentLine, depth);
+        }
+      };
+
+      CoffeeScriptTranspiler.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
+        var arg, bounds, childName, condition, expr, firstBounds, indent, infix, line, lines, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3;
+        switch (node.nodeType()) {
+          case 'Block':
+            if (node.expressions.length === 0) {
+              return;
+            }
+            bounds = this.getBounds(node);
+            shouldBeOneLine = false;
+            for (line = _i = _ref = bounds.start.line, _ref1 = bounds.end.line; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; line = _ref <= _ref1 ? ++_i : --_i) {
+              shouldBeOneLine || (shouldBeOneLine = this.hasLineBeenMarked[line]);
+            }
+            if (this.lines[bounds.start.line].slice(0, bounds.start.column).trim().length !== 0) {
+              shouldBeOneLine = true;
+            }
+            if (shouldBeOneLine) {
+              this.addSocket(node, depth, 0);
+            } else {
+              textLine = this.lines[node.locationData.first_line];
+              trueIndentDepth = textLine.length - textLine.trimLeft().length;
+              indent = new model.Indent(this.lines[node.locationData.first_line].slice(indentDepth, trueIndentDepth));
+              indentDepth = trueIndentDepth;
+              while (bounds.start.line > 0 && this.lines[bounds.start.line - 1].trim().length === 0) {
+                bounds.start.line -= 1;
+                bounds.start.column = this.lines[bounds.start.line].length + 1;
+              }
+              bounds.start.line -= 1;
+              bounds.start.column = this.lines[bounds.start.line].length + 1;
+              this.addMarkupAtLocation(indent, bounds, depth);
+            }
+            _ref2 = node.expressions;
+            for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
+              expr = _ref2[_j];
+              this.mark(expr, depth + 3, 0, null, indentDepth);
+            }
+            return this.wrapSemicolons(node.expressions, depth);
+          case 'Parens':
+            if (node.body != null) {
+              if (node.body.nodeType() !== 'Block') {
+                return this.mark(node.body, depth + 1, 0, wrappingParen != null ? wrappingParen : node, indentDepth);
+              } else {
+                if (node.body.unwrap() === node.body) {
+                  this.addBlock(node, depth, 0, COLORS.COMMAND, null);
+                  _ref3 = node.body.expressions;
+                  _results = [];
+                  for (_k = 0, _len1 = _ref3.length; _k < _len1; _k++) {
+                    expr = _ref3[_k];
+                    _results.push(this.mark(expr, depth + 1, 0, null, indentDepth));
+                  }
+                  return _results;
+                } else {
+                  return this.mark(node.body.unwrap(), depth + 1, 0, wrappingParen != null ? wrappingParen : node, indentDepth);
+                }
+              }
+            }
+            break;
+          case 'Op':
+            if ((node.first != null) && (node.second != null) && node.operator === '+') {
+              firstBounds = this.getBounds(node.first);
+              secondBounds = this.getBounds(node.second);
+              lines = this.lines.slice(firstBounds.end.line, +secondBounds.start.line + 1 || 9e9).join('\n');
+              infix = lines.slice(firstBounds.end.column, -(this.lines[secondBounds.start.line].length - secondBounds.start.column));
+              if (infix.indexOf('+') === -1) {
+                return;
+              }
+            }
+            this.addBlock(node, depth, OPERATOR_PRECEDENCES[node.operator], COLORS.VALUE, wrappingParen);
+            this.addSocketAndMark(node.first, depth + 1, OPERATOR_PRECEDENCES[node.operator], indentDepth);
+            if (node.second != null) {
+              return this.addSocketAndMark(node.second, depth + 1, OPERATOR_PRECEDENCES[node.operator], indentDepth);
+            }
+            break;
+          case 'Existence':
+            this.addBlock(node, depth, 100, COLORS.VALUE, wrappingParen);
+            return this.addSocketAndMark(node.expression, depth + 1, 101, indentDepth);
+          case 'In':
+            this.addBlock(node, depth, 0, COLORS.VALUE, wrappingParen);
+            this.addSocketAndMark(node.object, depth + 1, 0, indentDepth);
+            return this.addSocketAndMark(node.array, depth + 1, 0, indentDepth);
+          case 'Value':
+            return this.mark(node.base, depth + 1, precedence, wrappingParen, indentDepth);
+          case 'Literal':
+          case 'Bool':
+          case 'Undefined':
+          case 'Null':
+            return 0;
+          case 'Call':
+            this.addBlock(node, depth, precedence, COLORS.COMMAND, wrappingParen);
+            if ((node.variable != null) && ((_ref4 = node.variable.base) != null ? _ref4.nodeType() : void 0) !== 'Literal') {
+              this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth);
+            }
+            if (!node["do"]) {
+              _ref5 = node.args;
+              _results1 = [];
+              for (_l = 0, _len2 = _ref5.length; _l < _len2; _l++) {
+                arg = _ref5[_l];
+                _results1.push(this.addSocketAndMark(arg, depth + 1, 0, indentDepth));
+              }
+              return _results1;
+            }
+            break;
+          case 'Code':
+            this.addBlock(node, depth, precedence, COLORS.VALUE, wrappingParen);
+            _ref6 = node.params;
+            for (_m = 0, _len3 = _ref6.length; _m < _len3; _m++) {
+              param = _ref6[_m];
+              this.addSocketAndMark(param, depth + 1, 0, indentDepth);
+            }
+            return this.mark(node.body, depth + 1, 0, null, indentDepth);
+          case 'Assign':
+            this.addBlock(node, depth, precedence, COLORS.COMMAND, wrappingParen);
+            this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth);
+            return this.addSocketAndMark(node.value, depth + 1, 0, indentDepth);
+          case 'For':
+            this.addBlock(node, depth, precedence, COLORS.CONTROL, wrappingParen);
+            _ref7 = ['index', 'source', 'name', 'from', 'guard'];
+            for (_n = 0, _len4 = _ref7.length; _n < _len4; _n++) {
+              childName = _ref7[_n];
+              if (node[childName] != null) {
+                this.addSocketAndMark(node[childName], depth + 1, 0, indentDepth);
+              }
+            }
+            return this.mark(node.body, depth + 1, 0, null, indentDepth);
+          case 'Range':
+            this.addBlock(node, depth, 100, COLORS.VALUE, wrappingParen);
+            this.addSocketAndMark(node.from, depth, 0, indentDepth);
+            return this.addSocketAndMark(node.to, depth, 0, indentDepth);
+          case 'If':
+            this.addBlock(node, depth, precedence, COLORS.CONTROL, wrappingParen);
+            /*
+            bounds = @getBounds node
+            if @lines[bounds.start.line].indexOf('unless') >= 0 and
+                @locationsAreIdentical(bounds.start, @getBounds(node.condition).start) and
+                node.condition.nodeType() is 'Op'
+            
+              @addSocketAndMark node.condition.first, depth + 1, 0, indentDepth
+            else
+            */
+
+            this.addSocketAndMark(node.rawCondition, depth + 1, 0, indentDepth);
+            this.mark(node.body, depth + 1, 0, null, indentDepth);
+            if (node.elseBody != null) {
+              this.flagLineAsMarked(node.elseToken.first_line);
+              return this.mark(node.elseBody, depth + 1, 0, null, indentDepth);
+            }
+            break;
+          case 'Arr':
+            this.addBlock(node, depth, 100, COLORS.VALUE, wrappingParen);
+            _ref8 = node.objects;
+            _results2 = [];
+            for (_o = 0, _len5 = _ref8.length; _o < _len5; _o++) {
+              object = _ref8[_o];
+              _results2.push(this.addSocketAndMark(object, depth + 1, 0, indentDepth));
+            }
+            return _results2;
+            break;
+          case 'Return':
+            this.addBlock(node, depth, precedence, COLORS.RETURN, wrappingParen);
+            if (node.expression != null) {
+              return this.addSocketAndMark(node.expression, depth + 1, 0, indentDepth);
+            }
+            break;
+          case 'While':
+            this.addBlock(node, depth, precedence, COLORS.CONTROL, wrappingParen);
+            this.addSocketAndMark(node.rawCondition, depth + 1, 0, indentDepth);
+            if (node.guard != null) {
+              this.addSocketAndMark(node.guard, depth + 1, 0, indentDepth);
+            }
+            return this.mark(node.body, depth + 1, 0, null, indentDepth);
+          case 'Switch':
+            this.addBlock(node, depth, 0, COLORS.CONTROL, wrappingParen);
+            if (node.subject != null) {
+              this.addSocketAndMark(node.subject, depth + 1, 0, indentDepth);
+            }
+            _ref9 = node.cases;
+            for (_p = 0, _len6 = _ref9.length; _p < _len6; _p++) {
+              switchCase = _ref9[_p];
+              if (switchCase[0].constructor === Array) {
+                _ref10 = switchCase[0];
+                for (_q = 0, _len7 = _ref10.length; _q < _len7; _q++) {
+                  condition = _ref10[_q];
+                  this.addSocketAndMark(condition, depth + 1, 0, indentDepth);
+                }
+              } else {
+                this.addSocketAndMark(switchCase[0], depth + 1, 0, indentDepth);
+              }
+              this.mark(switchCase[1], depth + 1, 0, null, indentDepth);
+            }
+            if (node.otherwise != null) {
+              return this.mark(node.otherwise, depth + 1, 0, null, indentDepth);
+            }
+            break;
+          case 'Class':
+            this.addBlock(node, depth, 0, COLORS.CONTROL, wrappingParen);
+            if (node.variable != null) {
+              this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth);
+            }
+            if (node.parent != null) {
+              this.addSocketAndMark(node.parent, depth + 1, 0, indentDepth);
+            }
+            if (node.body != null) {
+              return this.mark(node.body, depth + 1, 0, null, indentDepth);
+            }
+            break;
+          case 'Obj':
+            this.addBlock(node, depth, 0, COLORS.VALUE, wrappingParen);
+            _ref11 = node.properties;
+            _results3 = [];
+            for (_r = 0, _len8 = _ref11.length; _r < _len8; _r++) {
+              property = _ref11[_r];
+              if (property.nodeType() === 'Assign') {
+                this.addSocketAndMark(property.variable, depth + 1, 0, indentDepth);
+                _results3.push(this.addSocketAndMark(property.value, depth + 1, 0, indentDepth));
+              } else {
+                _results3.push(void 0);
+              }
+            }
+            return _results3;
+        }
+      };
+
+      CoffeeScriptTranspiler.prototype.transpile = function() {
+        var node, nodes, _i, _len;
+        nodes = CoffeeScript.nodes(this.text).expressions;
+        for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+          node = nodes[_i];
+          this.mark(node, 3, 0, null, 0);
+        }
+        this.wrapSemicolons(nodes, 0);
+        return this.markup;
+      };
+
+      return CoffeeScriptTranspiler;
+
+    })();
+    coffeeScriptParser = new parser.Parser(function(text) {
+      var transpiler;
+      transpiler = new CoffeeScriptTranspiler(text);
+      return transpiler.transpile();
+    });
+    exports.parse = function(text, opts) {
+      if (opts == null) {
+        opts = {
+          wrapAtRoot: true
+        };
+      }
+      return coffeeScriptParser.parse(text, opts);
+    };
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=coffee.js.map
+*/;
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  define('ice-controller',['ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(coffee, draw, model, view) {
+    var ANIMATION_FRAME_RATE, AnimatedColor, CreateIndentOperation, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DestroyIndentOperation, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MIN_DRAG_DISTANCE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PALETTE_WIDTH, PickUpOperation, ReparseOperation, SetValueOperation, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, binding, containsCursor, editorBindings, exports, getOffsetLeft, getOffsetTop, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+    PALETTE_TOP_MARGIN = 5;
+    PALETTE_MARGIN = 5;
+    MIN_DRAG_DISTANCE = 5;
+    PALETTE_LEFT_MARGIN = 5;
+    PALETTE_WIDTH = 300;
+    DEFAULT_INDENT_DEPTH = '  ';
+    ANIMATION_FRAME_RATE = 60;
+    exports = {};
+    unsortedEditorBindings = {
+      'populate': [],
+      'resize': [],
+      'redraw_main': [],
+      'redraw_palette': [],
+      'mousedown': [],
+      'mousemove': [],
+      'mouseup': [],
+      'mutation': []
+    };
+    unsortedEditorKeyBindings = {};
+    editorBindings = {};
+    hook = function(event, priority, fn) {
+      var _name;
+      if (event.slice(0, 4) === 'key.') {
+        if (unsortedEditorKeyBindings[_name = event.slice(4)] == null) {
+          unsortedEditorKeyBindings[_name] = [];
+        }
+        return unsortedEditorKeyBindings[event.slice(4)].push({
+          priority: priority,
+          fn: fn
+        });
+      } else {
+        return unsortedEditorBindings[event].push({
+          priority: priority,
+          fn: fn
+        });
+      }
+    };
+    exports.Editor = Editor = (function() {
+      function Editor(wrapperElement, paletteGroups) {
+        var binding, boundListeners, combo, eventName, fns, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1, _ref2,
+          _this = this;
+        this.wrapperElement = wrapperElement;
+        this.paletteGroups = paletteGroups;
+        this.iceElement = document.createElement('div');
+        this.iceElement.className = 'ice-wrapper-div';
+        this.iceElement.tabIndex = 0;
+        this.wrapperElement.appendChild(this.iceElement);
+        this.mainCanvas = document.createElement('canvas');
+        this.mainCanvas.className = 'ice-main-canvas';
+        this.mainCtx = this.mainCanvas.getContext('2d');
+        this.iceElement.appendChild(this.mainCanvas);
+        this.paletteWrapper = document.createElement('div');
+        this.paletteWrapper.className = 'ice-palette-wrapper';
+        this.paletteCanvas = document.createElement('canvas');
+        this.paletteCanvas.className = 'ice-palette-canvas';
+        this.paletteCtx = this.paletteCanvas.getContext('2d');
+        this.paletteWrapper.appendChild(this.paletteCanvas);
+        this.iceElement.appendChild(this.paletteWrapper);
+        this.view = new view.View({
+          padding: 5,
+          indentWidth: 10,
+          indentToungeHeight: 10,
+          tabOffset: 10,
+          tabWidth: 15,
+          tabHeight: 5,
+          tabSideWidth: 0.125,
+          dropAreaHeight: 20,
+          indentDropAreaMinWidth: 50,
+          emptySocketWidth: 20,
+          emptySocketHeight: 25,
+          emptyLineHeight: 25,
+          highlightAreaHeight: 10,
+          shadowBlur: 5,
+          ctx: this.mainCtx
+        });
+        this.keyListener = new window.keypress.Listener(this.iceElement);
+        boundListeners = [];
+        _ref = editorBindings.key;
+        _fn = function(fns) {
+          return _this.keyListener.simple_combo(combo, function() {
+            var executeDefault, fn, result, state, _i, _len, _ref1;
+            state = {};
+            executeDefault = true;
+            for (_i = 0, _len = fns.length; _i < _len; _i++) {
+              fn = fns[_i];
+              result = (_ref1 = fn.call(_this, state)) != null ? _ref1 : true;
+              executeDefault && (executeDefault = result);
+            }
+            return executeDefault;
+          });
+        };
+        for (combo in _ref) {
+          fns = _ref[combo];
+          _fn(fns);
+        }
+        _ref1 = editorBindings.populate;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          binding = _ref1[_i];
+          binding.call(this);
+        }
+        window.addEventListener('resize', function() {
+          _this.resize();
+          _this.redrawMain();
+          return _this.redrawPalette();
+        });
+        this.resize();
+        _ref2 = ['mousedown', 'mouseup', 'mousemove'];
+        _fn1 = function(eventName) {
+          return _this.iceElement.addEventListener(eventName, function(event) {
+            var handler, state, trackPoint, _k, _len2, _ref3, _results;
+            trackPoint = _this.getPointRelativeToTracker(event);
+            state = {};
+            _ref3 = editorBindings[eventName];
+            _results = [];
+            for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+              handler = _ref3[_k];
+              _results.push(handler.call(_this, trackPoint, event, state));
+            }
+            return _results;
+          });
+        };
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          eventName = _ref2[_j];
+          _fn1(eventName);
+        }
+        this.tree = new model.Segment();
+        this.redrawMain();
+        this.redrawPalette();
+      }
+
+      Editor.prototype.resize = function() {
+        var binding, _i, _len, _ref, _results;
+        this.iceElement.style.height = "" + this.wrapperElement.offsetHeight + "px";
+        this.iceElement.style.width = "" + this.wrapperElement.offsetWidth + "px";
+        this.mainCanvas.height = this.iceElement.offsetHeight;
+        this.mainCanvas.width = this.iceElement.offsetWidth;
+        this.mainCanvas.style.height = "" + this.mainCanvas.height + "px";
+        this.mainCanvas.style.width = "" + this.mainCanvas.width + "px";
+        this.paletteCanvas.style.top = "" + this.paletteHeaderHeight + "px";
+        this.paletteCanvas.height = this.paletteWrapper.offsetHeight - this.paletteHeaderHeight;
+        this.paletteCanvas.width = PALETTE_WIDTH;
+        this.paletteCanvas.style.height = "" + this.paletteCanvas.height + "px";
+        this.paletteCanvas.style.width = "" + this.paletteCanvas.width + "px";
+        _ref = editorBindings.resize;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          binding = _ref[_i];
+          _results.push(binding.call(this));
+        }
+        return _results;
+      };
+
+      return Editor;
+
+    })();
+    Editor.prototype.clearMain = function() {
+      return this.mainCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+    };
+    Editor.prototype.redrawMain = function() {
+      var binding, _i, _len, _ref, _results;
+      if (!this.currentlyAnimating) {
+        draw._setGlobalFontSize(this.fontSize);
+        draw._setCTX(this.mainCtx);
+        this.clearMain();
+        this.view.getViewFor(this.tree).layout();
+        this.view.getViewFor(this.tree).draw(this.mainCtx, new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height));
+        this.redrawCursor();
+        _ref = editorBindings.redraw_main;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          binding = _ref[_i];
+          _results.push(binding.call(this));
+        }
+        return _results;
+      }
+    };
+    Editor.prototype.redrawCursor = function() {
+      var bound, head, line, _ref;
+      if ((this.cursor != null) && (this.cursor.parent != null)) {
+        head = this.cursor;
+        line = 0;
+        while (head !== this.cursor.parent.start) {
+          head = head.prev;
+          if (head.type === 'newline') {
+            line++;
+          }
+        }
+        bound = this.view.getViewFor(this.cursor.parent).bounds[line];
+        if (((_ref = this.cursor.nextVisibleToken()) != null ? _ref.type : void 0) === 'indentEnd' || this.cursor.next === this.tree.end) {
+          return this.drawCursor(new draw.Point(bound.x, bound.bottom()));
+        } else {
+          return this.drawCursor(new draw.Point(bound.x, bound.y));
+        }
+      }
+    };
+    Editor.prototype.clearPalette = function() {
+      return this.paletteCtx.clearRect(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
+    };
+    Editor.prototype.redrawPalette = function() {
+      var binding, boundingRect, lastBottomEdge, paletteBlock, paletteBlockView, _i, _j, _len, _len1, _ref, _ref1, _results;
+      this.clearPalette();
+      draw._setCTX(this.paletteCtx);
+      draw._setGlobalFontSize(this.fontSize);
+      lastBottomEdge = PALETTE_TOP_MARGIN;
+      boundingRect = new draw.Rectangle(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
+      _ref = this.currentPaletteBlocks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        paletteBlock = _ref[_i];
+        paletteBlockView = this.view.getViewFor(paletteBlock);
+        paletteBlockView.layout(PALETTE_LEFT_MARGIN, lastBottomEdge);
+        paletteBlockView.draw(this.paletteCtx, boundingRect);
+        lastBottomEdge = paletteBlockView.getBounds().bottom() + PALETTE_MARGIN;
+      }
+      _ref1 = editorBindings.redraw_palette;
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        binding = _ref1[_j];
+        _results.push(binding.call(this));
+      }
+      return _results;
+    };
+    Editor.prototype.getPointRelativeToTracker = function(event) {
+      var offsetPoint, point;
+      if (event.offsetX != null) {
+        point = new draw.Point(event.offsetX, event.offsetY);
+      } else {
+        point = new draw.Point(event.layerX, event.layerY);
+      }
+      offsetPoint = this.trackerOffset(event.target);
+      return new draw.Point(point.x + offsetPoint.x, point.y + offsetPoint.y);
+    };
+    Editor.prototype.absoluteOffset = function(el) {
+      var point;
+      point = new draw.Point(0, 0);
+      while (el !== document.body) {
+        point.x += el.offsetLeft - el.scrollLeft;
+        point.y += el.offsetTop - el.scrollTop;
+        el = el.offsetParent;
+      }
+      return point;
+    };
+    Editor.prototype.trackerOffset = function(el) {
+      var point;
+      point = new draw.Point(0, 0);
+      while (el !== this.iceElement) {
+        point.x += el.offsetLeft - el.scrollLeft;
+        point.y += el.offsetTop - el.scrollTop;
+        el = el.offsetParent;
+      }
+      return point;
+    };
+    Editor.prototype.trackerPointToMain = function(point) {
+      return new draw.Point(point.x - this.trackerOffset(this.mainCanvas).x + this.scrollOffsets.main.x, point.y - this.trackerOffset(this.mainCanvas).y + this.scrollOffsets.main.y);
+    };
+    Editor.prototype.trackerPointToPalette = function(point) {
+      return new draw.Point(point.x - this.trackerOffset(this.paletteCanvas).x + this.scrollOffsets.palette.x, point.y - this.trackerOffset(this.paletteCanvas).y + this.scrollOffsets.palette.y);
+    };
+    Editor.prototype.hitTest = function(point, block) {
+      var head, seek;
+      head = block.start;
+      seek = block.end;
+      while (head !== seek) {
+        if (head.type === 'blockStart' && this.view.getViewFor(head.container).path.contains(point)) {
+          seek = head.container.end;
+        }
+        head = head.next;
+      }
+      if (head !== block.end) {
+        return head.container;
+      } else if (block.type === 'block' && this.view.getViewFor(block).path.contains(point)) {
+        return block;
+      } else {
+        return null;
+      }
+    };
+    hook('populate', 0, function() {
+      return this.undoStack = [];
+    });
+    UndoOperation = (function() {
+      function UndoOperation() {}
+
+      UndoOperation.prototype.undo = function(editor) {
+        return editor.tree.start;
+      };
+
+      UndoOperation.prototype.redo = function(editor) {
+        return editor.tree.start;
+      };
+
+      return UndoOperation;
+
+    })();
+    Editor.prototype.addMicroUndoOperation = function(operation) {
+      var binding, _i, _len, _ref;
+      this.undoStack.push(operation);
+      _ref = editorBindings.mutation;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        binding = _ref[_i];
+        binding.call(this);
+      }
+      return this.fireEvent('change', [operation]);
+    };
+    Editor.prototype.undo = function() {
+      var operation;
+      if (this.undoStack.length === 0) {
+        return;
+      }
+      operation = this.undoStack.pop();
+      if (operation === 'CAPTURE_POINT') {
+        return;
+      } else {
+        this.moveCursorTo(operation.undo(this));
+        this.undo();
+      }
+      return this.redrawMain();
+    };
+    Editor.prototype.clearUndoStack = function() {
+      return this.undoStack.length = 0;
+    };
+    hook('key.meta z', 0, function() {
+      return this.undo();
+    });
+    PickUpOperation = (function(_super) {
+      __extends(PickUpOperation, _super);
+
+      function PickUpOperation(block) {
+        var beforeToken, _ref, _ref1;
+        this.block = block.clone();
+        beforeToken = block.start.prev;
+        while (((beforeToken != null ? beforeToken.prev : void 0) != null) && ((_ref = beforeToken.type) === 'newline' || _ref === 'segmentStart' || _ref === 'cursor')) {
+          beforeToken = beforeToken.prev;
+        }
+        this.before = (_ref1 = beforeToken != null ? beforeToken.getSerializedLocation() : void 0) != null ? _ref1 : null;
+      }
+
+      PickUpOperation.prototype.undo = function(editor) {
+        var clone;
+        if (this.before == null) {
+          return;
+        }
+        (clone = this.block.clone()).moveTo(editor.tree.getTokenAtLocation(this.before));
+        return clone.end;
+      };
+
+      PickUpOperation.prototype.redo = function(editor) {
+        var blockStart;
+        if (this.before == null) {
+          return;
+        }
+        blockStart = editor.tree.getTokenAtLocation(this.before);
+        while (blockStart.type !== this.block.start.type) {
+          blockStart = blockStart.next;
+        }
+        if (this.block.start.type === 'segment') {
+          blockStart.container.moveTo(null);
+        } else {
+          blockStart.container.moveTo(null);
+        }
+        return editor.tree.getTokenAtLocation(this.before);
+      };
+
+      return PickUpOperation;
+
+    })(UndoOperation);
+    DropOperation = (function(_super) {
+      __extends(DropOperation, _super);
+
+      function DropOperation(block, dest) {
+        var _ref;
+        this.block = block.clone();
+        this.dest = (_ref = dest != null ? dest.getSerializedLocation() : void 0) != null ? _ref : null;
+        if ((dest != null ? dest.type : void 0) === 'socketStart') {
+          this.displacedSocketText = dest.container.contents();
+        } else {
+          this.displacedSocketText = null;
+        }
+      }
+
+      DropOperation.prototype.undo = function(editor) {
+        var blockStart;
+        if (this.dest == null) {
+          return;
+        }
+        blockStart = editor.tree.getTokenAtLocation(this.dest);
+        while (blockStart.type !== this.block.start.type) {
+          blockStart = blockStart.next;
+        }
+        if (this.block.type === 'segment') {
+          blockStart.container.moveTo(null);
+        } else {
+          blockStart.container.moveTo(null);
+        }
+        if (this.displacedSocketText != null) {
+          editor.tree.getTokenAtLocation(this.dest).insert(this.displacedSocketText.clone());
+        }
+        return editor.tree.getTokenAtLocation(this.dest);
+      };
+
+      DropOperation.prototype.redo = function(editor) {
+        var clone;
+        if (this.dest == null) {
+          return;
+        }
+        (clone = this.block.clone()).moveTo(editor.tree.getTokenAtLocation(this.dest));
+        return clone.end;
+      };
+
+      return DropOperation;
+
+    })(UndoOperation);
+    hook('populate', 0, function() {
+      this.clickedPoint = null;
+      this.clickedBlock = null;
+      this.draggingBlock = null;
+      this.draggingOffset = null;
+      this.lastHighlight = null;
+      this.dragCanvas = document.createElement('canvas');
+      this.dragCanvas.className = 'ice-drag-canvas';
+      this.dragCtx = this.dragCanvas.getContext('2d');
+      this.highlightCanvas = document.createElement('canvas');
+      this.highlightCanvas.className = 'ice-highlight-canvas';
+      this.highlightCtx = this.highlightCanvas.getContext('2d');
+      this.iceElement.appendChild(this.dragCanvas);
+      return this.iceElement.appendChild(this.highlightCanvas);
+    });
+    Editor.prototype.clearHighlightCanvas = function() {
+      return this.highlightCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.highlightCanvas.width, this.highlightCanvas.height);
+    };
+    Editor.prototype.clearDrag = function() {
+      return this.dragCtx.clearRect(0, 0, this.dragCanvas.width, this.dragCanvas.height);
+    };
+    hook('resize', 0, function() {
+      this.dragCanvas.width = this.iceElement.offsetWidth * 2;
+      this.dragCanvas.height = this.iceElement.offsetHeight;
+      this.highlightCanvas.width = this.iceElement.offsetWidth;
+      this.highlightCanvas.style.width = "" + this.highlightCanvas.width + "px";
+      this.highlightCanvas.height = this.iceElement.offsetHeight;
+      return this.highlightCanvas.style.height = "" + this.highlightCanvas.height + "px";
+    });
+    hook('mousedown', 3, function(point, event, state) {
+      var hitTestResult;
+      if (state.consumedHitTest) {
+        return;
+      }
+      hitTestResult = this.hitTest(this.trackerPointToMain(point), this.tree);
+      if (hitTestResult != null) {
+        this.clickedBlock = hitTestResult;
+        this.moveCursorTo(this.clickedBlock.end);
+        this.clickedPoint = point;
+        return state.consumedHitTest = true;
+      }
+    });
+    hook('mouseup', 0, function(point, event, state) {
+      if (this.clickedBlock != null) {
+        this.clickedBlock = null;
+        return this.clickedPoint = null;
+      }
+    });
+    hook('mousemove', 1, function(point, event, state) {
+      var draggingBlockView, position;
+      if (!state.capturedPickup && (this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
+        this.draggingBlock = this.clickedBlock;
+        if (this.clickedBlockIsPaletteBlock) {
+          this.draggingOffset = this.view.getViewFor(this.draggingBlock).bounds[0].upperLeftCorner().from(this.trackerPointToPalette(this.clickedPoint));
+          this.draggingBlock = this.draggingBlock.clone();
+        } else {
+          this.draggingOffset = this.view.getViewFor(this.draggingBlock).bounds[0].upperLeftCorner().from(this.trackerPointToMain(this.clickedPoint));
+          if (!state.addedCapturePoint) {
+            this.addMicroUndoOperation('CAPTURE_POINT');
+            state.addedCapturePoint = true;
+          }
+          this.addMicroUndoOperation(new PickUpOperation(this.draggingBlock));
+        }
+        this.draggingBlock.moveTo(null);
+        draggingBlockView = this.view.getViewFor(this.draggingBlock);
+        draggingBlockView.layout(1, 1);
+        draggingBlockView.drawShadow(this.dragCtx, 5, 5);
+        draggingBlockView.draw(this.dragCtx, new draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
+        position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        this.dragCanvas.style.top = "" + position.y + "px";
+        this.dragCanvas.style.left = "" + position.x + "px";
+        this.clickedPoint = this.clickedBlock = null;
+        return this.redrawMain();
+      }
+    });
+    hook('mousemove', 0, function(point, event, state) {
+      var head, highlight, mainPoint, position,
+        _this = this;
+      if (this.draggingBlock != null) {
+        position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        this.dragCanvas.style.top = "" + position.y + "px";
+        this.dragCanvas.style.left = "" + position.x + "px";
+        mainPoint = this.trackerPointToMain(position);
+        if (mainPoint.y > this.view.getViewFor(this.tree).getBounds().bottom() && mainPoint.x > 0) {
+          head = this.tree.end;
+          while (!(head.type === 'blockEnd' || head === this.tree.start)) {
+            head = head.prev;
+          }
+          if (head === this.tree.start) {
+            highlight = this.tree;
+          } else {
+            highlight = head.container;
+          }
+        } else if (this.draggingBlock.type === 'block') {
+          highlight = this.tree.find(function(block) {
+            var _ref;
+            return (((_ref = block.parent) != null ? _ref.type : void 0) !== 'socket') && (_this.view.getViewFor(block).dropArea != null) && _this.view.getViewFor(block).dropArea.contains(mainPoint);
+          });
+        } else if (this.draggingBlock.type === 'segment') {
+          highlight = this.tree.find(function(block) {
+            var _ref;
+            return (block.type !== 'socket') && (((_ref = block.parent) != null ? _ref.type : void 0) !== 'socket') && (_this.view.getViewFor(block).dropArea != null) && _this.view.getViewFor(block).dropArea.contains(mainPoint);
+          });
+        }
+        if (highlight !== this.lastHighlight) {
+          this.clearHighlightCanvas();
+          if (highlight != null) {
+            this.view.getViewFor(highlight).highlightArea.draw(this.highlightCtx);
+          }
+          return this.lastHighlight = highlight;
+        }
+      }
+    });
+    hook('mouseup', 0, function(point, event, state) {
+      if ((this.draggingBlock != null) && (this.lastHighlight != null)) {
+        this.clearHighlightCanvas();
+        switch (this.lastHighlight.type) {
+          case 'indent':
+          case 'socket':
+            this.addMicroUndoOperation(new DropOperation(this.draggingBlock, this.lastHighlight.start));
+            this.draggingBlock.moveTo(this.lastHighlight.start);
+            break;
+          case 'block':
+            this.addMicroUndoOperation(new DropOperation(this.draggingBlock, this.lastHighlight.end));
+            this.draggingBlock.moveTo(this.lastHighlight.end);
+            break;
+          default:
+            if (this.lastHighlight === this.tree) {
+              this.addMicroUndoOperation(new DropOperation(this.draggingBlock, this.tree.start));
+              this.draggingBlock.moveTo(this.tree.start);
+            }
+        }
+        this.redrawMain();
+        this.moveCursorTo(this.draggingBlock.end, true);
+        this.draggingBlock = null;
+        this.draggingOffset = null;
+        this.lastHighlight = null;
+        return this.clearDrag();
+      }
+    });
+    hook('populate', 0, function() {
+      return this.floatingBlocks = [];
+    });
+    FloatingBlockRecord = (function() {
+      function FloatingBlockRecord(block, position) {
+        this.block = block;
+        this.position = position;
+      }
+
+      return FloatingBlockRecord;
+
+    })();
+    ToFloatingOperation = (function(_super) {
+      __extends(ToFloatingOperation, _super);
+
+      function ToFloatingOperation(block, position) {
+        this.position = new draw.Point(position.x, position.y);
+        ToFloatingOperation.__super__.constructor.call(this, block, null);
+      }
+
+      ToFloatingOperation.prototype.undo = function(editor) {
+        editor.floatingBlocks.pop();
+        return ToFloatingOperation.__super__.undo.apply(this, arguments);
+      };
+
+      ToFloatingOperation.prototype.redo = function(editor) {
+        editor.floatingBlocks.push(new FloatingBlockRecord(this.block.clone(), this.position));
+        return ToFloatingOperation.__super__.redo.apply(this, arguments);
+      };
+
+      return ToFloatingOperation;
+
+    })(DropOperation);
+    FromFloatingOperation = (function() {
+      function FromFloatingOperation(record) {
+        this.position = new draw.Point(record.position.x, record.position.y);
+        this.block = record.block.clone();
+      }
+
+      FromFloatingOperation.prototype.undo = function(editor) {
+        editor.floatingBlocks.push(new FloatingBlockRecord(this.block.clone(), this.position));
+        return null;
+      };
+
+      FromFloatingOperation.prototype.redo = function(editor) {
+        editor.floatingBlocks.pop();
+        return null;
+      };
+
+      return FromFloatingOperation;
+
+    })();
+    hook('mouseup', 0, function(point, event, state) {
+      var mainCanvasPoint, renderPoint;
+      if ((this.draggingBlock != null) && (this.lastHighlight == null)) {
+        mainCanvasPoint = this.trackerPointToMain(point);
+        renderPoint = new draw.Point(mainCanvasPoint.x + this.draggingOffset.x, mainCanvasPoint.y + this.draggingOffset.y);
+        if (renderPoint.x < 0) {
+          return;
+        }
+        this.addMicroUndoOperation(new ToFloatingOperation(this.draggingBlock, renderPoint));
+        this.floatingBlocks.push(new FloatingBlockRecord(this.draggingBlock, renderPoint));
+        this.draggingBlock = null;
+        this.draggingOffset = null;
+        this.lastHighlight = null;
+        this.clearDrag();
+        return this.redrawMain();
+      }
+    });
+    hook('mousedown', 7, function(point, event, state) {
+      var hitTestResult, i, record, _i, _len, _ref, _results;
+      if (state.consumedHitTest) {
+        return;
+      }
+      _ref = this.floatingBlocks;
+      _results = [];
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        record = _ref[i];
+        hitTestResult = this.hitTest(this.trackerPointToMain(point), record.block);
+        if (hitTestResult != null) {
+          this.clickedBlock = record.block;
+          this.clickedPoint = point;
+          state.consumedHitTest = true;
+          _results.push(this.redrawMain());
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    });
+    hook('mousemove', 7, function(point, event, state) {
+      var i, record, _i, _len, _ref;
+      if ((this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
+        _ref = this.floatingBlocks;
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          record = _ref[i];
+          if (record.block === this.clickedBlock) {
+            if (!state.addedCapturePoint) {
+              this.addMicroUndoOperation('CAPTURE_POINT');
+              state.addedCapturePoint = true;
+            }
+            this.addMicroUndoOperation(new FromFloatingOperation(record));
+            this.floatingBlocks.splice(i, 1);
+            this.redrawMain();
+            return;
+          }
+        }
+      }
+    });
+    hook('redraw_main', 7, function() {
+      var blockView, boundingRect, record, _i, _len, _ref, _results;
+      boundingRect = new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+      _ref = this.floatingBlocks;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        record = _ref[_i];
+        blockView = this.view.getViewFor(record.block);
+        blockView.layout(record.position.x, record.position.y);
+        _results.push(blockView.draw(this.mainCtx, boundingRect));
+      }
+      return _results;
+    });
+    hook('populate', 0, function() {
+      var i, paletteGroup, paletteHeaderRow, _i, _len, _ref, _results,
+        _this = this;
+      this.currentPaletteBlocks = [];
+      this.clickedBlockIsPaletteBlock = false;
+      this.paletteHeader = document.createElement('div');
+      this.paletteHeader.className = 'ice-palette-header';
+      this.paletteHeaderHeight = Math.ceil(this.paletteGroups.length / 2) * 30 + 2;
+      this.paletteWrapper.appendChild(this.paletteHeader);
+      paletteHeaderRow = document.createElement('div');
+      paletteHeaderRow.className = 'ice-palette-header-row';
+      this.paletteHeader.appendChild(paletteHeaderRow);
+      _ref = this.paletteGroups;
+      _results = [];
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        paletteGroup = _ref[i];
+        _results.push((function(paletteGroup) {
+          var block, paletteGroupHeader;
+          paletteGroup.blocks = (function() {
+            var _j, _len1, _ref1, _results1;
+            _ref1 = paletteGroup.blocks;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              block = _ref1[_j];
+              _results1.push(block.clone());
+            }
+            return _results1;
+          })();
+          paletteGroupHeader = document.createElement('div');
+          paletteGroupHeader.className = 'ice-palette-group-header';
+          paletteGroupHeader.innerText = paletteGroupHeader.textContent = paletteGroup.name;
+          paletteHeaderRow.appendChild(paletteGroupHeader);
+          if (i % 2 === 1) {
+            paletteHeaderRow = document.createElement('div');
+            paletteHeaderRow.className = 'ice-palette-header-row';
+            _this.paletteHeader.appendChild(paletteHeaderRow);
+          }
+          paletteGroupHeader.addEventListener('click', function() {
+            _this.currentPaletteGroup = paletteGroup.name;
+            _this.currentPaletteBlocks = paletteGroup.blocks;
+            _this.currentPaletteGroupHeader.className = 'ice-palette-group-header';
+            _this.currentPaletteGroupHeader = paletteGroupHeader;
+            _this.currentPaletteGroupHeader.className = 'ice-palette-group-header ice-palette-group-header-selected';
+            return _this.redrawPalette();
+          });
+          if (i === 0) {
+            _this.currentPaletteGroup = paletteGroup.name;
+            _this.currentPaletteBlocks = paletteGroup.blocks;
+            _this.currentPaletteGroupHeader = paletteGroupHeader;
+            return _this.currentPaletteGroupHeader.className = 'ice-palette-group-header ice-palette-group-header-selected';
+          }
+        })(paletteGroup));
+      }
+      return _results;
+    });
+    hook('mousedown', 0, function() {
+      return this.paletteHeader.style.zIndex = 0;
+    });
+    hook('mouseup', 0, function() {
+      return this.paletteHeader.style.zIndex = 257;
+    });
+    hook('mousedown', 7, function(point, event, state) {
+      var block, hitTestResult, palettePoint, _i, _len, _ref;
+      if (state.consumedHitTest) {
+        return;
+      }
+      palettePoint = this.trackerPointToPalette(point);
+      _ref = this.currentPaletteBlocks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        block = _ref[_i];
+        hitTestResult = this.hitTest(palettePoint, block);
+        if (hitTestResult != null) {
+          this.clickedBlock = block;
+          this.clickedPoint = point;
+          this.clickedBlockIsPaletteBlock = true;
+          return;
+        }
+      }
+      return this.clickedBlockIsPaletteBlock = false;
+    });
+    hook('mouseup', 0, function(point, event, state) {
+      var palettePoint, _ref, _ref1;
+      palettePoint = this.trackerPointToPalette(point);
+      if ((0 < (_ref = palettePoint.x) && _ref < this.paletteCanvas.width) && (0 < (_ref1 = palettePoint.y) && _ref1 < this.paletteCanvas.height)) {
+        this.draggingBlock = null;
+        this.draggingOffset = null;
+        return this.clearDrag();
+      }
+    });
+    hook('redraw_palette', 0, function() {
+      var block, bounds, hoverDiv, _i, _len, _ref, _results;
+      this.paletteScrollerStuffing.innerHTML = '';
+      _ref = this.currentPaletteBlocks;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        block = _ref[_i];
+        hoverDiv = document.createElement('div');
+        hoverDiv.className = 'ice-hover-div';
+        hoverDiv.title = block.stringify();
+        bounds = this.view.getViewFor(block).getBounds();
+        hoverDiv.style.top = "" + bounds.y + "px";
+        hoverDiv.style.left = "" + bounds.x + "px";
+        hoverDiv.style.width = "" + (Math.min(bounds.width, this.paletteScroller.offsetWidth - PALETTE_LEFT_MARGIN)) + "px";
+        hoverDiv.style.height = "" + bounds.height + "px";
+        _results.push(this.paletteScrollerStuffing.appendChild(hoverDiv));
+      }
+      return _results;
+    });
+    TextChangeOperation = (function(_super) {
+      __extends(TextChangeOperation, _super);
+
+      function TextChangeOperation(socket, before) {
+        this.before = before;
+        this.after = socket.stringify();
+        this.socket = socket.start.getSerializedLocation();
+      }
+
+      TextChangeOperation.prototype.undo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.append(socket.end);
+        socket.notifyChange();
+        return socket.start.insert(new model.TextToken(this.before));
+      };
+
+      TextChangeOperation.prototype.redo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.append(socket.end);
+        socket.notifyChange();
+        return socket.start.insert(new model.TextToken(this.after));
+      };
+
+      return TextChangeOperation;
+
+    })(UndoOperation);
+    TextReparseOperation = (function(_super) {
+      __extends(TextReparseOperation, _super);
+
+      function TextReparseOperation(socket, before) {
+        this.before = before;
+        this.after = socket.start.next.container;
+        this.socket = socket.start.getSerializedLocation();
+      }
+
+      TextReparseOperation.prototype.undo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.next.container.moveTo(null);
+        return socket.start.insert(new model.TextToken(this.before));
+      };
+
+      TextReparseOperation.prototype.redo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.append(socket.end);
+        socket.notifyChange();
+        return this.after.clone().moveTo(socket);
+      };
+
+      return TextReparseOperation;
+
+    })(UndoOperation);
+    hook('populate', 1, function() {
+      var event, _i, _len, _ref, _results,
+        _this = this;
+      this.hiddenInput = document.createElement('textarea');
+      this.hiddenInput.className = 'ice-hidden-input';
+      this.iceElement.appendChild(this.hiddenInput);
+      this.socketFocus = null;
+      this.textFocus = null;
+      this.textInputAnchor = null;
+      this.textInputSelecting = false;
+      this.oldFocusValue = null;
+      _ref = ['input', 'keyup', 'keydown'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        event = _ref[_i];
+        _results.push(this.hiddenInput.addEventListener(event, function() {
+          if (_this.textFocus != null) {
+            _this.populateSocket(_this.textFocus, _this.hiddenInput.value);
+            return _this.redrawTextInput();
+          }
+        }));
+      }
+      return _results;
+    });
+    hook('resize', 0, function() {
+      this.aceElement.style.width = "" + this.iceElement.offsetWidth + "px";
+      return this.aceElement.style.height = "" + this.iceElement.offsetHeight + "px";
+    });
+    last_ = function(array) {
+      return array[array.length - 1];
+    };
+    Editor.prototype.redrawTextInput = function() {
+      var endPosition, endRow, i, lines, startPosition, startRow, textFocusView, _i, _ref;
+      this.populateSocket(this.textFocus, this.hiddenInput.value);
+      this.redrawMain();
+      textFocusView = this.view.getViewFor(this.textFocus);
+      startRow = this.textFocus.stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
+      endRow = this.textFocus.stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+      lines = this.textFocus.stringify().split('\n');
+      startPosition = textFocusView.bounds[startRow].x + this.view.opts.padding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width;
+      endPosition = textFocusView.bounds[endRow].x + this.view.opts.padding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width;
+      if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
+        return this.mainCtx.strokeRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.padding, 0, this.fontSize);
+      } else {
+        this.mainCtx.fillStyle = 'rgba(0, 0, 256, 0.3)';
+        if (startRow === endRow) {
+          return this.mainCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.padding, endPosition - startPosition, this.fontSize);
+        } else {
+          this.mainCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.padding, textFocusView.bounds[startRow].right() - this.view.opts.padding - startPosition, this.fontSize);
+          for (i = _i = _ref = startRow + 1; _ref <= endRow ? _i < endRow : _i > endRow; i = _ref <= endRow ? ++_i : --_i) {
+            this.mainCtx.fillRect(textFocusView.bounds[i].x + this.view.opts.padding, textFocusView.bounds[i].y + this.view.opts.padding, textFocusView.bounds[i].width - 2 * this.view.opts.padding, this.fontSize);
+          }
+          return this.mainCtx.fillRect(textFocusView.bounds[endRow].x + this.view.opts.padding, textFocusView.bounds[endRow].y + this.view.opts.padding, endPosition - (textFocusView.bounds[endRow].x + this.view.opts.padding), this.fontSize);
+        }
+      }
+    };
+    Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
+      var newParse, unparsedValue,
+        _this = this;
+      if (selectionStart == null) {
+        selectionStart = 0;
+      }
+      if (selectionEnd == null) {
+        selectionEnd = 0;
+      }
+      if ((this.socketFocus != null) && this.socketFocus !== focus) {
+        this.addMicroUndoOperation('CAPTURE_POINT');
+        this.addMicroUndoOperation(new TextChangeOperation(this.socketFocus, this.oldFocusValue));
+        this.oldFocusValue = null;
+        try {
+          newParse = coffee.parse(unparsedValue = this.socketFocus.stringify(), {
+            wrapAtRoot: false
+          }).start.next;
+          if (newParse.type === 'blockStart') {
+            newParse.container.moveTo(this.socketFocus.start);
+            this.addMicroUndoOperation(new TextReparseOperation(this.socketFocus, unparsedValue));
+          }
+        } catch (_error) {}
+      }
+      this.socketFocus = focus;
+      if (focus == null) {
+        this.textFocus = null;
+        this.hiddenInput.blur();
+        this.iceElement.focus();
+        return;
+      }
+      this.oldFocusValue = focus.stringify();
+      this.textFocus = focus;
+      this.populateSocket(focus, focus.stringify());
+      this.textFocus.notifyChange();
+      this.moveCursorTo(focus.end);
+      this.hiddenInput.value = this.textFocus.stringify();
+      if (selectionStart < 0) {
+        selectionStart = this.textFocus.stringify().length - selectionStart;
+      }
+      if (selectionEnd < 0) {
+        selectionEnd = this.textFocus.stringify().length - selectionEnd;
+      }
+      setTimeout((function() {
+        _this.hiddenInput.focus();
+        return _this.hiddenInput.setSelectionRange(selectionStart, selectionEnd);
+      }), 0);
+      return this.redrawMain();
+    };
+    Editor.prototype.populateSocket = function(socket, string) {
+      var head, i, line, lines, _i, _len;
+      lines = string.split('\n');
+      socket.start.append(socket.end);
+      head = socket.start;
+      for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
+        line = lines[i];
+        head = head.insert(new model.TextToken(line));
+        if (i + 1 !== lines.length) {
+          head = head.insert(new model.NewlineToken());
+        }
+      }
+      return socket.notifyChange();
+    };
+    Editor.prototype.hitTestTextInput = function(point, block) {
+      var head, _ref;
+      head = block.start;
+      while (head != null) {
+        if (head.type === 'socketStart' && ((_ref = head.next.type) === 'text' || _ref === 'socketEnd') && this.view.getViewFor(head.container).path.contains(point)) {
+          return head.container;
+        }
+        head = head.next;
+      }
+      return null;
+    };
+    Editor.prototype.getTextPosition = function(point) {
+      var column, lines, row, textFocusView;
+      textFocusView = this.view.getViewFor(this.textFocus);
+      row = Math.floor((point.y - textFocusView.bounds[0].y) / (this.fontSize + 2 * this.view.opts.padding));
+      row = Math.max(row, 0);
+      row = Math.min(row, textFocusView.lineLength - 1);
+      column = Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.padding) / this.mainCtx.measureText(' ').width);
+      lines = this.textFocus.stringify().split('\n').slice(0, +row + 1 || 9e9);
+      lines[lines.length - 1] = lines[lines.length - 1].slice(0, column);
+      return lines.join('\n').length;
+    };
+    Editor.prototype.setTextInputAnchor = function(point) {
+      this.textInputAnchor = this.textInputHead = this.getTextPosition(point);
+      return this.hiddenInput.setSelectionRange(this.textInputAnchor, this.textInputHead);
+    };
+    Editor.prototype.setTextInputHead = function(point) {
+      this.textInputHead = this.getTextPosition(point);
+      return this.hiddenInput.setSelectionRange(Math.min(this.textInputAnchor, this.textInputHead), Math.max(this.textInputAnchor, this.textInputHead));
+    };
+    hook('mousedown', 6, function(point, event, state) {
+      var hitTestResult, mainPoint,
+        _this = this;
+      if (state.consumedHitTest) {
+        return;
+      }
+      mainPoint = this.trackerPointToMain(point);
+      hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+      if (hitTestResult != null) {
+        this.setTextInputFocus(hitTestResult);
+        this.redrawMain();
+        setTimeout((function() {
+          _this.setTextInputAnchor(mainPoint);
+          _this.redrawTextInput();
+          return _this.textInputSelecting = true;
+        }), 0);
+        return state.consumedHitTest = true;
+      }
+    });
+    hook('mousemove', 0, function(point, event, state) {
+      var mainPoint;
+      if (this.textInputSelecting) {
+        mainPoint = this.trackerPointToMain(point);
+        this.setTextInputHead(mainPoint);
+        return this.redrawTextInput();
+      }
+    });
+    hook('mouseup', 0, function(point, event, state) {
+      return this.textInputSelecting = false;
+    });
+    CreateSegmentOperation = (function(_super) {
+      __extends(CreateSegmentOperation, _super);
+
+      function CreateSegmentOperation(segment) {
+        this.first = segment.start.getSerializedLocation();
+        this.last = segment.end.getSerializedLocation();
+        this.lassoSelect = segment.isLassoSelect;
+      }
+
+      CreateSegmentOperation.prototype.undo = function(editor) {
+        editor.tree.getTokenAtLocation(this.first).container.remove();
+        return editor.tree.getTokenAtLocation(this.first);
+      };
+
+      CreateSegmentOperation.prototype.redo = function(editor) {
+        var segment;
+        segment = new model.Segment();
+        segment.lassoSelect = this.lassoSelect;
+        editor.tree.getTokenAtLocation(this.first).insertBefore(segment.start);
+        editor.tree.getTokenAtLocation(this.last).insertBefore(segment.end);
+        return segment.end;
+      };
+
+      return CreateSegmentOperation;
+
+    })(UndoOperation);
+    DestroySegmentOperation = (function(_super) {
+      __extends(DestroySegmentOperation, _super);
+
+      function DestroySegmentOperation(segment) {
+        this.first = segment.start.getSerializedLocation();
+        this.last = segment.end.getSerializedLocation();
+        this.lassoSelect = segment.isLassoSelect;
+      }
+
+      DestroySegmentOperation.prototype.undo = function(editor) {
+        var segment;
+        segment = new model.Segment();
+        segment.lassoSelect = this.lassoSelect;
+        editor.tree.getTokenAtLocation(this.first).insertBefore(segment.start);
+        editor.tree.getTokenAtLocation(this.last).insertBefore(segment.end);
+        return segment.end;
+      };
+
+      DestroySegmentOperation.prototype.redo = function(editor) {
+        editor.tree.getTokenAtLocation(this.first).container.remove();
+        return editor.tree.getTokenAtLocation(this.first);
+      };
+
+      return DestroySegmentOperation;
+
+    })(UndoOperation);
+    hook('populate', 0, function() {
+      this.lassoSelectCanvas = document.createElement('canvas');
+      this.lassoSelectCanvas.className = 'ice-lasso-select-canvas';
+      this.lassoSelectCtx = this.lassoSelectCanvas.getContext('2d');
+      this.lassoSelectAnchor = null;
+      this.lassoSegment = null;
+      return this.iceElement.appendChild(this.lassoSelectCanvas);
+    });
+    Editor.prototype.clearLassoSelectCanvas = function() {
+      return this.lassoSelectCtx.clearRect(0, 0, this.lassoSelectCanvas.width, this.lassoSelectCanvas.height);
+    };
+    hook('resize', 0, function() {
+      this.lassoSelectCanvas.width = this.iceElement.offsetWidth;
+      this.lassoSelectCanvas.style.width = "" + this.lassoSelectCanvas.width + "px";
+      this.lassoSelectCanvas.height = this.iceElement.offsetHeight;
+      return this.lassoSelectCanvas.style.height = "" + this.lassoSelectCanvas.height + "px";
+    });
+    Editor.prototype.clearLassoSelection = function() {
+      var head, needToRedraw, next;
+      this.lassoSegment = null;
+      head = this.tree.start;
+      needToRedraw = false;
+      while (head !== this.tree.end) {
+        if (head.type === 'segmentStart' && head.container.isLassoSegment) {
+          next = head.next;
+          this.addMicroUndoOperation(new DestroySegmentOperation(head.container));
+          head.container.remove();
+          needToRedraw = true;
+          head = next;
+        } else {
+          head = head.next;
+        }
+      }
+      if (needToRedraw) {
+        return this.redrawMain();
+      }
+    };
+    hook('mousedown', 0, function(point, event, state) {
+      var mainPoint, _ref, _ref1;
+      if (!state.clickedLassoSegment) {
+        this.clearLassoSelection();
+      }
+      if (state.consumedHitTest || state.suppressLassoSelect) {
+        return;
+      }
+      console.log('LASSO SELECT CAPTURED MOUSEDOWN');
+      mainPoint = this.trackerPointToMain(point);
+      if ((0 < (_ref = mainPoint.x) && _ref < this.mainCanvas.width) && (0 < (_ref1 = mainPoint.y) && _ref1 < this.mainCanvas.height)) {
+        if (this.lassoSelectAnchor != null) {
+          debugger;
+        }
+        return this.lassoSelectAnchor = this.trackerPointToMain(point);
+      }
+    });
+    hook('mousemove', 0, function(point, event, state) {
+      var mainPoint, size, topLeftCorner;
+      if (this.lassoSelectAnchor != null) {
+        mainPoint = this.trackerPointToMain(point);
+        this.clearLassoSelectCanvas();
+        topLeftCorner = new draw.Point(Math.min(this.lassoSelectAnchor.x, mainPoint.x) - this.scrollOffsets.main.x, Math.min(this.lassoSelectAnchor.y, mainPoint.y) - this.scrollOffsets.main.y);
+        size = new draw.Size(Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        this.lassoSelectCtx.strokeStyle = '#00f';
+        return this.lassoSelectCtx.strokeRect(topLeftCorner.x, topLeftCorner.y, size.width, size.height);
+      }
+    });
+    validateLassoSelection = function(tree, first, last) {
+      var head, tokensToInclude;
+      tokensToInclude = [];
+      head = first;
+      while (head !== last.next) {
+        if (head instanceof model.StartToken || head instanceof model.EndToken) {
+          tokensToInclude.push(head.container.start);
+          tokensToInclude.push(head.container.end);
+        }
+        head = head.next;
+      }
+      first = tree.start;
+      while (__indexOf.call(tokensToInclude, first) < 0) {
+        first = first.next;
+      }
+      last = tree.end;
+      while (__indexOf.call(tokensToInclude, last) < 0) {
+        last = last.prev;
+      }
+      while (first.type !== 'blockStart') {
+        first = first.prev;
+        if (first.type === 'blockEnd') {
+          first = first.container.start.prev;
+        }
+      }
+      while (last.type !== 'blockEnd') {
+        last = last.next;
+        if (last.type === 'blockStart') {
+          last = last.container.end.next;
+        }
+      }
+      return [first, last];
+    };
+    hook('mouseup', 0, function(point, event, state) {
+      var first, lassoRectangle, last, mainPoint, _ref;
+      if (this.lassoSelectAnchor != null) {
+        mainPoint = this.trackerPointToMain(point);
+        lassoRectangle = new draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        this.lassoSelectAnchor = null;
+        this.clearLassoSelectCanvas();
+        first = this.tree.start;
+        while (!((first == null) || first.type === 'blockStart' && this.view.getViewFor(first.container).path.intersects(lassoRectangle))) {
+          first = first.next;
+        }
+        last = this.tree.end;
+        while (!((last == null) || last.type === 'blockEnd' && this.view.getViewFor(last.container).path.intersects(lassoRectangle))) {
+          last = last.prev;
+        }
+        if (!((first != null) && (last != null))) {
+          return;
+        }
+        _ref = validateLassoSelection(this.tree, first, last), first = _ref[0], last = _ref[1];
+        this.lassoSegment = new model.Segment();
+        this.lassoSegment.isLassoSegment = true;
+        this.lassoSegment.wrap(first, last);
+        this.addMicroUndoOperation(new CreateSegmentOperation(this.lassoSegment));
+        this.moveCursorTo(this.lassoSegment.end, true);
+        return this.redrawMain();
+      }
+    });
+    hook('mousedown', 6.5, function(point, event, state) {
+      if (state.consumedHitTest) {
+        return;
+      }
+      if ((this.lassoSegment != null) && (this.hitTest(this.trackerPointToMain(point), this.lassoSegment) != null)) {
+        this.clickedBlock = this.lassoSegment;
+        this.clickedPoint = point;
+        state.consumedHitTest = true;
+        return state.clickedLassoSegment = true;
+      }
+    });
+    hook('populate', 0, function() {
+      return this.cursor = new model.CursorToken();
+    });
+    isValidCursorPosition = function(pos) {
+      var depth, _ref;
+      depth = 0;
+      while (!(depth === 0 && ((_ref = pos.type) === 'blockStart' || _ref === 'indentStart') || (pos.prev == null))) {
+        switch (pos.type) {
+          case 'blockStart':
+          case 'indentStart':
+          case 'socketStart':
+            depth--;
+            break;
+          case 'blockEnd':
+          case 'indentEnd':
+          case 'socketEnd':
+            depth++;
+        }
+        pos = pos.prev;
+      }
+      return pos.type === 'indentStart' || (pos.prev == null);
+    };
+    Editor.prototype.moveCursorTo = function(destination, attemptReparse) {
+      var head, _ref;
+      if (attemptReparse == null) {
+        attemptReparse = false;
+      }
+      if (destination == null) {
+        return;
+      }
+      head = destination;
+      while (head !== null && head !== this.tree.end) {
+        head = head.next;
+      }
+      if (head == null) {
+        return;
+      }
+      this.cursor.remove();
+      if (destination === this.tree.start) {
+        destination.insert(this.cursor);
+      } else {
+        head = destination;
+        while (!(((_ref = head.type) === 'newline' || _ref === 'indentEnd') || head === this.tree.end)) {
+          head = head.next;
+        }
+        if (head.type === 'newline') {
+          head.insert(this.cursor);
+        } else {
+          head.insertBefore(this.cursor);
+        }
+      }
+      if (this.cursor.parent.type === 'block') {
+        this.moveCursorTo(this.cursor.next);
+      }
+      if (attemptReparse) {
+        this.reparseHandwrittenBlocks();
+      }
+      return this.redrawCursor();
+    };
+    Editor.prototype.moveCursorUp = function() {
+      var head, _ref, _ref1;
+      head = (_ref = this.cursor.prev) != null ? _ref.prev : void 0;
+      if (head == null) {
+        return;
+      }
+      while (!(((_ref1 = head.type) === 'newline' || _ref1 === 'indentEnd') || head === this.tree.start)) {
+        head = head.prev;
+      }
+      this.cursor.remove();
+      if (head.type === 'newline' || head === this.tree.start) {
+        head.insert(this.cursor);
+      } else {
+        head.insertBefore(this.cursor);
+      }
+      if (!isValidCursorPosition(this.cursor)) {
+        this.moveCursorUp();
+      }
+      this.reparseHandwrittenBlocks();
+      return this.redrawCursor();
+    };
+    hook('key.up', 0, function() {
+      this.clearLassoSelection();
+      this.setTextInputFocus(null);
+      return this.moveCursorUp();
+    });
+    hook('key.down', 0, function() {
+      this.clearLassoSelection();
+      this.setTextInputFocus(null);
+      this.reparseHandwrittenBlocks();
+      return this.moveCursorTo(this.cursor.next.next);
+    });
+    hook('key.left', 0, function() {
+      var head;
+      if (this.socketFocus != null) {
+        if (this.hiddenInput.selectionEnd === 0) {
+          head = this.socketFocus.start;
+        } else {
+          return;
+        }
+      } else {
+        head = this.cursor;
+      }
+      while (!((head == null) || head.type === 'socketEnd' && head.container.start.next.type === 'text')) {
+        head = head.prev;
+      }
+      if (head != null) {
+        return this.setTextInputFocus(head.container, -1, -1);
+      }
+    });
+    hook('key.right', 0, function() {
+      var head;
+      if (this.socketFocus != null) {
+        if (this.hiddenInput.selectionEnd === this.hiddenInput.value.length) {
+          head = this.socketFocus.end;
+        } else {
+          return;
+        }
+      } else {
+        head = this.cursor;
+      }
+      while (!((head == null) || head.type === 'socketStart' && head.container.start.next.type === 'text')) {
+        head = head.next;
+      }
+      if (head != null) {
+        return this.setTextInputFocus(head.container);
+      }
+    });
+    Editor.prototype.deleteAtCursor = function() {
+      var blockEnd, _ref;
+      this.setTextInputFocus(null);
+      blockEnd = this.cursor.prev;
+      while ((_ref = blockEnd.type) !== 'blockEnd' && _ref !== 'indentStart') {
+        blockEnd = blockEnd.prev;
+      }
+      if (blockEnd.type === 'blockEnd') {
+        this.addMicroUndoOperation('CAPTURE_POINT');
+        this.addMicroUndoOperation(new PickUpOperation(blockEnd.container));
+        blockEnd.container.moveTo(null);
+        return this.redrawMain();
+      }
+    };
+    hook('key.backspace', 0, function(state) {
+      if (state.capturedBackspace) {
+        return;
+      }
+      if ((this.textFocus == null) || (this.hiddenInput.value.length === 0 && this.socketFocus.handwritten)) {
+        this.deleteAtCursor();
+        state.capturedBackspace = true;
+        return false;
+      }
+      return true;
+    });
+    hook('populate', 0, function() {
+      var _this = this;
+      this.handwrittenBlocks = [];
+      this.shiftKeyPressed = false;
+      return this.keyListener.register_combo({
+        keys: 'shift',
+        on_keydown: function() {
+          return _this.shiftKeyPressed = true;
+        },
+        on_keyup: function() {
+          return _this.shiftkeyPressed = false;
+        }
+      });
+    });
+    hook('key.enter', 0, function() {
+      var head, newBlock, newSocket, _ref;
+      if (!this.shiftKeyPressed) {
+        this.setTextInputFocus(null);
+        newBlock = new model.Block();
+        newSocket = new model.Socket(-Infinity);
+        newSocket.spliceIn(newBlock.start);
+        newSocket.handwritten = true;
+        this.handwrittenBlocks.push(newBlock);
+        head = this.cursor.prev;
+        while (((_ref = head.type) === 'newline' || _ref === 'cursor' || _ref === 'segmentStart' || _ref === 'segmentEnd') && head !== this.tree.start) {
+          head = head.prev;
+        }
+        this.addMicroUndoOperation('CAPTURE_POINT');
+        this.addMicroUndoOperation(new DropOperation(newBlock, head));
+        newBlock.moveTo(head);
+        this.redrawMain();
+        this.reparseHandwrittenBlocks();
+        return this.setTextInputFocus(newSocket);
+      }
+    });
+    containsCursor = function(block) {
+      var head;
+      head = block.start;
+      while (head !== block.end) {
+        if (head.type === 'cursor') {
+          return true;
+        }
+        head = head.next;
+      }
+      return false;
+    };
+    ReparseOperation = (function(_super) {
+      __extends(ReparseOperation, _super);
+
+      function ReparseOperation(block, parse) {
+        this.before = block.clone();
+        this.location = block.start.getSerializedLocation();
+        this.after = parse.clone();
+      }
+
+      ReparseOperation.prototype.undo = function(editor) {
+        var block, newBlock;
+        block = editor.tree.getTokenAtLocation(this.location).container;
+        newBlock = this.before.clone();
+        block.start.prev.append(newBlock.start);
+        newBlock.end.append(block.end.next);
+        return newBlock.notifyChange();
+      };
+
+      ReparseOperation.prototype.redo = function(editor) {
+        var block, newBlock;
+        block = editor.tree.getTokenAtLocation(this.location).container;
+        newBlock = this.after.clone();
+        block.prev.append(newBlock.start);
+        newBlock.end.append(block.end.next);
+        return newBlock.notifyChange();
+      };
+
+      return ReparseOperation;
+
+    })(UndoOperation);
+    Editor.prototype.reparseHandwrittenBlocks = function() {
+      var head, newBlock;
+      this.setTextInputFocus(null);
+      head = this.tree.start;
+      while (head !== this.tree.end) {
+        if (head.type === 'blockStart' && head.next.type === 'socketStart' && head.next.container.handwritten && !containsCursor(head.container)) {
+          try {
+            newBlock = coffee.parse(head.container.stringify(), {
+              wrapAtRoot: false
+            }).start.next;
+            if (newBlock.type === 'blockStart') {
+              this.addMicroUndoOperation(new ReparseOperation(head.container, newBlock.container));
+              head.prev.append(newBlock);
+              newBlock.container.end.append(head.container.end.next);
+              newBlock.parent = head.container.parent;
+              newBlock.notifyChange();
+              head = newBlock.container.end;
+            }
+          } catch (_error) {}
+        }
+        head = head.next;
+      }
+      return null;
+    };
+    CreateIndentOperation = (function(_super) {
+      __extends(CreateIndentOperation, _super);
+
+      function CreateIndentOperation(pos, depth) {
+        this.depth = depth;
+        this.location = pos.getSerializedLocation();
+      }
+
+      CreateIndentOperation.prototype.undo = function(editor) {
+        var indent;
+        indent = editor.tree.getTokenAtLocation(this.location).indent;
+        indent.start.prev.append(indent.end.next);
+        return indent.notifyChange();
+      };
+
+      CreateIndentOperation.prototype.redo = function(editor) {
+        var head, newIndent;
+        head = editor.tree.getTokenAtLocation(this.location);
+        newIndent = new model.Indent(DEFAULT_INDENT_DEPTH);
+        return head.prev.append(newIndent.start).append(new model.NewlineToken()).append(newIndent.end).append(head);
+      };
+
+      return CreateIndentOperation;
+
+    })(UndoOperation);
+    DestroyIndentOperation = (function(_super) {
+      __extends(DestroyIndentOperation, _super);
+
+      function DestroyIndentOperation(indent) {
+        this.location = indent.start.getSerializedLocation();
+        this.indent = indent.clone();
+      }
+
+      DestroyIndentOperation.prototype.undo = function(editor) {
+        var head, newIndent;
+        head = editor.tree.getTokenAtLocation(this.location);
+        newIndent = this.indent.clone();
+        head.prev.append(newIndent.start);
+        newIndent.end.append(head);
+        return newIndent.notifyChange();
+      };
+
+      DestroyIndentOperation.prototype.redo = function(editor) {
+        var indent;
+        indent = editor.tree.getTokenAtLocation(this.location).indent;
+        indent.start.prev.append(indent.end.next);
+        return indent.notifyChange();
+      };
+
+      return DestroyIndentOperation;
+
+    })(UndoOperation);
+    hook('key.tab', 0, function() {
+      var head, newIndent, _ref;
+      if ((this.socketFocus != null) && this.socketFocus.handwritten) {
+        this.addMicroUndoOperation('CAPTURE_POINT');
+        head = this.socketFocus.start;
+        while (head.type !== 'blockEnd') {
+          head = head.prev;
+        }
+        if (head.prev.type === 'indentEnd') {
+          while ((_ref = head.type) !== 'blockEnd' && _ref !== 'indentStart') {
+            head = head.prev;
+          }
+        } else {
+          this.addMicroUndoOperation(new CreateIndentOperation(head, DEFAULT_INDENT_DEPTH));
+          newIndent = new model.Indent(DEFAULT_INDENT_DEPTH);
+          newIndent.start.append(new model.NewlineToken()).append(newIndent.end);
+          newIndent.spliceIn(head.prev);
+          newIndent.notifyChange();
+          head = newIndent.start;
+        }
+        this.addMicroUndoOperation(new PickUpOperation(this.socketFocus.start.prev.container));
+        this.socketFocus.start.prev.container.moveTo(null);
+        this.addMicroUndoOperation(new DropOperation(this.socketFocus.start.prev.container, head));
+        this.socketFocus.start.prev.container.moveTo(head);
+        this.moveCursorTo(this.socketFocus.start.prev.container.end);
+        return this.redrawMain();
+      }
+    });
+    hook('key.backspace', 0, function(state) {
+      var indent, _ref, _ref1;
+      if (state.capturedBackspace) {
+        return;
+      }
+      if ((this.socketFocus == null) && ((_ref = this.cursor.prev) != null ? (_ref1 = _ref.prev) != null ? _ref1.type : void 0 : void 0) === 'indentStart' && (indent = this.cursor.prev.prev.indent).stringify().trim().length === 0) {
+        this.addMicroUndoOperation(new DestroyIndentOperation(indent));
+        indent.notifyChange();
+        indent.start.prev.append(indent.end.next);
+        this.moveCursorTo(indent.end.next);
+        state.capturedBackspace = true;
+        return this.redrawMain();
+      }
+    });
+    hook('populate', 0, function() {
+      var _this = this;
+      this.aceElement = document.createElement('div');
+      this.aceElement.className = 'ice-ace';
+      this.wrapperElement.appendChild(this.aceElement);
+      this.aceEditor = ace.edit(this.aceElement);
+      this.aceEditor.setTheme('ace/theme/chrome');
+      this.aceEditor.setFontSize(15);
+      this.aceEditor.getSession().setMode('ace/mode/coffee');
+      this.aceEditor.getSession().setTabSize(2);
+      this.aceEditor.on('change', function() {
+        return _this.setFontSize_raw(_this.aceEditor.getFontSize());
+      });
+      this.currentlyUsingBlocks = true;
+      return this.currentlyAnimating = false;
+    });
+    getOffsetTop = function(element) {
+      var top;
+      top = element.offsetTop;
+      while ((element = element.offsetParent) != null) {
+        top += element.offsetTop;
+      }
+      return top;
+    };
+    getOffsetLeft = function(element) {
+      var left;
+      left = element.offsetLeft;
+      while ((element = element.offsetParent) != null) {
+        left += element.offsetLeft;
+      }
+      return left;
+    };
+    Editor.prototype.computePlaintextTranslationVectors = function() {
+      var corner, head, state, textElements, translationVectors;
+      textElements = [];
+      translationVectors = [];
+      head = this.tree.start;
+      state = {
+        x: this.aceEditor.container.getBoundingClientRect().left - getOffsetLeft(this.aceElement) + this.aceEditor.renderer.$gutterLayer.gutterWidth,
+        y: this.aceEditor.container.getBoundingClientRect().top - getOffsetTop(this.aceElement),
+        indent: 0,
+        lineHeight: this.aceEditor.renderer.layerConfig.lineHeight,
+        leftEdge: this.aceEditor.container.getBoundingClientRect().left - getOffsetLeft(this.aceElement) + this.aceEditor.renderer.$gutterLayer.gutterWidth
+      };
+      while (head !== this.tree.end) {
+        switch (head.type) {
+          case 'text':
+            corner = this.view.getViewFor(head).bounds[0].upperLeftCorner();
+            translationVectors.push((new draw.Point(state.x, state.y)).from(corner));
+            textElements.push(this.view.getViewFor(head));
+            state.x += this.mainCtx.measureText(head.value).width;
+            break;
+          case 'newline':
+            state.y += state.lineHeight;
+            if (head.specialIndent != null) {
+              state.x = state.leftEdge + this.mainCtx.measureText(head.specialIndent).width;
+            } else {
+              state.x = state.leftEdge + state.indent * this.mainCtx.measureText(' ').width;
+            }
+            break;
+          case 'indentStart':
+            state.indent += head.container.depth;
+            break;
+          case 'indentEnd':
+            state.indent -= head.container.depth;
+        }
+        head = head.next;
+      }
+      return {
+        textElements: textElements,
+        translationVectors: translationVectors
+      };
+    };
+    AnimatedColor = (function() {
+      function AnimatedColor(start, end, time) {
+        this.start = start;
+        this.end = end;
+        this.time = time;
+        this.currentRGB = [parseInt(this.start.slice(1, 3), 16), parseInt(this.start.slice(3, 5), 16), parseInt(this.start.slice(5, 7), 16)];
+        this.step = [(parseInt(this.end.slice(1, 3), 16) - this.currentRGB[0]) / this.time, (parseInt(this.end.slice(3, 5), 16) - this.currentRGB[1]) / this.time, (parseInt(this.end.slice(5, 7), 16) - this.currentRGB[2]) / this.time];
+      }
+
+      AnimatedColor.prototype.advance = function() {
+        var i, item, _i, _len, _ref;
+        _ref = this.currentRGB;
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          item = _ref[i];
+          this.currentRGB[i] += this.step[i];
+        }
+        return "rgb(" + (Math.round(this.currentRGB[0])) + "," + (Math.round(this.currentRGB[1])) + "," + (Math.round(this.currentRGB[2])) + ")";
+      };
+
+      return AnimatedColor;
+
+    })();
+    Editor.prototype.performMeltAnimation = function() {
+      var animatedColor, div, i, originalOffset, textElement, textElements, tick, translatingElements, translationVectors, _i, _len, _ref, _ref1, _ref2,
+        _this = this;
+      if (this.currentlyUsingBlocks && !this.currentlyAnimating) {
+        this.aceEditor.setValue(this.getValue(), -1);
+        this.aceEditor.resize(true);
+        this.currentlyUsingBlocks = false;
+        this.currentlyAnimating = true;
+        this.redrawMain();
+        this.paletteHeader.style.zIndex = 0;
+        _ref = this.computePlaintextTranslationVectors(), textElements = _ref.textElements, translationVectors = _ref.translationVectors;
+        translatingElements = [];
+        for (i = _i = 0, _len = textElements.length; _i < _len; i = ++_i) {
+          textElement = textElements[i];
+          if (!((0 < (_ref1 = textElement.bounds[0].y + this.scrollOffsets.main.y) && _ref1 < this.mainCanvas.height) || (0 < (_ref2 = textElement.bounds[0].y + this.scrollOffsets.main.y + translationVectors[i].y) && _ref2 < this.mainCanvas.height))) {
+            continue;
+          }
+          div = document.createElement('div');
+          div.style.whiteSpace = 'pre';
+          div.innerText = textElement.model.value;
+          div.style.font = this.fontSize + 'px Courier New';
+          div.style.position = 'absolute';
+          div.style.marginTop = '-1px';
+          div.style.left = "" + (textElement.bounds[0].x + this.scrollOffsets.main.x) + "px";
+          div.style.top = "" + (textElement.bounds[0].y + this.scrollOffsets.main.y) + "px";
+          this.iceElement.appendChild(div);
+          translatingElements.push({
+            div: div,
+            position: {
+              x: textElement.bounds[0].x + this.scrollOffsets.main.x,
+              y: textElement.bounds[0].y + this.scrollOffsets.main.y
+            },
+            vector: translationVectors[i]
+          });
+        }
+        animatedColor = new AnimatedColor('#CCCCCC', '#FFFFFF', ANIMATION_FRAME_RATE);
+        originalOffset = this.scrollOffsets.main.y;
+        tick = function(count) {
+          var element, _j, _k, _len1, _len2, _results;
+          if (count < ANIMATION_FRAME_RATE * 2) {
+            setTimeout((function() {
+              return tick(count + 1);
+            }), 1000 / ANIMATION_FRAME_RATE);
+          }
+          if (count < ANIMATION_FRAME_RATE) {
+            _this.paletteWrapper.style.opacity = _this.mainCanvas.style.opacity = Math.max(0, 1 - 2 * (count / ANIMATION_FRAME_RATE));
+          } else {
+            for (_j = 0, _len1 = translatingElements.length; _j < _len1; _j++) {
+              element = translatingElements[_j];
+              element.position.x += element.vector.x / ANIMATION_FRAME_RATE;
+              element.position.y += element.vector.y / ANIMATION_FRAME_RATE;
+              element.div.style.left = "" + element.position.x + "px";
+              element.div.style.top = "" + element.position.y + "px";
+            }
+          }
+          if (count === ANIMATION_FRAME_RATE * 2) {
+            _this.iceElement.style.top = "-9999px";
+            _this.iceElement.style.left = "-9999px";
+            _this.aceElement.style.top = "0px";
+            _this.aceElement.style.left = "0px";
+            _this.currentlyAnimating = false;
+            _this.scrollOffsets.main.y = 0;
+            _this.mainCtx.setTransform(1, 0, 0, 1, 0, 0);
+            _results = [];
+            for (_k = 0, _len2 = translatingElements.length; _k < _len2; _k++) {
+              element = translatingElements[_k];
+              _results.push(_this.iceElement.removeChild(element.div));
+            }
+            return _results;
+          }
+        };
+        tick(0);
+        return {
+          success: true
+        };
+      }
+    };
+    Editor.prototype.performFreezeAnimation = function() {
+      var div, i, setValueResult, textElement, textElements, tick, translatingElements, translationVectors, _i, _len, _ref, _ref1, _ref2,
+        _this = this;
+      if (!this.currentlyUsingBlocks && !this.currentlyAnimating) {
+        setValueResult = this.setValue(this.aceEditor.getValue());
+        if (!setValueResult.success) {
+          return setValueResult;
+        }
+        this.setFontSize(this.aceEditor.getFontSize());
+        this.redrawMain();
+        this.currentlyUsingBlocks = true;
+        this.currentlyAnimating = true;
+        this.aceElement.style.top = "-9999px";
+        this.aceElement.style.left = "-9999px";
+        this.iceElement.style.top = "0px";
+        this.iceElement.style.left = "0px";
+        this.paletteHeader.style.zIndex = 0;
+        _ref = this.computePlaintextTranslationVectors(), textElements = _ref.textElements, translationVectors = _ref.translationVectors;
+        translatingElements = [];
+        for (i = _i = 0, _len = textElements.length; _i < _len; i = ++_i) {
+          textElement = textElements[i];
+          if (!((0 < (_ref1 = textElement.bounds[0].y + this.scrollOffsets.main.y) && _ref1 < this.mainCanvas.height) || (0 < (_ref2 = textElement.bounds[0].y + this.scrollOffsets.main.y + translationVectors[i].y) && _ref2 < this.mainCanvas.height))) {
+            continue;
+          }
+          div = document.createElement('div');
+          div.style.whiteSpace = 'pre';
+          div.innerText = textElement.model.value;
+          div.style.font = this.fontSize + 'px Courier New';
+          div.style.position = 'absolute';
+          div.style.marginTop = '-1px';
+          div.style.left = "" + (textElement.bounds[0].x + this.scrollOffsets.main.x + translationVectors[i].x) + "px";
+          div.style.top = "textElement.bounds[0].y + @scrollOffsets.main.y + translationVectors[i].y}px";
+          this.iceElement.appendChild(div);
+          translatingElements.push({
+            div: div,
+            position: {
+              x: textElement.bounds[0].x + this.scrollOffsets.main.x + translationVectors[i].x,
+              y: textElement.bounds[0].y + this.scrollOffsets.main.y + translationVectors[i].y
+            },
+            vector: translationVectors[i]
+          });
+        }
+        this.paletteWrapper.style.opacity = this.mainCanvas.style.opacity = 0;
+        tick = function(count) {
+          var element, _j, _k, _len1, _len2, _results;
+          if (count < ANIMATION_FRAME_RATE * 2) {
+            setTimeout((function() {
+              return tick(count + 1);
+            }), 1000 / ANIMATION_FRAME_RATE);
+          }
+          if (count < ANIMATION_FRAME_RATE) {
+            for (_j = 0, _len1 = translatingElements.length; _j < _len1; _j++) {
+              element = translatingElements[_j];
+              element.position.x += -element.vector.x / ANIMATION_FRAME_RATE;
+              element.position.y += -element.vector.y / ANIMATION_FRAME_RATE;
+              element.div.style.left = "" + element.position.x + "px";
+              element.div.style.top = "" + element.position.y + "px";
+            }
+          } else {
+            _this.paletteWrapper.style.opacity = _this.mainCanvas.style.opacity = Math.max(0, 1 - 2 * (2 - count / ANIMATION_FRAME_RATE));
+          }
+          if (count === ANIMATION_FRAME_RATE * 2) {
+            _this.currentlyAnimating = false;
+            _this.redrawMain();
+            _this.paletteHeader.style.zIndex = 257;
+            _results = [];
+            for (_k = 0, _len2 = translatingElements.length; _k < _len2; _k++) {
+              element = translatingElements[_k];
+              _results.push(_this.iceElement.removeChild(element.div));
+            }
+            return _results;
+          }
+        };
+        tick(0);
+        return {
+          success: true
+        };
+      }
+    };
+    Editor.prototype.toggleBlocks = function() {
+      if (this.currentlyUsingBlocks) {
+        return this.performMeltAnimation();
+      } else {
+        return this.performFreezeAnimation();
+      }
+    };
+    hook('populate', 0, function() {
+      var _this = this;
+      this.scrollOffsets = {
+        main: new draw.Point(0, 0),
+        palette: new draw.Point(0, 0)
+      };
+      this.mainScroller = document.createElement('div');
+      this.mainScroller.className = 'ice-main-scroller';
+      this.mainScrollerStuffing = document.createElement('div');
+      this.mainScrollerStuffing.className = 'ice-main-scroller-stuffing';
+      this.mainScroller.appendChild(this.mainScrollerStuffing);
+      this.iceElement.appendChild(this.mainScroller);
+      this.mainScroller.addEventListener('scroll', function() {
+        _this.scrollOffsets.main.y = _this.mainScroller.scrollTop;
+        _this.scrollOffsets.main.x = _this.mainScroller.scrollLeft;
+        _this.mainCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
+        _this.highlightCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
+        return _this.redrawMain();
+      });
+      this.paletteScroller = document.createElement('div');
+      this.paletteScroller.className = 'ice-palette-scroller';
+      this.paletteScrollerStuffing = document.createElement('div');
+      this.paletteScrollerStuffing.className = 'ice-palette-scroller-stuffing';
+      this.paletteScroller.appendChild(this.paletteScrollerStuffing);
+      this.paletteWrapper.appendChild(this.paletteScroller);
+      return this.paletteScroller.addEventListener('scroll', function() {
+        _this.scrollOffsets.palette.y = _this.paletteScroller.scrollTop;
+        _this.paletteCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.palette.x, -_this.scrollOffsets.palette.y);
+        return _this.redrawPalette();
+      });
+    });
+    hook('resize', 0, function() {
+      this.mainScroller.style.width = "" + this.iceElement.offsetWidth + "px";
+      this.mainScroller.style.height = "" + this.iceElement.offsetHeight + "px";
+      this.paletteScroller.style.top = "" + this.paletteHeaderHeight + "px";
+      this.paletteScroller.style.width = "" + PALETTE_WIDTH + "px";
+      return this.paletteScroller.style.height = "" + (this.iceElement.offsetHeight - this.paletteHeaderHeight) + "px";
+    });
+    hook('redraw_main', 0, function() {
+      var bounds, record, _i, _len, _ref;
+      bounds = this.view.getViewFor(this.tree).getBounds();
+      _ref = this.floatingBlocks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        record = _ref[_i];
+        bounds.unite(this.view.getViewFor(record.block).getBounds());
+      }
+      this.mainScrollerStuffing.style.width = "" + (bounds.right()) + "px";
+      return this.mainScrollerStuffing.style.height = "" + (bounds.bottom()) + "px";
+    });
+    hook('redraw_palette', 0, function() {
+      var block, bounds, _i, _len, _ref;
+      bounds = new draw.NoRectangle();
+      _ref = this.currentPaletteBlocks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        block = _ref[_i];
+        bounds.unite(this.view.getViewFor(block).getBounds());
+      }
+      return this.paletteScrollerStuffing.style.height = "" + (bounds.bottom()) + "px";
+    });
+    hook('populate', 0, function() {
+      return this.fontSize = 15;
+    });
+    Editor.prototype.setFontSize_raw = function(fontSize) {
+      this.fontSize = fontSize;
+      this.paletteHeader.style.fontSize = "" + fontSize + "px";
+      this.view.clearCache();
+      this.redrawMain();
+      return this.redrawPalette();
+    };
+    Editor.prototype.setFontSize = function(fontSize) {
+      this.aceEditor.setFontSize(fontSize);
+      return this.setFontSize_raw(fontSize);
+    };
+    MutationButtonOperation = (function(_super) {
+      __extends(MutationButtonOperation, _super);
+
+      function MutationButtonOperation(button) {
+        this.button = button.clone();
+        this.location = button.getSerializedLocation();
+      }
+
+      MutationButtonOperation.prototype.undo = function(editor) {
+        var button, end, head, start;
+        end = start = editor.tree.getTokenAtLocation(this.location);
+        head = this.button.expandValue.start.next;
+        while (head !== this.button.expandValue.end) {
+          head = head.next;
+          end = end.next;
+        }
+        start.prev.append(button = this.button.clone()).append(end);
+        return button;
+      };
+
+      MutationButtonOperation.prototype.redo = function(editor) {
+        return editor.tree.getTokenAtLocation(this.location).expand();
+      };
+
+      return MutationButtonOperation;
+
+    })(UndoOperation);
+    hook('mousedown', 6.9, function(point, event, state) {
+      var head, mainPoint;
+      if (state.consumedHitTest) {
+        return;
+      }
+      mainPoint = this.trackerPointToMain(point);
+      head = this.tree.start;
+      while (head !== this.tree.end) {
+        if (head.type === 'mutationButton' && this.view.getViewFor(head).bounds[0].contains(mainPoint)) {
+          this.addMicroUndoOperation(new MutationButtonOperation(head));
+          head.expand();
+          this.redrawMain();
+          state.consumedHitTest = true;
+          return;
+        }
+        head = head.next;
+      }
+    });
+    Editor.prototype.markLine = function(line, style) {
+      var _ref;
+      if ((_ref = this.tree.getBlockOnLine(line)) != null) {
+        _ref.lineMarkStyles.push(style);
+      }
+      return this.redrawMain();
+    };
+    Editor.prototype.unmarkLine = function(line, tag) {
+      var blockOnLine, i, style, _i, _len, _ref;
+      if ((blockOnLine = this.tree.getBlockOnLine(line)) == null) {
+        return;
+      }
+      _ref = blockOnLine.lineMarkStyles;
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        style = _ref[i];
+        if (style.tag === tag) {
+          blockOnLine.lineMarkStyles.splice(i, 1);
+          break;
+        }
+      }
+      return this.redrawMain();
+    };
+    Editor.prototype.clearLineMarks = function(tag) {
+      var head, i, style, _i, _len, _ref;
+      head = this.tree.start;
+      while (head !== this.tree.end) {
+        if (head.type === 'blockStart') {
+          if (tag == null) {
+            head.container.lineMarkStyles.length = 0;
+          } else {
+            _ref = head.container.lineMarkStyles;
+            for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+              style = _ref[i];
+              if (style.tag === tag) {
+                head.container.lineMarkStyles.splice(i, 1);
+                break;
+              }
+            }
+          }
+        }
+        head = head.next;
+      }
+      return this.redrawMain();
+    };
+    hook('populate', 0, function() {
+      return this.lastHoveredLine = null;
+    });
+    hook('mousemove', 0, function(point, event, state) {
+      var line, mainPoint, _i, _ref;
+      if ((this.draggingBlock == null) && (this.clickedBlock == null) && this.hasEvent('linehover')) {
+        mainPoint = this.trackerPointToMain(point);
+        for (line = _i = 0, _ref = this.view.getViewFor(this.tree).lineLength; 0 <= _ref ? _i < _ref : _i > _ref; line = 0 <= _ref ? ++_i : --_i) {
+          if (this.view.getViewFor(this.tree).bounds[line].contains(mainPoint)) {
+            if (line !== this.lastHoveredLine) {
+              this.fireEvent('linehover', [
+                {
+                  line: line
+                }
+              ]);
+            }
+            this.lastHoveredLine = line;
+            return;
+          }
+        }
+        if (this.lastHoveredLine !== null) {
+          this.fireEvent('linehover', [
+            {
+              line: null
+            }
+          ]);
+        }
+        return this.lastHoveredLine = null;
+      }
+    });
+    SetValueOperation = (function(_super) {
+      __extends(SetValueOperation, _super);
+
+      function SetValueOperation(oldValue, newValue) {
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+      }
+
+      SetValueOperation.prototype.undo = function(editor) {
+        editor.tree = this.oldValue.clone();
+        return editor.tree.start;
+      };
+
+      SetValueOperation.prototype.redo = function(editor) {
+        editor.tree = this.newValue.clone();
+        return editor.tree.start;
+      };
+
+      return SetValueOperation;
+
+    })(UndoOperation);
+    hook('populate', 0, function() {
+      return this.trimWhitespace = false;
+    });
+    Editor.prototype.setTrimWhitespace = function(trimWhitespace) {
+      return this.trimWhitespace = trimWhitespace;
+    };
+    Editor.prototype.setValue = function(value) {
+      var newParse;
+      if (this.trimWhitespace) {
+        value = value.trim();
+      }
+      newParse = coffee.parse(value, {
+        wrapAtRoot: true
+      });
+      if (value !== this.tree.stringify()) {
+        this.addMicroUndoOperation('CAPTURE_POINT');
+      }
+      this.addMicroUndoOperation(new SetValueOperation(this.tree, newParse));
+      this.tree = newParse;
+      this.tree.start.insert(this.cursor);
+      this.redrawMain();
+      return {
+        success: true
+      };
+    };
+    Editor.prototype.getValue = function() {
+      if (this.currentlyUsingBlocks) {
+        return this.tree.stringify();
+      } else {
+        return this.aceEditor.getValue();
+      }
+    };
+    hook('populate', 0, function() {
+      return this.bindings = {};
+    });
+    Editor.prototype.on = function(event, handler) {
+      return this.bindings[event] = handler;
+    };
+    Editor.prototype.once = function(event, handler) {
+      return this.bindings[event] = function() {
+        handler.apply(this, arguments);
+        return this.bindings[event] = null;
+      };
+    };
+    Editor.prototype.fireEvent = function(event, args) {
+      if (event in this.bindings) {
+        return this.bindings[event].apply(this, args);
+      }
+    };
+    Editor.prototype.hasEvent = function(event) {
+      return event in this.bindings && (this.bindings[event] != null);
+    };
+    Editor.prototype.setEditorState = function(useBlocks) {
+      if (useBlocks) {
+        this.setValue(this.aceEditor.getValue());
+        this.iceElement.style.top = this.iceElement.style.left = '0px';
+        this.aceElement.style.top = this.aceElement.style.left = '-9999px';
+        this.currentlyUsingBlocks = true;
+        this.resize();
+        return this.redrawMain();
+      } else {
+        this.aceEditor.setValue(this.getValue(), -1);
+        this.iceElement.style.top = this.iceElement.style.left = '-9999px';
+        this.aceElement.style.top = this.aceElement.style.left = '0px';
+        this.currentlyUsingBlocks = false;
+        return this.resize();
+      }
+    };
+    hook('mousedown', 0, function() {
+      return this.dragCanvas.style.zIndex = 300;
+    });
+    hook('mouseup', 0, function() {
+      this.dragCanvas.style.top = this.dragCanvas.style.left = '-9999px';
+      return this.dragCanvas.style.zIndex = 0;
+    });
+    touchEvents = {
+      'touchstart': 'mousedown',
+      'touchmove': 'mousemove',
+      'touchend': 'mouseup'
+    };
+    TOUCH_SELECTION_TIMEOUT = 2000;
+    hook('populate', 0, function() {
+      var _this = this;
+      this.touchScrollAnchor = new draw.Point(0, 0);
+      this.lassoSelectStartTimeout = null;
+      this.iceElement.addEventListener('touchstart', function(event) {
+        var handler, state, trackPoint, _i, _len, _ref;
+        clearTimeout(_this.lassoSelectStartTimeout);
+        trackPoint = _this.getPointRelativeToTracker(event.touches[0]);
+        state = {
+          suppressLassoSelect: true
+        };
+        _ref = editorBindings.mousedown;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          handler = _ref[_i];
+          handler.call(_this, trackPoint, event, state);
+        }
+        if (!state.consumedHitTest) {
+          _this.lassoSelectStartTimeout = setTimeout(TOUCH_SELECTION_TIMEOUT, function() {
+            var _j, _len1, _ref1, _results;
+            state = {};
+            _ref1 = editorBindings.mousedown;
+            _results = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              handler = _ref1[_j];
+              _results.push(handler.call(this, trackPoint, event, state));
+            }
+            return _results;
+          });
+        }
+        return event.preventDefault();
+      });
+      this.iceElement.addEventListener('touchmove', function(event) {
+        var handler, state, trackPoint, _i, _len, _ref;
+        clearTimeout(_this.lassoSelectStartTimeout);
+        trackPoint = _this.getPointRelativeToTracker(event.touches[0]);
+        state = {};
+        _ref = editorBindings.mousedown;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          handler = _ref[_i];
+          handler.call(_this, trackPoint, event, state);
+        }
+        if ((_this.clickedBlock != null) || (_this.draggingBlock != null) || (_this.lassoSelectAnchor != null)) {
+          return event.preventDefault();
+        }
+      });
+      return this.iceElement.addEventListener('touchend', function(event) {
+        var handler, state, trackPoint, _i, _len, _ref;
+        clearTimeout(_this.lassoSelectStartTimeout);
+        trackPoint = _this.getPointRelativeToTracker(event.touches[0]);
+        state = {};
+        _ref = editorBindings.mousedown;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          handler = _ref[_i];
+          handler.call(_this, trackPoint, event, state);
+        }
+        return event.preventDefault();
+      });
+    });
+    Editor.prototype.drawCursor = function(point) {
+      this.clearHighlightCanvas();
+      this.highlightCtx.beginPath();
+      this.highlightCtx.fillStyle = this.highlightCtx.strokeStyle = '#000';
+      if (point.x >= 5) {
+        this.highlightCtx.moveTo(point.x, point.y);
+        this.highlightCtx.lineTo(point.x - 5, point.y - 5);
+        this.highlightCtx.lineTo(point.x - 5, point.y + 5);
+      } else {
+        this.highlightCtx.moveTo(point.x, point.y);
+        this.highlightCtx.lineTo(point.x + 5, point.y - 5);
+        this.highlightCtx.lineTo(point.x + 5, point.y + 5);
+      }
+      this.highlightCtx.stroke();
+      return this.highlightCtx.fill();
+    };
+    for (key in unsortedEditorBindings) {
+      unsortedEditorBindings[key].sort(function(a, b) {
+        if (a.priority > b.priority) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+      editorBindings[key] = [];
+      _ref = unsortedEditorBindings[key];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        binding = _ref[_i];
+        editorBindings[key].push(binding.fn);
+      }
+    }
+    editorBindings.key = {};
+    for (key in unsortedEditorKeyBindings) {
+      unsortedEditorKeyBindings[key].sort(function(a, b) {
+        if (a.priority > b.priority) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+      editorBindings.key[key] = [];
+      _ref1 = unsortedEditorKeyBindings[key];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        binding = _ref1[_j];
+        editorBindings.key[key].push(binding.fn);
+      }
+    }
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=controller.js.map
+*/;
+(function() {
+  define('ice',['ice-view', 'ice-model', 'ice-coffee', 'ice-controller', 'ice-parser'], function(view, model, coffee, controller, parser) {
+    return {
+      view: view,
+      model: model,
+      parse: coffee.parse,
+      parseObj: parser.parseObj,
+      Editor: controller.Editor
+    };
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=main.js.map
+*/;
+}).call(this);;

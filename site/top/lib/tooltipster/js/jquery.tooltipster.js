@@ -1,6 +1,6 @@
 /*
 
-Tooltipster 3.2.3 | 2014-05-02
+Tooltipster 3.2.5 | 2014-06-28
 A rockin' custom tooltip jQuery plugin
 
 Developed by Caleb Jacob under the MIT license http://opensource.org/licenses/MIT
@@ -20,6 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 			content: null,
 			contentAsHTML: false,
 			contentCloning: true,
+			debug: true,
 			delay: 200,
 			minWidth: 0,
 			maxWidth: null,
@@ -1097,10 +1098,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 		},
 		
 		// public methods but for internal use only
-		option: function(o) {
-			return this.options[o];
+		// getter if val is ommitted, setter otherwise
+		option: function(o, val) {
+			if (typeof val == 'undefined') return this.options[o];
+			else {
+				this.options[o] = val;
+				return this;
+			}
 		},
-		status: function(o) {
+		status: function() {
 			return this.Status;
 		}
 	};
@@ -1159,10 +1165,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 						self = ns ? $(this).data(ns[0]) : null;
 					
 					// if the current element holds a tooltipster instance
-					if(self){
+					if (self) {
 						
 						if (typeof self[args[0]] === 'function') {
-							var resp = self[args[0]](args[1]);
+							// note : args[1] and args[2] may not be defined
+							var resp = self[args[0]](args[1], args[2]);
 						}
 						else {
 							throw new Error('Unknown method .tooltipster("' + args[0] + '")');
@@ -1201,12 +1208,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 					if (!ns) {
 						go = true;
 					}
-					else {
-						if(multiple) go = true;
-						else console.log('Tooltipster: one or more tooltips are already attached to this element: ignoring. Use the "multiple" option to attach more tooltips.');
+					else if (multiple) {
+						go = true;
+					}
+					else if (self.options.debug) {
+						console.log('Tooltipster: one or more tooltips are already attached to this element: ignoring. Use the "multiple" option to attach more tooltips.');
 					}
 					
-					if(go) {
+					if (go) {
 						instance = new Plugin(this, args[0]);
 						
 						// save the reference of the new instance
@@ -1221,7 +1230,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 					instances.push(instance);
 				});
 				
-				if(multiple) return instances;
+				if (multiple) return instances;
 				else return this;
 			}
 		}
