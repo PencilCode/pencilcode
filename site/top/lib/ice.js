@@ -705,6 +705,33 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         return traverseOneLevel(this.start.next, fn);
       };
 
+      Container.prototype.addLineMark = function(mark) {
+        this.lineMarkStyles.push(mark);
+        return this.notifyChange();
+      };
+
+      Container.prototype.removeLineMark = function(tag) {
+        var mark;
+        this.lineMarkStyles = (function() {
+          var _i, _len, _ref, _results;
+          _ref = this.lineMarkStyles;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            mark = _ref[_i];
+            if (mark.tag !== tag) {
+              _results.push(mark);
+            }
+          }
+          return _results;
+        }).call(this);
+        return this.notifyChange();
+      };
+
+      Container.prototype.clearLineMarks = function() {
+        this.lineMarkStyles = [];
+        return this.notifyChange();
+      };
+
       return Container;
 
     })();
@@ -782,14 +809,13 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
       };
 
       Token.prototype.notifyChange = function() {
-        var head, _results;
+        var head;
         head = this;
-        _results = [];
         while (head != null) {
           head.version++;
-          _results.push(head = head.parent);
+          head = head.parent;
         }
-        return _results;
+        return null;
       };
 
       Token.prototype.getSerializedLocation = function() {
@@ -1385,7 +1411,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         GenericView.prototype.drawSelf = function(ctx, style) {};
 
         GenericView.prototype.draw = function(ctx, boundingRect, style) {
-          var childObj, _i, _len, _ref;
+          var childObj, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
           if (this.totalBounds.overlap(boundingRect)) {
             window.drawNumber++;
             if (style == null) {
@@ -1397,7 +1423,16 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             _ref = this.children;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               childObj = _ref[_i];
-              self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              if (((_ref1 = (_ref2 = childObj.child.lineMarkStyles) != null ? _ref2.length : void 0) != null ? _ref1 : 0) === 0) {
+                self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              }
+            }
+            _ref3 = this.children;
+            for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+              childObj = _ref3[_j];
+              if (((_ref4 = (_ref5 = childObj.child.lineMarkStyles) != null ? _ref5.length : void 0) != null ? _ref4 : 0) > 0) {
+                self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              }
             }
           }
           return null;
@@ -1754,6 +1789,10 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           BlockView.__super__.computeOwnPath.apply(this, arguments);
           this.path.style.fillColor = this.model.color;
           this.path.style.strokeColor = '#888';
+          if (this.model.lineMarkStyles.length > 0) {
+            this.path.style.strokeColor = this.model.lineMarkStyles[0].color;
+            this.path.style.lineWidth = 2;
+          }
           return this.path;
         };
 
@@ -1904,7 +1943,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         SegmentView.prototype.draw = function(ctx, boundingRect, style) {
-          var childObj, _i, _len, _ref;
+          var childObj, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
           if (this.totalBounds.overlap(boundingRect)) {
             if (style == null) {
               style = {
@@ -1918,7 +1957,16 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             _ref = this.children;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               childObj = _ref[_i];
-              self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              if (((_ref1 = (_ref2 = childObj.child.lineMarkStyles) != null ? _ref2.length : void 0) != null ? _ref1 : 0) === 0) {
+                self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              }
+            }
+            _ref3 = this.children;
+            for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+              childObj = _ref3[_j];
+              if (((_ref4 = (_ref5 = childObj.child.lineMarkStyles) != null ? _ref5.length : void 0) != null ? _ref4 : 0) > 0) {
+                self.getViewFor(childObj.child).draw(ctx, boundingRect, style);
+              }
             }
             if (this.model.isLassoSegment) {
               style.selected--;
@@ -4394,7 +4442,10 @@ if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.cont
         return _this.setFontSize_raw(_this.aceEditor.getFontSize());
       });
       this.currentlyUsingBlocks = true;
-      return this.currentlyAnimating = false;
+      this.currentlyAnimating = false;
+      this.transitionContainer = document.createElement('div');
+      this.transitionContainer.className = 'ice-transition-container';
+      return this.iceElement.appendChild(this.transitionContainer);
     });
     getOffsetTop = function(element) {
       var top;
@@ -4502,7 +4553,7 @@ if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.cont
           div.style.marginTop = '-1px';
           div.style.left = "" + (textElement.bounds[0].x - this.scrollOffsets.main.x) + "px";
           div.style.top = "" + (textElement.bounds[0].y - this.scrollOffsets.main.y) + "px";
-          this.iceElement.appendChild(div);
+          this.transitionContainer.appendChild(div);
           translatingElements.push({
             div: div,
             position: {
@@ -4543,7 +4594,7 @@ if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.cont
             _results = [];
             for (_k = 0, _len2 = translatingElements.length; _k < _len2; _k++) {
               element = translatingElements[_k];
-              _results.push(_this.iceElement.removeChild(element.div));
+              _results.push(_this.transitionContainer.removeChild(element.div));
             }
             return _results;
           }
@@ -4761,41 +4812,26 @@ if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.cont
     Editor.prototype.markLine = function(line, style) {
       var _ref;
       if ((_ref = this.tree.getBlockOnLine(line)) != null) {
-        _ref.lineMarkStyles.push(style);
+        _ref.addLineMark(style);
       }
       return this.redrawMain();
     };
     Editor.prototype.unmarkLine = function(line, tag) {
-      var blockOnLine, i, style, _i, _len, _ref;
-      if ((blockOnLine = this.tree.getBlockOnLine(line)) == null) {
-        return;
-      }
-      _ref = blockOnLine.lineMarkStyles;
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        style = _ref[i];
-        if (style.tag === tag) {
-          blockOnLine.lineMarkStyles.splice(i, 1);
-          break;
-        }
+      var _ref;
+      if ((_ref = this.tree.getBlockOnLine(line)) != null) {
+        _ref.removeLineMark(tag);
       }
       return this.redrawMain();
     };
     Editor.prototype.clearLineMarks = function(tag) {
-      var head, i, style, _i, _len, _ref;
+      var head;
       head = this.tree.start;
       while (head !== this.tree.end) {
         if (head.type === 'blockStart') {
           if (tag == null) {
-            head.container.lineMarkStyles.length = 0;
+            head.container.clearLineMarks();
           } else {
-            _ref = head.container.lineMarkStyles;
-            for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-              style = _ref[i];
-              if (style.tag === tag) {
-                head.container.lineMarkStyles.splice(i, 1);
-                break;
-              }
-            }
+            head.container.removeLineMark(tag);
           }
         }
         head = head.next;
