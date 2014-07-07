@@ -1,0 +1,21 @@
+# Welcome to Pencil Code.
+
+dot yellow, 160 # big yellow dot
+rt 50           # right turn
+bk 38           # slide back
+pen black, 7    # black pen
+rt 100          # right turn
+lt 120, 35      # left turn curve
+pen null        # no pen
+lt 42           # left turn
+fd 50           # slide forward
+dot black, 20   # black dot
+lt 78
+fd 41
+dot black, 20
+rt 51
+bk 31.5
+rt 39
+
+# Words after # are comments that
+# are skipped by the computer.

@@ -22,6 +22,11 @@ exports.initialize = function(app) {
   console.log('using', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
 };
 exports.initialize2 = function(app) {
+  app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+  });
+
   app.use(express.bodyParser());
 
   app.use('/save', function(req, res) {

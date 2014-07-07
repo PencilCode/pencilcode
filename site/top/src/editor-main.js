@@ -351,6 +351,7 @@ view.on('run', function() {
   debug.flashStopButton();
   runCodeAtPosition('right', runtext, modelatpos('left').filename, false);
   if (!specialowner()) {
+    // Remember the most recently run program.
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
@@ -542,7 +543,8 @@ function letterComplexity(s) {
   return uniqcount && (uniqcount / (maxcount + dupcount));
 }
 
-function signUpAndSave(filename) {
+function signUpAndSave(options) {
+  if (!options) { options = {}; }
   var mimetext = view.getPaneEditorText(paneatpos('left'));
   var mp = modelatpos('left');
   var runtext = mimetext && mimetext.text;
@@ -557,8 +559,10 @@ function signUpAndSave(filename) {
     }
   });
   view.showLoginDialog({
-    prompt: 'Choose an account name to save.',
-    rename: filename || mp.filename,
+    prompt: options.prompt || 'Choose an account name to save.',
+    rename: options.nofilename ? '' : (options.filename || mp.filename),
+    center: options.center,
+    cancel: options.cancel,
     info: 'Accounts on pencilcode are free.',
     validate: function(state) {
       var username = state.username.toLowerCase();
@@ -569,6 +573,11 @@ function signUpAndSave(filename) {
             return {
               disable: true,
               info: 'Name "' + username + '" reserved.'
+            };
+          } else if (options.newonly) {
+            return {
+              disable: true,
+              info: 'Name "' + username + '" already used.'
             };
           } else {
             shouldCreateAccount = false;
@@ -625,7 +634,7 @@ function signUpAndSave(filename) {
              'href="/terms.html">the terms of service<label></a>.'
         };
       }
-      if (!state.rename) {
+      if (!options.nofilename && !state.rename) {
         return {
           disable: true,
           info: 'Choose a file name.'
@@ -653,7 +662,6 @@ function signUpAndSave(filename) {
             username, rename, {data: runtext, mtime: 1},
             forceOverwrite, key, false,
             function(status) {
-          console.log('status was', status);
           if (status.needauth) {
             state.update({
               disable: false,
@@ -683,10 +691,15 @@ function signUpAndSave(filename) {
             storage.deleteBackup(mp.filename);
             storage.deleteBackup(rename);
             state.update({cancel: true});
-            window.location.href =
+            var newurl =
                 'http://' + username + '.' + window.pencilcode.domain +
                 '/edit/' + rename +
                 '#login=' + username + ':' + (key ? key : '');
+            if (options.nohistory) {
+              window.location.replace(newurl);
+            } else {
+              window.location.href = newurl;
+            }
           }
         });
       }
@@ -1059,6 +1072,8 @@ function readNewUrl(undo) {
       login = /(?:^|#|&)login=([^:]*)(?::(\w+))?\b/.exec(hash),
   // Extract text from hash if present.
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(hash),
+  // Extract newuser flag from hash if present.
+      newuser = /(?:^|#|&)new(?:[=&]|$)/.exec(hash),
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
@@ -1077,11 +1092,29 @@ function readNewUrl(undo) {
     var savedlogin = cookie('login');
     login = savedlogin && /\b^([^:]*)(?::(\w*))?$/.exec(cookie('login'));
   } else if (ownername) {
+    // Remember credentials for 24 hours.
     cookie('login', login, { expires: 1, path: '/' });
+    // Also remember as the most recently used program (without hash).
+    cookie('recent', window.location.href.replace(/#.*$/, ''),
+        { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
   if (login) {
     model.username = login[1] || null;
     model.passkey = login[2] || null;
+  }
+  // Handle #new (new user) hash.
+  var afterLoad = null;
+  if (newuser) {
+    afterLoad = (function() {
+      signUpAndSave({
+        center: true,
+        nofilename: true,
+        nohistory: true,
+        newonly: true,
+        prompt: 'Choose an account name',
+        cancel: function() { history.back(); }
+      });
+    });
   }
   // Clean up the hash if present, and absorb the new auth information.
   if (hash.length) {
@@ -1126,9 +1159,9 @@ function readNewUrl(undo) {
       return;
     }
     if (!forceRefresh && filename == modelatpos('left').filename) {
-      // if (window.console) {
-      //   window.console.log('same filename; nothing done');
-      // }
+      if (afterLoad) {
+        afterLoad();
+      }
       return;
     }
   }
@@ -1149,7 +1182,7 @@ function readNewUrl(undo) {
   if (forceRefresh) {
     cancelAndClearPosition('left');
   }
-  loadFileIntoPosition('left', filename, isdir, isdir);
+  loadFileIntoPosition('left', filename, isdir, isdir, afterLoad);
 }
 
 function directNetLoad() {
@@ -1522,7 +1555,7 @@ $(window).on('message', function(e) {
       view.run();
       break;
     case 'save':
-      signUpAndSave(data.args[0]);
+      signUpAndSave({filename:data.args[0]});
       break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
