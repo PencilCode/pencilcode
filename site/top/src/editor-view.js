@@ -1030,6 +1030,8 @@ function setPaneRunText(pane, html, filename, targetUrl) {
     }
     $(this).dequeue();
   });
+  // Hide any ice editor palettes when you run a program.
+  $('.rightpal').hide();
 }
 
 function evalInRunningPane(pane, code) {
@@ -1348,11 +1350,6 @@ function updatePaneTitle(pane) {
   $('#' + pane + 'title_text').html(prefix + shortened + suffix);
 }
 
-function updatePaneExtra(pane) {
-  var paneState = state.pane[pane];
-  
-}
-
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");
   if (result.length && result.substr(result.length - 1) != '\n') {
@@ -1667,6 +1664,13 @@ function setPaneEditorText(pane, text, filename) {
       new ice.Editor(document.getElementById(id), ICE_EDITOR_PALETTE);
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
+  $(iceEditor.paletteWrapper).addClass('rightpal');
+  $(iceEditor.iceElement).on('focus', function() {
+    // Show the palette if it has been hidden (e.g., by the "run" command).
+    if (!iceEditor.aceEditor.getReadOnly()) {
+      $(iceEditor.paletteWrapper).show();
+    }
+  });
 
   // Enable whitespace-trimming hack in iceEditor
   iceEditor.setTrimWhitespace(true);
@@ -1679,7 +1683,6 @@ function setPaneEditorText(pane, text, filename) {
   iceEditor.on('change', function() {
     fireEvent('dirty', [pane]);
     publish('update', [iceEditor.getValue()]);
-    
     //Clear lines
     iceEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
@@ -1904,6 +1907,11 @@ function setPaneEditorReadOnly(pane, ro) {
   $(paneState.editor.container).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
+  if (ro) {
+    $(paneState.iceEditor.paletteWrapper).hide();
+  } else {
+    $(paneState.iceEditor.paletteWrapper).show();
+  }
   // Only if the editor is read only do we want to blur it.
   if (ro) {
     paneState.editor.blur();

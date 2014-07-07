@@ -71,9 +71,11 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   border-left:1px solid white;border-right:1px solid white;z-index:0;}
 .back{left:-50%;width:50%;}
 .left{left:0;width:50%;}
+.left.pane{z-index:1;}
 .right{left:50%;width:50%;}
+.rightpal{left:50vw;box-sizing:content-box;border-left:35px solid gainsboro;}
 .ace_search.right{left:auto;width:60%;max-width:400px;}
-#middle{z-index:1;display:none;}
+#middle{z-index:2;display:none;}
 #middle,.vcenter{position:absolute;left:50%;top:50%}
 .hcenter{margin:-50% -50%;}
 #run,#stop {border:0;background-color:rgba(255,255,255,0.7);opacity:0.7;
