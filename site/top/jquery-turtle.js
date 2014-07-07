@@ -4205,7 +4205,7 @@ var Instrument = (function() {
           voice: {}
         },
         context = result, timbre,
-        j, header, stems, key = {}, accent = {}, voiceid, out;
+        j, k, header, stems, key = {}, accent = {}, voiceid, out;
     // Shifts context to a voice with the given id given.  If no id
     // given, then just sticks with the current voice.  If the current
     // voice is unnamed and empty, renames the current voice.
@@ -4295,14 +4295,22 @@ var Instrument = (function() {
         }
       }
     }
+    var infer = ['unitnote', 'unitbeat', 'tempo'];
     if (result.voice) {
-      // Calculate times for all the tied notes.  This happens at the end
-      // because in principle, the first note of a song could be tied all
-      // the way through to the last note.
       out = [];
       for (j in result.voice) {
         if (result.voice[j].stems && result.voice[j].stems.length) {
+          // Calculate times for all the tied notes.  This happens at the end
+          // because in principle, the first note of a song could be tied all
+          // the way through to the last note.
           processTies(result.voice[j].stems);
+          // Bring up inferred tempo values from voices if not specified
+          // in the header.
+          for (k = 0; k < infer.length; ++k) {
+            if (!(infer[k] in result) && (infer[k] in result.voice[j])) {
+              result[infer[k]] = result.voice[j][infer[k]];
+            }
+          }
         } else {
           out.push(j);
         }
@@ -4434,7 +4442,7 @@ var Instrument = (function() {
       } else if (scale == 'min') {
         key = k.substr(0, scale.index + 1);
       } else {
-        key = k.substr(0, scale.index + scale.length);
+        key = k.substr(0, scale.index + scale[0].length);
       }
     } else {
       key = /^[a-g][#b]?/.exec(k) || '';
@@ -4480,7 +4488,7 @@ var Instrument = (function() {
   //
   // Then a song is just a sequence of stems interleaved with other
   // decorations such as dynamics markings and measure delimiters.
-  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|\[|\]|>+|<+|(?:(?:\^+|_+|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
+  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|[_<>@^]?"[^"]*"|\[|\]|>+|<+|(?:(?:\^+|_+|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
   function parseABCNotes(str, key, accent) {
     var tokens = str.match(ABCtoken), result = [], parsed = null,
         index = 0, dotted = 0, beatlet = null, t;
@@ -4510,6 +4518,11 @@ var Instrument = (function() {
       }
       if (/^[!+].*[!+]$/.test(tokens[index])) {
         parseDecoration(tokens[index++], accent);
+        continue;
+      }
+      if (/^.?".*"$/.test(tokens[index])) {
+        // Ignore double-quoted tokens (chords and general text annotations).
+        index++;
         continue;
       }
       if (/^[()]$/.test(tokens[index])) {
