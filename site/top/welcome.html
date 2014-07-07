@@ -310,7 +310,7 @@ var olduser = false;
 if (cookie('recent')) {
   document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
       cookie('recent').replace(/^http:\/\//, '').
-      replace(/^(\w+)\.[^\/]*\/edit\//, '$1&nbsp;/ ').
+      replace(/^(\w+)\.[^\/]+\/edit\//, '$1&nbsp;/ ').
       replace(/\//g, '<wbr>/') +
       '. <span class="extrabutton" id="reset">reset this</span></a>');
   olduser = true;

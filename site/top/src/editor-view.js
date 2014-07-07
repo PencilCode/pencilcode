@@ -734,15 +734,12 @@ function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
-  var dialog = $('<div class="dialog' +
-    (opts.center ? ' center' : '' ) +
-    '"><div class="prompt">' +
-    (opts.prompt ? opts.prompt : '') +
-    '<div class="info">' +
-    (opts.info ? opts.info : '') +
-    '</div>' +
-    (opts.content ? opts.content : '') +
-    '</div></div>').appendTo(overlay);
+  var dialogHTML =
+    '<div class="dialog' + (opts.center ? ' center' : '' ) + '">' +
+    '<div class="prompt">' + (opts.prompt ? opts.prompt : '') +
+    '<div class="info">' + (opts.info ? opts.info : '') + '</div>' +
+    (opts.content ? opts.content : '') + '</div></div>';
+  var dialog = $(dialogHTML).appendTo(overlay);
 
   ////////////////////////////////////////////////////////////////
   //
