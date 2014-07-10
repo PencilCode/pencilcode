@@ -2646,6 +2646,7 @@ function applyLoadedImage(loaded, elem, css) {
     backgroundImage: 'none',
     height: '',
     width: '',
+    turtleHull: '',
     transformOrigin: ''
   });
   if (loaded) {
@@ -6164,9 +6165,17 @@ var turtlefn = {
       // Deal with "tan" and "fill".
    "<u>wear(url)</u> Sets the turtle image url: " +
       "<mark>wear 'http://bit.ly/1bgrQ0p'</mark>"],
-  function wear(cc, name) {
+  function wear(cc, name, css) {
+    if (typeof(name) == 'object' && typeof(css) == 'string') {
+      var t = css;
+      css = name;
+      name = t;
+    }
     var img = nameToImg(name, 'turtle');
     if (!img) return this;
+    if (css) {
+      $.extend(img.css, css);
+    }
     this.plan(function(j, elem) {
       cc.appear(j);
       // Bug workaround - if background isn't cleared early enough,
