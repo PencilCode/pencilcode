@@ -5993,10 +5993,10 @@ var turtlefn = {
     });
     return this;
   }),
-  twist: wrapcommand('twist', 1
+  twist: wrapcommand('twist', 1,
   ["<u>twist(degrees)</u> Set the primary direction of the turtle. Allows " +
       "use of images that face a different direction than 'up': " +
-      "<mark>twist(90)</mark>"],
+      "<mark>twist(-90)</mark>"],
   function twist(cc, val) {
     this.plan(function(j, elem) {
       cc.appear(j);
@@ -6004,6 +6004,7 @@ var turtlefn = {
       this.css('turtleTwist', val);
       cc.resolve(j);
     });
+    return this;
   }),
   scale: wrapcommand('scale', 1,
   ["<u>scale(factor)</u> Scales all motion up or down by a factor. " +
