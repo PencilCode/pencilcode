@@ -181,6 +181,10 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
+      // Applies to both files and dirs: a simple "new file" button.
+      buttons.push({
+        id: 'new', title: 'Make a new program', label: 'New'});
+
       //
       // Then insert logout/login buttons depending on if someone
       // is already logged in
@@ -261,6 +265,23 @@ view.on('help', function() {
 view.on('tour', function() {
   // view.flashNotification('Tour coming soon.');
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
+});
+
+view.on('new', function() {
+  var directoryname = (
+    modelatpos('left').isdir ?
+    modelatpos('left').filename + '/' :
+    modelatpos('left').filename.replace(/(?:^|\/)[^\/]*$/, '/'));
+  storage.loadFile(model.ownername, directoryname, false, function(m) {
+    var untitled = 'untitled';
+    if (m.directory && m.list) {
+      untitled = chooseNewFilename(m.list);
+    }
+    if (directoryname == '/') {
+      directoryname = '';
+    }
+    window.location.href = '/edit/' + directoryname + untitled;
+  });
 });
 
 view.on('share', function() {
