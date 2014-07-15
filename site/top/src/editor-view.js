@@ -1024,22 +1024,24 @@ function setPaneRunText(pane, html, filename, targetUrl) {
   });
 }
 
-function evalInRunningPane(pane, code) {
+function evalInRunningPane(pane, code, raw) {
   var paneState = state.pane[pane];
   if (!paneState.running) { return [null, 'error: not running (wrong state)']; }
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) { return [null, 'error: not running (no preview)']; }
   var iframe = preview.find('iframe');
   if (!iframe.length) { return [null, 'error: not running (no iframe)']; }
-  try {
-    if (typeof(iframe[0].contentWindow.see) == 'function') {
-      return [iframe[0].contentWindow.see.eval(code), null];
+  if (!raw) {
+    try {
+      if (typeof(iframe[0].contentWindow.see) == 'function') {
+        return [iframe[0].contentWindow.see.eval(code), null];
+      }
+    } catch(e) {
+      return [null, 'error: ' + e.message];
     }
-  } catch(e) {
-    return [null, 'error: ' + e.message];
   }
   try {
-    return [contentWindow.eval(code), null];
+    return [iframe[0].contentWindow.eval(code), null];
   } catch(e) {
     return [null, 'error: ' + e.message];
   }
