@@ -8500,7 +8500,7 @@ var see;  // defined below.
 var paneltitle = '';
 var logconsole = null;
 var uselocalstorage = '_loghistory';
-var panelheight = 250;
+var panelheight = 50;
 var currentscope = '';
 var scopes = {
   '':  { e: window.eval, t: window },
