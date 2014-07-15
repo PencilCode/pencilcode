@@ -2023,26 +2023,6 @@ function endAndFillPenPath(elem, style) {
   }
 }
 
-function fillDot(drawOnCanvas, position, diameter, style) {
-  var ctx = drawOnCanvas.getContext('2d');
-  ctx.save();
-  applyPenStyle(ctx, style);
-  if (diameter === Infinity) {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillRect(0, 0, drawOnCanvas.width, drawOnCanvas.height);
-  } else {
-    setCanvasPageTransform(ctx, drawOnCanvas);
-    ctx.beginPath();
-    ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
-    ctx.closePath();
-    ctx.fill();
-    if (style.strokeStyle) {
-      ctx.stroke();
-    }
-  }
-  ctx.restore();
-}
-
 function clearField(arg) {
   if ((!arg || /\bcanvas\b/.test(arg)) && globalDrawing.canvas) {
     var ctx = globalDrawing.canvas.getContext('2d');
@@ -5585,6 +5565,105 @@ function fdbk(cc, amount) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// DOT AND BOX FUNCTIONS
+// Support for animated drawing of dots and boxes.
+//////////////////////////////////////////////////////////////////////////
+
+function animatedDotCommand(fillShape) {
+  return (function(cc, style, diameter) {
+    if ($.isNumeric(style)) {
+      // Allow for parameters in either order.
+      var t = style;
+      style = diameter;
+      diameter = t;
+    }
+    if (diameter == null) { diameter = 8.8; }
+    if (!style) { style = 'black'; }
+    var ps = parsePenStyle(style, 'fillStyle');
+    this.plan(function(j, elem) {
+      cc.appear(j);
+      var c = this.pagexy(),
+          ts = readTurtleTransform(elem, true),
+          state = getTurtleData(elem),
+          drawOnCanvas = getDrawOnCanvas(state),
+          // Scale by sx.  (TODO: consider parent transforms.)
+          targetDiam = diameter * ts.sx,
+          animDiam = Math.max(0, targetDiam - 2),
+          finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
+          hasAlpha = /rgba|hsla/.test(ps.fillStyle);
+      if (canMoveInstantly(this)) {
+        fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+        cc.resolve(j);
+      } else {
+        this.queue(function(next) {
+          $({radius: 0}).animate({radius: animDiam}, {
+            duration: animTime(elem),
+            step: function() {
+              if (!hasAlpha) {
+                fillShape(drawOnCanvas, c, this.radius, ts.rot, ps);
+              }
+            },
+            complete: function() {
+              fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+              cc.resolve(j);
+              next();
+            }
+          })
+        });
+      }
+    });
+    return this;
+  });
+}
+
+function fillDot(drawOnCanvas, position, diameter, rot, style) {
+  var ctx = drawOnCanvas.getContext('2d');
+  ctx.save();
+  applyPenStyle(ctx, style);
+  if (diameter === Infinity) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillRect(0, 0, drawOnCanvas.width, drawOnCanvas.height);
+  } else {
+    setCanvasPageTransform(ctx, drawOnCanvas);
+    ctx.beginPath();
+    ctx.arc(position.pageX, position.pageY, diameter / 2, 0, 2*Math.PI, false);
+    ctx.closePath();
+    ctx.fill();
+    if (style.strokeStyle) {
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function fillBox(drawOnCanvas, position, diameter, rot, style) {
+  var ctx = drawOnCanvas.getContext('2d');
+  ctx.save();
+  applyPenStyle(ctx, style);
+  if (diameter === Infinity) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillRect(0, 0, drawOnCanvas.width, drawOnCanvas.height);
+  } else {
+    var s = Math.sin((rot + 45) / 180 * Math.PI),
+        c = Math.cos((rot + 45) / 180 * Math.PI),
+        hdx = diameter * c / Math.SQRT2,
+        hdy = diameter * s / Math.SQRT2;
+    setCanvasPageTransform(ctx, drawOnCanvas);
+    ctx.beginPath();
+    ctx.moveTo(position.pageX - hdx, position.pageY - hdy);
+    ctx.lineTo(position.pageX - hdy, position.pageY + hdx);
+    ctx.lineTo(position.pageX + hdx, position.pageY + hdy);
+    ctx.lineTo(position.pageX + hdy, position.pageY - hdx);
+    ctx.closePath();
+    ctx.fill();
+    if (style.strokeStyle) {
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+//////////////////////////////////////////////////////////////////////////
 // TURTLE FUNCTIONS
 // Turtle methods to be registered as jquery instance methods.
 //////////////////////////////////////////////////////////////////////////
@@ -5931,51 +6010,11 @@ var turtlefn = {
   dot: wrapcommand('dot', 0,
   ["<u>dot(color, diameter)</u> Draws a dot. " +
       "Color and diameter are optional: " +
-      "<mark>dot blue</mark>"],
-  function dot(cc, style, diameter) {
-    if ($.isNumeric(style)) {
-      // Allow for parameters in either order.
-      var t = style;
-      style = diameter;
-      diameter = t;
-    }
-    if (diameter == null) { diameter = 8.8; }
-    if (!style) { style = 'black'; }
-    var ps = parsePenStyle(style, 'fillStyle');
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var c = this.pagexy(),
-          ts = readTurtleTransform(elem, true),
-          state = getTurtleData(elem),
-          drawOnCanvas = getDrawOnCanvas(state),
-          // Scale by sx.  (TODO: consider parent transforms.)
-          targetDiam = diameter * ts.sx,
-          animDiam = Math.max(0, targetDiam - 2),
-          finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
-          hasAlpha = /rgba|hsla/.test(ps.fillStyle);
-      if (canMoveInstantly(this)) {
-        fillDot(drawOnCanvas, c, finalDiam, ps);
-        cc.resolve(j);
-      } else {
-        this.queue(function(next) {
-          $({radius: 0}).animate({radius: animDiam}, {
-            duration: animTime(elem),
-            step: function() {
-              if (!hasAlpha) {
-                fillDot(drawOnCanvas, c, this.radius, ps);
-              }
-            },
-            complete: function() {
-              fillDot(drawOnCanvas, c, finalDiam, ps);
-              cc.resolve(j);
-              next();
-            }
-          })
-        });
-      }
-    });
-    return this;
-  }),
+      "<mark>dot blue</mark>"], animatedDotCommand(fillDot)),
+  box: wrapcommand('box', 0,
+  ["<u>box(color, size)</u> Draws a box. " +
+      "Color and size are optional: " +
+      "<mark>dot blue</mark>"], animatedDotCommand(fillBox)),
   mirror: wrapcommand('mirror', 1,
   ["<u>mirror(flipped)</u> Mirrors the turtle across its main axis, or " +
       "unmirrors if flipped if false. " +
