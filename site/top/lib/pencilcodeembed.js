@@ -93,7 +93,6 @@
   // The "frame" username is magic: it puts
   // Pencil Code into a frame-friendly mode.
   var targetDomain = 'http://frame.pencilcode.net' + dev;
-  var targetUrl = targetDomain + '/edit/frame';
   var secret = makeSecret();
 
   var PencilCodeEmbed = (function() {
@@ -126,7 +125,7 @@
         throw new Error('PencilCodeEmbed: beginLoad must be called first.');
       }
       this.iframe.contentWindow.postMessage(
-          JSON.stringify(payload), targetUrl);
+          JSON.stringify(payload), targetDomain);
       return this;
     };
 
@@ -215,6 +214,10 @@
         setuparg = '&setup=' + encodeURIComponent(JSON.stringify(opts.setup));
       }
 
+      var targetUrl = targetDomain + '/edit/frame';
+      if (opts.mode) {
+        targetUrl += '.' + opts.mode;
+      }
       this.iframe.src =
           targetUrl +
           '#text=' + encodeURIComponent(code) +
