@@ -268,10 +268,12 @@ view.on('tour', function() {
 });
 
 view.on('new', function() {
-  var directoryname = (
-    modelatpos('left').isdir ?
-    modelatpos('left').filename + '/' :
-    modelatpos('left').filename.replace(/(?:^|\/)[^\/]*$/, '/'));
+  if (modelatpos('left').isdir) {
+    handleDirLink(paneatpos('left'), '#new');
+    return;
+  }
+  var directoryname =
+      modelatpos('left').filename.replace(/(?:^|\/)[^\/]*$/, '/');
   storage.loadFile(model.ownername, directoryname, false, function(m) {
     var untitled = 'untitled';
     if (m.directory && m.list) {
@@ -830,7 +832,9 @@ function chooseNewFilename(dirlist) {
   return 'untitled' + (maxNum + 1);
 }
 
-view.on('link', function(pane, linkname) {
+view.on('link', handleDirLink);
+
+function handleDirLink(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
   if (base.length) { base += '/'; }
@@ -850,7 +854,7 @@ view.on('link', function(pane, linkname) {
   var isdir = /\/$/.test(linkname);
   loadFileIntoPosition('right', openfile, isdir, isdir,
     function() { rotateModelLeft(true); });
-});
+}
 
 view.on('linger', function(pane, linkname) {
   if (pane !== paneatpos('left')) { return; }
