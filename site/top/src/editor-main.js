@@ -286,36 +286,50 @@ view.on('new', function() {
   });
 });
 
+var lastSharedCode = '';
+var lastSharedName = '';
+
 view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
-  shortenUrl('http://' + window.pencilcode.domain + '/edit/' +
-      shortfilename + '#text=' +
-      encodeURIComponent(code).replace(/%20/g, '+'),
-      function(shortened) {
-        opts = {};
-        if (model.ownername) {
-          // Share the run URL unless there is no owner (e.g., for /first).
-          opts.shareRunURL = "http://" + document.domain + '/home/' +
+  if (!code) { return; }
+  // First save if needed (including login user if necessary)
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    saveAction(false, 'Log in to share', shareAction);
+  } else {
+    shareAction();
+  }
+  function shareAction() {
+    // Then attempt to save on share.pencilcode.net
+    var prefix = (60466175 - (Math.floor((new Date).getTime()/1000) %
+        (24*60*60*500))).toString(36);
+    var sharename =
+        prefix + "-" + model.ownername + "-" +
+        shortfilename.replace(/[^\w\.]+/g, '_').replace(/^_+|_+$/g, '');
+    if (lastSharedName.substring(prefix.length) ==
+        sharename.substring(prefix.length) && lastShareCode == code) {
+      // Don't pollute the shared space with duplicate code; use the
+      // same share filename if the code is the same.
+      sharename = lastSharedName;
+    }
+    var data = $.extend({}, modelatpos('left').data, { data:code });
+    storage.saveFile('share', sharename, data, true, 828, false, function(m) {
+      var opts = {};
+      if (!m.error && !m.deleted) {
+        opts.shareStageURL = "http://share." + window.pencilcode.domain +
+            "/home/" + sharename;
+      }
+      if (model.ownername) {
+        // Share the run URL unless there is no owner (e.g., for /first).
+        opts.shareRunURL = "http://" + document.domain + '/home/' +
             modelatpos('left').filename;
-        }
-        opts.shareEditURL = window.location.href;
-
-        opts.shareClipURL = shortened;
-        opts.title = modelatpos('left').filename;
-
-        // First save if needed (including login user if necessary)
-        if (view.isPaneEditorDirty(paneatpos('left'))) {
-          saveAction(false, 'Log in to share', function() {
-            // Now bring up share dialog
-            view.showShareDialog(opts);
-          });
-        }
-        else {
-          view.showShareDialog(opts);
-        }
-      });
+      }
+      opts.shareEditURL = window.location.href;
+      // Now bring up share dialog
+      view.showShareDialog(opts);
+    });
+  }
 });
 
 view.on('bydate', function() {
