@@ -7705,7 +7705,7 @@ var shapes = {
         turtleHull: "-8 -5 -8 6 -2 -13 2 -13 8 6 8 -5 0 9",
         opacity: 0.67,
         backgroundImage: 'url(' + turtleGIFUrl + ')',
-        backgroundSize: 'contain'
+        backgroundSize: 'cover'
       }
     };
   },
