@@ -255,7 +255,7 @@ function updateTopControls(addHistory) {
 //
 
 view.on('help', function() {
-  view.flashNotification('<a href="http://' +
+  view.flashNotification('<a href="//' +
      window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
     (model.username ?
         '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
@@ -317,18 +317,34 @@ view.on('share', function() {
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = {};
       if (!m.error && !m.deleted) {
-        opts.shareStageURL = "http://share." + window.pencilcode.domain +
+        opts.shareStageURL = "//share." + window.pencilcode.domain +
             "/home/" + sharename;
       }
       if (model.ownername) {
         // Share the run URL unless there is no owner (e.g., for /first).
-        opts.shareRunURL = "http://" + document.domain + '/home/' +
+        opts.shareRunURL = "//" + document.domain + '/home/' +
             modelatpos('left').filename;
       }
       opts.shareEditURL = window.location.href;
       // Now bring up share dialog
       view.showShareDialog(opts);
     });
+  }
+});
+
+view.on('fullscreen', function(pane) {
+  function showfullscreen() {
+    window.open("/home/" + model.pane[pane].filename,
+                "run-" + model.ownername);
+  }
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    if (model.ownername == model.username) {
+      // Open immediately to avoid popup blocker.
+      showfullscreen();
+    }
+    saveAction(false, 'Log in to save', showfullscreen);
+  } else {
+    showfullscreen();
   }
 });
 
@@ -490,7 +506,7 @@ view.on('setpass', function() {
 view.on('save', function() { saveAction(false, null, null); });
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
-  window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
+  window.open('//guide.' + window.pencilcode.domain + '/home/'); });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
@@ -728,7 +744,7 @@ function signUpAndSave(options) {
             storage.deleteBackup(rename);
             state.update({cancel: true});
             var newurl =
-                'http://' + username + '.' + window.pencilcode.domain +
+                '//' + username + '.' + window.pencilcode.domain +
                 '/edit/' + rename +
                 '#login=' + username + ':' + (key ? key : '');
             if (options.nohistory) {
@@ -928,10 +944,10 @@ view.on('done', function() {
 function doneWithFile(filename) {
   if (!filename || !model.ownername) {
     if (window.location.href ==
-      'http://' + window.pencilcode.domain + '/edit/') {
-      window.location.href = 'http://' + window.pencilcode.domain + '/';
+      '//' + window.pencilcode.domain + '/edit/') {
+      window.location.href = '//' + window.pencilcode.domain + '/';
     } else {
-      window.location.href = 'http://' + window.pencilcode.domain + '/edit/';
+      window.location.href = '//' + window.pencilcode.domain + '/edit/';
     }
   } else {
     if (filename.indexOf('/') >= 0) {
@@ -1260,7 +1276,8 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
   m.running = true;
   m.filename = filename;
   var baseUrl = filename && (
-      'http://' + (model.ownername ? model.ownername + '.' : '') +
+      window.location.protocol +
+      '//' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
@@ -1270,7 +1287,7 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, html, filename, baseUrl);
+      view.setPaneRunText(pane, html, filename, baseUrl, !specialowner());
     }
   }, 1);
   if (code) {
@@ -1388,7 +1405,6 @@ function sortByDate(a, b) {
 function renderDirectory(position) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
-  console.log(pane, position, mpp);
   var m = mpp.data;
   var filename = mpp.filename;
   var filenameslash = filename.length ? filename + '/' : '';
@@ -1398,7 +1414,7 @@ function renderDirectory(position) {
     var label = m.list[j].name;
     if (model.ownername === '' && filename === '') {
       if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = 'http://' + label + '.' + window.pencilcode.domain + '/edit/';
+      var href = '//' + label + '.' + window.pencilcode.domain + '/edit/';
       links.push({html:label, href:href, mtime:m.list[j].mtime});
     } else {
       if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
@@ -1441,7 +1457,8 @@ function shortenUrl(url, cb) {
     header: 'Content-Type: application/json',
     data: JSON.stringify({longUrl: url})
   };
-  var reqStr = 'http://call.jsonlib.com/fetch?' + escape(JSON.stringify(reqObj));
+  var reqStr =
+      '//jsonlib.appspot.com/fetch?' + escape(JSON.stringify(reqObj));
 
   // If the request length is longer than 2048, it is not going to succeed.
   if (reqStr.length <= 2048) {
@@ -1559,7 +1576,6 @@ function getCrossFrameContext() {
 
 // processes messages from other frames
 $(window).on('message', function(e) {
-  console.log(e.originalEvent.data);
   // parse event data
   try {
     var data = JSON.parse(e.originalEvent.data);

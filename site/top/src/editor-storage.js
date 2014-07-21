@@ -102,7 +102,7 @@ function networkErrorMessage(domain) {
 
 window.pencilcode.storage = {
   loadUserList: function(cb) {
-    $.getJSON('http://' + window.pencilcode.domain + '/load/', function(m) {
+    $.getJSON('//' + window.pencilcode.domain + '/load/', function(m) {
       if (m && m.directory && m.list) {
         var result = [];
         for (var j = 0; j < m.list.length; ++j) {

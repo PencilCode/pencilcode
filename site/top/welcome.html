@@ -4,7 +4,7 @@
 <title>Pencil</title>
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
 
-<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500' rel='stylesheet' type='text/css'>
+<link href='//fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500' rel='stylesheet' type='text/css'>
 <style>
 body {
   font-family: Lato;
@@ -231,12 +231,12 @@ functions such as <code>pen</code> (sets the turtle's pen color),
 Pencil is all <a href="/license.html" target="_blank">open source</a>.
 Hang out on the <a href="/group" target="_blank">Pencil
 discussion forum</a> or check out
-<a href="http://pencilcode.net/material/reference.pdf" target="_blank"
+<a href="//pencilcode.net/material/reference.pdf" target="_blank"
 >the quick reference</a>
 or
-<a href="http://guide.pencilcode.net/" target="_blank">the online guide</a>
+<a href="//guide.pencilcode.net/" target="_blank">the online guide</a>
 to find out more.  There is also an illustrated
-<a href="http://pencilcode.net/book" target="_blank">Pencil Code book</a> with more than 100 small projects.
+<a href="//pencilcode.net/book" target="_blank">Pencil Code book</a> with more than 100 small projects.
 <p>Anybody can save programs and web pages, but read the
 <a href="/terms.html" target="_blank">Terms of Service</a> and the
 <a href="/privacy.html" target="_blank">Privacy Policy</a> first.
@@ -256,7 +256,7 @@ do not prevent malicious interference.
 science education by making programming as simple and as
 powerful as using a pencil.
 Contribute to the development of Pencil Code at
-<a href="http://dev.pencilcode.net/" target="_blank"
+<a href="//dev.pencilcode.net/" target="_blank"
 >dev.pencilcode.net</a> or
 <a href="https://github.com/PencilCode">github</a>.
 &nbsp;&mdash;
@@ -275,7 +275,7 @@ Contribute to the development of Pencil Code at
 <a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
 <br>
 <div class="choices">
-<a href="http://gym.pencilcode.net/draw/">I'm new here.
+<a href="//gym.pencilcode.net/draw/">I'm new here.
 <span class="em">Let's play.</span>
 <span class="extrabutton"
   id="blank" href="/edit/untitled">blank editor</span></a>
@@ -309,7 +309,7 @@ function cookie(key) {
 var olduser = false;
 if (cookie('recent')) {
   document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
-      cookie('recent').replace(/^http:\/\//, '').
+      cookie('recent').replace(/^https?:\/\//, '').
       replace(/^(\w+)\.[^\/]+\/edit\//, '$1&nbsp;/ ').
       replace(/\//g, '<wbr>/') +
       '. <span class="extrabutton" id="reset">reset this</span></a>');
@@ -328,7 +328,7 @@ var ytprobe = new Image();
 ytprobe.onerror = function(){
   ytpresent = false;
 };
-ytprobe.src = "http://youtube.com/favicon.ico?r=" + Math.random();
+ytprobe.src = "//youtube.com/favicon.ico?r=" + Math.random();
 $('a[data-vimeo]').click(function(e) {
   if (ytpresent) {
     var href = $(this).attr('href');
@@ -341,8 +341,8 @@ $('a[data-vimeo]').click(function(e) {
       } else {
         $('#video').html(
           '<iframe type="text/html" width="640" height="390" ' +
-          'src="http://www.youtube.com/embed/' + match[1] +
-          '?autoplay=1&origin=http://guide.pencilcode.net" ' +
+          'src="//www.youtube.com/embed/' + match[1] +
+          '?autoplay=1&origin=http://pencilcode.net" ' +
           'frameborder="0"></iframe>');
         return false;
       }
@@ -372,7 +372,7 @@ $('#clickvideo').click(function() {
     'width="640" height="390" frameborder="0" webkitallowfullscreen ' +
     'mozallowfullscreen allowfullscreen></iframe>'
   var youtubeFrame = '<iframe type="text/html" width="640" height="390" ' +
-    'src="http://www.youtube.com/embed/JJzFD4EdeuY?autoplay=1&' +
+    'src="//www.youtube.com/embed/JJzFD4EdeuY?autoplay=1&' +
     'origin=http://pencilcode.net" frameborder="0" webkitallowfullscreen ' +
     'mozallowfullscreen allowfullscreen></iframe>';
   $('#video').html(ytpresent ? youtubeFrame : vimeoFrame);
