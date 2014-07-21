@@ -1405,7 +1405,6 @@ function sortByDate(a, b) {
 function renderDirectory(position) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
-  console.log(pane, position, mpp);
   var m = mpp.data;
   var filename = mpp.filename;
   var filenameslash = filename.length ? filename + '/' : '';
@@ -1577,7 +1576,6 @@ function getCrossFrameContext() {
 
 // processes messages from other frames
 $(window).on('message', function(e) {
-  console.log(e.originalEvent.data);
   // parse event data
   try {
     var data = JSON.parse(e.originalEvent.data);
