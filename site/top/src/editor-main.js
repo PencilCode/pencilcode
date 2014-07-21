@@ -1459,7 +1459,7 @@ function shortenUrl(url, cb) {
     data: JSON.stringify({longUrl: url})
   };
   var reqStr =
-      'http://call.jsonlib.com/fetch?' + escape(JSON.stringify(reqObj));
+      '//jsonlib.appspot.com/fetch?' + escape(JSON.stringify(reqObj));
 
   // If the request length is longer than 2048, it is not going to succeed.
   if (reqStr.length <= 2048) {
