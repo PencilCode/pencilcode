@@ -61,12 +61,8 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
   font-weight:900;
   padding:0 12px;color:skyblue;letter-spacing:2px;
   border-left:1px solid white;border-right:1px solid white;}
-.panetitle a {text-decoration:none;color:inherit;}
+.panetitle a {color:inherit;}
 .panetitle a:hover {text-decoration:underline;color:white;}
-.panetitle a:hover:after { width:10px;height:10px;
-  display:inline-block;content:'';
-  margin:5px;
-  background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);}
 .pane{position:absolute;top:84px;bottom:0;background:whitesmoke;
   border-left:1px solid white;border-right:1px solid white;z-index:0;}
 .back{left:-50%;width:50%;}

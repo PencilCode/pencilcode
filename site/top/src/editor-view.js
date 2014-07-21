@@ -506,7 +506,7 @@ function fixParentLink(elt) {
      filename = '';
   }
   if (!filename) {
-    filename = 'http://' + window.pencilcode.domain + '/edit/';
+    filename = '//' + window.pencilcode.domain + '/edit/';
   } else {
     filename += '/';
   }
@@ -974,11 +974,12 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
-function setPaneRunText(pane, html, filename, targetUrl) {
+function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
+  paneState.fullScreenLink = fullScreenLink;
   updatePaneTitle(pane);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
@@ -1276,6 +1277,7 @@ function clearPane(pane, loading) {
   paneState.dirtied = false;
   paneState.links = null;
   paneState.running = false;
+  paneState.fullScreenLink = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
   $('#' + pane + 'title').html('');
@@ -1320,12 +1322,23 @@ function updatePaneTitle(pane) {
   } else if (paneState.links) {
     suffix = ' directory';
   } else if (paneState.running) {
-    prefix = '<a target="_blank" href="/home/' + paneState.filename + '">';
-    suffix = ' preview</a>';
+    if (paneState.fullScreenLink) {
+      prefix = '<a target="_blank" class="fullscreen" href="/home/' +
+           paneState.filename + '">';
+      suffix = ' screen &#x21f1;</a>';
+    } else {
+      suffix = ' screen';
+    }
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
   $('#' + pane + 'title').html(prefix + shortened + suffix);
+  if (paneState.running) {
+    $('#' + pane + 'title .fullscreen').click(function(e) {
+      e.preventDefault();
+      fireEvent('fullscreen', [pane]);
+    });
+  }
 }
 
 function normalizeCarriageReturns(text) {

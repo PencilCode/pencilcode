@@ -92,7 +92,7 @@
 
   // The "frame" username is magic: it puts
   // Pencil Code into a frame-friendly mode.
-  var targetDomain = 'http://frame.pencilcode.net' + dev;
+  var targetDomain = window.location.protocol + '//frame.pencilcode.net' + dev;
   var secret = makeSecret();
 
   var PencilCodeEmbed = (function() {
