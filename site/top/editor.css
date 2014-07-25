@@ -106,6 +106,8 @@ body#pencildoc #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;
 }
+.fullscreen img { vertical-align:bottom;margin:0 2px 3px 5px;opacity:0.6; }
+.fullscreen:hover img { opacity: 1; }
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}

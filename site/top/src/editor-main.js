@@ -315,7 +315,7 @@ view.on('share', function() {
     }
     var data = $.extend({}, modelatpos('left').data, { data:code });
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
-      var opts = {};
+      var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
         opts.shareStageURL = "//share." + window.pencilcode.domain +
             "/home/" + sharename;
@@ -848,7 +848,7 @@ function saveLoginCookie() {
 }
 
 function chooseNewFilename(dirlist) {
-  if (!dirlist) { return 'untitled'; }
+  if (!dirlist) { return 'unutitled'; }
   if (dirlist.length === 0) { return 'first';}
   var maxNum = -1;
   for (var j = 0; j < dirlist.length; ++j) {
