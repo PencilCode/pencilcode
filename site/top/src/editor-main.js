@@ -1591,7 +1591,8 @@ $(window).on('message', function(e) {
   // invoke the requested method
   switch (data.methodName) {
     case 'setCode':
-      view.setPaneEditorText(paneatpos('left'), data.args[0], null);
+      view.setPaneEditorText(
+          paneatpos('left'), data.args[0], modelatpos('left').filename);
       break;
     case 'setupScript':
       model.setupScript = data.args[0];
