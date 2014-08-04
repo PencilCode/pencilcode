@@ -8,6 +8,7 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'draw-protractor': 'src/draw-protractor',
+    'drags': 'src/drags',
     'filetype': 'src/filetype',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',

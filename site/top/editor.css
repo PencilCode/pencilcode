@@ -32,12 +32,20 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #topleft,#topright{padding:0 12px;height:56px;vertical-align:middle;
   overflow:hidden;}
 #topright{text-align:right;width:1%;}
-#topright button,#overlay button{border:none;background-color:white;
+#topright button,#overlay button,#toolbutton{border:none;background-color:white;
   -moz-appearance: none !important;
   box-shadow:0 0 7px gray;color:black;
   border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
   font-weight:300;vertical-align:middle;height:28px;
   padding:2px 8px;margin:5px;display:inline-block;}
+#toolbutton {
+  position: fixed; z-index: 1; bottom: 10px; right: 10px;
+}
+#toolwindow {
+  position: fixed; z-index: 2; bottom: 10px; right: 10px;
+  height: 80vh; width: 45vw;
+  background: pink;
+}
 #topright button#save {
   padding-left: 28px; background-image: url(/pencil_16.png);
   background-repeat: no-repeat; background-position: 8px center; }

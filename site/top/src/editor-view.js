@@ -9,7 +9,8 @@ define([
   'see',
   'ice',
   'draw-protractor',
-  'ZeroClipboard'],
+  'ZeroClipboard',
+  'drags'],
 function(
   $,
   filetype,
@@ -2124,6 +2125,7 @@ function noteNewFilename(pane, filename) {
 eval(see.scope('view'));
 
 $('#owner,#filename,#folder').tooltipster();
+$('#toolwindow').drags();
 
 return window.pencilcode.view;
 
