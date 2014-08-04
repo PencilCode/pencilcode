@@ -659,10 +659,18 @@ function showShareDialog(opts) {
     opts = { };
   }
 
+  function addProtocol(path) {
+    if (/^\w+:/.test(path)) { return path; }
+    return 'http:' + path;
+  }
+
   bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
-  bodyText = bodyText + 'Posted program: ' + opts.shareStageURL + '\r\n\r\n';
-  bodyText = bodyText + 'Latest program: ' + opts.shareRunURL + '\r\n\r\n';
-  bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
+  bodyText = bodyText + 'Posted program: ' +
+     addProtocol(opts.shareStageURL) + '\r\n\r\n';
+  bodyText = bodyText + 'Latest program: ' +
+     addProtocol(opts.shareRunURL) + '\r\n\r\n';
+  bodyText = bodyText + 'Program code: ' +
+     addProtocol(opts.shareEditURL) + '\r\n\r\n';
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
@@ -1349,7 +1357,7 @@ function updatePaneTitle(pane) {
     if (paneState.fullScreenLink) {
       prefix = '<a target="_blank" class="fullscreen" href="/home/' +
            paneState.filename + '">';
-      suffix = ' screen &#x21f1;</a>';
+      suffix = ' screen <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMvvhp8YAAABjSURBVEhL7Y1JCgAhDAT9/6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRYzBP6aySgZYAAAAASUVORK5CYII="></a>';
     } else {
       suffix = ' screen';
     }
