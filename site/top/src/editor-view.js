@@ -514,7 +514,7 @@ function fixParentLink(elt) {
      filename = '';
   }
   if (!filename) {
-    filename = 'http://' + window.pencilcode.domain + '/edit/';
+    filename = '//' + window.pencilcode.domain + '/edit/';
   } else {
     filename += '/';
   }
@@ -660,10 +660,9 @@ function showShareDialog(opts) {
   }
 
   bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
-  bodyText = bodyText + 'Running program: ' + opts.shareRunURL + '\r\n\r\n';
+  bodyText = bodyText + 'Posted program: ' + opts.shareStageURL + '\r\n\r\n';
+  bodyText = bodyText + 'Latest program: ' + opts.shareRunURL + '\r\n\r\n';
   bodyText = bodyText + 'Program code: ' + opts.shareEditURL + '\r\n\r\n';
-  if (opts.shareClipURL)
-    bodyText = bodyText + 'Shortened URL: ' + opts.shareClipURL + '\r\n\r\n';
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
@@ -671,35 +670,36 @@ function showShareDialog(opts) {
   bodyText = escape(bodyText);
   subjectText = escape(subjectText);
 
-  opts.prompt = (opts.prompt) ? opts.prompt : 'Share';
+  opts.prompt = (opts.prompt) ? opts.prompt : 'Shared &#x2713;';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
-        (opts.shareRunURL ?
+        (opts.shareStageURL ?
         '<div class="field">' +
-          '<a target="_blank" class="quiet" ' +
+          '<a target="_blank" ' +
+          'title="Posted on share.' + window.pencilcode.domain + '" href="' +
+          opts.shareStageURL + '">See it here</a> <input type="text" value="' +
+          opts.shareStageURL + '"><button class="copy" data-clipboard-text="' +
+          opts.shareStageURL + '"><img src="/copy.png" title="Copy"></button>' +
+         '</div>' : '') +
+        ((opts.shareRunURL && !opts.shareStageURL) ?
+        '<div class="field">' +
+          '<a target="_blank" ' +
           'title="Run without showing code" href="' +
-          opts.shareRunURL + '">Full Screen</a> <input type="text" value="' +
+          opts.shareRunURL + '">See it here</a> <input type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         '<div class="field">' +
-          '<a target="_blank" class="quiet" ' +
+          '<a target="_blank" ' +
           'title="Link showing the code" href="' +
-          opts.shareEditURL + '">Code</a> <input type="text" value="' +
+          opts.shareEditURL + '">Share code</a> ' +
+          '<input type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' +
-        (opts.shareClipURL ?
-        '<div class="field">' +
-          '<a target="_blank" class="quiet" ' +
-          'title="Copy this code snippet" href="' +
-          opts.shareClipURL + '">Copy</a> <input type="text" value="' +
-          opts.shareClipURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareClipURL + '"><img src="/copy.png" title="Copy"></button>' +
-         '</div>' : '') +
       '</div><br>' +
-    '<button class="ok" title="Share by email">Email</button>' +
-    '<button class="cancel">Cancel</button>';
+    '<button class="cancel">OK</button>' +
+    '<button class="ok" title="Share by email">Email</button>';
 
   opts.init = function(dialog) {
     dialog.find('a.quiet').tooltipster();
@@ -728,7 +728,7 @@ function showShareDialog(opts) {
         }, 1500);
       });
     });
-    dialog.find('button.ok').focus();
+    dialog.find('button.cancel').focus();
   }
 
   opts.done = function(state) {
@@ -982,11 +982,12 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
-function setPaneRunText(pane, html, filename, targetUrl) {
+function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
   paneState.filename = filename;
+  paneState.fullScreenLink = fullScreenLink;
   updatePaneTitle(pane);
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) {
@@ -1034,22 +1035,24 @@ function setPaneRunText(pane, html, filename, targetUrl) {
   $('.rightpal').hide();
 }
 
-function evalInRunningPane(pane, code) {
+function evalInRunningPane(pane, code, raw) {
   var paneState = state.pane[pane];
   if (!paneState.running) { return [null, 'error: not running (wrong state)']; }
   var preview = $('#' + pane + ' .preview');
   if (!preview.length) { return [null, 'error: not running (no preview)']; }
   var iframe = preview.find('iframe');
   if (!iframe.length) { return [null, 'error: not running (no iframe)']; }
-  try {
-    if (typeof(iframe[0].contentWindow.see) == 'function') {
-      return [iframe[0].contentWindow.see.eval(code), null];
+  if (!raw) {
+    try {
+      if (typeof(iframe[0].contentWindow.see) == 'function') {
+        return [iframe[0].contentWindow.see.eval(code), null];
+      }
+    } catch(e) {
+      return [null, 'error: ' + e.message];
     }
-  } catch(e) {
-    return [null, 'error: ' + e.message];
   }
   try {
-    return [contentWindow.eval(code), null];
+    return [iframe[0].contentWindow.eval(code), null];
   } catch(e) {
     return [null, 'error: ' + e.message];
   }
@@ -1284,6 +1287,7 @@ function clearPane(pane, loading) {
   paneState.dirtied = false;
   paneState.links = null;
   paneState.running = false;
+  paneState.fullScreenLink = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
   $('#' + pane + 'title_text').html(''); $('#' + pane + 'title-extra').html('');
@@ -1342,12 +1346,23 @@ function updatePaneTitle(pane) {
   } else if (paneState.links) {
     suffix = ' directory';
   } else if (paneState.running) {
-    prefix = '<a target="_blank" href="/home/' + paneState.filename + '">';
-    suffix = ' preview</a>';
+    if (paneState.fullScreenLink) {
+      prefix = '<a target="_blank" class="fullscreen" href="/home/' +
+           paneState.filename + '">';
+      suffix = ' screen &#x21f1;</a>';
+    } else {
+      suffix = ' screen';
+    }
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
   $('#' + pane + 'title_text').html(prefix + shortened + suffix);
+  if (paneState.running) {
+    $('#' + pane + 'title .fullscreen').click(function(e) {
+      e.preventDefault();
+      fireEvent('fullscreen', [pane]);
+    });
+  }
 }
 
 function normalizeCarriageReturns(text) {

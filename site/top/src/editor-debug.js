@@ -156,13 +156,117 @@ function debugResolve(method, debugId, length, index, elem) {
   updateLine(record);
 }
 
+function getTextOnLine(text, line) {
+  var lines = text.split('\n');
+  if (line < lines.length) return lines[line];
+  return '';
+}
+
+var showPopupErrorMessage = function (msg) {
+  var center = document.getElementById('error-advice') ||
+      document.createElement('center');
+  center.id = "error-advice";
+  document.body.insertBefore(center, document.body.firstChild);
+  center.style.background = 'rgba(240,240,240,0.8)';
+  center.style.position = 'absolute';
+  center.style.top = 0;
+  center.style.right = 0;
+  center.style.left = 0;
+  center.style.fontFamily = 'Arial';
+  center.style.margin = '5px 15%';
+  center.style.padding = '8px';
+  center.style.borderRadius = '8px';
+  center.style.boxShadow = '0 0 5px dimgray';
+  center.innerHTML = msg;
+}
+
+function errorAdvice(msg, text) {
+  var advice, m, msg;
+  advice = '<p>Oops, the computer got confused.';
+  if (msg) {
+    msg = msg.replace(/^Uncaught [a-z]*Error: /i, '');
+    if (msg !== "Cannot read property '0' of null") {
+      advice += '<p>It says: "' + msg + '"';
+    }
+  }
+  m = /(\w+) is not defined/.exec(msg);
+  if (m) {
+    if (/^[a-z]{2,}[0-9]+$/i.test(m[1])) {
+      advice += "<p>Is there a missing space in '<b>" + m[1] + "</b>'?";
+    } else if (/[A-Z]/.test(m[1]) && (m[1].toLowerCase() in {
+        'dot':1, 'pen':1, 'fd':1, 'bk':1, 'lt':1, 'rt':1, 'write':1,
+        'type':1, 'menu':1, 'play':1, 'speed':1, 'ht':1, 'st':1,
+        'cs':1, 'cg':1, 'ct':1, 'fill':1, 'rgb':1, 'rgba':1, 'hsl':1,
+        'hsla':1, 'red':1, 'blue':1, 'black':1, 'green':1, 'gray':1,
+        'orange':1, 'purple':1, 'pink':1, 'yellow':1, 'gold':1,
+        'aqua':1, 'tan':1, 'white':1, 'violet':1, 'snow':1, 'true':1,
+        'false':1, 'null':1, 'for':1, 'if':1, 'else':1, 'do':1, 'in':1,
+        'return':1})) {
+      advice += ("<p>Did you mean '<b>" + (m[1].toLowerCase()) + "</b>' ") +
+                ("instead of '<b>" + m[1] + "</b>'?");
+    } else if (m[1].toLowerCase().substring(0, 3) == "inf") {
+      advice += "<p><b>Infinity</b> is spelled like this with a capital I.";
+    } else {
+      if (m[1].length > 3) {
+        advice += "<p>Is <b>" + m[1] + "</b> spelled right?";
+      } else {
+        advice += ("<p>Is '<b>" + m[1] + " = </b><em>something</em>' ") +
+                  "needed first?";
+      }
+      advice += "<p>Or are quotes needed around <b>\"" + m[1] + "\"</b>?";
+    }
+  } else if (/object is not a function/.test(msg)) {
+    advice += "<p>Is there missing punctuation like a dot?";
+  } else if (/undefined is not a function/.test(msg)) {
+    advice += "<p>Is a command misspelled here?";
+  } else if (/indentation/.test(msg)) {
+    advice += "<p>Is the code lined up neatly?";
+    advice += "<p>Or is something unfinished before this?";
+  } else if (/not a function/.test(msg)) {
+    advice += "<p>Is there a missing comma?";
+  } else if (/octal literal/.test(msg)) {
+    advice += "<p>Avoid extra 0 digits before a number.";
+  } else if (/unexpected when/.test(msg)) {
+    advice += "<p>Is the 'when' indented correctly?";
+  } else if (/unexpected newline/.test(msg)) {
+    advice += "<p>Is something missing on the previous line?";
+  } else if (/unexpected ,/.test(msg)) {
+    advice += "<p>You might not need a comma here.";
+  } else if (/unexpected ->/.test(msg)) {
+    advice += "<p>Is a comma or '=' missing before the arrow?";
+  } else if (/unexpected end of input/.test(msg)) {
+    advice += "<p>Is there some unfinished code around here?";
+  } else if ((m = /unexpected (\S+)/.exec(msg))) {
+    advice += "<p>Is something missing before " + m[1] + "?";
+  } else if (/missing ["']/.test(msg) ||
+      (msg === "Cannot read property '0' of null")) {
+    advice += "<p>Is there a string with an unmatched quote?";
+    advice += "<p>It might be on an higher line.";
+  } else if (/missing [\])}]/.test(msg)) {
+    advice += "<p>It might be missing on an higher line.";
+  } else if ((m = /unexpected (\w+)$/.exec(msg))) {
+    advice += "<p>You might try removing '" + m[1] + "'";
+  }
+  return advice;
+}
+
+
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
 function debugError(err) {
+  console.log('debugError', err);
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
+  var mimetext = view.getPaneEditorText(view.paneid('left'));
+  var text = getTextOnLine(mimetext && mimetext.text || '', line);
+  var advice = errorAdvice(err.message, text);
+  var script = (
+    '(' + showPopupErrorMessage.toString() + '(' +
+    JSON.stringify(advice) + '));');
+  view.evalInRunningPane(view.paneid('right'), script, true);
 }
+
 
 // Retrieves (or creates if necessary) the debug record corresponding
 // to the given debugId.  A debug record tracks everything needed for

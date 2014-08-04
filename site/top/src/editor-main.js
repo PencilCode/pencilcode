@@ -182,6 +182,10 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
+      // Applies to both files and dirs: a simple "new file" button.
+      buttons.push({
+        id: 'new', title: 'Make a new program', label: 'New'});
+
       //
       // Then insert logout/login buttons depending on if someone
       // is already logged in
@@ -252,7 +256,7 @@ function updateTopControls(addHistory) {
 //
 
 view.on('help', function() {
-  view.flashNotification('<a href="http://' +
+  view.flashNotification('<a href="//' +
      window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
     (model.username ?
         '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
@@ -264,36 +268,85 @@ view.on('tour', function() {
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
 });
 
+view.on('new', function() {
+  if (modelatpos('left').isdir) {
+    handleDirLink(paneatpos('left'), '#new');
+    return;
+  }
+  var directoryname =
+      modelatpos('left').filename.replace(/(?:^|\/)[^\/]*$/, '/');
+  storage.loadFile(model.ownername, directoryname, false, function(m) {
+    var untitled = 'untitled';
+    if (m.directory && m.list) {
+      untitled = chooseNewFilename(m.list);
+    }
+    if (directoryname == '/') {
+      directoryname = '';
+    }
+    window.location.href = '/edit/' + directoryname + untitled;
+  });
+});
+
+var lastSharedCode = '';
+var lastSharedName = '';
+
 view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var code = getEditTextIfAny() || '';
-  shortenUrl('http://' + window.pencilcode.domain + '/edit/' +
-      shortfilename + '#text=' +
-      encodeURIComponent(code).replace(/%20/g, '+'),
-      function(shortened) {
-        opts = {};
-        if (model.ownername) {
-          // Share the run URL unless there is no owner (e.g., for /first).
-          opts.shareRunURL = "http://" + document.domain + '/home/' +
+  if (!code) { return; }
+  // First save if needed (including login user if necessary)
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    saveAction(false, 'Log in to share', shareAction);
+  } else {
+    shareAction();
+  }
+  function shareAction() {
+    // Then attempt to save on share.pencilcode.net
+    var prefix = (60466175 - (Math.floor((new Date).getTime()/1000) %
+        (24*60*60*500))).toString(36);
+    var sharename =
+        prefix + "-" + model.ownername + "-" +
+        shortfilename.replace(/[^\w\.]+/g, '_').replace(/^_+|_+$/g, '');
+    if (lastSharedName.substring(prefix.length) ==
+        sharename.substring(prefix.length) && lastShareCode == code) {
+      // Don't pollute the shared space with duplicate code; use the
+      // same share filename if the code is the same.
+      sharename = lastSharedName;
+    }
+    var data = $.extend({}, modelatpos('left').data, { data:code });
+    storage.saveFile('share', sharename, data, true, 828, false, function(m) {
+      var opts = {};
+      if (!m.error && !m.deleted) {
+        opts.shareStageURL = "//share." + window.pencilcode.domain +
+            "/home/" + sharename;
+      }
+      if (model.ownername) {
+        // Share the run URL unless there is no owner (e.g., for /first).
+        opts.shareRunURL = "//" + document.domain + '/home/' +
             modelatpos('left').filename;
-        }
-        opts.shareEditURL = window.location.href;
+      }
+      opts.shareEditURL = window.location.href;
+      // Now bring up share dialog
+      view.showShareDialog(opts);
+    });
+  }
+});
 
-        opts.shareClipURL = shortened;
-        opts.title = modelatpos('left').filename;
-
-        // First save if needed (including login user if necessary)
-        if (view.isPaneEditorDirty(paneatpos('left'))) {
-          saveAction(false, 'Log in to share', function() {
-            // Now bring up share dialog
-            view.showShareDialog(opts);
-          });
-        }
-        else {
-          view.showShareDialog(opts);
-        }
-      });
+view.on('fullscreen', function(pane) {
+  function showfullscreen() {
+    window.open("/home/" + model.pane[pane].filename,
+                "run-" + model.ownername);
+  }
+  if (view.isPaneEditorDirty(paneatpos('left'))) {
+    if (model.ownername == model.username) {
+      // Open immediately to avoid popup blocker.
+      showfullscreen();
+    }
+    saveAction(false, 'Log in to save', showfullscreen);
+  } else {
+    showfullscreen();
+  }
 });
 
 view.on('bydate', function() {
@@ -454,7 +507,7 @@ view.on('setpass', function() {
 view.on('save', function() { saveAction(false, null, null); });
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
-  window.open('http://guide.' + window.pencilcode.domain + '/home/'); });
+  window.open('//guide.' + window.pencilcode.domain + '/home/'); });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
@@ -692,7 +745,7 @@ function signUpAndSave(options) {
             storage.deleteBackup(rename);
             state.update({cancel: true});
             var newurl =
-                'http://' + username + '.' + window.pencilcode.domain +
+                '//' + username + '.' + window.pencilcode.domain +
                 '/edit/' + rename +
                 '#login=' + username + ':' + (key ? key : '');
             if (options.nohistory) {
@@ -810,7 +863,9 @@ function chooseNewFilename(dirlist) {
   return 'untitled' + (maxNum + 1);
 }
 
-view.on('link', function(pane, linkname) {
+view.on('link', handleDirLink);
+
+function handleDirLink(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
   if (base.length) { base += '/'; }
@@ -830,7 +885,7 @@ view.on('link', function(pane, linkname) {
   var isdir = /\/$/.test(linkname);
   loadFileIntoPosition('right', openfile, isdir, isdir,
     function() { rotateModelLeft(true); });
-});
+}
 
 view.on('linger', function(pane, linkname) {
   if (pane !== paneatpos('left')) { return; }
@@ -890,10 +945,10 @@ view.on('done', function() {
 function doneWithFile(filename) {
   if (!filename || !model.ownername) {
     if (window.location.href ==
-      'http://' + window.pencilcode.domain + '/edit/') {
-      window.location.href = 'http://' + window.pencilcode.domain + '/';
+      '//' + window.pencilcode.domain + '/edit/') {
+      window.location.href = '//' + window.pencilcode.domain + '/';
     } else {
-      window.location.href = 'http://' + window.pencilcode.domain + '/edit/';
+      window.location.href = '//' + window.pencilcode.domain + '/edit/';
     }
   } else {
     if (filename.indexOf('/') >= 0) {
@@ -1222,7 +1277,8 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
   m.running = true;
   m.filename = filename;
   var baseUrl = filename && (
-      'http://' + (model.ownername ? model.ownername + '.' : '') +
+      window.location.protocol +
+      '//' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
@@ -1232,7 +1288,7 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, html, filename, baseUrl);
+      view.setPaneRunText(pane, html, filename, baseUrl, !specialowner());
     }
   }, 1);
   if (code) {
@@ -1350,7 +1406,6 @@ function sortByDate(a, b) {
 function renderDirectory(position) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
-  console.log(pane, position, mpp);
   var m = mpp.data;
   var filename = mpp.filename;
   var filenameslash = filename.length ? filename + '/' : '';
@@ -1360,7 +1415,7 @@ function renderDirectory(position) {
     var label = m.list[j].name;
     if (model.ownername === '' && filename === '') {
       if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = 'http://' + label + '.' + window.pencilcode.domain + '/edit/';
+      var href = '//' + label + '.' + window.pencilcode.domain + '/edit/';
       links.push({html:label, href:href, mtime:m.list[j].mtime});
     } else {
       if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
@@ -1403,7 +1458,8 @@ function shortenUrl(url, cb) {
     header: 'Content-Type: application/json',
     data: JSON.stringify({longUrl: url})
   };
-  var reqStr = 'http://call.jsonlib.com/fetch?' + escape(JSON.stringify(reqObj));
+  var reqStr =
+      '//jsonlib.appspot.com/fetch?' + escape(JSON.stringify(reqObj));
 
   // If the request length is longer than 2048, it is not going to succeed.
   if (reqStr.length <= 2048) {
@@ -1521,7 +1577,6 @@ function getCrossFrameContext() {
 
 // processes messages from other frames
 $(window).on('message', function(e) {
-  console.log(e.originalEvent.data);
   // parse event data
   try {
     var data = JSON.parse(e.originalEvent.data);
