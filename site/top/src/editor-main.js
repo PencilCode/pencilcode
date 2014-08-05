@@ -128,6 +128,7 @@ function posofpane(pane) {
 function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
           model.ownername === 'gymstage' ||
+          model.ownername === 'share' ||
           model.ownername === 'frame' ||
           model.ownername === 'event');
 }
@@ -172,8 +173,10 @@ function updateTopControls(addHistory) {
                    !view.isPaneEditorDirty(paneatpos('left')) });
 
       // Also insert share button
-      buttons.push({
-        id: 'share', title: 'Share links to this program', label: 'Share'});
+      if (!specialowner() || !model.ownername) {
+        buttons.push({
+          id: 'share', title: 'Share links to this program', label: 'Share'});
+      }
     }
 
     //
@@ -1287,7 +1290,9 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, html, filename, baseUrl, !specialowner());
+      view.setPaneRunText(pane, html, filename, baseUrl,
+         // Do not enable fullscreen mode when no owner, or a nosaveowner.
+         model.ownername && !nosaveowner());
     }
   }, 1);
   if (code) {
