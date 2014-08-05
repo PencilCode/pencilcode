@@ -41,11 +41,6 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden}
 #toolbutton {
   position: fixed; z-index: 1; bottom: 10px; right: 10px;
 }
-#toolwindow {
-  position: fixed; z-index: 2; bottom: 10px; right: 10px;
-  height: 80vh; width: 45vw;
-  background: pink;
-}
 #topright button#save {
   padding-left: 28px; background-image: url(/pencil_16.png);
   background-repeat: no-repeat; background-position: 8px center; }
@@ -136,3 +131,91 @@ body#pencildoc #diigolet-csm {
 }
 .ice-toggle-button {text-decoration:none;color:inherit;font-size:18px;cursor:pointer;}
 .ice-toggle-button:hover {text-decoration:underline;color:white;}
+
+#toolwindow {
+  position: fixed; z-index: 2; bottom: 10px; right: 10px;
+  height: 80vh; width: 45vw;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:0 0 7px black;
+}
+#toolwindow .tooltitle {
+  position: absolute;
+  width: 100%;
+  height: 36px;
+  top: 0;
+  background: whitesmoke;
+}
+#toolwindow .toolbody {
+  position: absolute;
+  width: 100%;
+  top: 36px;
+  bottom: 0;
+  background: white;
+}
+
+.tabs-menu {
+  height: 30px;
+  float: left;
+  clear: both;
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.tabs-menu li {
+  height: 30px;
+  line-height: 30px;
+  float: left;
+  margin-right: 10px;
+  background-color: #ccc;
+  border-top: 1px solid #d4d4d1;
+  border-right: 1px solid #d4d4d1;
+  border-left: 1px solid #d4d4d1;
+  border-top-right-radius: 8px;
+  border-top-left-radius: 8px;
+  list-style-type: none;
+}
+
+.tabs-menu li.current {
+  position: relative;
+  background-color: #fff;
+  border-bottom: 1px solid #fff;
+  z-index: 5;
+}
+
+.tabs-menu li a {
+  padding: 10px;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.tabs-menu .current a {
+  color: #2e7da3;
+}
+
+.tab {
+  border: 1px solid #d4d4d1;
+  background-color: #fff;
+  float: left;
+  width: auto;
+}
+
+.tab-content {
+  width: 100%;height: 100%;
+  display: none;
+}
+
+.default-tab {
+ display: block;
+}
+

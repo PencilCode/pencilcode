@@ -54,5 +54,5 @@ $.fn.drags = function(opt) {
   });
 }
 
-})(jQuery);
+});
 

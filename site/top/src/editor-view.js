@@ -142,6 +142,8 @@ window.pencilcode.view = {
   // Sets buttons.
   showButtons: showButtons,
   enableButton: enableButton,
+  // Sets up tool window tabs.
+  showTools: showTools,
   // Notifications
   flashNotification: flashNotification,
   dismissNotification: dismissNotification,
@@ -1683,9 +1685,16 @@ function setPaneEditorText(pane, text, filename) {
   paneState.cleanText = text;
   paneState.dirtied = false;
 
+  // HACK for now.
+  showTools([{id: 'palette', label: 'Blocks', content: ''}]);
+
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
   var iceEditor = paneState.iceEditor =
-      new ice.Editor(document.getElementById(id), ICE_EDITOR_PALETTE);
+      new ice.Editor(
+          document.getElementById(id),
+          document.getElementById('palette'),
+          ICE_EDITOR_PALETTE);
+  window.iceEditor = iceEditor;
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   $(iceEditor.paletteWrapper).addClass('rightpal');
@@ -2125,7 +2134,45 @@ function noteNewFilename(pane, filename) {
 eval(see.scope('view'));
 
 $('#owner,#filename,#folder').tooltipster();
-$('#toolwindow').drags();
+$('#toolwindow').drags({handle:'.tooltitle'});
+
+// enable tabs
+$("#toolwindow .tabs-menu").on('mousedown', 'a', function(event) {
+  event.preventDefault();
+  $(this).parent().addClass("current");
+  $(this).parent().siblings().removeClass("current");
+  var tab = $(this).attr("href");
+  $(".tab-content").not(tab).css("display", "none");
+  $(tab).fadeIn();
+});
+
+function clearTabs() {
+  $("#toolwindow .tabs-menu").html('');
+  $("#toolwindow .toolbody").html('');
+}
+
+function addTab(id, label, content, isdefault) {
+  $("#toolwindow .tabs-menu").append(
+    (isdefault ? '<li class="current">' : '<li>') +
+    '<a href="#' + id + '">' + label + '</a></li>');
+  $('<div id="' + id + '" class="tab-content"' +
+    (isdefault ? ' style="display:block"' : '') + '></div>')
+      .append(content)
+      .appendTo('#toolwindow .toolbody');
+}
+
+addTab('first', 'test-tab', '<div style="position:absolute;background:pink;width:100%;height:100%"><div>');
+addTab('second', 'test-tab-2', '<div style="position:absolute;background:green;width:100%;height:100%"><div>');
+
+// tool list should be
+// [{label:, id:, content:}]
+function showTools(toollist) {
+  clearTabs();
+  for (var j = 0; j < toollist.length; ++j) {
+    var tool = toollist[j];
+    addTab(tool.id, tool.label, tool.content, (j == 0));
+  }
+}
 
 return window.pencilcode.view;
 
