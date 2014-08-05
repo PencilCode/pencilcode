@@ -3925,6 +3925,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           binding = _ref[_i];
           binding.call(this);
         }
+        this.paletteCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.palette.x, -this.scrollOffsets.palette.y);
         return this.redrawPalette();
       };
 
@@ -3969,7 +3970,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           path = _ref1[line];
           path.draw(this.highlightCtx);
         }
-        this.redrawCursor();
+        this.drawCursor();
         _ref2 = editorBindings.redraw_main;
         _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
@@ -3980,6 +3981,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     Editor.prototype.redrawCursor = function() {
+      this.clearHighlightCanvas();
+      return this.drawCursor();
+    };
+    Editor.prototype.drawCursor = function() {
       return this.strokeCursor(this.determineCursorPosition());
     };
     Editor.prototype.clearPalette = function() {
@@ -4086,6 +4091,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return null;
       }
     };
+    hook('mousedown', 10, function() {
+      return this.iceElement.focus();
+    });
     hook('populate', 0, function() {
       return this.undoStack = [];
     });
@@ -6119,7 +6127,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (point == null) {
         return;
       }
-      this.clearHighlightCanvas();
       this.highlightCtx.beginPath();
       this.highlightCtx.fillStyle = this.highlightCtx.strokeStyle = '#000';
       this.highlightCtx.lineWidth = 1;
