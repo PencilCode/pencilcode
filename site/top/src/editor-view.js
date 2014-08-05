@@ -1694,7 +1694,6 @@ function setPaneEditorText(pane, text, filename) {
           document.getElementById(id),
           document.getElementById('palette'),
           ICE_EDITOR_PALETTE);
-  window.iceEditor = iceEditor;
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   $(iceEditor.paletteWrapper).addClass('rightpal');
@@ -1756,7 +1755,9 @@ function setPaneEditorText(pane, text, filename) {
     if (changeHandler.suppressChange) {
       return;
     }
-    ensureEmptyLastLine(editor);
+    // Add an empty last line on a timer, because the editor doesn't
+    // return accurate values for contents in the middle of the change event.
+    setTimeout(function() { ensureEmptyLastLine(editor); }, 0);
     var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
     if (editor.getFontSize() > 16) {
@@ -2134,7 +2135,7 @@ function noteNewFilename(pane, filename) {
 eval(see.scope('view'));
 
 $('#owner,#filename,#folder').tooltipster();
-$('#toolwindow').drags({handle:'.tooltitle'});
+$('#toolwindow').drags({handle:'.tooltitle', resize: '.resizetriangle'});
 
 // enable tabs
 $("#toolwindow .tabs-menu").on('mousedown', 'a', function(event) {

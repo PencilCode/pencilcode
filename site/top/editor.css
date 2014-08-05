@@ -137,6 +137,7 @@ body#pencildoc #diigolet-csm {
   height: 80vh; width: 45vw;
   background: white;
   border-radius: 8px;
+  border-bottom-right-radius: 0px;
   overflow: hidden;
   box-shadow:0 0 7px black;
 }
@@ -146,6 +147,30 @@ body#pencildoc #diigolet-csm {
   height: 36px;
   top: 0;
   background: whitesmoke;
+  overflow:hidden;
+}
+.closex {
+  color: dodgerblue;
+  padding: 3px 15px;
+  float:right;
+  cursor: pointer;
+}
+.closex::after {
+  content: '\2715';
+}
+.closex:hover {
+  background: dodgerblue;
+  color: white;
+}
+.resizetriangle {
+  position: absolute;
+  bottom:0px;
+  right:0px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 20px 20px;
+  border-color: transparent transparent dodgerblue transparent;
 }
 #toolwindow .toolbody {
   position: absolute;
@@ -153,6 +178,7 @@ body#pencildoc #diigolet-csm {
   top: 36px;
   bottom: 0;
   background: white;
+  box-shadow: 0 0 7px gray;
 }
 
 .tabs-menu {
@@ -168,7 +194,6 @@ body#pencildoc #diigolet-csm {
 
 .tabs-menu li {
   height: 30px;
-  line-height: 30px;
   float: left;
   margin-right: 10px;
   background-color: #ccc;
@@ -184,13 +209,19 @@ body#pencildoc #diigolet-csm {
   position: relative;
   background-color: #fff;
   border-bottom: 1px solid #fff;
+  box-shadow:0 0 7px gray;
   z-index: 5;
+}
+
+.tabs-menu li:hover {
+  box-shadow:0 0 7px black;
 }
 
 .tabs-menu li a {
   padding: 10px;
-  text-transform: uppercase;
   color: #fff;
+  font-weight: normal;
+  font-size: 18px;
   text-decoration: none;
   -moz-user-select: -moz-none;
   -khtml-user-select: none;
@@ -200,7 +231,7 @@ body#pencildoc #diigolet-csm {
 }
 
 .tabs-menu .current a {
-  color: #2e7da3;
+  color: black;
 }
 
 .tab {
