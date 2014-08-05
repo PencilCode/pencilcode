@@ -3890,7 +3890,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return _this.resize();
         });
         _ref2 = {
-          mousedown: [this.iceElement, this.paletteElement],
+          mousedown: [this.iceElement, this.paletteElement, this.dragCover],
           mouseup: [window],
           mousemove: [window]
         };
@@ -6125,12 +6125,22 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return this.resize();
       }
     };
-    hook('mousedown', 0, function() {
-      return this.dragCanvas.style.zIndex = 300;
+    hook('populate', 0, function() {
+      this.dragCover = document.createElement('div');
+      this.dragCover.className = 'ice-drag-cover';
+      this.dragCover.style.display = 'none';
+      return document.body.appendChild(this.dragCover);
+    });
+    hook('mousedown', -1, function() {
+      if (this.clickedBlock != null) {
+        this.dragCover.style.display = 'block';
+        return this.dragCanvas.style.zIndex = 300;
+      }
     });
     hook('mouseup', 0, function() {
       this.dragCanvas.style.top = this.dragCanvas.style.left = '-9999px';
-      return this.dragCanvas.style.zIndex = 0;
+      this.dragCanvas.style.zIndex = 0;
+      return this.dragCover.style.display = 'none';
     });
     touchEvents = {
       'touchstart': 'mousedown',
