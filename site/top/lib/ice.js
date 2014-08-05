@@ -3963,13 +3963,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           selected: 0,
           noText: (_ref = opts.noText) != null ? _ref : false
         });
-        this.redrawCursor();
         this.clearHighlightCanvas();
         _ref1 = this.markedLines;
         for (line in _ref1) {
           path = _ref1[line];
           path.draw(this.highlightCtx);
         }
+        this.redrawCursor();
         _ref2 = editorBindings.redraw_main;
         _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
@@ -6018,6 +6018,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.setValue(this.aceEditor.getValue());
         this.iceElement.style.top = this.iceElement.style.left = '0px';
         this.aceElement.style.top = this.aceElement.style.left = '-9999px';
+        this.gutter.style.left = this.gutter.style.top = '0px';
         this.currentlyUsingBlocks = true;
         this.resize();
         return this.redrawMain();
@@ -6025,6 +6026,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.aceEditor.setValue(this.getValue(), -1);
         this.iceElement.style.top = this.iceElement.style.left = '-9999px';
         this.aceElement.style.top = this.aceElement.style.left = '0px';
+        this.gutter.style.left = this.gutter.style.top = '-9999px';
         this.currentlyUsingBlocks = false;
         return this.resize();
       }
@@ -6181,10 +6183,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         lineDiv.innerText = line + 1;
         this.lineNumberTags[line] = lineDiv;
       }
-      lineDiv.style.top = "" + treeView.bounds[line].y + "px";
-      lineDiv.style.height = treeView.bounds[line].height;
-      lineDiv.style.fontSize = this.view.opts.textHeight;
-      lineDiv.style.paddingTop = treeView.distanceToBase[line].above - this.view.opts.textHeight;
+      lineDiv.style.top = treeView.bounds[line].y + 'px';
+      lineDiv.style.height = treeView.bounds[line].height + 'px';
+      lineDiv.style.fontSize = this.view.opts.textHeight + 'px';
+      lineDiv.style.paddingTop = treeView.distanceToBase[line].above - this.view.opts.textHeight + 'px';
       return this.gutter.appendChild(lineDiv);
     };
     Editor.prototype.findLineNumberAtCoordinate = function(coord) {
