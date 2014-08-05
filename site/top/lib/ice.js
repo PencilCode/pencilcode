@@ -1937,7 +1937,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         GenericViewNode.prototype.drawSelf = function(ctx, style) {};
 
         GenericViewNode.prototype.draw = function(ctx, boundingRect, style) {
-          var childObj, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+          var childObj, _i, _len, _ref;
           if (this.totalBounds.overlap(boundingRect)) {
             if (style == null) {
               style = defaultStyleObject();
@@ -1949,16 +1949,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             _ref = this.children;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               childObj = _ref[_i];
-              if (((_ref1 = (_ref2 = childObj.child.lineMarkStyles) != null ? _ref2.length : void 0) != null ? _ref1 : 0) === 0) {
-                this.view.getViewNodeFor(childObj.child).draw(ctx, boundingRect, style);
-              }
-            }
-            _ref3 = this.children;
-            for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
-              childObj = _ref3[_j];
-              if (((_ref4 = (_ref5 = childObj.child.lineMarkStyles) != null ? _ref5.length : void 0) != null ? _ref4 : 0) > 0) {
-                this.view.getViewNodeFor(childObj.child).draw(ctx, boundingRect, style);
-              }
+              this.view.getViewNodeFor(childObj.child).draw(ctx, boundingRect, style);
             }
             if (this.model.ephemeral && this.view.opts.respectEphemeral) {
               style.grayscale--;
@@ -2553,10 +2544,6 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           BlockViewNode.__super__.computeOwnPath.apply(this, arguments);
           this.path.style.fillColor = this.model.color;
           this.path.style.strokeColor = '#888';
-          if (this.model.lineMarkStyles.length > 0) {
-            this.path.style.strokeColor = this.model.lineMarkStyles[0].color;
-            this.path.style.lineWidth = 2;
-          }
           this.path.bevel = true;
           return this.path;
         };
@@ -3961,7 +3948,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.topNubbyPath.style.fillColor = '#EBEBEB';
     });
     Editor.prototype.redrawMain = function(opts) {
-      var binding, layoutResult, _i, _len, _ref, _ref1, _results;
+      var binding, layoutResult, line, path, _i, _len, _ref, _ref1, _ref2, _results;
       if (opts == null) {
         opts = {};
       }
@@ -3977,10 +3964,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           noText: (_ref = opts.noText) != null ? _ref : false
         });
         this.redrawCursor();
-        _ref1 = editorBindings.redraw_main;
+        this.clearHighlightCanvas();
+        _ref1 = this.markedLines;
+        for (line in _ref1) {
+          path = _ref1[line];
+          path.draw(this.highlightCtx);
+        }
+        _ref2 = editorBindings.redraw_main;
         _results = [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          binding = _ref1[_i];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          binding = _ref2[_i];
           _results.push(binding.call(this, layoutResult));
         }
         return _results;
@@ -5646,7 +5639,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         if (!setValueResult.success) {
           return setValueResult;
         }
-        this.mainScroller.scrollTop = this.view.getViewNodeFor(this.tree).bounds[this.aceEditor.getFirstVisibleRow()].y;
+        if (this.aceEditor.getFirstVisibleRow() === 0) {
+          this.mainScroller.scrollTop = 0;
+        } else {
+          this.mainScroller.scrollTop = this.view.getViewNodeFor(this.tree).bounds[this.aceEditor.getFirstVisibleRow()].y;
+        }
         setTimeout((function() {
           var aceScrollTop, bottom, div, i, line, lineHeight, textElement, textElements, tick, top, translatingElements, translationVectors, treeView, _i, _j, _len, _ref, _ref1, _ref2;
           _this.setFontSize(_this.aceEditor.getFontSize());
@@ -5706,7 +5703,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               div: div,
               position: {
                 x: 0,
-                y: lineHeight * line
+                y: lineHeight * line - aceScrollTop + _this.scrollOffsets.main.y
               },
               vector: new draw.Point(0, lineHeight * line - (treeView.bounds[line].y + treeView.distanceToBase[line].above - _this.fontSize) - aceScrollTop + _this.scrollOffsets.main.y)
             });
@@ -5888,38 +5885,28 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         head = head.next;
       }
     });
-    Editor.prototype.markLine = function(line, style) {
-      var block;
+    hook('populate', 0, function() {
+      return this.markedLines = {};
+    });
+    Editor.prototype.markLine = function(line) {
+      var block, path;
       block = this.tree.getBlockOnLine(line);
       if (block != null) {
-        block.addLineMark(style);
-        this.view.getViewNodeFor(block).computeOwnPath();
+        path = this.markedLines[line] = this.view.getViewNodeFor(block).path.clone();
+        path.style.fillColor = null;
+        path.style.strokeColor = '#FFF';
+        path.style.lineWidth = 2;
+        path.noclip = true;
+        path.bevel = false;
       }
       return this.redrawMain();
     };
-    Editor.prototype.unmarkLine = function(line, tag) {
-      var block;
-      block = this.tree.getBlockOnLine(line);
-      if (block != null) {
-        block.removeLineMark(tag);
-        this.view.getViewNodeFor(block).computeOwnPath();
-      }
+    Editor.prototype.unmarkLine = function(line) {
+      delete this.markedLines[line];
       return this.redrawMain();
     };
     Editor.prototype.clearLineMarks = function(tag) {
-      var head;
-      head = this.tree.start;
-      while (head !== this.tree.end) {
-        if (head.type === 'blockStart') {
-          if (tag != null) {
-            head.container.clearLineMarks();
-          } else {
-            head.container.removeLineMark(tag);
-          }
-          this.view.getViewNodeFor(head.container).computeOwnPath();
-        }
-        head = head.next;
-      }
+      this.markedLines = {};
       return this.redrawMain();
     };
     hook('populate', 0, function() {

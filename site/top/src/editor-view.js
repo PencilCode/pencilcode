@@ -1042,8 +1042,6 @@ function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
     }
     $(this).dequeue();
   });
-  // Hide any ice editor palettes when you run a program.
-  $('.rightpal').hide();
 }
 
 function evalInRunningPane(pane, code, raw) {
@@ -1517,6 +1515,7 @@ function changeEditorText(paneState, text) {
 var ICE_EDITOR_PALETTE =[
   {
     name: 'Common',
+    color: 'common',
     blocks: (function() {
       var _i, _len, _ref, _results;
       _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'for i in [1..10]\n  fd 10', 'if touches \'red\'\n  fd 10', 'fun = (arg) ->\n  return arg'];
@@ -1529,6 +1528,7 @@ var ICE_EDITOR_PALETTE =[
     })()
   }, {
     name: 'Turtle',
+    color: 'turtle',
     blocks: (function() {
       var _i, _len, _ref, _results;
       _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'pen red', 'dot green, 20', 'slide 10', 'jumpto 0, 0', 'turnto 0', 'rt 90, 100', 'lt 90, 100'];
@@ -1541,6 +1541,7 @@ var ICE_EDITOR_PALETTE =[
     })()
   }, {
     name: 'Control',
+    color: 'control',
     blocks: (function() {
       var _i, _len, _ref, _results;
       _ref = ['if touches \'red\'\n  fd 10', 'if touches \'red\'\n  fd 10\nelse\n  bk 10', 'for element, i in list\n  see element', 'for key, value of obj\n  see key, value', 'while touches \'red\'\n  fd 10'];
@@ -1553,6 +1554,7 @@ var ICE_EDITOR_PALETTE =[
     })()
   }, {
     name: 'Functions',
+    color: 'functions',
     blocks: [
       ice.parseObj({
         type: 'block',
@@ -1602,6 +1604,7 @@ var ICE_EDITOR_PALETTE =[
     ]
   }, {
     name: 'Containers',
+    color: 'containers',
     blocks: [
       ice.parseObj({
         type: 'block',
@@ -1645,6 +1648,7 @@ var ICE_EDITOR_PALETTE =[
     ]
   }, {
     name: 'Logic',
+    color: 'logic',
     blocks: (function() {
       var _i, _len, _ref, _results;
       _ref = ['1 is 1', '1 isnt 2', 'true and false', 'false or true'];
@@ -1657,6 +1661,7 @@ var ICE_EDITOR_PALETTE =[
     })()
   }, {
     name: 'Math',
+    color: 'math',
     blocks: (function() {
       var _i, _len, _ref, _results;
       _ref = ['2 + 3', '2 - 3', '2 * 3', '2 / 3', '2 < 3', '3 > 2', 'Math.pow 2, 3', 'Math.sqrt 2', 'random 10'];
@@ -1696,7 +1701,6 @@ function setPaneEditorText(pane, text, filename) {
           ICE_EDITOR_PALETTE);
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
-  $(iceEditor.paletteWrapper).addClass('rightpal');
   $(iceEditor.iceElement).on('focus', function() {
     // Show the palette if it has been hidden (e.g., by the "run" command).
     if (!iceEditor.aceEditor.getReadOnly()) {
