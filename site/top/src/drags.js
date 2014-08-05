@@ -34,9 +34,10 @@ $.fn.drags = function(opt) {
         up_func = function() {
           $sheet.remove();
           $(window).off("mousemove", move_func).off("mouseup", up_func);
+          window.dispatchEvent(new Event('resize'));
         },
         move_func = function(e) {
-          console.log('move', (new Date).getTime());
+          window.dispatchEvent(new Event('resize'));
           if (!e.which) { console.log('e.which', e.which);  up_func(); return; }
           $drag.width(Math.max(100, Math.min(max_x, e.pageX + pos_x)))
                .height(Math.max(100, Math.min(max_y, e.pageY + pos_y)));
