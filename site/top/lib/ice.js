@@ -432,7 +432,9 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           ctx.fill();
         }
         ctx.save();
-        ctx.clip();
+        if (!this.noclip) {
+          ctx.clip();
+        }
         if (this.bevel) {
           ctx.beginPath();
           ctx.moveTo(this._points[0].x, this._points[0].y);
@@ -454,7 +456,6 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           ctx.lineWidth = 2;
           ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#000');
           ctx.stroke();
-          ctx.strokeStyle = 'white';
           ctx.beginPath();
           ctx.moveTo(this._points[0].x, this._points[0].y);
           _ref2 = this._points.slice(1);
@@ -1623,7 +1624,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
         GenericViewNode.prototype.computeMargins = function() {
           var childObj, left, padding, parenttype, right, _i, _len, _ref, _ref1;
-          if (this.computedVersion === this.model.version) {
+          if (this.computedVersion === this.model.version && ((this.model.parent == null) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
             return this.margins;
           }
           parenttype = (_ref = this.model.parent) != null ? _ref.type : void 0;
@@ -2280,7 +2281,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         ContainerViewNode.prototype.computeOwnPath = function() {
-          var bounds, el, glueTop, innerLeft, innerRight, left, leftmost, line, multilineBounds, multilineChild, multilineNode, multilineView, path, right, rightmost, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+          var bounds, el, glueTop, innerLeft, innerRight, left, leftmost, line, multilineBounds, multilineChild, multilineNode, multilineView, path, right, rightmost, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
           left = [];
           right = [];
           if (this.shouldAddTab()) {
@@ -2331,7 +2332,6 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
               multilineView = this.view.getViewNodeFor(multilineChild.child);
               multilineBounds = multilineView.bounds[line - multilineChild.startLine];
-              right.push(new draw.Point(bounds.right(), bounds.y));
               if (multilineBounds.width === 0) {
                 if (this.bevels.topRight) {
                   right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
@@ -2339,13 +2339,8 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
                 } else {
                   right.push(new draw.Point(bounds.right(), bounds.y));
                 }
-                if (this.bevels.bottomRight && !((_ref1 = this.glue[line]) != null ? _ref1.draw : void 0)) {
-                  right.push(new draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                  right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
-                } else {
-                  right.push(new draw.Point(bounds.right(), bounds.bottom()));
-                }
               } else {
+                right.push(new draw.Point(bounds.right(), bounds.y));
                 right.push(new draw.Point(bounds.right(), multilineBounds.y));
                 right.push(new draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
                 right.push(new draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
@@ -2360,7 +2355,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               right.push(new draw.Point(multilineBounds.x, bounds.y));
               right.push(new draw.Point(multilineBounds.x, bounds.bottom()));
             }
-            if ((_ref2 = this.multilineChildrenData[line]) === MULTILINE_END || _ref2 === MULTILINE_END_START) {
+            if ((_ref1 = this.multilineChildrenData[line]) === MULTILINE_END || _ref1 === MULTILINE_END_START) {
               left.push(new draw.Point(bounds.x, bounds.y));
               left.push(new draw.Point(bounds.x, bounds.bottom()));
               multilineChild = this.lineChildren[line][0];
@@ -2388,7 +2383,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
                     } else {
                       right.push(new draw.Point(bounds.right(), bounds.y));
                     }
-                    if (this.bevels.bottomRight && !((_ref3 = this.glue[line]) != null ? _ref3.draw : void 0)) {
+                    if (this.bevels.bottomRight && !((_ref2 = this.glue[line]) != null ? _ref2.draw : void 0)) {
                       right.push(new draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
                       right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
                     } else {
@@ -2428,23 +2423,26 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               innerRight = Math.min(this.bounds[line + 1].right(), this.bounds[line].right());
               left.push(new draw.Point(innerLeft, this.bounds[line].bottom()));
               left.push(new draw.Point(innerLeft, this.bounds[line + 1].y));
-              if ((_ref4 = this.multilineChildrenData[line]) !== MULTILINE_START && _ref4 !== MULTILINE_END_START) {
+              if ((_ref3 = this.multilineChildrenData[line]) !== MULTILINE_START && _ref3 !== MULTILINE_END_START) {
                 right.push(new draw.Point(innerRight, this.bounds[line].bottom()));
                 right.push(new draw.Point(innerRight, this.bounds[line + 1].y));
               }
             }
-            if ((_ref5 = this.multilineChildrenData[line]) === MULTILINE_START || _ref5 === MULTILINE_END_START) {
+            if ((_ref4 = this.multilineChildrenData[line]) === MULTILINE_START || _ref4 === MULTILINE_END_START) {
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
               multilineNode = this.view.getViewNodeFor(multilineChild.child);
               multilineBounds = multilineNode.bounds[line - multilineChild.startLine];
-              if ((_ref6 = this.glue[line]) != null ? _ref6.draw : void 0) {
+              if ((_ref5 = this.glue[line]) != null ? _ref5.draw : void 0) {
                 glueTop = this.bounds[line + 1].y - this.glue[line].height + this.view.opts.padding;
               } else {
                 glueTop = this.bounds[line].bottom();
               }
-              right.push(new draw.Point(multilineBounds.x, glueTop));
               if (multilineChild.child.type === 'indent') {
+                right.push(new draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
+                right.push(new draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
                 this.addTab(right, new draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.padding + this.view.opts.tabOffset, this.bounds[line + 1].y), true);
+              } else {
+                right.push(new draw.Point(multilineBounds.x, glueTop));
               }
               right.push(new draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, glueTop));
               right.push(new draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, this.bounds[line + 1].y));
@@ -2636,6 +2634,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           } else {
             this.dropArea = this.path;
             this.highlightArea = this.path.clone();
+            this.highlightArea.noclip = true;
             this.highlightArea.style.strokeColor = '#FFF';
             return this.highlightArea.style.lineWidth = this.view.opts.padding;
           }
@@ -4028,8 +4027,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     Editor.prototype.absoluteOffset = function(el) {
       var point;
-      point = new draw.Point(0, 0);
-      while (el !== document.body) {
+      point = new draw.Point(el.offsetLeft, el.offsetTop);
+      el = el.offsetParent;
+      while (!(el === document.body || (el == null))) {
         point.x += el.offsetLeft - el.scrollLeft;
         point.y += el.offsetTop - el.scrollTop;
         el = el.offsetParent;
@@ -4039,12 +4039,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.trackerOffset = function(el) {
       var subtractIceElementOffset, x, y,
         _this = this;
-      x = y = 0;
+      x = el.offsetLeft;
+      y = el.offsetTop;
+      el = el.offsetParent;
       subtractIceElementOffset = function() {
         var _results;
-        el = _this.iceElement;
+        el = _this.iceElement.offsetParent;
+        x -= _this.iceElement.offsetLeft;
+        y -= _this.iceElement.offsetTop;
         _results = [];
-        while (el !== null) {
+        while (el != null) {
           x -= el.offsetLeft - el.scrollLeft;
           y -= el.offsetTop - el.scrollTop;
           _results.push(el = el.offsetParent);
@@ -4052,7 +4056,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return _results;
       };
       while (el !== this.iceElement) {
-        if (el === null) {
+        if (el == null) {
           subtractIceElementOffset();
           break;
         }
@@ -4226,6 +4230,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.lastHighlight = null;
       this.dragCanvas = document.createElement('canvas');
       this.dragCanvas.className = 'ice-drag-canvas';
+      this.dragCanvas.style.left = '-9999px';
+      this.dragCanvas.style.top = '-9999px';
       this.dragCtx = this.dragCanvas.getContext('2d');
       this.highlightCanvas = document.createElement('canvas');
       this.highlightCanvas.className = 'ice-highlight-canvas';
@@ -4297,20 +4303,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         draggingBlockView.layout(1, 1);
         draggingBlockView.drawShadow(this.dragCtx, 5, 5);
         draggingBlockView.draw(this.dragCtx, new draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
-        position = new draw.Point(point.x + this.draggingOffset.x + getOffsetTop(this.iceElement), point.y + this.draggingOffset.y + getOffsetLeft(this.iceElement));
-        this.dragCanvas.style.top = "" + position.y + "px";
-        this.dragCanvas.style.left = "" + position.x + "px";
+        position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        this.dragCanvas.style.top = "" + (position.y + getOffsetTop(this.iceElement)) + "px";
+        this.dragCanvas.style.left = "" + (position.x + getOffsetLeft(this.iceElement)) + "px";
         this.clickedPoint = this.clickedBlock = null;
         return this.redrawMain();
       }
     });
     hook('mousemove', 0, function(point, event, state) {
-      var head, highlight, mainPoint, position,
+      var head, highlight, mainPoint, palettePoint, position, _ref, _ref1, _ref2, _ref3,
         _this = this;
       if (this.draggingBlock != null) {
         position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
-        this.dragCanvas.style.top = "" + position.y + "px";
-        this.dragCanvas.style.left = "" + position.x + "px";
+        this.dragCanvas.style.top = "" + (position.y + getOffsetTop(this.iceElement)) + "px";
+        this.dragCanvas.style.left = "" + (position.x + getOffsetLeft(this.iceElement)) + "px";
         mainPoint = this.trackerPointToMain(position);
         if (mainPoint.y > this.view.getViewNodeFor(this.tree).getBounds().bottom() && mainPoint.x > 0) {
           head = this.tree.end;
@@ -4338,7 +4344,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           if (highlight != null) {
             this.view.getViewNodeFor(highlight).highlightArea.draw(this.highlightCtx);
           }
-          return this.lastHighlight = highlight;
+          this.lastHighlight = highlight;
+        }
+        palettePoint = this.trackerPointToPalette(position);
+        if ((0 < (_ref = palettePoint.x - this.scrollOffsets.palette.x) && _ref < this.paletteCanvas.width) && (0 < (_ref1 = palettePoint.y - this.scrollOffsets.palette.y) && _ref1 < this.paletteCanvas.height) || !((0 < (_ref2 = mainPoint.x - this.scrollOffsets.main.x) && _ref2 < this.mainCanvas.width) && (0 < (_ref3 = mainPoint.y - this.scrollOffsets.main.y) && _ref3 < this.mainCanvas.height))) {
+          return this.dragCanvas.style.opacity = 0.7;
+        } else {
+          return this.dragCanvas.style.opacity = 1;
         }
       }
     });
@@ -4847,6 +4859,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('mousemove', 0, function(point, event, state) {
       var mainPoint;
       if (this.textInputSelecting) {
+        if (this.textFocus == null) {
+          this.textInputSelecting = false;
+          return;
+        }
         mainPoint = this.trackerPointToMain(point);
         this.setTextInputHead(mainPoint);
         return this.redrawTextInput();
@@ -5421,7 +5437,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.aceEditor.getSession().setMode('ace/mode/coffee');
       this.aceEditor.getSession().setTabSize(2);
       this.aceEditor.on('change', function() {
-        return _this.setFontSize_raw(_this.aceEditor.getFontSize());
+        _this.setFontSize_raw(_this.aceEditor.getFontSize());
+        _this.gutter.style.width = _this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
+        return _this.resize();
       });
       this.currentlyUsingBlocks = true;
       this.currentlyAnimating = false;
@@ -5548,8 +5566,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             vector: translationVectors[i]
           });
         }
-        top = this.aceEditor.getFirstVisibleRow();
-        bottom = this.aceEditor.getLastVisibleRow();
+        top = Math.max(this.aceEditor.getFirstVisibleRow(), 0);
+        bottom = Math.min(this.aceEditor.getLastVisibleRow(), this.view.getViewNodeFor(this.tree).lineLength - 1);
         aceScrollTop = this.aceEditor.session.getScrollTop();
         treeView = this.view.getViewNodeFor(this.tree);
         lineHeight = this.aceEditor.renderer.layerConfig.lineHeight;
@@ -5666,8 +5684,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               vector: translationVectors[i]
             });
           }
-          top = _this.aceEditor.getFirstVisibleRow();
-          bottom = _this.aceEditor.getLastVisibleRow();
+          top = Math.max(_this.aceEditor.getFirstVisibleRow(), 0);
+          bottom = Math.min(_this.aceEditor.getLastVisibleRow(), _this.view.getViewNodeFor(_this.tree).lineLength - 1);
           treeView = _this.view.getViewNodeFor(_this.tree);
           lineHeight = _this.aceEditor.renderer.layerConfig.lineHeight;
           aceScrollTop = _this.aceEditor.session.getScrollTop();
@@ -5679,7 +5697,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             div.style.boxSizing = 'border-box';
             div.style.position = 'absolute';
             div.style.zIndex = 300;
-            div.style.width = "" + editor.aceEditor.renderer.$gutter.offsetWidth + "px";
+            div.style.width = "" + _this.aceEditor.renderer.$gutter.offsetWidth + "px";
             div.style.textAlign = 'right';
             div.style.paddingRight = '10px';
             div.style.left = 0;
@@ -5809,15 +5827,21 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (this.fontSize !== fontSize) {
         this.fontSize = fontSize;
         this.paletteHeader.style.fontSize = "" + fontSize + "px";
+        this.gutter.style.fontSize = "" + fontSize + "px";
         this.view.opts.textHeight = fontSize;
         this.view.clearCache();
+        this.dragView.opts.textHeight = fontSize;
+        this.dragView.clearCache();
         this.redrawMain();
         return this.redrawPalette();
       }
     };
     Editor.prototype.setFontSize = function(fontSize) {
       this.aceEditor.setFontSize(fontSize);
-      return this.setFontSize_raw(fontSize);
+      this.aceEditor.resize();
+      this.setFontSize_raw(fontSize);
+      this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
+      return this.resize();
     };
     MutationButtonOperation = (function(_super) {
       __extends(MutationButtonOperation, _super);
