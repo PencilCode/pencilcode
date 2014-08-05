@@ -203,6 +203,11 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         return this.height = rect.height;
       };
 
+      Rectangle.prototype.clip = function(ctx) {
+        ctx.rect(this.x, this.y, this.width, this.height);
+        return ctx.clip();
+      };
+
       Rectangle.prototype.clone = function() {
         var rect;
         rect = new Rectangle(0, 0, 0, 0);
@@ -3721,7 +3726,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('ice-controller',['ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(coffee, draw, model, view) {
-    var ANIMATION_FRAME_RATE, AnimatedColor, CreateIndentOperation, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DestroyIndentOperation, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MIN_DRAG_DISTANCE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, binding, containsCursor, editorBindings, exports, extend_, getOffsetLeft, getOffsetTop, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+    var ANIMATION_FRAME_RATE, AnimatedColor, CreateIndentOperation, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DestroyIndentOperation, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MIN_DRAG_DISTANCE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, binding, containsCursor, deepCopy, deepEquals, editorBindings, exports, extend_, getOffsetLeft, getOffsetTop, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
     PALETTE_TOP_MARGIN = 5;
     PALETTE_MARGIN = 5;
     MIN_DRAG_DISTANCE = 5;
@@ -3742,6 +3747,44 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         obj[key] = value;
       }
       return obj;
+    };
+    deepCopy = function(a) {
+      var key, newObject, val;
+      if (a instanceof Object) {
+        newObject = {};
+        for (key in a) {
+          val = a[key];
+          newObject[key] = deepCopy(val);
+        }
+        return newObject;
+      } else {
+        return a;
+      }
+    };
+    deepEquals = function(a, b) {
+      var key, val;
+      if (a instanceof Object) {
+        for (key in a) {
+          if (!__hasProp.call(a, key)) continue;
+          val = a[key];
+          if (!deepEquals(b[key], val)) {
+            console.log(key, b[key], val, 'false');
+            return false;
+          }
+        }
+        for (key in b) {
+          if (!__hasProp.call(b, key)) continue;
+          val = b[key];
+          if (!key in a) {
+            if (!deepEquals(a[key], val)) {
+              return false;
+            }
+          }
+        }
+        return true;
+      } else {
+        return a === b;
+      }
     };
     unsortedEditorBindings = {
       'populate': [],
@@ -3932,8 +3975,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return Editor;
 
     })();
-    Editor.prototype.clearMain = function() {
-      return this.mainCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+    Editor.prototype.clearMain = function(opts) {
+      if (opts.boundingRectangle != null) {
+        return this.mainCtx.clearRect(opts.boundingRectangle.x, opts.boundingRectangle.y, opts.boundingRectangle.width, opts.boundingRectangle.height);
+      } else {
+        return this.mainCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+      }
     };
     hook('resize', 0, function() {
       this.topNubbyPath = new draw.Path();
@@ -3949,32 +3996,39 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.topNubbyPath.style.fillColor = '#EBEBEB';
     });
     Editor.prototype.redrawMain = function(opts) {
-      var binding, layoutResult, line, path, _i, _len, _ref, _ref1, _ref2, _results;
+      var binding, layoutResult, line, path, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
       if (opts == null) {
         opts = {};
       }
       if (!this.currentlyAnimating) {
         draw._setGlobalFontSize(this.fontSize);
         draw._setCTX(this.mainCtx);
-        this.clearMain();
+        this.clearMain(opts);
         this.topNubbyPath.draw(this.mainCtx);
+        if (opts.boundingRectangle != null) {
+          this.mainCtx.save();
+          opts.boundingRectangle.clip(this.mainCtx);
+        }
         layoutResult = this.view.getViewNodeFor(this.tree).layout(0, TOP_TAB_HEIGHT);
-        this.view.getViewNodeFor(this.tree).draw(this.mainCtx, new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
+        this.view.getViewNodeFor(this.tree).draw(this.mainCtx, (_ref = opts.boundingRectangle) != null ? _ref : new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
           grayscale: 0,
           selected: 0,
-          noText: (_ref = opts.noText) != null ? _ref : false
+          noText: (_ref1 = opts.noText) != null ? _ref1 : false
         });
         this.clearHighlightCanvas();
-        _ref1 = this.markedLines;
-        for (line in _ref1) {
-          path = _ref1[line];
+        _ref2 = this.markedLines;
+        for (line in _ref2) {
+          path = _ref2[line];
           path.draw(this.highlightCtx);
         }
         this.drawCursor();
-        _ref2 = editorBindings.redraw_main;
+        if (opts.boundingRectangle != null) {
+          this.mainCtx.restore();
+        }
+        _ref3 = editorBindings.redraw_main;
         _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          binding = _ref2[_i];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          binding = _ref3[_i];
           _results.push(binding.call(this, layoutResult));
         }
         return _results;
@@ -4720,12 +4774,44 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return array[array.length - 1];
     };
     Editor.prototype.redrawTextInput = function() {
-      var endPosition, endRow, i, lines, startPosition, startRow, textFocusView, _i, _ref;
+      var endPosition, endRow, head, i, line, lines, newp, oldp, rect, sameLength, startPosition, startRow, textFocusView, treeView, _i, _ref;
+      sameLength = this.textFocus.stringify().split('\n').length === this.hiddenInput.value.split('\n').length;
       this.populateSocket(this.textFocus, this.hiddenInput.value);
-      this.redrawMain();
       textFocusView = this.view.getViewNodeFor(this.textFocus);
       startRow = this.textFocus.stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
       endRow = this.textFocus.stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+      if (sameLength && startRow === endRow) {
+        line = endRow;
+        head = this.textFocus.start;
+        while (head !== this.tree.start) {
+          head = head.prev;
+          if (head.type === 'newline') {
+            line++;
+          }
+        }
+        treeView = this.view.getViewNodeFor(this.tree);
+        oldp = deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
+        treeView.layout(0, TOP_TAB_HEIGHT);
+        newp = deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
+        if (deepEquals(newp, oldp)) {
+          rect = new draw.NoRectangle();
+          if (line > 0) {
+            rect.unite(treeView.bounds[line - 1]);
+          }
+          rect.unite(treeView.bounds[line]);
+          if (line + 1 < treeView.bounds.length) {
+            rect.unite(treeView.bounds[line + 1]);
+          }
+          rect.width = this.mainCanvas.width;
+          this.redrawMain({
+            boundingRectangle: rect
+          });
+        } else {
+          this.redrawMain();
+        }
+      } else {
+        this.redrawMain();
+      }
       lines = this.textFocus.stringify().split('\n');
       startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width;
       endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width;
