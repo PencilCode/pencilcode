@@ -33,15 +33,12 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden;
 #topleft,#topright{padding:0 12px;height:56px;vertical-align:middle;
   overflow:hidden;}
 #topright{text-align:right;width:1%;}
-#topright button,#overlay button,#toolbutton{border:none;background-color:white;
+#topright button,#overlay button{border:none;background-color:white;
   -moz-appearance: none !important;
   box-shadow:0 0 7px gray;color:black;
   border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
   font-weight:300;vertical-align:middle;height:28px;
   padding:2px 8px;margin:5px;display:inline-block;}
-#toolbutton {
-  position: fixed; z-index: 1; bottom: 10px; right: 10px;
-}
 #topright button#save {
   padding-left: 28px; background-image: url(/pencil_16.png);
   background-repeat: no-repeat; background-position: 8px center; }
@@ -132,38 +129,63 @@ body#pencildoc #diigolet-csm {
 }
 .ice-toggle-button {text-decoration:none;color:inherit;font-size:18px;cursor:pointer;}
 .ice-toggle-button:hover {text-decoration:underline;color:white;}
-
-#toolwindow {
-  position: fixed; z-index: 2; bottom: 10px; right: 10px;
-  height: 80vh; width: 45vw;
+.gadget {
+  position: fixed; z-index: 2;
   border-radius: 8px;
   border-bottom-right-radius: 0px;
   overflow: hidden;
   box-shadow:0 0 7px black;
 }
-#toolwindow .tooltitle {
-  position: absolute;
+.gadget .topbar {
   width: 100%;
   height: 36px;
-  top: 0;
+  margin: 0;
+  padding-top: 8px;
+  padding-left: 10px;
   background: whitesmoke;
   overflow:hidden;
+  cursor: move;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;   
 }
-.closex {
+.gadget .topbar button {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 2px 8px;
+  font-family: Lato;
+  font-size: 18px;
+  height: 28px;
+  background: white;
+  border: 0;
+  border-top-right-radius: 8px;
+  border-top-left-radius: 8px;
+  box-shadow: 0 0 7px gray;
+  font-weight: normal;
+  font-size: 18px;
+  text-decoration: none;
+}
+.gadget .closer {
+  position: absolute;
+  top: 0;
+  right: 0;
   color: dodgerblue;
   padding: 3px 15px;
   float:right;
   cursor: pointer;
   height: 36px;
 }
-.closex::after {
+.gadget .closer::after {
   content: '\2715';
 }
-.closex:hover {
+.gadget .closer:hover {
   background: dodgerblue;
   color: white;
+  box-shadow: 0 0 7px black;
 }
-.resizetriangle {
+.gadget .sizer {
   position: absolute;
   z-index: 1000;
   bottom:0px;
@@ -173,81 +195,28 @@ body#pencildoc #diigolet-csm {
   border-style: solid;
   border-width: 0 0 20px 20px;
   border-color: transparent transparent dodgerblue transparent;
+  cursor: nwse-resize;
 }
-#toolwindow .toolbody {
+.gadget .body {
+  box-shadow: 0 0 7px gray;
   position: absolute;
-  width: 100%;
   top: 36px;
   bottom: 0;
-  box-shadow: 0 0 7px gray;
+  width: 100%;
 }
-
-.tabs-menu {
-  height: 30px;
-  float: left;
-  clear: both;
-  position: absolute;
-  bottom: 0;
-  left: 10px;
-  padding: 0;
-  margin: 0;
-}
-
-.tabs-menu li {
-  height: 30px;
-  float: left;
-  margin-right: 10px;
-  background-color: #ccc;
-  border-top: 1px solid #d4d4d1;
-  border-right: 1px solid #d4d4d1;
-  border-left: 1px solid #d4d4d1;
-  border-top-right-radius: 8px;
-  border-top-left-radius: 8px;
-  list-style-type: none;
-}
-
-.tabs-menu li.current {
-  position: relative;
-  background-color: #fff;
-  border-bottom: 1px solid #fff;
+.gadget.minimized {
+  height: auto; width: auto;
   box-shadow:0 0 7px gray;
-  z-index: 5;
 }
-
-.tabs-menu li:hover {
-  box-shadow:0 0 7px black;
+.gadget.minimized .topbar {
+  padding: 0;
+  height: auto;
 }
-
-.tabs-menu li a {
-  padding: 10px;
-  color: #fff;
-  font-weight: normal;
-  font-size: 18px;
-  text-decoration: none;
-  -moz-user-select: -moz-none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.tabs-menu .current a {
-  color: black;
-}
-
-.tab {
-  border: 1px solid #d4d4d1;
-  background-color: #fff;
-  float: left;
-  width: auto;
-}
-
-.tab-content {
-  width: 100%;height: 100%;
+.gadget.minimized .closer {
   display: none;
 }
-
-.default-tab {
- display: block;
+.gadget.minimized .sizer {
+  border-width: 0 0 10px 10px;
+  cursor: default;
 }
 
