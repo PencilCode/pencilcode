@@ -135,7 +135,6 @@ body#pencildoc #diigolet-csm {
 #toolwindow {
   position: fixed; z-index: 2; bottom: 10px; right: 10px;
   height: 80vh; width: 45vw;
-  background: white;
   border-radius: 8px;
   border-bottom-right-radius: 0px;
   overflow: hidden;
@@ -154,6 +153,7 @@ body#pencildoc #diigolet-csm {
   padding: 3px 15px;
   float:right;
   cursor: pointer;
+  height: 36px;
 }
 .closex::after {
   content: '\2715';
@@ -164,6 +164,7 @@ body#pencildoc #diigolet-csm {
 }
 .resizetriangle {
   position: absolute;
+  z-index: 1000;
   bottom:0px;
   right:0px;
   width: 0;
@@ -177,7 +178,6 @@ body#pencildoc #diigolet-csm {
   width: 100%;
   top: 36px;
   bottom: 0;
-  background: white;
   box-shadow: 0 0 7px gray;
 }
 
