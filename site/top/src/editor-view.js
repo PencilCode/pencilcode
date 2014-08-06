@@ -1584,7 +1584,7 @@ var ICE_EDITOR_PALETTE =[
             ]
           }
         ]
-      }), ice.parse('return arg').start.next.container, ice.parseObj({
+      }), ice.parse('return arg').start.next.container, ice.parse('do fn').start.next.container, ice.parseObj({
         type: 'block',
         valueByDefault: false,
         color: '#268bd2',
@@ -1624,11 +1624,11 @@ var ICE_EDITOR_PALETTE =[
         precedence: 32,
         color: '#26cf3c',
         children: [
-          '{   ', {
+          '[  ', {
             type: 'indent',
-            depth: 2,
+            depth: 4,
             children: ['\n']
-          }, '}'
+          }, '  ]'
         ]
       }), ice.parseObj({
         type: 'block',
