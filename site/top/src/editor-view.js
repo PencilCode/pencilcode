@@ -1697,6 +1697,9 @@ function setPaneEditorText(pane, text, filename) {
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
   var paletteElement = document.createElement('div');
+  $(paletteElement).css({
+    width: '100%', height: '100%', position: 'absolute'
+  });
   var iceEditor = paneState.iceEditor =
       new ice.Editor(
           document.getElementById(id),
@@ -1705,6 +1708,13 @@ function setPaneEditorText(pane, text, filename) {
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
+  iceEditor.on('statechange', function(blocks) {
+    if (!blocks || iceEditor.aceEditor.getReadOnly()) {
+      clearPaletteElement(iceEditor.paletteElement);
+    } else {
+      setPaletteElement(iceEditor.paletteElement);
+    }
+  });
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
@@ -2138,10 +2148,10 @@ $('#owner,#filename,#folder').tooltipster();
 gadget.addGadget('blocks', {
   name: 'Blocks',
   top: 100,
-  left: $(window).width() / 2 + 50,
-  width: Math.min(400, $(window).width() / 2),
-  height: Math.min(500, $(window).height() - 200),
-  minimized: true
+  minimized: false,
+  left: $(window).width() / 4,
+  width: Math.min(300, $(window).width() / 2),
+  height: Math.min(500, $(window).height() - 120)
 }).hide();
 
 function clearPaletteElement(elt) {
