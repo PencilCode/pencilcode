@@ -2556,8 +2556,21 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         BlockViewNode.prototype.computeOwnDropArea = function() {
+          var highlightAreaPoints, lastBounds, point, _i, _len;
           this.dropArea = new draw.Rectangle(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom() - this.view.opts.dropAreaHeight / 2, this.bounds[this.lineLength - 1].width, this.view.opts.dropAreaHeight).toPath();
-          this.highlightArea = new draw.Rectangle(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom() - this.view.opts.highlightAreaHeight / 2, this.bounds[this.lineLength - 1].width, this.view.opts.highlightAreaHeight).toPath();
+          this.highlightArea = new draw.Path();
+          highlightAreaPoints = [];
+          lastBounds = this.bounds[this.lineLength - 1];
+          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          this.addTabReverse(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          this.addTab(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          for (_i = 0, _len = highlightAreaPoints.length; _i < _len; _i++) {
+            point = highlightAreaPoints[_i];
+            this.highlightArea.push(point);
+          }
           this.highlightArea.style.lineWidth = 1;
           this.highlightArea.style.strokeColor = '#fff';
           return this.highlightArea.style.fillColor = '#fff';
@@ -2687,8 +2700,23 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         IndentViewNode.prototype.computeOwnDropArea = function() {
+          var highlightAreaPoints, lastBounds, point, _i, _len;
           this.dropArea = new draw.Rectangle(this.bounds[1].x, this.bounds[1].y - this.view.opts.dropAreaHeight / 2, Math.max(this.bounds[1].width, this.view.opts.indentDropAreaMinWidth), this.view.opts.dropAreaHeight).toPath();
-          this.highlightArea = new draw.Rectangle(this.bounds[1].x, this.bounds[1].y - this.view.opts.highlightAreaHeight / 2, Math.max(this.bounds[1].width, this.view.opts.indentDropAreaMinWidth), this.view.opts.highlightAreaHeight).toPath();
+          this.highlightArea = new draw.Path();
+          highlightAreaPoints = [];
+          lastBounds = new draw.NoRectangle();
+          lastBounds.copy(this.bounds[1]);
+          lastBounds.width = Math.max(lastBounds.width, this.view.opts.indentDropAreaMinWidth);
+          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          this.addTabReverse(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          this.addTab(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          for (_i = 0, _len = highlightAreaPoints.length; _i < _len; _i++) {
+            point = highlightAreaPoints[_i];
+            this.highlightArea.push(point);
+          }
           this.highlightArea.style.lineWidth = 1;
           this.highlightArea.style.strokeColor = '#fff';
           return this.highlightArea.style.fillColor = '#fff';
@@ -4052,17 +4080,27 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     Editor.prototype.redrawHighlights = function() {
-      var id, line, path, _ref, _ref1;
+      var id, info, line, path, _ref, _ref1;
       this.clearHighlightCanvas();
       _ref = this.markedLines;
       for (line in _ref) {
-        path = _ref[line];
-        path.draw(this.highlightCtx);
+        info = _ref[line];
+        if (this.inTree(info.model)) {
+          path = this.getHighlightPath(info.model, info.style);
+          path.draw(this.highlightCtx);
+        } else {
+          delete this.markedLines[line];
+        }
       }
       _ref1 = this.extraMarks;
       for (id in _ref1) {
-        path = _ref1[id];
-        path.draw(this.highlightCtx);
+        info = _ref1[id];
+        if (this.inTree(info.model)) {
+          path = this.getHighlightPath(info.model, info.style);
+          path.draw(this.highlightCtx);
+        } else {
+          delete this.extraMarks[id];
+        }
       }
       return this.drawCursor();
     };
@@ -4401,6 +4439,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.dragCanvas.style.top = "" + (position.y + getOffsetTop(this.iceElement)) + "px";
         this.dragCanvas.style.left = "" + (position.x + getOffsetLeft(this.iceElement)) + "px";
         mainPoint = this.trackerPointToMain(position);
+        mainPoint.x += this.view.opts.tabOffset + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth);
+        mainPoint.y += this.view.opts.tabHeight;
         if (this.draggingBlock.type === 'block') {
           highlight = this.tree.find((function(block) {
             var _ref;
@@ -4674,21 +4714,23 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.paletteHeader.style.zIndex = 257;
     });
     hook('mousedown', 6, function(point, event, state) {
-      var block, hitTestResult, palettePoint, _i, _len, _ref;
+      var block, hitTestResult, palettePoint, _i, _len, _ref, _ref1, _ref2;
       if (state.consumedHitTest) {
         return;
       }
       palettePoint = this.trackerPointToPalette(point);
-      _ref = this.currentPaletteBlocks;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        block = _ref[_i];
-        hitTestResult = this.hitTest(palettePoint, block);
-        if (hitTestResult != null) {
-          this.clickedBlock = block;
-          this.clickedPoint = point;
-          this.clickedBlockIsPaletteBlock = true;
-          state.consumedHitTest = true;
-          return;
+      if ((this.scrollOffsets.palette.y < (_ref = palettePoint.y) && _ref < this.scrollOffsets.palette.y + this.paletteCanvas.height) && (this.scrollOffsets.palette.x < (_ref1 = palettePoint.x) && _ref1 < this.scrollOffsets.palette.x + this.paletteCanvas.width)) {
+        _ref2 = this.currentPaletteBlocks;
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          block = _ref2[_i];
+          hitTestResult = this.hitTest(palettePoint, block);
+          if (hitTestResult != null) {
+            this.clickedBlock = block;
+            this.clickedPoint = point;
+            this.clickedBlockIsPaletteBlock = true;
+            state.consumedHitTest = true;
+            return;
+          }
         }
       }
       return this.clickedBlockIsPaletteBlock = false;
@@ -4863,9 +4905,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             throw new Error('Socket is split.');
           }
         } catch (_error) {
-          this.extraMarks[this.socketFocus.id] = this.getErrorPath(this.socketFocus, {
-            color: '#F00'
-          });
+          this.extraMarks[this.socketFocus.id] = {
+            model: this.socketFocus,
+            style: {
+              color: '#F00'
+            }
+          };
           this.redrawMain();
         }
       }
@@ -5272,35 +5317,35 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.moveCursorTo(this.cursor.next.next);
       return this.scrollCursorIntoPosition();
     });
-    hook('key.shift tab', 0, function() {
-      var head;
-      if (this.socketFocus != null) {
-        head = this.socketFocus.start;
-      } else {
-        head = this.cursor;
-      }
-      while (!((head == null) || head.type === 'socketEnd' && head.container.start.next.type === 'text')) {
-        head = head.prev;
-      }
-      if (head != null) {
-        this.setTextInputFocus(head.container, -1, -1);
-      }
-      return false;
-    });
     hook('key.tab', 0, function() {
       var head;
-      if (this.socketFocus != null) {
-        head = this.socketFocus.end;
+      if (this.shiftKeyPressed) {
+        if (this.socketFocus != null) {
+          head = this.socketFocus.start;
+        } else {
+          head = this.cursor;
+        }
+        while (!((head == null) || head.type === 'socketEnd' && head.container.start.next.type === 'text')) {
+          head = head.prev;
+        }
+        if (head != null) {
+          this.setTextInputFocus(head.container, -1, -1);
+        }
+        return false;
       } else {
-        head = this.cursor;
+        if (this.socketFocus != null) {
+          head = this.socketFocus.end;
+        } else {
+          head = this.cursor;
+        }
+        while (!((head == null) || head.type === 'socketStart' && head.container.start.next.type === 'text')) {
+          head = head.next;
+        }
+        if (head != null) {
+          this.setTextInputFocus(head.container);
+        }
+        return false;
       }
-      while (!((head == null) || head.type === 'socketStart' && head.container.start.next.type === 'text')) {
-        head = head.next;
-      }
-      if (head != null) {
-        this.setTextInputFocus(head.container);
-      }
-      return false;
     });
     Editor.prototype.deleteAtCursor = function() {
       var blockEnd, _ref;
@@ -5360,6 +5405,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.redrawMain();
         this.reparseHandwrittenBlocks();
         return this.setTextInputFocus(newSocket);
+      } else if (this.textFocus != null) {
+        this.setTextInputFocus(null);
+        return this.redrawMain();
       }
     });
     containsCursor = function(block) {
@@ -5984,7 +6032,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.markedLines = {};
       return this.extraMarks = {};
     });
-    Editor.prototype.getErrorPath = function(model, style) {
+    Editor.prototype.getHighlightPath = function(model, style) {
       var path;
       path = this.view.getViewNodeFor(model).path.clone();
       path.style.fillColor = null;
@@ -5998,7 +6046,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var block;
       block = this.tree.getBlockOnLine(line);
       if (block != null) {
-        this.markedLines[line] = this.getErrorPath(block, style);
+        this.markedLines[line] = {
+          model: block,
+          style: style
+        };
       }
       return this.redrawMain();
     };
@@ -6014,30 +6065,24 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.lastHoveredLine = null;
     });
     hook('mousemove', 0, function(point, event, state) {
-      var line, mainPoint, _i, _ref;
+      var hoveredLine, mainPoint, treeView;
       if ((this.draggingBlock == null) && (this.clickedBlock == null) && this.hasEvent('linehover')) {
         mainPoint = this.trackerPointToMain(point);
-        for (line = _i = 0, _ref = this.view.getViewNodeFor(this.tree).lineLength; 0 <= _ref ? _i < _ref : _i > _ref; line = 0 <= _ref ? ++_i : --_i) {
-          if (this.view.getViewNodeFor(this.tree).bounds[line].contains(mainPoint)) {
-            if (line !== this.lastHoveredLine) {
-              this.fireEvent('linehover', [
-                {
-                  line: line
-                }
-              ]);
-            }
-            this.lastHoveredLine = line;
-            return;
-          }
+        treeView = this.view.getViewNodeFor(this.tree);
+        if ((this.lastHoveredLine != null) && treeView.bounds[this.lastHoveredLine].contains(mainPoint)) {
+          return;
         }
-        if (this.lastHoveredLine !== null) {
-          this.fireEvent('linehover', [
+        hoveredLine = this.findLineNumberAtCoordinate(point.y);
+        if (!treeView.bounds[hoveredLine].contains(mainPoint)) {
+          hoveredLine = null;
+        }
+        if (hoveredLine !== this.lastHoveredLine) {
+          return this.fireEvent('linehover', [
             {
-              line: null
+              line: this.lastHoveredLine = hoveredLine
             }
           ]);
         }
-        return this.lastHoveredLine = null;
       }
     });
     SetValueOperation = (function(_super) {
@@ -6308,11 +6353,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       end = treeView.bounds.length - 1;
       pivot = Math.floor((start + end) / 2);
       while (treeView.bounds[pivot].y !== coord && start < end) {
+        if (start === pivot || end === pivot) {
+          return pivot;
+        }
         if (treeView.bounds[pivot].y > coord) {
-          end = pivot - 1;
+          end = pivot;
         }
         if (treeView.bounds[pivot].y < coord) {
-          start = pivot + 1;
+          start = pivot;
         }
         if (end < 0) {
           return 0;

@@ -1584,7 +1584,7 @@ var ICE_EDITOR_PALETTE =[
             ]
           }
         ]
-      }), ice.parse('return arg').start.next.container, ice.parse('do fn').start.next.container, ice.parseObj({
+      }), ice.parse('return arg').start.next.container, ice.parse('do (fn)').start.next.container, ice.parseObj({
         type: 'block',
         valueByDefault: false,
         color: '#268bd2',
