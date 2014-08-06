@@ -10,8 +10,10 @@ function makesheet(item) {
     height: $(window).height(), width: $(window).width(),
     zIndex: item.css('z-index')}).insertBefore(item);
 }
-    
-$('body').on('click', '.gadget .topbar button, .gadget .topbar .closer',
+
+$('body').on(
+    'click',
+    '.gadget .topbar button, .gadget .topbar .closer',
 function() {
   var $this = $(this).closest('.gadget'),
       $window = $(window);
@@ -126,7 +128,7 @@ function addGadget(id, opts) {
     '<div class="sizer"></div>' +
     '</div>');
   if (opts.width) result.data('width', opts.width);
-  if (opts.height) result.data('width', opts.height);
+  if (opts.height) result.data('height', opts.height);
   var css = {};
   if (opts.minimized) {
     result.addClass('minimized');

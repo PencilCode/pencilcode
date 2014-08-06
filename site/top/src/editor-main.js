@@ -245,9 +245,9 @@ function updateTopControls(addHistory) {
   }
   // Update editability.
   view.setNameTextReadOnly(!model.editmode);
-  view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
   view.setPaneEditorReadOnly(paneatpos('right'), true);
   view.setPaneEditorReadOnly(paneatpos('back'), true);
+  view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
 }
 
 //

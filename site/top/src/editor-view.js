@@ -1284,9 +1284,13 @@ function updatePaneLinks(pane) {
 
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
+  if (paneState.iceEditor && paneState.iceEditor.destroy) {
+    paneState.iceEditor.destroy();
+  }
   if (paneState.editor) {
     paneState.editor.destroy();
   }
+  paneState.iceEditor = null;
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
@@ -1296,6 +1300,7 @@ function clearPane(pane, loading) {
   paneState.dirtied = false;
   paneState.links = null;
   paneState.running = false;
+  paneState.palette = null;
   paneState.fullScreenLink = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
@@ -1691,19 +1696,15 @@ function setPaneEditorText(pane, text, filename) {
   paneState.dirtied = false;
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var paletteElement = document.createElement('div');
   var iceEditor = paneState.iceEditor =
       new ice.Editor(
           document.getElementById(id),
-          $('#blocks .body')[0],  // HACK for now.
+          paletteElement,
           ICE_EDITOR_PALETTE);
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
-  $(iceEditor.iceElement).on('focus', function() {
-    // Show the palette if it has been hidden (e.g., by the "run" command).
-    if (!iceEditor.aceEditor.getReadOnly()) {
-      $(iceEditor.paletteWrapper).show();
-    }
-  });
+  iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
@@ -1938,10 +1939,11 @@ function setPaneEditorReadOnly(pane, ro) {
   $(paneState.editor.container).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
-  if (ro) {
-    $(paneState.iceEditor.paletteWrapper).hide();
+  if (ro || !paneState.iceEditor.currentlyUsingBlocks) {
+    clearPaletteElement(paneState.iceEditor.paletteElement);
   } else {
-    $(paneState.iceEditor.paletteWrapper).show();
+    setPaletteElement(paneState.iceEditor.paletteElement);
+    paneState.iceEditor.resizePalette();
   }
   // Only if the editor is read only do we want to blur it.
   if (ro) {
@@ -2135,11 +2137,27 @@ $('#owner,#filename,#folder').tooltipster();
 
 gadget.addGadget('blocks', {
   name: 'Blocks',
-  top: 50,
-  left: 50,
-  width: 200, height: 200,
+  top: 100,
+  left: $(window).width() / 2 + 50,
+  width: Math.min(400, $(window).width() / 2),
+  height: Math.min(500, $(window).height() - 200),
   minimized: true
-});
+}).hide();
+
+function clearPaletteElement(elt) {
+  if ($(elt).closest('#blocks .body').length) {
+    $('#blocks .body').empty();
+    $('#blocks').hide();
+  }
+}
+
+function setPaletteElement(elt) {
+  $('#blocks .body').empty();
+  if (elt) {
+    $('#blocks .body').append(elt);
+    $('#blocks').show();
+  }
+}
 
 return window.pencilcode.view;
 
