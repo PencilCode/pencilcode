@@ -10,9 +10,11 @@ function makesheet(item) {
     height: $(window).height(), width: $(window).width(),
     zIndex: item.css('z-index')}).insertBefore(item);
 }
-    
-$('body').on('click', '.gadget .topbar button, .gadget .topbar .closer',
-function() {
+
+$('body').on('click',
+    '.gadget .topbar button, .gadget .topbar .closer', toggle);
+
+function toggle(e) {
   var $this = $(this).closest('.gadget'),
       $window = $(window);
   if ($this.is(':animated') || $this.data('moved')) return;
@@ -50,7 +52,7 @@ function() {
       'padding-left': 0, 'padding-top': 0});
     $this.addClass('minimized');
   }
-});
+}
 
 $('body').on('mousedown', '.gadget .topbar', function(e) {
   var $window = $(window),
@@ -112,7 +114,14 @@ $('body').on('mousedown', '.gadget .sizer', function(e) {
     $(window).on("mousemove", move_func).
               on("mouseup", up_func);
     e.preventDefault(); // disable selection
-})
+});
+
+$('body').on('expand', '.gadget', function(e) {
+  $this = $(this);
+  if ($this.hasClass('minimized')) {
+    toggle.call(this, e);
+  }
+});
 
 function addGadget(id, opts) {
   var result = $(
@@ -126,7 +135,7 @@ function addGadget(id, opts) {
     '<div class="sizer"></div>' +
     '</div>');
   if (opts.width) result.data('width', opts.width);
-  if (opts.height) result.data('width', opts.height);
+  if (opts.height) result.data('height', opts.height);
   var css = {};
   if (opts.minimized) {
     result.addClass('minimized');
