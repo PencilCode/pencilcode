@@ -13,6 +13,7 @@ require.config({
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
+    'FontLoader': 'src/FontLoader',
     'ice': 'lib/ice'
   },
   shim: {

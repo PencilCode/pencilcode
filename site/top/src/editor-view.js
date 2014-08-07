@@ -10,6 +10,7 @@ define([
   'ice',
   'draw-protractor',
   'ZeroClipboard',
+  'FontLoader',
   'gadget'],
 function(
   $,
@@ -19,6 +20,7 @@ function(
   ice,
   drawProtractor,
   ZeroClipboard,
+  FontLoader,
   gadget
 ) {
 
@@ -1705,6 +1707,9 @@ function setPaneEditorText(pane, text, filename) {
           document.getElementById(id),
           paletteElement,
           ICE_EDITOR_PALETTE);
+  whenCodeFontLoaded(function () {
+    // iceEditor.setFontFamily("Source Code Pro");
+  });
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
@@ -2168,6 +2173,31 @@ function setPaletteElement(elt) {
     $('#blocks').show();
   }
 }
+
+var codeFontLoaded = false,
+    codeFontLoadingCallbacks = [];
+var fontloader = new FontLoader(["Source Code Pro"], {
+  fontsLoaded: function(failure) {
+    if (!failure) {
+      codeFontLoaded = true;
+      for (var j = 0; j < codeFontLoadingCallbacks.length; ++j) {
+        codeFontLoadingCallbacks[j].call();
+      }
+    }
+  }
+});
+fontloader.loadFonts();
+
+function whenCodeFontLoaded(callback) {
+  if (codeFontLoaded) {
+    callback.call();
+  } else{
+    codeFontLoadingCallbacks.push(callback);
+  }
+}
+
+window.FontLoader = FontLoader;
+window.fontloader = fontloader;
 
 return window.pencilcode.view;
 

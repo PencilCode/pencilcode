@@ -1,6 +1,6 @@
 * {box-sizing:border-box;}
 .tooltipster-default {box-sizing:content-box;}
-body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden;
+body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   position:fixed;height:100%;width:100%; }
 #overlay{position:absolute;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.1);display:none;z-index:2}
@@ -90,10 +90,10 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:700;overflow:hidden;
 #owner:hover{text-decoration:underline;}
 #folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
 .editor{position:absolute:top:0;height:100%;left:0;width:100%;
-  background-color:white;font:24px "Source Code Pro";font-weight:600;}
+  background-color:white;font:24px "Source Code Pro";font-weight:500;}
 #pencildoc .ace_editor {
   font-family: "Source Code Pro";
-  font-weight: 600;
+  font-weight: 500;
   line-height: 121%;
 }
 /* Code line highlighting for errors */
@@ -127,7 +127,8 @@ body#pencildoc #diigolet-csm {
 .panetitle-extra {
   float: right;
 }
-.ice-toggle-button {text-decoration:none;color:inherit;font-size:18px;cursor:pointer;}
+.ice-toggle-button {
+  text-decoration:none;color:inherit;cursor:pointer;}
 .ice-toggle-button:hover {text-decoration:underline;color:white;}
 .gadget {
   position: fixed; z-index: 2;
@@ -148,7 +149,7 @@ body#pencildoc #diigolet-csm {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none;   
+  user-select: none;
 }
 .gadget .topbar button {
   position: relative;
