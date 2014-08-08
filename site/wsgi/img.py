@@ -37,6 +37,7 @@ def application(env, start_response):
     userip = env['REMOTE_ADDR']
     filename = filename_from_uri(request_uri)
     scrapeurl = 'https://ajax.googleapis.com/ajax/services/search/images?v=1.0'
+    scrapeurl += '&safe=active'
     if userip:
       scrapeurl += '&userip=' + userip
     scrapeurl += '&q=' + filename
@@ -48,5 +49,5 @@ def application(env, start_response):
   except:
     pass
   finally:
-    start_response('301 Redirect', [('Location', redirect_url.encode('utf-8'))])
+    start_response('302 Redirect', [('Location', redirect_url.encode('utf-8'))])
   return []
