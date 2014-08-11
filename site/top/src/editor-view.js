@@ -1752,11 +1752,11 @@ function setPaneEditorText(pane, text, filename) {
               (dimensions.columns + 5) * big.width > $('#' + pane).width());
   if (long) {
     // Use a small font for long documents.
-    $('#' + pane + ' .editor').css({fontWeight: 500, lineHeight: '119%'});
+    $('#' + pane + ' .editor').css({lineHeight: '119%'});
     editor.setFontSize(16);
   } else {
     // Use a giant font for short documents.
-    $('#' + pane + ' .editor').css({fontWeight: 600, lineHeight: '121%'});
+    $('#' + pane + ' .editor').css({lineHeight: '121%'});
     editor.setFontSize(24);
   }
   setupAutofoldScriptPragmas(paneState);
