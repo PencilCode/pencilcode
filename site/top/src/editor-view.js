@@ -1705,19 +1705,16 @@ function setPaneEditorText(pane, text, filename) {
   var iceEditor = paneState.iceEditor =
       new ice.Editor(
           document.getElementById(id),
-          paletteElement,
           ICE_EDITOR_PALETTE);
   whenCodeFontLoaded(function () {
-    // iceEditor.setFontFamily("Source Code Pro");
+  iceEditor.setFontFamily("Source Code Pro");
   });
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
   iceEditor.on('statechange', function(blocks) {
     if (!blocks || iceEditor.aceEditor.getReadOnly()) {
-      clearPaletteElement(iceEditor.paletteElement);
     } else {
-      setPaletteElement(iceEditor.paletteElement);
     }
   });
 

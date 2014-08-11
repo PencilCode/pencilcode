@@ -427,13 +427,15 @@ if (!transform || !hasGetBoundingClientRect()) {
 // and that first value will be interpreted as defaultProp:value1.
 // Some rudimentary quoting can be done, e.g., value:"prop", etc.
 function parseOptionString(str, defaultProp) {
-  if (str == null) {
-    return {};
+  if (typeof(str) != 'string') {
+    if (str == null) {
+      return {};
+    }
+    if ($.isPlainObject(str)) {
+      return str;
+    }
+    str = '' + str;
   }
-  if ($.isPlainObject(str)) {
-    return str;
-  }
-  str = '' + str;
   // Each token is an identifier, a quoted or parenthesized string,
   // a run of whitespace, or any other non-matching character.
   var token = str.match(/[-a-zA-Z_][-\w]*|"[^"]*"|'[^']'|\([^()]*\)|\s+|./g),
@@ -1366,6 +1368,7 @@ function convexHull(points) {
 
 function parseTurtleHull(text) {
   if (!text) return null;
+  if ($.isArray(text)) return text;
   var nums = $.map(text.trim().split(/\s+/), parseFloat), points = [], j = 0;
   while (j + 1 < nums.length) {
     points.push({ pageX: nums[j], pageY: nums[j + 1] });
@@ -2656,6 +2659,18 @@ function applyLoadedImage(loaded, elem, css) {
     sel.css(css);
   }
   var newOrigin = readTransformOrigin(elem);
+  if (loaded && !css.turtleHull) {
+    try {
+      var hull = transparentHull(loaded);
+      scalePolygon(hull,
+            parseFloat(sel.css('width')) / loaded.width,
+            parseFloat(sel.css('height')) / loaded.height,
+            -newOrigin[0], -newOrigin[1]);
+      sel.css('turtleHull', hull);
+    } catch (e) {
+      // Do not do this if the image can't be loaded.
+    }
+  }
   // If there was a change, then translate the element to keep the origin
   // in the same location on the screen.
   if (newOrigin[0] != oldOrigin[0] || newOrigin[1] != oldOrigin[1]) {
@@ -5102,7 +5117,9 @@ function gatherelts(args) {
   }
   // Gather elements passed as arguments.
   for (j = 0; j < argcount; ++j) {
-    if (args[j].constructor === $) {
+    if (!args[j]) {
+      continue;  // Skip null args.
+    } else if (args[j].constructor === $) {
       elts.push.apply(elts, args[j].toArray());  // Unpack jQuery.
     } else if ($.isArray(args[j])) {
       elts.push.apply(elts, args[j]);  // Accept an array.
@@ -6141,6 +6158,29 @@ var turtlefn = {
   function pf() {
     return this.pen('path', continuationArg(arguments, 0));
   },
+  clip: wrapcommand('clip', 1,
+  ["<u>Clips tranparent bits out of the image of the sprite, " +
+      "and sets the hit region."],
+  function clip(cc, threshold) {
+    if (threshold == null) {
+      threshold = 0.125;
+    }
+    return this.plan(function(j, elem) {
+      cc.appear(j);
+      if (elem.tagName == 'CANVAS') {
+        var hull = transparentHull(elem, threshold),
+            sel = $(elem),
+            origin = readTransformOrigin(elem);
+        eraseOutsideHull(elem, hull);
+        scalePolygon(hull,
+          parseFloat(sel.css('width')) / elem.width,
+          parseFloat(sel.css('height')) / elem.height,
+          -origin[0], -origin[1]);
+        sel.css('turtleHull', hull);
+      }
+      cc.resolve(j);
+    });
+  }),
   play: wrapcommand('play', 1,
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
       "<a href=\"http://abcnotation.com/\" target=\"_blank\">" +
@@ -7783,7 +7823,10 @@ function createRectangleShape(width, height, subpixels) {
   return (function(color) {
     var c = getOffscreenCanvas(width, height);
     var ctx = c.getContext('2d');
-    if (color && color != 'transparent') {
+    if (!color) {
+      color = "rgba(128,128,128,0.125)";
+    }
+    if (color != 'transparent') {
       ctx.fillStyle = color;
       ctx.fillRect(0, 0, width, height);
     }
@@ -7870,45 +7913,12 @@ function nameToImg(name, defaultshape) {
   if (shape) {
     return shape(color);
   }
-  // Parse openicon patterns.
-  // TODO: add more built-in shapes and remove this.
-  var openicon =
-    /^openicon:\/?\/?([^@\/][^@]*)(?:@(?:(\d+):)?(\d+))?$/.exec(name);
-  if (openicon) {
-    var openiconName = openicon[1],
-        sourceSize = parseInt(openicon[3]),
-        targetSize = parseInt(openicon[2]),
-        dotloc = openiconName.lastIndexOf('.'),
-        openiconType = 'png';
-    if (openiconName.indexOf('/') == -1) {
-      openiconName = 'others/' + openiconName;
-    }
-    if (dotloc > 0 && dotloc <= openiconName.length - 4 &&
-        dotloc >= openiconName.length - 5) {
-      openiconType = openiconName.substring(dotloc + 1);
-      openiconName = openiconName.substring(0, dotloc);
-    }
-    if (!targetSize) {
-      targetSize = sourceSize || 24;
-    }
-    if (!sourceSize) {
-      sourceSize = 48;
-    }
-    return {
-      url: 'http://openiconlibrary.sourceforge.net/gallery2/' +
-        'open_icon_library-full/icons/' + openiconType + '/' +
-        sourceSize + 'x' + sourceSize + '/' +
-        openiconName + '.' + openiconType,
-      css: {
-        width: targetSize,
-        height: targetSize,
-        transformOrigin: '50% 50%',
-        opacity: 1
-      }
-    }
-  }
   // Parse URLs.
   if (/^(?:(?:https?|data):)?\//i.exec(name)) {
+    if (/^https?:/i.test(name) && !/^https?:\/\/[^/]*pencilcode.net/.test(name)
+        && /(?:^|\.)pencilcode\.net$/.test(window.location.hostname)) {
+      name = '/proxy/' + name;
+    }
     return {
       url: name,
       css: {
@@ -9399,5 +9409,78 @@ function tryinitpanel() {
 }
 
 eval("scope('jquery-turtle', " + seejs + ", this)");
+
+function transparentHull(image, threshold) {
+  var c = document.createElement('canvas');
+  if (!threshold) threshold = 0;
+  c.width = image.width;
+  c.height = image.height;
+  ctx = c.getContext('2d');
+  ctx.drawImage(image, 0, 0);
+  return transparentCanvasHull(c, threshold);
+}
+
+function transparentCanvasHull(canvas, threshold) {
+  var ctx = canvas.getContext('2d');
+  data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  var hull = [];
+  var intthresh = 256 * threshold;
+  var first, last, prevfirst = Infinity, prevlast = -1;
+  for (var row = 0; row < canvas.height; ++row) {
+    // We only take the first/last hull in a row to reduce the number of
+    // possible points from O(n^2) to O(n).
+    first = Infinity;
+    last = -1;
+    for (var col = 0; col < canvas.width; ++col) {
+      if (data[row * 4 * canvas.width + col * 4 + 3] > intthresh) {
+        if (last < 0) first = col;
+        last = col;
+      }
+    }
+    if (last >= 0 || prevlast >= 0) {
+      hull.push({ pageX: Math.min(first, prevfirst), pageY: row});
+      hull.push({ pageX: Math.max(last, prevlast) + 1, pageY: row});
+    }
+    prevfirst = first;
+    prevlast = last;
+  }
+  if (prevlast >= 0) {
+    hull.push({ pageX: prevfirst, pageY: canvas.height});
+    hull.push({ pageX: prevlast + 1, pageY: canvas.height});
+  }
+  return convexHull(hull);
+}
+
+function eraseOutsideHull(canvas, hull) {
+  var ctx = canvas.getContext('2d'),
+      w = canvas.width,
+      h = canvas.height
+      j = 0;
+  ctx.save();
+  // Erase everything outside clipping region.
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(w, 0);
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  if (hull.length) {
+    ctx.moveTo(hull[0].pageX, hull[0].pageY);
+    for (; j < hull.length; j += 1) {
+      ctx.lineTo(hull[j].pageX, hull[j].pageY);
+    }
+  }
+  ctx.closePath();
+  ctx.clip();
+  ctx.clearRect(0, 0, w, h);
+  ctx.restore();
+}
+
+function scalePolygon(poly, sx, sy, tx, ty) {
+  for (var i = 0; i < poly.length; i++){
+    poly[i].pageX = poly[i].pageX * sx + tx;
+    poly[i].pageY = poly[i].pageY * sy + ty;
+  }
+}
 
 })(jQuery);
