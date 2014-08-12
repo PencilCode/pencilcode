@@ -7917,7 +7917,8 @@ function nameToImg(name, defaultshape) {
   if (/^(?:(?:https?|data):)?\//i.exec(name)) {
     if (/^https?:/i.test(name) && !/^https?:\/\/[^/]*pencilcode.net/.test(name)
         && /(?:^|\.)pencilcode\.net$/.test(window.location.hostname)) {
-      name = '/proxy/' + name;
+      name = window.location.protocol + '//' +
+             window.location.host + '/proxy/' + name;
     }
     return {
       url: name,
@@ -9439,14 +9440,14 @@ function transparentCanvasHull(canvas, threshold) {
     }
     if (last >= 0 || prevlast >= 0) {
       hull.push({ pageX: Math.min(first, prevfirst), pageY: row});
-      hull.push({ pageX: Math.max(last, prevlast), pageY: row});
+      hull.push({ pageX: Math.max(last, prevlast) + 1, pageY: row});
     }
     prevfirst = first;
     prevlast = last;
   }
   if (prevlast >= 0) {
     hull.push({ pageX: prevfirst, pageY: canvas.height});
-    hull.push({ pageX: prevlast, pageY: canvas.height});
+    hull.push({ pageX: prevlast + 1, pageY: canvas.height});
   }
   return convexHull(hull);
 }
