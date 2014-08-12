@@ -90,7 +90,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
 #owner:hover{text-decoration:underline;}
 #folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
 .editor{position:absolute;top:0;height:100%;left:0;width:100%;
-  background-color:white;font:24px "Source Code Pro";font-weight:500;
+  background-color:white;font:24px "Source Code Pro";font-weight:400;
   overflow: hidden}
 #pencildoc .ace_editor {
   font-family: "Source Code Pro";

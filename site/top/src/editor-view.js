@@ -1721,7 +1721,7 @@ function setPaneEditorText(pane, text, filename) {
       }
       if (long) {
         editor.setFontSize(16);
-        $('#' + pane + ' .editor').css({fontWeight: 500, lineHeight: '119%'});
+        $('#' + pane + ' .editor').css({lineHeight: '119%'});
       }
     }
     if (!paneState.dirtied) {
