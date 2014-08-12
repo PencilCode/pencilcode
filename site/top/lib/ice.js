@@ -6534,7 +6534,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var _this = this;
       this.touchScrollAnchor = new draw.Point(0, 0);
       this.lassoSelectStartTimeout = null;
-      this.iceElement.addEventListener('touchstart', function(event) {
+      this.wrapperElement.addEventListener('touchstart', function(event) {
         var handler, state, trackPoint, _i, _len, _ref;
         clearTimeout(_this.lassoSelectStartTimeout);
         trackPoint = _this.touchEventToPoint(event, 0);
@@ -6552,7 +6552,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return _this.queueLassoMousedown(trackPoint, event);
         }
       });
-      this.iceElement.addEventListener('touchmove', function(event) {
+      this.wrapperElement.addEventListener('touchmove', function(event) {
         var handler, state, trackPoint, _i, _len, _ref;
         clearTimeout(_this.lassoSelectStartTimeout);
         trackPoint = _this.touchEventToPoint(event, 0);
@@ -6569,7 +6569,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return event.preventDefault();
         }
       });
-      return this.iceElement.addEventListener('touchend', function(event) {
+      return this.wrapperElement.addEventListener('touchend', function(event) {
         var handler, state, trackPoint, _i, _len, _ref;
         clearTimeout(_this.lassoSelectStartTimeout);
         trackPoint = _this.touchEventToPoint(event, 0);

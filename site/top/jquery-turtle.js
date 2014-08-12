@@ -7917,7 +7917,8 @@ function nameToImg(name, defaultshape) {
   if (/^(?:(?:https?|data):)?\//i.exec(name)) {
     if (/^https?:/i.test(name) && !/^https?:\/\/[^/]*pencilcode.net/.test(name)
         && /(?:^|\.)pencilcode\.net$/.test(window.location.hostname)) {
-      name = '/proxy/' + name;
+      name = window.location.protocol + '//' +
+             window.location.host + '/proxy/' + name;
     }
     return {
       url: name,

@@ -1546,7 +1546,7 @@ var ICE_EDITOR_PALETTE =[
       'button \'Click\', ->\n' +
       '  ``',
       
-      'read \'Enter a\', ->\n' +
+      'read \'Enter a\', (a) ->\n' +
       '  ``',
       
       'tick 1, ->\n' +
