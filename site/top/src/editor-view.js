@@ -1521,164 +1521,95 @@ function changeEditorText(paneState, text) {
 // is copied from compiled CoffeeScript.
 var ICE_EDITOR_PALETTE =[
   {
-    name: 'Common',
-    color: 'common',
-    blocks: (function() {
-      var _i, _len, _ref, _results;
-      _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'for i in [1..10]\n  fd 10', 'if touches \'red\'\n  fd 10', 'fun = (arg) ->\n  return arg'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.container);
-      }
-      return _results;
-    })()
-  }, {
     name: 'Turtle',
-    color: 'turtle',
-    blocks: (function() {
-      var _i, _len, _ref, _results;
-      _ref = ['fd 100', 'bk 100', 'rt 90', 'lt 90', 'pen red', 'dot green, 20', 'slide 10', 'jumpto 0, 0', 'turnto 0', 'rt 90, 100', 'lt 90, 100'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.container);
-      }
-      return _results;
-    })()
-  }, {
+    color: 'common',
+    blocks: [
+      'pen red',
+      'fd 100',
+      'rt 90',
+      'lt 90',
+      'bk 100',
+      'dot blue, 50',
+      'box green, 50',
+      'speed 10',
+      'label \'hello\'',
+      'do ht',
+      'do st'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container;
+    })
+  },
+  {
     name: 'Control',
     color: 'control',
-    blocks: (function() {
-      var _i, _len, _ref, _results;
-      _ref = ['if touches \'red\'\n  fd 10', 'if touches \'red\'\n  fd 10\nelse\n  bk 10', 'for element, i in list\n  see element', 'for key, value of obj\n  see key, value', 'while touches \'red\'\n  fd 10'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.container);
-      }
-      return _results;
-    })()
-  }, {
-    name: 'Functions',
-    color: 'functions',
     blocks: [
-      ice.parseObj({
-        type: 'block',
-        valueByDefault: true,
-        color: '#26cf3c',
-        children: [
-          '(', {
-            type: 'socket',
-            precedence: 0,
-            contents: 'arg'
-          }, ') ->', {
-            type: 'indent',
-            depth: 2,
-            children: [
-              '\n', {
-                type: 'block',
-                valueByDefault: false,
-                color: '#dc322f',
-                children: [
-                  'return ', {
-                    type: 'socket',
-                    precedence: 0,
-                    contents: 'arg'
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }), ice.parse('return arg').start.next.container, ice.parse('do (fn)').start.next.container, ice.parseObj({
-        type: 'block',
-        valueByDefault: false,
-        color: '#268bd2',
-        precedence: 32,
-        children: [
-          {
-            type: 'socket',
-            precedence: 0,
-            contents: 'fn'
-          }, '(', {
-            type: 'socket',
-            precedence: 0,
-            contents: 'arg'
-          }, ')'
-        ]
-      })
-    ]
-  }, {
-    name: 'Containers',
-    color: 'containers',
-    blocks: [
-      ice.parseObj({
-        type: 'block',
-        valueByDefault: true,
-        color: '#26cf3c',
-        precedence: 32,
-        children: [
-          '[', {
-            type: 'socket',
-            precedence: 0,
-            contents: 'el'
-          }, ']'
-        ]
-      }), ice.parse("array.push 'hello'").start.next.container, ice.parse("array.sort()").start.next.container, ice.parse('{}').start.next.container, ice.parseObj({
-        type: 'block',
-        valueByDefault: true,
-        precedence: 32,
-        color: '#26cf3c',
-        children: [
-          '[  ', {
-            type: 'indent',
-            depth: 4,
-            children: ['\n']
-          }, '  ]'
-        ]
-      }), ice.parseObj({
-        type: 'block',
-        color: '#268bd2',
-        children: [
-          {
-            type: 'socket',
-            precedence: 0,
-            contents: 'property'
-          }, ':', {
-            type: 'socket',
-            precedence: 0,
-            contents: 'value'
-          }
-        ]
-      }), ice.parse("obj['hello'] = 'world'").start.next.container
-    ]
-  }, {
-    name: 'Logic',
-    color: 'logic',
-    blocks: (function() {
-      var _i, _len, _ref, _results;
-      _ref = ['1 is 1', '1 isnt 2', 'true and false', 'false or true'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.container);
-      }
-      return _results;
-    })()
-  }, {
-    name: 'Math',
+      'button \'Click\', ->\n' +
+      '  ``',
+      
+      'read \'Enter a\', ->\n' +
+      '  ``',
+      
+      'tick 1, ->\n' +
+      '  ``',
+      'for [1..3]\n' +
+      '  ``',
+      
+      'for x in [1..3]\n' +
+      '  ``',
+      
+      'while ``\n' +
+      '  ``',
+      
+      'if ``\n' +
+      '  ``',
+
+      'if ``\n' +
+      '  ``\n' +
+      'else\n' +
+      '  ``',
+
+      'menu\n' +
+      '  \'Choice 1\': ->\n' +
+      '    ``\n' +
+      '  \'Choice 2\': ->\n' +
+      '    ``'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container;
+    })
+  },
+  {
+    name: 'Calculation',
     color: 'math',
-    blocks: (function() {
-      var _i, _len, _ref, _results;
-      _ref = ['2 + 3', '2 - 3', '2 * 3', '2 / 3', '2 < 3', '3 > 2', 'Math.pow 2, 3', 'Math.sqrt 2', 'random 10'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        paletteElement = _ref[_i];
-        _results.push(ice.parse(paletteElement).start.next.container);
-      }
-      return _results;
-    })()
+    blocks: [
+      'x = ``',
+      '`` + ``',
+      '`` - ``',
+      '`` * ``',
+      '`` / ``',
+      'random [1..100]',
+      'round ``',
+      'ln ``',
+      'f = (param) ->\n' +
+      '  ``',
+      'f ``'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container
+    })
+  },
+  {
+    name: 'Drawing',
+    color: 'turtle',
+    blocks: [
+      'pen purple, 10',
+      'do pu',
+      'do pd',
+      'rt 180, 100',
+      'lt 180, 100',
+      'slide 100, 20',
+      'jump 100, 20'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container
+    })
   }
 ];
 
