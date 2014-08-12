@@ -220,4 +220,15 @@ body#pencildoc #diigolet-csm {
   border-width: 0 0 10px 10px;
   cursor: default;
 }
+#pencildoc .ice-palette-group-header {
+  font-family: Lato;
+  font-size: 22px;
+  line-height: 26px;
+}
+#pencildoc .ice-palette-header-row {
+  height: 26px;
+}
 
+#pencildoc .ice-palette-header {
+  background: white;
+}
