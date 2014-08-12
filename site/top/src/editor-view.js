@@ -1534,7 +1534,16 @@ var ICE_EDITOR_PALETTE =[
       'speed 10',
       'label \'hello\'',
       'do ht',
-      'do st'
+      'do st',
+      'do pu',
+      'do pd',
+      'pen purple, 10',
+      'rt 180, 100',
+      'lt 180, 100',
+      'slide 100, 20',
+      'jump 100, 20',
+      'play \'GEC\'',
+      'wear \'/img/cat-icon\''
     ].map(function(block) {
       return ice.parse(block).start.next.container;
     })
@@ -1544,9 +1553,6 @@ var ICE_EDITOR_PALETTE =[
     color: 'control',
     blocks: [
       'button \'Click\', ->\n' +
-      '  ``',
-      
-      'read \'Enter a\', (a) ->\n' +
       '  ``',
       
       'tick 1, ->\n' +
@@ -1566,13 +1572,7 @@ var ICE_EDITOR_PALETTE =[
       'if ``\n' +
       '  ``\n' +
       'else\n' +
-      '  ``',
-
-      'menu\n' +
-      '  \'Choice 1\': ->\n' +
-      '    ``\n' +
-      '  \'Choice 2\': ->\n' +
-      '    ``'
+      '  ``'
     ].map(function(block) {
       return ice.parse(block).start.next.container;
     })
@@ -1588,7 +1588,9 @@ var ICE_EDITOR_PALETTE =[
       '`` / ``',
       'random [1..100]',
       'round ``',
-      'ln ``',
+      'abs ``',
+      'max ``, ``',
+      'min ``, ``',
       'f = (param) ->\n' +
       '  ``',
       'f ``'
@@ -1597,16 +1599,22 @@ var ICE_EDITOR_PALETTE =[
     })
   },
   {
-    name: 'Drawing',
+    name: 'Interaction',
     color: 'turtle',
     blocks: [
-      'pen purple, 10',
-      'do pu',
-      'do pd',
-      'rt 180, 100',
-      'lt 180, 100',
-      'slide 100, 20',
-      'jump 100, 20'
+      'speed Infinity',
+      'moveto lastclick',
+      'turnto lastmousemove',
+      'read \'Name?\', (n) ->\n' +
+      '  write \'Hello \' + n',
+      'click ->\n' +
+      '  write \'Heh!\'',
+      'if pressed \'enter\'\n' +
+      '  write \'Holding.\'',
+      'p = new Piano',
+      'p.play \'EDC\'',
+      'w = new Webcam',
+      't = new Turtle'
     ].map(function(block) {
       return ice.parse(block).start.next.container
     })

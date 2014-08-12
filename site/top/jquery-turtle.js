@@ -2513,6 +2513,12 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
   };
 }
 
+var absoluteUrlAnchor = document.createElement('a');
+function absoluteUrl(url) {
+  absoluteUrlAnchor.href = url;
+  return absoluteUrlAnchor.href;
+}
+
 // A map of url to {img: Image, queue: [{elem: elem, css: css, cb: cb}]}.
 var stablyLoadedImages = {};
 
@@ -2533,7 +2539,7 @@ var stablyLoadedImages = {};
 // @param css is a dictionary of css props to set when the image is loaded.
 // @param cb is an optional callback, called after the loading is done.
 function setImageWithStableOrigin(elem, url, css, cb) {
-  var record;
+  var record, url = absoluteUrl(url);
   // The data-loading attr will always reflect the last URL requested.
   elem.setAttribute('data-loading', url);
   if (url in stablyLoadedImages) {
@@ -2648,10 +2654,12 @@ function applyLoadedImage(loaded, elem, css) {
       elem.height = loaded.height;
       if (!isCanvas) {
         elem.src = loaded.src;
-      } else {
-        ctx = elem.getContext('2d');
-        ctx.clearRect(0, 0, loaded.width, loaded.height);
-        ctx.drawImage(loaded, 0, 0);
+      } else if (loaded.width > 0 && loaded.height > 0) {
+        try {
+          ctx = elem.getContext('2d');
+          ctx.clearRect(0, 0, loaded.width, loaded.height);
+          ctx.drawImage(loaded, 0, 0);
+        } catch (e) { }
       }
     }
   }
@@ -3369,10 +3377,14 @@ var pressedKey = (function() {
   // The pressed function just polls the given keyname.
   function pressed(keyname) {
     focusWindowIfFirst();
-    // Canonical names are lowercase and have no spaces.
-    keyname = keyname.replace(/\s/g, '').toLowerCase();
-    if (pressedState[keyname]) return true;
-    return false;
+    if (keyname) {
+      // Canonical names are lowercase and have no spaces.
+      keyname = keyname.replace(/\s/g, '').toLowerCase();
+      if (pressedState[keyname]) return true;
+      return false;
+    } else {
+      return listPressedKeys();
+    }
   }
   pressed.enable = enablePressListener;
   pressed.list = listPressedKeys;
@@ -8373,7 +8385,7 @@ function input(name, callback, numeric) {
       numeric >= 0 && $.isNumeric(val) && ('' + parseFloat(val) == val))) {
       val = parseFloat(val);
     }
-    if (callback) { callback.call(thisval, val); }
+    if (callback) { setTimeout(function() {callback.call(thisval, val); }, 0); }
   }
   function validate() {
     if (numeric <= 0) return true;
