@@ -10,8 +10,8 @@ define([
   'ice',
   'draw-protractor',
   'ZeroClipboard',
-  'FontLoader',
-  'gadget'],
+  'FontLoader'
+],
 function(
   $,
   filetype,
@@ -20,8 +20,7 @@ function(
   ice,
   drawProtractor,
   ZeroClipboard,
-  FontLoader,
-  gadget
+  FontLoader
 ) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
@@ -556,6 +555,10 @@ $('#buttonbar,#middle').on('mousemove', 'button', function(e) {
 });
 
 $('#buttonbar,#middle').on('click', 'button', function(e) {
+  // First deal with rename if it's in progress.
+  if ($('#filename').is(document.activeElement)) {
+    $('#filename').blur();
+  }
   if (this.id) {
     $(this).removeClass('pressed');
     $(this).tooltipster('hide');
@@ -1637,10 +1640,6 @@ function setPaneEditorText(pane, text, filename) {
   paneState.dirtied = false;
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var paletteElement = document.createElement('div');
-  $(paletteElement).css({
-    width: '100%', height: '100%', position: 'absolute'
-  });
   var iceEditor = paneState.iceEditor =
       new ice.Editor(
           document.getElementById(id),
@@ -1890,12 +1889,6 @@ function setPaneEditorReadOnly(pane, ro) {
   $(paneState.editor.container).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
-  if (ro || !paneState.iceEditor.currentlyUsingBlocks) {
-    clearPaletteElement(paneState.iceEditor.paletteElement);
-  } else {
-    setPaletteElement(paneState.iceEditor.paletteElement);
-    paneState.iceEditor.resizePalette();
-  }
   // Only if the editor is read only do we want to blur it.
   if (ro) {
     paneState.editor.blur();
@@ -2085,30 +2078,6 @@ function noteNewFilename(pane, filename) {
 eval(see.scope('view'));
 
 $('#owner,#filename,#folder').tooltipster();
-
-gadget.addGadget('blocks', {
-  name: 'Blocks',
-  top: 100,
-  minimized: false,
-  left: $(window).width() / 4,
-  width: Math.min(300, $(window).width() / 2),
-  height: Math.min(500, $(window).height() - 120)
-}).hide();
-
-function clearPaletteElement(elt) {
-  if ($(elt).closest('#blocks .body').length) {
-    $('#blocks .body').empty();
-    $('#blocks').hide();
-  }
-}
-
-function setPaletteElement(elt) {
-  $('#blocks .body').empty();
-  if (elt) {
-    $('#blocks .body').append(elt);
-    $('#blocks').show();
-  }
-}
 
 var codeFontLoaded = false,
     codeFontLoadingCallbacks = [];

@@ -1290,6 +1290,14 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         return "<socket precedence=\"" + this.container.precedence + "\">";
       };
 
+      SocketStartToken.prototype.stringify = function() {
+        if (this.next === this.container.end || this.next.type === 'text' && this.next.value === '') {
+          return '``';
+        } else {
+          return '';
+        }
+      };
+
       return SocketStartToken;
 
     })(StartToken);
@@ -1361,7 +1369,11 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
       IndentEndToken.prototype.stringify = function(state) {
         state.indent = state.indent.slice(0, -this.container.depth);
-        return '';
+        if (this.previousVisibleToken().previousVisibleToken() === this.container.start) {
+          return '``';
+        } else {
+          return '';
+        }
       };
 
       IndentEndToken.prototype.serialize = function() {
@@ -2754,7 +2766,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             this.dropPoint = this.bounds[0].upperLeftCorner();
             this.highlightArea = this.path.clone();
             this.highlightArea.noclip = true;
-            this.highlightArea.style.strokeColor = '#FFF';
+            this.highlightArea.style.strokeColor = '#FF0';
             return this.highlightArea.style.lineWidth = this.view.opts.padding;
           }
         };
@@ -3959,7 +3971,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('ice-controller',['ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(coffee, draw, model, view) {
-    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, exports, extend_, fontMetrics, fontMetricsCache, getCharactersTo, getFontHeight, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, exports, extend_, fontMetrics, fontMetricsCache, getCharactersTo, getFontHeight, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
     PALETTE_TOP_MARGIN = 5;
     PALETTE_MARGIN = 5;
     MIN_DRAG_DISTANCE = 1;
@@ -4746,6 +4758,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           this.draggingBlock.spliceOut();
         }
         this.clearHighlightCanvas();
+        this.addMicroUndoOperation('CAPTURE_POINT');
         switch (this.lastHighlight.type) {
           case 'indent':
           case 'socket':
@@ -5033,20 +5046,43 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       TextChangeOperation.prototype.undo = function(editor) {
         var socket;
         socket = editor.tree.getTokenAtLocation(this.socket).container;
-        socket.start.append(socket.end);
-        socket.notifyChange();
-        return socket.start.insert(new model.TextToken(this.before));
+        return editor.populateSocket(socket, this.before);
       };
 
       TextChangeOperation.prototype.redo = function(editor) {
         var socket;
         socket = editor.tree.getTokenAtLocation(this.socket).container;
-        socket.start.append(socket.end);
-        socket.notifyChange();
-        return socket.start.insert(new model.TextToken(this.after));
+        return editor.populateSocket(this.socket, this.after);
       };
 
       return TextChangeOperation;
+
+    })(UndoOperation);
+    TextReparseOperation = (function(_super) {
+      __extends(TextReparseOperation, _super);
+
+      function TextReparseOperation(socket, before) {
+        this.before = before;
+        this.after = socket.start.next.container;
+        this.socket = socket.start.getSerializedLocation();
+      }
+
+      TextReparseOperation.prototype.undo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.next.container.moveTo(null);
+        return socket.start.insert(new model.TextToken(this.before));
+      };
+
+      TextReparseOperation.prototype.redo = function(editor) {
+        var socket;
+        socket = editor.tree.getTokenAtLocation(this.socket).container;
+        socket.start.append(socket.end);
+        socket.notifyChange();
+        return this.after.clone().moveTo(socket);
+      };
+
+      return TextReparseOperation;
 
     })(UndoOperation);
     hook('populate', 1, function() {
@@ -5146,7 +5182,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
-      var newParse, parseParent, _ref, _ref1,
+      var newParse, originalText, parseParent, shouldPop, unparsedValue, _ref, _ref1,
         _this = this;
       if (selectionStart == null) {
         selectionStart = 0;
@@ -5161,6 +5197,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.addMicroUndoOperation('CAPTURE_POINT');
         this.addMicroUndoOperation(new TextChangeOperation(this.textFocus, this.oldFocusValue));
         this.oldFocusValue = null;
+        originalText = this.textFocus.stringify();
+        shouldPop = false;
+        try {
+          newParse = coffee.parse(unparsedValue = this.textFocus.stringify(), {
+            wrapAtRoot: false
+          });
+          if (newParse.start.next.type === 'blockStart' && newParse.start.next.container.end.next === newParse.end) {
+            this.textFocus.start.append(this.textFocus.end);
+            newParse.start.next.container.spliceIn(this.textFocus.start);
+            this.addMicroUndoOperation(new TextReparseOperation(this.textFocus, unparsedValue));
+            shouldPop = true;
+          }
+        } catch (_error) {}
         try {
           parseParent = this.textFocus.parent;
           newParse = coffee.parse(parseParent.stringify(), {
@@ -5182,6 +5231,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             throw new Error('Socket is split.');
           }
         } catch (_error) {
+          this.populateSocket(this.textFocus, originalText);
+          if (shouldPop) {
+            this.undoStack.pop();
+          }
           this.extraMarks[this.textFocus.id] = {
             model: this.textFocus,
             style: {
