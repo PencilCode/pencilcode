@@ -641,13 +641,14 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           baseline: capital.bottom,
           descent: gp.bottom
         };
+        result.prettytop = Math.max(0, Math.min(result.ascent, result.ex - (result.descent - result.baseline)));
         fontMetricsCache[fontStyle] = result;
       }
       return result;
     };
     _FONT_CAPITAL = 2;
-    refreshFontCapital = function() {
-      return _FONT_CAPITAL = fontMetrics(_FONT_FAMILY, _FONT_SIZE).ascent;
+    exports.refreshFontCapital = refreshFontCapital = function() {
+      return _FONT_CAPITAL = fontMetrics(_FONT_FAMILY, _FONT_SIZE).prettytop;
     };
     exports._setCTX = function(ctx) {
       return _CTX = ctx;
@@ -3695,7 +3696,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptTranspiler.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, condition, expr, fakeBlock, firstBounds, indent, index, infix, line, lines, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
+        var arg, bounds, childName, condition, expr, fakeBlock, firstBounds, indent, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -3804,26 +3805,32 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return 0;
           case 'Call':
             if (node.variable != null) {
-              if (_ref5 = (_ref6 = node.variable) != null ? (_ref7 = _ref6.base) != null ? _ref7.value : void 0 : void 0, __indexOf.call(BLOCK_FUNCTIONS, _ref5) >= 0) {
+              methodname = null;
+              if (((_ref5 = node.variable.properties) != null ? _ref5.length : void 0) > 0) {
+                methodname = (_ref6 = node.variable.properties[node.variable.properties.length - 1].name) != null ? _ref6.value : void 0;
+              } else if ((_ref7 = node.variable.base) != null ? _ref7.value : void 0) {
+                methodname = node.variable.base.value;
+              }
+              if (__indexOf.call(BLOCK_FUNCTIONS, methodname) >= 0) {
                 this.addBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
-              } else if (_ref8 = node.variable, __indexOf.call(VALUE_FUNCTIONS, _ref8) >= 0) {
+              } else if (__indexOf.call(VALUE_FUNCTIONS, methodname) >= 0) {
                 this.addBlock(node, depth, 0, 'value', wrappingParen, MOSTLY_VALUE);
               } else {
                 this.addBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
               }
-              if (((_ref9 = node.variable.base) != null ? _ref9.nodeType() : void 0) !== 'Literal') {
+              if (((_ref8 = node.variable.base) != null ? _ref8.nodeType() : void 0) !== 'Literal') {
                 this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth);
-              } else if (((_ref10 = node.variable.properties) != null ? _ref10.length : void 0) > 0) {
+              } else if (((_ref9 = node.variable.properties) != null ? _ref9.length : void 0) > 0) {
                 this.addSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
               }
             } else {
               this.addBlock(node, depth, precedence, 'command', wrappingParen, ANY_DROP);
             }
             if (!node["do"]) {
-              _ref11 = node.args;
+              _ref10 = node.args;
               _results2 = [];
-              for (index = _m = 0, _len3 = _ref11.length; _m < _len3; index = ++_m) {
-                arg = _ref11[index];
+              for (index = _m = 0, _len3 = _ref10.length; _m < _len3; index = ++_m) {
+                arg = _ref10[index];
                 precedence = 0;
                 if (index === node.args.length - 1) {
                   precedence = -1;
@@ -3835,9 +3842,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Code':
             this.addBlock(node, depth, precedence, 'value', wrappingParen, VALUE_ONLY);
-            _ref12 = node.params;
-            for (_n = 0, _len4 = _ref12.length; _n < _len4; _n++) {
-              param = _ref12[_n];
+            _ref11 = node.params;
+            for (_n = 0, _len4 = _ref11.length; _n < _len4; _n++) {
+              param = _ref11[_n];
               this.addSocketAndMark(param, depth + 1, 0, indentDepth, NO);
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
@@ -3849,16 +3856,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.addSocketAndMark(node.value, depth + 1, 0, indentDepth);
           case 'For':
             this.addBlock(node, depth, precedence, 'control', wrappingParen, MOSTLY_BLOCK);
-            _ref13 = ['source', 'from', 'guard', 'step'];
-            for (_o = 0, _len5 = _ref13.length; _o < _len5; _o++) {
-              childName = _ref13[_o];
+            _ref12 = ['source', 'from', 'guard', 'step'];
+            for (_o = 0, _len5 = _ref12.length; _o < _len5; _o++) {
+              childName = _ref12[_o];
               if (node[childName] != null) {
                 this.addSocketAndMark(node[childName], depth + 1, 0, indentDepth);
               }
             }
-            _ref14 = ['index', 'name'];
-            for (_p = 0, _len6 = _ref14.length; _p < _len6; _p++) {
-              childName = _ref14[_p];
+            _ref13 = ['index', 'name'];
+            for (_p = 0, _len6 = _ref13.length; _p < _len6; _p++) {
+              childName = _ref13[_p];
               if (node[childName] != null) {
                 this.addSocketAndMark(node[childName], depth + 1, 0, indentDepth, NO);
               }
@@ -3889,10 +3896,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Arr':
             this.addBlock(node, depth, 100, 'value', wrappingParen, VALUE_ONLY);
-            _ref15 = node.objects;
+            _ref14 = node.objects;
             _results3 = [];
-            for (_q = 0, _len7 = _ref15.length; _q < _len7; _q++) {
-              object = _ref15[_q];
+            for (_q = 0, _len7 = _ref14.length; _q < _len7; _q++) {
+              object = _ref14[_q];
               _results3.push(this.addSocketAndMark(object, depth + 1, 0, indentDepth));
             }
             return _results3;
@@ -3915,13 +3922,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.subject != null) {
               this.addSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
-            _ref16 = node.cases;
-            for (_r = 0, _len8 = _ref16.length; _r < _len8; _r++) {
-              switchCase = _ref16[_r];
+            _ref15 = node.cases;
+            for (_r = 0, _len8 = _ref15.length; _r < _len8; _r++) {
+              switchCase = _ref15[_r];
               if (switchCase[0].constructor === Array) {
-                _ref17 = switchCase[0];
-                for (_s = 0, _len9 = _ref17.length; _s < _len9; _s++) {
-                  condition = _ref17[_s];
+                _ref16 = switchCase[0];
+                for (_s = 0, _len9 = _ref16.length; _s < _len9; _s++) {
+                  condition = _ref16[_s];
                   this.addSocketAndMark(condition, depth + 1, 0, indentDepth);
                 }
               } else {
@@ -3947,10 +3954,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Obj':
             this.addBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
-            _ref18 = node.properties;
+            _ref17 = node.properties;
             _results4 = [];
-            for (_t = 0, _len10 = _ref18.length; _t < _len10; _t++) {
-              property = _ref18[_t];
+            for (_t = 0, _len10 = _ref17.length; _t < _len10; _t++) {
+              property = _ref17[_t];
               if (property.nodeType() === 'Assign') {
                 this.addSocketAndMark(property.variable, depth + 1, 0, indentDepth, NO);
                 _results4.push(this.addSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -4128,6 +4135,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.paletteElement.style.width = '300px';
         this.iceElement.style.left = this.paletteElement.offsetWidth + 'px';
         this.wrapperElement.appendChild(this.paletteElement);
+        draw.refreshFontCapital();
         this.standardViewSettings = {
           padding: 5,
           indentWidth: 20,
@@ -6449,8 +6457,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     hook('populate', 0, function() {
       this.fontSize = 15;
-      this.fontAscent = 1;
-      return this.fontFamily = 'Courier New';
+      this.fontFamily = 'Courier New';
+      return this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
     });
     Editor.prototype.setFontSize_raw = function(fontSize) {
       if (this.fontSize !== fontSize) {
@@ -6458,7 +6466,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.paletteHeader.style.fontSize = "" + fontSize + "px";
         this.gutter.style.fontSize = "" + fontSize + "px";
         this.view.opts.textHeight = this.dragView.opts.textHeight = getFontHeight(this.fontFamily, this.fontSize);
-        this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).ascent;
+        this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
         this.view.clearCache();
         this.dragView.clearCache();
         this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
@@ -6470,7 +6478,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       draw._setGlobalFontFamily(fontFamily);
       this.fontFamily = fontFamily;
       this.view.opts.textHeight = getFontHeight(this.fontFamily, this.fontSize);
-      this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).ascent;
+      this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
       this.view.clearCache();
       this.dragView.clearCache();
       this.gutter.style.fontFamily = fontFamily;
@@ -7000,6 +7008,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           baseline: capital.bottom,
           descent: gp.bottom
         };
+        result.prettytop = Math.max(0, Math.min(result.ascent, result.ex - (result.descent - result.baseline)));
         fontMetricsCache[fontStyle] = result;
       }
       return result;
@@ -7007,7 +7016,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     getFontHeight = function(family, size) {
       var metrics;
       metrics = fontMetrics(family, size);
-      return metrics.descent - metrics.ascent;
+      return metrics.descent - metrics.prettytop;
     };
     Editor.prototype.overflowsX = function() {
       return this.documentDimensions().width > this.viewportDimensions().width;
