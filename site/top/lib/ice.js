@@ -676,7 +676,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
       }
 
       Draw.prototype.refreshFontCapital = function() {
-        return this.fontAscent = helper.fontMetrics(self.fontFamily, self.fontSize).prettytop;
+        return this.fontAscent = helper.fontMetrics(this.fontFamily, this.fontSize).prettytop;
       };
 
       Draw.prototype.setCtx = function(ctx) {
@@ -4338,7 +4338,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.topNubbyPath.style.fillColor = '#EBEBEB';
     });
     Editor.prototype.redrawMain = function(opts) {
-      var binding, layoutResult, _i, _len, _ref, _ref1, _ref2, _results;
+      var binding, layoutResult, oldScroll, _i, _len, _ref, _ref1, _ref2;
       if (opts == null) {
         opts = {};
       }
@@ -4362,12 +4362,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           this.mainCtx.restore();
         }
         _ref2 = editorBindings.redraw_main;
-        _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
           binding = _ref2[_i];
-          _results.push(binding.call(this, layoutResult));
+          binding.call(this, layoutResult);
         }
-        return _results;
+        if (this.changeEventVersion !== this.tree.version) {
+          this.changeEventVersion = this.tree.version;
+          this.suppressChangeEvent = true;
+          oldScroll = this.aceEditor.session.getScrollTop();
+          this.aceEditor.setValue(this.getValue(), -1);
+          this.suppressChangeEvent = false;
+          this.aceEditor.session.setScrollTop(oldScroll);
+          this.fireEvent('change', []);
+        }
+        return null;
       }
     };
     Editor.prototype.redrawHighlights = function() {
@@ -4510,7 +4518,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.iceElement.focus();
     });
     hook('populate', 0, function() {
-      return this.undoStack = [];
+      this.undoStack = [];
+      return this.changeEventVersion = 0;
     });
     UndoOperation = (function() {
       function UndoOperation() {}
@@ -4526,21 +4535,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return UndoOperation;
 
     })();
-    Editor.prototype.addMicroUndoOperation = function(operation) {
-      var head, next, oldScroll;
-      this.undoStack.push(operation);
+    Editor.prototype.removeBlankLines = function() {
+      var head, next, _results;
       head = this.tree.end.previousVisibleToken();
+      _results = [];
       while ((head != null ? head.type : void 0) === 'newline') {
         next = head.previousVisibleToken();
         head.remove();
-        head = next;
+        _results.push(head = next);
       }
-      this.suppressChangeEvent = true;
-      oldScroll = this.aceEditor.session.getScrollTop();
-      this.aceEditor.setValue(this.getValue(), -1);
-      this.suppressChangeEvent = false;
-      this.aceEditor.session.setScrollTop(oldScroll);
-      return this.fireEvent('change', [operation]);
+      return _results;
+    };
+    Editor.prototype.addMicroUndoOperation = function(operation) {
+      this.undoStack.push(operation);
+      return this.removeBlankLines();
     };
     Editor.prototype.undo = function() {
       var operation;
@@ -4767,7 +4775,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     });
     hook('mousemove', 0, function(point, event, state) {
-      var best, mainPoint, min, position, testPoints,
+      var best, head, mainPoint, min, position, testPoints, _ref, _ref1, _ref2,
         _this = this;
       if (this.draggingBlock != null) {
         position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
@@ -4776,29 +4784,38 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         mainPoint = this.trackerPointToMain(position);
         best = null;
         min = Infinity;
-        testPoints = this.dropPointQuadTree.retrieve({
-          x: mainPoint.x - MAX_DROP_DISTANCE,
-          y: mainPoint.y - MAX_DROP_DISTANCE,
-          w: MAX_DROP_DISTANCE * 2,
-          h: MAX_DROP_DISTANCE * 2
-        }, function(point) {
-          var distance;
-          if (!(point._ice_needs_shift && !_this.shiftKeyPressed)) {
-            distance = mainPoint.from(point);
-            distance.y *= 2;
-            distance = distance.magnitude();
-            if (distance < min && mainPoint.from(point).magnitude() < MAX_DROP_DISTANCE && (_this.view.getViewNodeFor(point._ice_node).highlightArea != null)) {
-              best = point._ice_node;
-              return min = distance;
+        head = this.tree.start.next;
+        while (((_ref = head.type) === 'newline' || _ref === 'cursor') || head.type === 'text' && head.value === '') {
+          head = head.next;
+        }
+        if (head === this.tree.end && (this.mainCanvas.width + this.scrollOffsets.main.x > (_ref1 = mainPoint.x) && _ref1 > this.scrollOffsets.main.x) && (this.mainCanvas.height + this.scrollOffsets.main.y > (_ref2 = mainPoint.y) && _ref2 > this.scrollOffsets.main.y)) {
+          this.view.getViewNodeFor(this.tree).highlightArea.draw(this.highlightCtx);
+          return this.lastHighlight = this.tree;
+        } else {
+          testPoints = this.dropPointQuadTree.retrieve({
+            x: mainPoint.x - MAX_DROP_DISTANCE,
+            y: mainPoint.y - MAX_DROP_DISTANCE,
+            w: MAX_DROP_DISTANCE * 2,
+            h: MAX_DROP_DISTANCE * 2
+          }, function(point) {
+            var distance;
+            if (!(point._ice_needs_shift && !_this.shiftKeyPressed)) {
+              distance = mainPoint.from(point);
+              distance.y *= 2;
+              distance = distance.magnitude();
+              if (distance < min && mainPoint.from(point).magnitude() < MAX_DROP_DISTANCE && (_this.view.getViewNodeFor(point._ice_node).highlightArea != null)) {
+                best = point._ice_node;
+                return min = distance;
+              }
             }
+          });
+          if (best !== this.lastHighlight) {
+            this.clearHighlightCanvas();
+            if (best != null) {
+              this.view.getViewNodeFor(best).highlightArea.draw(this.highlightCtx);
+            }
+            return this.lastHighlight = best;
           }
-        });
-        if (best !== this.lastHighlight) {
-          this.clearHighlightCanvas();
-          if (best != null) {
-            this.view.getViewNodeFor(best).highlightArea.draw(this.highlightCtx);
-          }
-          return this.lastHighlight = best;
         }
       }
     });
@@ -4889,8 +4906,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     ToFloatingOperation = (function(_super) {
       __extends(ToFloatingOperation, _super);
 
-      function ToFloatingOperation(block, position) {
-        this.position = new this.draw.Point(position.x, position.y);
+      function ToFloatingOperation(block, position, editor) {
+        this.position = new editor.draw.Point(position.x, position.y);
         ToFloatingOperation.__super__.constructor.call(this, block, null);
       }
 
@@ -4908,8 +4925,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
     })(DropOperation);
     FromFloatingOperation = (function() {
-      function FromFloatingOperation(record) {
-        this.position = new this.draw.Point(record.position.x, record.position.y);
+      function FromFloatingOperation(record, editor) {
+        this.position = new editor.draw.Point(record.position.x, record.position.y);
         this.block = record.block.clone();
       }
 
@@ -4958,7 +4975,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         } else if (renderPoint.x - this.scrollOffsets.main.x < 0) {
           renderPoint.x = this.scrollOffsets.main.x;
         }
-        this.addMicroUndoOperation(new ToFloatingOperation(this.draggingBlock, renderPoint));
+        this.addMicroUndoOperation(new ToFloatingOperation(this.draggingBlock, renderPoint, this));
         this.floatingBlocks.push(new FloatingBlockRecord(this.draggingBlock, renderPoint));
         this.draggingBlock = null;
         this.draggingOffset = null;
@@ -5000,7 +5017,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               this.addMicroUndoOperation('CAPTURE_POINT');
               state.addedCapturePoint = true;
             }
-            this.addMicroUndoOperation(new FromFloatingOperation(record));
+            this.addMicroUndoOperation(new FromFloatingOperation(record, this));
             this.floatingBlocks.splice(i, 1);
             this.redrawMain();
             return;
@@ -6695,6 +6712,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.tree = newParse;
       this.gutterVersion = -1;
       this.tree.start.insert(this.cursor);
+      this.removeBlankLines();
       this.redrawMain();
       return {
         success: true
@@ -6708,9 +6726,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.aceEditor.session.setScrollTop(oldScrollTop);
       return this.setValue_raw(value);
     };
+    Editor.prototype.addEmptyLine = function(str) {
+      if (str.length === 0 || str[str.length - 1] === '\n') {
+        return str;
+      } else {
+        return str + '\n';
+      }
+    };
     Editor.prototype.getValue = function() {
       if (this.currentlyUsingBlocks) {
-        return this.tree.stringify();
+        return this.addEmptyLine(this.tree.stringify());
       } else {
         return this.aceEditor.getValue();
       }
