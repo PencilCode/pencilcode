@@ -35,11 +35,100 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 55:"7",56:"8",57:"9",65:"a",66:"b",67:"c",68:"d",69:"e",70:"f",71:"g",72:"h",73:"i",74:"j",75:"k",76:"l",77:"m",78:"n",79:"o",80:"p",81:"q",82:"r",83:"s",84:"t",85:"u",86:"v",87:"w",88:"x",89:"y",90:"z",91:"cmd",92:"cmd",93:"cmd",96:"num_0",97:"num_1",98:"num_2",99:"num_3",100:"num_4",101:"num_5",102:"num_6",103:"num_7",104:"num_8",105:"num_9",106:"num_multiply",107:"num_add",108:"num_enter",109:"num_subtract",110:"num_decimal",111:"num_divide",124:"print",144:"num",145:"scroll",186:";",187:"=",188:",",
 189:"-",190:".",191:"/",192:"`",219:"[",220:"\\",221:"]",222:"'",223:"`",224:"cmd",225:"alt",57392:"ctrl",63289:"num"};-1!==navigator.userAgent.indexOf("Mac OS X")&&(k="cmd");-1!==navigator.userAgent.indexOf("Opera")&&(q["17"]="cmd")}).call(this);
 ;(function() {
+  define('ice-helper',[],function() {
+    var exports, fontMetrics, fontMetricsCache;
+    exports = {};
+    exports.ANY_DROP = 0;
+    exports.BLOCK_ONLY = 1;
+    exports.MOSTLY_BLOCK = 2;
+    exports.MOSTLY_VALUE = 3;
+    exports.VALUE_ONLY = 4;
+    fontMetricsCache = {};
+    exports.fontMetrics = fontMetrics = function(fontFamily, fontHeight) {
+      var baseline, canvas, capital, ctx, ex, fontStyle, gp, height, lf, metrics, result, textTopAndBottom, width;
+      fontStyle = "" + fontHeight + "px " + fontFamily;
+      result = fontMetricsCache[fontStyle];
+      textTopAndBottom = function(testText) {
+        var col, first, index, last, pixels, right, row, _i, _j;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, width, height);
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'white';
+        ctx.fillText(testText, 0, 0);
+        right = Math.ceil(ctx.measureText(testText).width);
+        pixels = ctx.getImageData(0, 0, width, height).data;
+        first = -1;
+        last = height;
+        for (row = _i = 0; 0 <= height ? _i < height : _i > height; row = 0 <= height ? ++_i : --_i) {
+          for (col = _j = 1; 1 <= right ? _j < right : _j > right; col = 1 <= right ? ++_j : --_j) {
+            index = (row * width + col) * 4;
+            if (pixels[index] !== 0) {
+              if (first < 0) {
+                first = row;
+              }
+              break;
+            }
+          }
+          if (first >= 0 && col >= right) {
+            last = row;
+            break;
+          }
+        }
+        return {
+          top: first,
+          bottom: last
+        };
+      };
+      if (!result) {
+        canvas = document.createElement('canvas');
+        ctx = canvas.getContext('2d');
+        ctx.font = fontStyle;
+        metrics = ctx.measureText('Hg');
+        if (canvas.height < fontHeight * 2 || canvas.width < metrics.width) {
+          canvas.width = Math.ceil(metrics.width);
+          canvas.height = fontHeight * 2;
+          ctx = canvas.getContext('2d');
+          ctx.font = fontStyle;
+        }
+        width = canvas.width;
+        height = canvas.height;
+        capital = textTopAndBottom('H');
+        ex = textTopAndBottom('x');
+        lf = textTopAndBottom('lf');
+        gp = textTopAndBottom('g');
+        baseline = capital.bottom;
+        result = {
+          ascent: lf.top,
+          capital: capital.top,
+          ex: ex.top,
+          baseline: capital.bottom,
+          descent: gp.bottom
+        };
+        result.prettytop = Math.max(0, Math.min(result.ascent, result.ex - (result.descent - result.baseline)));
+        fontMetricsCache[fontStyle] = result;
+      }
+      return result;
+    };
+    exports.getFontHeight = function(family, size) {
+      var metrics;
+      metrics = fontMetrics(family, size);
+      return metrics.descent - metrics.prettytop;
+    };
+    return exports;
+  });
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=helper.js.map
+*/;
+(function() {
   var __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define('ice-draw',[],function() {
-    var NoRectangle, Path, Point, Rectangle, Size, Text, avgColor, exports, fontMetrics, fontMetricsCache, max, memoizedAvgColor, min, refreshFontCapital, toHex, toRGB, twoDigitHex, zeroPad, _CTX, _FONT_CAPITAL, _FONT_FAMILY, _FONT_SIZE, _area, _intersects;
+  define('ice-draw',['ice-helper'], function(helper) {
+    var Draw, avgColor, exports, max, memoizedAvgColor, min, toHex, toRGB, twoDigitHex, zeroPad, _area, _intersects;
+    exports = {};
     _area = function(a, b, c) {
       return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
     };
@@ -119,551 +208,498 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
       })();
       return memoizedAvgColor[c] = toHex(newRGB);
     };
-    exports = {};
-    exports.Point = Point = (function() {
-      function Point(x, y) {
-        this.x = x;
-        this.y = y;
-      }
-
-      Point.prototype.clone = function() {
-        return new Point(this.x, this.y);
-      };
-
-      Point.prototype.magnitude = function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-      };
-
-      Point.prototype.translate = function(vector) {
-        this.x += vector.x;
-        return this.y += vector.y;
-      };
-
-      Point.prototype.add = function(x, y) {
-        this.x += x;
-        return this.y += y;
-      };
-
-      Point.prototype.copy = function(point) {
-        this.x = point.x;
-        return this.y = point.y;
-      };
-
-      Point.prototype.from = function(point) {
-        return new Point(this.x - point.x, this.y - point.y);
-      };
-
-      Point.prototype.clear = function() {
-        return this.x = this.y = 0;
-      };
-
-      Point.prototype.equals = function(point) {
-        return point.x === this.x && point.y === this.y;
-      };
-
-      return Point;
-
-    })();
-    exports.Size = Size = (function() {
-      function Size(width, height) {
-        this.width = width;
-        this.height = height;
-      }
-
-      Size.prototype.equals = function(size) {
-        return this.width === size.width && this.height === size.height;
-      };
-
-      Size.copy = function(size) {
-        return new Size(size.width, size.height);
-      };
-
-      return Size;
-
-    })();
-    exports.Rectangle = Rectangle = (function() {
-      function Rectangle(x, y, width, height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-      }
-
-      Rectangle.prototype.contains = function(point) {
-        return (this.x != null) && (this.y != null) && !((point.x < this.x) || (point.x > this.x + this.width) || (point.y < this.y) || (point.y > this.y + this.height));
-      };
-
-      Rectangle.prototype.identical = function(other) {
-        return this.x === other.x && this.y === other.y && this.width === other.width && this.height === other.height;
-      };
-
-      Rectangle.prototype.copy = function(rect) {
-        this.x = rect.x;
-        this.y = rect.y;
-        this.width = rect.width;
-        return this.height = rect.height;
-      };
-
-      Rectangle.prototype.clip = function(ctx) {
-        ctx.rect(this.x, this.y, this.width, this.height);
-        return ctx.clip();
-      };
-
-      Rectangle.prototype.clone = function() {
-        var rect;
-        rect = new Rectangle(0, 0, 0, 0);
-        rect.copy(this);
-        return rect;
-      };
-
-      Rectangle.prototype.clear = function() {
-        this.width = this.height = 0;
-        return this.x = this.y = null;
-      };
-
-      Rectangle.prototype.bottom = function() {
-        return this.y + this.height;
-      };
-
-      Rectangle.prototype.right = function() {
-        return this.x + this.width;
-      };
-
-      Rectangle.prototype.fill = function(ctx, style) {
-        ctx.fillStyle = style;
-        return ctx.fillRect(this.x, this.y, this.width, this.height);
-      };
-
-      Rectangle.prototype.unite = function(rectangle) {
-        if (!((this.x != null) && (this.y != null))) {
-          return this.copy(rectangle);
-        } else if (!((rectangle.x != null) && (rectangle.y != null))) {
-
-        } else {
-          this.width = max(this.right(), rectangle.right()) - (this.x = min(this.x, rectangle.x));
-          return this.height = max(this.bottom(), rectangle.bottom()) - (this.y = min(this.y, rectangle.y));
-        }
-      };
-
-      Rectangle.prototype.swallow = function(point) {
-        if (!((this.x != null) && (this.y != null))) {
-          return this.copy(new Rectangle(point.x, point.y, 0, 0));
-        } else {
-          this.width = max(this.right(), point.x) - (this.x = min(this.x, point.x));
-          return this.height = max(this.bottom(), point.y) - (this.y = min(this.y, point.y));
-        }
-      };
-
-      Rectangle.prototype.overlap = function(rectangle) {
-        return (this.x != null) && (this.y != null) && !((rectangle.right()) < this.x || (rectangle.bottom() < this.y) || (rectangle.x > this.right()) || (rectangle.y > this.bottom()));
-      };
-
-      Rectangle.prototype.translate = function(vector) {
-        this.x += vector.x;
-        return this.y += vector.y;
-      };
-
-      Rectangle.prototype.stroke = function(ctx, style) {
-        ctx.strokeStyle = style;
-        return ctx.strokeRect(this.x, this.y, this.width, this.height);
-      };
-
-      Rectangle.prototype.fill = function(ctx, style) {
-        ctx.fillStyle = style;
-        return ctx.fillRect(this.x, this.y, this.width, this.height);
-      };
-
-      Rectangle.prototype.upperLeftCorner = function() {
-        return new Point(this.x, this.y);
-      };
-
-      Rectangle.prototype.toPath = function() {
-        var path, point, _i, _len, _ref;
-        path = new Path();
-        _ref = [[this.x, this.y], [this.x, this.bottom()], [this.right(), this.bottom()], [this.right(), this.y]];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          point = _ref[_i];
-          path.push(new Point(point[0], point[1]));
-        }
-        return path;
-      };
-
-      return Rectangle;
-
-    })();
-    exports.NoRectangle = NoRectangle = (function(_super) {
-      __extends(NoRectangle, _super);
-
-      function NoRectangle() {
-        NoRectangle.__super__.constructor.call(this, null, null, 0, 0);
-      }
-
-      return NoRectangle;
-
-    })(Rectangle);
-    exports.Path = Path = (function() {
-      function Path() {
-        this._points = [];
-        this._cachedTranslation = new Point(0, 0);
-        this._cacheFlag = false;
-        this._bounds = new NoRectangle();
-        this.style = {
-          'strokeColor': '#000',
-          'lineWidth': 1,
-          'fillColor': null
-        };
-      }
-
-      Path.prototype._clearCache = function() {
-        var maxX, maxY, minX, minY, point, _i, _len, _ref;
-        if (this._cacheFlag) {
-          minX = minY = Infinity;
-          maxX = maxY = 0;
-          _ref = this._points;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            point = _ref[_i];
-            minX = min(minX, point.x);
-            maxX = max(maxX, point.x);
-            minY = min(minY, point.y);
-            maxY = max(maxY, point.y);
+    exports.Draw = Draw = (function() {
+      function Draw() {
+        var NoRectangle, Path, Point, Rectangle, Size, Text, self;
+        this.ctx = null;
+        this.fontSize = 15;
+        this.fontFamily = 'Courier New, monospace';
+        this.fontAscent = 2;
+        self = this;
+        this.Point = Point = (function() {
+          function Point(x, y) {
+            this.x = x;
+            this.y = y;
           }
-          this._bounds.x = minX;
-          this._bounds.y = minY;
-          this._bounds.width = maxX - minX;
-          this._bounds.height = maxY - minY;
-          return this._cacheFlag = false;
-        }
-      };
 
-      Path.prototype.push = function(point) {
-        this._points.push(point);
-        return this._cacheFlag = true;
-      };
+          Point.prototype.clone = function() {
+            return new Point(this.x, this.y);
+          };
 
-      Path.prototype.unshift = function(point) {
-        this._points.unshift(point);
-        return this._cacheFlag = true;
-      };
+          Point.prototype.magnitude = function() {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+          };
 
-      Path.prototype.contains = function(point) {
-        var count, dest, end, last, _i, _len, _ref;
-        this._clearCache();
-        if (this._points.length === 0) {
-          return false;
-        }
-        if (!this._bounds.contains(point)) {
-          return false;
-        }
-        dest = new Point(this._bounds.x - 10, point.y);
-        count = 0;
-        last = this._points[this._points.length - 1];
-        _ref = this._points;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          end = _ref[_i];
-          if (_intersects(last, end, point, dest)) {
-            count += 1;
+          Point.prototype.translate = function(vector) {
+            this.x += vector.x;
+            return this.y += vector.y;
+          };
+
+          Point.prototype.add = function(x, y) {
+            this.x += x;
+            return this.y += y;
+          };
+
+          Point.prototype.copy = function(point) {
+            this.x = point.x;
+            return this.y = point.y;
+          };
+
+          Point.prototype.from = function(point) {
+            return new Point(this.x - point.x, this.y - point.y);
+          };
+
+          Point.prototype.clear = function() {
+            return this.x = this.y = 0;
+          };
+
+          Point.prototype.equals = function(point) {
+            return point.x === this.x && point.y === this.y;
+          };
+
+          return Point;
+
+        })();
+        this.Size = Size = (function() {
+          function Size(width, height) {
+            this.width = width;
+            this.height = height;
           }
-          last = end;
-        }
-        return count % 2 === 1;
-      };
 
-      Path.prototype.intersects = function(rectangle) {
-        var end, last, lastSide, rectSides, side, _i, _j, _len, _len1, _ref;
-        this._clearCache();
-        if (this._points.length === 0) {
-          return false;
-        }
-        if (!rectangle.overlap(this._bounds)) {
-          return false;
-        } else {
-          last = this._points[this._points.length - 1];
-          rectSides = [new Point(rectangle.x, rectangle.y), new Point(rectangle.right(), rectangle.y), new Point(rectangle.right(), rectangle.bottom()), new Point(rectangle.x, rectangle.bottom())];
-          _ref = this._points;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            end = _ref[_i];
-            lastSide = rectSides[rectSides.length - 1];
-            for (_j = 0, _len1 = rectSides.length; _j < _len1; _j++) {
-              side = rectSides[_j];
-              if (_intersects(last, end, lastSide, side)) {
+          Size.prototype.equals = function(size) {
+            return this.width === size.width && this.height === size.height;
+          };
+
+          Size.copy = function(size) {
+            return new Size(size.width, size.height);
+          };
+
+          return Size;
+
+        })();
+        this.Rectangle = Rectangle = (function() {
+          function Rectangle(x, y, width, height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+          }
+
+          Rectangle.prototype.contains = function(point) {
+            return (this.x != null) && (this.y != null) && !((point.x < this.x) || (point.x > this.x + this.width) || (point.y < this.y) || (point.y > this.y + this.height));
+          };
+
+          Rectangle.prototype.identical = function(other) {
+            return this.x === other.x && this.y === other.y && this.width === other.width && this.height === other.height;
+          };
+
+          Rectangle.prototype.copy = function(rect) {
+            this.x = rect.x;
+            this.y = rect.y;
+            this.width = rect.width;
+            return this.height = rect.height;
+          };
+
+          Rectangle.prototype.clip = function(ctx) {
+            ctx.rect(this.x, this.y, this.width, this.height);
+            return ctx.clip();
+          };
+
+          Rectangle.prototype.clone = function() {
+            var rect;
+            rect = new Rectangle(0, 0, 0, 0);
+            rect.copy(this);
+            return rect;
+          };
+
+          Rectangle.prototype.clear = function() {
+            this.width = this.height = 0;
+            return this.x = this.y = null;
+          };
+
+          Rectangle.prototype.bottom = function() {
+            return this.y + this.height;
+          };
+
+          Rectangle.prototype.right = function() {
+            return this.x + this.width;
+          };
+
+          Rectangle.prototype.fill = function(ctx, style) {
+            ctx.fillStyle = style;
+            return ctx.fillRect(this.x, this.y, this.width, this.height);
+          };
+
+          Rectangle.prototype.unite = function(rectangle) {
+            if (!((this.x != null) && (this.y != null))) {
+              return this.copy(rectangle);
+            } else if (!((rectangle.x != null) && (rectangle.y != null))) {
+
+            } else {
+              this.width = max(this.right(), rectangle.right()) - (this.x = min(this.x, rectangle.x));
+              return this.height = max(this.bottom(), rectangle.bottom()) - (this.y = min(this.y, rectangle.y));
+            }
+          };
+
+          Rectangle.prototype.swallow = function(point) {
+            if (!((this.x != null) && (this.y != null))) {
+              return this.copy(new Rectangle(point.x, point.y, 0, 0));
+            } else {
+              this.width = max(this.right(), point.x) - (this.x = min(this.x, point.x));
+              return this.height = max(this.bottom(), point.y) - (this.y = min(this.y, point.y));
+            }
+          };
+
+          Rectangle.prototype.overlap = function(rectangle) {
+            return (this.x != null) && (this.y != null) && !((rectangle.right()) < this.x || (rectangle.bottom() < this.y) || (rectangle.x > this.right()) || (rectangle.y > this.bottom()));
+          };
+
+          Rectangle.prototype.translate = function(vector) {
+            this.x += vector.x;
+            return this.y += vector.y;
+          };
+
+          Rectangle.prototype.stroke = function(ctx, style) {
+            ctx.strokeStyle = style;
+            return ctx.strokeRect(this.x, this.y, this.width, this.height);
+          };
+
+          Rectangle.prototype.fill = function(ctx, style) {
+            ctx.fillStyle = style;
+            return ctx.fillRect(this.x, this.y, this.width, this.height);
+          };
+
+          Rectangle.prototype.upperLeftCorner = function() {
+            return new Point(this.x, this.y);
+          };
+
+          Rectangle.prototype.toPath = function() {
+            var path, point, _i, _len, _ref;
+            path = new Path();
+            _ref = [[this.x, this.y], [this.x, this.bottom()], [this.right(), this.bottom()], [this.right(), this.y]];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              point = _ref[_i];
+              path.push(new Point(point[0], point[1]));
+            }
+            return path;
+          };
+
+          return Rectangle;
+
+        })();
+        this.NoRectangle = NoRectangle = (function(_super) {
+          __extends(NoRectangle, _super);
+
+          function NoRectangle() {
+            NoRectangle.__super__.constructor.call(this, null, null, 0, 0);
+          }
+
+          return NoRectangle;
+
+        })(Rectangle);
+        this.Path = Path = (function() {
+          function Path() {
+            this._points = [];
+            this._cachedTranslation = new Point(0, 0);
+            this._cacheFlag = false;
+            this._bounds = new NoRectangle();
+            this.style = {
+              'strokeColor': '#000',
+              'lineWidth': 1,
+              'fillColor': null
+            };
+          }
+
+          Path.prototype._clearCache = function() {
+            var maxX, maxY, minX, minY, point, _i, _len, _ref;
+            if (this._cacheFlag) {
+              minX = minY = Infinity;
+              maxX = maxY = 0;
+              _ref = this._points;
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                point = _ref[_i];
+                minX = min(minX, point.x);
+                maxX = max(maxX, point.x);
+                minY = min(minY, point.y);
+                maxY = max(maxY, point.y);
+              }
+              this._bounds.x = minX;
+              this._bounds.y = minY;
+              this._bounds.width = maxX - minX;
+              this._bounds.height = maxY - minY;
+              return this._cacheFlag = false;
+            }
+          };
+
+          Path.prototype.push = function(point) {
+            this._points.push(point);
+            return this._cacheFlag = true;
+          };
+
+          Path.prototype.unshift = function(point) {
+            this._points.unshift(point);
+            return this._cacheFlag = true;
+          };
+
+          Path.prototype.contains = function(point) {
+            var count, dest, end, last, _i, _len, _ref;
+            this._clearCache();
+            if (this._points.length === 0) {
+              return false;
+            }
+            if (!this._bounds.contains(point)) {
+              return false;
+            }
+            dest = new Point(this._bounds.x - 10, point.y);
+            count = 0;
+            last = this._points[this._points.length - 1];
+            _ref = this._points;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              end = _ref[_i];
+              if (_intersects(last, end, point, dest)) {
+                count += 1;
+              }
+              last = end;
+            }
+            return count % 2 === 1;
+          };
+
+          Path.prototype.intersects = function(rectangle) {
+            var end, last, lastSide, rectSides, side, _i, _j, _len, _len1, _ref;
+            this._clearCache();
+            if (this._points.length === 0) {
+              return false;
+            }
+            if (!rectangle.overlap(this._bounds)) {
+              return false;
+            } else {
+              last = this._points[this._points.length - 1];
+              rectSides = [new Point(rectangle.x, rectangle.y), new Point(rectangle.right(), rectangle.y), new Point(rectangle.right(), rectangle.bottom()), new Point(rectangle.x, rectangle.bottom())];
+              _ref = this._points;
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                end = _ref[_i];
+                lastSide = rectSides[rectSides.length - 1];
+                for (_j = 0, _len1 = rectSides.length; _j < _len1; _j++) {
+                  side = rectSides[_j];
+                  if (_intersects(last, end, lastSide, side)) {
+                    return true;
+                  }
+                  lastSide = side;
+                }
+                last = end;
+              }
+              if (this.contains(rectSides[0])) {
                 return true;
               }
-              lastSide = side;
-            }
-            last = end;
-          }
-          if (this.contains(rectSides[0])) {
-            return true;
-          }
-          if (rectangle.contains(this._points[0])) {
-            return true;
-          }
-          return false;
-        }
-      };
-
-      Path.prototype.bounds = function() {
-        this._clearCache();
-        return this._bounds;
-      };
-
-      Path.prototype.translate = function(vector) {
-        this._cachedTranslation.translate(vector);
-        return this._cacheFlag = true;
-      };
-
-      Path.prototype.draw = function(ctx) {
-        var i, point, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
-        this._clearCache();
-        if (this._points.length === 0) {
-          return;
-        }
-        ctx.strokeStyle = this.style.strokeColor;
-        ctx.lineWidth = this.style.lineWidth;
-        if (this.style.fillColor != null) {
-          ctx.fillStyle = this.style.fillColor;
-        }
-        ctx.beginPath();
-        ctx.moveTo(this._points[0].x, this._points[0].y);
-        _ref = this._points;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          point = _ref[_i];
-          ctx.lineTo(point.x, point.y);
-        }
-        ctx.lineTo(this._points[0].x, this._points[0].y);
-        if (this._points.length > 1) {
-          ctx.lineTo(this._points[1].x, this._points[1].y);
-        }
-        if (this.style.fillColor != null) {
-          ctx.fill();
-        }
-        ctx.save();
-        if (!this.noclip) {
-          ctx.clip();
-        }
-        if (this.bevel) {
-          ctx.beginPath();
-          ctx.moveTo(this._points[0].x, this._points[0].y);
-          _ref1 = this._points.slice(1);
-          for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
-            point = _ref1[i];
-            if ((point.x < this._points[i].x && point.y >= this._points[i].y) || (point.y > this._points[i].y && point.x <= this._points[i].x)) {
-              ctx.lineTo(point.x, point.y);
-            } else if (!point.equals(this._points[i])) {
-              ctx.moveTo(point.x, point.y);
-            }
-          }
-          if (!(this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y)) {
-            ctx.lineTo(this._points[0].x, this._points[0].y);
-          }
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#000');
-          ctx.stroke();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#000');
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(this._points[0].x, this._points[0].y);
-          _ref2 = this._points.slice(1);
-          for (i = _k = 0, _len2 = _ref2.length; _k < _len2; i = ++_k) {
-            point = _ref2[i];
-            if ((point.x > this._points[i].x && point.y <= this._points[i].y) || (point.y < this._points[i].y && point.x >= this._points[i].x)) {
-              ctx.lineTo(point.x, point.y);
-            } else if (!point.equals(this._points[i])) {
-              ctx.moveTo(point.x, point.y);
-            }
-          }
-          if (this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y) {
-            ctx.lineTo(this._points[0].x, this._points[0].y);
-          }
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#FFF');
-          ctx.stroke();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#FFF');
-          ctx.stroke();
-        } else {
-          ctx.stroke();
-        }
-        return ctx.restore();
-      };
-
-      Path.prototype.clone = function() {
-        var clone, el, _i, _len, _ref;
-        clone = new Path();
-        _ref = this._points;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          el = _ref[_i];
-          clone.push(el);
-        }
-        return clone;
-      };
-
-      Path.prototype.drawShadow = function(ctx, offsetX, offsetY, blur) {
-        var key, oldValues, point, value, _i, _len, _ref, _results;
-        this._clearCache();
-        ctx.fillStyle = this.style.fillColor;
-        if (this._points.length === 0) {
-          return;
-        }
-        oldValues = {
-          shadowColor: ctx.shadowColor,
-          shadowBlur: ctx.shadowBlur,
-          shadowOffsetY: ctx.shadowOffsetY,
-          shadowOffsetX: ctx.shadowOffsetX,
-          globalAlpha: ctx.globalAlpha
-        };
-        ctx.globalAlpha = 0.5;
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = blur;
-        ctx.shadowOffsetX = offsetX;
-        ctx.shadowOffsetY = offsetY;
-        ctx.beginPath();
-        ctx.moveTo(this._points[0].x, this._points[0].y);
-        _ref = this._points;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          point = _ref[_i];
-          ctx.lineTo(point.x, point.y);
-        }
-        ctx.lineTo(this._points[0].x, this._points[0].y);
-        ctx.fill();
-        _results = [];
-        for (key in oldValues) {
-          if (!__hasProp.call(oldValues, key)) continue;
-          value = oldValues[key];
-          _results.push(ctx[key] = value);
-        }
-        return _results;
-      };
-
-      return Path;
-
-    })();
-    _CTX = null;
-    _FONT_SIZE = 15;
-    _FONT_FAMILY = 'Courier New, monospace';
-    exports.Text = Text = (function() {
-      function Text(point, value) {
-        this.point = point;
-        this.value = value;
-        this.wantedFont = _FONT_SIZE + 'px ' + _FONT_FAMILY;
-        if (_CTX.font !== this.wantedFont) {
-          _CTX.font = _FONT_SIZE + 'px ' + _FONT_FAMILY;
-        }
-        this._bounds = new Rectangle(this.point.x, this.point.y, _CTX.measureText(this.value).width, _FONT_SIZE);
-      }
-
-      Text.prototype.bounds = function() {
-        return this._bounds;
-      };
-
-      Text.prototype.contains = function(point) {
-        return this._bounds.contains(point);
-      };
-
-      Text.prototype.translate = function(vector) {
-        this.point.translate(vector);
-        return this._bounds.translate(vector);
-      };
-
-      Text.prototype.setPosition = function(point) {
-        return this.translate(point.from(this.point));
-      };
-
-      Text.prototype.draw = function(ctx) {
-        ctx.textBaseline = 'top';
-        ctx.font = _FONT_SIZE + 'px ' + _FONT_FAMILY;
-        ctx.fillStyle = '#000';
-        return ctx.fillText(this.value, this.point.x, this.point.y - _FONT_CAPITAL);
-      };
-
-      return Text;
-
-    })();
-    fontMetricsCache = {};
-    fontMetrics = function(fontFamily, fontHeight) {
-      var baseline, canvas, capital, ctx, ex, fontStyle, gp, height, lf, metrics, result, textTopAndBottom, width;
-      fontStyle = "" + fontHeight + "px " + fontFamily;
-      result = fontMetricsCache[fontStyle];
-      textTopAndBottom = function(testText) {
-        var col, first, index, last, pixels, right, row, _i, _j;
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, width, height);
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
-        ctx.fillText(testText, 0, 0);
-        right = Math.ceil(ctx.measureText(testText).width);
-        pixels = ctx.getImageData(0, 0, width, height).data;
-        first = -1;
-        last = height;
-        for (row = _i = 0; 0 <= height ? _i < height : _i > height; row = 0 <= height ? ++_i : --_i) {
-          for (col = _j = 1; 1 <= right ? _j < right : _j > right; col = 1 <= right ? ++_j : --_j) {
-            index = (row * width + col) * 4;
-            if (pixels[index] !== 0) {
-              if (first < 0) {
-                first = row;
+              if (rectangle.contains(this._points[0])) {
+                return true;
               }
-              break;
+              return false;
             }
+          };
+
+          Path.prototype.bounds = function() {
+            this._clearCache();
+            return this._bounds;
+          };
+
+          Path.prototype.translate = function(vector) {
+            this._cachedTranslation.translate(vector);
+            return this._cacheFlag = true;
+          };
+
+          Path.prototype.draw = function(ctx) {
+            var i, point, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+            this._clearCache();
+            if (this._points.length === 0) {
+              return;
+            }
+            ctx.strokeStyle = this.style.strokeColor;
+            ctx.lineWidth = this.style.lineWidth;
+            if (this.style.fillColor != null) {
+              ctx.fillStyle = this.style.fillColor;
+            }
+            ctx.beginPath();
+            ctx.moveTo(this._points[0].x, this._points[0].y);
+            _ref = this._points;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              point = _ref[_i];
+              ctx.lineTo(point.x, point.y);
+            }
+            ctx.lineTo(this._points[0].x, this._points[0].y);
+            if (this._points.length > 1) {
+              ctx.lineTo(this._points[1].x, this._points[1].y);
+            }
+            if (this.style.fillColor != null) {
+              ctx.fill();
+            }
+            ctx.save();
+            if (!this.noclip) {
+              ctx.clip();
+            }
+            if (this.bevel) {
+              ctx.beginPath();
+              ctx.moveTo(this._points[0].x, this._points[0].y);
+              _ref1 = this._points.slice(1);
+              for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
+                point = _ref1[i];
+                if ((point.x < this._points[i].x && point.y >= this._points[i].y) || (point.y > this._points[i].y && point.x <= this._points[i].x)) {
+                  ctx.lineTo(point.x, point.y);
+                } else if (!point.equals(this._points[i])) {
+                  ctx.moveTo(point.x, point.y);
+                }
+              }
+              if (!(this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y)) {
+                ctx.lineTo(this._points[0].x, this._points[0].y);
+              }
+              ctx.lineWidth = 4;
+              ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#000');
+              ctx.stroke();
+              ctx.lineWidth = 2;
+              ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#000');
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(this._points[0].x, this._points[0].y);
+              _ref2 = this._points.slice(1);
+              for (i = _k = 0, _len2 = _ref2.length; _k < _len2; i = ++_k) {
+                point = _ref2[i];
+                if ((point.x > this._points[i].x && point.y <= this._points[i].y) || (point.y < this._points[i].y && point.x >= this._points[i].x)) {
+                  ctx.lineTo(point.x, point.y);
+                } else if (!point.equals(this._points[i])) {
+                  ctx.moveTo(point.x, point.y);
+                }
+              }
+              if (this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y) {
+                ctx.lineTo(this._points[0].x, this._points[0].y);
+              }
+              ctx.lineWidth = 4;
+              ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#FFF');
+              ctx.stroke();
+              ctx.lineWidth = 2;
+              ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#FFF');
+              ctx.stroke();
+            } else {
+              ctx.stroke();
+            }
+            return ctx.restore();
+          };
+
+          Path.prototype.clone = function() {
+            var clone, el, _i, _len, _ref;
+            clone = new Path();
+            _ref = this._points;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              el = _ref[_i];
+              clone.push(el);
+            }
+            return clone;
+          };
+
+          Path.prototype.drawShadow = function(ctx, offsetX, offsetY, blur) {
+            var key, oldValues, point, value, _i, _len, _ref, _results;
+            this._clearCache();
+            ctx.fillStyle = this.style.fillColor;
+            if (this._points.length === 0) {
+              return;
+            }
+            oldValues = {
+              shadowColor: ctx.shadowColor,
+              shadowBlur: ctx.shadowBlur,
+              shadowOffsetY: ctx.shadowOffsetY,
+              shadowOffsetX: ctx.shadowOffsetX,
+              globalAlpha: ctx.globalAlpha
+            };
+            ctx.globalAlpha = 0.5;
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = blur;
+            ctx.shadowOffsetX = offsetX;
+            ctx.shadowOffsetY = offsetY;
+            ctx.beginPath();
+            ctx.moveTo(this._points[0].x, this._points[0].y);
+            _ref = this._points;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              point = _ref[_i];
+              ctx.lineTo(point.x, point.y);
+            }
+            ctx.lineTo(this._points[0].x, this._points[0].y);
+            ctx.fill();
+            _results = [];
+            for (key in oldValues) {
+              if (!__hasProp.call(oldValues, key)) continue;
+              value = oldValues[key];
+              _results.push(ctx[key] = value);
+            }
+            return _results;
+          };
+
+          return Path;
+
+        })();
+        this.Text = Text = (function() {
+          function Text(point, value) {
+            this.point = point;
+            this.value = value;
+            this.wantedFont = self.fontSize + 'px ' + self.fontFamily;
+            if (self.ctx.font !== this.wantedFont) {
+              self.ctx.font = self.fontSize + 'px ' + self.fontFamily;
+            }
+            this._bounds = new Rectangle(this.point.x, this.point.y, self.ctx.measureText(this.value).width, self.fontSize);
           }
-          if (first >= 0 && col >= right) {
-            last = row;
-            break;
-          }
-        }
-        return {
-          top: first,
-          bottom: last
-        };
-      };
-      if (!result) {
-        canvas = document.createElement('canvas');
-        ctx = canvas.getContext('2d');
-        ctx.font = fontStyle;
-        metrics = ctx.measureText('Hg');
-        if (canvas.height < fontHeight * 2 || canvas.width < metrics.width) {
-          canvas.width = Math.ceil(metrics.width);
-          canvas.height = fontHeight * 2;
-          ctx = canvas.getContext('2d');
-          ctx.font = fontStyle;
-        }
-        width = canvas.width;
-        height = canvas.height;
-        capital = textTopAndBottom('H');
-        ex = textTopAndBottom('x');
-        lf = textTopAndBottom('lf');
-        gp = textTopAndBottom('g');
-        baseline = capital.bottom;
-        result = {
-          ascent: lf.top,
-          capital: capital.top,
-          ex: ex.top,
-          baseline: capital.bottom,
-          descent: gp.bottom
-        };
-        result.prettytop = Math.max(0, Math.min(result.ascent, result.ex - (result.descent - result.baseline)));
-        fontMetricsCache[fontStyle] = result;
+
+          Text.prototype.bounds = function() {
+            return this._bounds;
+          };
+
+          Text.prototype.contains = function(point) {
+            return this._bounds.contains(point);
+          };
+
+          Text.prototype.translate = function(vector) {
+            this.point.translate(vector);
+            return this._bounds.translate(vector);
+          };
+
+          Text.prototype.setPosition = function(point) {
+            return this.translate(point.from(this.point));
+          };
+
+          Text.prototype.draw = function(ctx) {
+            ctx.textBaseline = 'top';
+            ctx.font = self.fontSize + 'px ' + self.fontFamily;
+            ctx.fillStyle = '#000';
+            return ctx.fillText(this.value, this.point.x, this.point.y - self.fontAscent);
+          };
+
+          return Text;
+
+        })();
       }
-      return result;
-    };
-    _FONT_CAPITAL = 2;
-    exports.refreshFontCapital = refreshFontCapital = function() {
-      return _FONT_CAPITAL = fontMetrics(_FONT_FAMILY, _FONT_SIZE).prettytop;
-    };
-    exports._setCTX = function(ctx) {
-      return _CTX = ctx;
-    };
-    exports._setGlobalFontSize = function(size) {
-      _FONT_SIZE = size;
-      return refreshFontCapital();
-    };
-    exports._setGlobalFontFamily = function(family) {
-      _FONT_FAMILY = family;
-      return refreshFontCapital();
-    };
-    exports._getGlobalFontSize = function() {
-      return _FONT_SIZE;
-    };
+
+      Draw.prototype.refreshFontCapital = function() {
+        return this.fontAscent = helper.fontMetrics(self.fontFamily, self.fontSize).prettytop;
+      };
+
+      Draw.prototype.setCtx = function(ctx) {
+        return this.ctx = ctx;
+      };
+
+      Draw.prototype.setGlobalFontSize = function(size) {
+        this.fontSize = size;
+        return this.refreshFontCapital();
+      };
+
+      Draw.prototype.setGlobalFontFamily = function(family) {
+        this.fontFamily = family;
+        return this.refreshFontCapital();
+      };
+
+      Draw.prototype.getGlobalFontSize = function() {
+        return this.fontSize;
+      };
+
+      return Draw;
+
+    })();
     return exports;
   });
 
@@ -1572,18 +1608,18 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
   var __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define('ice-view',['ice-draw', 'ice-model'], function(draw, model) {
+  define('ice-view',['ice-helper', 'ice-draw', 'ice-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
     NO_MULTILINE = 0;
     MULTILINE_START = 1;
     MULTILINE_MIDDLE = 2;
     MULTILINE_END = 3;
     MULTILINE_END_START = 4;
-    ANY_DROP = 0;
-    BLOCK_ONLY = 1;
-    MOSTLY_BLOCK = 2;
-    MOSTLY_VALUE = 3;
-    VALUE_ONLY = 4;
+    ANY_DROP = helper.ANY_DROP;
+    BLOCK_ONLY = helper.BLOCK_ONLY;
+    MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
+    MOSTLY_VALUE = helper.MOSTLY_VALUE;
+    VALUE_ONLY = helper.VALUE_ONLY;
     DEFAULT_OPTIONS = {
       padding: 5,
       indentWidth: 10,
@@ -1634,15 +1670,16 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
       var BlockViewNode, ContainerViewNode, CursorViewNode, GenericViewNode, IndentViewNode, SegmentViewNode, SocketViewNode, TextViewNode;
 
       function View(opts) {
-        var option;
+        var option, _ref;
         this.opts = opts != null ? opts : {};
         this.map = {};
+        this.draw = (_ref = this.opts.draw) != null ? _ref : new draw.Draw();
         for (option in DEFAULT_OPTIONS) {
           if (!(option in this.opts)) {
             this.opts[option] = DEFAULT_OPTIONS[option];
           }
         }
-        draw._setCTX(this.opts.ctx);
+        this.draw.setCtx(this.opts.ctx);
       }
 
       View.prototype.clearCache = function() {
@@ -1708,7 +1745,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           this.bounds = [];
           this.changedBoundingBox = true;
           this.glue = {};
-          this.path = new draw.Path();
+          this.path = new this.view.draw.Path();
           this.dropArea = this.highlightArea = null;
           this.computedVersion = -1;
         }
@@ -1861,7 +1898,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             this.minDimensions.length = this.minDistanceToBase.length = this.lineLength;
           } else {
             while (this.minDimensions.length !== this.lineLength) {
-              this.minDimensions.push(new draw.Size(0, 0));
+              this.minDimensions.push(new this.view.draw.Size(0, 0));
               this.minDistanceToBase.push({
                 above: 0,
                 below: 0
@@ -1889,7 +1926,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             var _i, _ref, _results;
             _results = [];
             for (_i = 0, _ref = this.lineLength; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--) {
-              _results.push(new draw.Size(0, 0));
+              _results.push(new this.view.draw.Size(0, 0));
             }
             return _results;
           }).call(this);
@@ -1917,13 +1954,13 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             if (this.topLineSticksToBottom) {
               distance = this.distanceToBase[0];
               distance.below = Math.max(distance.below, parentNode.distanceToBase[startLine].below);
-              this.dimensions[0] = new draw.Size(this.dimensions[0].width, distance.below + distance.above);
+              this.dimensions[0] = new this.view.draw.Size(this.dimensions[0].width, distance.below + distance.above);
             }
             if (this.bottomLineSticksToTop) {
               lineCount = this.distanceToBase.length;
               distance = this.distanceToBase[lineCount - 1];
               distance.above = Math.max(distance.above, parentNode.distanceToBase[startLine + lineCount - 1].above);
-              this.dimensions[lineCount - 1] = new draw.Size(this.dimensions[lineCount - 1].width, distance.below + distance.above);
+              this.dimensions[lineCount - 1] = new this.view.draw.Size(this.dimensions[lineCount - 1].width, distance.below + distance.above);
             }
           }
           changed = oldDimensions.length !== this.lineLength;
@@ -1954,7 +1991,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             this.bounds[line].x = left;
             this.bounds[line].width = this.dimensions[line].width;
           } else {
-            this.bounds[line] = new draw.Rectangle(left, 0, this.dimensions[line].width, 0);
+            this.bounds[line] = new this.view.draw.Rectangle(left, 0, this.dimensions[line].width, 0);
           }
           return this.bounds[line];
         };
@@ -2009,7 +2046,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         GenericViewNode.prototype.computeOwnPath = function() {
-          return this.path = new draw.Path();
+          return this.path = new this.view.draw.Path();
         };
 
         GenericViewNode.prototype.computePath = function() {
@@ -2024,7 +2061,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           }
           if (this.changedBoundingBox) {
             this.computeOwnPath();
-            this.totalBounds = new draw.NoRectangle();
+            this.totalBounds = new this.view.draw.NoRectangle();
             if (this.bounds.length > 0) {
               this.totalBounds.unite(this.bounds[0]);
               this.totalBounds.unite(this.bounds[this.bounds.length - 1]);
@@ -2319,7 +2356,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               this.bounds[line].x = left;
               this.bounds[line].width = this.dimensions[line].width;
             } else {
-              this.bounds[line] = new draw.Rectangle(left, 0, this.dimensions[line].width, 0);
+              this.bounds[line] = new this.view.draw.Rectangle(left, 0, this.dimensions[line].width, 0);
             }
             this.changedBoundingBox = true;
           }
@@ -2431,147 +2468,147 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           left = [];
           right = [];
           if (this.shouldAddTab()) {
-            this.addTab(left, new draw.Point(this.bounds[0].x + this.view.opts.tabOffset, this.bounds[0].y));
+            this.addTab(left, new this.view.draw.Point(this.bounds[0].x + this.view.opts.tabOffset, this.bounds[0].y));
           }
           _ref = this.bounds;
           for (line = _i = 0, _len = _ref.length; _i < _len; line = ++_i) {
             bounds = _ref[line];
             if (this.multilineChildrenData[line] === NO_MULTILINE) {
               if (this.bevels.topLeft && line === 0) {
-                left.push(new draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
-                left.push(new draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
+                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
+                left.push(new this.view.draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
               } else {
-                left.push(new draw.Point(bounds.x, bounds.y));
+                left.push(new this.view.draw.Point(bounds.x, bounds.y));
               }
               if (this.bevels.bottomLeft && line === this.lineLength - 1) {
-                left.push(new draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
-                left.push(new draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
+                left.push(new this.view.draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
+                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
               } else {
-                left.push(new draw.Point(bounds.x, bounds.bottom()));
+                left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
               }
               if (this.bevels.topRight) {
-                right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                right.push(new draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
               } else {
-                right.push(new draw.Point(bounds.right(), bounds.y));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.y));
               }
               if (this.bevels.bottomRight) {
-                right.push(new draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
               } else {
-                right.push(new draw.Point(bounds.right(), bounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
               }
             }
             if (this.multilineChildrenData[line] === MULTILINE_START) {
               if (this.bevels.topLeft && line === 0) {
-                left.push(new draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
-                left.push(new draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
+                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
+                left.push(new this.view.draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
               } else {
-                left.push(new draw.Point(bounds.x, bounds.y));
+                left.push(new this.view.draw.Point(bounds.x, bounds.y));
               }
               if (this.bevels.bottomLeft && line === this.lineLength - 1) {
-                left.push(new draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
-                left.push(new draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
+                left.push(new this.view.draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
+                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
               } else {
-                left.push(new draw.Point(bounds.x, bounds.bottom()));
+                left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
               }
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
               multilineView = this.view.getViewNodeFor(multilineChild.child);
               multilineBounds = multilineView.bounds[line - multilineChild.startLine];
               if (multilineBounds.width === 0) {
                 if (this.bevels.topRight) {
-                  right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                  right.push(new draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
+                  right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
+                  right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
                 } else {
-                  right.push(new draw.Point(bounds.right(), bounds.y));
+                  right.push(new this.view.draw.Point(bounds.right(), bounds.y));
                 }
               } else {
-                right.push(new draw.Point(bounds.right(), bounds.y));
-                right.push(new draw.Point(bounds.right(), multilineBounds.y));
-                right.push(new draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
-                right.push(new draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
-                right.push(new draw.Point(multilineBounds.x, multilineBounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.y));
+                right.push(new this.view.draw.Point(bounds.right(), multilineBounds.y));
+                right.push(new this.view.draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
+                right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.bottom()));
               }
             }
             if (this.multilineChildrenData[line] === MULTILINE_MIDDLE) {
               multilineChild = this.lineChildren[line][0];
               multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[line - multilineChild.startLine];
-              left.push(new draw.Point(bounds.x, bounds.y));
-              left.push(new draw.Point(bounds.x, bounds.bottom()));
-              right.push(new draw.Point(multilineBounds.x, bounds.y));
-              right.push(new draw.Point(multilineBounds.x, bounds.bottom()));
+              left.push(new this.view.draw.Point(bounds.x, bounds.y));
+              left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
+              right.push(new this.view.draw.Point(multilineBounds.x, bounds.y));
+              right.push(new this.view.draw.Point(multilineBounds.x, bounds.bottom()));
             }
             if ((_ref1 = this.multilineChildrenData[line]) === MULTILINE_END || _ref1 === MULTILINE_END_START) {
-              left.push(new draw.Point(bounds.x, bounds.y));
-              left.push(new draw.Point(bounds.x, bounds.bottom()));
+              left.push(new this.view.draw.Point(bounds.x, bounds.y));
+              left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
               multilineChild = this.lineChildren[line][0];
               multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[line - multilineChild.startLine];
-              right.push(new draw.Point(multilineBounds.x, multilineBounds.y));
-              right.push(new draw.Point(multilineBounds.x, multilineBounds.bottom()));
+              right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y));
+              right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.bottom()));
               if (multilineChild.child.type === 'indent') {
-                this.addTabReverse(right, new draw.Point(multilineBounds.x + this.view.opts.tabOffset, multilineBounds.bottom()));
+                this.addTabReverse(right, new this.view.draw.Point(multilineBounds.x + this.view.opts.tabOffset, multilineBounds.bottom()));
               }
-              right.push(new draw.Point(multilineBounds.right(), multilineBounds.bottom()));
+              right.push(new this.view.draw.Point(multilineBounds.right(), multilineBounds.bottom()));
               if (this.lineChildren[line].length > 1) {
-                right.push(new draw.Point(multilineBounds.right(), multilineBounds.y));
+                right.push(new this.view.draw.Point(multilineBounds.right(), multilineBounds.y));
                 if (this.multilineChildrenData[line] === MULTILINE_END) {
-                  right.push(new draw.Point(bounds.right(), bounds.y));
-                  right.push(new draw.Point(bounds.right(), bounds.bottom()));
+                  right.push(new this.view.draw.Point(bounds.right(), bounds.y));
+                  right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
                 } else {
                   multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
                   multilineView = this.view.getViewNodeFor(multilineChild.child);
                   multilineBounds = multilineView.bounds[line - multilineChild.startLine];
-                  right.push(new draw.Point(bounds.right(), bounds.y));
+                  right.push(new this.view.draw.Point(bounds.right(), bounds.y));
                   if (multilineBounds.width === 0) {
                     if (this.bevels.topRight) {
-                      right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                      right.push(new draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
+                      right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
+                      right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
                     } else {
-                      right.push(new draw.Point(bounds.right(), bounds.y));
+                      right.push(new this.view.draw.Point(bounds.right(), bounds.y));
                     }
                     if (this.bevels.bottomRight && !((_ref2 = this.glue[line]) != null ? _ref2.draw : void 0)) {
-                      right.push(new draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                      right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
+                      right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
+                      right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
                     } else {
-                      right.push(new draw.Point(bounds.right(), bounds.bottom()));
+                      right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
                     }
                   } else {
-                    right.push(new draw.Point(bounds.right(), multilineBounds.y));
-                    right.push(new draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
-                    right.push(new draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
-                    right.push(new draw.Point(multilineBounds.x, multilineBounds.bottom()));
+                    right.push(new this.view.draw.Point(bounds.right(), multilineBounds.y));
+                    right.push(new this.view.draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
+                    right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
+                    right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.bottom()));
                   }
                 }
               } else if (line === this.lineLength - 1) {
-                right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, multilineBounds.bottom()));
-                right.push(new draw.Point(bounds.right(), multilineBounds.bottom() + this.view.opts.bevelClip));
-                right.push(new draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                right.push(new draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, multilineBounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), multilineBounds.bottom() + this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
               } else {
-                right.push(new draw.Point(bounds.right(), multilineBounds.bottom()));
-                right.push(new draw.Point(bounds.right(), bounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), multilineBounds.bottom()));
+                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
               }
             }
             if (line in this.glue && this.glue[line].draw) {
               glueTop = this.bounds[line + 1].y - this.glue[line].height;
               leftmost = Math.min(this.bounds[line + 1].x, this.bounds[line].x);
               rightmost = Math.max(this.bounds[line + 1].right(), this.bounds[line].right());
-              left.push(new draw.Point(this.bounds[line].x, glueTop));
-              left.push(new draw.Point(leftmost, glueTop));
-              left.push(new draw.Point(leftmost, glueTop + this.view.opts.padding));
+              left.push(new this.view.draw.Point(this.bounds[line].x, glueTop));
+              left.push(new this.view.draw.Point(leftmost, glueTop));
+              left.push(new this.view.draw.Point(leftmost, glueTop + this.view.opts.padding));
               if (this.multilineChildrenData[line] !== MULTILINE_START) {
-                right.push(new draw.Point(this.bounds[line].right(), glueTop));
-                right.push(new draw.Point(rightmost, glueTop));
-                right.push(new draw.Point(rightmost, glueTop + this.view.opts.padding));
+                right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop));
+                right.push(new this.view.draw.Point(rightmost, glueTop));
+                right.push(new this.view.draw.Point(rightmost, glueTop + this.view.opts.padding));
               }
             } else if ((this.bounds[line + 1] != null) && this.multilineChildrenData[line] !== MULTILINE_MIDDLE) {
               innerLeft = Math.max(this.bounds[line + 1].x, this.bounds[line].x);
               innerRight = Math.min(this.bounds[line + 1].right(), this.bounds[line].right());
-              left.push(new draw.Point(innerLeft, this.bounds[line].bottom()));
-              left.push(new draw.Point(innerLeft, this.bounds[line + 1].y));
+              left.push(new this.view.draw.Point(innerLeft, this.bounds[line].bottom()));
+              left.push(new this.view.draw.Point(innerLeft, this.bounds[line + 1].y));
               if ((_ref3 = this.multilineChildrenData[line]) !== MULTILINE_START && _ref3 !== MULTILINE_END_START) {
-                right.push(new draw.Point(innerRight, this.bounds[line].bottom()));
-                right.push(new draw.Point(innerRight, this.bounds[line + 1].y));
+                right.push(new this.view.draw.Point(innerRight, this.bounds[line].bottom()));
+                right.push(new this.view.draw.Point(innerRight, this.bounds[line + 1].y));
               }
             }
             if ((_ref4 = this.multilineChildrenData[line]) === MULTILINE_START || _ref4 === MULTILINE_END_START) {
@@ -2584,21 +2621,21 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
                 glueTop = this.bounds[line].bottom();
               }
               if (multilineChild.child.type === 'indent') {
-                right.push(new draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
-                right.push(new draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
-                this.addTab(right, new draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.view.opts.tabOffset, this.bounds[line + 1].y), true);
+                right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
+                this.addTab(right, new this.view.draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.view.opts.tabOffset, this.bounds[line + 1].y), true);
               } else {
-                right.push(new draw.Point(multilineBounds.x, glueTop));
+                right.push(new this.view.draw.Point(multilineBounds.x, glueTop));
               }
-              right.push(new draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, glueTop));
-              right.push(new draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, this.bounds[line + 1].y));
+              right.push(new this.view.draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, glueTop));
+              right.push(new this.view.draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, this.bounds[line + 1].y));
             }
           }
           if (this.shouldAddTab()) {
-            this.addTab(right, new draw.Point(this.bounds[this.lineLength - 1].x + this.view.opts.tabOffset, this.bounds[this.lineLength - 1].bottom()));
+            this.addTab(right, new this.view.draw.Point(this.bounds[this.lineLength - 1].x + this.view.opts.tabOffset, this.bounds[this.lineLength - 1].bottom()));
           }
           path = left.reverse().concat(right);
-          this.path = new draw.Path();
+          this.path = new this.view.draw.Path();
           for (_j = 0, _len1 = path.length; _j < _len1; _j++) {
             el = path[_j];
             this.path.push(el);
@@ -2607,19 +2644,19 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         };
 
         ContainerViewNode.prototype.addTab = function(array, point) {
-          array.push(new draw.Point(point.x + this.view.opts.tabWidth, point.y));
-          array.push(new draw.Point(point.x + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), point.y + this.view.opts.tabHeight));
-          array.push(new draw.Point(point.x + this.view.opts.tabWidth * this.view.opts.tabSideWidth, point.y + this.view.opts.tabHeight));
-          array.push(new draw.Point(point.x, point.y));
+          array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth, point.y));
+          array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), point.y + this.view.opts.tabHeight));
+          array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth * this.view.opts.tabSideWidth, point.y + this.view.opts.tabHeight));
+          array.push(new this.view.draw.Point(point.x, point.y));
           return array.push(point);
         };
 
         ContainerViewNode.prototype.addTabReverse = function(array, point) {
           array.push(point);
-          array.push(new draw.Point(point.x, point.y));
-          array.push(new draw.Point(point.x + this.view.opts.tabWidth * this.view.opts.tabSideWidth, point.y + this.view.opts.tabHeight));
-          array.push(new draw.Point(point.x + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), point.y + this.view.opts.tabHeight));
-          return array.push(new draw.Point(point.x + this.view.opts.tabWidth, point.y));
+          array.push(new this.view.draw.Point(point.x, point.y));
+          array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth * this.view.opts.tabSideWidth, point.y + this.view.opts.tabHeight));
+          array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), point.y + this.view.opts.tabHeight));
+          return array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth, point.y));
         };
 
         ContainerViewNode.prototype.computeOwnDropArea = function() {
@@ -2706,20 +2743,20 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
         BlockViewNode.prototype.computeOwnDropArea = function() {
           var highlightAreaPoints, lastBounds, point, _i, _len;
-          this.dropPoint = new draw.Point(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom());
-          this.highlightArea = new draw.Path();
+          this.dropPoint = new this.view.draw.Point(this.bounds[this.lineLength - 1].x, this.bounds[this.lineLength - 1].bottom());
+          this.highlightArea = new this.view.draw.Path();
           highlightAreaPoints = [];
           lastBounds = this.bounds[this.lineLength - 1];
-          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
-          this.addTabReverse(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
-          this.addTab(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          this.addTabReverse(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.bottom() - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.bottom() + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
           for (_i = 0, _len = highlightAreaPoints.length; _i < _len; _i++) {
             point = highlightAreaPoints[_i];
             this.highlightArea.push(point);
@@ -2812,7 +2849,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         }
 
         IndentViewNode.prototype.computeOwnPath = function() {
-          return this.path = new draw.Path();
+          return this.path = new this.view.draw.Path();
         };
 
         IndentViewNode.prototype.computeChildren = function() {
@@ -2854,21 +2891,21 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         IndentViewNode.prototype.computeOwnDropArea = function() {
           var highlightAreaPoints, lastBounds, point, _i, _len;
           this.dropPoint = this.bounds[1].upperLeftCorner();
-          this.highlightArea = new draw.Path();
+          this.highlightArea = new this.view.draw.Path();
           highlightAreaPoints = [];
-          lastBounds = new draw.NoRectangle();
+          lastBounds = new this.view.draw.NoRectangle();
           lastBounds.copy(this.bounds[1]);
           lastBounds.width = Math.max(lastBounds.width, this.view.opts.indentDropAreaMinWidth);
-          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-          this.addTabReverse(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-          highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-          this.addTab(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-          highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          this.addTabReverse(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+          highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
           for (_i = 0, _len = highlightAreaPoints.length; _i < _len; _i++) {
             point = highlightAreaPoints[_i];
             this.highlightArea.push(point);
@@ -2890,7 +2927,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         }
 
         SegmentViewNode.prototype.computeOwnPath = function() {
-          return this.path = new draw.Path();
+          return this.path = new this.view.draw.Path();
         };
 
         SegmentViewNode.prototype.computeOwnDropArea = function() {
@@ -2899,21 +2936,21 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
             return this.dropArea = null;
           } else {
             this.dropPoint = this.bounds[0].upperLeftCorner();
-            this.highlightArea = new draw.Path();
+            this.highlightArea = new this.view.draw.Path();
             highlightAreaPoints = [];
-            lastBounds = new draw.NoRectangle();
+            lastBounds = new this.view.draw.NoRectangle();
             lastBounds.copy(this.bounds[0]);
             lastBounds.width = Math.max(lastBounds.width, this.view.opts.indentDropAreaMinWidth);
-            highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-            highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-            this.addTabReverse(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-            highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
-            highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
-            highlightAreaPoints.push(new draw.Point(lastBounds.right(), lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-            highlightAreaPoints.push(new draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-            this.addTab(highlightAreaPoints, new draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-            highlightAreaPoints.push(new draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
-            highlightAreaPoints.push(new draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+            this.addTabReverse(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right(), lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.right() - this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+            this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
+            highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
             for (_i = 0, _len = highlightAreaPoints.length; _i < _len; _i++) {
               point = highlightAreaPoints[_i];
               this.highlightArea.push(point);
@@ -2964,9 +3001,9 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           if (this.computedVersion === this.model.version) {
             return null;
           }
-          this.textElement = new draw.Text(new draw.Point(0, 0), this.model.value);
+          this.textElement = new this.view.draw.Text(new this.view.draw.Point(0, 0), this.model.value);
           height = this.view.opts.textHeight;
-          this.minDimensions[0] = new draw.Size(this.textElement.bounds().width, height);
+          this.minDimensions[0] = new this.view.draw.Size(this.textElement.bounds().width, height);
           this.minDistanceToBase[0] = {
             above: height,
             below: 0
@@ -2995,7 +3032,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           var oldPoint;
           ctx.globalAlpha = 1;
           oldPoint = this.textElement.point;
-          this.textElement.point = new draw.Point(x, y);
+          this.textElement.point = new this.view.draw.Point(x, y);
           this.textElement.draw(ctx);
           this.textElement.point = oldPoint;
           return ctx.globalAlpha = 0.1;
@@ -3428,14 +3465,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define('ice-coffee',['ice-model', 'ice-parser', 'coffee-script'], function(model, parser, CoffeeScript) {
+  define('ice-coffee',['ice-helper', 'ice-model', 'ice-parser', 'coffee-script'], function(helper, model, parser, CoffeeScript) {
     var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptTranspiler, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, VALUE_FUNCTIONS, VALUE_ONLY, YES, coffeeScriptParser, exports;
     exports = {};
-    ANY_DROP = 0;
-    BLOCK_ONLY = 1;
-    MOSTLY_BLOCK = 2;
-    MOSTLY_VALUE = 3;
-    VALUE_ONLY = 4;
+    ANY_DROP = helper.ANY_DROP;
+    BLOCK_ONLY = helper.BLOCK_ONLY;
+    MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
+    MOSTLY_VALUE = helper.MOSTLY_VALUE;
+    VALUE_ONLY = helper.VALUE_ONLY;
     BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas'];
     OPERATOR_PRECEDENCES = {
@@ -4009,22 +4046,22 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define('ice-controller',['ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(coffee, draw, model, view) {
-    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, exports, extend_, fontMetrics, fontMetricsCache, getCharactersTo, getFontHeight, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+  define('ice-controller',['ice-helper', 'ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(helper, coffee, draw, model, view) {
+    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOP_TAB_HEIGHT, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, exports, extend_, getCharactersTo, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
     PALETTE_TOP_MARGIN = 5;
     PALETTE_MARGIN = 5;
     MIN_DRAG_DISTANCE = 1;
     PALETTE_LEFT_MARGIN = 5;
     DEFAULT_INDENT_DEPTH = '  ';
     ANIMATION_FRAME_RATE = 60;
-    TOP_TAB_HEIGHT = 20;
+    TOP_TAB_HEIGHT = 10;
     DISCOURAGE_DROP_TIMEOUT = 1000;
     MAX_DROP_DISTANCE = 100;
-    ANY_DROP = 0;
-    BLOCK_ONLY = 1;
-    MOSTLY_BLOCK = 2;
-    MOSTLY_VALUE = 3;
-    VALUE_ONLY = 4;
+    ANY_DROP = helper.ANY_DROP;
+    BLOCK_ONLY = helper.BLOCK_ONLY;
+    MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
+    MOSTLY_VALUE = helper.MOSTLY_VALUE;
+    VALUE_ONLY = helper.VALUE_ONLY;
     exports = {};
     extend_ = function(a, b) {
       var key, obj, value;
@@ -4112,6 +4149,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           _this = this;
         this.wrapperElement = wrapperElement;
         this.paletteGroups = paletteGroups;
+        this.draw = new draw.Draw();
         this.debugging = true;
         this.iceElement = document.createElement('div');
         this.iceElement.className = 'ice-wrapper-div';
@@ -4135,11 +4173,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.paletteElement.style.width = '300px';
         this.iceElement.style.left = this.paletteElement.offsetWidth + 'px';
         this.wrapperElement.appendChild(this.paletteElement);
-        draw.refreshFontCapital();
+        this.draw.refreshFontCapital();
         this.standardViewSettings = {
           padding: 5,
           indentWidth: 20,
-          textHeight: getFontHeight('Courier New', 15),
+          textHeight: helper.getFontHeight('Courier New', 15),
           indentTongueHeight: 20,
           tabOffset: 10,
           tabWidth: 15,
@@ -4151,7 +4189,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           emptyLineHeight: 25,
           highlightAreaHeight: 10,
           shadowBlur: 5,
-          ctx: this.mainCtx
+          ctx: this.mainCtx,
+          draw: this.draw
         };
         this.view = new view.View(extend_(this.standardViewSettings, {
           respectEphemeral: true
@@ -4286,16 +4325,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     hook('resize', 0, function() {
-      this.topNubbyPath = new draw.Path();
+      this.topNubbyPath = new this.draw.Path();
       this.topNubbyPath.bevel = true;
-      this.topNubbyPath.push(new draw.Point(this.mainCanvas.width, 0));
-      this.topNubbyPath.push(new draw.Point(this.mainCanvas.width, TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth, TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), this.view.opts.tabHeight + TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * this.view.opts.tabSideWidth, this.view.opts.tabHeight + TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(this.view.opts.tabOffset, TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(0, TOP_TAB_HEIGHT));
-      this.topNubbyPath.push(new draw.Point(0, 0));
+      this.topNubbyPath.push(new this.draw.Point(this.mainCanvas.width, 0));
+      this.topNubbyPath.push(new this.draw.Point(this.mainCanvas.width, TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth, TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), this.view.opts.tabHeight + TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * this.view.opts.tabSideWidth, this.view.opts.tabHeight + TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset, TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(0, TOP_TAB_HEIGHT));
+      this.topNubbyPath.push(new this.draw.Point(0, 0));
       return this.topNubbyPath.style.fillColor = '#EBEBEB';
     });
     Editor.prototype.redrawMain = function(opts) {
@@ -4304,8 +4343,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         opts = {};
       }
       if (!this.currentlyAnimating) {
-        draw._setGlobalFontSize(this.fontSize);
-        draw._setCTX(this.mainCtx);
+        this.draw.setGlobalFontSize(this.fontSize);
+        this.draw.setCtx(this.mainCtx);
         this.clearMain(opts);
         this.topNubbyPath.draw(this.mainCtx);
         if (opts.boundingRectangle != null) {
@@ -4313,7 +4352,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           opts.boundingRectangle.clip(this.mainCtx);
         }
         layoutResult = this.view.getViewNodeFor(this.tree).layout(0, TOP_TAB_HEIGHT);
-        this.view.getViewNodeFor(this.tree).draw(this.mainCtx, (_ref = opts.boundingRectangle) != null ? _ref : new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
+        this.view.getViewNodeFor(this.tree).draw(this.mainCtx, (_ref = opts.boundingRectangle) != null ? _ref : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
           grayscale: 0,
           selected: 0,
           noText: (_ref1 = opts.noText) != null ? _ref1 : false
@@ -4369,10 +4408,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.redrawPalette = function() {
       var binding, boundingRect, lastBottomEdge, paletteBlock, paletteBlockView, _i, _j, _len, _len1, _ref, _ref1, _results;
       this.clearPalette();
-      draw._setCTX(this.paletteCtx);
-      draw._setGlobalFontSize(this.fontSize);
+      this.draw.setCtx(this.paletteCtx);
+      this.draw.setGlobalFontSize(this.fontSize);
       lastBottomEdge = PALETTE_TOP_MARGIN;
-      boundingRect = new draw.Rectangle(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
+      boundingRect = new this.draw.Rectangle(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
       _ref = this.currentPaletteBlocks;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         paletteBlock = _ref[_i];
@@ -4392,16 +4431,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.getPointRelativeToTracker = function(event) {
       var offsetPoint, point;
       if (event.offsetX != null) {
-        point = new draw.Point(event.offsetX, event.offsetY);
+        point = new this.draw.Point(event.offsetX, event.offsetY);
       } else {
-        point = new draw.Point(event.layerX, event.layerY);
+        point = new this.draw.Point(event.layerX, event.layerY);
       }
       offsetPoint = this.trackerOffset(event.target);
-      return new draw.Point(point.x + offsetPoint.x, point.y + offsetPoint.y);
+      return new this.draw.Point(point.x + offsetPoint.x, point.y + offsetPoint.y);
     };
     Editor.prototype.absoluteOffset = function(el) {
       var point;
-      point = new draw.Point(el.offsetLeft, el.offsetTop);
+      point = new this.draw.Point(el.offsetLeft, el.offsetTop);
       el = el.offsetParent;
       while (!(el === document.body || (el == null))) {
         point.x += el.offsetLeft - el.scrollLeft;
@@ -4438,16 +4477,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         y += el.offsetTop - el.scrollTop;
         el = el.offsetParent;
       }
-      return new draw.Point(x, y);
+      return new this.draw.Point(x, y);
     };
     Editor.prototype.trackerPointToMain = function(point) {
-      return new draw.Point(point.x - this.trackerOffset(this.mainCanvas).x + this.scrollOffsets.main.x, point.y - this.trackerOffset(this.mainCanvas).y + this.scrollOffsets.main.y);
+      return new this.draw.Point(point.x - this.trackerOffset(this.mainCanvas).x + this.scrollOffsets.main.x, point.y - this.trackerOffset(this.mainCanvas).y + this.scrollOffsets.main.y);
     };
     Editor.prototype.trackerPointToPalette = function(point) {
       if (this.paletteCanvas.offsetParent == null) {
-        return new draw.Point(NaN, NaN);
+        return new this.draw.Point(NaN, NaN);
       }
-      return new draw.Point(point.x - this.trackerOffset(this.paletteCanvas).x + this.scrollOffsets.palette.x, point.y - this.trackerOffset(this.paletteCanvas).y + this.scrollOffsets.palette.y);
+      return new this.draw.Point(point.x - this.trackerOffset(this.paletteCanvas).x + this.scrollOffsets.palette.x, point.y - this.trackerOffset(this.paletteCanvas).y + this.scrollOffsets.palette.y);
     };
     Editor.prototype.hitTest = function(point, block) {
       var head, seek;
@@ -4488,10 +4527,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
     })();
     Editor.prototype.addMicroUndoOperation = function(operation) {
+      var head, next, oldScroll;
       this.undoStack.push(operation);
+      head = this.tree.end.previousVisibleToken();
+      while ((head != null ? head.type : void 0) === 'newline') {
+        next = head.previousVisibleToken();
+        head.remove();
+        head = next;
+      }
       this.suppressChangeEvent = true;
+      oldScroll = this.aceEditor.session.getScrollTop();
       this.aceEditor.setValue(this.getValue(), -1);
       this.suppressChangeEvent = false;
+      this.aceEditor.session.setScrollTop(oldScroll);
       return this.fireEvent('change', [operation]);
     };
     Editor.prototype.undo = function() {
@@ -4682,8 +4730,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         draggingBlockView = this.dragView.getViewNodeFor(this.draggingBlock);
         draggingBlockView.layout(1, 1);
         draggingBlockView.drawShadow(this.dragCtx, 5, 5);
-        draggingBlockView.draw(this.dragCtx, new draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
-        position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        draggingBlockView.draw(this.dragCtx, new this.draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
+        position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         this.dropPointQuadTree = QUAD.init({
           x: this.scrollOffsets.main.xA,
           y: this.scrollOffsets.main.y,
@@ -4722,7 +4770,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var best, mainPoint, min, position, testPoints,
         _this = this;
       if (this.draggingBlock != null) {
-        position = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         this.dragCanvas.style.top = "" + (position.y + getOffsetTop(this.iceElement)) + "px";
         this.dragCanvas.style.left = "" + (position.x + getOffsetLeft(this.iceElement)) + "px";
         mainPoint = this.trackerPointToMain(position);
@@ -4842,7 +4890,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       __extends(ToFloatingOperation, _super);
 
       function ToFloatingOperation(block, position) {
-        this.position = new draw.Point(position.x, position.y);
+        this.position = new this.draw.Point(position.x, position.y);
         ToFloatingOperation.__super__.constructor.call(this, block, null);
       }
 
@@ -4861,7 +4909,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     })(DropOperation);
     FromFloatingOperation = (function() {
       function FromFloatingOperation(record) {
-        this.position = new draw.Point(record.position.x, record.position.y);
+        this.position = new this.draw.Point(record.position.x, record.position.y);
         this.block = record.block.clone();
       }
 
@@ -4887,7 +4935,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('mouseup', 0, function(point, event, state) {
       var palettePoint, renderPoint, trackPoint, _ref, _ref1, _ref2, _ref3;
       if ((this.draggingBlock != null) && (this.lastHighlight == null)) {
-        trackPoint = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         renderPoint = this.trackerPointToMain(trackPoint);
         palettePoint = this.trackerPointToPalette(trackPoint);
         if (this.inTree(this.draggingBlock)) {
@@ -4962,7 +5010,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     hook('redraw_main', 7, function() {
       var blockView, boundingRect, record, _i, _len, _ref, _results;
-      boundingRect = new draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+      boundingRect = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
       _ref = this.floatingBlocks;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -5180,7 +5228,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         treeView.layout(0, TOP_TAB_HEIGHT);
         newp = deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
         if (deepEquals(newp, oldp)) {
-          rect = new draw.NoRectangle();
+          rect = new this.draw.NoRectangle();
           if (line > 0) {
             rect.unite(treeView.bounds[line - 1]);
           }
@@ -5314,13 +5362,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       setTimeout((function() {
         var _ref2;
-        _this.hiddenInput.focus();
-        if (_this.hiddenInput.value[0] === _this.hiddenInput.value[_this.hiddenInput.value.length - 1] && ((_ref2 = _this.hiddenInput.value[0]) === '\'' || _ref2 === '"')) {
-          _this.hiddenInput.setSelectionRange(1, _this.hiddenInput.value.length - 1);
-        } else {
-          _this.hiddenInput.setSelectionRange(0, _this.hiddenInput.value.length);
+        if (_this.textFocus != null) {
+          _this.hiddenInput.focus();
+          if (_this.hiddenInput.value[0] === _this.hiddenInput.value[_this.hiddenInput.value.length - 1] && ((_ref2 = _this.hiddenInput.value[0]) === '\'' || _ref2 === '"')) {
+            _this.hiddenInput.setSelectionRange(1, _this.hiddenInput.value.length - 1);
+          } else {
+            _this.hiddenInput.setSelectionRange(0, _this.hiddenInput.value.length);
+          }
+          return _this.redrawTextInput();
         }
-        return _this.redrawTextInput();
       }), 0);
       this.redrawMain();
       return this.redrawTextInput();
@@ -5557,8 +5607,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (this.lassoSelectAnchor != null) {
         mainPoint = this.trackerPointToMain(point);
         this.clearLassoSelectCanvas();
-        topLeftCorner = new draw.Point(Math.min(this.lassoSelectAnchor.x, mainPoint.x) - this.scrollOffsets.main.x, Math.min(this.lassoSelectAnchor.y, mainPoint.y) - this.scrollOffsets.main.y);
-        size = new draw.Size(Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        topLeftCorner = new this.draw.Point(Math.min(this.lassoSelectAnchor.x, mainPoint.x) - this.scrollOffsets.main.x, Math.min(this.lassoSelectAnchor.y, mainPoint.y) - this.scrollOffsets.main.y);
+        size = new this.draw.Size(Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
         this.lassoSelectCtx.strokeStyle = '#00f';
         return this.lassoSelectCtx.strokeRect(topLeftCorner.x, topLeftCorner.y, size.width, size.height);
       }
@@ -5600,7 +5650,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var first, lassoRectangle, last, mainPoint, _ref;
       if (this.lassoSelectAnchor != null) {
         mainPoint = this.trackerPointToMain(point);
-        lassoRectangle = new draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
         this.lassoSelectAnchor = null;
         this.clearLassoSelectCanvas();
         first = this.tree.start;
@@ -5710,9 +5760,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
         bound = this.view.getViewNodeFor(this.cursor.parent).bounds[line];
         if (((_ref = this.cursor.nextVisibleToken()) != null ? _ref.type : void 0) === 'indentEnd' && ((_ref1 = this.cursor.prev) != null ? _ref1.prev.type : void 0) !== 'indentStart' || this.cursor.next === this.tree.end) {
-          return new draw.Point(bound.x, bound.bottom());
+          return new this.draw.Point(bound.x, bound.bottom());
         } else {
-          return new draw.Point(bound.x, bound.y);
+          return new this.draw.Point(bound.x, bound.y);
         }
       }
     };
@@ -5839,7 +5889,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var _this = this;
       this.handwrittenBlocks = [];
       this.shiftKeyPressed = false;
-      return this.keyListener.register_combo({
+      this.keyListener.register_combo({
         keys: 'shift',
         on_keydown: function() {
           return _this.shiftKeyPressed = true;
@@ -5848,30 +5898,40 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return _this.shiftKeyPressed = false;
         }
       });
-    });
-    hook('key.enter', 0, function() {
-      var head, newBlock, newSocket, _ref;
-      if (!((this.textFocus != null) || this.shiftKeyPressed)) {
-        this.setTextInputFocus(null);
-        newBlock = new model.Block();
-        newSocket = new model.Socket(-Infinity);
-        newSocket.spliceIn(newBlock.start);
-        newSocket.handwritten = true;
-        this.handwrittenBlocks.push(newBlock);
-        head = this.cursor.prev;
-        while (((_ref = head.type) === 'newline' || _ref === 'cursor' || _ref === 'segmentStart' || _ref === 'segmentEnd') && head !== this.tree.start) {
-          head = head.prev;
+      return this.keyListener.register_combo({
+        keys: 'enter',
+        on_keydown: function() {
+          var head, newBlock, newSocket, _ref;
+          if (!((_this.textFocus != null) || _this.shiftKeyPressed)) {
+            _this.setTextInputFocus(null);
+            newBlock = new model.Block();
+            newSocket = new model.Socket(-Infinity);
+            newSocket.spliceIn(newBlock.start);
+            newSocket.handwritten = true;
+            _this.handwrittenBlocks.push(newBlock);
+            head = _this.cursor.prev;
+            while (((_ref = head.type) === 'newline' || _ref === 'cursor' || _ref === 'segmentStart' || _ref === 'segmentEnd') && head !== _this.tree.start) {
+              head = head.prev;
+            }
+            console.log('found', head);
+            _this.addMicroUndoOperation('CAPTURE_POINT');
+            _this.addMicroUndoOperation(new DropOperation(newBlock, head));
+            newBlock.moveTo(head);
+            _this.redrawMain();
+            _this.reparseHandwrittenBlocks();
+            return _this.newHandwrittenSocket = newSocket;
+          } else if (_this.textFocus != null) {
+            _this.setTextInputFocus(null);
+            return _this.redrawMain();
+          }
+        },
+        on_keyup: function() {
+          if (_this.newHandwrittenSocket != null) {
+            _this.setTextInputFocus(_this.newHandwrittenSocket);
+            return _this.newHandwrittenSocket = null;
+          }
         }
-        this.addMicroUndoOperation('CAPTURE_POINT');
-        this.addMicroUndoOperation(new DropOperation(newBlock, head));
-        newBlock.moveTo(head);
-        this.redrawMain();
-        this.reparseHandwrittenBlocks();
-        return this.setTextInputFocus(newSocket);
-      } else if (this.textFocus != null) {
-        this.setTextInputFocus(null);
-        return this.redrawMain();
-      }
+      });
     });
     containsCursor = function(block) {
       var head;
@@ -6101,7 +6161,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             corner = this.view.getViewNodeFor(head).bounds[0].upperLeftCorner();
             corner.x -= this.scrollOffsets.main.x;
             corner.y -= this.scrollOffsets.main.y;
-            translationVectors.push((new draw.Point(state.x, state.y)).from(corner));
+            translationVectors.push((new this.draw.Point(state.x, state.y)).from(corner));
             textElements.push(this.view.getViewNodeFor(head));
             state.x += this.mainCtx.measureText(head.value).width;
             break;
@@ -6397,8 +6457,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('populate', 0.1, function() {
       var _this = this;
       this.scrollOffsets = {
-        main: new draw.Point(0, 0),
-        palette: new draw.Point(0, 0)
+        main: new this.draw.Point(0, 0),
+        palette: new this.draw.Point(0, 0)
       };
       this.mainScroller = document.createElement('div');
       this.mainScroller.className = 'ice-main-scroller';
@@ -6447,7 +6507,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     hook('redraw_palette', 0, function() {
       var block, bounds, _i, _len, _ref;
-      bounds = new draw.NoRectangle();
+      bounds = new this.draw.NoRectangle();
       _ref = this.currentPaletteBlocks;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         block = _ref[_i];
@@ -6458,15 +6518,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('populate', 0, function() {
       this.fontSize = 15;
       this.fontFamily = 'Courier New';
-      return this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
+      return this.fontAscent = helper.fontMetrics(this.fontFamily, this.fontSize).prettytop;
     });
     Editor.prototype.setFontSize_raw = function(fontSize) {
       if (this.fontSize !== fontSize) {
         this.fontSize = fontSize;
         this.paletteHeader.style.fontSize = "" + fontSize + "px";
         this.gutter.style.fontSize = "" + fontSize + "px";
-        this.view.opts.textHeight = this.dragView.opts.textHeight = getFontHeight(this.fontFamily, this.fontSize);
-        this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
+        this.view.opts.textHeight = this.dragView.opts.textHeight = helper.getFontHeight(this.fontFamily, this.fontSize);
+        this.fontAscent = helper.fontMetrics(this.fontFamily, this.fontSize).prettytop;
         this.view.clearCache();
         this.dragView.clearCache();
         this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
@@ -6475,10 +6535,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     Editor.prototype.setFontFamily = function(fontFamily) {
-      draw._setGlobalFontFamily(fontFamily);
+      this.draw.setGlobalFontFamily(fontFamily);
       this.fontFamily = fontFamily;
-      this.view.opts.textHeight = getFontHeight(this.fontFamily, this.fontSize);
-      this.fontAscent = fontMetrics(this.fontFamily, this.fontSize).prettytop;
+      this.view.opts.textHeight = helper.getFontHeight(this.fontFamily, this.fontSize);
+      this.fontAscent = helper.fontMetrics(this.fontFamily, this.fontSize).prettytop;
       this.view.clearCache();
       this.dragView.clearCache();
       this.gutter.style.fontFamily = fontFamily;
@@ -6545,7 +6605,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       path = this.view.getViewNodeFor(model).path.clone();
       path.style.fillColor = null;
       path.style.strokeColor = style.color;
-      path.style.lineWidth = 2;
+      path.style.lineWidth = 3;
       path.noclip = true;
       path.bevel = false;
       return path;
@@ -6725,7 +6785,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     TOUCH_SELECTION_TIMEOUT = 1000;
     Editor.prototype.touchEventToPoint = function(event, index) {
       var absolutePoint;
-      absolutePoint = new draw.Point(event.changedTouches[index].pageX, event.changedTouches[index].pageY);
+      absolutePoint = new this.draw.Point(event.changedTouches[index].pageX, event.changedTouches[index].pageY);
       return absolutePoint.from(this.absoluteOffset(this.iceElement));
     };
     Editor.prototype.queueLassoMousedown = function(trackPoint, event) {
@@ -6744,7 +6804,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     hook('populate', 0, function() {
       var _this = this;
-      this.touchScrollAnchor = new draw.Point(0, 0);
+      this.touchScrollAnchor = new this.draw.Point(0, 0);
       this.lassoSelectStartTimeout = null;
       this.wrapperElement.addEventListener('touchstart', function(event) {
         var handler, state, trackPoint, _i, _len, _ref;
@@ -6831,7 +6891,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('mouseup', 0.5, function(point, event) {
       var renderPoint, trackPoint;
       if (this.draggingBlock != null) {
-        trackPoint = new draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
+        trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         renderPoint = this.trackerPointToMain(trackPoint);
         if (this.inTree(this.draggingBlock) && this.mainViewOrChildrenContains(this.draggingBlock, renderPoint)) {
           this.draggingBlock.ephemeral = false;
@@ -6918,106 +6978,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return this.gutter.style.height = "" + (Math.max(this.mainScroller.offsetHeight, treeView.totalBounds.height)) + "px";
       }
     });
-    /*
-    getFontHeight = (family, size) ->
-      testElement = document.createElement 'span'
-      testElement.innerHTML = 'Hg'
-    
-      testPartner = document.createElement 'div'
-      testPartner.style.display = 'inline-block'; testPartner.style.background = '#000'
-      testPartner.style.width = '1px'; testPartner.style.height = '1px'
-    
-      testWrapper = document.createElement 'div'
-      testWrapper.style.position = 'absolute'
-      testWrapper.style.left = testWrapper.style.top = '-9999px'
-      testWrapper.style.font = "#{size}px #{family}"
-    
-      testWrapper.appendChild testElement; testWrapper.appendChild testPartner
-    
-      document.body.appendChild testWrapper
-    
-      testPartner.style.verticalAlign = 'text-top'
-      offsetTop = testPartner.offsetTop - testElement.offsetTop
-    
-      testPartner.style.verticalAlign = 'text-bottom'
-      offsetBottom = testPartner.offsetTop - testElement.offsetTop
-    
-      #document.body.removeChild testWrapper
-    
-      return offsetBottom - offsetTop
-    */
-
-    fontMetricsCache = {};
-    fontMetrics = function(fontFamily, fontHeight) {
-      var baseline, canvas, capital, ctx, ex, fontStyle, gp, height, lf, metrics, result, textTopAndBottom, width;
-      fontStyle = "" + fontHeight + "px " + fontFamily;
-      result = fontMetricsCache[fontStyle];
-      textTopAndBottom = function(testText) {
-        var col, first, index, last, pixels, right, row, _i, _j;
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, width, height);
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
-        ctx.fillText(testText, 0, 0);
-        right = Math.ceil(ctx.measureText(testText).width);
-        pixels = ctx.getImageData(0, 0, width, height).data;
-        first = -1;
-        last = height;
-        for (row = _i = 0; 0 <= height ? _i < height : _i > height; row = 0 <= height ? ++_i : --_i) {
-          for (col = _j = 1; 1 <= right ? _j < right : _j > right; col = 1 <= right ? ++_j : --_j) {
-            index = (row * width + col) * 4;
-            if (pixels[index] !== 0) {
-              if (first < 0) {
-                first = row;
-              }
-              break;
-            }
-          }
-          if (first >= 0 && col >= right) {
-            last = row;
-            break;
-          }
-        }
-        return {
-          top: first,
-          bottom: last
-        };
-      };
-      if (!result) {
-        canvas = document.createElement('canvas');
-        ctx = canvas.getContext('2d');
-        ctx.font = fontStyle;
-        metrics = ctx.measureText('Hg');
-        if (canvas.height < fontHeight * 2 || canvas.width < metrics.width) {
-          canvas.width = Math.ceil(metrics.width);
-          canvas.height = fontHeight * 2;
-          ctx = canvas.getContext('2d');
-          ctx.font = fontStyle;
-        }
-        width = canvas.width;
-        height = canvas.height;
-        capital = textTopAndBottom('H');
-        ex = textTopAndBottom('x');
-        lf = textTopAndBottom('lf');
-        gp = textTopAndBottom('g');
-        baseline = capital.bottom;
-        result = {
-          ascent: lf.top,
-          capital: capital.top,
-          ex: ex.top,
-          baseline: capital.bottom,
-          descent: gp.bottom
-        };
-        result.prettytop = Math.max(0, Math.min(result.ascent, result.ex - (result.descent - result.baseline)));
-        fontMetricsCache[fontStyle] = result;
-      }
-      return result;
-    };
-    getFontHeight = function(family, size) {
-      var metrics;
-      metrics = fontMetrics(family, size);
-      return metrics.descent - metrics.prettytop;
-    };
     Editor.prototype.overflowsX = function() {
       return this.documentDimensions().width > this.viewportDimensions().width;
     };
