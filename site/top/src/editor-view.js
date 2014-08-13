@@ -1354,12 +1354,15 @@ function updatePaneTitle(pane) {
         addClass('ice-toggle-button').text('use blocks').click(function() {
       var togglingSucceeded = paneState.iceEditor.toggleBlocks();
       if (togglingSucceeded) {
-        if (paneState.iceEditor.currentlyUsingBlocks) {
-          $(this).text('use code');
-        }
-        else {
-          $(this).text('use blocks');
-        }
+        var button = this;
+        setTimeout(function() {
+          if (paneState.iceEditor.currentlyUsingBlocks) {
+            $(button).text('use code');
+          }
+          else {
+            $(button).text('use blocks');
+          }
+        }, 0);
       }
     }));
   } else if (paneState.links) {
@@ -1524,8 +1527,8 @@ function changeEditorText(paneState, text) {
 // is copied from compiled CoffeeScript.
 var ICE_EDITOR_PALETTE =[
   {
-    name: 'Turtle',
-    color: 'common',
+    name: 'Draw',
+    color: 'blue',
     blocks: [
       'pen red',
       'fd 100',
@@ -1553,12 +1556,9 @@ var ICE_EDITOR_PALETTE =[
   },
   {
     name: 'Control',
-    color: 'control',
+    color: 'orange',
     blocks: [
       'button \'Click\', ->\n' +
-      '  ``',
-      
-      'tick 1, ->\n' +
       '  ``',
       'for [1..3]\n' +
       '  ``',
@@ -1568,6 +1568,8 @@ var ICE_EDITOR_PALETTE =[
       
       'while ``\n' +
       '  ``',
+      'read \'Name?\', (n) ->\n' +
+      '  write \'Hello \' + n',
       
       'if ``\n' +
       '  ``',
@@ -1581,8 +1583,8 @@ var ICE_EDITOR_PALETTE =[
     })
   },
   {
-    name: 'Calculation',
-    color: 'math',
+    name: 'Calculate',
+    color: 'green',
     blocks: [
       'x = ``',
       '`` + ``',
@@ -1602,14 +1604,14 @@ var ICE_EDITOR_PALETTE =[
     })
   },
   {
-    name: 'Interaction',
-    color: 'turtle',
+    name: 'Interact',
+    color: 'violet',
     blocks: [
       'speed Infinity',
+      'tick 1, ->\n' +
+      '  ``',
       'moveto lastclick',
       'turnto lastmousemove',
-      'read \'Name?\', (n) ->\n' +
-      '  write \'Hello \' + n',
       'click ->\n' +
       '  write \'Heh!\'',
       'if pressed \'enter\'\n' +
