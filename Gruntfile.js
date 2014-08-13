@@ -180,6 +180,14 @@ module.exports = function(grunt) {
         }
       }
     },
+    sed: {
+      iced: {
+        pattern: '\n\\(function\\(root\\)',
+        replacement: '\nthis.CoffeeScript||(function(root)',
+        path: 'site/top/iced-coffee-script.js',
+        recursive: false
+      }
+    },
     watch: {
       dev: {
         files: [
@@ -236,6 +244,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-node-inspector');
+  grunt.loadNpmTasks('grunt-sed');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -273,6 +282,8 @@ module.exports = function(grunt) {
     grunt.task.run('mochaTest');
   });
 
+  // "update" does a bowercopy and a sed.
+  grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
                      ['proxymessage', 'watch:dev', 'node-inspector:dev']);
