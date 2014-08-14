@@ -1647,8 +1647,9 @@ function setPaneEditorText(pane, text, filename) {
           document.getElementById(id),
           ICE_EDITOR_PALETTE);
   whenCodeFontLoaded(function () {
-  iceEditor.setFontFamily("Source Code Pro");
+    iceEditor.setFontFamily("Source Code Pro");
   });
+  iceEditor.setTopNubbyStyle(0, '#1e90ff');
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
   iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
@@ -1665,7 +1666,6 @@ function setPaneEditorText(pane, text, filename) {
   iceEditor.on('change', function() {
     fireEvent('dirty', [pane]);
     publish('update', [iceEditor.getValue()]);
-    //Clear lines
     iceEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
   });
@@ -1702,7 +1702,8 @@ function setPaneEditorText(pane, text, filename) {
   publish('update', [text]);
   editor.getSession().setUndoManager(um);
   var changeHandler = paneState.changeHandler = (function changeHandler() {
-    if (changeHandler.suppressChange) {
+    if (changeHandler.suppressChange ||
+        (paneState.iceEditor && paneState.iceEditor.suppressAceChangeEvent)) {
       return;
     }
     // Add an empty last line on a timer, because the editor doesn't
