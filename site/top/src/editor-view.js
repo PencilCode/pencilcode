@@ -1647,7 +1647,8 @@ function setPaneEditorText(pane, text, filename) {
           document.getElementById(id),
           ICE_EDITOR_PALETTE);
   whenCodeFontLoaded(function () {
-  iceEditor.setFontFamily("Source Code Pro");
+    iceEditor.setFontFamily("Source Code Pro");
+    iceEditor.setFontSize(16);
   });
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
