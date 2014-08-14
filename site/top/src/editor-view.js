@@ -1593,6 +1593,9 @@ var ICE_EDITOR_PALETTE =[
       '`` - ``',
       '`` * ``',
       '`` / ``',
+      '`` is ``',
+      '`` < ``',
+      '`` > ``',
       'random [1..100]',
       'round ``',
       'abs ``',
@@ -1600,7 +1603,7 @@ var ICE_EDITOR_PALETTE =[
       'min ``, ``',
       'f = (param) ->\n' +
       '  ``',
-      'f ``'
+      '(``)(``)'
     ].map(function(block) {
       return ice.parse(block).start.next.container
     })
