@@ -2331,7 +2331,13 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           for (line = _k = 0, _len2 = _ref1.length; _k < _len2; line = ++_k) {
             minDimension = _ref1[line];
             if (this.lineChildren[line].length === 0) {
-              this.minDistanceToBase[line].above = this.view.opts.textHeight;
+              if (this.model.type === 'socket') {
+                this.minDistanceToBase[line].above = this.view.opts.textHeight * this.view.opts.textPadding;
+                this.minDistanceToBase[line].above = this.view.opts.textPadding;
+              } else {
+                this.minDistanceToBase[line].above = this.view.opts.textHeight + this.view.opts.padding;
+                this.minDistanceToBase[line].below = this.view.opts.padding;
+              }
             }
             minDimension.height = this.minDistanceToBase[line].above + this.minDistanceToBase[line].below;
           }
@@ -4235,7 +4241,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.paletteElement.style.left = '0px';
         this.paletteElement.style.top = '0px';
         this.paletteElement.style.bottom = '0px';
-        this.paletteElement.style.width = '300px';
+        this.paletteElement.style.width = '270px';
         this.iceElement.style.left = this.paletteElement.offsetWidth + 'px';
         this.wrapperElement.appendChild(this.paletteElement);
         this.draw.refreshFontCapital();
@@ -5896,7 +5902,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }
         }
         bound = this.view.getViewNodeFor(this.cursor.parent).bounds[line];
-        if (((_ref = this.cursor.nextVisibleToken()) != null ? _ref.type : void 0) === 'indentEnd' && ((_ref1 = this.cursor.prev) != null ? _ref1.prev.type : void 0) !== 'indentStart' || this.cursor.next === this.tree.end) {
+        if (((_ref = this.cursor.nextVisibleToken()) != null ? _ref.type : void 0) === 'indentEnd' && ((_ref1 = this.cursor.prev) != null ? _ref1.prev.type : void 0) !== 'indentStart' || (this.cursor.next === this.tree.end && this.cursor.prev !== this.tree.start)) {
           return new this.draw.Point(bound.x, bound.bottom());
         } else {
           return new this.draw.Point(bound.x, bound.y);
@@ -6423,7 +6429,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           translatingElements.push(div);
           div.className = 'ice-transitioning-element ice-transitioning-gutter';
           div.style.transition = "left " + translateTime + "ms, top " + translateTime + "ms, font-size " + translateTime + "ms";
-          this.mainScrollerStuffing.appendChild(div);
+          this.iceElement.appendChild(div);
           _fn1(div, line);
         }
         this.lineNumberWrapper.style.display = 'none';
@@ -6553,7 +6559,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             div.className = 'ice-transitioning-element ice-transitioning-gutter';
             div.style.transition = "left " + translateTime + "ms, top " + translateTime + "ms, font-size " + translateTime + "ms";
             translatingElements.push(div);
-            _this.mainScrollerStuffing.appendChild(div);
+            _this.iceElement.appendChild(div);
             _fn1(div, line);
           }
           _ref1 = [_this.mainCanvas, _this.highlightCanvas];
@@ -6598,11 +6604,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         };
       }
     };
-    Editor.prototype.toggleBlocks = function() {
+    Editor.prototype.toggleBlocks = function(cb) {
       if (this.currentlyUsingBlocks) {
-        return this.performMeltAnimation();
+        return this.performMeltAnimation(500, 1000, cb);
       } else {
-        return this.performFreezeAnimation();
+        return this.performFreezeAnimation(500, 500, cb);
       }
     };
     hook('populate', 0.1, function() {
@@ -7138,6 +7144,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var _ref, _ref1;
       return this.gutter.style.height = "" + (Math.max(this.iceElement.offsetHeight, (_ref = (_ref1 = this.view.getViewNodeFor(this.tree).totalBounds) != null ? _ref1.height : void 0) != null ? _ref : 0)) + "px";
     });
+    Editor.prototype.setPaletteWidth = function(width) {
+      this.paletteWrapper.style.width = width + 'px';
+      return this.resize();
+    };
     Editor.prototype.overflowsX = function() {
       return this.documentDimensions().width > this.viewportDimensions().width;
     };

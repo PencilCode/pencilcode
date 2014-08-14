@@ -1358,9 +1358,11 @@ function updatePaneTitle(pane) {
         setTimeout(function() {
           if (paneState.iceEditor.currentlyUsingBlocks) {
             $(button).text('use code');
+            paneState.iceEditor.iceElement.focus();
           }
           else {
             $(button).text('use blocks');
+            paneState.editor.focus();
           }
         }, 0);
       }
@@ -1650,6 +1652,7 @@ function setPaneEditorText(pane, text, filename) {
     iceEditor.setFontFamily("Source Code Pro");
     iceEditor.setFontSize(16);
   });
+  iceEditor.setPaletteWidth(250);
   iceEditor.setTopNubbyStyle(0, '#1e90ff');
   iceEditor.setValue(text);
   iceEditor.setEditorState(false);
