@@ -1648,6 +1648,7 @@ function setPaneEditorText(pane, text, filename) {
           ICE_EDITOR_PALETTE);
   whenCodeFontLoaded(function () {
     iceEditor.setFontFamily("Source Code Pro");
+    iceEditor.setFontSize(16);
   });
   iceEditor.setTopNubbyStyle(0, '#1e90ff');
   iceEditor.setValue(text);
