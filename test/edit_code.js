@@ -72,7 +72,7 @@ describe('code editor', function() {
         // Poll until the element with class="editor" appears on the page.
         if (!$('.editor').length) return;
         // Reach in and return the text that is shown within the editor.
-        var ace_editor = ace.edit($('.editor').attr('id'));
+        var ace_editor = ace.edit($('.ice-ace')[0]);
         return {
           text: ace_editor.getSession().getValue()
         };
@@ -111,12 +111,12 @@ describe('code editor', function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; });
+          function() { return $(this).position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "untitled" in it.
       if (!lefttitle.length || !/untitled/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
       if (!$('.editor').length) return;
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       // Return a ton of UI state.
       return {
         filename: $('#filename').text(),
@@ -200,11 +200,11 @@ describe('code editor', function() {
   it('should enable the save button after editing a program', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Modify the text in the editor.
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       $('.editor').mousedown();
       ace_editor.getSession().setValue("speed 10\npen blue\nrt 180, 100");
     }, function() {
-      var ace_editor = ace.edit($('.editor').attr('id'));
+      var ace_editor = ace.edit($('.ice-ace')[0]);
       return {
         filename: $('#filename').text(),
         text: ace_editor.getValue(),
@@ -277,7 +277,7 @@ describe('code editor', function() {
         // Wait for the notifcation butter bar to show
         if (!$('#notification').is(':visible')) return;
         var lefttitle = $('.panetitle').filter(
-            function() { return $(this).position().left == 0; });
+            function() { return $(this).position().left == 0; }).find('.panetitle-text');
         return {
           notification: $('#notification').text(),
           lefttitle: lefttitle.text(),
@@ -368,6 +368,12 @@ describe('code editor', function() {
   });
   it('should accept the right password', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
+      // Fill the textarea with some code to ensure
+      // we do not get "deleted" message.
+      var ace_editor = ace.edit($('.ice-ace')[0]);
+      
+      ace_editor.getSession().setValue("speed 10\npen blue\nrt 180, 100");
+
       // Enter the correct password, and click OK again.
       $('.password').val('test');
       $('.ok').click();
@@ -390,7 +396,7 @@ describe('code editor', function() {
       asyncTest(_page, one_step_timeout, null, null, function() {
         if (!window.$) return;
         if (!$('.editor').is(':visible')) return;
-        var ace_editor = ace.edit($('.editor').attr('id'));
+        var ace_editor = ace.edit($('.ice-ace')[0]);
         if (!ace_editor.getValue()) return;
         return {
           url: window.location.href,
@@ -419,7 +425,7 @@ describe('code editor', function() {
   it('should delete when empty is saved', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Delete all the text in the editor!
-      var ace_editor = ace.edit($('.editor').attr('id'));
+        var ace_editor = ace.edit($('.ice-ace')[0]);
       ace_editor.getSession().setValue('');
       // Then click the save button.
       $('#save').mousedown();

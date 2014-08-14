@@ -3,7 +3,7 @@
 <head>
 <title>Pencil Code Editor</title>
 <meta charset="utf-8">
-<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300,700,900|Source+Code+Pro:500,600">
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300,900|Source+Code+Pro:400">
 <meta name="viewport" content="initial-scale=1,width=device-width">
 <style>
 * {box-sizing:border-box;}
@@ -21,7 +21,9 @@ document.write(
   '<link rel="stylesheet" type="text/css" href="//' +
   pencilcode.domain + '/editor.css">' +
   '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">');
+  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/lib/ice.css">');
 </script>
 </head>
 <body id="pencildoc">
@@ -47,13 +49,22 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 })();
 </script></nobr></td>
 <td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
-<div id="alphatitle" class="back panetitle"></div>
+<div id="alphatitle" class="back panetitle">
+  <span id="alphatitle_text" class="panetitle-text"></span>
+  <span id="alphatitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="alpha" class="back pane"></div>
-<div id="bravotitle" class="left panetitle" style="width:100%"></div>
+<div id="bravotitle" class="left panetitle" style="width:100%">
+  <span id="bravotitle_text" class="panetitle-text"></span>
+  <span id="bravotitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="bravo" class="left pane" style="width:100%"
 ><div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<div id="charlietitle" class="right panetitle" style="left:100%"></div>
+<div id="charlietitle" class="right panetitle" style="left:100%">
+  <span id="charlietitle_text" class="panetitle-text"></span>
+  <span id="charlietitle-extra" class="panetitle-extra"></span>
+</div>
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div><!-- end clip -->
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->

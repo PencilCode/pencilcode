@@ -7,15 +7,21 @@ define([
   'filetype',
   'tooltipster',
   'see',
+  'ice',
   'draw-protractor',
-  'ZeroClipboard'],
+  'ZeroClipboard',
+  'FontLoader'
+],
 function(
   $,
   filetype,
   tooltipster,
   see,
+  ice,
   drawProtractor,
-  ZeroClipboard) {
+  ZeroClipboard,
+  FontLoader
+) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -67,6 +73,12 @@ var state = {
   },
 }
 
+var iceMarkClassColors = {
+  'debugerror': '#F00',
+  'debugfocus': '#FFF',
+  'debugtrace': '#FF0'
+}
+
 //
 // Zeroclipboard seems very flakey.  The documentation says
 // that this configuration should not be necessary but it seems to be
@@ -94,7 +106,7 @@ window.pencilcode.view = {
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
-  setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
+  setPaneTitle: function(pane, html) { $('#' + pane + 'title_text').html(html); },
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   changePaneEditorText: function(pane, text) {
@@ -543,6 +555,10 @@ $('#buttonbar,#middle').on('mousemove', 'button', function(e) {
 });
 
 $('#buttonbar,#middle').on('click', 'button', function(e) {
+  // First deal with rename if it's in progress.
+  if ($('#filename').is(document.activeElement)) {
+    $('#filename').blur();
+  }
   if (this.id) {
     $(this).removeClass('pressed');
     $(this).tooltipster('hide');
@@ -1273,9 +1289,13 @@ function updatePaneLinks(pane) {
 
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
+  if (paneState.iceEditor && paneState.iceEditor.destroy) {
+    paneState.iceEditor.destroy();
+  }
   if (paneState.editor) {
     paneState.editor.destroy();
   }
+  paneState.iceEditor = null;
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
@@ -1285,10 +1305,11 @@ function clearPane(pane, loading) {
   paneState.dirtied = false;
   paneState.links = null;
   paneState.running = false;
+  paneState.palette = null;
   paneState.fullScreenLink = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
-  $('#' + pane + 'title').html('');
+  $('#' + pane + 'title_text').html(''); $('#' + pane + 'title-extra').html('');
 }
 
 function modeForMimeType(mimeType) {
@@ -1327,6 +1348,25 @@ function updatePaneTitle(pane) {
     } else {
       suffix = ' code';
     }
+
+    $('#' + pane + 'title-extra').html('');
+    $('#' + pane + 'title-extra').append($('<span>').
+        addClass('ice-toggle-button').text('use blocks').click(function() {
+      var togglingSucceeded = paneState.iceEditor.toggleBlocks();
+      if (togglingSucceeded) {
+        var button = this;
+        setTimeout(function() {
+          if (paneState.iceEditor.currentlyUsingBlocks) {
+            $(button).text('use code');
+            paneState.iceEditor.iceElement.focus();
+          }
+          else {
+            $(button).text('use blocks');
+            paneState.editor.focus();
+          }
+        }, 0);
+      }
+    }));
   } else if (paneState.links) {
     suffix = ' directory';
   } else if (paneState.running) {
@@ -1340,7 +1380,7 @@ function updatePaneTitle(pane) {
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
-  $('#' + pane + 'title').html(prefix + shortened + suffix);
+  $('#' + pane + 'title_text').html(prefix + shortened + suffix);
   if (paneState.running) {
     $('#' + pane + 'title .fullscreen').click(function(e) {
       e.preventDefault();
@@ -1485,6 +1525,112 @@ function changeEditorText(paneState, text) {
   paneState.changeHandler();
 }
 
+// The following palette description
+// is copied from compiled CoffeeScript.
+var ICE_EDITOR_PALETTE =[
+  {
+    name: 'Draw',
+    color: 'blue',
+    blocks: [
+      'pen red',
+      'fd 100',
+      'rt 90',
+      'lt 90',
+      'bk 100',
+      'dot blue, 50',
+      'box green, 50',
+      'speed 10',
+      'label \'hello\'',
+      'do ht',
+      'do st',
+      'do pu',
+      'do pd',
+      'pen purple, 10',
+      'rt 180, 100',
+      'lt 180, 100',
+      'slide 100, 20',
+      'jump 100, 20',
+      'play \'GEC\'',
+      'wear \'/img/cat-icon\''
+    ].map(function(block) {
+      return ice.parse(block).start.next.container;
+    })
+  },
+  {
+    name: 'Control',
+    color: 'orange',
+    blocks: [
+      'button \'Click\', ->\n' +
+      '  ``',
+      'for [1..3]\n' +
+      '  ``',
+      
+      'for x in [1..3]\n' +
+      '  ``',
+      
+      'while ``\n' +
+      '  ``',
+      'read \'Name?\', (n) ->\n' +
+      '  write \'Hello \' + n',
+      
+      'if ``\n' +
+      '  ``',
+
+      'if ``\n' +
+      '  ``\n' +
+      'else\n' +
+      '  ``'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container;
+    })
+  },
+  {
+    name: 'Calculate',
+    color: 'green',
+    blocks: [
+      'x = ``',
+      '`` + ``',
+      '`` - ``',
+      '`` * ``',
+      '`` / ``',
+      '`` is ``',
+      '`` < ``',
+      '`` > ``',
+      'random [1..100]',
+      'round ``',
+      'abs ``',
+      'max ``, ``',
+      'min ``, ``',
+      'f = (param) ->\n' +
+      '  ``',
+      '(``)(``)'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container
+    })
+  },
+  {
+    name: 'Interact',
+    color: 'violet',
+    blocks: [
+      'speed Infinity',
+      'tick 1, ->\n' +
+      '  ``',
+      'moveto lastclick',
+      'turnto lastmousemove',
+      'click ->\n' +
+      '  write \'Heh!\'',
+      'if pressed \'enter\'\n' +
+      '  write \'Holding.\'',
+      'p = new Piano',
+      'p.play \'EDC\'',
+      'w = new Webcam',
+      't = new Turtle'
+    ].map(function(block) {
+      return ice.parse(block).start.next.container
+    })
+  }
+];
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1499,8 +1645,39 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = filetype.mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
+
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var editor = paneState.editor = ace.edit(id);
+  var iceEditor = paneState.iceEditor =
+      new ice.Editor(
+          document.getElementById(id),
+          ICE_EDITOR_PALETTE);
+  whenCodeFontLoaded(function () {
+    iceEditor.setFontFamily("Source Code Pro");
+    iceEditor.setFontSize(16);
+  });
+  iceEditor.setPaletteWidth(250);
+  iceEditor.setTopNubbyStyle(0, '#1e90ff');
+  iceEditor.setValue(text);
+  iceEditor.setEditorState(false);
+  iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
+  iceEditor.on('statechange', function(blocks) {
+    if (!blocks || iceEditor.aceEditor.getReadOnly()) {
+    } else {
+    }
+  });
+
+  iceEditor.on('linehover', function(ev) {
+    fireEvent('icehover', [pane, ev]);
+  });
+
+  iceEditor.on('change', function() {
+    fireEvent('dirty', [pane]);
+    publish('update', [iceEditor.getValue()]);
+    iceEditor.clearLineMarks();
+    fireEvent('changelines', [pane]);
+  });
+  var editor = paneState.editor = iceEditor.aceEditor;
+
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
   editor.setTheme("ace/theme/chrome");
@@ -1510,6 +1687,7 @@ function setPaneEditorText(pane, text, filename) {
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -1518,24 +1696,26 @@ function setPaneEditorText(pane, text, filename) {
               (dimensions.columns + 5) * big.width > $('#' + pane).width());
   if (long) {
     // Use a small font for long documents.
-    $('#' + pane + ' .editor').css({fontWeight: 500, lineHeight: '119%'});
+    $('#' + pane + ' .editor').css({lineHeight: '119%'});
     editor.setFontSize(16);
   } else {
     // Use a giant font for short documents.
-    $('#' + pane + ' .editor').css({fontWeight: 600, lineHeight: '121%'});
+    $('#' + pane + ' .editor').css({lineHeight: '121%'});
     editor.setFontSize(24);
   }
-  editor.setValue(text);
   setupAutofoldScriptPragmas(paneState);
   var um = editor.getSession().getUndoManager();
   um.reset();
   publish('update', [text]);
   editor.getSession().setUndoManager(um);
   var changeHandler = paneState.changeHandler = (function changeHandler() {
-    if (changeHandler.suppressChange) {
+    if (changeHandler.suppressChange ||
+        (paneState.iceEditor && paneState.iceEditor.suppressAceChangeEvent)) {
       return;
     }
-    ensureEmptyLastLine(editor);
+    // Add an empty last line on a timer, because the editor doesn't
+    // return accurate values for contents in the middle of the change event.
+    setTimeout(function() { ensureEmptyLastLine(editor); }, 0);
     var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
     if (editor.getFontSize() > 16) {
@@ -1551,7 +1731,7 @@ function setPaneEditorText(pane, text, filename) {
       }
       if (long) {
         editor.setFontSize(16);
-        $('#' + pane + ' .editor').css({fontWeight: 500, lineHeight: '119%'});
+        $('#' + pane + ' .editor').css({lineHeight: '119%'});
       }
     }
     if (!paneState.dirtied) {
@@ -1731,7 +1911,9 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue();
+  // TODO: differentiate with
+  // paneState.editor.getSession().getValue();
   if (text != paneState.cleanText) {
     paneState.dirtied = true;
     return true;
@@ -1744,7 +1926,9 @@ function getPaneEditorText(pane) {
   if (!paneState.editor) {
     return null;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue();
+  // TODO: differentiate with
+  // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
   return {text: text, mime: paneState.mimeType };
@@ -1797,6 +1981,16 @@ function markPaneEditorLine(pane, line, markclass) {
     idMap[zline] = true;
   } else {
     var r = paneState.editor.session.highlightLines(zline, zline, markclass);
+
+    // Mark the ICE editor line, if applicable
+    if (paneState.iceEditor.currentlyUsingBlocks) {
+      paneState.iceEditor.markLine(zline, {
+        color: (markclass in iceMarkClassColors ?
+                iceMarkClassColors[markclass] : '#FF0'),
+        tag: markclass
+      });
+    }
+
     // Save the mark ID so that it can be cleared later.
     idMap[zline] = r.id;
   }
@@ -1825,6 +2019,7 @@ function clearPaneEditorLine(pane, line, markclass) {
   } else {
     session.removeMarker(id);
   }
+  paneState.iceEditor.unmarkLine(zline, markclass);
   delete idMap[zline];
 }
 
@@ -1855,6 +2050,7 @@ function clearPaneEditorMarks(pane, markclass) {
       }
     }
   }
+  paneState.iceEditor.clearLineMarks(markclass);
 }
 
 function notePaneEditorCleanText(pane, text) {
@@ -1892,6 +2088,31 @@ function noteNewFilename(pane, filename) {
 eval(see.scope('view'));
 
 $('#owner,#filename,#folder').tooltipster();
+
+var codeFontLoaded = false,
+    codeFontLoadingCallbacks = [];
+var fontloader = new FontLoader(["Source Code Pro"], {
+  fontsLoaded: function(failure) {
+    if (!failure) {
+      codeFontLoaded = true;
+      for (var j = 0; j < codeFontLoadingCallbacks.length; ++j) {
+        codeFontLoadingCallbacks[j].call();
+      }
+    }
+  }
+});
+fontloader.loadFonts();
+
+function whenCodeFontLoaded(callback) {
+  if (codeFontLoaded) {
+    callback.call();
+  } else{
+    codeFontLoadingCallbacks.push(callback);
+  }
+}
+
+window.FontLoader = FontLoader;
+window.fontloader = fontloader;
 
 return window.pencilcode.view;
 

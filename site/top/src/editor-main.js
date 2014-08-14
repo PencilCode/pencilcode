@@ -8,10 +8,13 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'draw-protractor': 'src/draw-protractor',
+    'gadget': 'src/gadget',
     'filetype': 'src/filetype',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
-    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
+    'FontLoader': 'src/FontLoader',
+    'ice': 'lib/ice'
   },
   shim: {
     'tooltipster': {
@@ -246,9 +249,9 @@ function updateTopControls(addHistory) {
   }
   // Update editability.
   view.setNameTextReadOnly(!model.editmode);
-  view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
   view.setPaneEditorReadOnly(paneatpos('right'), true);
   view.setPaneEditorReadOnly(paneatpos('back'), true);
+  view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
 }
 
 //

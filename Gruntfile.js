@@ -22,7 +22,9 @@ module.exports = function(grunt) {
           'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
-          'seedrandom.js': 'seedrandom/seedrandom.js'
+          'seedrandom.js': 'seedrandom/seedrandom.js',
+          'lib/ice.js': 'ice-editor/dist/ice-full.js',
+          'lib/ice.css': 'ice-editor/dist/ice.min.css'
         }
       },
       zeroclipboard: {
@@ -81,6 +83,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'src/almond',
           out: 'site/top/editor.js',
+          optimize: 'none',
           mainConfigFile: 'site/top/src/editor-main.js',
           preserveLicenseComments: false
         }
@@ -291,6 +294,8 @@ module.exports = function(grunt) {
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
+  // "build", for development, builds code without running tests.
+  grunt.registerTask('build', ['requirejs', 'replace']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
 };
