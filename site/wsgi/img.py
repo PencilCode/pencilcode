@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 # img.py
 
-import cgi, re, urllib, urllib2, collections
+import cgi, re, urllib, urllib2, urlparse, collections
 
 
 scrapeagent = 'Mozilla/5.0 (Linux x86_64) Gecko/20100101 Firefox/31.0'
 scrapeurl = 'https://www.google.com/search?tbm=isch&sa=X&biw=1024&bih=768'
 scraper = re.compile(r'href="(?:[^"/]*//[^"/]*)?/imgres?[^"]*imgurl=([^&"]*)')
+
+# Some sites redirect image urls to http urls, or don't like hotlinking.
+# Blacklist these as we find them.
+blacklist = set([
+   'www.public-domain-image.com',
+   'pixabay.com'
+])
 
 def uri_without_query(uri):
   return uri.split('?', 1)[0]
@@ -94,10 +101,13 @@ def application(env, start_response):
       request = urllib2.Request(url, None, headers)
       response = urllib2.urlopen(request)
       text = response.read()
-      result = scraper.search(text)
-      if result:
-        redirect_url = urllib.unquote(result.group(1))
-        cache[filename] = redirect_url
+      for link in scraper.findall(text):
+        candidate = urllib.unquote(link)
+        u = urlparse.urlparse(candidate)
+        if u.hostname not in blacklist:
+          redirect_url = candidate
+          cache[filename] = redirect_url
+          break
 
   except Exception as e:
     print e
