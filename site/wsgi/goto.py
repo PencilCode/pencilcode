@@ -4,10 +4,9 @@
 import cgi, re, urllib, urllib2, collections
 
 
-scrapeagent = 'Mozilla/5.0 (Linux x86_64) Gecko/20100101 Firefox/31.0'
-scrapeurl = 'https://www.google.com/search?tbm=isch&sa=X&biw=1024&bih=768'
-scraper = re.compile(r'href="(?:[^"/]*//[^"/]*)?/imgres?[^"]*imgurl=([^&"]*)')
-
+scrapeagent = 'Mozilla/5.0'
+scrapeurl = 'https://www.google.com/search?safe=on&btnI='
+scraper = re.compile(r'HREF="([^"])*"')
 def uri_without_query(uri):
   return uri.split('?', 1)[0]
 
@@ -18,7 +17,7 @@ def filename_from_uri(uri):
   return '/'.join(splituri(uri)[1:])
 
 def application(env, start_response):
-  redirect_url = 'http://pencilcode.net/pencil_32.png'
+  redirect_url = 'http://pencilcode.net/'
   try:
     form = cgi.FieldStorage(fp=env['wsgi.input'], environ=env)
     request_uri = env['REQUEST_URI']
@@ -32,7 +31,7 @@ def application(env, start_response):
     filename = filename_from_uri(request_uri)
     m = []
 
-    if m.append(re.match(r'(?i)(https?:)//?([^/]+/.*)$', filename)) or any(m):
+    if m.append(re.match(r'(?i)(https?:)//?(.+)$', filename)) or any(m):
       # http://...  is a redirect.  (Note server reduces repeated slashes.)
       p = m.pop()
       redirect_url = p.group(1) + '//' + p.group(2)
@@ -42,62 +41,28 @@ def application(env, start_response):
       redirect_url = cache[filename]
 
     else:
-      # Anything else is an imagesearch.
-      # Labelled for noncommercial reuse with modification.
-      tbs = 'sur:fm'
-      terms = filename
-
-      # path with /i/, /s/, /m/, /l/, or /1024x768/ sizes image
-      if m.append(re.match(r'([isml])/(.*)$', terms)) or any(m):
-        p = m.pop()
-        tbs += ',isz:' + p.group(1)
-        terms = p.group(2)
-      elif m.append(re.match(r'(\d+)x(\d+)/(.*)$', terms)) or any(m):
-        p = m.pop()
-        tbs += ',isz:ex,iszw:' + p.group(1) + ',iszh:' + p.group(2)
-        terms = p.group(3)
-
-      # path with /color/, /gray/, /red/, /orange/, etc, selects color
-      if m.append(re.match(r'(color|gray|trans)/(.*)$', terms)) or any(m):
-        p = m.pop()
-        tbs += ',ic:' + p.group(1)
-        terms = p.group(2)
-      elif m.append(re.match(r'(red|orange|yellow|green|teal|blue|purple|' +
-          r'pink|white|gray|black|brown)/(.*)$', terms)) or any(m):
-        p = m.pop()
-        tbs += ',ic:specific,isc:' + p.group(1)
-        terms = p.group(2)
-
-      # path with /face/, /photo/, /clipart/, /lineart/
-      if m.append(re.match(r'(face|photo|clipart|lineart|animated)' +
-          r'/(.*)$', terms)) or any(m):
-        p = m.pop()
-        tbs += ',itp:' + p.group(1)
-        terms = p.group(2)
-
-      # ends with .gif, .jpeg, etc.
-      if m.append(re.match(r'(.*)\.(gif|jpeg|png|bmp|svg|ico|webp)$',
-           terms)) or any(m):
-        p = m.pop()
-        tbs += ',ift:' + p.group(2)
-        terms = p.group(1)
-
-      url = scrapeurl + '&safe=active&tbs=' + tbs
+      # Do a google IFL search redirect.
+      query = re.sub(r'[-\s\.\+%&=]+', '+', filename)
+      url = scrapeurl + '&q=' + query
 
       headers = { 'User-Agent': agent, 'Referer': referer }
       if userip:
         # url += '&userip=' + userip
         headers['X-Forwarded-For'] = userip
 
-      query = re.sub(r'[-\s\.\+%&=]+', '+', terms)
-      url += '&q=' + query
-      request = urllib2.Request(url, None, headers)
-      response = urllib2.urlopen(request)
-      text = response.read()
-      result = scraper.search(text)
-      if result:
-        redirect_url = urllib.unquote(result.group(1))
+      opener = urllib2.build_opener(RedirectHandler())
+      opener.addheaders = headers.items()
+      response = opener.open(url)
+      location = response.info().getheader('Location', None)
+      if location:
+        redirect_url = location
         cache[filename] = redirect_url
+      else:
+        text = response.read()
+        result = scraper.search(text)
+        if result:
+          redirect_url = urllib.unquote(result.group(1))
+          cache[filename] = redirect_url
 
   except Exception as e:
     print e
@@ -106,6 +71,13 @@ def application(env, start_response):
     start_response('302 Redirect', [('Location', redirect_url.encode('utf-8'))])
   return []
 
+
+class RedirectHandler(urllib2.HTTPRedirectHandler):
+  def http_error_302(self, req, fp, code, msg, headers):
+    result = urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
+    result.status = code
+    return result
+  http_error_301 = http_error_303 = http_error_307 = http_error_302
 
 class Cache(collections.OrderedDict):
   '''A quick implementation of an LRU cache based on OrderedDict'''
