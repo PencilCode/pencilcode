@@ -1338,56 +1338,72 @@ function uniqueId(name) {
 
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
-  var prefix = '', suffix = '';
+  var label = '';
   if (paneState.editor) {
     if (/^text\/plain/.test(paneState.mimeType)) {
-      suffix = ' text';
+      label = 'text';
     } else if (/^text\/xml/.test(paneState.mimeType) ||
         /^application\/json/.test(paneState.mimeType)) {
-      suffix = ' data';
+      label = 'data';
+    } else if (/^text\/html/.test(paneState.mimeType)) {
+      label = 'html';
     } else {
-      suffix = ' code';
-    }
-
-    $('#' + pane + 'title-extra').html('');
-    $('#' + pane + 'title-extra').append($('<span>').
-        addClass('ice-toggle-button').text('use blocks').click(function() {
-      var togglingSucceeded = paneState.iceEditor.toggleBlocks();
-      if (togglingSucceeded) {
-        var button = this;
-        setTimeout(function() {
-          if (paneState.iceEditor.currentlyUsingBlocks) {
-            $(button).text('use code');
-            paneState.iceEditor.iceElement.focus();
-          }
-          else {
-            $(button).text('use blocks');
-            paneState.editor.focus();
-          }
-        }, 0);
+      label = 'code';
+      if (mimeTypeSupportsBlocks(paneState.mimeType)) {
+        symbol = '&gt;'
+        tooltip = 'Click to use blocks';
+        if (paneState.iceEditor.currentlyUsingBlocks) {
+          label = 'blocks';
+          symbol = '&lt;';
+          tooltip = 'Click to use code';
+        }
+        label = '<a target="_blank" class="toggleblocks" href="/code/' +
+            paneState.filename + '" title="' + tooltip +
+            '"><b>' + symbol + '</b> <span>' + label + '</span></a>';
       }
-    }));
+    }
   } else if (paneState.links) {
-    suffix = ' directory';
+    label = 'directory';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
-      prefix = '<a target="_blank" class="fullscreen" href="/home/' +
-           paneState.filename + '">';
-      suffix = ' screen <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMvvhp8YAAABjSURBVEhL7Y1JCgAhDAT9/6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRYzBP6aySgZYAAAAASUVORK5CYII="></a>';
+      label = '<a target="_blank" class="fullscreen" href="/home/' +
+           paneState.filename + '" title="Click for fullscreen">' +
+           '<img src="data:image/png;base64,iVBORw0KGgoAAAANS' +
+           'UhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BA' +
+           'ACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3Y' +
+           'XJlAHBhaW50Lm5ldCA0LjAuMvvhp8YAAABjSURBVEhL7Y1JCgAhDAT9/' +
+           '6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp' +
+           '5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRY' +
+           'zBP6aySgZYAAAAASUVORK5CYII="> <span>screen</span></a>';
     } else {
-      suffix = ' screen';
+      label = 'screen';
     }
   }
-  var shortened = paneState.filename || '';
-  shortened = shortened.replace(/^.*\//, '');
-  $('#' + pane + 'title_text').html(prefix + shortened + suffix);
+  $('#' + pane + 'title_text').html(label).find('a[title]').
+      tooltipster({ position: 'bottom-left' });
   if (paneState.running) {
     $('#' + pane + 'title .fullscreen').click(function(e) {
-      e.preventDefault();
-      fireEvent('fullscreen', [pane]);
     });
   }
 }
+
+$('.panetitle').on('click', '.fullscreen', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  e.preventDefault();
+  fireEvent('fullscreen', [pane]);
+});
+
+$('.panetitle').on('click', '.toggleblocks', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  e.preventDefault();
+  setPaneEditorBlockMode(pane, !getPaneEditorBlockMode(pane));
+});
+
+$('.pane').on('click', '.closeblocks', function(e) {
+  var pane = $(this).closest('.pane').prop('id');
+  e.preventDefault();
+  setPaneEditorBlockMode(pane, false);
+});
 
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");
@@ -1636,7 +1652,7 @@ var ICE_EDITOR_PALETTE =[
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorText(pane, text, filename) {
+function setPaneEditorText(pane, text, filename, useblocks) {
   clearPane(pane);
   text = normalizeCarriageReturns(text);
   var id = uniqueId('editor');
@@ -1645,6 +1661,9 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = filetype.mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
+  if (!mimeTypeSupportsBlocks(paneState.mimeType)) {
+     useblocks = false;
+  }
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
   var iceEditor = paneState.iceEditor =
@@ -1658,13 +1677,8 @@ function setPaneEditorText(pane, text, filename) {
   iceEditor.setPaletteWidth(250);
   iceEditor.setTopNubbyStyle(0, '#1e90ff');
   iceEditor.setValue(text);
-  iceEditor.setEditorState(false);
+  iceEditor.setEditorState(useblocks);
   iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
-  iceEditor.on('statechange', function(blocks) {
-    if (!blocks || iceEditor.aceEditor.getReadOnly()) {
-    } else {
-    }
-  });
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
@@ -1676,6 +1690,10 @@ function setPaneEditorText(pane, text, filename) {
     iceEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
   });
+
+  $('<div class="closeblocks">&times</div>').appendTo(iceEditor.paletteWrapper);
+
+
   var editor = paneState.editor = iceEditor.aceEditor;
 
   fixRepeatedCtrlFCommand(editor);
@@ -1765,6 +1783,28 @@ function setPaneEditorText(pane, text, filename) {
   gutter.on('click', '.guttermouseable', function() {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
+}
+
+function mimeTypeSupportsBlocks(mimeType) {
+  return /x-pencilcode|coffeescript/.test(mimeType);
+}
+
+function setPaneEditorBlockMode(pane, useblocks) {
+  var paneState = state.pane[pane];
+  if (!paneState.iceEditor) return false;
+  useblocks = !!useblocks;
+  if (paneState.iceEditor.currentlyUsingBlocks == useblocks) return false;
+  if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
+  var togglingSucceeded = paneState.iceEditor.toggleBlocks();
+  if (!togglingSucceeded) return false;
+  updatePaneTitle(pane);
+  return true;
+}
+
+function getPaneEditorBlockMode(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.iceEditor) return false;
+  return paneState.iceEditor.currentlyUsingBlocks;
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
@@ -2081,6 +2121,9 @@ function noteNewFilename(pane, filename) {
     paneState.mimeType = filetype.mimeForFilename(filename);
     paneState.editor.getSession().clearAnnotations();
     paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+    if (!mimeTypeSupportsBlocks(paneState.mimeType)) {
+      setPaneEditorBlockMode(pane, false);
+    }
   }
   updatePaneTitle(pane);
 }

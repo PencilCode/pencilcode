@@ -894,6 +894,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
       Container.prototype.wrap = function(first, last) {
         var _this = this;
+        this.parent = this.start.parent = this.end.parent = first.parent;
         first.prev.append(this.start);
         this.start.append(first);
         this.end.append(last.next);
@@ -1169,7 +1170,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
       StartToken.prototype.insert = function(token) {
         if (token instanceof StartToken || token instanceof EndToken) {
-          throw new Error('"insert"-ing a container can cause problems');
+          console.warn('"insert"-ing a container can cause problems');
         }
         token.next = this.next;
         token.prev = this;
@@ -1210,7 +1211,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
 
       EndToken.prototype.insert = function(token) {
         if (token instanceof StartToken || token instanceof EndToken) {
-          throw new Error('"insert"-ing a container can cause problems');
+          console.warn('"insert"-ing a container can cause problems');
         }
         token.next = this.next;
         token.prev = this;
@@ -1490,7 +1491,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         return new Segment(this.isLassoSegment);
       };
 
-      Segment.prototype.remove = function() {
+      Segment.prototype.unwrap = function() {
         var _this = this;
         this.notifyChange();
         this.traverseOneLevel(function(head, isContainer) {
@@ -4119,7 +4120,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('ice-controller',['ice-helper', 'ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(helper, coffee, draw, model, view) {
-    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, escapeString, exports, extend_, getCharactersTo, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CURSOR_HEIGHT_DECREASE, CURSOR_WIDTH_DECREASE, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, MutationButtonOperation, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, escapeString, exports, extend_, getCharactersTo, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
     PALETTE_TOP_MARGIN = 5;
     PALETTE_MARGIN = 5;
     MIN_DRAG_DISTANCE = 1;
@@ -4128,6 +4129,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     ANIMATION_FRAME_RATE = 60;
     DISCOURAGE_DROP_TIMEOUT = 1000;
     MAX_DROP_DISTANCE = 100;
+    CURSOR_WIDTH_DECREASE = 3;
+    CURSOR_HEIGHT_DECREASE = 2;
     ANY_DROP = helper.ANY_DROP;
     BLOCK_ONLY = helper.BLOCK_ONLY;
     MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
@@ -4190,6 +4193,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       'resize_palette': [],
       'redraw_main': [],
       'redraw_palette': [],
+      'set_palette': [],
       'mousedown': [],
       'mousemove': [],
       'mouseup': [],
@@ -4273,13 +4277,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         boundListeners = [];
         _ref = editorBindings.key;
         _fn = function(fns) {
-          return _this.keyListener.simple_combo(combo, function() {
+          return _this.keyListener.simple_combo(combo, function(event, count) {
             var executeDefault, fn, result, state, _i, _len, _ref1;
             state = {};
             executeDefault = true;
             for (_i = 0, _len = fns.length; _i < _len; _i++) {
               fn = fns[_i];
-              result = (_ref1 = fn.call(_this, state)) != null ? _ref1 : true;
+              result = (_ref1 = fn.call(_this, state, event, count)) != null ? _ref1 : true;
               executeDefault && (executeDefault = result);
             }
             return executeDefault;
@@ -4335,6 +4339,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           _fn1(eventName, elements);
         }
         this.tree = new model.Segment();
+        this.tree.start.insert(this.cursor);
         this.resize();
         this.redrawMain();
         this.redrawPalette();
@@ -4382,6 +4387,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           binding.call(this);
         }
         this.paletteCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.palette.x, -this.scrollOffsets.palette.y);
+        this.paletteHighlightCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.palette.x, -this.scrollOffsets.palette.y);
         return this.redrawPalette();
       };
 
@@ -4486,9 +4492,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           delete this.extraMarks[id];
         }
       }
+      return this.redrawCursors();
+    };
+    Editor.prototype.clearCursorCanvas = function() {
+      return this.cursorCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.cursorCanvas.width, this.cursorCanvas.height);
+    };
+    Editor.prototype.redrawCursors = function() {
+      this.clearCursorCanvas();
       if (this.textFocus != null) {
         return this.redrawTextHighlights();
-      } else {
+      } else if (this.lassoSegment == null) {
         return this.drawCursor();
       }
     };
@@ -4501,8 +4514,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.redrawPalette = function() {
       var binding, boundingRect, lastBottomEdge, paletteBlock, paletteBlockView, _i, _j, _len, _len1, _ref, _ref1, _results;
       this.clearPalette();
-      this.draw.setCtx(this.paletteCtx);
-      this.draw.setGlobalFontSize(this.fontSize);
       lastBottomEdge = PALETTE_TOP_MARGIN;
       boundingRect = new this.draw.Rectangle(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
       _ref = this.currentPaletteBlocks;
@@ -5155,7 +5166,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         paletteGroup = _ref[i];
         _results.push((function(paletteGroup) {
-          var block, clickHandler, paletteGroupHeader;
+          var block, clickHandler, event, paletteGroupHeader, _j, _len1, _ref1, _results1;
           if (i % 2 === 0) {
             paletteHeaderRow = document.createElement('div');
             paletteHeaderRow.className = 'ice-palette-header-row';
@@ -5179,12 +5190,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }
           paletteHeaderRow.appendChild(paletteGroupHeader);
           clickHandler = function() {
+            var event, _j, _len1, _ref1, _results1;
             _this.currentPaletteGroup = paletteGroup.name;
             _this.currentPaletteBlocks = paletteGroup.blocks;
             _this.currentPaletteGroupHeader.className = _this.currentPaletteGroupHeader.className.replace(/\s[-\w]*-selected\b/, '');
             _this.currentPaletteGroupHeader = paletteGroupHeader;
             _this.currentPaletteGroupHeader.className += ' ice-palette-group-header-selected';
-            return _this.redrawPalette();
+            _this.redrawPalette();
+            _ref1 = editorBindings.set_palette;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              event = _ref1[_j];
+              _results1.push(event.call(_this));
+            }
+            return _results1;
           };
           paletteGroupHeader.addEventListener('click', clickHandler);
           paletteGroupHeader.addEventListener('touchstart', clickHandler);
@@ -5192,7 +5211,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _this.currentPaletteGroup = paletteGroup.name;
             _this.currentPaletteBlocks = paletteGroup.blocks;
             _this.currentPaletteGroupHeader = paletteGroupHeader;
-            return _this.currentPaletteGroupHeader.className += ' ice-palette-group-header-selected';
+            _this.currentPaletteGroupHeader.className += ' ice-palette-group-header-selected';
+            _this.redrawPalette();
+            _ref1 = editorBindings.set_palette;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              event = _ref1[_j];
+              _results1.push(event.call(_this));
+            }
+            return _results1;
           }
         })(paletteGroup));
       }
@@ -5226,10 +5253,55 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return this.clickedBlockIsPaletteBlock = false;
     });
+    hook('populate', 0, function() {
+      this.paletteHighlightCanvas = document.createElement('canvas');
+      this.paletteHighlightCanvas.className = 'ice-palette-highlight-canvas';
+      this.paletteHighlightCtx = this.paletteHighlightCanvas.getContext('2d');
+      this.paletteHighlightPath = null;
+      this.currentHighlightedPaletteBlock = null;
+      return this.paletteWrapper.appendChild(this.paletteHighlightCanvas);
+    });
+    hook('resize', 0, function() {
+      this.paletteHighlightCanvas.style.top = this.paletteHeader.offsetHeight + 'px';
+      this.paletteHighlightCanvas.width = this.paletteCanvas.width;
+      return this.paletteHighlightCanvas.height = this.paletteCanvas.height;
+    });
     hook('redraw_palette', 0, function() {
-      var block, bounds, hoverDiv, _i, _len, _ref, _results;
+      if (this.currentHighlightedPaletteBlock != null) {
+        this.paletteHighlightCtx.clearRect(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteHighlightCanvas.width + this.scrollOffsets.palette.x, this.paletteHighlightCanvas.height + this.scrollOffsets.palette.y);
+        return this.paletteHighlightPath.draw(this.paletteHighlightCtx);
+      }
+    });
+    hook('set_palette', 0, function() {
+      var block, bounds, hoverDiv, _fn, _i, _len, _ref, _results,
+        _this = this;
       this.paletteScrollerStuffing.innerHTML = '';
+      this.currentHighlightedPaletteBlock = null;
       _ref = this.currentPaletteBlocks;
+      _fn = function(block) {
+        hoverDiv.addEventListener('mousemove', function(event) {
+          var palettePoint;
+          palettePoint = _this.trackerPointToPalette(_this.getPointRelativeToTracker(event));
+          if (_this.mainViewOrChildrenContains(block, palettePoint)) {
+            if (block !== _this.currentHighlightedPaletteBlock) {
+              _this.paletteHighlightPath = _this.getHighlightPath(block, {
+                color: '#FF0'
+              });
+              _this.paletteHighlightPath.draw(_this.paletteHighlightCtx);
+              return _this.currentHighlightedPaletteBlock = block;
+            }
+          } else if (block === _this.currentHighlightedPaletteBlock) {
+            _this.currentHighlightedPaletteBlock = null;
+            return _this.paletteHighlightCtx.clearRect(_this.scrollOffsets.palette.x, _this.scrollOffsets.palette.y, _this.paletteHighlightCanvas.width + _this.scrollOffsets.palette.x, _this.paletteHighlightCanvas.height + _this.scrollOffsets.palette.y);
+          }
+        });
+        return hoverDiv.addEventListener('mouseout', function(event) {
+          if (block === _this.currentHighlightedPaletteBlock) {
+            _this.currentHighlightedPaletteBlock = null;
+            return _this.paletteHighlightCtx.clearRect(_this.scrollOffsets.palette.x, _this.scrollOffsets.palette.y, _this.paletteHighlightCanvas.width + _this.scrollOffsets.palette.x, _this.paletteHighlightCanvas.height + _this.scrollOffsets.palette.y);
+          }
+        });
+      };
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         block = _ref[_i];
@@ -5241,6 +5313,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         hoverDiv.style.left = "" + bounds.x + "px";
         hoverDiv.style.width = "" + (Math.min(bounds.width, this.paletteScroller.offsetWidth - PALETTE_LEFT_MARGIN)) + "px";
         hoverDiv.style.height = "" + bounds.height + "px";
+        _fn(block);
         _results.push(this.paletteScrollerStuffing.appendChild(hoverDiv));
       }
       return _results;
@@ -5318,6 +5391,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         event = _ref[_i];
         _results.push(this.hiddenInput.addEventListener(event, function() {
+          _this.highlightFlashShow();
           if (_this.textFocus != null) {
             _this.populateSocket(_this.textFocus, _this.hiddenInput.value);
             return _this.redrawTextInput();
@@ -5363,16 +5437,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             rect.unite(treeView.bounds[line + 1]);
           }
           rect.width = Math.max(rect.width, this.mainCanvas.width);
-          this.redrawMain({
+          return this.redrawMain({
             boundingRectangle: rect
           });
         } else {
-          this.redrawMain();
+          return this.redrawMain();
         }
       } else {
-        this.redrawMain();
+        return this.redrawMain();
       }
-      return this.redrawTextHighlights(true);
     };
     Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
       var endPosition, endRow, i, lines, startPosition, startRow, textFocusView, _i, _ref;
@@ -5386,18 +5459,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width;
       endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width;
       if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
-        this.mainCtx.strokeStyle = '#000';
-        this.mainCtx.strokeRect(startPosition, textFocusView.bounds[startRow].y, 0, this.view.opts.textHeight);
+        this.cursorCtx.strokeStyle = '#000';
+        this.cursorCtx.strokeRect(startPosition, textFocusView.bounds[startRow].y, 0, this.view.opts.textHeight);
+        this.textInputHighlighted = false;
       } else {
-        this.mainCtx.fillStyle = 'rgba(0, 0, 256, 0.3)';
+        this.textInputHighlighted = true;
+        this.cursorCtx.fillStyle = 'rgba(0, 0, 256, 0.3)';
         if (startRow === endRow) {
-          this.mainCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
+          this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
         } else {
-          this.mainCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
+          this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
           for (i = _i = _ref = startRow + 1; _ref <= endRow ? _i < endRow : _i > endRow; i = _ref <= endRow ? ++_i : --_i) {
-            this.mainCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
+            this.cursorCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
           }
-          this.mainCtx.fillRect(textFocusView.bounds[endRow].x, textFocusView.bounds[endRow].y + this.view.opts.textPadding, endPosition - textFocusView.bounds[endRow].x, this.view.opts.textHeight);
+          this.cursorCtx.fillRect(textFocusView.bounds[endRow].x, textFocusView.bounds[endRow].y + this.view.opts.textPadding, endPosition - textFocusView.bounds[endRow].x, this.view.opts.textHeight);
         }
       }
       if (scrollIntoView && endPosition > this.scrollOffsets.main.x + this.mainCanvas.width) {
@@ -5408,8 +5483,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return str[0] + str.slice(1, -1).replace(/(\'|\"|\n)/g, '\\$1') + str[str.length - 1];
     };
     Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
-      var newParse, originalText, parseParent, shouldPop, string, unparsedValue, _ref, _ref1, _ref2,
-        _this = this;
+      var newParse, originalText, parseParent, shouldPop, string, unparsedValue, _ref, _ref1, _ref2, _ref3;
       if (selectionStart == null) {
         selectionStart = 0;
       }
@@ -5503,18 +5577,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (selectionEnd < 0) {
         selectionEnd = this.textFocus.stringify().length - selectionEnd;
       }
-      setTimeout((function() {
-        var _ref3;
-        if (_this.textFocus != null) {
-          _this.hiddenInput.focus();
-          if (_this.hiddenInput.value[0] === _this.hiddenInput.value[_this.hiddenInput.value.length - 1] && ((_ref3 = _this.hiddenInput.value[0]) === '\'' || _ref3 === '"')) {
-            _this.hiddenInput.setSelectionRange(1, _this.hiddenInput.value.length - 1);
-          } else {
-            _this.hiddenInput.setSelectionRange(0, _this.hiddenInput.value.length);
-          }
-          return _this.redrawTextInput();
+      if (this.textFocus != null) {
+        this.hiddenInput.focus();
+        if (this.hiddenInput.value[0] === this.hiddenInput.value[this.hiddenInput.value.length - 1] && ((_ref3 = this.hiddenInput.value[0]) === '\'' || _ref3 === '"')) {
+          this.hiddenInput.setSelectionRange(1, this.hiddenInput.value.length - 1);
+        } else {
+          this.hiddenInput.setSelectionRange(0, this.hiddenInput.value.length);
         }
-      }), 0);
+        this.redrawTextInput();
+      }
       this.redrawMain();
       return this.redrawTextInput();
     };
@@ -5651,7 +5722,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
 
       CreateSegmentOperation.prototype.undo = function(editor) {
-        editor.tree.getTokenAtLocation(this.first).container.remove();
+        editor.tree.getTokenAtLocation(this.first).container.unwrap();
         return editor.tree.getTokenAtLocation(this.first);
       };
 
@@ -5686,7 +5757,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       DestroySegmentOperation.prototype.redo = function(editor) {
-        editor.tree.getTokenAtLocation(this.first).container.remove();
+        editor.tree.getTokenAtLocation(this.first).container.unwrap();
         return editor.tree.getTokenAtLocation(this.first);
       };
 
@@ -5720,7 +5791,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         if (head.type === 'segmentStart' && head.container.isLassoSegment) {
           next = head.next;
           this.addMicroUndoOperation(new DestroySegmentOperation(head.container));
-          head.container.remove();
+          head.container.unwrap();
           needToRedraw = true;
           head = next;
         } else {
@@ -5845,6 +5916,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (!this.inTree(destination)) {
         return;
       }
+      this.highlightFlashShow();
       this.cursor.remove();
       if (destination === this.tree.start) {
         destination.insert(this.cursor);
@@ -5870,6 +5942,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.moveCursorUp = function() {
       var head, _ref, _ref1;
       head = (_ref = this.cursor.prev) != null ? _ref.prev : void 0;
+      this.highlightFlashShow();
       if (head == null) {
         return;
       }
@@ -6007,27 +6080,43 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var blockEnd, _ref;
       this.setTextInputFocus(null);
       blockEnd = this.cursor.prev;
-      while ((_ref = blockEnd.type) !== 'blockEnd' && _ref !== 'indentStart') {
+      while ((_ref = blockEnd != null ? blockEnd.type : void 0) !== 'blockEnd' && _ref !== 'indentStart' && _ref !== (void 0)) {
         blockEnd = blockEnd.prev;
       }
+      if (blockEnd == null) {
+        return;
+      }
       if (blockEnd.type === 'blockEnd') {
-        this.addMicroUndoOperation('CAPTURE_POINT');
         this.addMicroUndoOperation(new PickUpOperation(blockEnd.container));
         blockEnd.container.spliceOut();
         return this.redrawMain();
       }
     };
-    hook('key.backspace', 0, function(state) {
+    hook('key.backspace', 0, function(state, event) {
       if (state.capturedBackspace) {
         return;
       }
-      if ((this.textFocus == null) || (this.hiddenInput.value.length === 0 && this.textFocus.handwritten)) {
+      if (this.lassoSegment != null) {
+        this.addMicroUndoOperation('CAPTURE_POINT');
+        this.deleteLassoSegment();
+        return false;
+      } else if ((this.textFocus == null) || (this.hiddenInput.value.length === 0 && this.textFocus.handwritten)) {
+        this.addMicroUndoOperation('CAPTURE_POINT');
         this.deleteAtCursor();
         state.capturedBackspace = true;
         return false;
       }
       return true;
     });
+    Editor.prototype.deleteLassoSegment = function() {
+      if (this.lassoSegment == null) {
+        throw new Error('Cannot delete nonexistent lasso segment');
+      }
+      this.addMicroUndoOperation(new PickUpOperation(this.lassoSegment));
+      this.lassoSegment.spliceOut();
+      this.lassoSegment = null;
+      return this.redrawMain();
+    };
     hook('populate', 0, function() {
       var _this = this;
       this.handwrittenBlocks = [];
@@ -6056,7 +6145,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             while (((_ref = head.type) === 'newline' || _ref === 'cursor' || _ref === 'segmentStart' || _ref === 'segmentEnd') && head !== _this.tree.start) {
               head = head.prev;
             }
-            console.log('found', head);
             _this.addMicroUndoOperation('CAPTURE_POINT');
             _this.addMicroUndoOperation(new DropOperation(newBlock, head));
             newBlock.moveTo(head);
@@ -6433,8 +6521,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           _fn1(div, line);
         }
         this.lineNumberWrapper.style.display = 'none';
-        this.mainCanvas.style.transition = this.highlightCanvas.style.transition = "opacity " + fadeTime + "ms linear";
-        this.mainCanvas.style.opacity = this.highlightCanvas.style.opacity = 0;
+        this.mainCanvas.style.transition = this.highlightCanvas.style.transition = this.cursorCanvas.style.opacity = "opacity " + fadeTime + "ms linear";
+        this.mainCanvas.style.opacity = this.highlightCanvas.style.opacity = this.cursorCanvas.style.opacity = 0;
         setTimeout((function() {
           _this.iceElement.style.transition = _this.paletteWrapper.style.transition = "left " + translateTime + "ms";
           _this.iceElement.style.left = '0px';
@@ -6493,6 +6581,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         } else {
           this.mainScroller.scrollTop = this.view.getViewNodeFor(this.tree).bounds[this.aceEditor.getFirstVisibleRow()].y;
         }
+        this.currentlyUsingBlocks = true;
+        this.currentlyAnimating = true;
         setTimeout((function() {
           var aceScrollTop, bottom, div, el, i, line, lineHeight, textElement, textElements, top, translatingElements, translationVectors, treeView, _fn, _fn1, _i, _j, _k, _len, _len1, _ref, _ref1;
           _this.mainScroller.style.overflow = 'hidden';
@@ -6500,8 +6590,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           _this.redrawMain({
             noText: true
           });
-          _this.currentlyUsingBlocks = true;
-          _this.currentlyAnimating = true;
           _this.aceElement.style.top = "-9999px";
           _this.aceElement.style.left = "-9999px";
           _this.paletteWrapper.style.top = '0px';
@@ -6562,14 +6650,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _this.iceElement.appendChild(div);
             _fn1(div, line);
           }
-          _ref1 = [_this.mainCanvas, _this.highlightCanvas];
+          _ref1 = [_this.mainCanvas, _this.highlightCanvas, _this.cursorCanvas];
           for (_k = 0, _len1 = _ref1.length; _k < _len1; _k++) {
             el = _ref1[_k];
             el.style.opacity = 0;
           }
           setTimeout((function() {
             var _l, _len2, _ref2, _results;
-            _ref2 = [_this.mainCanvas, _this.highlightCanvas];
+            _ref2 = [_this.mainCanvas, _this.highlightCanvas, _this.cursorCanvas];
             _results = [];
             for (_l = 0, _len2 = _ref2.length; _l < _len2; _l++) {
               el = _ref2[_l];
@@ -6628,6 +6716,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         _this.scrollOffsets.main.x = _this.mainScroller.scrollLeft;
         _this.mainCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
         _this.highlightCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
+        _this.cursorCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
         return _this.redrawMain();
       });
       this.paletteScroller = document.createElement('div');
@@ -6639,6 +6728,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.paletteScroller.addEventListener('scroll', function() {
         _this.scrollOffsets.palette.y = _this.paletteScroller.scrollTop;
         _this.paletteCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.palette.x, -_this.scrollOffsets.palette.y);
+        _this.paletteHighlightCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.palette.x, -_this.scrollOffsets.palette.y);
         return _this.redrawPalette();
       });
     });
@@ -6814,6 +6904,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       function SetValueOperation(oldValue, newValue) {
         this.oldValue = oldValue;
         this.newValue = newValue;
+        this.oldValue = this.oldValue.clone();
+        this.newValue = this.newValue.clone();
       }
 
       SetValueOperation.prototype.undo = function(editor) {
@@ -7017,25 +7109,75 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return event.preventDefault();
       });
     });
+    hook('populate', 0, function() {
+      this.cursorCanvas = document.createElement('canvas');
+      this.cursorCanvas.className = 'ice-highlight-canvas';
+      this.cursorCtx = this.cursorCanvas.getContext('2d');
+      return this.iceElement.appendChild(this.cursorCanvas);
+    });
+    hook('resize', 0, function() {
+      this.cursorCanvas.width = this.iceElement.offsetWidth;
+      this.cursorCanvas.style.width = "" + this.cursorCanvas.width + "px";
+      this.cursorCanvas.height = this.iceElement.offsetHeight;
+      this.cursorCanvas.style.height = "" + this.cursorCanvas.height + "px";
+      return this.cursorCanvas.style.left = "" + this.mainCanvas.offsetLeft + "px";
+    });
     Editor.prototype.strokeCursor = function(point) {
+      var arcAngle, arcCenter, endAngle, h, startAngle, w;
       if (point == null) {
         return;
       }
-      this.highlightCtx.beginPath();
-      this.highlightCtx.fillStyle = this.highlightCtx.strokeStyle = '#000';
-      this.highlightCtx.lineWidth = 1;
-      if (point.x >= 5) {
-        this.highlightCtx.moveTo(point.x, point.y);
-        this.highlightCtx.lineTo(point.x - 5, point.y - 5);
-        this.highlightCtx.lineTo(point.x - 5, point.y + 5);
-      } else {
-        this.highlightCtx.moveTo(point.x, point.y);
-        this.highlightCtx.lineTo(point.x + 5, point.y - 5);
-        this.highlightCtx.lineTo(point.x + 5, point.y + 5);
-      }
-      this.highlightCtx.stroke();
-      return this.highlightCtx.fill();
+      this.cursorCtx.save();
+      this.cursorCtx.beginPath();
+      this.cursorCtx.fillStyle = this.cursorCtx.strokeStyle = '#000';
+      this.cursorCtx.lineCap = 'round';
+      this.cursorCtx.lineWidth = 3;
+      w = this.view.opts.tabWidth / 2 - CURSOR_WIDTH_DECREASE;
+      h = this.view.opts.tabHeight - CURSOR_HEIGHT_DECREASE;
+      arcCenter = new this.draw.Point(point.x + this.view.opts.tabOffset + w + CURSOR_WIDTH_DECREASE, point.y - (w * w + h * h) / (2 * h) + h + CURSOR_HEIGHT_DECREASE / 2);
+      arcAngle = Math.atan2(w, (w * w + h * h) / (2 * h) - h);
+      startAngle = 0.5 * Math.PI - arcAngle;
+      endAngle = 0.5 * Math.PI + arcAngle;
+      this.cursorCtx.arc(arcCenter.x, arcCenter.y, (w * w + h * h) / (2 * h), startAngle, endAngle);
+      this.cursorCtx.stroke();
+      return this.cursorCtx.restore();
     };
+    Editor.prototype.highlightFlashShow = function() {
+      var _this = this;
+      if (this.flashTimeout != null) {
+        clearTimeout(this.flashTimeout);
+      }
+      this.cursorCanvas.style.display = 'block';
+      this.highlightsCurrentlyShown = true;
+      return this.flashTimeout = setTimeout((function() {
+        return _this.flash();
+      }), 500);
+    };
+    Editor.prototype.highlightFlashHide = function() {
+      var _this = this;
+      if (this.flashTimeout != null) {
+        clearTimeout(this.flashTimeout);
+      }
+      this.cursorCanvas.style.display = 'none';
+      this.highlightsCurrentlyShown = false;
+      return this.flashTimeout = setTimeout((function() {
+        return _this.flash();
+      }), 500);
+    };
+    Editor.prototype.flash = function() {
+      if ((this.lassoSegment != null) || (this.draggingBlock != null) || ((this.textFocus != null) && this.textInputHighlighted) || !this.highlightsCurrentlyShown) {
+        return this.highlightFlashShow();
+      } else {
+        return this.highlightFlashHide();
+      }
+    };
+    hook('populate', 0, function() {
+      var _this = this;
+      this.highlightsCurrentlyShown = false;
+      return this.flashTimeout = setTimeout((function() {
+        return _this.flash();
+      }), 0);
+    });
     Editor.prototype.mainViewOrChildrenContains = function(model, point) {
       var childObj, modelView, _i, _len, _ref;
       modelView = this.view.getViewNodeFor(model);
@@ -7148,6 +7290,76 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.paletteWrapper.style.width = width + 'px';
       return this.resize();
     };
+    hook('populate', 0, function() {
+      var pressedVKey,
+        _this = this;
+      this.copyPasteInput = document.createElement('textarea');
+      this.copyPasteInput.style.position = 'absolute';
+      this.copyPasteInput.style.left = this.copyPasteInput.style.top = '-9999px';
+      this.iceElement.appendChild(this.copyPasteInput);
+      this.keyListener.register_combo({
+        keys: 'ctrl',
+        on_keydown: function() {
+          if (_this.textFocus == null) {
+            _this.copyPasteInput.focus();
+            if (_this.lassoSegment != null) {
+              _this.copyPasteInput.value = _this.lassoSegment.stringify();
+            }
+            return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
+          }
+        },
+        on_keyup: function() {
+          return _this.iceElement.focus();
+        }
+      });
+      pressedVKey = false;
+      this.copyPasteInput.addEventListener('keydown', function(event) {
+        if (event.keyCode === 86) {
+          return pressedVKey = true;
+        }
+      });
+      this.copyPasteInput.addEventListener('keyup', function(event) {
+        if (event.keyCode === 86) {
+          return pressedVKey = false;
+        }
+      });
+      return this.copyPasteInput.addEventListener('input', function() {
+        var blocks, _ref;
+        if (pressedVKey) {
+          try {
+            blocks = coffee.parse(_this.copyPasteInput.value);
+            _this.addMicroUndoOperation('CAPTURE_POINT');
+            _this.addMicroUndoOperation(new DropOperation(blocks, _this.cursor.previousVisibleToken()));
+            blocks.spliceIn(_this.cursor);
+            if (!(_this.copyPasteInput.value[_this.copyPasteInput.value.length - 1] === '\n' || ((_ref = blocks.end.nextVisibleToken().type) === 'newline' || _ref === 'indentEnd'))) {
+              blocks.end.insert(new model.NewlineToken());
+            }
+            _this.addMicroUndoOperation(new DestroySegmentOperation(blocks));
+            blocks.unwrap();
+            _this.redrawMain();
+          } catch (_error) {}
+          return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
+        }
+      });
+    });
+    hook('populate', 0, function() {
+      var _this = this;
+      return setTimeout((function() {
+        var parent;
+        parent = _this.tree;
+        return Object.defineProperty(_this.cursor, 'parent', {
+          get: function() {
+            return parent;
+          },
+          set: function(p) {
+            parent = p;
+            if (p === null) {
+              debugger;
+            }
+          }
+        });
+      }), 0);
+    });
     Editor.prototype.overflowsX = function() {
       return this.documentDimensions().width > this.viewportDimensions().width;
     };

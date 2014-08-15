@@ -112,8 +112,8 @@ describe('code editor', function() {
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; }).find('.panetitle-text');
-      // Wait for this title to say "untitled" in it.
-      if (!lefttitle.length || !/untitled/.test(lefttitle.text())) return;
+      // Wait for this title to say "code" in it.
+      if (!lefttitle.length || !/code/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
       if (!$('.editor').length) return;
       var ace_editor = ace.edit($('.ice-ace')[0]);
@@ -132,8 +132,8 @@ describe('code editor', function() {
       assert.ifError(err);
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename));
-      // The title should reflect this name also
-      assert.equal(result.filename + ' code', result.title);
+      // The title should say code
+      assert.equal('> code', result.title);
       // The program text should be empty.
       assert.equal("", result.text);
       // The element with active focus should be the editable filename.
@@ -291,8 +291,8 @@ describe('code editor', function() {
       assert.ifError(err);
       // The butter bar should show the new name.
       assert.equal(result.notification, 'Using name ' + name + '.');
-      // The editor title should show the new name.
-      assert.equal(result.lefttitle, name + ' code');
+      // The editor title should say 'code'
+      assert.equal(result.lefttitle, '> code');
       // The url should reflect the new name.
       assert.equal(result.url,
           'http://livetest.pencilcode.net.dev/edit/' + name);

@@ -62,8 +62,11 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   font-weight:300;
   padding:0 12px;color:skyblue;letter-spacing:2px;
   border-left:1px solid white;border-right:1px solid white;}
-.panetitle a {color:inherit;}
-.panetitle a:hover {text-decoration:underline;color:white;}
+.panetitle a {color:inherit; text-decoration: none; display: block;}
+.panetitle a b {font-family: monospace; font-size: 34px; vertical-align: top;}
+.panetitle a span {text-decoration: none; underline;}
+.panetitle a:hover {color:white;}
+.panetitle a:hover span {text-decoration:underline;color:white;}
 .pane{position:absolute;top:84px;bottom:0;background:whitesmoke;
   border-left:1px solid white;border-right:1px solid white;z-index:0;}
 .back{left:-50%;width:50%;}
@@ -112,6 +115,11 @@ body#pencildoc #diigolet-csm {
 }
 .fullscreen img { vertical-align:bottom;margin:0 2px 3px 5px;opacity:0.6; }
 .fullscreen:hover img { opacity: 1; }
+.closeblocks { font-size: 26px; font-weight: bold; font-family: sans-serif;
+ position: absolute; right: 0px; top: 0px; line-height: 15px;
+ padding: 0 1px 2px 1px; color: dodgerblue; z-index: 2000; cursor: pointer; }
+.closeblocks:hover { background: dodgerblue; color: white; }
+.closeblocks:active { color: red; background: dodgerblue; }
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}
