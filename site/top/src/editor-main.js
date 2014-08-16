@@ -514,6 +514,10 @@ view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
   window.open('//guide.' + window.pencilcode.domain + '/home/'); });
 
+view.on('toggleblocks', function(p, useblocks) {
+  saveBlockMode(useblocks);
+});
+
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
     return;
@@ -811,7 +815,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
   });
 }
 
- function handleSaveStatus(status, filename, noteclean) {
+function handleSaveStatus(status, filename, noteclean) {
   if (status.newer) {
     view.flashNotification('Newer copy on network. ' +
                            '<a href="#overwrite" id="overwrite">Overwrite</a>?');
@@ -851,6 +855,15 @@ function logInAndSave(filename, newdata, forceOverwrite,
 function saveLoginCookie() {
   cookie('login', (model.username || '') + ':' + (model.passkey || ''),
          { expires: 1, path: '/' });
+}
+
+function loadBlockMode() {
+  if (model.ownername === 'frame') return false;
+  return (cookie('blocks') != 'off');
+}
+
+function saveBlockMode(on) {
+  return cookie('blocks', on ? 'on' : 'off', { expires: 7, path: '/' });
 }
 
 function chooseNewFilename(dirlist) {
@@ -1340,7 +1353,7 @@ function createNewFileIntoPosition(position, filename, text) {
     data: text,
     mtime: 0
   };
-  view.setPaneEditorText(pane, text, filename);
+  view.setPaneEditorText(pane, text, filename, loadBlockMode());
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
 }
@@ -1397,7 +1410,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         if (!m.data) { m.data = ''; }
         mpp.isdir = false;
         mpp.data = m;
-        view.setPaneEditorText(pane, m.data, filename);
+        view.setPaneEditorText(pane, m.data, filename, loadBlockMode());
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
@@ -1600,7 +1613,8 @@ $(window).on('message', function(e) {
   switch (data.methodName) {
     case 'setCode':
       view.setPaneEditorText(
-          paneatpos('left'), data.args[0], modelatpos('left').filename);
+          paneatpos('left'), data.args[0], modelatpos('left').filename,
+          loadBlockMode());
       break;
     case 'setupScript':
       model.setupScript = data.args[0];

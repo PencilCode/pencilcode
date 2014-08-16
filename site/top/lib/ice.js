@@ -7345,19 +7345,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('populate', 0, function() {
       var _this = this;
       return setTimeout((function() {
-        var parent;
-        parent = _this.tree;
-        return Object.defineProperty(_this.cursor, 'parent', {
-          get: function() {
-            return parent;
-          },
-          set: function(p) {
-            parent = p;
-            if (p === null) {
-              debugger;
-            }
-          }
-        });
+        return _this.cursor.parent = _this.tree;
       }), 0);
     });
     Editor.prototype.overflowsX = function() {

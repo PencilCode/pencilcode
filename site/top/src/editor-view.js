@@ -1797,6 +1797,7 @@ function setPaneEditorBlockMode(pane, useblocks) {
   if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
   var togglingSucceeded = paneState.iceEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
+  fireEvent('toggleblocks', [pane, paneState.iceEditor.currentlyUsingBlocks]);
   updatePaneTitle(pane);
   return true;
 }

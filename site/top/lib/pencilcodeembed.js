@@ -84,16 +84,27 @@
     return secret;
   }
 
-  // For testing, add a .dev domain suffix when this script
-  // is served from a .dev domain.
+  // calculates an absolute URL
+  function absoluteUrl(url) {
+    if (!url) return null;
+    var absoluteUrlAnchor = document.createElement('a');
+    absoluteUrlAnchor.href = url;
+    return {
+      url: absoluteUrlAnchor.href,
+      hostname: absoluteUrlAnchor.hostname
+    }
+  }
+
+  // Look at the source of this script to determine the framing domain.
   var scripts = document.getElementsByTagName('script');
-  var dev = (scripts.length && /^(?:(?:https?:)?\/\/)?[^\/]*\.dev\//.test(
-        scripts[scripts.length - 1].src)) ? '.dev' : '';
+  var src = absoluteUrl(scripts.length && scripts[scripts.length - 1].src);
+  var domain = src ? src.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2') :
+     'pencilcode.net';
 
   // The "frame" username is magic: it puts
   // Pencil Code into a frame-friendly mode.
   var targetDomain = (/^http/i.test(window.location.protocol) ?
-     window.location.protocol : 'http:') + '//frame.pencilcode.net' + dev;
+     window.location.protocol : 'http:') + '//frame.' + domain;
   var secret = makeSecret();
 
   var PencilCodeEmbed = (function() {
