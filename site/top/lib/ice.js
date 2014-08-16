@@ -2079,7 +2079,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
                 bound = _ref2[_k];
                 this.totalBounds.x = Math.min(this.totalBounds.x, bound.x);
-                maxRight = Math.max(maxRight, bound.y);
+                maxRight = Math.max(maxRight, bound.x);
               }
               this.totalBounds.width = maxRight - this.totalBounds.x;
             }
@@ -4806,7 +4806,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
         this.dumpNodeForDebug(hitTestResult, line);
       }
-      if (hitTestResult != null) {
+      if ((hitTestResult != null) && event.which === 1) {
         this.clickedBlock = hitTestResult;
         this.moveCursorTo(this.clickedBlock.start.next);
         this.clickedPoint = point;
@@ -5308,10 +5308,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         hoverDiv = document.createElement('div');
         hoverDiv.className = 'ice-hover-div';
         hoverDiv.title = block.stringify();
-        bounds = this.view.getViewNodeFor(block).getBounds();
+        bounds = this.view.getViewNodeFor(block).totalBounds;
+        console.log(bounds);
         hoverDiv.style.top = "" + bounds.y + "px";
         hoverDiv.style.left = "" + bounds.x + "px";
-        hoverDiv.style.width = "" + (Math.min(bounds.width, this.paletteScroller.offsetWidth - PALETTE_LEFT_MARGIN)) + "px";
+        hoverDiv.style.width = "" + (Math.min(bounds.width, Infinity)) + "px";
         hoverDiv.style.height = "" + bounds.height + "px";
         _fn(block);
         _results.push(this.paletteScrollerStuffing.appendChild(hoverDiv));

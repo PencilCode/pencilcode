@@ -340,8 +340,17 @@ view.on('share', function() {
 
 view.on('fullscreen', function(pane) {
   function showfullscreen() {
-    window.open("/home/" + model.pane[pane].filename,
-                "run-" + model.ownername);
+    var w = window.open("/home/" + model.pane[pane].filename,
+         "run-" + model.ownername);
+    if (!w || w.closed) {
+      view.showDialog({
+        prompt:'Saved.', content: '<p>Will open full page.</p>' +
+            '<button class="ok">OK</button> ' +
+            '<button class="cancel">Cancel</button>',
+        done: function(s) { s.update({cancel:true}); showfullscreen(); }});
+    } else {
+      w.focus();
+    }
   }
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     if (model.ownername == model.username) {

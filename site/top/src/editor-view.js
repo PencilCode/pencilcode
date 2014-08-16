@@ -1367,7 +1367,7 @@ function updatePaneTitle(pane) {
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
-           paneState.filename + '" title="Click for fullscreen">' +
+           paneState.filename + '" title="Click for full page">' +
            '<img src="data:image/png;base64,iVBORw0KGgoAAAANS' +
            'UhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BA' +
            'ACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3Y' +
