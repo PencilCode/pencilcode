@@ -1678,7 +1678,6 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   iceEditor.setTopNubbyStyle(0, '#1e90ff');
   iceEditor.setValue(text);
   iceEditor.setEditorState(useblocks);
-  iceEditor.aceEditor.setReadOnly(true); // Default to read-only.
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
