@@ -3505,7 +3505,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('ice-coffee',['ice-helper', 'ice-model', 'ice-parser', 'coffee-script'], function(helper, model, parser, CoffeeScript) {
-    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptTranspiler, EITHER_FUNCTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, backTickLine, coffeeScriptParser, exports, findUnmatchedLine, fixCoffeeScriptError, spacestring;
+    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptTranspiler, EITHER_FUNCTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, STATEMENT_KEYWORDS, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, backTickLine, coffeeScriptParser, exports, findUnmatchedLine, fixCoffeeScriptError, spacestring;
     exports = {};
     ANY_DROP = helper.ANY_DROP;
     BLOCK_ONLY = helper.BLOCK_ONLY;
@@ -3515,6 +3515,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
     EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
+    STATEMENT_KEYWORDS = ['break', 'continue'];
     OPERATOR_PRECEDENCES = {
       '||': 1,
       '&&': 2,
@@ -3601,7 +3602,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptTranspiler.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, indent, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
+        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, indent, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -3711,6 +3712,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Literal':
+            if (_ref5 = node.value, __indexOf.call(STATEMENT_KEYWORDS, _ref5) >= 0) {
+              return this.addBlock(node, depth, 0, 'return', wrappingParen, BLOCK_ONLY);
+            } else {
+              return 0;
+            }
+            break;
+          case 'Literal':
           case 'Bool':
           case 'Undefined':
           case 'Null':
@@ -3719,9 +3727,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.variable != null) {
               methodname = null;
               unrecognized = false;
-              if (((_ref5 = node.variable.properties) != null ? _ref5.length : void 0) > 0) {
-                methodname = (_ref6 = node.variable.properties[node.variable.properties.length - 1].name) != null ? _ref6.value : void 0;
-              } else if ((_ref7 = node.variable.base) != null ? _ref7.value : void 0) {
+              if (((_ref6 = node.variable.properties) != null ? _ref6.length : void 0) > 0) {
+                methodname = (_ref7 = node.variable.properties[node.variable.properties.length - 1].name) != null ? _ref7.value : void 0;
+              } else if ((_ref8 = node.variable.base) != null ? _ref8.value : void 0) {
                 methodname = node.variable.base.value;
               }
               if (__indexOf.call(BLOCK_FUNCTIONS, methodname) >= 0) {
@@ -3732,19 +3740,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 this.addBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
                 unrecognized = __indexOf.call(EITHER_FUNCTIONS, methodname) >= 0;
               }
-              if (unrecognized || ((_ref8 = node.variable.base) != null ? _ref8.nodeType() : void 0) !== 'Literal') {
+              if (unrecognized || ((_ref9 = node.variable.base) != null ? _ref9.nodeType() : void 0) !== 'Literal') {
                 this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth);
-              } else if (((_ref9 = node.variable.properties) != null ? _ref9.length : void 0) > 0) {
+              } else if (((_ref10 = node.variable.properties) != null ? _ref10.length : void 0) > 0) {
                 this.addSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
               }
             } else {
               this.addBlock(node, depth, precedence, 'command', wrappingParen, ANY_DROP);
             }
             if (!node["do"]) {
-              _ref10 = node.args;
+              _ref11 = node.args;
               _results2 = [];
-              for (index = _m = 0, _len3 = _ref10.length; _m < _len3; index = ++_m) {
-                arg = _ref10[index];
+              for (index = _m = 0, _len3 = _ref11.length; _m < _len3; index = ++_m) {
+                arg = _ref11[index];
                 precedence = 0;
                 if (index === node.args.length - 1) {
                   precedence = -1;
@@ -3756,9 +3764,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Code':
             this.addBlock(node, depth, precedence, 'value', wrappingParen, VALUE_ONLY);
-            _ref11 = node.params;
-            for (_n = 0, _len4 = _ref11.length; _n < _len4; _n++) {
-              param = _ref11[_n];
+            _ref12 = node.params;
+            for (_n = 0, _len4 = _ref12.length; _n < _len4; _n++) {
+              param = _ref12[_n];
               this.addSocketAndMark(param, depth + 1, 0, indentDepth, NO);
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
@@ -3770,16 +3778,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.addSocketAndMark(node.value, depth + 1, 0, indentDepth);
           case 'For':
             this.addBlock(node, depth, precedence, 'control', wrappingParen, MOSTLY_BLOCK);
-            _ref12 = ['source', 'from', 'guard', 'step'];
-            for (_o = 0, _len5 = _ref12.length; _o < _len5; _o++) {
-              childName = _ref12[_o];
+            _ref13 = ['source', 'from', 'guard', 'step'];
+            for (_o = 0, _len5 = _ref13.length; _o < _len5; _o++) {
+              childName = _ref13[_o];
               if (node[childName] != null) {
                 this.addSocketAndMark(node[childName], depth + 1, 0, indentDepth);
               }
             }
-            _ref13 = ['index', 'name'];
-            for (_p = 0, _len6 = _ref13.length; _p < _len6; _p++) {
-              childName = _ref13[_p];
+            _ref14 = ['index', 'name'];
+            for (_p = 0, _len6 = _ref14.length; _p < _len6; _p++) {
+              childName = _ref14[_p];
               if (node[childName] != null) {
                 this.addSocketAndMark(node[childName], depth + 1, 0, indentDepth, NO);
               }
@@ -3810,10 +3818,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Arr':
             this.addBlock(node, depth, 100, 'value', wrappingParen, VALUE_ONLY);
-            _ref14 = node.objects;
+            _ref15 = node.objects;
             _results3 = [];
-            for (_q = 0, _len7 = _ref14.length; _q < _len7; _q++) {
-              object = _ref14[_q];
+            for (_q = 0, _len7 = _ref15.length; _q < _len7; _q++) {
+              object = _ref15[_q];
               _results3.push(this.addSocketAndMark(object, depth + 1, 0, indentDepth));
             }
             return _results3;
@@ -3836,13 +3844,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.subject != null) {
               this.addSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
-            _ref15 = node.cases;
-            for (_r = 0, _len8 = _ref15.length; _r < _len8; _r++) {
-              switchCase = _ref15[_r];
+            _ref16 = node.cases;
+            for (_r = 0, _len8 = _ref16.length; _r < _len8; _r++) {
+              switchCase = _ref16[_r];
               if (switchCase[0].constructor === Array) {
-                _ref16 = switchCase[0];
-                for (_s = 0, _len9 = _ref16.length; _s < _len9; _s++) {
-                  condition = _ref16[_s];
+                _ref17 = switchCase[0];
+                for (_s = 0, _len9 = _ref17.length; _s < _len9; _s++) {
+                  condition = _ref17[_s];
                   this.addSocketAndMark(condition, depth + 1, 0, indentDepth);
                 }
               } else {
@@ -3868,10 +3876,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Obj':
             this.addBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
-            _ref17 = node.properties;
+            _ref18 = node.properties;
             _results4 = [];
-            for (_t = 0, _len10 = _ref17.length; _t < _len10; _t++) {
-              property = _ref17[_t];
+            for (_t = 0, _len10 = _ref18.length; _t < _len10; _t++) {
+              property = _ref18[_t];
               if (property.nodeType() === 'Assign') {
                 this.addSocketAndMark(property.variable, depth + 1, 0, indentDepth, NO);
                 _results4.push(this.addSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -4094,8 +4102,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     });
     fixCoffeeScriptError = function(lines, e) {
-      var unmatchedline;
-      console.log('encountered error', e.message);
+      var unmatchedline, _ref;
+      console.log('encountered error', e.message, 'line', (_ref = e.location) != null ? _ref.first_line : void 0);
+      if (/unexpected\s*(?:newline|if|for|while|switch|unless|end of input)/.test(e.message) && /^\s*(?:if|for|while|unless)\s+\S+/.test(lines[e.location.first_line])) {
+        return addEmptyBackTickLineAfter(lines, e.location.first_line);
+      }
       if (/unexpected/.test(e.message)) {
         return backTickLine(lines, e.location.first_line);
       }
@@ -4135,7 +4146,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (!leading || leading[0].length >= lines[n].length) {
         return false;
       }
-      return lines.splice(n + 1, 0, leading[0] + '``');
+      return lines.splice(n + 1, 0, leading[0] + '  ``');
     };
     exports.parse = function(text, opts) {
       if (opts == null) {
@@ -4729,6 +4740,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return;
         }
         (clone = this.block.clone()).moveTo(editor.tree.getTokenAtLocation(this.before));
+        if (this.block.type === 'segment' && this.block.isLassoSegment) {
+          editor.lassoSegment = this.block;
+        }
         return clone.end;
       };
 
@@ -4775,11 +4789,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         while (blockStart.type !== this.block.start.type) {
           blockStart = blockStart.next;
         }
-        if (this.block.type === 'segment') {
-          blockStart.container.moveTo(null);
-        } else {
-          blockStart.container.moveTo(null);
-        }
+        blockStart.container.spliceOut();
         if (this.displacedSocketText != null) {
           editor.tree.getTokenAtLocation(this.dest).insert(this.displacedSocketText.clone());
         }
@@ -5596,8 +5606,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               if (newParse.type === 'blockStart') {
                 parseParent.start.prev.append(newParse);
                 newParse.container.end.append(parseParent.end.next);
-                newParse.parent = newParse.start.parent = newParse.end.parent = parseParent.parent;
-                newParse.notifyChange();
+                newParse.container.parent = newParse.parent = newParse.container.end.parent = parseParent.parent;
+                newParse.container.notifyChange();
                 this.addMicroUndoOperation(new ReparseOperation(parseParent, newParse.container));
                 parseParent.parent = null;
               }
@@ -5772,8 +5782,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       function CreateSegmentOperation(segment) {
         this.first = segment.start.getSerializedLocation();
-        this.last = segment.end.getSerializedLocation();
-        this.lassoSelect = segment.isLassoSelect;
+        this.last = segment.end.getSerializedLocation() - 2;
+        this.lassoSelect = segment.isLassoSegment;
       }
 
       CreateSegmentOperation.prototype.undo = function(editor) {
@@ -5784,9 +5794,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       CreateSegmentOperation.prototype.redo = function(editor) {
         var segment;
         segment = new model.Segment();
-        segment.lassoSelect = this.lassoSelect;
-        editor.tree.getTokenAtLocation(this.first).insertBefore(segment.start);
-        editor.tree.getTokenAtLocation(this.last).insertBefore(segment.end);
+        segment.isLassoSegment = this.lassoSelect;
+        segment.wrap(editor.tree.getTokenAtLocation(this.first), editor.tree.getTokenAtLocation(this.last));
         return segment.end;
       };
 
@@ -5798,16 +5807,18 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       function DestroySegmentOperation(segment) {
         this.first = segment.start.getSerializedLocation();
-        this.last = segment.end.getSerializedLocation();
-        this.lassoSelect = segment.isLassoSelect;
+        this.last = segment.end.getSerializedLocation() - 2;
+        this.lassoSelect = segment.isLassoSegment;
       }
 
       DestroySegmentOperation.prototype.undo = function(editor) {
         var segment;
         segment = new model.Segment();
-        segment.lassoSelect = this.lassoSelect;
-        editor.tree.getTokenAtLocation(this.first).insertBefore(segment.start);
-        editor.tree.getTokenAtLocation(this.last).insertBefore(segment.end);
+        segment.isLassoSegment = this.lassoSelect;
+        segment.wrap(editor.tree.getTokenAtLocation(this.first), editor.tree.getTokenAtLocation(this.last));
+        if (this.lassoSelect) {
+          editor.lassoSegment = segment;
+        }
         return segment.end;
       };
 
@@ -6075,7 +6086,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var charsCounted, head;
       head = parent.start;
       charsCounted = 0;
-      while (!(charsCounted >= chars && head.type === 'socketStart' && head.next.type === 'text')) {
+      while (!(charsCounted >= chars && head.type === 'socketStart' && (head.next.type === 'text' || head.next === head.container.end))) {
         if (head.type === 'text') {
           charsCounted += head.value.length;
         }
@@ -6398,7 +6409,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.aceElement = document.createElement('div');
       this.aceElement.className = 'ice-ace';
       this.wrapperElement.appendChild(this.aceElement);
-      console.log('Just appended ace element');
       this.aceEditor = ace.edit(this.aceElement);
       this.aceEditor.setTheme('ace/theme/chrome');
       this.aceEditor.setFontSize(15);
@@ -7351,14 +7361,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.resize();
     };
     hook('populate', 0, function() {
-      var pressedVKey,
+      var pressedVKey, pressedXKey,
         _this = this;
       this.copyPasteInput = document.createElement('textarea');
       this.copyPasteInput.style.position = 'absolute';
       this.copyPasteInput.style.left = this.copyPasteInput.style.top = '-9999px';
       this.iceElement.appendChild(this.copyPasteInput);
       this.keyListener.register_combo({
-        keys: 'ctrl',
+        keys: 'meta',
         on_keydown: function() {
           if (_this.textFocus == null) {
             _this.copyPasteInput.focus();
@@ -7373,14 +7383,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
       });
       pressedVKey = false;
+      pressedXKey = false;
       this.copyPasteInput.addEventListener('keydown', function(event) {
         if (event.keyCode === 86) {
           return pressedVKey = true;
+        } else if (event.keyCode === 88) {
+          return pressedXKey = true;
         }
       });
       this.copyPasteInput.addEventListener('keyup', function(event) {
         if (event.keyCode === 86) {
           return pressedVKey = false;
+        } else if (event.keyCode === 88) {
+          return pressedXKey = false;
         }
       });
       return this.copyPasteInput.addEventListener('input', function() {
@@ -7404,11 +7419,17 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               }
               return _results;
             })()).join('\n');
+            str = str.replace(/^\n*|\n*$/g, '');
             blocks = coffee.parse(str);
             _this.addMicroUndoOperation('CAPTURE_POINT');
+            if (_this.lassoSegment != null) {
+              _this.addMicroUndoOperation(new PickUpOperation(_this.lassoSegment));
+              _this.lassoSegment.spliceOut();
+              _this.lassoSegment = null;
+            }
             _this.addMicroUndoOperation(new DropOperation(blocks, _this.cursor.previousVisibleToken()));
             blocks.spliceIn(_this.cursor);
-            if (!(_this.copyPasteInput.value[_this.copyPasteInput.value.length - 1] === '\n' || ((_ref1 = blocks.end.nextVisibleToken().type) === 'newline' || _ref1 === 'indentEnd'))) {
+            if ((_ref1 = blocks.end.nextVisibleToken().type) !== 'newline' && _ref1 !== 'indentEnd') {
               blocks.end.insert(new model.NewlineToken());
             }
             _this.addMicroUndoOperation(new DestroySegmentOperation(blocks));
@@ -7416,6 +7437,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _this.redrawMain();
           } catch (_error) {}
           return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
+        } else if (pressedXKey && (_this.lassoSegment != null)) {
+          _this.addMicroUndoOperation('CAPTURE_POINT');
+          _this.addMicroUndoOperation(new PickUpOperation(_this.lassoSegment));
+          _this.lassoSegment.spliceOut();
+          _this.lassoSegment = null;
+          return _this.redrawMain();
         }
       });
     });
