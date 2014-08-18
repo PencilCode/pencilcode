@@ -1557,17 +1557,19 @@ var ICE_EDITOR_PALETTE =[
       'box green, 50',
       'speed 10',
       'label \'hello\'',
+      'do home',
+      'do cs',
+      'do cg',
       'do ht',
       'do st',
       'do pu',
       'do pd',
+      'scale 3',
       'pen purple, 10',
       'rt 180, 100',
       'lt 180, 100',
       'slide 100, 20',
-      'jump 100, 20',
-      'play \'GEC\'',
-      'wear \'/img/cat-icon\''
+      'jump 100, 20'
     ].map(function(block) {
       return ice.parse(block).start.next.container;
     })
@@ -1629,6 +1631,8 @@ var ICE_EDITOR_PALETTE =[
     color: 'violet',
     blocks: [
       'speed Infinity',
+      'play \'GEC\'',
+      'wear \'/img/cat-icon\'',
       'tick 1, ->\n' +
       '  ``',
       'moveto lastclick',
@@ -1676,8 +1680,8 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   });
   iceEditor.setPaletteWidth(250);
   iceEditor.setTopNubbyStyle(0, '#1e90ff');
-  iceEditor.setValue(text);
   iceEditor.setEditorState(useblocks);
+  iceEditor.setValue(text);
 
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
