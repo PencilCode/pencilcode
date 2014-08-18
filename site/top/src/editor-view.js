@@ -1548,106 +1548,191 @@ var ICE_EDITOR_PALETTE =[
     name: 'Draw',
     color: 'blue',
     blocks: [
-      'pen red',
-      'fd 100',
-      'rt 90',
-      'lt 90',
-      'bk 100',
-      'dot blue, 50',
-      'box green, 50',
-      'speed 10',
-      'label \'hello\'',
-      'do home',
-      'do cs',
-      'do cg',
-      'do ht',
-      'do st',
-      'do pu',
-      'do pd',
-      'scale 3',
-      'pen purple, 10',
-      'rt 180, 100',
-      'lt 180, 100',
-      'slide 100, 20',
-      'jump 100, 20'
-    ].map(function(block) {
-      return ice.parse(block).start.next.container;
-    })
-  },
-  {
+      {
+        block: 'pen red',
+        title: 'Set the pen color'
+      }, {
+        block: 'fd 100',
+        title: 'Move forward'
+      }, {
+        block: 'rt 90',
+        title: 'Turn right'
+      }, {
+        block: 'lt 90',
+        title: 'Turn left'
+      }, {
+        block: 'bk 100',
+        title: 'Move backward'
+      }, {
+        block: 'dot blue, 50',
+        title: 'Make a dot'
+      }, {
+        block: 'box green, 50',
+        title: 'Make a square'
+      }, {
+        block: 'speed 10',
+        title: 'Set the speed of the turtle'
+      }, {
+        block: 'label \'hello\'',
+        title: 'Write text at the turtle'
+      }, {
+        block: 'do home',
+        title: 'Move the turtle back to start'
+      }, {
+        block: 'do cs',
+        title: 'Clear screen'
+      }, {
+        block: 'do cg',
+        title: 'Clear graphics'
+      }, {
+        block: 'do st',
+        title: 'Show the turtle'
+      }, {
+        block: 'do pu',
+        title: 'Lift the pen up'
+      }, {
+        block: 'do pd',
+        title: 'Put the pen down'
+      }, {
+        block: 'scale 3',
+        title: 'Change the size of the turtle'
+      }, {
+        block: 'pen purple, 10',
+        title: 'Set the pen color and size'
+      }, {
+        block: 'rt 180, 100',
+        title: 'Make a wide right turn'
+      }, {
+        block: 'lt 180, 100',
+        title: 'Make a wide left turn'
+      }, {
+        block: 'slide 100, 20',
+        title: 'Slide diagonally or sideways'
+      }, {
+        block: 'jump 100, 20',
+        title: 'Jump without drawing'
+      }
+    ]
+  }, {
     name: 'Control',
     color: 'orange',
     blocks: [
-      'button \'Click\', ->\n' +
-      '  ``',
-      'for [1..3]\n' +
-      '  ``',
-      
-      'for x in [1..3]\n' +
-      '  ``',
-      
-      'while ``\n' +
-      '  ``',
-      'read \'Name?\', (n) ->\n' +
-      '  write \'Hello \' + n',
-      
-      'if ``\n' +
-      '  ``',
-
-      'if ``\n' +
-      '  ``\n' +
-      'else\n' +
-      '  ``'
-    ].map(function(block) {
-      return ice.parse(block).start.next.container;
-    })
-  },
-  {
+      {
+        block: 'button \'Click\', ->\n  ``',
+        title: 'Make a button and do something when clicked'
+      }, {
+        block: 'for [1..3]\n  ``',
+        title: 'Do something multiple times'
+      }, {
+        block: 'for x in [1..3]\n  ``',
+        title: 'Do something multiple times...?'
+      }, {
+        block: 'while ``\n  ``',
+        title: 'Repeat something while a condition is true'
+      }, {
+        block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
+        title: 'Read input from the user'
+      }, {
+        block: 'if ``\n  ``',
+        title: 'Do something only if a condition is true'
+      }, {
+        block: 'if ``\n  ``\nelse\n  ``',
+        title: 'Do something if a condition is true, otherwise do something else'
+      }
+    ]
+  }, {
     name: 'Calculate',
     color: 'green',
     blocks: [
-      'x = ``',
-      '`` + ``',
-      '`` - ``',
-      '`` * ``',
-      '`` / ``',
-      '`` is ``',
-      '`` < ``',
-      '`` > ``',
-      'random [1..100]',
-      'round ``',
-      'abs ``',
-      'max ``, ``',
-      'min ``, ``',
-      'f = (param) ->\n' +
-      '  ``',
-      '(``)(``)'
-    ].map(function(block) {
-      return ice.parse(block).start.next.container
-    })
-  },
-  {
+      {
+        block: 'x = ``',
+        title: 'Set a variable'
+      }, {
+        block: '`` + ``',
+        title: 'Add two numbers'
+      }, {
+        block: '`` - ``',
+        title: 'Subtract two numbers'
+      }, {
+        block: '`` * ``',
+        title: 'Multiply two numbers'
+      }, {
+        block: '`` / ``',
+        title: 'Divide two numbers'
+      }, {
+        block: '`` is ``',
+        title: 'Compare two values'
+      }, {
+        block: '`` < ``',
+        title: 'Compare two values'
+      }, {
+        block: '`` > ``',
+        title: 'Compare two values'
+      }, {
+        block: 'random [1..100]',
+        title: 'Get a random number in a range'
+      }, {
+        block: 'round ``',
+        title: 'Round to the nearest integer'
+      }, {
+        block: 'abs ``',
+        title: 'Absolute value'
+      }, {
+        block: 'max ``, ``',
+        title: 'Get the larger of two numbers'
+      }, {
+        block: 'min ``, ``',
+        title: 'Get the smaller on two numbers'
+      }, {
+        block: 'f = (param) ->\n  ``',
+        title: 'Define a new function'
+      }, {
+        block: 'myFunction(myArgument)',
+        title: 'Use a custom function'
+      }
+    ]
+  }, {
     name: 'Interact',
     color: 'violet',
     blocks: [
-      'speed Infinity',
-      'play \'GEC\'',
-      'wear \'/img/cat-icon\'',
-      'tick 1, ->\n' +
-      '  ``',
-      'moveto lastclick',
-      'turnto lastmousemove',
-      'click ->\n' +
-      '  write \'Heh!\'',
-      'if pressed \'enter\'\n' +
-      '  write \'Holding.\'',
-      'p = new Piano',
-      'p.play \'EDC\'',
-      'w = new Webcam',
-      't = new Turtle'
-    ].map(function(block) {
-      return ice.parse(block).start.next.container
-    })
+      {
+        block: 'speed Infinity',
+        title: 'Make the turtle move immediately'
+      }, {
+        block: 'play \'GEC\'',
+        title: 'Play music notes'
+      }, {
+        block: 'wear \'/img/cat-icon\'',
+        title: 'Change the turtle picture'
+      }, {
+        block: 'tick 1, ->\n  ``',
+        title: 'Do something at equally-spaced times'
+      }, {
+        block: 'moveto lastclick',
+        title: 'Move to a location'
+      }, {
+        block: 'turnto lastmousemove',
+        title: 'Turn towards a location'
+      }, {
+        block: 'click ->\n  write \'Heh!\'',
+        title: 'Do something when the turtle is clicked'
+      }, {
+        block: 'if pressed \'enter\'\n  write \'Holding.\'',
+        title: 'Test if a key is pressed'
+      }, {
+        block: 'p = new Piano',
+        title: 'Make a new piano'
+      }, {
+        block: 'p.play \'EDC\'',
+        title: 'Tell a piano to play notes'
+      }, {
+        block: 'w = new Webcam',
+        title: 'Make a new webcam'
+      }, {
+        block: 't = new Turtle',
+        title: 'Make a new turtle'
+      }
+    ]
   }
 ];
 
