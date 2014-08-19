@@ -5973,16 +5973,46 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     });
     hook('mousemove', 0, function(point, event, state) {
-      var mainPoint, size, topLeftCorner;
+      var first, lassoRectangle, last, mainPoint, _ref;
       if (this.lassoSelectAnchor != null) {
         mainPoint = this.trackerPointToMain(point);
         this.clearLassoSelectCanvas();
-        topLeftCorner = new this.draw.Point(Math.min(this.lassoSelectAnchor.x, mainPoint.x) - this.scrollOffsets.main.x, Math.min(this.lassoSelectAnchor.y, mainPoint.y) - this.scrollOffsets.main.y);
-        size = new this.draw.Size(Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+        first = this.tree.start;
+        while (!((first == null) || first.type === 'blockStart' && this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
+          first = first.next;
+        }
+        last = this.tree.end;
+        while (!((last == null) || last.type === 'blockEnd' && this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
+          last = last.prev;
+        }
+        this.clearLassoSelectCanvas();
+        this.clearHighlightCanvas();
+        if (first && (last != null)) {
+          _ref = validateLassoSelection(this.tree, first, last), first = _ref[0], last = _ref[1];
+          this.drawTemporaryLasso(first, last);
+        }
         this.lassoSelectCtx.strokeStyle = '#00f';
-        return this.lassoSelectCtx.strokeRect(topLeftCorner.x, topLeftCorner.y, size.width, size.height);
+        return this.lassoSelectCtx.strokeRect(lassoRectangle.x - this.scrollOffsets.main.x, lassoRectangle.y - this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
       }
     });
+    Editor.prototype.drawTemporaryLasso = function(first, last) {
+      var head, mainCanvasRectangle, _results;
+      mainCanvasRectangle = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+      head = first;
+      _results = [];
+      while (head !== last) {
+        if (head instanceof model.StartToken) {
+          this.view.getViewNodeFor(head.container).draw(this.highlightCtx, mainCanvasRectangle, {
+            selected: Infinity
+          });
+          _results.push(head = head.container.end);
+        } else {
+          _results.push(head = head.next);
+        }
+      }
+      return _results;
+    };
     validateLassoSelection = function(tree, first, last) {
       var head, tokensToInclude;
       tokensToInclude = [];
@@ -6039,7 +6069,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.lassoSegment.isLassoSegment = true;
         this.lassoSegment.wrap(first, last);
         this.addMicroUndoOperation(new CreateSegmentOperation(this.lassoSegment));
-        this.moveCursorTo(this.lassoSegment.end, true);
+        this.moveCursorTo(this.lassoSegment.end.next, true);
         return this.redrawMain();
       }
     });
@@ -6099,13 +6129,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.redrawHighlights();
     };
     Editor.prototype.moveCursorUp = function() {
-      var head, _ref, _ref1;
-      head = (_ref = this.cursor.prev) != null ? _ref.prev : void 0;
-      this.highlightFlashShow();
-      if (head == null) {
+      var head, _ref;
+      if (this.cursor.prev == null) {
         return;
       }
-      while (!(((_ref1 = head.type) === 'newline' || _ref1 === 'indentEnd') || head === this.tree.start)) {
+      this.cursor = this.cursor.prev;
+      this.highlightFlashShow();
+      if (typeof head === "undefined" || head === null) {
+        return;
+      }
+      while (!(((_ref = head.type) === 'newline' || _ref === 'indentEnd') || head === this.tree.start)) {
         head = head.prev;
       }
       this.cursor.remove();
@@ -6286,7 +6319,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return _this.shiftKeyPressed = true;
         },
         on_keyup: function() {
-          return _this.shiftKeyPressed = false;
+          return _this.shiftKeyPressd = false;
         }
       });
       return this.keyListener.register_combo({
@@ -6392,107 +6425,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.redrawMain();
       return null;
     };
-    /*
-    # CreateIndent undo operation
-    class CreateIndentOperation extends UndoOperation
-      constructor: (pos, @depth) ->
-        @location = pos.getSerializedLocation()
-    
-      undo: (editor) ->
-        indent = editor.tree.getTokenAtLocation(@location).indent
-        indent.start.prev.append indent.end.next; indent.notifyChange()
-    
-      redo: (editor) ->
-        head = editor.tree.getTokenAtLocation(@location)
-    
-        newIndent = new model.Indent DEFAULT_INDENT_DEPTH
-        head.prev.append(newIndent.start)
-                 .append(new model.NewlineToken())
-                 .append(newIndent.end)
-                 .append(head)
-    
-    # DestroyIndent undo operation
-    class DestroyIndentOperation extends UndoOperation
-      constructor: (indent) ->
-        @location = indent.start.getSerializedLocation()
-        @indent = indent.clone()
-    
-      undo: (editor) ->
-        head = editor.tree.getTokenAtLocation(@location)
-    
-        newIndent = @indent.clone()
-        head.prev.append newIndent.start
-        newIndent.end.append head
-    
-        newIndent.notifyChange()
-    
-      redo: (editor) ->
-        indent = editor.tree.getTokenAtLocation(@location).indent
-        indent.start.prev.append indent.end.next; indent.notifyChange()
-    
-    # If we press tab while we are editing
-    # a handwritten block, we create and indent.
-    hook 'key.tab', 0, ->
-      if @textFocus? and @textFocus.handwritten
-        @addMicroUndoOperation 'CAPTURE_POINT'
-    
-        # Seek the block directly before this
-        head = @textFocus.start
-        until head.type is 'blockEnd'
-          head = head.prev
-    
-        # If it ends in an indent,
-        # move this block to that indent.
-        if head.prev.type is 'indentEnd'
-          until head.type in ['blockEnd', 'indentStart']
-            head = head.prev
-    
-        # Otherwise, create an indent right before this.
-        else
-          @addMicroUndoOperation new CreateIndentOperation head, DEFAULT_INDENT_DEPTH
-    
-          newIndent = new model.Indent DEFAULT_INDENT_DEPTH
-          newIndent.start.append(new model.NewlineToken()).append newIndent.end
-          newIndent.spliceIn head.prev
-          newIndent.notifyChange()
-    
-          head = newIndent.start
-    
-        # Go through the motions of moving this block into
-        # the indent we have just found.
-        @addMicroUndoOperation new PickUpOperation @textFocus.start.prev.container
-        @textFocus.start.prev.container.spliceOut() #MUTATION
-    
-        @addMicroUndoOperation new DropOperation @textFocus.start.prev.container, head
-        @textFocus.start.prev.container.spliceIn head #MUTATION
-    
-        # Move the cursor up to where the block now is.
-        @moveCursorTo @textFocus.start.prev.container.end
-    
-        @redrawMain()
-    
-    # If we press backspace at the start of an empty
-    # indent (an indent containing only whitespace),
-    # delete that indent.
-    hook 'key.backspace', 0, (state) ->
-      if state.capturedBackspace then return
-    
-      if  not @textFocus? and
-          @cursor.prev?.prev?.type is 'indentStart' and
-          (indent = @cursor.prev.prev.indent).stringify().trim().length is 0
-    
-        @addMicroUndoOperation new DestroyIndentOperation indent
-        indent.notifyChange()
-    
-        indent.start.prev.append indent.end.next #MUTATION
-    
-        @moveCursorTo indent.end.next
-    
-        state.capturedBackspace = true
-    
-        @redrawMain()
-    */
-
     Editor.prototype.copyAceEditor = function() {
       this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
       return this.resize();
@@ -7482,7 +7414,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               _this.lassoSegment = null;
             }
             _this.addMicroUndoOperation(new DropOperation(blocks, _this.cursor.previousVisibleToken()));
-            blocks.spliceIn(_this.cursor);
+            blocks.spliceIn(_this.getCursorSpliceArea());
             if ((_ref1 = blocks.end.nextVisibleToken().type) !== 'newline' && _ref1 !== 'indentEnd') {
               blocks.end.insert(new model.NewlineToken());
             }
