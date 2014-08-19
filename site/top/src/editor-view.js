@@ -1779,6 +1779,10 @@ function setPaneEditorText(pane, text, filename, useblocks) {
     fireEvent('changelines', [pane]);
   });
 
+  iceEditor.on('toggledone', function() {
+    updatePaneTitle(pane);
+  });
+
   $('<div class="closeblocks">&times</div>').appendTo(iceEditor.paletteWrapper);
 
 
@@ -1886,7 +1890,6 @@ function setPaneEditorBlockMode(pane, useblocks) {
   var togglingSucceeded = paneState.iceEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
   fireEvent('toggleblocks', [pane, paneState.iceEditor.currentlyUsingBlocks]);
-  updatePaneTitle(pane);
   return true;
 }
 
