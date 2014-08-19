@@ -1637,7 +1637,7 @@ var ICE_EDITOR_PALETTE =[
         title: 'Do something only if a condition is true'
       }, {
         block: 'if ``\n  ``\nelse\n  ``',
-        title: 'Do something if a condition is true, otherwise do something else'
+        title: 'Do something if a condition is true, otherwise something else'
       }
     ]
   }, {
