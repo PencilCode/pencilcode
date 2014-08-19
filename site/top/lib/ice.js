@@ -5320,7 +5320,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }
           paletteGroupHeader = document.createElement('div');
           paletteGroupHeader.className = 'ice-palette-group-header';
-          paletteGroupHeader.innerText = paletteGroupHeader.textContent = paletteGroup.name;
+          paletteGroupHeader.innerText = paletteGroupHeader.textContent = paletteGroupHeader.textContent = paletteGroup.name;
           if (paletteGroup.color) {
             paletteGroupHeader.className += ' ' + paletteGroup.color;
           }
@@ -5807,6 +5807,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
       }
       if (hitTestResult != null) {
+        this.hiddenInput.focus();
         if (hitTestResult !== this.textFocus) {
           this.setTextInputFocus(hitTestResult);
           this.redrawMain();
@@ -6584,7 +6585,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }
           div = document.createElement('div');
           div.style.whiteSpace = 'pre';
-          div.innerText = textElement.model.value;
+          div.innerText = div.textContent = textElement.model.value;
           div.style.font = this.fontSize + 'px ' + this.fontFamily;
           div.style.left = "" + (textElement.bounds[0].x - this.scrollOffsets.main.x) + "px";
           div.style.top = "" + (textElement.bounds[0].y - this.scrollOffsets.main.y - this.fontAscent) + "px";
@@ -6609,7 +6610,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         for (line = _j = top; top <= bottom ? _j <= bottom : _j >= bottom; line = top <= bottom ? ++_j : --_j) {
           div = document.createElement('div');
           div.style.whiteSpace = 'pre';
-          div.innerText = line + 1;
+          div.innerText = div.textContent = line + 1;
           div.style.left = 0;
           div.style.top = "" + (treeView.bounds[line].y + treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent - this.scrollOffsets.main.y) + "px";
           div.style.font = this.fontSize + 'px ' + this.fontFamily;
@@ -6623,9 +6624,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.lineNumberWrapper.style.display = 'none';
         this.mainCanvas.style.transition = this.highlightCanvas.style.transition = this.cursorCanvas.style.opacity = "opacity " + fadeTime + "ms linear";
         this.mainCanvas.style.opacity = this.highlightCanvas.style.opacity = this.cursorCanvas.style.opacity = 0;
-        this.iceElement.style.transition = this.paletteWrapper.style.transition = "left " + fadeTime + "ms";
-        this.iceElement.style.left = '0px';
-        this.paletteWrapper.style.left = "" + (-this.paletteWrapper.offsetWidth) + "px";
+        setTimeout((function() {
+          _this.iceElement.style.transition = _this.paletteWrapper.style.transition = "left " + translateTime + "ms";
+          _this.iceElement.style.left = '0px';
+          return _this.paletteWrapper.style.left = "" + (-_this.paletteWrapper.offsetWidth) + "px";
+        }), fadeTime);
         setTimeout((function() {
           var _k, _len1;
           _this.iceElement.style.transition = _this.paletteWrapper.style.transition = '';
@@ -6711,7 +6714,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             div = document.createElement('div');
             div.style.whiteSpace = 'pre';
-            div.innerText = textElement.model.value;
+            div.innerText = div.textContent = textElement.model.value;
             div.style.font = _this.aceFontSize() + ' ' + _this.fontFamily;
             div.style.position = 'absolute';
             div.style.left = "" + (textElement.bounds[0].x - _this.scrollOffsets.main.x + translationVectors[i].x) + "px";
@@ -6737,7 +6740,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           for (line = _j = top; top <= bottom ? _j <= bottom : _j >= bottom; line = top <= bottom ? ++_j : --_j) {
             div = document.createElement('div');
             div.style.whiteSpace = 'pre';
-            div.innerText = line + 1;
+            div.innerText = div.textContent = line + 1;
             div.style.font = _this.aceFontSize() + ' ' + _this.fontFamily;
             div.style.width = "" + _this.aceEditor.renderer.$gutter.offsetWidth + "px";
             div.style.left = 0;
@@ -6793,7 +6796,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     Editor.prototype.toggleBlocks = function(cb) {
       if (this.currentlyUsingBlocks) {
-        return this.performMeltAnimation(700, 500, cb);
+        return this.performMeltAnimation(500, 1000, cb);
       } else {
         return this.performFreezeAnimation(500, 500, cb);
       }
@@ -7280,7 +7283,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       } else {
         lineDiv = document.createElement('div');
         lineDiv.className = 'ice-gutter-line';
-        lineDiv.innerText = line + 1;
+        lineDiv.innerText = lineDiv.textContent = line + 1;
         this.lineNumberTags[line] = lineDiv;
       }
       lineDiv.style.top = "" + (treeView.bounds[line].y + treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent - this.scrollOffsets.main.y) + "px";
