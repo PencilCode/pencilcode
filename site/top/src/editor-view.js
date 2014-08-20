@@ -1381,10 +1381,6 @@ function updatePaneTitle(pane) {
   }
   $('#' + pane + 'title_text').html(label).find('a[title]').
       tooltipster({ position: 'bottom-left' });
-  if (paneState.running) {
-    $('#' + pane + 'title .fullscreen').click(function(e) {
-    });
-  }
 }
 
 $('.panetitle').on('click', '.fullscreen', function(e) {

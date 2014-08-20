@@ -4323,7 +4323,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     exports.Editor = Editor = (function() {
       function Editor(wrapperElement, paletteGroups) {
-        var binding, boundListeners, combo, elements, eventName, fns, _fn, _fn1, _i, _len, _ref, _ref1, _ref2,
+        var binding, boundListeners, combo, dispatchEvent, elements, eventName, fns, _fn, _fn1, _i, _len, _ref, _ref1, _ref2,
           _this = this;
         this.wrapperElement = wrapperElement;
         this.paletteGroups = paletteGroups;
@@ -4404,6 +4404,30 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         window.addEventListener('resize', function() {
           return _this.resize();
         });
+        dispatchEvent = function(event) {
+          var handler, state, trackPoint, _j, _len1, _ref2, _ref3;
+          if ((_ref2 = event.type) === 'mousedown' || _ref2 === 'dblclick' || _ref2 === 'mouseup') {
+            if (event.which !== 1) {
+              return;
+            }
+          }
+          trackPoint = _this.getPointRelativeToTracker(event);
+          state = {};
+          _ref3 = editorBindings[event.type];
+          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+            handler = _ref3[_j];
+            handler.call(_this, trackPoint, event, state);
+          }
+          if (typeof event.stopPropagation === "function") {
+            event.stopPropagation();
+          }
+          if (typeof event.preventDefault === "function") {
+            event.preventDefault();
+          }
+          event.cancelBubble = true;
+          event.returnValue = false;
+          return false;
+        };
         _ref2 = {
           mousedown: [this.iceElement, this.paletteElement, this.dragCover],
           dblclick: [this.iceElement, this.paletteElement, this.dragCover],
@@ -4415,25 +4439,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           _results = [];
           for (_j = 0, _len1 = elements.length; _j < _len1; _j++) {
             element = elements[_j];
-            _results.push(element.addEventListener(eventName, function(event) {
-              var handler, state, trackPoint, _k, _len2, _ref3;
-              trackPoint = _this.getPointRelativeToTracker(event);
-              state = {};
-              _ref3 = editorBindings[eventName];
-              for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-                handler = _ref3[_k];
-                handler.call(_this, trackPoint, event, state);
-              }
-              if (typeof event.stopPropagation === "function") {
-                event.stopPropagation();
-              }
-              if (typeof event.preventDefault === "function") {
-                event.preventDefault();
-              }
-              event.cancelBubble = true;
-              event.returnValue = false;
-              return false;
-            }));
+            _results.push(element.addEventListener(eventName, dispatchEvent));
           }
           return _results;
         };
@@ -4641,14 +4647,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return _results;
     };
     Editor.prototype.getPointRelativeToTracker = function(event) {
-      var offsetPoint, point;
-      if (event.offsetX != null) {
-        point = new this.draw.Point(event.offsetX, event.offsetY);
-      } else {
-        point = new this.draw.Point(event.layerX, event.layerY);
-      }
-      offsetPoint = this.trackerOffset(event.target);
-      return new this.draw.Point(point.x + offsetPoint.x, point.y + offsetPoint.y);
+      return new this.draw.Point(event.pageX, event.pageY);
     };
     Editor.prototype.absoluteOffset = function(el) {
       var point;
@@ -4692,13 +4691,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return new this.draw.Point(x, y);
     };
     Editor.prototype.trackerPointToMain = function(point) {
-      return new this.draw.Point(point.x - this.trackerOffset(this.mainCanvas).x + this.scrollOffsets.main.x, point.y - this.trackerOffset(this.mainCanvas).y + this.scrollOffsets.main.y);
+      var gbr;
+      if (this.mainCanvas.offsetParent == null) {
+        return new this.draw.Point(NaN, NaN);
+      }
+      gbr = this.mainCanvas.getBoundingClientRect();
+      return new this.draw.Point(point.x - gbr.left + this.scrollOffsets.main.x, point.y - gbr.top + this.scrollOffsets.main.y);
     };
     Editor.prototype.trackerPointToPalette = function(point) {
+      var gbr;
       if (this.paletteCanvas.offsetParent == null) {
         return new this.draw.Point(NaN, NaN);
       }
-      return new this.draw.Point(point.x - this.trackerOffset(this.paletteCanvas).x + this.scrollOffsets.palette.x, point.y - this.trackerOffset(this.paletteCanvas).y + this.scrollOffsets.palette.y);
+      gbr = this.paletteCanvas.getBoundingClientRect();
+      return new this.draw.Point(point.x - gbr.left + this.scrollOffsets.palette.x, point.y - gbr.top + this.scrollOffsets.palette.y);
     };
     Editor.prototype.hitTest = function(point, block) {
       var head, seek;
@@ -5009,8 +5015,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         _this = this;
       if (this.draggingBlock != null) {
         position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
-        this.dragCanvas.style.top = "" + (position.y + getOffsetTop(this.iceElement)) + "px";
-        this.dragCanvas.style.left = "" + (position.x + getOffsetLeft(this.iceElement)) + "px";
+        this.dragCanvas.style.top = "" + position.y + "px";
+        this.dragCanvas.style.left = "" + position.x + "px";
         mainPoint = this.trackerPointToMain(position);
         best = null;
         min = Infinity;
@@ -5029,7 +5035,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             h: MAX_DROP_DISTANCE * 2
           }, function(point) {
             var distance;
-            if (!((point.acceptLevel === helper.DISCOURAGED) && !_this.shiftKeyPressed)) {
+            if (!((point.acceptLevel === helper.DISCOURAGED) && !event.shiftKey)) {
               distance = mainPoint.from(point);
               distance.y *= 2;
               distance = distance.magnitude();
@@ -5796,9 +5802,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (state.consumedHitTest) {
         return;
       }
-      if (event.which !== 1) {
-        return;
-      }
       mainPoint = this.trackerPointToMain(point);
       hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
       if (hitTestResult !== this.textFocus) {
@@ -6130,16 +6133,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.redrawHighlights();
     };
     Editor.prototype.moveCursorUp = function() {
-      var head, _ref;
+      var head, _ref, _ref1;
       if (this.cursor.prev == null) {
         return;
       }
-      this.cursor = this.cursor.prev;
+      head = (_ref = this.cursor.prev) != null ? _ref.prev : void 0;
       this.highlightFlashShow();
-      if (typeof head === "undefined" || head === null) {
+      if (head == null) {
         return;
       }
-      while (!(((_ref = head.type) === 'newline' || _ref === 'indentEnd') || head === this.tree.start)) {
+      while (!(((_ref1 = head.type) === 'newline' || _ref1 === 'indentEnd') || head === this.tree.start)) {
         head = head.prev;
       }
       this.cursor.remove();
@@ -6221,9 +6224,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return head.container;
     };
-    hook('key.tab', 0, function() {
+    hook('key.tab', 0, function(state, event) {
       var chars, head, persistentParent, socket;
-      if (this.shiftKeyPressed) {
+      if (event.shiftKey) {
         if (this.textFocus != null) {
           head = this.textFocus.start;
         } else {
@@ -6313,21 +6316,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('populate', 0, function() {
       var _this = this;
       this.handwrittenBlocks = [];
-      this.shiftKeyPressed = false;
-      this.keyListener.register_combo({
-        keys: 'shift',
-        on_keydown: function() {
-          return _this.shiftKeyPressed = true;
-        },
-        on_keyup: function() {
-          return _this.shiftKeyPressd = false;
-        }
-      });
       return this.keyListener.register_combo({
         keys: 'enter',
-        on_keydown: function() {
+        on_keydown: function(event) {
           var head, newBlock, newSocket, _ref;
-          if (!((_this.textFocus != null) || _this.shiftKeyPressed)) {
+          if (!((_this.textFocus != null) || event.shiftKey)) {
             _this.setTextInputFocus(null);
             newBlock = new model.Block();
             newSocket = new model.Socket(-Infinity);
@@ -6344,7 +6337,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _this.redrawMain();
             _this.reparseHandwrittenBlocks();
             return _this.newHandwrittenSocket = newSocket;
-          } else if ((_this.textFocus != null) && !_this.shiftKeyPressed) {
+          } else if ((_this.textFocus != null) && !event.shiftKey) {
             _this.setTextInputFocus(null);
             return _this.redrawMain();
           } else {
@@ -7219,8 +7212,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return _this.flash();
       }), 500);
     };
+    Editor.prototype.editorHasFocus = function() {
+      var _ref;
+      return ((_ref = document.activeElement) === this.iceElement || _ref === this.hiddenInput || _ref === this.copyPasteInput) && document.hasFocus();
+    };
     Editor.prototype.flash = function() {
-      if ((this.lassoSegment != null) || (this.draggingBlock != null) || ((this.textFocus != null) && this.textInputHighlighted) || !this.highlightsCurrentlyShown) {
+      if ((this.lassoSegment != null) || (this.draggingBlock != null) || ((this.textFocus != null) && this.textInputHighlighted) || !this.highlightsCurrentlyShown || !this.editorHasFocus()) {
         return this.highlightFlashShow();
       } else {
         return this.highlightFlashHide();
@@ -7229,6 +7226,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('populate', 0, function() {
       var _this = this;
       this.highlightsCurrentlyShown = false;
+      this.iceElement.addEventListener('blur', function() {
+        _this.highlightFlashShow();
+        _this.cursorCanvas.style.transition = '';
+        return _this.cursorCanvas.style.opacity = 0.5;
+      });
+      this.iceElement.addEventListener('focus', function() {
+        _this.highlightFlashShow();
+        _this.cursorCanvas.style.transition = '';
+        return _this.cursorCanvas.style.opacity = 1;
+      });
       return this.flashTimeout = setTimeout((function() {
         return _this.flash();
       }), 0);
