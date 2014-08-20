@@ -1764,6 +1764,11 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   iceEditor.setEditorState(useblocks);
   iceEditor.setValue(text);
 
+  $('.ice-hover-div').tooltipster();
+  iceEditor.on('changepalette', function() {
+    $('.ice-hover-div').tooltipster();
+  });
+
   iceEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
   });
