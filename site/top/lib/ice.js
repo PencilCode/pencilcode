@@ -50,6 +50,14 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
     exports.ENCOURAGED = 0;
     exports.DISCOURAGED = 1;
     exports.FORBIDDEN = 2;
+    if (typeof window !== "undefined" && window !== null) {
+      window.String.prototype.trimLeft = function() {
+        return this.replace(/^\s+/, '');
+      };
+      window.String.prototype.trimRight = function() {
+        return this.replace(/\s+$/, '');
+      };
+    }
     fontMetricsCache = {};
     exports.fontMetrics = fontMetrics = function(fontFamily, fontHeight) {
       var baseline, canvas, capital, ctx, ex, fontStyle, gp, height, lf, metrics, result, textTopAndBottom, width;
@@ -742,6 +750,55 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         set: set
       });
     };
+    exports.isTreeValid = function(tree) {
+      var hare, head, lastHare, stack, tortise, _ref, _ref1;
+      tortise = hare = tree.start;
+      while (true) {
+        tortise = tortise.next;
+        lastHare = hare;
+        hare = hare.next;
+        if (hare == null) {
+          window._ice_debug_lastHare = lastHare;
+          throw new Error('Ran off the end of the document before EOF');
+        }
+        if (lastHare !== hare.prev) {
+          throw new Error('Linked list is not properly bidirectional');
+        }
+        if (hare === tree.end) {
+          break;
+        }
+        lastHare = hare;
+        hare = hare.next;
+        if (hare == null) {
+          window._ice_debug_lastHare = lastHare;
+          throw new Error('Ran off the end of the document before EOF');
+        }
+        if (lastHare !== hare.prev) {
+          throw new Error('Linked list is not properly bidirectional');
+        }
+        if (hare === tree.end) {
+          break;
+        }
+        if (tortise === hare) {
+          throw new Error('Linked list loops');
+        }
+      }
+      stack = [];
+      head = tree.start.next;
+      while (!(head === tree.end || head === null)) {
+        if (head instanceof StartToken) {
+          stack.push(head.container);
+        } else if (head instanceof EndToken) {
+          if (stack[stack.length - 1] !== head.container) {
+            throw new Error("Stack does not align " + ((_ref = stack[stack.length - 1]) != null ? _ref.type : void 0) + " != " + ((_ref1 = head.container) != null ? _ref1.type : void 0));
+          } else {
+            stack.pop();
+          }
+        }
+        head = head.next;
+      }
+      return true;
+    };
     exports.Container = Container = (function() {
       function Container() {
         if (!((this.start != null) || (this.end != null))) {
@@ -768,6 +825,36 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
           head = head.parent;
         }
         return head === parent;
+      };
+
+      Container.prototype.getCommonParent = function(other) {
+        var head;
+        head = this;
+        while (!other.hasParent(head)) {
+          head = head.parent;
+        }
+        return head;
+      };
+
+      Container.prototype.hasCommonParent = function(other) {
+        var head;
+        head = this;
+        while (!other.hasParent(head)) {
+          head = head.parent;
+        }
+        return head != null;
+      };
+
+      Container.prototype.rawReplace = function(other) {
+        if (other.start.prev != null) {
+          other.start.prev.append(this.start);
+        }
+        if (other.last.next != null) {
+          this.end.append(other.last.next);
+        }
+        this.start.parent = this.end.parent = this.parent = other.parent;
+        other.parent = other.start.parent = other.end.parent = null;
+        return other.start.prev = other.end.next = null;
       };
 
       Container.prototype.clone = function() {
@@ -1049,6 +1136,33 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
         this.version = 0;
       }
 
+      Token.prototype.hasParent = function(parent) {
+        var head;
+        head = this;
+        while (head !== parent && head !== null) {
+          head = head.parent;
+        }
+        return head === parent;
+      };
+
+      Token.prototype.getCommonParent = function(other) {
+        var head;
+        head = this;
+        while (!other.hasParent(head)) {
+          head = head.parent;
+        }
+        return head;
+      };
+
+      Token.prototype.hasCommonParent = function(other) {
+        var head;
+        head = this;
+        while (!other.hasParent(head)) {
+          head = head.parent;
+        }
+        return head != null;
+      };
+
       Token.prototype.append = function(token) {
         var _this = this;
         this.next = token;
@@ -1089,7 +1203,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
       Token.prototype.remove = function() {
         if (this.prev != null) {
           this.prev.append(this.next);
-        } else {
+        } else if (this.next != null) {
           this.next.prev = null;
         }
         return this.prev = this.next = this.parent = null;
@@ -3684,12 +3798,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 return this.mark(node.body, depth + 1, 0, wrappingParen != null ? wrappingParen : node, indentDepth);
               } else {
                 if (node.body.unwrap() === node.body) {
-                  this.addBlock(node, depth, 0, 'command', null, MOSTLY_BLOCK);
+                  this.addBlock(node, depth, -2, 'command', null, MOSTLY_BLOCK);
                   _ref3 = node.body.expressions;
                   _results = [];
                   for (_k = 0, _len1 = _ref3.length; _k < _len1; _k++) {
                     expr = _ref3[_k];
-                    _results.push(this.addSocketAndMark(expr, depth + 1, 0, indentDepth));
+                    _results.push(this.addSocketAndMark(expr, depth + 1, -2, indentDepth));
                   }
                   return _results;
                 } else {
@@ -3727,7 +3841,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'Value':
             if ((node.properties != null) && node.properties.length > 0) {
               this.addBlock(node, depth, 0, 'value', wrappingParen, MOSTLY_VALUE);
-              this.addSocketAndMark(node.base, depth + 1, precedence, indentDepth);
+              this.addSocketAndMark(node.base, depth + 1, 0, indentDepth);
               _ref7 = node.properties;
               _results1 = [];
               for (_l = 0, _len2 = _ref7.length; _l < _len2; _l++) {
@@ -3741,7 +3855,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                     }
                   }));
                 } else if (property.nodeType() === 'Index') {
-                  _results1.push(this.addSocketAndMark(property.index, depth + 1, precedence, indentDepth));
+                  _results1.push(this.addSocketAndMark(property.index, depth + 1, 0, indentDepth));
                 } else {
                   _results1.push(void 0);
                 }
@@ -3758,7 +3872,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 right: 1
               };
             } else {
-              return this.mark(node.base, depth + 1, precedence, wrappingParen, indentDepth);
+              return this.mark(node.base, depth + 1, 0, wrappingParen, indentDepth);
             }
             break;
           case 'Literal':
@@ -3799,7 +3913,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 this.addSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
               }
             } else {
-              this.addBlock(node, depth, precedence, 'command', wrappingParen, ANY_DROP);
+              this.addBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
             }
             if (!node["do"]) {
               _ref15 = node.args;
@@ -3816,7 +3930,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Code':
-            this.addBlock(node, depth, precedence, 'value', wrappingParen, VALUE_ONLY);
+            this.addBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
             _ref16 = node.params;
             for (_n = 0, _len4 = _ref16.length; _n < _len4; _n++) {
               param = _ref16[_n];
@@ -3824,13 +3938,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
           case 'Assign':
-            this.addBlock(node, depth, precedence, 'command', wrappingParen, MOSTLY_BLOCK);
+            this.addBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
             this.addSocketAndMark(node.variable, depth + 1, 0, indentDepth, function(block) {
               return block.nodeType === 'Value';
             });
             return this.addSocketAndMark(node.value, depth + 1, 0, indentDepth);
           case 'For':
-            this.addBlock(node, depth, precedence, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.addBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
             _ref17 = ['source', 'from', 'guard', 'step'];
             for (_o = 0, _len5 = _ref17.length; _o < _len5; _o++) {
               childName = _ref17[_o];
@@ -3851,7 +3965,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             this.addSocketAndMark(node.from, depth, 0, indentDepth);
             return this.addSocketAndMark(node.to, depth, 0, indentDepth);
           case 'If':
-            this.addBlock(node, depth, precedence, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.addBlock(node, depth, 0, 'control', wrappingParen, MOSTLY_BLOCK);
             /*
             bounds = @getBounds node
             if @lines[bounds.start.line].indexOf('unless') >= 0 and
@@ -3880,13 +3994,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return _results3;
             break;
           case 'Return':
-            this.addBlock(node, depth, precedence, 'return', wrappingParen, BLOCK_ONLY);
+            this.addBlock(node, depth, 0, 'return', wrappingParen, BLOCK_ONLY);
             if (node.expression != null) {
               return this.addSocketAndMark(node.expression, depth + 1, 0, indentDepth);
             }
             break;
           case 'While':
-            this.addBlock(node, depth, precedence, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.addBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
             this.addSocketAndMark(node.rawCondition, depth + 1, 0, indentDepth);
             if (node.guard != null) {
               this.addSocketAndMark(node.guard, depth + 1, 0, indentDepth);
@@ -4081,7 +4195,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       CoffeeScriptTranspiler.prototype.wrapSemicolonLine = function(firstBounds, lastBounds, expressions, depth) {
         var block, child, surroundingBounds, _i, _len, _results;
-        block = new model.Block(0, 'command', ANY_DROP);
+        block = new model.Block(-2, 'command', ANY_DROP);
         surroundingBounds = {
           start: firstBounds.start,
           end: lastBounds.end
@@ -4090,7 +4204,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         _results = [];
         for (_i = 0, _len = expressions.length; _i < _len; _i++) {
           child = expressions[_i];
-          _results.push(this.addSocket(child, depth + 2, 0));
+          _results.push(this.addSocket(child, depth + 2, -2));
         }
         return _results;
       };
@@ -4223,7 +4337,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('ice-controller',['ice-helper', 'ice-coffee', 'ice-draw', 'ice-model', 'ice-view'], function(helper, coffee, draw, model, view) {
-    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CURSOR_HEIGHT_DECREASE, CURSOR_WIDTH_DECREASE, CreateSegmentOperation, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, escapeString, exports, extend_, getCharactersTo, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
+    var ANIMATION_FRAME_RATE, ANY_DROP, AnimatedColor, BLOCK_ONLY, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, CreateSegmentOperation, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DestroySegmentOperation, DropOperation, Editor, FloatingBlockRecord, FromFloatingOperation, MAX_DROP_DISTANCE, MIN_DRAG_DISTANCE, MOSTLY_BLOCK, MOSTLY_VALUE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, PickUpOperation, ReparseOperation, SetValueOperation, TOUCH_SELECTION_TIMEOUT, TextChangeOperation, TextReparseOperation, ToFloatingOperation, UndoOperation, VALUE_ONLY, binding, containsCursor, deepCopy, deepEquals, editorBindings, escapeString, exports, extend_, getAtChar, getCharactersTo, getOffsetLeft, getOffsetTop, getSocketAtChar, hook, isValidCursorPosition, key, last_, touchEvents, unsortedEditorBindings, unsortedEditorKeyBindings, validateLassoSelection, _i, _j, _len, _len1, _ref, _ref1;
     PALETTE_TOP_MARGIN = 5;
     PALETTE_MARGIN = 5;
     MIN_DRAG_DISTANCE = 1;
@@ -4234,6 +4348,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     MAX_DROP_DISTANCE = 100;
     CURSOR_WIDTH_DECREASE = 3;
     CURSOR_HEIGHT_DECREASE = 2;
+    CURSOR_UNFOCUSED_OPACITY = 0.5;
+    DEBUG_FLAG = false;
     ANY_DROP = helper.ANY_DROP;
     BLOCK_ONLY = helper.BLOCK_ONLY;
     MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
@@ -4452,6 +4568,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.resize();
         this.redrawMain();
         this.redrawPalette();
+        return this;
       }
 
       Editor.prototype.resize = function() {
@@ -5107,7 +5224,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     hook('mouseup', 1, function(point, event, state) {
-      var newBlock, parent;
       if ((this.draggingBlock != null) && (this.lastHighlight != null)) {
         if (this.inTree(this.draggingBlock)) {
           this.addMicroUndoOperation('CAPTURE_POINT');
@@ -5131,28 +5247,35 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               this.draggingBlock.spliceIn(this.tree.start);
             }
         }
-        if (this.lastHighlight.type === 'socket') {
-          try {
-            parent = this.draggingBlock.parent.parent;
-            newBlock = coffee.parse(parent.stringify(), {
-              wrapAtRoot: true
-            }).start.next.container;
-            if ((newBlock != null ? newBlock.type : void 0) === 'block') {
-              parent.start.prev.append(newBlock.start);
-              newBlock.end.append(parent.end.next);
-              newBlock.parent = newBlock.start.parent = newBlock.end.parent = parent.parent;
-              this.addMicroUndoOperation(new ReparseOperation(parent, newBlock));
-            }
-          } catch (_error) {}
-        }
-        this.redrawMain();
         this.moveCursorTo(this.draggingBlock.end, true);
-        this.draggingBlock = null;
-        this.draggingOffset = null;
-        this.lastHighlight = null;
-        return this.clearDrag();
+        if (this.lastHighlight.type === 'socket') {
+          this.reparseRawReplace(this.draggingBlock.parent.parent);
+        }
+        return this.endDrag();
       }
     });
+    Editor.prototype.reparseRawReplace = function(oldBlock) {
+      var e, newBlock, newParse, pos;
+      try {
+        newParse = coffee.parse(oldBlock.stringify(), {
+          wrapAtRoot: true
+        });
+        newBlock = newParse.start.next.container;
+        if (newParse.start.next.container.end === newParse.end.prev && (newBlock != null ? newBlock.type : void 0) === 'block') {
+          this.addMicroUndoOperation(new ReparseOperation(parent, newBlock));
+          if (this.cursor.hasParent(oldBlock)) {
+            pos = this.getRecoverableCursorPosition();
+            newBlock.rawReplace(oldBlock);
+            return this.recoverCursorPosition(pos);
+          } else {
+            return newBlock.rawReplace(oldBlock);
+          }
+        }
+      } catch (_error) {
+        e = _error;
+        return false;
+      }
+    };
     hook('populate', 0, function() {
       return this.floatingBlocks = [];
     });
@@ -5206,6 +5329,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
     })();
     Editor.prototype.inTree = function(block) {
+      if (block.container != null) {
+        block = block.container;
+      }
       while (!(block === this.tree || (block == null))) {
         block = block.parent;
       }
@@ -5228,11 +5354,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           if (this.draggingBlock === this.lassoSegment) {
             this.lassoSegment = null;
           }
-          this.draggingBlock = null;
-          this.draggingOffset = null;
-          this.lastHighlight = null;
-          this.clearDrag();
-          this.redrawMain();
+          this.endDrag();
           return;
         } else if (renderPoint.x - this.scrollOffsets.main.x < 0) {
           renderPoint.x = this.scrollOffsets.main.x;
@@ -5317,8 +5439,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         paletteGroup = _ref[i];
-        _results.push((function(paletteGroup) {
-          var clickHandler, data, event, newBlock, newPaletteBlocks, paletteGroupBlocks, paletteGroupHeader, _j, _k, _len1, _len2, _ref1, _ref2, _results1;
+        _results.push((function(paletteGroup, i) {
+          var clickHandler, data, newBlock, newPaletteBlocks, paletteGroupBlocks, paletteGroupHeader, updatePalette, _j, _len1, _ref1;
           if (i % 2 === 0) {
             paletteHeaderRow = document.createElement('div');
             paletteHeaderRow.className = 'ice-palette-header-row';
@@ -5344,17 +5466,24 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             });
           }
           paletteGroupBlocks = newPaletteBlocks;
-          clickHandler = function() {
-            var event, _k, _len2, _ref2, _results1;
+          updatePalette = function() {
+            var _ref2;
             _this.currentPaletteGroup = paletteGroup.name;
             _this.currentPaletteBlocks = paletteGroupBlocks.map(function(x) {
               return x.block;
             });
             _this.currentPaletteMetadata = paletteGroupBlocks;
-            _this.currentPaletteGroupHeader.className = _this.currentPaletteGroupHeader.className.replace(/\s[-\w]*-selected\b/, '');
+            if ((_ref2 = _this.currentPaletteGroupHeader) != null) {
+              _ref2.className = _this.currentPaletteGroupHeader.className.replace(/\s[-\w]*-selected\b/, '');
+            }
             _this.currentPaletteGroupHeader = paletteGroupHeader;
+            _this.currentPaletteIndex = i;
             _this.currentPaletteGroupHeader.className += ' ice-palette-group-header-selected';
-            _this.redrawPalette();
+            return _this.redrawPalette();
+          };
+          clickHandler = function() {
+            var event, _k, _len2, _ref2, _results1;
+            updatePalette();
             _ref2 = editorBindings.set_palette;
             _results1 = [];
             for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
@@ -5366,23 +5495,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           paletteGroupHeader.addEventListener('click', clickHandler);
           paletteGroupHeader.addEventListener('touchstart', clickHandler);
           if (i === 0) {
-            _this.currentPaletteGroup = paletteGroup.name;
-            _this.currentPaletteBlocks = paletteGroupBlocks.map(function(x) {
-              return x.block;
-            });
-            _this.currentPaletteMetadata = paletteGroupBlocks;
-            _this.currentPaletteGroupHeader = paletteGroupHeader;
-            _this.currentPaletteGroupHeader.className += ' ice-palette-group-header-selected';
-            _this.redrawPalette();
-            _ref2 = editorBindings.set_palette;
-            _results1 = [];
-            for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-              event = _ref2[_k];
-              _results1.push(event.call(_this));
-            }
-            return _results1;
+            return updatePalette();
           }
-        })(paletteGroup));
+        })(paletteGroup, i));
       }
       return _results;
     });
@@ -5523,7 +5638,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         socket = editor.tree.getTokenAtLocation(this.socket).container;
         socket.start.append(socket.end);
         socket.notifyChange();
-        return this.after.clone().moveTo(socket);
+        return this.after.clone().spliceIn(socket);
       };
 
       return TextReparseOperation;
@@ -5644,12 +5759,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return str[0] + str.slice(1, -1).replace(/(\'|\"|\n)/g, '\\$1') + str[str.length - 1];
     };
     Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
-      var newParse, originalText, parseParent, shouldPop, string, unparsedValue, _ref, _ref1, _ref2, _ref3;
+      var cursorParent, cursorPosition, newParse, originalText, shouldPop, shouldRecoverCursor, string, unparsedValue, _ref, _ref1;
       if (selectionStart == null) {
-        selectionStart = 0;
+        selectionStart = null;
       }
       if (selectionEnd == null) {
-        selectionEnd = 0;
+        selectionEnd = null;
       }
       if ((focus != null ? focus.id : void 0) in this.extraMarks) {
         delete this.extraMarks[focus != null ? focus.id : void 0];
@@ -5660,6 +5775,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.oldFocusValue = null;
         originalText = this.textFocus.stringify();
         shouldPop = false;
+        shouldRecoverCursor = false;
+        cursorPosition = cursorParent = null;
+        if (this.cursor.hasParent(this.textFocus.parent)) {
+          shouldRecoverCursor = true;
+          cursorPosition = this.getRecoverableCursorPosition();
+        }
         if (!this.textFocus.handwritten) {
           newParse = null;
           string = this.textFocus.stringify().trim();
@@ -5685,33 +5806,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             shouldPop = true;
           }
         }
-        try {
-          parseParent = this.textFocus.parent;
-          newParse = coffee.parse(parseParent.stringify(), {
-            wrapAtRoot: true
-          });
-          if (((_ref1 = newParse.start.next) != null ? (_ref2 = _ref1.container) != null ? _ref2.end : void 0 : void 0) === newParse.end.prev) {
-            if (focus === null) {
-              newParse = newParse.start.next;
-              if (newParse.type === 'blockStart') {
-                parseParent.start.prev.append(newParse);
-                newParse.container.end.append(parseParent.end.next);
-                newParse.container.parent = newParse.parent = newParse.container.end.parent = parseParent.parent;
-                newParse.container.notifyChange();
-                this.addMicroUndoOperation(new ReparseOperation(parseParent, newParse.container));
-                parseParent.parent = null;
-              }
-            }
-          } else {
-            throw new Error('Socket is split.');
-          }
-        } catch (_error) {
+        if (!this.reparseRawReplace(this.textFocus.parent)) {
           this.populateSocket(this.textFocus, originalText);
           if (shouldPop) {
             this.undoStack.pop();
           }
           this.redrawMain();
         }
+      }
+      if (shouldRecoverCursor) {
+        this.recoverCursorPosition(cursorPosition);
       }
       if (focus == null) {
         this.textFocus = null;
@@ -5726,15 +5830,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.textFocus.notifyChange();
       this.moveCursorTo(focus.end);
       this.hiddenInput.value = this.textFocus.stringify();
-      if (selectionStart < 0) {
-        selectionStart = this.textFocus.stringify().length - selectionStart;
-      }
-      if (selectionEnd < 0) {
-        selectionEnd = this.textFocus.stringify().length - selectionEnd;
+      if ((selectionStart != null) && (selectionEnd == null)) {
+        selectionEnd = selectionStart;
       }
       if (this.textFocus != null) {
         this.hiddenInput.focus();
-        if (this.hiddenInput.value[0] === this.hiddenInput.value[this.hiddenInput.value.length - 1] && ((_ref3 = this.hiddenInput.value[0]) === '\'' || _ref3 === '"')) {
+        if ((selectionStart != null) && (selectionEnd != null)) {
+          this.hiddenInput.setSelectionRange(selectionStart, selectionEnd);
+        } else if (this.hiddenInput.value[0] === this.hiddenInput.value[this.hiddenInput.value.length - 1] && ((_ref1 = this.hiddenInput.value[0]) === '\'' || _ref1 === '"')) {
           this.hiddenInput.setSelectionRange(1, this.hiddenInput.value.length - 1);
         } else {
           this.hiddenInput.setSelectionRange(0, this.hiddenInput.value.length);
@@ -5992,12 +6095,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
         this.clearLassoSelectCanvas();
         this.clearHighlightCanvas();
+        this.lassoSelectCtx.strokeStyle = '#00f';
+        this.lassoSelectCtx.strokeRect(lassoRectangle.x - this.scrollOffsets.main.x, lassoRectangle.y - this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
         if (first && (last != null)) {
           _ref = validateLassoSelection(this.tree, first, last), first = _ref[0], last = _ref[1];
-          this.drawTemporaryLasso(first, last);
+          return this.drawTemporaryLasso(first, last);
         }
-        this.lassoSelectCtx.strokeStyle = '#00f';
-        return this.lassoSelectCtx.strokeRect(lassoRectangle.x - this.scrollOffsets.main.x, lassoRectangle.y - this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
       }
     });
     Editor.prototype.drawTemporaryLasso = function(first, last) {
@@ -6073,7 +6176,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.lassoSegment.isLassoSegment = true;
         this.lassoSegment.wrap(first, last);
         this.addMicroUndoOperation(new CreateSegmentOperation(this.lassoSegment));
-        this.moveCursorTo(this.lassoSegment.end.next, true);
+        this.moveCursorTo(this.lassoSegment.end.nextVisibleToken(), true);
         return this.redrawMain();
       }
     });
@@ -6104,10 +6207,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         attemptReparse = false;
       }
       if (destination == null) {
-        return;
+        if (DEBUG_FLAG) {
+          throw new Error('Cannot move cursor to null');
+        }
+        return null;
       }
       if (!this.inTree(destination)) {
-        return;
+        if (DEBUG_FLAG) {
+          throw new Error('Cannot move cursor to a place not in the main tree');
+        }
+        return null;
       }
       this.highlightFlashShow();
       this.cursor.remove();
@@ -6126,9 +6235,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       if (!isValidCursorPosition(this.cursor)) {
         this.moveCursorTo(this.cursor.next);
-      }
-      if (attemptReparse) {
-        this.reparseHandwrittenBlocks();
       }
       return this.redrawHighlights();
     };
@@ -6154,10 +6260,135 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (!isValidCursorPosition(this.cursor)) {
         this.moveCursorUp();
       }
-      this.reparseHandwrittenBlocks();
       this.redrawHighlights();
       return this.scrollCursorIntoPosition();
     };
+    Editor.prototype.getRecoverableCursorPosition = function() {
+      var head, pos;
+      pos = {
+        lines: 0,
+        indents: 0
+      };
+      head = this.cursor;
+      while (!(head.type === 'newline' || head === this.tree.start)) {
+        if (head.type === 'indentEnd') {
+          pos.indents++;
+        }
+        head = head.prev;
+      }
+      while (head !== this.tree.start) {
+        if (head.type === 'newline') {
+          pos.lines++;
+        }
+        head = head.prev;
+      }
+      return pos;
+    };
+    getAtChar = function(parent, chars) {
+      var charsCounted, head;
+      head = parent.start;
+      charsCounted = 0;
+      while (!(charsCounted >= chars)) {
+        if (head.type === 'text') {
+          charsCounted += head.value.length;
+        }
+        head = head.next;
+      }
+      return head;
+    };
+    Editor.prototype.recoverCursorPosition = function(pos) {
+      var head, testPos;
+      head = this.tree.start;
+      testPos = {
+        lines: 0,
+        indents: 0
+      };
+      while (!(head === this.tree.end || testPos.lines === pos.lines)) {
+        head = head.next;
+        if (head.type === 'newline') {
+          testPos.lines++;
+        }
+      }
+      while (!(head === this.tree.end || testPos.indents === pos.indents)) {
+        head = head.next;
+        if (head.type === 'indentEnd') {
+          testPos.indents++;
+        }
+      }
+      this.cursor.remove();
+      if (head.type === 'newline') {
+        return head.insert(this.cursor);
+      } else {
+        return head.insertBefore(this.cursor);
+      }
+    };
+    Editor.prototype.moveCursorHorizontally = function(direction) {
+      var chars, head, persistentParent, position, socket, _ref;
+      if (this.textFocus != null) {
+        if (direction === 'right') {
+          head = this.textFocus.end.next;
+        } else {
+          head = this.textFocus.start.prev;
+        }
+      } else if (!(this.cursor.prev === this.tree.start && direction === 'left' || this.cursor.next === this.tree.end && direction === 'right')) {
+        if (direction === 'right') {
+          head = this.cursor.next.next;
+        } else {
+          head = this.cursor.prev.prev;
+        }
+      } else {
+        return;
+      }
+      while (true) {
+        if (((_ref = head.type) === 'newline' || _ref === 'indentEnd') || head.container === this.tree) {
+          this.cursor.remove();
+          if (head === this.tree.start || head.type === 'newline') {
+            head.insert(this.cursor);
+          } else {
+            head.insertBefore(this.cursor);
+          }
+          this.setTextInputFocus(null);
+          if (!this.inTree(this.cursor)) {
+            debugger;
+          }
+          if (isValidCursorPosition(this.cursor)) {
+            break;
+          }
+        }
+        if (head.type === 'socketStart' && (head.next.type === 'text' || head.next === head.container.end)) {
+          if ((this.textFocus != null) && head.container.hasParent(this.textFocus.parent)) {
+            persistentParent = this.textFocus.getCommonParent(head.container).parent;
+            chars = getCharactersTo(persistentParent, head.container.start);
+            this.setTextInputFocus(null);
+            socket = getSocketAtChar(persistentParent, chars);
+          } else {
+            socket = head.container;
+            this.setTextInputFocus(null);
+          }
+          position = (direction === 'right' ? 0 : -1);
+          this.setTextInputFocus(socket, position, position);
+          break;
+        }
+        if (direction === 'right') {
+          head = head.next;
+        } else {
+          head = head.prev;
+        }
+      }
+      return this.redrawMain();
+    };
+    hook('key.right', 0, function(state, event) {
+      if ((this.textFocus == null) || this.hiddenInput.selectionStart === this.hiddenInput.value.length) {
+        this.moveCursorHorizontally('right');
+        return event.preventDefault();
+      }
+    });
+    hook('key.left', 0, function(state, event) {
+      if ((this.textFocus == null) || this.hiddenInput.selectionEnd === 0) {
+        this.moveCursorHorizontally('left');
+        return event.preventDefault();
+      }
+    });
     Editor.prototype.determineCursorPosition = function() {
       var bound, head, line, _ref, _ref1;
       if ((this.cursor != null) && (this.cursor.parent != null)) {
@@ -6194,10 +6425,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.moveCursorUp();
     });
     hook('key.down', 0, function() {
+      if (this.textFocus == null) {
+        this.moveCursorTo(this.cursor.next.next);
+      }
       this.clearLassoSelection();
       this.setTextInputFocus(null);
-      this.reparseHandwrittenBlocks();
-      this.moveCursorTo(this.cursor.next.next);
       return this.scrollCursorIntoPosition();
     });
     getCharactersTo = function(parent, token) {
@@ -6237,7 +6469,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
         if (head != null) {
           if ((this.textFocus != null) && head.container.hasParent(this.textFocus.parent)) {
-            persistentParent = this.textFocus.parent.parent;
+            persistentParent = this.textFocus.getCommonParent(head.container).parent;
             chars = getCharactersTo(persistentParent, head.container.start);
             this.setTextInputFocus(null);
             socket = getSocketAtChar(persistentParent, chars);
@@ -6259,7 +6491,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
         if (head != null) {
           if ((this.textFocus != null) && head.container.hasParent(this.textFocus.parent)) {
-            persistentParent = this.textFocus.parent.parent;
+            persistentParent = this.textFocus.getCommonParent(head.container).parent;
             chars = getCharactersTo(persistentParent, head.container.start);
             this.setTextInputFocus(null);
             socket = getSocketAtChar(persistentParent, chars);
@@ -6306,7 +6538,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     Editor.prototype.deleteLassoSegment = function() {
       if (this.lassoSegment == null) {
-        throw new Error('Cannot delete nonexistent lasso segment');
+        if (DEBUG_FLAG) {
+          throw new Error('Cannot delete nonexistent lasso segment');
+        }
+        return null;
       }
       this.addMicroUndoOperation(new PickUpOperation(this.lassoSegment));
       this.lassoSegment.spliceOut();
@@ -6335,7 +6570,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _this.addMicroUndoOperation(new DropOperation(newBlock, head));
             newBlock.moveTo(head);
             _this.redrawMain();
-            _this.reparseHandwrittenBlocks();
             return _this.newHandwrittenSocket = newSocket;
           } else if ((_this.textFocus != null) && !event.shiftKey) {
             _this.setTextInputFocus(null);
@@ -6376,49 +6610,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         var block, newBlock;
         block = editor.tree.getTokenAtLocation(this.location).container;
         newBlock = this.before.clone();
-        block.start.prev.append(newBlock.start);
-        newBlock.end.append(block.end.next);
-        return newBlock.notifyChange();
+        return newBlock.rawReplace(block);
       };
 
       ReparseOperation.prototype.redo = function(editor) {
         var block, newBlock;
         block = editor.tree.getTokenAtLocation(this.location).container;
         newBlock = this.after.clone();
-        block.prev.append(newBlock.start);
-        newBlock.end.append(block.end.next);
+        newBlock.rawReplace(block);
         return newBlock.notifyChange();
       };
 
       return ReparseOperation;
 
     })(UndoOperation);
-    Editor.prototype.reparseHandwrittenBlocks = function() {
-      var head, newBlock;
-      this.setTextInputFocus(null);
-      head = this.tree.start;
-      while (head !== this.tree.end) {
-        if (head.type === 'blockStart' && head.next.type === 'socketStart' && head.next.container.handwritten && !containsCursor(head.container)) {
-          try {
-            newBlock = coffee.parse(head.container.stringify(), {
-              wrapAtRoot: true
-            }).start.next;
-            if (newBlock.type === 'blockStart') {
-              this.addMicroUndoOperation(new ReparseOperation(head.container, newBlock.container));
-              head.prev.append(newBlock);
-              newBlock.container.end.append(head.container.end.next);
-              newBlock.parent = head.container.parent;
-              head.container.parent = null;
-              newBlock.notifyChange();
-              head = newBlock.container.end;
-            }
-          } catch (_error) {}
-        }
-        head = head.next;
-      }
-      this.redrawMain();
-      return null;
-    };
     Editor.prototype.copyAceEditor = function() {
       this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
       return this.resize();
@@ -6750,15 +6955,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             el.style.opacity = 0;
           }
           setTimeout((function() {
-            var _l, _len2, _ref2, _results;
+            var _l, _len2, _ref2;
             _ref2 = [_this.mainCanvas, _this.highlightCanvas, _this.cursorCanvas];
-            _results = [];
             for (_l = 0, _len2 = _ref2.length; _l < _len2; _l++) {
               el = _ref2[_l];
               el.style.transition = "opacity " + fadeTime + "ms linear";
-              _results.push(el.style.opacity = 1);
             }
-            return _results;
+            _this.mainCanvas.style.opacity = 1;
+            _this.highlightCanvas.style.opacity = 1;
+            if (_this.editorHasFocus()) {
+              return _this.cursorCanvas.style.opacity = 1;
+            } else {
+              return _this.cursorCanvas.style.opacity = CURSOR_UNFOCUSED_OPACITY;
+            }
           }), translateTime);
           _this.iceElement.style.transition = _this.paletteWrapper.style.transition = "left " + fadeTime + "ms";
           _this.iceElement.style.left = "" + _this.paletteWrapper.offsetWidth + "px";
@@ -7082,6 +7291,21 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.dragCanvas.style.top = this.dragCanvas.style.left = '-9999px';
       return this.dragCover.style.display = 'none';
     });
+    hook('mousedown', 10, function() {
+      if (this.draggingBlock != null) {
+        return this.endDrag();
+      }
+    });
+    Editor.prototype.endDrag = function() {
+      this.draggingBlock = null;
+      this.draggingOffset = null;
+      this.lastHighlight = null;
+      this.clearDrag();
+      this.redrawMain();
+    };
+    hook('set_palette', 0, function() {
+      return this.fireEvent('changepalette', []);
+    });
     touchEvents = {
       'touchstart': 'mousedown',
       'touchmove': 'mousemove',
@@ -7161,7 +7385,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     hook('populate', 0, function() {
       this.cursorCanvas = document.createElement('canvas');
-      this.cursorCanvas.className = 'ice-highlight-canvas';
+      this.cursorCanvas.className = 'ice-highlight-canvas ice-cursor-canvas';
       this.cursorCtx = this.cursorCanvas.getContext('2d');
       return this.iceElement.appendChild(this.cursorCanvas);
     });
@@ -7224,18 +7448,25 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     hook('populate', 0, function() {
-      var _this = this;
+      var blurCursors, focusCursors,
+        _this = this;
       this.highlightsCurrentlyShown = false;
-      this.iceElement.addEventListener('blur', function() {
+      blurCursors = function() {
         _this.highlightFlashShow();
         _this.cursorCanvas.style.transition = '';
-        return _this.cursorCanvas.style.opacity = 0.5;
-      });
-      this.iceElement.addEventListener('focus', function() {
+        return _this.cursorCanvas.style.opacity = CURSOR_UNFOCUSED_OPACITY;
+      };
+      this.iceElement.addEventListener('blur', blurCursors);
+      this.hiddenInput.addEventListener('blur', blurCursors);
+      this.copyPasteInput.addEventListener('blur', blurCursors);
+      focusCursors = function() {
         _this.highlightFlashShow();
         _this.cursorCanvas.style.transition = '';
         return _this.cursorCanvas.style.opacity = 1;
-      });
+      };
+      this.iceElement.addEventListener('focus', focusCursors);
+      this.hiddenInput.addEventListener('focus', focusCursors);
+      this.copyPasteInput.addEventListener('focus', focusCursors);
       return this.flashTimeout = setTimeout((function() {
         return _this.flash();
       }), 0);
@@ -7262,11 +7493,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         renderPoint = this.trackerPointToMain(trackPoint);
         if (this.inTree(this.draggingBlock) && this.mainViewOrChildrenContains(this.draggingBlock, renderPoint)) {
           this.draggingBlock.ephemeral = false;
-          this.draggingBlock = null;
-          this.draggingOffset = null;
-          this.lastHighlight = null;
-          this.clearDrag();
-          return this.redrawMain();
+          return this.endDrag();
         }
       }
     });
@@ -7352,7 +7579,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.paletteWrapper.style.width = width + 'px';
       return this.resize();
     };
-    hook('populate', 0, function() {
+    hook('populate', 1, function() {
       var pressedVKey, pressedXKey,
         _this = this;
       this.copyPasteInput = document.createElement('textarea');
@@ -7424,7 +7651,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               _this.lassoSegment = null;
             }
             _this.addMicroUndoOperation(new DropOperation(blocks, _this.cursor.previousVisibleToken()));
-            blocks.spliceIn(_this.getCursorSpliceArea());
+            blocks.spliceIn(_this.cursor);
             if ((_ref1 = blocks.end.nextVisibleToken().type) !== 'newline' && _ref1 !== 'indentEnd') {
               blocks.end.insert(new model.NewlineToken());
             }
