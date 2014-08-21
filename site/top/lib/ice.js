@@ -2212,7 +2212,7 @@ tilde:"~",accent:"`",scroll_lock:"scroll",num_lock:"num"};r={"/":"?",".":">",","
               for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
                 bound = _ref2[_k];
                 this.totalBounds.x = Math.min(this.totalBounds.x, bound.x);
-                maxRight = Math.max(maxRight, bound.x);
+                maxRight = Math.max(maxRight, bound.right());
               }
               this.totalBounds.width = maxRight - this.totalBounds.x;
             }

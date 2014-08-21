@@ -7459,8 +7459,10 @@ $.turtle = function turtle(id, options) {
     }
     see.init(seeopt);
     if (wrotebody) {
+       /*
        see.html('<span style="color:red">Turtle script should be inside body ' +
                 '- wrote a &lt;body&gt;</span>');
+       */
     }
     // Return an eval loop hook string if 'see' is exported.
     if (exportedsee) {
