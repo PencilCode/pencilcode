@@ -83,7 +83,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'src/almond',
           out: 'site/top/editor.js',
-          optimize: 'none',
+          // optimize: 'none',
           mainConfigFile: 'site/top/src/editor-main.js',
           preserveLicenseComments: false
         }
