@@ -1351,15 +1351,18 @@ function updatePaneTitle(pane) {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         symbol = '&gt;'
-        tooltip = 'Click to use blocks';
+        alt = 'show blocks'
+        tooltip = 'Click to show blocks';
         if (paneState.iceEditor.currentlyUsingBlocks) {
           label = 'blocks';
+          alt = 'show code'
           symbol = '&lt;';
-          tooltip = 'Click to use code';
+          tooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
             paneState.filename + '" title="' + tooltip +
-            '"><b>' + symbol + '</b> <span>' + label + '</span></a>';
+            '"><b>' + symbol + '</b> <span alt="' + alt + '">' +
+            label + '</span></a>';
       }
     }
   } else if (paneState.links) {
@@ -1367,14 +1370,15 @@ function updatePaneTitle(pane) {
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
-           paneState.filename + '" title="Click for full page">' +
+           paneState.filename + '" title="Click to open window">' +
            '<img src="data:image/png;base64,iVBORw0KGgoAAAANS' +
            'UhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BA' +
            'ACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3Y' +
            'XJlAHBhaW50Lm5ldCA0LjAuMvvhp8YAAABjSURBVEhL7Y1JCgAhDAT9/' +
            '6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp' +
            '5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRY' +
-           'zBP6aySgZYAAAAASUVORK5CYII="> <span>screen</span></a>';
+           'zBP6aySgZYAAAAASUVORK5CYII="> <span alt="open window">' +
+           'screen</span></a>';
     } else {
       label = 'screen';
     }
@@ -1781,6 +1785,7 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   });
 
   iceEditor.on('toggledone', function() {
+    $('.ice-hover-div').tooltipster();
     updatePaneTitle(pane);
   });
 
