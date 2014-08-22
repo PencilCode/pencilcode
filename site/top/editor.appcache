@@ -3,6 +3,7 @@ CACHE MANIFEST
 # Last built <!--# include file="builddate.txt" -->
 
 /edit/
+/blank.html
 /lib/ace/ace.js
 /lib/ace/theme-chrome.js
 /lib/ace/mode-coffee.js
@@ -33,6 +34,7 @@ http://<!--# echo var="site" -->/jquery.js
 http://<!--# echo var="site" -->/
 http://<!--# echo var="site" -->/terms.html
 http://<!--# echo var="site" -->/privacy.html
+http://<!--# echo var="site" -->/license.html
 
 FALLBACK:
 /edit/ /edit/

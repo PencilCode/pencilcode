@@ -18,7 +18,7 @@ function wrapTurtle(text, pragmasOnly, setupScript) {
   // errors, using CORS rules.)  More discussion:
   // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
   scripts.push(
-    '<script src="//' +
+    '<script src="http://' +
     top.pencilcode.domain + '/turtlebits.js' +
     '" crossorigin="anonymous">\n<\057script>');
   // Then add any setupScript supplied.
@@ -67,6 +67,13 @@ function modifyForPreview(text, filename, targetUrl, pragmasOnly, sScript) {
   if (!text) return '';
   if (mimeType && !/^text\/html/.test(mimeType)) {
     return '<PLAINTEXT>' + text;
+  }
+  if (targetUrl) {
+    var domain = /^(https?:\/\/?\w+(?:\.\w+)+)(?:\/|$)/.exec(targetUrl);
+    if (domain) {
+       text = text.replace('<html>',
+         '<html manifest="' + domain[1] + '/editor.appcache">');
+    }
   }
   if (targetUrl && !/<base/i.exec(text)) {
     // Insert a <base href="target_url" /> in a good location.

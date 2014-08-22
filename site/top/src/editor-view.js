@@ -998,6 +998,34 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
+var singlePreviewIframe = $('<iframe src="/blank.html"></iframe>');
+
+function setupPreviewIframe(parent, url, html) {
+  parent.html('');
+  var session = Math.random(), iframe = singlePreviewIframe;
+  iframe.data('session', session).appendTo(parent);
+  // Write everything into the frame.
+  iframe.load(function() {
+    if (iframe.data('session') == session) {
+      var framewin = iframe[0].contentWindow;
+      $('body', framewin).on('keydown',
+      function(e) {
+        if (e.ctrlKey || e.metaKey || e.which === 8) {
+          var handler = hotkeys[String.fromCharCode(e.which)];
+          if (handler) {
+            return handler(e);
+          }
+        }
+      });
+      framewin.postMessage({
+        action: 'write',
+        replaceurl: url,
+        html: html
+      }, "*");
+    }
+  });
+}
+
 function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
   clearPane(pane);
   var paneState = state.pane[pane];
@@ -1009,44 +1037,7 @@ function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
   if (!preview.length) {
     preview = $('<div class="preview"></div>').appendTo('#' + pane);
   }
-  var session = Math.random();
-  preview.data('session', session);
-  $('#' + pane).queue(function() {
-    var p = $(this).find('.preview');
-    if (p.data('session') == session) {
-      p.html('');
-      var iframe = $('<iframe></iframe>').appendTo(p);
-      // Destroy and create new iframe.
-      iframe.attr('src', 'about:blank');
-      var framewin = iframe[0].contentWindow;
-      var framedoc = framewin.document;
-      framedoc.open();
-      // Fake out /home URL instead of /edit URL if possible.
-      try {
-        if (framewin.history.replaceState) {
-          framewin.history.replaceState(null, targetUrl, targetUrl);
-        }
-      } catch (e) {
-        if (window.console) {
-          window.console.warn('https://bugzilla.mozilla.org/777526', e)
-        }
-      }
-      framedoc.write(html);
-      framedoc.close();
-      // Bind the key handlers to the iframe once it's loaded.
-      $(iframe).load(function() {
-        $('body', framedoc).on('keydown', function(e) {
-          if (e.ctrlKey || e.metaKey || e.which === 8) {
-            var handler = hotkeys[String.fromCharCode(e.which)];
-            if (handler) {
-              return handler(e);
-            }
-          }
-        });
-      });
-    }
-    $(this).dequeue();
-  });
+  setupPreviewIframe(preview, targetUrl, html);
 }
 
 function evalInRunningPane(pane, code, raw) {
