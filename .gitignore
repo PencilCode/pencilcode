@@ -2,6 +2,7 @@
 node_modules
 site/data
 site/cache
+site/top/builddate.txt
 site/top/editor.html
 site/top/editor.js
 site/top/framed.html

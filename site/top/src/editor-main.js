@@ -698,11 +698,13 @@ function signUpAndSave(options) {
         return {
           disable: true,
           info: 'Real names are <a target=_blank ' +
-             'href="/privacy.html">not allowed</a>.' +
+             'href="//' + pencilcode.domain + '/privacy.html">' +
+             'not allowed</a>.' +
              '<br>When using a Pencil Code account,' +
              '<br><label>' +
              'I agree to <a target=_blank ' +
-             'href="/terms.html">the terms of service<label></a>.'
+             'href="//' + pencilcode.domain + '/terms.html">' +
+             'the terms of service<label></a>.'
         };
       }
       if (!options.nofilename && !state.rename) {

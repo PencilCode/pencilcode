@@ -111,8 +111,8 @@ describe('new user', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The login dialog should link to terms of service and privacy policy.
-      assert.ok(/href="\/privacy.html\"/.test(result.itext));
-      assert.ok(/href="\/terms.html\"/.test(result.itext));
+      assert.ok(/href="[^"]*\/privacy.html\"/.test(result.itext));
+      assert.ok(/href="[^"]*\/terms.html\"/.test(result.itext));
       // The username should be enabled and start empty.
       assert.equal(false, result.udisabled);
       assert.equal('', result.uval);

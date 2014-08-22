@@ -1,0 +1,41 @@
+CACHE MANIFEST
+
+# Last built <!--# include file="builddate.txt" -->
+
+/edit/
+/lib/ace/ace.js
+/lib/ace/theme-chrome.js
+/lib/ace/mode-coffee.js
+/lib/ace/worker-coffee.js
+
+http://fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400
+http://fonts.gstatic.com/s/lato/v8/EsvMC5un3kjyUhB9ZEPPwg.woff2
+http://fonts.gstatic.com/s/sourcecodepro/v5/mrl8jkM18OlOQN8JLgasDxM0YzuT7MdOe03otPbuUS0.woff
+http://fonts.gstatic.com/s/sourcecodepro/v5/mrl8jkM18OlOQN8JLgasD9V_2ngZ8dMf8fLgjYEouxg.woff2
+http://www.google-analytics.com/analytics.js
+
+http://<!--# echo var="site" -->/editor.css
+http://<!--# echo var="site" -->/editor.js
+http://<!--# echo var="site" -->/favicon.ico
+http://<!--# echo var="site" -->/folder_32.png
+http://<!--# echo var="site" -->/pencil_16.png
+http://<!--# echo var="site" -->/gray_pencil_16.png
+http://<!--# echo var="site" -->/pencil_32.png
+http://<!--# echo var="site" -->/pencil_48.png
+http://<!--# echo var="site" -->/pencil_64.png
+http://<!--# echo var="site" -->/pencil_192.png
+http://<!--# echo var="site" -->/pencil_avatar.png
+http://<!--# echo var="site" -->/lib/tooltipster/css/tooltipster.css
+http://<!--# echo var="site" -->/lib/ice.css
+http://<!--# echo var="site" -->/turtlebits.js
+http://<!--# echo var="site" -->/jquery.js
+
+http://<!--# echo var="site" -->/
+http://<!--# echo var="site" -->/terms.html
+http://<!--# echo var="site" -->/privacy.html
+
+FALLBACK:
+/edit/ /edit/
+
+NETWORK:
+*
