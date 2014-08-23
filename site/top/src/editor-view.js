@@ -1768,9 +1768,9 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   meltEditor.setEditorState(useblocks);
   meltEditor.setValue(text);
 
-  $('.ice-hover-div').tooltipster();
+  $('.melt-hover-div').tooltipster();
   meltEditor.on('changepalette', function() {
-    $('.ice-hover-div').tooltipster();
+    $('.melt-hover-div').tooltipster();
   });
 
   meltEditor.on('linehover', function(ev) {
@@ -1785,7 +1785,7 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   });
 
   meltEditor.on('toggledone', function() {
-    $('.ice-hover-div').tooltipster();
+    $('.melt-hover-div').tooltipster();
     updatePaneTitle(pane);
   });
 
