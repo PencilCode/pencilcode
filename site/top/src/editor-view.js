@@ -1351,15 +1351,18 @@ function updatePaneTitle(pane) {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         symbol = '&gt;'
-        tooltip = 'Click to use blocks';
+        alt = 'show blocks'
+        tooltip = 'Click to show blocks';
         if (paneState.meltEditor.currentlyUsingBlocks) {
           label = 'blocks';
+          alt = 'show code'
           symbol = '&lt;';
-          tooltip = 'Click to use code';
+          tooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
             paneState.filename + '" title="' + tooltip +
-            '"><b>' + symbol + '</b> <span>' + label + '</span></a>';
+            '"><b>' + symbol + '</b> <span alt="' + alt + '">' +
+            label + '</span></a>';
       }
     }
   } else if (paneState.links) {
@@ -1367,24 +1370,21 @@ function updatePaneTitle(pane) {
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
-           paneState.filename + '" title="Click for full page">' +
+           paneState.filename + '" title="Click to open window">' +
            '<img src="data:image/png;base64,iVBORw0KGgoAAAANS' +
            'UhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BA' +
            'ACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3Y' +
            'XJlAHBhaW50Lm5ldCA0LjAuMvvhp8YAAABjSURBVEhL7Y1JCgAhDAT9/' +
            '6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp' +
            '5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRY' +
-           'zBP6aySgZYAAAAASUVORK5CYII="> <span>screen</span></a>';
+           'zBP6aySgZYAAAAASUVORK5CYII="> <span alt="open window">' +
+           'screen</span></a>';
     } else {
       label = 'screen';
     }
   }
   $('#' + pane + 'title_text').html(label).find('a[title]').
       tooltipster({ position: 'bottom-left' });
-  if (paneState.running) {
-    $('#' + pane + 'title .fullscreen').click(function(e) {
-    });
-  }
 }
 
 $('.panetitle').on('click', '.fullscreen', function(e) {
@@ -1637,7 +1637,7 @@ var ICE_EDITOR_PALETTE =[
         title: 'Do something only if a condition is true'
       }, {
         block: 'if ``\n  ``\nelse\n  ``',
-        title: 'Do something if a condition is true, otherwise do something else'
+        title: 'Do something if a condition is true, otherwise something else'
       }
     ]
   }, {
@@ -1768,7 +1768,16 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   meltEditor.setEditorState(useblocks);
   meltEditor.setValue(text);
 
+<<<<<<< HEAD
   meltEditor.on('linehover', function(ev) {
+=======
+  $('.ice-hover-div').tooltipster();
+  iceEditor.on('changepalette', function() {
+    $('.ice-hover-div').tooltipster();
+  });
+
+  iceEditor.on('linehover', function(ev) {
+>>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
     fireEvent('icehover', [pane, ev]);
   });
 
@@ -1779,7 +1788,16 @@ function setPaneEditorText(pane, text, filename, useblocks) {
     fireEvent('changelines', [pane]);
   });
 
+<<<<<<< HEAD
   $('<div class="closeblocks">&times</div>').appendTo(meltEditor.paletteWrapper);
+=======
+  iceEditor.on('toggledone', function() {
+    $('.ice-hover-div').tooltipster();
+    updatePaneTitle(pane);
+  });
+
+  $('<div class="closeblocks">&times</div>').appendTo(iceEditor.paletteWrapper);
+>>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
 
 
   var editor = paneState.editor = meltEditor.aceEditor;
@@ -1885,8 +1903,12 @@ function setPaneEditorBlockMode(pane, useblocks) {
   if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
   var togglingSucceeded = paneState.meltEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
+<<<<<<< HEAD
   fireEvent('toggleblocks', [pane, paneState.meltEditor.currentlyUsingBlocks]);
   updatePaneTitle(pane);
+=======
+  fireEvent('toggleblocks', [pane, paneState.iceEditor.currentlyUsingBlocks]);
+>>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
   return true;
 }
 

@@ -63,10 +63,14 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   padding:0 12px;color:skyblue;letter-spacing:2px;
   border-left:1px solid white;border-right:1px solid white;}
 .panetitle a {color:inherit; text-decoration: none; display: block;}
-.panetitle a b {font-family: monospace; font-size: 34px; vertical-align: top;}
+.panetitle a b {font-family: Courier New,monospace; font-size: 34px;
+  line-height:30px;font-weight:bold; vertical-align: top;}
 .panetitle a span {text-decoration: none; underline;}
 .panetitle a:hover {color:white;}
+.panetitle a:active {color:red;}
 .panetitle a:hover span {text-decoration:underline;color:white;}
+.panetitle a:hover span[alt]:before {content:attr(alt);font-size:24px;}
+.panetitle a:hover span[alt] {font-size:0;}
 .pane{position:absolute;top:84px;bottom:0;background:whitesmoke;
   border-left:1px solid white;border-right:1px solid white;z-index:0;}
 .back{left:-50%;width:50%;}
@@ -113,7 +117,7 @@ body#pencildoc #diigolet-csm {
   /* Disable the diigo csm popup, which gets in the way of the editor. */
   display: none!important;
 }
-.fullscreen img { vertical-align:bottom;margin:0 2px 3px 5px;opacity:0.6; }
+.fullscreen img { vertical-align:top;margin:2px 2px 3px 5px;opacity:0.6; }
 .fullscreen:hover img { opacity: 1; }
 .closeblocks { font-size: 26px; font-weight: bold; font-family: sans-serif;
  position: absolute; right: 0px; top: 0px; line-height: 15px;

@@ -83,7 +83,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'src/almond',
           out: 'site/top/editor.js',
-          optimize: 'none',
+          // optimize: 'none',
           mainConfigFile: 'site/top/src/editor-main.js',
           preserveLicenseComments: false
         }
@@ -266,6 +266,12 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.task.registerTask('builddate', 'Create builddate.txt file', function() {
+    var stamp = grunt.template.today('dddd, mmmm dS, yyyy, HH:MM:ss Z');
+    grunt.file.write('site/top/builddate.txt', stamp);
+    grunt.log.writeln('Build date: ' + stamp);
+  });
+
   grunt.task.registerTask('test', 'Run integration tests.',
   function(testname) {
     if (!!testname) {
@@ -289,14 +295,15 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
-                     ['proxymessage', 'watch:dev', 'node-inspector:dev']);
+      ['proxymessage', 'watch:dev', 'node-inspector:dev']);
   // "compserver" serves the compiled editor code, not the source.
   grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
-  grunt.registerTask('build', ['requirejs', 'replace']);
+  grunt.registerTask('build', ['requirejs', 'replace', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
-  grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
+  grunt.registerTask('default',
+      ['requirejs', 'replace', 'uglify', 'builddate', 'test']);
 };
 

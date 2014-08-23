@@ -197,7 +197,7 @@ describe('code editor', function() {
       done();
     });
   });
-  it('should flip into blocks mode', function(done) {
+  it('should flip into code mode', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
@@ -208,6 +208,7 @@ describe('code editor', function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; })
           .find('.panetitle-text');
+      if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
         title: lefttitle.text(),
