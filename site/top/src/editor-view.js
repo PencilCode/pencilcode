@@ -1768,16 +1768,12 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   meltEditor.setEditorState(useblocks);
   meltEditor.setValue(text);
 
-<<<<<<< HEAD
-  meltEditor.on('linehover', function(ev) {
-=======
   $('.ice-hover-div').tooltipster();
-  iceEditor.on('changepalette', function() {
+  meltEditor.on('changepalette', function() {
     $('.ice-hover-div').tooltipster();
   });
 
-  iceEditor.on('linehover', function(ev) {
->>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
+  meltEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
   });
 
@@ -1788,16 +1784,12 @@ function setPaneEditorText(pane, text, filename, useblocks) {
     fireEvent('changelines', [pane]);
   });
 
-<<<<<<< HEAD
-  $('<div class="closeblocks">&times</div>').appendTo(meltEditor.paletteWrapper);
-=======
-  iceEditor.on('toggledone', function() {
+  meltEditor.on('toggledone', function() {
     $('.ice-hover-div').tooltipster();
     updatePaneTitle(pane);
   });
 
-  $('<div class="closeblocks">&times</div>').appendTo(iceEditor.paletteWrapper);
->>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
+  $('<div class="closeblocks">&times</div>').appendTo(meltEditor.paletteWrapper);
 
 
   var editor = paneState.editor = meltEditor.aceEditor;
@@ -1903,12 +1895,7 @@ function setPaneEditorBlockMode(pane, useblocks) {
   if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
   var togglingSucceeded = paneState.meltEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
-<<<<<<< HEAD
   fireEvent('toggleblocks', [pane, paneState.meltEditor.currentlyUsingBlocks]);
-  updatePaneTitle(pane);
-=======
-  fireEvent('toggleblocks', [pane, paneState.iceEditor.currentlyUsingBlocks]);
->>>>>>> af07a719bad1ccbec39223d3122de05bd8627909
   return true;
 }
 
