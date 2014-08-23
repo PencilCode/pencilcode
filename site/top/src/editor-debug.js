@@ -157,8 +157,8 @@ function debugResolve(method, debugId, length, index, elem) {
 }
 
 function getTextOnLine(text, line) {
-  var lines = text.split('\n');
-  if (line < lines.length) return lines[line];
+  var lines = text.split('\n'), index = line - 1;
+  if (index >= 0 && index < lines.length) return lines[index];
   return '';
 }
 
@@ -231,7 +231,16 @@ function errorAdvice(msg, text) {
   } else if (/unexpected newline/.test(msg)) {
     advice += "<p>Is something missing on the previous line?";
   } else if (/unexpected ,/.test(msg)) {
-    advice += "<p>You might not need a comma here.";
+    m = /^.*?\b(\w+)\s+\((?:[^()]|\((?:[^()]|\([^()]*\))*\))+,.+\)/.exec(text);
+    if (m) {
+      advice += '<p>You might need to remove the space after ' +
+                '<b>' + m[1] + '</b>.';
+    } else if (/(^[^'"]*,\s*['"])|(['"],[^'"]*$)/.test(text)) {
+      advice += '<p>You might want to use <b>+</b> instead of <b>,</b> ' +
+                'to combine strings.';
+    } else {
+      advice += "<p>You might not need a comma here.";
+    }
   } else if (/unexpected ->/.test(msg)) {
     advice += "<p>Is a comma or '=' missing before the arrow?";
   } else if (/unexpected end of input/.test(msg)) {
