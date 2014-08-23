@@ -23,8 +23,8 @@ module.exports = function(grunt) {
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
           'seedrandom.js': 'seedrandom/seedrandom.js',
-          'lib/ice.js': 'ice-editor/dist/ice-full.js',
-          'lib/ice.css': 'ice-editor/dist/ice.min.css'
+          'lib/melt.js': 'melt-editor/dist/melt-full.js',
+          'lib/melt.css': 'melt-editor/dist/melt.min.css'
         }
       },
       zeroclipboard: {

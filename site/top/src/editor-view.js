@@ -7,7 +7,7 @@ define([
   'filetype',
   'tooltipster',
   'see',
-  'ice',
+  'melt',
   'draw-protractor',
   'ZeroClipboard',
   'FontLoader'
@@ -17,7 +17,7 @@ function(
   filetype,
   tooltipster,
   see,
-  ice,
+  melt,
   drawProtractor,
   ZeroClipboard,
   FontLoader
@@ -73,7 +73,7 @@ var state = {
   },
 }
 
-var iceMarkClassColors = {
+var meltMarkClassColors = {
   'debugerror': '#F00',
   'debugfocus': '#FFF',
   'debugtrace': '#FF0'
@@ -1289,13 +1289,13 @@ function updatePaneLinks(pane) {
 
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
-  if (paneState.iceEditor && paneState.iceEditor.destroy) {
-    paneState.iceEditor.destroy();
+  if (paneState.meltEditor && paneState.meltEditor.destroy) {
+    paneState.meltEditor.destroy();
   }
   if (paneState.editor) {
     paneState.editor.destroy();
   }
-  paneState.iceEditor = null;
+  paneState.meltEditor = null;
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
@@ -1352,7 +1352,7 @@ function updatePaneTitle(pane) {
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         symbol = '&gt;'
         tooltip = 'Click to use blocks';
-        if (paneState.iceEditor.currentlyUsingBlocks) {
+        if (paneState.meltEditor.currentlyUsingBlocks) {
           label = 'blocks';
           symbol = '&lt;';
           tooltip = 'Click to use code';
@@ -1755,34 +1755,34 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   }
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var iceEditor = paneState.iceEditor =
-      new ice.Editor(
+  var meltEditor = paneState.meltEditor =
+      new melt.Editor(
           document.getElementById(id),
           ICE_EDITOR_PALETTE);
   whenCodeFontLoaded(function () {
-    iceEditor.setFontFamily("Source Code Pro");
-    iceEditor.setFontSize(16);
+    meltEditor.setFontFamily("Source Code Pro");
+    meltEditor.setFontSize(16);
   });
-  iceEditor.setPaletteWidth(250);
-  iceEditor.setTopNubbyStyle(0, '#1e90ff');
-  iceEditor.setEditorState(useblocks);
-  iceEditor.setValue(text);
+  meltEditor.setPaletteWidth(250);
+  meltEditor.setTopNubbyStyle(0, '#1e90ff');
+  meltEditor.setEditorState(useblocks);
+  meltEditor.setValue(text);
 
-  iceEditor.on('linehover', function(ev) {
+  meltEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
   });
 
-  iceEditor.on('change', function() {
+  meltEditor.on('change', function() {
     fireEvent('dirty', [pane]);
-    publish('update', [iceEditor.getValue()]);
-    iceEditor.clearLineMarks();
+    publish('update', [meltEditor.getValue()]);
+    meltEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
   });
 
-  $('<div class="closeblocks">&times</div>').appendTo(iceEditor.paletteWrapper);
+  $('<div class="closeblocks">&times</div>').appendTo(meltEditor.paletteWrapper);
 
 
-  var editor = paneState.editor = iceEditor.aceEditor;
+  var editor = paneState.editor = meltEditor.aceEditor;
 
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
@@ -1816,7 +1816,7 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   editor.getSession().setUndoManager(um);
   var changeHandler = paneState.changeHandler = (function changeHandler() {
     if (changeHandler.suppressChange ||
-        (paneState.iceEditor && paneState.iceEditor.suppressAceChangeEvent)) {
+        (paneState.meltEditor && paneState.meltEditor.suppressAceChangeEvent)) {
       return;
     }
     // Add an empty last line on a timer, because the editor doesn't
@@ -1879,21 +1879,21 @@ function mimeTypeSupportsBlocks(mimeType) {
 
 function setPaneEditorBlockMode(pane, useblocks) {
   var paneState = state.pane[pane];
-  if (!paneState.iceEditor) return false;
+  if (!paneState.meltEditor) return false;
   useblocks = !!useblocks;
-  if (paneState.iceEditor.currentlyUsingBlocks == useblocks) return false;
+  if (paneState.meltEditor.currentlyUsingBlocks == useblocks) return false;
   if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
-  var togglingSucceeded = paneState.iceEditor.toggleBlocks();
+  var togglingSucceeded = paneState.meltEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
-  fireEvent('toggleblocks', [pane, paneState.iceEditor.currentlyUsingBlocks]);
+  fireEvent('toggleblocks', [pane, paneState.meltEditor.currentlyUsingBlocks]);
   updatePaneTitle(pane);
   return true;
 }
 
 function getPaneEditorBlockMode(pane) {
   var paneState = state.pane[pane];
-  if (!paneState.iceEditor) return false;
-  return paneState.iceEditor.currentlyUsingBlocks;
+  if (!paneState.meltEditor) return false;
+  return paneState.meltEditor.currentlyUsingBlocks;
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
@@ -2040,7 +2040,7 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
-  var text = paneState.iceEditor.getValue();
+  var text = paneState.meltEditor.getValue();
   // TODO: differentiate with
   // paneState.editor.getSession().getValue();
   if (text != paneState.cleanText) {
@@ -2055,7 +2055,7 @@ function getPaneEditorText(pane) {
   if (!paneState.editor) {
     return null;
   }
-  var text = paneState.iceEditor.getValue();
+  var text = paneState.meltEditor.getValue();
   // TODO: differentiate with
   // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
@@ -2112,10 +2112,10 @@ function markPaneEditorLine(pane, line, markclass) {
     var r = paneState.editor.session.highlightLines(zline, zline, markclass);
 
     // Mark the ICE editor line, if applicable
-    if (paneState.iceEditor.currentlyUsingBlocks) {
-      paneState.iceEditor.markLine(zline, {
-        color: (markclass in iceMarkClassColors ?
-                iceMarkClassColors[markclass] : '#FF0'),
+    if (paneState.meltEditor.currentlyUsingBlocks) {
+      paneState.meltEditor.markLine(zline, {
+        color: (markclass in meltMarkClassColors ?
+                meltMarkClassColors[markclass] : '#FF0'),
         tag: markclass
       });
     }
@@ -2148,7 +2148,7 @@ function clearPaneEditorLine(pane, line, markclass) {
   } else {
     session.removeMarker(id);
   }
-  paneState.iceEditor.unmarkLine(zline, markclass);
+  paneState.meltEditor.unmarkLine(zline, markclass);
   delete idMap[zline];
 }
 
@@ -2179,7 +2179,7 @@ function clearPaneEditorMarks(pane, markclass) {
       }
     }
   }
-  paneState.iceEditor.clearLineMarks(markclass);
+  paneState.meltEditor.clearLineMarks(markclass);
 }
 
 function notePaneEditorCleanText(pane, text) {

@@ -14,6 +14,6 @@
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
     "zeroclipboard": "latest",
-    "ice-editor": "Pencilcode/ice_editor#master"
+    "melt-editor": "Pencilcode/ice_editor#master"
   }
 }
