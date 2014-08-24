@@ -5036,10 +5036,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     Editor.prototype.trackerPointIsInPalette = function(point) {
       var gbr;
-      if (this.palettleCanvas.offsetParent == null) {
+      if (this.paletteCanvas.offsetParent == null) {
         return false;
       }
-      gbr = this.palettleCanvas.getBoundingClientRect();
+      gbr = this.paletteCanvas.getBoundingClientRect();
       return point.x >= gbr.left && point.x < gbr.right && point.y >= gbr.top && point.y < gbr.bottom;
     };
     Editor.prototype.hitTest = function(point, block) {
