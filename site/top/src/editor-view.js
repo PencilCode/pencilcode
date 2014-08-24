@@ -1768,7 +1768,9 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   meltEditor.setEditorState(useblocks);
   meltEditor.setValue(text);
 
-  $('.melt-hover-div').tooltipster();
+  setTimeout(function() {
+    $('.melt-hover-div').tooltipster();
+  }, 0);
   meltEditor.on('changepalette', function() {
     $('.melt-hover-div').tooltipster();
   });
