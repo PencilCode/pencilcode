@@ -185,6 +185,16 @@ window.pencilcode.view = {
   _state: state
 };
 
+$(window).on('resize.editor', function() {
+  var pane;
+  for (var pane in state.pane) {
+    var paneState = state.pane[pane];
+    if (paneState.meltEditor) {
+      paneState.meltEditor.resize();
+    }
+  }
+});
+
 function publish(method, args, requestid){
   if (state.subscriber) { state.subscriber(method, args, requestid); }
 }
