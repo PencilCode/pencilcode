@@ -67,6 +67,8 @@ describe('new user', function() {
     asyncTest(_page, one_step_timeout, null, null, function() {
       // Poll until the element with class="editor" appears on the page.
       if (!$('.editor').length) return;
+      // Poll until a dialog is shown.
+      if (!$('.dialog').length) return;
       // Reach in and return the text that is shown within the editor.
       var ace_editor = ace.edit($('.melt-ace')[0]);
       return {

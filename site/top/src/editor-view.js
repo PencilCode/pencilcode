@@ -913,6 +913,7 @@ function showLoginDialog(opts) {
     // This timeout is added so that in the #new case where
     // the dialog and ACE editor are competing for focus, the
     // dialog wins.
+    dialog.find('input:not([disabled])').eq(0).focus();
     setTimeout(function() {
       dialog.find('input:not([disabled])').eq(0).focus();
     }, 0);

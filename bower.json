@@ -8,12 +8,15 @@
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
     "requirejs": "latest",
-    "ace-builds": "PencilCode/pencilcode-ace-builds#master",
+    "ace-builds": "ajaxorg/ace-builds#v1.1.6",
     "almond": "latest",
     "seedrandom": "latest",
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
     "zeroclipboard": "latest",
     "melt-editor": "Pencilcode/ice_editor#master"
+  },
+  "resolutions": {
+    "ace-builds": "v1.1.6"
   }
 }
