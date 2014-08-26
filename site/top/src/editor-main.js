@@ -869,7 +869,7 @@ function saveLoginCookie() {
 }
 
 function loadBlockMode() {
-  if (model.ownername === 'frame') return false;
+  if (model.ownername === 'frame') return true;
   return (cookie('blocks') != 'off');
 }
 

@@ -5672,81 +5672,86 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return _results;
     });
     hook('populate', 0, function() {
-      var i, paletteGroup, paletteHeaderRow, _i, _len, _ref1, _results;
-      this.currentPaletteBlocks = [];
-      this.currentPaletteMetadata = [];
       this.paletteHeader = document.createElement('div');
       this.paletteHeader.className = 'melt-palette-header';
       this.paletteWrapper.appendChild(this.paletteHeader);
+      return this.setPalette(this.paletteGroups);
+    });
+    Editor.prototype.setPalette = function(paletteGroups) {
+      var i, paletteGroup, paletteHeaderRow, _fn, _i, _len, _ref1;
+      this.paletteHeader.innerHTML = '';
+      this.paletteGroups = paletteGroups;
+      this.currentPaletteBlocks = [];
+      this.currentPaletteMetadata = [];
       paletteHeaderRow = null;
       _ref1 = this.paletteGroups;
-      _results = [];
+      _fn = (function(_this) {
+        return function(paletteGroup, i) {
+          var clickHandler, data, newBlock, newPaletteBlocks, paletteGroupBlocks, paletteGroupHeader, updatePalette, _j, _len1, _ref2;
+          if (i % 2 === 0) {
+            paletteHeaderRow = document.createElement('div');
+            paletteHeaderRow.className = 'melt-palette-header-row';
+            _this.paletteHeader.appendChild(paletteHeaderRow);
+          }
+          paletteGroupHeader = document.createElement('div');
+          paletteGroupHeader.className = 'melt-palette-group-header';
+          paletteGroupHeader.innerText = paletteGroupHeader.textContent = paletteGroupHeader.textContent = paletteGroup.name;
+          if (paletteGroup.color) {
+            paletteGroupHeader.className += ' ' + paletteGroup.color;
+          }
+          paletteHeaderRow.appendChild(paletteGroupHeader);
+          newPaletteBlocks = [];
+          _ref2 = paletteGroup.blocks;
+          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+            data = _ref2[_j];
+            newBlock = coffee.parse(data.block).start.next.container;
+            newBlock.spliceOut();
+            newBlock.parent = null;
+            newPaletteBlocks.push({
+              block: newBlock,
+              title: data.title
+            });
+          }
+          paletteGroupBlocks = newPaletteBlocks;
+          updatePalette = function() {
+            var _ref3;
+            _this.currentPaletteGroup = paletteGroup.name;
+            _this.currentPaletteBlocks = paletteGroupBlocks.map(function(x) {
+              return x.block;
+            });
+            _this.currentPaletteMetadata = paletteGroupBlocks;
+            if ((_ref3 = _this.currentPaletteGroupHeader) != null) {
+              _ref3.className = _this.currentPaletteGroupHeader.className.replace(/\s[-\w]*-selected\b/, '');
+            }
+            _this.currentPaletteGroupHeader = paletteGroupHeader;
+            _this.currentPaletteIndex = i;
+            _this.currentPaletteGroupHeader.className += ' melt-palette-group-header-selected';
+            return _this.redrawPalette();
+          };
+          clickHandler = function() {
+            var event, _k, _len2, _ref3, _results;
+            updatePalette();
+            _ref3 = editorBindings.set_palette;
+            _results = [];
+            for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+              event = _ref3[_k];
+              _results.push(event.call(_this));
+            }
+            return _results;
+          };
+          paletteGroupHeader.addEventListener('click', clickHandler);
+          paletteGroupHeader.addEventListener('touchstart', clickHandler);
+          if (i === 0) {
+            return updatePalette();
+          }
+        };
+      })(this);
       for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
         paletteGroup = _ref1[i];
-        _results.push((function(_this) {
-          return function(paletteGroup, i) {
-            var clickHandler, data, newBlock, newPaletteBlocks, paletteGroupBlocks, paletteGroupHeader, updatePalette, _j, _len1, _ref2;
-            if (i % 2 === 0) {
-              paletteHeaderRow = document.createElement('div');
-              paletteHeaderRow.className = 'melt-palette-header-row';
-              _this.paletteHeader.appendChild(paletteHeaderRow);
-            }
-            paletteGroupHeader = document.createElement('div');
-            paletteGroupHeader.className = 'melt-palette-group-header';
-            paletteGroupHeader.innerText = paletteGroupHeader.textContent = paletteGroupHeader.textContent = paletteGroup.name;
-            if (paletteGroup.color) {
-              paletteGroupHeader.className += ' ' + paletteGroup.color;
-            }
-            paletteHeaderRow.appendChild(paletteGroupHeader);
-            newPaletteBlocks = [];
-            _ref2 = paletteGroup.blocks;
-            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-              data = _ref2[_j];
-              newBlock = coffee.parse(data.block).start.next.container;
-              newBlock.spliceOut();
-              newBlock.parent = null;
-              newPaletteBlocks.push({
-                block: newBlock,
-                title: data.title
-              });
-            }
-            paletteGroupBlocks = newPaletteBlocks;
-            updatePalette = function() {
-              var _ref3;
-              _this.currentPaletteGroup = paletteGroup.name;
-              _this.currentPaletteBlocks = paletteGroupBlocks.map(function(x) {
-                return x.block;
-              });
-              _this.currentPaletteMetadata = paletteGroupBlocks;
-              if ((_ref3 = _this.currentPaletteGroupHeader) != null) {
-                _ref3.className = _this.currentPaletteGroupHeader.className.replace(/\s[-\w]*-selected\b/, '');
-              }
-              _this.currentPaletteGroupHeader = paletteGroupHeader;
-              _this.currentPaletteIndex = i;
-              _this.currentPaletteGroupHeader.className += ' melt-palette-group-header-selected';
-              return _this.redrawPalette();
-            };
-            clickHandler = function() {
-              var event, _k, _len2, _ref3, _results1;
-              updatePalette();
-              _ref3 = editorBindings.set_palette;
-              _results1 = [];
-              for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-                event = _ref3[_k];
-                _results1.push(event.call(_this));
-              }
-              return _results1;
-            };
-            paletteGroupHeader.addEventListener('click', clickHandler);
-            paletteGroupHeader.addEventListener('touchstart', clickHandler);
-            if (i === 0) {
-              return updatePalette();
-            }
-          };
-        })(this)(paletteGroup, i));
+        _fn(paletteGroup, i);
       }
-      return _results;
-    });
+      return this.resizePalette();
+    };
     hook('mousedown', 6, function(point, event, state) {
       var block, hitTestResult, palettePoint, _i, _len, _ref1, _ref2, _ref3;
       if (state.consumedHitTest) {
