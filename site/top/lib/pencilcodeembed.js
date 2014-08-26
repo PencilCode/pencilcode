@@ -315,6 +315,11 @@
       return this.invokeRemote('hideNotification', []);
     };
 
+    // shows block mode
+    proto.setBlockMode = function(showBlocks) {
+      return this.invokeRemote('setBlockMode', [showBlocks]);
+    };
+
     proto.eval = function(code, callback) {
       return this.invokeRemote('eval', [code], callback);
     }

@@ -1645,6 +1645,9 @@ $(window).on('message', function(e) {
     case 'save':
       signUpAndSave({filename:data.args[0]});
       break;
+    case 'setBlockMode':
+      view.setPaneEditorBlockMode(paneatpos('left'), data.args[0]);
+      break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
       break;

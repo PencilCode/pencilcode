@@ -113,6 +113,8 @@ window.pencilcode.view = {
     return changeEditorText(state.pane[pane], text);
   },
   getPaneEditorText: getPaneEditorText,
+  setPaneEditorBlockMode: setPaneEditorBlockMode,
+  getPaneEditorBlockMode: getPaneEditorBlockMode,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
