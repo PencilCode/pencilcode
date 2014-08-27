@@ -1,0 +1,25 @@
+<!doctype html>
+<html manifest="/editor.appcache">
+<body></body>
+<script>
+window.addEventListener("message", function (event) {
+  if (!event.data) return;
+  if (event.data.action == 'write') {
+    if (event.data.replaceurl) {
+      try {
+        if (window.history.replaceState) {
+          window.history.replaceState(null,
+              event.data.replaceurl, event.data.replaceurl);
+        }
+      } catch (e) {
+        if (window.console) {
+          window.console.warn('https://bugzilla.mozilla.org/777526', e)
+        }
+      }
+    }
+    document.write(event.data.html || '');
+    document.close();
+  }
+}, false);
+</script>
+</html>

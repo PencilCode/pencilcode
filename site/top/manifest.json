@@ -1,0 +1,22 @@
+{
+  "name": "Pencil Code",
+  "description": "A Modern Sandbox for Little Programs",
+  "version": "1",
+  "app": {
+    "urls": [
+      "*://<!--# echo var="site" -->/",
+      "*://<!--# echo var="site" -->/edit/",
+      "*://*.<!--# echo var="site" -->/edit/",
+      "*://<!--# echo var="site" -->/terms.html",
+      "*://<!--# echo var="site" -->/privacy.html",
+      "*://<!--# echo var="site" -->/license.html"
+    ],
+    "launch": {
+      "web_url": "http://<!--# echo var="site" -->/edit/"
+    }
+  },
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "manifest_version": 2
+}
