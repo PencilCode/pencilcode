@@ -3,7 +3,7 @@ var phantom = require('node-phantom-simple'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
-    extended_timeout = 20000,
+    extended_timeout = 30000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
 

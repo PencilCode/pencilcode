@@ -657,7 +657,8 @@ function startPollingWindow() {
 function pollForStop() {
   pollTimer = null;
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
-      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function' ||
+      document.hidden) {
     return;
   }
   var stoppable = targetWindow.jQuery.turtle.interrupt('test');
@@ -674,8 +675,17 @@ function pollForStop() {
       view.publish('execute');
     }
   }
-  pollTimer = setTimeout(pollForStop, 100);
+  // Use requestAnimationFrame to allow ourselves to be throttled.
+  requestAnimationFrame(function() {
+    if (!pollTimer) {
+      pollTimer = setTimeout(pollForStop, 100);
+    }
+  });
 }
+
+document.addEventListener('visibilityChange', function() {
+  if (!document.hidden) { pollForStop(); }
+});
 
 view.on('stop', function() {
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||

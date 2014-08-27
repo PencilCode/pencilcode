@@ -221,19 +221,22 @@
         return handled;
       });
 
-      var setuparg = '';
+      var setupargs = '';
+      setupargs += '&blocks=' + (opts.blocks ? '1' : '0');
+
       if (opts.setup) {
-        setuparg = '&setup=' + encodeURIComponent(JSON.stringify(opts.setup));
+        setupargs += '&setup=' + encodeURIComponent(JSON.stringify(opts.setup));
       }
 
       var targetUrl = targetDomain + '/edit/frame';
       if (opts.mode) {
         targetUrl += '.' + opts.mode;
       }
+      
       this.iframe.src =
           targetUrl +
           '#text=' + encodeURIComponent(code) +
-          setuparg +
+          setupargs +
           '&secret=' + secret;
       return this;
     };

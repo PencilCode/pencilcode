@@ -1654,7 +1654,7 @@ var ICE_EDITOR_PALETTE =[
       }
     ]
   }, {
-    name: 'Calculate',
+    name: 'Math',
     color: 'green',
     blocks: [
       {
@@ -1700,7 +1700,7 @@ var ICE_EDITOR_PALETTE =[
         block: 'f = (param) ->\n  ``',
         title: 'Define a new function'
       }, {
-        block: 'myFunction(myArgument)',
+        block: 'myfunc(arg)',
         title: 'Use a custom function'
       }
     ]
@@ -1777,7 +1777,11 @@ function setPaneEditorText(pane, text, filename, useblocks) {
     meltEditor.setFontSize(16);
   });
   meltEditor.setPaletteWidth(250);
-  meltEditor.setTopNubbyStyle(0, '#1e90ff');
+  if (!/^frame\./.test(window.location.hostname)) {
+    meltEditor.setTopNubbyStyle(0, '#1e90ff');
+  } else {
+    meltEditor.setTopNubbyStyle(0, '#dddddd');
+  }
   meltEditor.setEditorState(useblocks);
   meltEditor.setValue(text);
 
@@ -1804,8 +1808,10 @@ function setPaneEditorText(pane, text, filename, useblocks) {
     updatePaneTitle(pane);
   });
 
-  $('<div class="closeblocks">&times</div>').appendTo(meltEditor.paletteWrapper);
-
+  if (!/^frame\./.test(window.location.hostname)) {
+    $('<div class="closeblocks">&times</div>').appendTo(
+      meltEditor.paletteWrapper);
+  }
 
   var editor = paneState.editor = meltEditor.aceEditor;
 

@@ -868,13 +868,21 @@ function saveLoginCookie() {
          { expires: 1, path: '/' });
 }
 
+var requestedBlockMode = null;
 function loadBlockMode() {
-  if (model.ownername === 'frame') return true;
-  return (cookie('blocks') != 'off');
+  var result = requestedBlockMode;
+  if (result === null && model.ownername != 'frame') {
+    result = (cookie('blocks') != 'off');
+  }
+  if (result === null) { result = true; }
+  return result;
 }
 
 function saveBlockMode(on) {
-  return cookie('blocks', on ? 'on' : 'off', { expires: 7, path: '/' });
+  requestedBlockMode = on;
+  if (model.ownername != 'frame') {
+    cookie('blocks', on ? 'on' : 'off', { expires: 7, path: '/' });
+  }
 }
 
 function chooseNewFilename(dirlist) {
@@ -1158,6 +1166,8 @@ function readNewUrl(undo) {
       text = /(?:^|#|&)text=([^&]*)(?:&|$)/.exec(hash),
   // Extract newuser flag from hash if present.
       newuser = /(?:^|#|&)new(?:[=&]|$)/.exec(hash),
+  // Extract blocks flag from hash if present.
+      blocks = /(?:^|#|&)blocks=([^&]*)(?:&|$)/.exec(hash),
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
@@ -1185,6 +1195,11 @@ function readNewUrl(undo) {
   if (login) {
     model.username = login[1] || null;
     model.passkey = login[2] || null;
+  }
+  // Handle #blocks
+  if (blocks) {
+    var f = blocks[1];
+    requestedBlockMode = (f != '0' && f != 'off' && f != 'false');
   }
   // Handle #new (new user) hash.
   var afterLoad = null;

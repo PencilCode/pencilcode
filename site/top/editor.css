@@ -121,7 +121,7 @@ body#pencildoc #diigolet-csm {
 .fullscreen:hover img { opacity: 1; }
 .closeblocks { font-size: 26px; font-weight: bold; font-family: sans-serif;
  position: absolute; right: 0px; top: 0px; line-height: 15px;
- padding: 0 1px 2px 1px; color: dodgerblue; z-index: 2000; cursor: pointer; }
+ padding: 0 1px 2px 1px; color: skyblue; z-index: 2000; cursor: pointer; }
 .closeblocks:hover { background: dodgerblue; color: white; }
 .closeblocks:active { color: red; background: dodgerblue; }
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
@@ -234,22 +234,41 @@ body#pencildoc #diigolet-csm {
   border-width: 0 0 10px 10px;
   cursor: default;
 }
+#pencildoc .melt-palette-header {
+  border: 0;
+  background-color: #e8e8e8;
+}
 #pencildoc .melt-palette-group-header {
   font-family: Lato;
   font-size: 22px;
   line-height: 26px;
+  color:dimgray;
+}
+#pencildoc .melt-palette-group-header:not(.melt-palette-group-header-selected):hover {
+  font-family: Lato;
+  font-size: 22px;
+  line-height: 26px;
+  background-color:white;
+}
+#pencildoc .melt-palette-group-header:active {
+  color: black;
 }
 #pencildoc .melt-palette-header-row {
   height: 26px;
 }
 
-#pencildoc .melt-palette-header {
-  background: white;
+#pencildoc .melt-palette-group-header-selected:hover {
+  font-weight: 300;
 }
 
 #pencildoc .melt-palette-group-header-selected {
   font-weight: 300;
   color: black;
+}
+
+#pencildoc .ace_gutter, #pencildoc .melt-gutter,
+#pencildoc .melt-palette-canvas {
+  background-color: whitesmoke;
 }
 .melt-palette-group-header.blue { border-left: 10px solid #8fbfef; }
 .melt-palette-group-header-selected.blue { background-color: #8fbfef; }
