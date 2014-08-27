@@ -14,7 +14,7 @@ require.config({
     'sourcemap': 'src/sourcemap',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
     'FontLoader': 'src/FontLoader',
-    'melt': 'lib/melt'
+    'droplet': 'lib/droplet'
   },
   shim: {
     'tooltipster': {

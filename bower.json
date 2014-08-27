@@ -14,7 +14,7 @@
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
     "zeroclipboard": "latest",
-    "melt-editor": "Pencilcode/ice_editor#master"
+    "droplet": "Pencilcode/droplet#master"
   },
   "resolutions": {
     "ace-builds": "v1.1.6"

@@ -7,7 +7,7 @@ define([
   'filetype',
   'tooltipster',
   'see',
-  'melt',
+  'droplet',
   'draw-protractor',
   'ZeroClipboard',
   'FontLoader'
@@ -17,7 +17,7 @@ function(
   filetype,
   tooltipster,
   see,
-  melt,
+  droplet,
   drawProtractor,
   ZeroClipboard,
   FontLoader
@@ -73,7 +73,7 @@ var state = {
   },
 }
 
-var meltMarkClassColors = {
+var dropletMarkClassColors = {
   'debugerror': '#F00',
   'debugfocus': '#FFF',
   'debugtrace': '#FF0'
@@ -191,8 +191,8 @@ $(window).on('resize.editor', function() {
   var pane;
   for (var pane in state.pane) {
     var paneState = state.pane[pane];
-    if (paneState.meltEditor) {
-      paneState.meltEditor.resize();
+    if (paneState.dropletEditor) {
+      paneState.dropletEditor.resize();
     }
   }
 });
@@ -1302,13 +1302,13 @@ function updatePaneLinks(pane) {
 
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
-  if (paneState.meltEditor && paneState.meltEditor.destroy) {
-    paneState.meltEditor.destroy();
+  if (paneState.dropletEditor && paneState.dropletEditor.destroy) {
+    paneState.dropletEditor.destroy();
   }
   if (paneState.editor) {
     paneState.editor.destroy();
   }
-  paneState.meltEditor = null;
+  paneState.dropletEditor = null;
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
@@ -1366,7 +1366,7 @@ function updatePaneTitle(pane) {
         symbol = '&gt;'
         alt = 'show blocks'
         tooltip = 'Click to show blocks';
-        if (paneState.meltEditor.currentlyUsingBlocks) {
+        if (paneState.dropletEditor.currentlyUsingBlocks) {
           label = 'blocks';
           alt = 'show code'
           symbol = '&lt;';
@@ -1768,52 +1768,52 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   }
 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var meltEditor = paneState.meltEditor =
-      new melt.Editor(
+  var dropletEditor = paneState.dropletEditor =
+      new droplet.Editor(
           document.getElementById(id),
-          ICE_EDITOR_PALETTE);
+          {mode: 'coffeescript', palette:ICE_EDITOR_PALETTE});
   whenCodeFontLoaded(function () {
-    meltEditor.setFontFamily("Source Code Pro");
-    meltEditor.setFontSize(16);
+    dropletEditor.setFontFamily("Source Code Pro");
+    dropletEditor.setFontSize(16);
   });
-  meltEditor.setPaletteWidth(250);
+  dropletEditor.setPaletteWidth(250);
   if (!/^frame\./.test(window.location.hostname)) {
-    meltEditor.setTopNubbyStyle(0, '#1e90ff');
+    dropletEditor.setTopNubbyStyle(0, '#1e90ff');
   } else {
-    meltEditor.setTopNubbyStyle(0, '#dddddd');
+    dropletEditor.setTopNubbyStyle(0, '#dddddd');
   }
-  meltEditor.setEditorState(useblocks);
-  meltEditor.setValue(text);
+  dropletEditor.setEditorState(useblocks);
+  dropletEditor.setValue(text);
 
   setTimeout(function() {
-    $('.melt-hover-div').tooltipster();
+    $('.droplet-hover-div').tooltipster();
   }, 0);
-  meltEditor.on('changepalette', function() {
-    $('.melt-hover-div').tooltipster();
+  dropletEditor.on('changepalette', function() {
+    $('.droplet-hover-div').tooltipster();
   });
 
-  meltEditor.on('linehover', function(ev) {
+  dropletEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
   });
 
-  meltEditor.on('change', function() {
+  dropletEditor.on('change', function() {
     fireEvent('dirty', [pane]);
-    publish('update', [meltEditor.getValue()]);
-    meltEditor.clearLineMarks();
+    publish('update', [dropletEditor.getValue()]);
+    dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
   });
 
-  meltEditor.on('toggledone', function() {
-    $('.melt-hover-div').tooltipster();
+  dropletEditor.on('toggledone', function() {
+    $('.droplet-hover-div').tooltipster();
     updatePaneTitle(pane);
   });
 
   if (!/^frame\./.test(window.location.hostname)) {
     $('<div class="closeblocks">&times</div>').appendTo(
-      meltEditor.paletteWrapper);
+      dropletEditor.paletteWrapper);
   }
 
-  var editor = paneState.editor = meltEditor.aceEditor;
+  var editor = paneState.editor = dropletEditor.aceEditor;
 
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
@@ -1847,7 +1847,7 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   editor.getSession().setUndoManager(um);
   var changeHandler = paneState.changeHandler = (function changeHandler() {
     if (changeHandler.suppressChange ||
-        (paneState.meltEditor && paneState.meltEditor.suppressAceChangeEvent)) {
+        (paneState.dropletEditor && paneState.dropletEditor.suppressAceChangeEvent)) {
       return;
     }
     // Add an empty last line on a timer, because the editor doesn't
@@ -1910,20 +1910,20 @@ function mimeTypeSupportsBlocks(mimeType) {
 
 function setPaneEditorBlockMode(pane, useblocks) {
   var paneState = state.pane[pane];
-  if (!paneState.meltEditor) return false;
+  if (!paneState.dropletEditor) return false;
   useblocks = !!useblocks;
-  if (paneState.meltEditor.currentlyUsingBlocks == useblocks) return false;
+  if (paneState.dropletEditor.currentlyUsingBlocks == useblocks) return false;
   if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
-  var togglingSucceeded = paneState.meltEditor.toggleBlocks();
+  var togglingSucceeded = paneState.dropletEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
-  fireEvent('toggleblocks', [pane, paneState.meltEditor.currentlyUsingBlocks]);
+  fireEvent('toggleblocks', [pane, paneState.dropletEditor.currentlyUsingBlocks]);
   return true;
 }
 
 function getPaneEditorBlockMode(pane) {
   var paneState = state.pane[pane];
-  if (!paneState.meltEditor) return false;
-  return paneState.meltEditor.currentlyUsingBlocks;
+  if (!paneState.dropletEditor) return false;
+  return paneState.dropletEditor.currentlyUsingBlocks;
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
@@ -2070,7 +2070,7 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
-  var text = paneState.meltEditor.getValue();
+  var text = paneState.dropletEditor.getValue();
   // TODO: differentiate with
   // paneState.editor.getSession().getValue();
   if (text != paneState.cleanText) {
@@ -2085,7 +2085,7 @@ function getPaneEditorText(pane) {
   if (!paneState.editor) {
     return null;
   }
-  var text = paneState.meltEditor.getValue();
+  var text = paneState.dropletEditor.getValue();
   // TODO: differentiate with
   // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
@@ -2142,10 +2142,10 @@ function markPaneEditorLine(pane, line, markclass) {
     var r = paneState.editor.session.highlightLines(zline, zline, markclass);
 
     // Mark the ICE editor line, if applicable
-    if (paneState.meltEditor.currentlyUsingBlocks) {
-      paneState.meltEditor.markLine(zline, {
-        color: (markclass in meltMarkClassColors ?
-                meltMarkClassColors[markclass] : '#FF0'),
+    if (paneState.dropletEditor.currentlyUsingBlocks) {
+      paneState.dropletEditor.markLine(zline, {
+        color: (markclass in dropletMarkClassColors ?
+                dropletMarkClassColors[markclass] : '#FF0'),
         tag: markclass
       });
     }
@@ -2178,7 +2178,7 @@ function clearPaneEditorLine(pane, line, markclass) {
   } else {
     session.removeMarker(id);
   }
-  paneState.meltEditor.unmarkLine(zline, markclass);
+  paneState.dropletEditor.unmarkLine(zline, markclass);
   delete idMap[zline];
 }
 
@@ -2209,7 +2209,7 @@ function clearPaneEditorMarks(pane, markclass) {
       }
     }
   }
-  paneState.meltEditor.clearLineMarks(markclass);
+  paneState.dropletEditor.clearLineMarks(markclass);
 }
 
 function notePaneEditorCleanText(pane, text) {
