@@ -235,7 +235,7 @@ describe('framed embed', function() {
     });
   });
   it('should run code via beginRun and get execute event', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+    asyncTest(_page, extended_timeout, null, function() {
       window.resetTest();
       window.test.code0 = pco.getCode();
       pco.beginRun();
@@ -302,7 +302,7 @@ describe('framed embed', function() {
     });
   });
   it('should run code via beginRun with setupScript', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+    asyncTest(_page, extended_timeout, null, function() {
       window.resetTest();
       window.test.code0 = pco.getCode();
       pco.setupScript([
