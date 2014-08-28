@@ -14,6 +14,9 @@ blacklist = set([
    'www.public-domain-image.com',
    'pixabay.com'
 ])
+cross_origin_ok = set([
+   'upload.wikimedia.org'
+])
 
 def uri_without_query(uri):
   return uri.split('?', 1)[0]
@@ -33,6 +36,7 @@ def application(env, start_response):
     referer = env.get('HTTP_REFERER',
       env['UWSGI_SCHEME'] + '://' + host_name + '/')
     agent = env.get('HTTP_USER_AGENT', scrapeagent)
+    origin = env.get('HTTP_ORIGIN', None)
     cache_control = env.get('HTTP_CACHE_CONTROL', '')
     pragma = env.get('HTTP_PRAGMA', '')
     userip = env['REMOTE_ADDR']
@@ -104,10 +108,14 @@ def application(env, start_response):
       for link in scraper.findall(text):
         candidate = urllib.unquote(link)
         u = urlparse.urlparse(candidate)
-        if u.hostname not in blacklist:
+        if u.hostname in blacklist:
+          continue
+        if origin is None or u.hostname in cross_origin_ok:
           redirect_url = candidate
-          cache[filename] = redirect_url
-          break
+        else:
+          redirect_url = '/proxy/' +  candidate
+        cache[filename] = redirect_url
+        break
 
   except Exception as e:
     print e
