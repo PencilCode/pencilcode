@@ -24,10 +24,19 @@ function rewriteRules(req, res, next) {
   next();
 }
 
+function noAppcache(req, res, next) {
+  var u = cnUtils.parseUrl(req);
+  if (/\.appcache$/.test(u.pathname)) {
+    res.send(200, 'CACHE MANIFEST\nNETWORK:\n*');
+  } else {
+    next();
+  }
+}
+
 function proxyRules(req, res, next) {
   var u = cnUtils.parseUrl(req);
   var exp = (req.app.locals.config.useProxy) ?
-    /^\/(?:code|home|load|save|proxy)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
+    /^\/(?:code|home|load|save|proxy|img|link)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
   if (exp.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
@@ -69,6 +78,7 @@ function proxyPacGenerator(req, res, next) {
 
 serverbase.initialize(app);
 app.use(rewriteRules);
+app.use(noAppcache);
 app.use(proxyRules);
 app.use(proxyPacGenerator);
 serverbase.initialize2(app);
