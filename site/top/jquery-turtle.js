@@ -3409,10 +3409,8 @@ var pressedKey = (function() {
     }
   }
   // Used to get names for key codes.
-  function match(keyname, code) {
+  function match(choices, code) {
     var name = keyCodeName[code];
-    if (name == keyname) return true;
-    var choices = keyname.replace(/\s/g, '').toLowerCase().split(',');
     if (choices.indexOf(name) >= 0) return true;
     if (code >= 160 && code <= 165) {
       // For "shift left", also trigger "shift"; same for control and alt.
@@ -3421,30 +3419,32 @@ var pressedKey = (function() {
     }
     return false;
   }
+  // Keyup, keydown, and keypress handlers all can accept an optional
+  // string which is a name of a key to handle (or a comma-separated
+  // list of names of keys to handle.
+  function makeKeyHandler(fn, ch) {
+    focusWindowIfFirst();
+    var t, listener, choices;
+    if (typeof(fn) == 'string' && typeof(ch) == 'function') {
+      t = ch; ch = fn; fn = t;
+    }
+    if (ch) {
+      choices = ch.replace(/\s/g, '').toLowerCase().split(',');
+      return function(e) {
+        if (match(choices, e.which)) {
+          fn.call(this, e);
+        }
+      }
+    } else {
+      return fn;
+    }
+  }
   pressed.enable = enablePressListener;
   pressed.list = listPressedKeys;
-  pressed.match = match;
+  pressed.wrap = makeKeyHandler;
   return pressed;
 })();
 
-// Keyup, keydown, and keypress handlers all can accept an optional
-// string which is a name of a key to handle (or a comma-separated
-// list of names of keys to handle.
-function makeKeyHandler(fn, ch) {
-  var t, listener;
-  if (typeof(fn) == 'string' && typeof(ch) == 'function') {
-    t = ch; ch = fn; fn = t;
-  }
-  if (ch) {
-    return function(e) {
-      if (pressedKey.match(ch, e.which)) {
-        fn.call(this, e);
-      }
-    }
-  } else {
-    return fn;
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////
 // WEB AUDIO SUPPORT
@@ -7176,19 +7176,19 @@ var dollar_turtle_methods = {
   ["<u>keydown(fn)</u> Calls fn(event) whenever a key is pushed down. " +
       "<mark>keydown (e) -> write 'down ' + e.which</mark>"],
   function(fn) {
-    $(window).keydown(makeKeyHandler(fn, arguments[1]));
+    $(window).keydown(pressedKey.wrap(fn, arguments[1]));
   }),
   keyup: wrapraw('keyup',
   ["<u>keyup(fn)</u> Calls fn(event) whenever a key is released. " +
       "<mark>keyup (e) -> write 'up ' + e.which</mark>"],
   function(fn) {
-    $(window).keyup(makeKeyHandler(fn, arguments[1]));
+    $(window).keyup(pressedKey.wrap(fn, arguments[1]));
   }),
   keypress: wrapraw('keypress',
   ["<u>keypress(fn)</u> Calls fn(event) whenever a letter is typed. " +
       "<mark>keypress (e) -> write 'press ' + e.which</mark>"],
   function(fn) {
-    $(window).keypress(makeKeyHandler(fn, arguments[1]));
+    $(window).keypress(pressedKey.wrap(fn, arguments[1]));
   }),
   send: wrapraw('send',
   ["<u>send(name)</u> Sends a message to be received by recv. " +
