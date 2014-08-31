@@ -871,10 +871,15 @@ function saveLoginCookie() {
 var requestedBlockMode = null;
 function loadBlockMode() {
   var result = requestedBlockMode;
-  if (result === null && model.ownername != 'frame') {
-    result = (cookie('blocks') != 'off');
+  if (result === null) {
+    if (model.ownername == 'frame') {
+      // Frames that don't request a block mode start in text mode.
+      result = false;
+    } else {
+      // Otherwise we start in block mode unless the cookie has disabled it.
+      result = (cookie('blocks') != 'off');
+    }
   }
-  if (result === null) { result = true; }
   return result;
 }
 

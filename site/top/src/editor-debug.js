@@ -675,12 +675,7 @@ function pollForStop() {
       view.publish('execute');
     }
   }
-  // Use requestAnimationFrame to allow ourselves to be throttled.
-  requestAnimationFrame(function() {
-    if (!pollTimer) {
-      pollTimer = setTimeout(pollForStop, 100);
-    }
-  });
+  pollTimer = setTimeout(pollForStop, 100);
 }
 
 document.addEventListener('visibilityChange', function() {
