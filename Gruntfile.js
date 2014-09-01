@@ -23,8 +23,8 @@ module.exports = function(grunt) {
           'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lodash.js': 'lodash/dist/lodash.js',
           'seedrandom.js': 'seedrandom/seedrandom.js',
-          'lib/melt.js': 'melt-editor/dist/melt-full.js',
-          'lib/melt.css': 'melt-editor/dist/melt.min.css'
+          'lib/droplet.js': 'droplet/dist/droplet-full.js',
+          'lib/droplet.css': 'droplet/dist/droplet.min.css'
         }
       },
       zeroclipboard: {
@@ -83,7 +83,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'src/almond',
           out: 'site/top/editor.js',
-          // optimize: 'none',
+          optimize: 'none',
           mainConfigFile: 'site/top/src/editor-main.js',
           preserveLicenseComments: false
         }

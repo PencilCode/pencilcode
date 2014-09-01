@@ -70,7 +70,7 @@ describe('new user', function() {
       // Poll until a dialog is shown.
       if (!$('.dialog').length) return;
       // Reach in and return the text that is shown within the editor.
-      var ace_editor = ace.edit($('.melt-ace')[0]);
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
       return {
         text: ace_editor.getSession().getValue(),
         active: document.activeElement &&
