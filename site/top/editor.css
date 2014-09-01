@@ -122,8 +122,9 @@ body#pencildoc #diigolet-csm {
 .closeblocks { font-size: 26px; font-weight: bold; font-family: sans-serif;
  position: absolute; right: 0px; top: 0px; line-height: 15px;
  padding: 0 1px 2px 1px; color: skyblue; z-index: 2000; cursor: pointer; }
-.closeblocks:hover { background: dodgerblue; color: white; }
-.closeblocks:active { color: red; background: dodgerblue; }
+.droplet-palette-wrapper:hover .closeblocks { color:dodgerblue; }
+.droplet-palette-wrapper .closeblocks:hover { background: dodgerblue; color: white; }
+.droplet-palette-wrapper .closeblocks:active { color: red; background: dodgerblue; }
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}

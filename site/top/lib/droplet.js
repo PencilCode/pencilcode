@@ -11593,7 +11593,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       if (this.currentlyUsingBlocks && !this.currentlyAnimating) {
         this.fireEvent('statechange', [false]);
-        this.aceEditor.setValue(this.getValue(), -1);
         this.setAceValue(this.getValue());
         top = this.findLineNumberAtCoordinate(this.scrollOffsets.main.y);
         this.aceEditor.scrollToLine(top);
@@ -12097,7 +12096,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     Editor.prototype.setAceValue = function(value) {
       if (value !== this.lastAceSeenValue) {
-        this.aceEditor.setValue(value);
+        this.aceEditor.setValue(value, 1);
         return this.lastAceSeenValue = value;
       }
     };
