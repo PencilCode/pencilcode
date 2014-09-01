@@ -1804,13 +1804,16 @@ function setPaneEditorText(pane, text, filename, useblocks) {
   });
 
   dropletEditor.on('toggledone', function() {
-    $('.droplet-hover-div').tooltipster();
+    if (!$('.droplet-hover-div').hasClass('tooltipstered')) {
+      $('.droplet-hover-div').tooltipster();
+    }
     updatePaneTitle(pane);
   });
 
   if (!/^frame\./.test(window.location.hostname)) {
-    $('<div class="closeblocks">&times</div>').appendTo(
-      dropletEditor.paletteWrapper);
+    $('<div class="closeblocks" title="Switch from blocks to code">' +
+      '&times</div>').appendTo(
+      dropletEditor.paletteWrapper).tooltipster();
   }
 
   var editor = paneState.editor = dropletEditor.aceEditor;

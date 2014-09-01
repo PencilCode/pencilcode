@@ -26,7 +26,7 @@ http://<!--# echo var="site" -->/pencil_64.png
 http://<!--# echo var="site" -->/pencil_192.png
 http://<!--# echo var="site" -->/pencil_avatar.png
 http://<!--# echo var="site" -->/lib/tooltipster/css/tooltipster.css
-http://<!--# echo var="site" -->/lib/melt.css
+http://<!--# echo var="site" -->/lib/droplet.css
 http://<!--# echo var="site" -->/turtlebits.js
 http://<!--# echo var="site" -->/jquery.js
 
