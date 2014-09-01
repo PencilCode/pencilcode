@@ -3,6 +3,7 @@ var phantom = require('node-phantom-simple'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
+    extended_timeout = 30000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
 
@@ -68,7 +69,9 @@ describe('code editor', function() {
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
-      asyncTest(_page, one_step_timeout, null, null, function() {
+      asyncTest(_page, one_step_timeout, null, function() {
+        addEventListener('error', function(e) { window.lasterrorevent = e; });
+      }, function() {
         // Poll until the element with class="editor" appears on the page.
         if (!$('.editor').length) return;
         // Reach in and return the text that is shown within the editor.
@@ -85,13 +88,18 @@ describe('code editor', function() {
     });
   });
   it('should navigate to parent dir', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+    asyncTest(_page, extended_timeout, null, function() {
       // Click on the folder icon.
       $('#folder').click();
     }, function() {
+      var lefttitle = $('.panetitle').filter(
+          function() { return $(this).position().left == 0; }).find('.panetitle-text');
+      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return {poll:true, step:0};
       // Wait for both the directory div and the create link to appear.
-      if (!$('.directory').length) return;
-      if (!$('.create').length) return;
+      if (!$('.directory').length) return {poll:true, step:1};
+      if (!$('.create').length) return {poll:true, step:2};
+      // Race condition: also wait for 'first' to vanish from filename
+      if (/first/.test($('#filename').text())) return { poll: true, step:3, msg: window.lasterrorevent && window.lasterrorevent.message };
       // Return an array of all the link text within the directory listing.
       var dirs = []
       $('.directory a').each(function() { dirs.push($(this).text()); });
@@ -108,6 +116,9 @@ describe('code editor', function() {
       // Click on the "Create new program" link.
       $('.create').click();
     }, function() {
+      // TODO: debug - not sure why we need to wait until here for first
+      // to vanish from filename field.
+      // if (/first/.test($('#filename').text())) return;
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
@@ -131,7 +142,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The filename chosen should start with the word "untitled"
-      assert.ok(/^untitled/.test(result.filename));
+      assert.ok(/^untitled/.test(result.filename), result.filename);
       // The title should say blocks
       assert.equal('< blocks', result.title);
       // The program text should be empty.
