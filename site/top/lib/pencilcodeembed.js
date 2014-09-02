@@ -232,7 +232,7 @@
       if (opts.mode) {
         targetUrl += '.' + opts.mode;
       }
-      
+
       this.iframe.src =
           targetUrl +
           '#text=' + encodeURIComponent(code) +
