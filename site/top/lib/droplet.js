@@ -2537,6 +2537,19 @@ QUAD.init = function (args) {
         return head;
       };
 
+      Container.prototype.getLinesToParent = function() {
+        var head, lines;
+        head = this.start;
+        lines = 0;
+        while (head !== this.parent.start) {
+          if (head.type === 'newline') {
+            lines++;
+          }
+          head = head.prev;
+        }
+        return lines;
+      };
+
       Container.prototype.hasCommonParent = function(other) {
         var head;
         head = this;
@@ -2855,13 +2868,22 @@ QUAD.init = function (args) {
       };
 
       Container.prototype.isFirstOnLine = function() {
-        var _ref, _ref1;
-        return this.start.previousAffectToken() === ((_ref = this.parent) != null ? _ref.start : void 0) || ((_ref1 = this.start.previousVisibleToken()) != null ? _ref1.type : void 0) === 'newline';
+        var _ref, _ref1, _ref2, _ref3, _ref4;
+        return ((_ref = this.start.previousVisibleToken()) === ((_ref1 = this.parent) != null ? _ref1.start : void 0) || _ref === ((_ref2 = this.parent) != null ? (_ref3 = _ref2.parent) != null ? _ref3.start : void 0 : void 0) || _ref === null) || ((_ref4 = this.start.previousVisibleToken()) != null ? _ref4.type : void 0) === 'newline';
       };
 
       Container.prototype.isLastOnLine = function() {
-        var _ref, _ref1, _ref2, _ref3;
-        return ((_ref = this.end.nextAffectToken()) === ((_ref1 = this.parent) != null ? _ref1.end : void 0) || _ref === null) || ((_ref2 = (_ref3 = this.end.nextVisibleToken()) != null ? _ref3.type : void 0) === 'newline' || _ref2 === 'indentStart');
+        var _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+        return ((_ref = this.end.nextVisibleToken()) === ((_ref1 = this.parent) != null ? _ref1.end : void 0) || _ref === ((_ref2 = this.parent) != null ? (_ref3 = _ref2.parent) != null ? _ref3.end : void 0 : void 0) || _ref === null) || ((_ref4 = (_ref5 = this.end.nextVisibleToken()) != null ? _ref5.type : void 0) === 'newline' || _ref4 === 'indentEnd');
+      };
+
+      Container.prototype.visParent = function() {
+        var head;
+        head = this.parent;
+        while ((head != null ? head.type : void 0) === 'segment' && head.isLassoSegment) {
+          head = head.parent;
+        }
+        return head;
       };
 
       Container.prototype.addLineMark = function(mark) {
@@ -3029,7 +3051,7 @@ QUAD.init = function (args) {
 
       Token.prototype.isLastOnLine = function() {
         var _ref, _ref1, _ref2;
-        return this.nextVisibleToken() === ((_ref = this.parent) != null ? _ref.end : void 0) || ((_ref1 = (_ref2 = this.nextVisibleToken()) != null ? _ref2.type : void 0) === 'newline' || _ref1 === 'indentStart');
+        return this.nextVisibleToken() === ((_ref = this.parent) != null ? _ref.end : void 0) || ((_ref1 = (_ref2 = this.nextVisibleToken()) != null ? _ref2.type : void 0) === 'newline' || _ref1 === 'indentEnd');
       };
 
       Token.prototype.getSerializedLocation = function() {
@@ -3529,7 +3551,7 @@ QUAD.init = function (args) {
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
-    var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
+    var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
     NO_MULTILINE = 0;
     MULTILINE_START = 1;
     MULTILINE_MIDDLE = 2;
@@ -3543,6 +3565,7 @@ QUAD.init = function (args) {
     CARRIAGE_ARROW_SIDEALONG = 0;
     CARRIAGE_ARROW_INDENT = 1;
     CARRIAGE_ARROW_NONE = 2;
+    CARRIAGE_GROW_DOWN = 3;
     DEFAULT_OPTIONS = {
       padding: 5,
       indentWidth: 10,
@@ -3694,7 +3717,7 @@ QUAD.init = function (args) {
         }
 
         GenericViewNode.prototype.serialize = function(line) {
-          var child, i, prop, result, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
+          var child, i, prop, result, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
           result = [];
           _ref = ['lineLength', 'margins', 'topLineSticksToBottom', 'bottomLineSticksToTop', 'changedBoundingBox', 'path', 'highlightArea', 'computedVersion', 'carriageArrow'];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -3706,7 +3729,7 @@ QUAD.init = function (args) {
             child = _ref1[i];
             result.push(("child " + i + ": {startLine: " + child.startLine + ", ") + ("endLine: " + child.endLine + "}"));
           }
-          if (line !== null) {
+          if (line != null) {
             _ref2 = ['multilineChildrenData', 'minDimensions', 'minDistanceToBase', 'dimensions', 'distanceToBase', 'bounds', 'glue'];
             for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
               prop = _ref2[_k];
@@ -3716,6 +3739,19 @@ QUAD.init = function (args) {
             for (i = _l = 0, _len3 = _ref3.length; _l < _len3; i = ++_l) {
               child = _ref3[i];
               result.push(("line " + line + " child " + i + ": ") + ("{startLine: " + child.startLine + ", ") + ("endLine: " + child.endLine + "}}"));
+            }
+          } else {
+            for (line = _m = 0, _ref4 = this.lineLength; 0 <= _ref4 ? _m < _ref4 : _m > _ref4; line = 0 <= _ref4 ? ++_m : --_m) {
+              _ref5 = ['multilineChildrenData', 'minDimensions', 'minDistanceToBase', 'dimensions', 'distanceToBase', 'bounds', 'glue'];
+              for (_n = 0, _len4 = _ref5.length; _n < _len4; _n++) {
+                prop = _ref5[_n];
+                result.push("" + prop + " " + line + ": " + (JSON.stringify(this[prop][line])));
+              }
+              _ref6 = this.lineChildren[line];
+              for (i = _o = 0, _len5 = _ref6.length; _o < _len5; i = ++_o) {
+                child = _ref6[i];
+                result.push(("line " + line + " child " + i + ": ") + ("{startLine: " + child.startLine + ", ") + ("endLine: " + child.endLine + "}}"));
+              }
             }
           }
           return result.join('\n');
@@ -3896,7 +3932,7 @@ QUAD.init = function (args) {
             this.distanceToBase[i].above = this.minDistanceToBase[i].above;
             this.distanceToBase[i].below = this.minDistanceToBase[i].below;
           }
-          if ((this.model.parent != null) && !root && (this.topLineSticksToBottom || this.bottomLineSticksToTop)) {
+          if ((this.model.parent != null) && !root && (this.topLineSticksToBottom || this.bottomLineSticksToTop || (this.lineLength > 1 && !this.model.isLastOnLine()))) {
             parentNode = this.view.getViewNodeFor(this.model.parent);
             if (this.topLineSticksToBottom) {
               distance = this.distanceToBase[0];
@@ -3907,6 +3943,11 @@ QUAD.init = function (args) {
               lineCount = this.distanceToBase.length;
               distance = this.distanceToBase[lineCount - 1];
               distance.above = Math.max(distance.above, parentNode.distanceToBase[startLine + lineCount - 1].above);
+              this.dimensions[lineCount - 1] = new this.view.draw.Size(this.dimensions[lineCount - 1].width, distance.below + distance.above);
+            }
+            if (this.lineLength > 1 && !this.model.isLastOnLine() && this.model.type === 'block') {
+              distance = this.distanceToBase[this.lineLength - 1];
+              distance.below = parentNode.distanceToBase[startLine + this.lineLength - 1].below;
               this.dimensions[lineCount - 1] = new this.view.draw.Size(this.dimensions[lineCount - 1].width, distance.below + distance.above);
             }
           }
@@ -4210,10 +4251,6 @@ QUAD.init = function (args) {
             };
           })(this));
           this.lineLength = line + 1;
-          if (this.lineLength > 1) {
-            this.topLineSticksToBottom = true;
-            this.bottomLineSticksToTop = true;
-          }
           if (this.bounds.length !== this.lineLength) {
             this.changedBoundingBox = true;
             this.bounds = this.bounds.slice(0, this.lineLength);
@@ -4223,34 +4260,45 @@ QUAD.init = function (args) {
               _base[i] = NO_MULTILINE;
             }
           }
+          if (this.lineLength > 1) {
+            this.topLineSticksToBottom = true;
+            this.bottomLineSticksToTop = true;
+          }
           return this.lineLength;
         };
 
         ContainerViewNode.prototype.computeCarriageArrow = function(root) {
-          var childObj, head, _i, _len, _ref, _ref1;
+          var childObj, head, oldCarriageArrow, parent, _i, _len, _ref;
           if (root == null) {
             root = false;
           }
+          oldCarriageArrow = this.carriageArrow;
           this.carriageArrow = CARRIAGE_ARROW_NONE;
-          if ((!root) && ((_ref = this.model.parent) != null ? _ref.type : void 0) === 'indent') {
-            if (!this.model.isFirstOnLine()) {
-              this.carriageArrow = CARRIAGE_ARROW_SIDEALONG;
-            } else {
-              head = this.model.start;
-              while (!(head === this.model.parent.start || head.type === 'newline')) {
-                head = head.prev;
-              }
-              if (head === this.model.parent.start) {
-                this.carriageArrow = CARRIAGE_ARROW_INDENT;
-              }
+          parent = this.model.visParent();
+          if ((!root) && (parent != null ? parent.type : void 0) === 'indent' && this.view.getViewNodeFor(parent).lineLength > 1 && this.lineLength === 1) {
+            head = this.model.start;
+            while (!(head === parent.start || head.type === 'newline')) {
+              head = head.prev;
             }
+            if (head === parent.start) {
+              if (this.model.isLastOnLine()) {
+                this.carriageArrow = CARRIAGE_ARROW_INDENT;
+              } else {
+                this.carriageArrow = CARRIAGE_GROW_DOWN;
+              }
+            } else if (!this.model.isFirstOnLine()) {
+              this.carriageArrow = CARRIAGE_ARROW_SIDEALONG;
+            }
+          }
+          if (this.carriageArrow !== oldCarriageArrow) {
+            this.changedBoundingBox = true;
           }
           if (this.computedVersion === this.model.version && ((this.model.parent == null) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
             return null;
           }
-          _ref1 = this.children;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            childObj = _ref1[_i];
+          _ref = this.children;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            childObj = _ref[_i];
             this.view.getViewNodeFor(childObj.child).computeCarriageArrow();
           }
           return null;
@@ -4472,7 +4520,7 @@ QUAD.init = function (args) {
           var bounds, destinationBounds, el, glueTop, innerLeft, innerRight, left, leftmost, line, multilineBounds, multilineChild, multilineNode, multilineView, parentViewNode, path, right, rightmost, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
           left = [];
           right = [];
-          if (this.shouldAddTab() && this.carriageArrow !== CARRIAGE_ARROW_SIDEALONG) {
+          if (this.shouldAddTab() && this.model.isFirstOnLine() && this.carriageArrow !== CARRIAGE_ARROW_SIDEALONG) {
             this.addTab(left, new this.view.draw.Point(this.bounds[0].x + this.view.opts.tabOffset, this.bounds[0].y));
           }
           _ref = this.bounds;
@@ -4609,6 +4657,7 @@ QUAD.init = function (args) {
                 right.push(new this.view.draw.Point(rightmost, glueTop + this.view.opts.padding));
               }
             } else if ((this.bounds[line + 1] != null) && this.multilineChildrenData[line] !== MULTILINE_MIDDLE) {
+              console.log(this.model.stringify());
               innerLeft = Math.max(this.bounds[line + 1].x, this.bounds[line].x);
               innerRight = Math.min(this.bounds[line + 1].right(), this.bounds[line].right());
               left.push(new this.view.draw.Point(innerLeft, this.bounds[line].bottom()));
@@ -4617,8 +4666,13 @@ QUAD.init = function (args) {
                 right.push(new this.view.draw.Point(innerRight, this.bounds[line].bottom()));
                 right.push(new this.view.draw.Point(innerRight, this.bounds[line + 1].y));
               }
+            } else if (this.carriageArrow === CARRIAGE_GROW_DOWN) {
+              parentViewNode = this.view.getViewNodeFor(this.model.visParent());
+              destinationBounds = parentViewNode.bounds[1];
+              right.push(new this.view.draw.Point(this.bounds[line].right(), destinationBounds.y - this.view.opts.padding));
+              left.push(new this.view.draw.Point(this.bounds[line].x, destinationBounds.y - this.view.opts.padding));
             } else if (this.carriageArrow === CARRIAGE_ARROW_INDENT) {
-              parentViewNode = this.view.getViewNodeFor(this.model.parent);
+              parentViewNode = this.view.getViewNodeFor(this.model.visParent());
               destinationBounds = parentViewNode.bounds[1];
               right.push(new this.view.draw.Point(this.bounds[line].right(), destinationBounds.y));
               right.push(new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset + this.view.opts.tabWidth, destinationBounds.y));
@@ -4627,14 +4681,14 @@ QUAD.init = function (args) {
               left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.y));
               this.addTab(right, new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset, destinationBounds.y));
             } else if (this.carriageArrow === CARRIAGE_ARROW_SIDEALONG) {
-              parentViewNode = this.view.getViewNodeFor(this.model.parent);
-              destinationBounds = parentViewNode.bounds[1];
-              right.push(new this.view.draw.Point(this.bounds[line].right(), this.bounds[line].bottom() + this.view.opts.padding));
-              right.push(new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset + this.view.opts.tabWidth, this.bounds[line].bottom() + this.view.opts.padding));
-              left.push(new this.view.draw.Point(this.bounds[line].x, this.bounds[line].bottom()));
-              left.push(new this.view.draw.Point(destinationBounds.x, this.bounds[line].bottom()));
-              left.push(new this.view.draw.Point(destinationBounds.x, this.bounds[line].bottom() + this.view.opts.padding));
-              this.addTab(right, new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset, this.bounds[line].bottom() + this.view.opts.padding));
+              parentViewNode = this.view.getViewNodeFor(this.model.visParent());
+              destinationBounds = parentViewNode.bounds[this.model.getLinesToParent()];
+              right.push(new this.view.draw.Point(this.bounds[line].right(), destinationBounds.bottom() + this.view.opts.padding));
+              right.push(new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset + this.view.opts.tabWidth, destinationBounds.bottom() + this.view.opts.padding));
+              left.push(new this.view.draw.Point(this.bounds[line].x, destinationBounds.bottom()));
+              left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.bottom()));
+              left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.bottom() + this.view.opts.padding));
+              this.addTab(right, new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset, destinationBounds.bottom() + this.view.opts.padding));
             }
             if ((_ref6 = this.multilineChildrenData[line]) === MULTILINE_START || _ref6 === MULTILINE_END_START) {
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
@@ -4645,12 +4699,10 @@ QUAD.init = function (args) {
               } else {
                 glueTop = this.bounds[line].bottom();
               }
-              if (multilineChild.child.type === 'indent') {
-                if (multilineChild.child.start.next.type === 'newline') {
-                  right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
-                  right.push(new this.view.draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
-                  this.addTab(right, new this.view.draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.view.opts.tabOffset, glueTop), true);
-                }
+              if (multilineChild.child.type === 'indent' && multilineChild.child.start.next.type === 'newline') {
+                right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
+                right.push(new this.view.draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
+                this.addTab(right, new this.view.draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.view.opts.tabOffset, glueTop), true);
               } else {
                 right.push(new this.view.draw.Point(multilineBounds.x, glueTop));
               }
@@ -4749,10 +4801,7 @@ QUAD.init = function (args) {
         BlockViewNode.prototype.shouldAddTab = function() {
           var parent, _ref;
           if (this.model.parent != null) {
-            parent = this.model.parent;
-            while ((parent != null ? parent.type : void 0) === 'segment') {
-              parent = parent.parent;
-            }
+            parent = this.model.visParent();
             return (parent != null ? parent.type : void 0) !== 'socket';
           } else {
             return !((_ref = this.model.socketLevel) === MOSTLY_VALUE || _ref === VALUE_ONLY);
@@ -4771,13 +4820,13 @@ QUAD.init = function (args) {
         BlockViewNode.prototype.computeOwnDropArea = function() {
           var destinationBounds, highlightAreaPoints, lastBoundsLeft, lastBoundsRight, parentViewNode, point, _i, _len;
           if (this.carriageArrow === CARRIAGE_ARROW_INDENT) {
-            parentViewNode = this.view.getViewNodeFor(this.model.parent);
+            parentViewNode = this.view.getViewNodeFor(this.model.visParent());
             destinationBounds = parentViewNode.bounds[1];
             this.dropPoint = new this.view.draw.Point(destinationBounds.x, destinationBounds.y);
             lastBoundsLeft = destinationBounds.x;
             lastBoundsRight = destinationBounds.right();
           } else if (this.carriageArrow === CARRIAGE_ARROW_SIDEALONG) {
-            parentViewNode = this.view.getViewNodeFor(this.model.parent);
+            parentViewNode = this.view.getViewNodeFor(this.model.visParent());
             destinationBounds = parentViewNode.bounds[1];
             this.dropPoint = new this.view.draw.Point(destinationBounds.x, this.bounds[this.lineLength - 1].bottom() + this.view.opts.padding);
             lastBoundsLeft = destinationBounds.x;
@@ -4907,7 +4956,9 @@ QUAD.init = function (args) {
               if (childView.topLineSticksToBottom || childView.bottomLineSticksToTop) {
                 childView.invalidate = true;
               }
-              childView.topLineSticksToBottom = childView.bottomLineSticksToTop = false;
+              if (childView.lineLength === 1) {
+                childView.topLineSticksToBottom = childView.bottomLineSticksToTop = false;
+              }
             }
           }
           _ref1 = this.lineChildren[0];
@@ -5234,7 +5285,7 @@ QUAD.init = function (args) {
         this.markup = [];
       }
 
-      Parser.prototype.parse = function(opts) {
+      Parser.prototype._parse = function(opts) {
         var segment;
         opts = _extend(opts, {
           wrapAtRoot: true
@@ -5248,6 +5299,8 @@ QUAD.init = function (args) {
         segment.isRoot = true;
         return segment;
       };
+
+      Parser.prototype.markRoot = function() {};
 
       Parser.prototype.isParenWrapped = function(block) {
         return block.start.next.type === 'text' && block.start.next.value[0] === '(' && block.end.prev.type === 'text' && block.end.prev.value[block.end.prev.value.length - 1] === ')';
@@ -5290,16 +5343,18 @@ QUAD.init = function (args) {
           depth: depth,
           start: true
         });
-        return this.markup.push({
+        this.markup.push({
           token: container.end,
           location: bounds.end,
           depth: depth,
           start: false
         });
+        return container;
       };
 
       Parser.prototype.sortMarkup = function() {
         return this.markup.sort(function(a, b) {
+          var isDifferent;
           if (a.location.line > b.location.line) {
             return 1;
           }
@@ -5312,11 +5367,15 @@ QUAD.init = function (args) {
           if (b.location.column > a.location.column) {
             return -1;
           }
+          isDifferent = 1;
+          if (a.token.container === b.token.container) {
+            isDifferent = -1;
+          }
           if (a.start && !b.start) {
-            return 1;
+            return isDifferent;
           }
           if (b.start && !a.start) {
-            return -1;
+            return -isDifferent;
           }
           if (a.start && b.start) {
             if (a.depth > b.depth) {
@@ -5397,7 +5456,12 @@ QUAD.init = function (args) {
             }
             head = head.append(new model.NewlineToken());
           } else {
-            lastIndex = indentDepth;
+            if (indentDepth >= line.length || line.slice(0, +indentDepth + 1 || 9e9).trim().length > 0) {
+              lastIndex = line.length - line.trimLeft().length;
+              head.specialIndent = line.slice(0, lastIndex);
+            } else {
+              lastIndex = indentDepth;
+            }
             _ref4 = markupOnLines[i];
             for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
               mark = _ref4[_k];
@@ -5541,7 +5605,6 @@ QUAD.init = function (args) {
           head = container.end.next;
           _results.push(container.spliceOut());
         } else if (head instanceof model.StartToken && head.container.flagToStrip) {
-          console.log(head.container);
           if ((_ref = head.container.parent) != null) {
             _ref.color = 'error';
           }
@@ -5554,6 +5617,37 @@ QUAD.init = function (args) {
       }
       return _results;
     };
+    Parser.parens = function(leading, trailing, node, context) {
+      if (context === null || context.type !== 'socket' || context.precedence < node.precedence) {
+        while (true) {
+          if ((leading.match(/^\s*\(/) != null) && (trailing.match(/\)\s*/) != null)) {
+            leading = leading.replace(/^\s*\(\s*/, '');
+            trailing = trailing.replace(/^\s*\)\s*/, '');
+          } else {
+            break;
+          }
+        }
+      } else {
+        leading = '(' + leading;
+        trailing = trailing + ')';
+      }
+      return [leading, trailing];
+    };
+    Parser.empty = '';
+    Parser.parse = function(text, opts) {};
+    exports.makeParser = function(CustomParser) {
+      return CustomParser.parse = function(text, opts) {
+        var parser;
+        if (opts == null) {
+          opts = {
+            wrapAtRoot: true
+          };
+        }
+        parser = new CustomParser(text);
+        return parser._parse(opts);
+      };
+    };
+    exports.makeParser(Parser);
     return exports;
   });
 
@@ -5586,7 +5680,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
     MOSTLY_VALUE = helper.MOSTLY_VALUE;
     VALUE_ONLY = helper.VALUE_ONLY;
-    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress'];
+    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
     EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
     STATEMENT_KEYWORDS = ['break', 'continue'];
@@ -6110,7 +6204,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       CoffeeScriptParser.prototype.addMarkup = function(container, bounds, depth) {
         CoffeeScriptParser.__super__.addMarkup.apply(this, arguments);
-        return this.flagLineAsMarked(bounds.start.line);
+        this.flagLineAsMarked(bounds.start.line);
+        return container;
       };
 
       CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, color, wrappingParen, socketLevel) {
@@ -6246,33 +6341,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return lines.splice(n + 1, 0, leading[0] + '  ``');
     };
-    exports.parse = function(text, opts) {
-      if (opts == null) {
-        opts = {
-          wrapAtRoot: true
-        };
-      }
-      parser = new CoffeeScriptParser(text);
-      return parser.parse(opts);
-    };
-    exports.parens = function(leading, trailing, node, context) {
-      if (context === null || context.type !== 'socket' || context.precedence < node.precedence) {
-        while (true) {
-          if ((leading.match(/^\s*\(/) != null) && (trailing.match(/\)\s*/) != null)) {
-            leading = leading.replace(/^\s*\(\s*/, '');
-            trailing = trailing.replace(/^\s*\)\s*/, '');
-          } else {
-            break;
-          }
-        }
-      } else {
-        leading = '(' + leading;
-        trailing = trailing + ')';
-      }
-      return [leading, trailing];
-    };
-    exports.empty = "``";
-    return exports;
+    CoffeeScriptParser.empty = "``";
+    parser.makeParser(CoffeeScriptParser);
+    return CoffeeScriptParser;
   });
 
 }).call(this);
@@ -8818,7 +8889,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-javascript',['droplet-helper', 'droplet-model', 'droplet-parser', 'acorn'], function(helper, model, parser, acorn) {
-    var JavaScriptParser, STATEMENT_NODE_TYPES, exports, operatorPrecedences;
+    var COLORS, DEFAULT_INDENT_DEPTH, JavaScriptParser, STATEMENT_NODE_TYPES, exports, operatorPrecedences;
     exports = {};
     operatorPrecedences = {
       '+': 0,
@@ -8826,7 +8897,33 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       '/': 1,
       '*': 1
     };
-    STATEMENT_NODE_TYPES = ['ExpressionStatement', 'ReturnStatement'];
+    STATEMENT_NODE_TYPES = ['ExpressionStatement', 'ReturnStatement', 'BreakStatement', 'ThrowStatement'];
+    COLORS = {
+      'BinaryExpression': 'value',
+      'FunctionExpression': 'value',
+      'FunctionDeclaration': 'control',
+      'AssignmentExpression': 'command',
+      'CallExpression': 'command',
+      'ReturnStatement': 'return',
+      'MemberExpression': 'value',
+      'IfStatement': 'control',
+      'ForStatement': 'control',
+      'UpdateExpression': 'command',
+      'VariableDeclaration': 'command',
+      'LogicalExpression': 'value',
+      'WhileStatement': 'control',
+      'DoWhileStatement': 'control',
+      'ObjectExpression': 'value',
+      'SwitchStatement': 'control',
+      'BreakStatement': 'return',
+      'NewExpression': 'command',
+      'ThrowStatement': 'return',
+      'TryStatement': 'control',
+      'ArrayExpression': 'value',
+      'SequenceExpression': 'command',
+      'ConditionalExpression': 'value'
+    };
+    DEFAULT_INDENT_DEPTH = '  ';
     exports.JavaScriptParser = JavaScriptParser = (function(_super) {
       __extends(JavaScriptParser, _super);
 
@@ -8841,7 +8938,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           locations: true,
           line: 0
         });
-        return this.mark(tree, 0, null);
+        return this.mark(0, tree, 0, null);
       };
 
       JavaScriptParser.prototype.getAcceptsRule = function(node) {
@@ -8871,20 +8968,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         switch (node.type) {
           case 'ExpressionStatement':
             return this.getColor(node.expression);
-          case 'BinaryExpression':
-            return 'value';
-          case 'FunctionExpression':
-            return 'command';
-          case 'FunctionDeclaration':
-            return 'control';
-          case 'AssignmentExpression':
-            return 'command';
-          case 'CallExpression':
-            return 'command';
-          case 'ReturnStatement':
-            return 'return';
-          case 'MemberExpression':
-            return 'value';
+          default:
+            return COLORS[node.type];
         }
       };
 
@@ -8893,7 +8978,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.getBounds = function(node) {
-        var bounds, line, semicolon, _ref;
+        var bounds, line, semicolon, semicolonLength, _ref;
         if (node.type === 'BlockStatement') {
           bounds = {
             start: {
@@ -8912,8 +8997,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return bounds;
         } else if (_ref = node.type, __indexOf.call(STATEMENT_NODE_TYPES, _ref) >= 0) {
           line = this.lines[node.loc.end.line];
-          semicolon = this.lines[node.loc.end.line].slice(node.loc.end.column).indexOf(';');
-          if (semicolon > 0) {
+          semicolon = this.lines[node.loc.end.line].slice(node.loc.end.column - 1).indexOf(';');
+          if (semicolon >= 0) {
+            semicolonLength = this.lines[node.loc.end.line].slice(node.loc.end.column - 1).match(/;\s*/)[0].length;
             return {
               start: {
                 line: node.loc.start.line,
@@ -8921,88 +9007,279 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               },
               end: {
                 line: node.loc.end.line,
-                column: node.loc.end.column + semicolon
+                column: node.loc.end.column + semicolon + semicolonLength - 1
               }
             };
           }
         }
-        return node.loc;
+        return {
+          start: {
+            line: node.loc.start.line,
+            column: node.loc.start.column
+          },
+          end: {
+            line: node.loc.end.line,
+            column: node.loc.end.column
+          }
+        };
+      };
+
+      JavaScriptParser.prototype.getCaseIndentBounds = function(node) {
+        var bounds;
+        bounds = {
+          start: this.getBounds(node.consequent[0]).start,
+          end: this.getBounds(node.consequent[node.consequent.length - 1]).end
+        };
+        if (this.lines[bounds.start.line].slice(0, bounds.start.column).trim().length === 0) {
+          bounds.start.line -= 1;
+          bounds.start.column = this.lines[bounds.start.line].length;
+        }
+        if (this.lines[bounds.end.line].slice(0, bounds.end.column).trim().length === 0) {
+          bounds.end.line -= 1;
+          bounds.end.column = this.lines[bounds.end.line].length;
+        }
+        return bounds;
+      };
+
+      JavaScriptParser.prototype.getIndentPrefix = function(bounds, indentDepth) {
+        var line;
+        if (bounds.end.line - bounds.start.line < 1) {
+          return DEFAULT_INDENT_DEPTH;
+        } else {
+          line = this.lines[bounds.start.line + 1];
+          return line.slice(indentDepth, line.length - line.trimLeft().length);
+        }
       };
 
       JavaScriptParser.prototype.isComment = function(text) {
         return text.match(/^\s*\/\/.*$/);
       };
 
-      JavaScriptParser.prototype.mark = function(node, depth, bounds) {
-        var argument, statement, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results, _results1, _results2;
+      JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
+        var argument, declaration, element, expression, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9;
         switch (node.type) {
           case 'Program':
             _ref = node.body;
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               statement = _ref[_i];
-              _results.push(this.mark(statement, depth + 1, null));
+              _results.push(this.mark(indentDepth, statement, depth + 1, null));
             }
             return _results;
             break;
           case 'Function':
             this.jsBlock(node, depth, bounds);
-            return this.mark(node.body, depth + 1, null);
-          case 'FunctionDeclaration':
+            return this.mark(indentDepth, node.body, depth + 1, null);
+          case 'SequenceExpression':
             this.jsBlock(node, depth, bounds);
-            this.mark(node.body, depth + 1, null);
-            return this.jsSocketAndMark(node.id, depth + 1);
-          case 'FunctionExpression':
-            this.jsBlock(node, depth, bounds);
-            this.mark(node.body, depth + 1, null);
-            if (node.id != null) {
-              return this.jsSocketAndMark(node.id, depth + 1);
-            }
-            break;
-          case 'AssignmentExpression':
-            this.jsBlock(node, depth, bounds);
-            this.jsSocketAndMark(node.left, depth + 1, null);
-            return this.jsSocketAndMark(node.right, depth + 1, null);
-          case 'ReturnStatement':
-            this.jsBlock(node, depth, bounds);
-            if (node.argument != null) {
-              return this.jsSocketAndMark(node.argument, depth + 1, null);
-            }
-            break;
-          case 'BlockStatement':
-            this.addIndent({
-              bounds: this.getBounds(node),
-              depth: depth,
-              prefix: '  '
-            });
-            _ref1 = node.body;
+            _ref1 = node.expressions;
             _results1 = [];
             for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              statement = _ref1[_j];
-              _results1.push(this.mark(statement, depth + 1, null));
+              expression = _ref1[_j];
+              _results1.push(this.jsSocketAndMark(indentDepth, expression, depth + 1, null));
             }
             return _results1;
             break;
-          case 'BinaryExpression':
+          case 'FunctionDeclaration':
             this.jsBlock(node, depth, bounds);
-            this.jsSocketAndMark(node.left, depth + 1, operatorPrecedences[node.operator]);
-            return this.jsSocketAndMark(node.right, depth + 1, operatorPrecedences[node.operator]);
-          case 'ExpressionStatement':
-            return this.mark(node.expression, depth + 1, this.getBounds(node));
-          case 'CallExpression':
+            this.mark(indentDepth, node.body, depth + 1, null);
+            return this.jsSocketAndMark(indentDepth, node.id, depth + 1);
+          case 'FunctionExpression':
             this.jsBlock(node, depth, bounds);
-            _ref2 = node["arguments"];
+            this.mark(indentDepth, node.body, depth + 1, null);
+            if (node.id != null) {
+              this.jsSocketAndMark(indentDepth, node.id, depth + 1);
+            }
+            _ref2 = node.params;
             _results2 = [];
             for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-              argument = _ref2[_k];
-              _results2.push(this.jsSocketAndMark(argument, depth, 10));
+              param = _ref2[_k];
+              _results2.push(this.jsSocketAndMark(indentDepth, param, depth + 1));
             }
             return _results2;
             break;
+          case 'AssignmentExpression':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.left, depth + 1, null);
+            return this.jsSocketAndMark(indentDepth, node.right, depth + 1, null);
+          case 'ReturnStatement':
+            this.jsBlock(node, depth, bounds);
+            if (node.argument != null) {
+              return this.jsSocketAndMark(indentDepth, node.argument, depth + 1, null);
+            }
+            break;
+          case 'BreakStatement':
+          case 'ContinueStatement':
+            this.jsBlock(node, depth, bounds);
+            if (node.label != null) {
+              return this.jsSocketAndMark(indentDepth, node.label, depth + 1, null);
+            }
+            break;
+          case 'ThrowStatement':
+            this.jsBlock(node, depth, bounds);
+            return this.jsSocketAndMark(indentDepth, node.argument, depth + 1, null);
+          case 'IfStatement':
+          case 'ConditionalExpression':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.test, depth + 1, 10);
+            this.jsSocketAndMark(indentDepth, node.consequent, depth + 1, null);
+            if (node.alternate != null) {
+              return this.jsSocketAndMark(indentDepth, node.alternate, depth + 1, 10);
+            }
+            break;
+          case 'ForStatement':
+            this.jsBlock(node, depth, bounds);
+            if (node.init != null) {
+              this.jsSocketAndMark(indentDepth, node.init, depth + 1, 10);
+            }
+            if (node.test != null) {
+              this.jsSocketAndMark(indentDepth, node.test, depth + 1, 10);
+            }
+            if (node.update != null) {
+              this.jsSocketAndMark(indentDepth, node.update, depth + 1, 10);
+            }
+            return this.mark(indentDepth, node.body, depth + 1);
+          case 'BlockStatement':
+            prefix = this.getIndentPrefix(this.getBounds(node), indentDepth);
+            indentDepth += prefix.length;
+            this.addIndent({
+              bounds: this.getBounds(node),
+              depth: depth,
+              prefix: prefix
+            });
+            _ref3 = node.body;
+            _results3 = [];
+            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+              statement = _ref3[_l];
+              _results3.push(this.mark(indentDepth, statement, depth + 1, null));
+            }
+            return _results3;
+            break;
+          case 'BinaryExpression':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.left, depth + 1, operatorPrecedences[node.operator]);
+            return this.jsSocketAndMark(indentDepth, node.right, depth + 1, operatorPrecedences[node.operator]);
+          case 'ExpressionStatement':
+            return this.mark(indentDepth, node.expression, depth + 1, this.getBounds(node));
+          case 'CallExpression':
+          case 'NewExpression':
+            this.jsBlock(node, depth, bounds);
+            if (node.callee.type !== 'Identifier') {
+              this.jsSocketAndMark(indentDepth, node.callee, depth + 1, 10);
+            }
+            _ref4 = node["arguments"];
+            _results4 = [];
+            for (_m = 0, _len4 = _ref4.length; _m < _len4; _m++) {
+              argument = _ref4[_m];
+              _results4.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, 10));
+            }
+            return _results4;
+            break;
           case 'MemberExpression':
             this.jsBlock(node, depth, bounds);
-            this.jsSocketAndMark(node.object, depth + 1);
-            return this.jsSocketAndMark(node.property, depth + 1);
+            this.jsSocketAndMark(indentDepth, node.object, depth + 1);
+            return this.jsSocketAndMark(indentDepth, node.property, depth + 1);
+          case 'UpdateExpression':
+            this.jsBlock(node, depth, bounds);
+            return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
+          case 'VariableDeclaration':
+            this.jsBlock(node, depth, bounds);
+            _ref5 = node.declarations;
+            _results5 = [];
+            for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
+              declaration = _ref5[_n];
+              _results5.push(this.mark(indentDepth, declaration, depth + 1));
+            }
+            return _results5;
+            break;
+          case 'VariableDeclarator':
+            this.jsSocketAndMark(indentDepth, node.id, depth);
+            if (node.init != null) {
+              return this.jsSocketAndMark(indentDepth, node.init, depth);
+            }
+            break;
+          case 'LogicalExpression':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.left, depth + 1);
+            return this.jsSocketAndMark(indentDepth, node.right, depth + 1);
+          case 'WhileStatement':
+          case 'DoWhileStatement':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.body, depth + 1);
+            return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
+          case 'ObjectExpression':
+            this.jsBlock(node, depth, bounds);
+            _ref6 = node.properties;
+            _results6 = [];
+            for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
+              property = _ref6[_o];
+              this.jsSocketAndMark(indentDepth, property.key, depth + 1);
+              _results6.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
+            }
+            return _results6;
+            break;
+          case 'SwitchStatement':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
+            _ref7 = node.cases;
+            _results7 = [];
+            for (_p = 0, _len7 = _ref7.length; _p < _len7; _p++) {
+              switchCase = _ref7[_p];
+              _results7.push(this.mark(indentDepth, switchCase, depth + 1, null));
+            }
+            return _results7;
+            break;
+          case 'SwitchCase':
+            if (node.test != null) {
+              this.jsSocketAndMark(indentDepth, node.test, depth + 1);
+            }
+            if (node.consequent.length > 0) {
+              bounds = this.getCaseIndentBounds(node);
+              prefix = this.getIndentPrefix(this.getBounds(node), indentDepth);
+              indentDepth += prefix.length;
+              this.addIndent({
+                bounds: bounds,
+                depth: depth + 1,
+                prefix: prefix
+              });
+              _ref8 = node.consequent;
+              _results8 = [];
+              for (_q = 0, _len8 = _ref8.length; _q < _len8; _q++) {
+                statement = _ref8[_q];
+                _results8.push(this.mark(indentDepth, statement, depth + 2));
+              }
+              return _results8;
+            }
+            break;
+          case 'TryStatement':
+            this.jsBlock(node, depth, bounds);
+            this.jsSocketAndMark(indentDepth, node.block, depth + 1, null);
+            if (node.handler != null) {
+              if (node.handler.guard != null) {
+                this.jsSocketAndMark(indentDepth, node.handler.guard, depth + 1, null);
+              }
+              if (node.handler.param != null) {
+                this.jsSocketAndMark(indentDepth, node.handler.param, depth + 1, null);
+              }
+              this.jsSocketAndMark(indentDepth, node.handler.body, depth + 1, null);
+            }
+            if (node.finalizer != null) {
+              return this.jsSocketAndMark(indentDepth, node.finalizer, depth + 1, null);
+            }
+            break;
+          case 'ArrayExpression':
+            this.jsBlock(node, depth, bounds);
+            _ref9 = node.elements;
+            _results9 = [];
+            for (_r = 0, _len9 = _ref9.length; _r < _len9; _r++) {
+              element = _ref9[_r];
+              if (element != null) {
+                _results9.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
+              } else {
+                _results9.push(void 0);
+              }
+            }
+            return _results9;
         }
       };
 
@@ -9017,24 +9294,22 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         });
       };
 
-      JavaScriptParser.prototype.jsSocketAndMark = function(node, depth, precedence, bounds) {
-        this.addSocket({
-          bounds: bounds != null ? bounds : this.getBounds(node),
-          depth: depth,
-          precedence: precedence,
-          accepts: this.getAcceptsRule(node)
-        });
-        return this.mark(node, depth + 1, bounds);
+      JavaScriptParser.prototype.jsSocketAndMark = function(indentDepth, node, depth, precedence, bounds) {
+        if (node.type !== 'BlockStatement') {
+          this.addSocket({
+            bounds: bounds != null ? bounds : this.getBounds(node),
+            depth: depth,
+            precedence: precedence,
+            accepts: this.getAcceptsRule(node)
+          });
+        }
+        return this.mark(indentDepth, node, depth + 1, bounds);
       };
 
       return JavaScriptParser;
 
     })(parser.Parser);
-    exports.parse = function(text, opts) {
-      parser = new JavaScriptParser(text);
-      return parser.parse(opts);
-    };
-    exports.parens = function(leading, trailing, node, context) {
+    JavaScriptParser.parens = function(leading, trailing, node, context) {
       if ((context != null ? context.type : void 0) === 'socket') {
         trailing = trailing.replace(/;?\s*$/, '');
       } else {
@@ -9055,8 +9330,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return [leading, trailing];
     };
-    exports.empty = "eval('')";
-    return exports;
+    JavaScriptParser.empty = "eval('')";
+    parser.makeParser(JavaScriptParser);
+    return JavaScriptParser;
   });
 
 }).call(this);
@@ -9676,7 +9952,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         if (this.before == null) {
           return;
         }
-        this.spliceIn((clone = this.block.clone()), editor.tree.getTokenAtLocation(this.before));
+        editor.spliceIn((clone = this.block.clone()), editor.tree.getTokenAtLocation(this.before));
         if (this.block.type === 'segment' && this.block.isLassoSegment) {
           editor.lassoSegment = this.block;
         }
@@ -9693,9 +9969,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           blockStart = blockStart.next;
         }
         if (this.block.start.type === 'segment') {
-          this.spliceOut(blockStart.container);
+          editor.spliceOut(blockStart.container);
         } else {
-          this.spliceOut(blockStart.container);
+          editor.spliceOut(blockStart.container);
         }
         return editor.tree.getTokenAtLocation(this.before);
       };
@@ -9726,7 +10002,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         while (blockStart.type !== this.block.start.type) {
           blockStart = blockStart.next;
         }
-        this.spliceOut(blockStart.container);
+        editor.spliceOut(blockStart.container);
         if (this.displacedSocketText != null) {
           editor.tree.getTokenAtLocation(this.dest).insert(this.displacedSocketText.clone());
         }
@@ -12609,12 +12885,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 //# sourceMappingURL=controller.js.map
 ;
 (function() {
-  define('droplet',['droplet-draw', 'droplet-view', 'droplet-model', 'droplet-coffee', 'droplet-controller', 'droplet-parser'], function(draw, view, model, coffee, controller, parser) {
+  define('droplet',['droplet-draw', 'droplet-view', 'droplet-model', 'droplet-coffee', 'droplet-javascript', 'droplet-controller', 'droplet-parser'], function(draw, view, model, coffee, javascript, controller, parser) {
     return {
       view: view,
       draw: draw,
       model: model,
       parse: coffee.parse,
+      js_parse: javascript.parse,
       parseObj: parser.parseObj,
       Editor: controller.Editor
     };

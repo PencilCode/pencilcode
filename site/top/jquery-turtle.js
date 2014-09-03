@@ -8128,7 +8128,15 @@ function globaltick(rps, fn) {
     tickinterval = null;
   }
   if (fn && rps) {
-    tickinterval = window.setInterval(fn, 1000 / rps);
+    tickinterval = window.setInterval(
+      function() {
+        // Set default speed to Infinity within tick().
+        var savedturtlespeed = $.fx.speeds.turtle;
+        $.fx.speeds.turtle = 0;
+        fn();
+        $.fx.speeds.turtle = savedturtlespeed;
+      },
+      1000 / rps);
   }
 }
 
