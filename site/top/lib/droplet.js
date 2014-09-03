@@ -2874,7 +2874,7 @@ QUAD.init = function (args) {
 
       Container.prototype.isLastOnLine = function() {
         var _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
-        return ((_ref = this.end.nextVisibleToken()) === ((_ref1 = this.parent) != null ? _ref1.end : void 0) || _ref === ((_ref2 = this.parent) != null ? (_ref3 = _ref2.parent) != null ? _ref3.end : void 0 : void 0) || _ref === null) || ((_ref4 = (_ref5 = this.end.nextVisibleToken()) != null ? _ref5.type : void 0) === 'newline' || _ref4 === 'indentEnd');
+        return ((_ref = this.end.nextVisibleToken()) === ((_ref1 = this.parent) != null ? _ref1.end : void 0) || _ref === ((_ref2 = this.parent) != null ? (_ref3 = _ref2.parent) != null ? _ref3.end : void 0 : void 0) || _ref === null) || ((_ref4 = (_ref5 = this.end.nextVisibleToken()) != null ? _ref5.type : void 0) === 'newline' || _ref4 === 'indentStart' || _ref4 === 'indentEnd');
       };
 
       Container.prototype.visParent = function() {
@@ -4657,7 +4657,6 @@ QUAD.init = function (args) {
                 right.push(new this.view.draw.Point(rightmost, glueTop + this.view.opts.padding));
               }
             } else if ((this.bounds[line + 1] != null) && this.multilineChildrenData[line] !== MULTILINE_MIDDLE) {
-              console.log(this.model.stringify());
               innerLeft = Math.max(this.bounds[line + 1].x, this.bounds[line].x);
               innerRight = Math.min(this.bounds[line + 1].right(), this.bounds[line].right());
               left.push(new this.view.draw.Point(innerLeft, this.bounds[line].bottom()));
@@ -12809,7 +12808,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('keydown', 0, function(event, state) {
       var _ref1;
       if (_ref1 = event.which, __indexOf.call(command_modifiers, _ref1) >= 0) {
-        console.log('FOCUSING');
         if (this.textFocus == null) {
           this.copyPasteInput.focus();
           if (this.lassoSegment != null) {
