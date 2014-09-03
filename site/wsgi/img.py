@@ -58,15 +58,21 @@ def application(env, start_response):
       tbs = 'sur:fm'
       terms = filename
 
-      # path with /i/, /s/, /m/, /l/, or /1024x768/ sizes image
-      if m.append(re.match(r'([isml])/(.*)$', terms)) or any(m):
+      # path with /a/, /i/, /s/, /m/, /l/, or /1024x768/ sizes image
+      isz = 's'
+      if m.append(re.match(r'([aisml])/(.*)$', terms)) or any(m):
         p = m.pop()
-        tbs += ',isz:' + p.group(1)
+        if p.group(1) == 'a':
+          isz = None
+        else:
+          isz = p.group(1)
         terms = p.group(2)
       elif m.append(re.match(r'(\d+)x(\d+)/(.*)$', terms)) or any(m):
         p = m.pop()
-        tbs += ',isz:ex,iszw:' + p.group(1) + ',iszh:' + p.group(2)
+        isz = 'ex,iszw:' + p.group(1) + ',iszh:' + p.group(2)
         terms = p.group(3)
+      if isz is not None:
+        tbs += ',isz:' + isz
 
       # path with /color/, /gray/, /red/, /orange/, etc, selects color
       if m.append(re.match(r'(color|gray|trans)/(.*)$', terms)) or any(m):
