@@ -1670,13 +1670,9 @@ QUAD.init = function (args) {
     exports.MOSTLY_BLOCK = 2;
     exports.MOSTLY_VALUE = 3;
     exports.VALUE_ONLY = 4;
-    exports.ENCOURAGE_ALL = 0;
-    exports.NORMAL = 1;
-    exports.DISCOURAGE_ALL = 2;
-    exports.FORBID = 3;
-    exports.ENCOURAGED = 0;
-    exports.DISCOURAGED = 1;
-    exports.FORBIDDEN = 2;
+    exports.ENCOURAGE = 1;
+    exports.DISCOURAGE = 0;
+    exports.FORBID = -1;
     if (typeof window !== "undefined" && window !== null) {
       window.String.prototype.trimLeft = function() {
         return this.replace(/^\s+/, '');
@@ -2519,6 +2515,15 @@ QUAD.init = function (args) {
         return new Container();
       };
 
+      Container.prototype.getReader = function() {
+        return {
+          id: this.id,
+          type: this.type,
+          precedence: this.precedence,
+          classes: this.classes
+        };
+      };
+
       Container.prototype.hasParent = function(parent) {
         var head;
         head = this;
@@ -2595,7 +2600,7 @@ QUAD.init = function (args) {
           } else {
             return this.start.next.value = value;
           }
-        } else {
+        } else if (value.length !== 0) {
           return this.start.insert(new TextToken(value));
         }
       };
@@ -2607,7 +2612,7 @@ QUAD.init = function (args) {
           } else {
             return this.end.prev.value = value;
           }
-        } else {
+        } else if (value.length !== 0) {
           return this.end.insertBefore(new TextToken(value));
         }
       };
@@ -3213,7 +3218,7 @@ QUAD.init = function (args) {
 
       Block.prototype._serialize_header = function() {
         var _ref, _ref1;
-        return "<block precedence=\"" + this.precedence + "\" color=\"" + this.color + "\" socketLevel=\"" + this.socketLevel + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : []) + "\" >";
+        return "<block precedence=\"" + this.precedence + "\" color=\"" + this.color + "\" socketLevel=\"" + this.socketLevel + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : '') + "\" >";
       };
 
       Block.prototype._serialize_footer = function() {
@@ -3258,34 +3263,23 @@ QUAD.init = function (args) {
     exports.Socket = Socket = (function(_super) {
       __extends(Socket, _super);
 
-      function Socket(precedence, handwritten, acceptsRules) {
+      function Socket(precedence, handwritten, classes) {
         this.precedence = precedence != null ? precedence : 0;
         this.handwritten = handwritten != null ? handwritten : false;
-        this.acceptsRules = acceptsRules != null ? acceptsRules : NORMAL;
+        this.classes = classes != null ? classes : [];
         this.start = new SocketStartToken(this);
         this.end = new SocketEndToken(this);
         this.type = 'socket';
         Socket.__super__.constructor.apply(this, arguments);
       }
 
-      Socket.prototype.accepts = function(block) {
-        var c, _i, _len, _ref, _ref1;
-        _ref = block.classes;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          c = _ref[_i];
-          if (c in this.acceptsRules) {
-            return this.acceptsRules[c];
-          }
-        }
-        return (_ref1 = this.acceptsRules['default']) != null ? _ref1 : NORMAL;
-      };
-
       Socket.prototype._cloneEmpty = function() {
         return new Socket(this.precedence, this.handwritten, this.accepts);
       };
 
       Socket.prototype._serialize_header = function() {
-        return "<socket precedence=\"" + this.precedence + "\" handwritten=\"" + this.handwritten + "\" accepts=\"" + (helper.serializeShallowDict(this.acceptsRules)) + "\">";
+        var _ref, _ref1;
+        return "<socket precedence=\"" + this.precedence + "\" handwritten=\"" + this.handwritten + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : '') + "\">";
       };
 
       Socket.prototype._serialize_footer = function() {
@@ -3340,8 +3334,9 @@ QUAD.init = function (args) {
     exports.Indent = Indent = (function(_super) {
       __extends(Indent, _super);
 
-      function Indent(prefix) {
+      function Indent(prefix, classes) {
         this.prefix = prefix != null ? prefix : '';
+        this.classes = classes != null ? classes : [];
         this.start = new IndentStartToken(this);
         this.end = new IndentEndToken(this);
         this.type = 'indent';
@@ -3354,7 +3349,8 @@ QUAD.init = function (args) {
       };
 
       Indent.prototype._serialize_header = function() {
-        return "<indent prefix=\"" + this.prefix + "\">";
+        var _ref, _ref1;
+        return "<indent prefix=\"" + this.prefix + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : '') + "\">";
       };
 
       Indent.prototype._serialize_footer = function() {
@@ -5325,13 +5321,13 @@ QUAD.init = function (args) {
 
       Parser.prototype.addSocket = function(opts) {
         var socket;
-        socket = new model.Socket(opts.precedence, false, opts.accepts);
+        socket = new model.Socket(opts.precedence, false, opts.classes);
         return this.addMarkup(socket, opts.bounds, opts.depth);
       };
 
       Parser.prototype.addIndent = function(opts) {
         var indent;
-        indent = new model.Indent(opts.prefix);
+        indent = new model.Indent(opts.prefix, opts.classes);
         return this.addMarkup(indent, opts.bounds, opts.depth);
       };
 
@@ -5543,17 +5539,17 @@ QUAD.init = function (args) {
         return _results;
       };
       parser.onopentag = function(node) {
-        var attributes, container, _ref;
+        var attributes, container, _ref, _ref1, _ref2;
         attributes = node.attributes;
         switch (node.name) {
           case 'block':
             container = new model.Block(attributes.precedence, attributes.color, attributes.socketLevel, (_ref = attributes.classes) != null ? typeof _ref.split === "function" ? _ref.split(' ') : void 0 : void 0);
             break;
           case 'socket':
-            container = new model.Socket(attributes.precedence, attributes.handritten, helper.deserializeShallowDict(attributes.accepts));
+            container = new model.Socket(attributes.precedence, attributes.handritten, (_ref1 = attributes.classes) != null ? typeof _ref1.split === "function" ? _ref1.split(' ') : void 0 : void 0);
             break;
           case 'indent':
-            container = new model.Indent(attributes.prefix);
+            container = new model.Indent(attributes.prefix, (_ref2 = attributes.classe) != null ? typeof _ref2.split === "function" ? _ref2.split(' ') : void 0 : void 0);
             break;
           case 'segment':
             if (stack.length !== 0) {
@@ -5632,6 +5628,13 @@ QUAD.init = function (args) {
       }
       return [leading, trailing];
     };
+    Parser.drop = function(block, context, pred) {
+      if (block.type === 'segment' && context.tpye === 'socket') {
+        return helper.FORBID;
+      } else {
+        return helper.ENCOURAGE;
+      }
+    };
     Parser.empty = '';
     Parser.parse = function(text, opts) {};
     exports.makeParser = function(CustomParser) {
@@ -5672,13 +5675,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-coffee',['droplet-helper', 'droplet-model', 'droplet-parser', 'coffee-script'], function(helper, model, parser, CoffeeScript) {
-    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptParser, EITHER_FUNCTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, SAY_FORBID, SAY_NORMAL, STATEMENT_KEYWORDS, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
+    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptParser, EITHER_FUNCTIONS, FORBID_ALL, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
     exports = {};
-    ANY_DROP = helper.ANY_DROP;
-    BLOCK_ONLY = helper.BLOCK_ONLY;
-    MOSTLY_BLOCK = helper.MOSTLY_BLOCK;
-    MOSTLY_VALUE = helper.MOSTLY_VALUE;
-    VALUE_ONLY = helper.VALUE_ONLY;
+    ANY_DROP = ['any-drop'];
+    BLOCK_ONLY = ['block-only'];
+    MOSTLY_BLOCK = ['mostly-block'];
+    MOSTLY_VALUE = ['mostly-value'];
+    VALUE_ONLY = ['value-only'];
+    LVALUE = ['lvalue'];
+    FORBID_ALL = ['forbid-all'];
+    PROPERTY_ACCESS = ['prop-access'];
     BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
     EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
@@ -5700,12 +5706,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       '%': 6,
       '**': 7,
       '%%': 7
-    };
-    SAY_NORMAL = {
-      "default": helper.NORMAL
-    };
-    SAY_FORBID = {
-      "default": helper.FORBID
     };
     YES = function() {
       return true;
@@ -5900,10 +5900,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               for (_l = 0, _len2 = _ref7.length; _l < _len2; _l++) {
                 property = _ref7[_l];
                 if (property.nodeType() === 'Access') {
-                  _results1.push(this.csSocketAndMark(property.name, depth + 1, -2, indentDepth, {
-                    'works-as-method-call': helper.ENCOURAGE_ALL,
-                    'default': helper.FORBID
-                  }));
+                  _results1.push(this.csSocketAndMark(property.name, depth + 1, -2, indentDepth, PROPERTY_ACCESS));
                 } else if (property.nodeType() === 'Index') {
                   _results1.push(this.csSocketAndMark(property.index, depth + 1, 0, indentDepth));
                 } else {
@@ -5984,15 +5981,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             _ref16 = node.params;
             for (_n = 0, _len4 = _ref16.length; _n < _len4; _n++) {
               param = _ref16[_n];
-              this.csSocketAndMark(param, depth + 1, 0, indentDepth, SAY_FORBID);
+              this.csSocketAndMark(param, depth + 1, 0, indentDepth, FORBID_ALL);
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
           case 'Assign':
             this.csBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
-            this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, {
-              'Value': helper.NORMAL,
-              'default': helper.FORBID
-            });
+            this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, LVALUE);
             return this.csSocketAndMark(node.value, depth + 1, 0, indentDepth);
           case 'For':
             this.csBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
@@ -6007,7 +6001,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             for (_p = 0, _len6 = _ref18.length; _p < _len6; _p++) {
               childName = _ref18[_p];
               if (node[childName] != null) {
-                this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, SAY_FORBID);
+                this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, FORBID_ALL);
               }
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
@@ -6083,7 +6077,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'Class':
             this.csBlock(node, depth, 0, 'control', wrappingParen, ANY_DROP);
             if (node.variable != null) {
-              this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, SAY_FORBID);
+              this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, FORBID_ALL);
             }
             if (node.parent != null) {
               this.csSocketAndMark(node.parent, depth + 1, 0, indentDepth);
@@ -6099,7 +6093,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             for (_t = 0, _len10 = _ref22.length; _t < _len10; _t++) {
               property = _ref22[_t];
               if (property.nodeType() === 'Assign') {
-                this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, SAY_FORBID);
+                this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
                 _results4.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
               } else {
                 _results4.push(void 0);
@@ -6207,36 +6201,35 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return container;
       };
 
-      CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, color, wrappingParen, socketLevel) {
+      CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, color, wrappingParen, classes) {
+        if (classes == null) {
+          classes = [];
+        }
         return this.addBlock({
           bounds: this.getBounds(wrappingParen != null ? wrappingParen : node),
           depth: depth,
           precedence: precedence,
           color: color,
-          socketLevel: socketLevel,
-          classes: getClassesFor(node),
+          classes: getClassesFor(node).concat(classes),
           parenWrapped: wrappingParen != null
         });
       };
 
-      CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, accepts) {
-        if (accepts == null) {
-          accepts = SAY_NORMAL;
+      CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes) {
+        if (classes == null) {
+          classes = [];
         }
         return this.addSocket({
           bounds: this.getBounds(node),
           depth: depth,
           precedence: precedence,
-          accepts: accepts
+          classes: getClassesFor(node).concat(classes)
         });
       };
 
-      CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, accepts) {
+      CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes) {
         var socket;
-        if (accepts == null) {
-          accepts = SAY_NORMAL;
-        }
-        socket = this.csSocket(node, depth, precedence, accepts);
+        socket = this.csSocket(node, depth, precedence, classes);
         this.mark(node, depth + 1, precedence, null, indentDepth);
         return socket;
       };
@@ -6341,6 +6334,38 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return lines.splice(n + 1, 0, leading[0] + '  ``');
     };
     CoffeeScriptParser.empty = "``";
+    CoffeeScriptParser.drop = function(block, context, pred) {
+      var _ref;
+      if (context.type === 'socket') {
+        if (__indexOf.call(context.classes, 'forbid-all') >= 0 || block.type === 'segment') {
+          return helper.FORBID;
+        } else if (__indexOf.call(context.classes, 'lvalue') >= 0) {
+          if (__indexOf.call(block.classes, 'Value') >= 0) {
+            return helper.ENCOURAGE;
+          } else {
+            return helper.FORBID;
+          }
+        } else if (__indexOf.call(context.classes, 'property-access') >= 0) {
+          if (__indexOf.call(block.classes, 'works-as-method-call') >= 0) {
+            return helper.ENCOURAGE;
+          } else {
+            return helper.FORBID;
+          }
+        } else if (__indexOf.call(block.classes, 'value-only') >= 0 || __indexOf.call(block.classes, 'mostly-value') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0) {
+          console.log(block.classes);
+          return helper.ENCOURAGE;
+        } else if (__indexOf.call(block.classes, 'mostly-block') >= 0) {
+          return helper.DISCOURAGE;
+        }
+      } else if ((_ref = context.type) === 'indent' || _ref === 'segment') {
+        if (__indexOf.call(block.classes, 'block-only') >= 0 || __indexOf.call(block.classes, 'mostly-block') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0 || block.type === 'segment') {
+          return helper.ENCOURAGE;
+        } else if (__indexOf.call(block.classes, 'mostly-value') >= 0) {
+          return helper.DISCOURAGE;
+        }
+      }
+      return helper.DISCOURAGE;
+    };
     parser.makeParser(CoffeeScriptParser);
     return CoffeeScriptParser;
   });
@@ -10148,7 +10173,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         draggingBlockView.draw(this.dragCtx, new this.draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
         position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         this.dropPointQuadTree = QUAD.init({
-          x: this.scrollOffsets.main.xA,
+          x: this.scrollOffsets.main.x,
           y: this.scrollOffsets.main.y,
           w: this.mainCanvas.width,
           h: this.mainCanvas.height
@@ -10160,7 +10185,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }
           if (head instanceof model.StartToken) {
             acceptLevel = this.getAcceptLevel(this.draggingBlock, head.container);
-            if (acceptLevel !== helper.FORBIDDEN) {
+            if (acceptLevel !== helper.FORBID) {
               dropPoint = this.view.getViewNodeFor(head.container).dropPoint;
               if (dropPoint != null) {
                 this.dropPointQuadTree.insert({
@@ -10184,6 +10209,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return this.redrawMain();
       }
     });
+    Editor.prototype.getAcceptLevel = function(drag, drop) {
+      if (drop.type === 'socket') {
+        return this.mode.drop(drag.getReader(), drop.getReader(), null);
+      } else if (drop.type === 'block') {
+        return this.mode.drop(drag.getReader(), drop.visParent().getReader(), drop);
+      } else {
+        return this.mode.drop(drag.getReader(), drop.getReader(), drop.getReader());
+      }
+    };
     hook('mousemove', 0, function(point, event, state) {
       var best, head, mainPoint, min, palettePoint, position, testPoints, _ref1, _ref2, _ref3;
       if (this.draggingBlock != null) {
@@ -10209,7 +10243,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           }, (function(_this) {
             return function(point) {
               var distance;
-              if (!((point.acceptLevel === helper.DISCOURAGED) && !event.shiftKey)) {
+              if (!((point.acceptLevel === helper.DISCOURAGE) && !event.shiftKey)) {
                 distance = mainPoint.from(point);
                 distance.y *= 2;
                 distance = distance.magnitude();
@@ -10245,42 +10279,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       clearTimeout(this.discourageDropTimeout);
       return this.discourageDropTimeout = null;
     });
-    Editor.prototype.getAcceptLevel = function(drag, drop) {
-      var acceptance, _ref1, _ref2, _ref3, _ref4, _ref5;
-      if (drop == null) {
-        return helper.FORBIDDEN;
-      }
-      if (this.view.getViewNodeFor(drop).dropPoint == null) {
-        return helper.FORBIDDEN;
-      }
-      if (((_ref1 = drop.parent) != null ? _ref1.type : void 0) === 'socket') {
-        return helper.FORBIDDEN;
-      }
-      if ((drag != null ? drag.type : void 0) === 'segment' && ((_ref2 = drop.type) === 'block' || _ref2 === 'segment' || _ref2 === 'indent')) {
-        return helper.ENCOURAGED;
-      }
-      if ((drop != null ? drop.type : void 0) === 'socket') {
-        acceptance = drop.accepts(drag);
-        if (acceptance === helper.ENCOURAGE_ALL) {
-          return helper.ENCOURAGED;
-        }
-        if (acceptance === helper.NORMAL && ((_ref3 = drag.socketLevel) === ANY_DROP || _ref3 === MOSTLY_VALUE || _ref3 === VALUE_ONLY)) {
-          return helper.ENCOURAGED;
-        } else if (acceptance === helper.NORMAL && ((_ref4 = drag.socketLevel) === MOSTLY_BLOCK)) {
-          return helper.DISCOURAGED;
-        } else if (acceptance === helper.DISCOURAGE && drag.socketLevel !== BLOCK_ONLY) {
-          return helper.DISCOURAGED;
-        } else {
-          return helper.FORBIDDEN;
-        }
-      } else if ((_ref5 = drag.socketLevel) === ANY_DROP || _ref5 === MOSTLY_BLOCK || _ref5 === BLOCK_ONLY) {
-        return helper.ENCOURAGED;
-      } else if (drag.socketLevel === MOSTLY_VALUE) {
-        return helper.DISCOURAGED;
-      } else {
-        return helper.FORBIDDEN;
-      }
-    };
     hook('mouseup', 1, function(point, event, state) {
       if ((this.draggingBlock != null) && (this.lastHighlight != null)) {
         if (this.inTree(this.draggingBlock)) {

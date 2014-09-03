@@ -2300,10 +2300,11 @@ function makeTurtleEasingHook() {
 
 function animTime(elem) {
   var state = $.data(elem, 'turtleData');
-  if (!state) return 'turtle';
+  if (!state) return (insidetick ? 0 : 'turtle');
   if ($.isNumeric(state.speed) || state.speed == 'Infinity') {
     return 1000 / state.speed;
   }
+  if (state.speed == 'turtle' && insidetick) return 0;
   return state.speed;
 }
 
@@ -2535,9 +2536,59 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
 }
 
 var absoluteUrlAnchor = document.createElement('a');
-function absoluteUrl(url) {
+function absoluteUrlObject(url) {
   absoluteUrlAnchor.href = url;
-  return absoluteUrlAnchor.href;
+  return absoluteUrlAnchor;
+}
+function absoluteUrl(url) {
+  return absoluteUrlObject(url).href;
+}
+
+// Pencil-code specific function: detects whether a domain appears to
+// be a pencilcode site.
+function isPencilHost(hostname) {
+  return /(?:^|\.)pencil(?:code)?\./i.test(hostname);
+}
+// Returns a pencilcode username from the URL, if any.
+function pencilUserFromUrl(url) {
+  var hostname = absoluteUrlObject(url == null ? '' : url).hostname,
+      match = /^(\w+)\.pencil(?:code)?\./i.exec(hostname);
+  if (match) return match[1];
+  return null;
+}
+// Rewrites a url to have the top directory name given.
+function apiUrl(url, topdir) {
+  var link = absoluteUrlObject(url == null ? '' : url),
+      result = link.href;
+  if (isPencilHost(link.hostname)) {
+    if (/^\/(?:edit|home|code|load|save)(?:\/|$)/.test(link.pathname)) {
+      // Replace a special topdir name.
+      result = link.protocol + '//' + link.host + '/' + topdir + '/' +
+        link.pathname.replace(/\/[^\/]*(?:\/|$)/, '') + link.search + link.hash;
+    } else {
+      // Prepend a topdir name if there is no special name already.
+      result = link.protocol + '//' + link.host + '/' + topdir +
+        link.pathname + link.search + link.hash;
+    }
+  } else if (isPencilHost(window.location.hostname)) {
+    // Proxy offdomain requests to avoid CORS issues.
+    result = '/proxy/' + result;
+  }
+  return result;
+}
+// Retrieves the pencil code login cookie, if there is one.
+function loginCookie() {
+  if (!document.cookie) return null;
+  var cookies = document.cookie.split(/;\s*/);
+  for (var j = 0; j < cookies.length; ++j) {
+    if (/^login=/.test(cookies[j])) {
+      var val = unescape(cookies[j].substr(6)).split(':');
+      if (val && val.length == 2) {
+        return { user: val[0], key: val[1] };
+      }
+    }
+  }
+  return null;
 }
 
 // A map of url to {img: Image, queue: [{elem: elem, css: css, cb: cb}]}.
@@ -7055,6 +7106,63 @@ var dollar_turtle_methods = {
     });
     sync = null;
   }),
+  load: wrapraw('load',
+  ["<u>load(url, cb)</u> Loads data from the url and passes it to cb. " +
+      "<mark>load '/intro', (t) -> write 'intro contains', t</mark>"],
+  function(url, cb) {
+    var val = null;
+    $.ajax(apiUrl(url, 'load'), { async: !!cb, complete: function(xhr) {
+      try {
+        val = JSON.parse(xhr.responseText);
+        if (typeof(val.data) == 'string' && typeof(val.file) == 'string') {
+          val = val.data;
+        } else if ($.isArray(val.list) && typeof(val.directory) == 'string') {
+          val = val.list;
+        }
+      } catch(e) {
+        if (val == null && xhr && xhr.responseText) {
+          val = xhr.responseText;
+        }
+      }
+      if (cb) {
+        cb(val, xhr);
+      }
+    }});
+    return val;
+  }),
+  save: wrapraw('save',
+  ["<u>save(url, data, cb)</u> Posts data to the url and calls when done. " +
+      "<mark>save '/intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
+  function(url, data, cb) {
+    if (!url) throw new Error('Missing url for save');
+    var payload = data, url = apiUrl(url, 'save');
+    if (typeof(payload) == 'string' || typeof(payload) == 'number') {
+      payload = { data: payload };
+    }
+    if (payload && !payload.key) {
+      var login = loginCookie();
+      if (login && login.key && login.user == pencilUserFromUrl(url)) {
+        payload.key = login.key;
+      }
+    }
+    $.ajax(apiUrl(url, 'save'), {
+      type: 'POST',
+      data: payload,
+      complete: function(xhr) {
+        var val
+        try {
+          val = JSON.parse(xhr.responseText);
+        } catch(e) {
+          if (val == null && xhr && xhr.responseText) {
+            val = xhr.responseText;
+          }
+        }
+        if (cb) {
+          cb(val, xhr);
+        }
+      }
+    });
+  }),
   append: wrapraw('append',
   ["<u>append(html)</u> Appends text to the document without a new line. " +
       "<mark>append 'try this twice...'</mark>"],
@@ -7987,11 +8095,13 @@ function nameToImg(name, defaultshape) {
     return shape(color);
   }
   // Parse URLs.
-  if (/^(?:(?:https?|data):)?\//i.exec(name)) {
-    if (/^https?:/i.test(name) && !/^https?:\/\/[^/]*pencilcode.net/.test(name)
-        && /(?:^|\.)pencilcode\.net\b/.test(window.location.hostname)) {
+  if (/\//.test(name)) {
+    var hostname = absoluteUrlObject(name).hostname;
+    // Use proxy to load image if the image is offdomain but the page is on
+    // a pencil host (with a proxy).
+    if (!isPencilHost(hostname) && isPencilHost(window.location.hostname)) {
       name = window.location.protocol + '//' +
-             window.location.host + '/proxy/' + name;
+             window.location.host + '/proxy/' + absoluteUrl(name);
     }
     return {
       url: name,
@@ -8117,7 +8227,7 @@ function random(arg, arg2) {
 }
 
 // Simplify setInterval(fn, 1000) to just tick(fn).
-var tickinterval = null;
+var tickinterval = null, insidetick = 0;
 function globaltick(rps, fn) {
   if (fn === undefined && $.isFunction(rps)) {
     fn = rps;
@@ -8131,10 +8241,12 @@ function globaltick(rps, fn) {
     tickinterval = window.setInterval(
       function() {
         // Set default speed to Infinity within tick().
-        var savedturtlespeed = $.fx.speeds.turtle;
-        $.fx.speeds.turtle = 0;
-        fn();
-        $.fx.speeds.turtle = savedturtlespeed;
+        try {
+          insidetick++;
+          fn();
+        } finally {
+          insidetick--;
+        }
       },
       1000 / rps);
   }
