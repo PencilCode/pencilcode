@@ -694,6 +694,13 @@ function signUpAndSave(options) {
               username.substr(username.length - 3) + '".'
         };
       }
+      if (username && /^pencil/.test(username)) {
+        // Discourage usernames that start with 'pencil'
+        return {
+          disable: true,
+          info: 'Name should not start with pencil.'
+        };
+      }
       if (state.username.length < 3) {
         return {
           disable: true,
