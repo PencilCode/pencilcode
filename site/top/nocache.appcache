@@ -1,3 +1,5 @@
 CACHE MANIFEST
+# Trivial manfiest disables the App Cache.
+# Last built <!--# include file="builddate.txt" -->
 NETWORK:
 *
