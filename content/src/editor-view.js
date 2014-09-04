@@ -2068,6 +2068,13 @@ function setPaneEditorReadOnly(pane, ro) {
   }
 }
 
+function sameDisregardingTrailingSpace(s1, s2) {
+  if (s1 == s2) return true;
+  if (s1.length == s2.length) return false;
+  if (s1.replace(/\s+$/, '') == s2.replace(/\s+$/, '')) return true;
+  return false;
+}
+
 function isPaneEditorDirty(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) { return false; }
@@ -2075,9 +2082,7 @@ function isPaneEditorDirty(pane) {
     return true;
   }
   var text = paneState.dropletEditor.getValue();
-  // TODO: differentiate with
-  // paneState.editor.getSession().getValue();
-  if (text != paneState.cleanText) {
+  if (!sameDisregardingTrailingSpace(text, paneState.cleanText)) {
     paneState.dirtied = true;
     return true;
   }
