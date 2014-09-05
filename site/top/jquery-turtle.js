@@ -2298,13 +2298,14 @@ function makeTurtleEasingHook() {
   }
 }
 
-function animTime(elem) {
+function animTime(elem, intick) {
   var state = $.data(elem, 'turtleData');
-  if (!state) return (insidetick ? 0 : 'turtle');
+  intick = intick || insidetick;
+  if (!state) return (intick ? 0 : 'turtle');
   if ($.isNumeric(state.speed) || state.speed == 'Infinity') {
     return 1000 / state.speed;
   }
-  if (state.speed == 'turtle' && insidetick) return 0;
+  if (state.speed == 'turtle' && intick) return 0;
   return state.speed;
 }
 
@@ -5644,7 +5645,7 @@ function rtlt(cc, degrees, radius) {
   if (degrees == null) {
     degrees = 90;  // zero-argument default.
   }
-  var elem, left = (cc.name === 'lt');
+  var elem, left = (cc.name === 'lt'), intick = insidetick;
   if ((elem = canMoveInstantly(this)) &&
       (radius === 0 || (radius == null && getTurningRadius(elem) === 0))) {
     cc.appear(0);
@@ -5657,7 +5658,7 @@ function rtlt(cc, degrees, radius) {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.animate({turtleRotation: operator + cssNum(degrees || 0) + 'deg'},
-          animTime(elem), animEasing(elem), cc.resolver(j));
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   } else {
@@ -5666,7 +5667,7 @@ function rtlt(cc, degrees, radius) {
       var oldRadius = this.css('turtleTurningRadius');
       this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
       this.animate({turtleRotation: operator + cssNum(degrees) + 'deg'},
-          animTime(elem), animEasing(elem));
+          animTime(elem, intick), animEasing(elem));
       this.plan(function() {
         this.css({turtleTurningRadius: oldRadius});
         cc.resolve(j);
@@ -5684,7 +5685,7 @@ function fdbk(cc, amount) {
   if (cc.name === 'bk') {
     amount = -amount;
   }
-  var elem;
+  var elem, intick = insidetick;
   if ((elem = canMoveInstantly(this))) {
     cc.appear(0);
     doQuickMove(elem, amount, 0);
@@ -5694,7 +5695,7 @@ function fdbk(cc, amount) {
   this.plan(function(j, elem) {
     cc.appear(0);
     this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
-        animTime(elem), animEasing(elem), cc.resolver(0));
+        animTime(elem, intick), animEasing(elem), cc.resolver(0));
   });
   return this;
 }
@@ -5705,6 +5706,7 @@ function fdbk(cc, amount) {
 //////////////////////////////////////////////////////////////////////////
 
 function animatedDotCommand(fillShape) {
+  var intick = insidetick;
   return (function(cc, style, diameter) {
     if ($.isNumeric(style)) {
       // Allow for parameters in either order.
@@ -5732,7 +5734,7 @@ function animatedDotCommand(fillShape) {
       } else {
         this.queue(function(next) {
           $({radius: 0}).animate({radius: animDiam}, {
-            duration: animTime(elem),
+            duration: animTime(elem, intick),
             step: function() {
               if (!hasAlpha) {
                 fillShape(drawOnCanvas, c, this.radius, ts.rot, ps);
@@ -5830,10 +5832,11 @@ var turtlefn = {
     }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
+    var intick = insidetick;
     this.plan(function(j, elem) {
       cc.appear(j);
       this.animate({turtlePosition: displacedPosition(elem, y, x)},
-          animTime(elem), animEasing(elem), cc.resolver(j));
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   }),
@@ -5847,7 +5850,7 @@ var turtlefn = {
     }
     if (!y) { y = 0; }
     if (!x) { x = 0; }
-    var elem;
+    var elem, intick = insidetick;
     if ((elem = canMoveInstantly(this))) {
       cc.appear(0);
       doQuickMoveXY(elem, x, y);
@@ -5859,7 +5862,7 @@ var turtlefn = {
       var tr = getElementTranslation(elem);
       this.animate(
         { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-        animTime(elem), animEasing(elem), cc.resolver(j));
+        animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   }),
@@ -5870,7 +5873,7 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"],
   function moveto(cc, x, y) {
-    var position = x, localx = 0, localy = 0, limit = null;
+    var position = x, localx = 0, localy = 0, limit = null, intick = insidetick;
     if ($.isNumeric(position) && $.isNumeric(y)) {
       // moveto x, y: use local coordinates.
       localx = parseFloat(position);
@@ -5912,7 +5915,7 @@ var turtlefn = {
       cc.appear(j);
       this.animate({turtlePosition:
           computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
-          animTime(elem), animEasing(elem), cc.resolver(j));
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   }),
@@ -5961,6 +5964,7 @@ var turtlefn = {
       bearing = [bearing, y];
       y = null;
     }
+    var intick = insidetick;
     this.plan(function(j, elem) {
       cc.appear(j);
       if ($.isWindow(elem) || elem.nodeType === 9) {
@@ -6003,7 +6007,7 @@ var turtlefn = {
       }
       dir = ts.rot + normalizeRotation(dir - ts.rot);
       this.animate({turtleRotation: dir},
-          animTime(elem), animEasing(elem), cc.resolver(j));
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   }),
@@ -6060,6 +6064,7 @@ var turtlefn = {
     } else if ($.isPlainObject(penstyle)) {
       penstyle = writePenStyle(penstyle);
     }
+    var intick = insidetick;
     this.plan(function(j, elem) {
       cc.appear(j);
       var animate = !canMoveInstantly(this) && this.is(':visible'),
@@ -6111,7 +6116,7 @@ var turtlefn = {
           pencil.css({ opacity: 0 });
           target.opacity = 1;
         }
-        pencil.animate(target, animTime(elem));
+        pencil.animate(target, animTime(elem, intick));
         this.queue(function(next) {
           pencil.done(function() {
             pencil.remove();
@@ -6187,6 +6192,7 @@ var turtlefn = {
     if (valy === undefined) { valy = valx; }
     // Disallow scaling to zero using this method.
     if (!valx || !valy) { valx = valy = 1; }
+    var intick = insidetick;
     this.plan(function(j, elem) {
       cc.appear(j);
       if ($.isWindow(elem) || elem.nodeType === 9) {
@@ -6198,7 +6204,7 @@ var turtlefn = {
       c[0] *= valx;
       c[1] *= valy;
       this.animate({turtleScale: $.map(c, cssNum).join(' ')},
-            animTime(elem), animEasing(elem), cc.resolver(j));
+            animTime(elem, intick), animEasing(elem), cc.resolver(j));
     });
     return this;
   }),
@@ -6373,7 +6379,7 @@ var turtlefn = {
     if (typeof(css) == 'number') {
       css = { height: css };
     }
-    var img = nameToImg(name, 'turtle');
+    var img = nameToImg(name, 'turtle'), intick = insidetick;
     if (!img) return this;
     if (css) {
       $.extend(img.css, css);
@@ -6393,7 +6399,7 @@ var turtlefn = {
         if (callback) { waiting = null; callback(); }
       });
       if (!canMoveInstantly(this)) {
-        this.delay(animTime(elem));
+        this.delay(animTime(elem, intick));
       }
       if (!loaded) {
         this.pause({done: function(cb) {
@@ -6427,15 +6433,24 @@ var turtlefn = {
   label: wrapcommand('label', 1,
   ["<u>label(text)</u> Labels the current position with HTML: " +
       "<mark>label 'remember'</mark>",
-   "<u>label(text, styles)</u> Apply CSS styles to the label: " +
-      "<mark>label 'big', { fontSize: 100 }</mark>"],
-  function label(cc, html, styles) {
+   "<u>label(text, position, styles)</u> Position is 'top', 'bottom', 'left'," +
+      "or 'right', and styles is an optional size or CSS object: " +
+      "<mark>label 'big', 'bottom', { color: red:, fontSize: 100 }</mark>"],
+  function label(cc, html, side, styles) {
+    if (!styles && ($.isNumeric(side) || $.isPlainObject(side))) {
+      styles = side;
+      side = null;
+    }
     if ($.isNumeric(styles)) {
       styles = { fontSize: styles };
     }
+    if (!side) {
+      side = 'rotated-scaled';
+    }
+    var intick = insidetick;
     return this.plan(function(j, elem) {
       cc.appear(j);
-      var applyStyles = {}, currentStyles = this.prop('style');
+      var applyStyles = {margin: 8}, currentStyles = this.prop('style');
       // For defaults, copy inline styles of the turtle itself except for
       // properties in the following list (these are the properties used to
       // make the turtle look like a turtle).
@@ -6459,18 +6474,29 @@ var turtlefn = {
       // Place the label on the screen using the figured styles.
       var out = output(html, 'label').css(applyStyles)
           .addClass('turtle').appendTo(getTurtleField());
+      var rotated = /\brotated\b/.test(side),
+          scaled = /\bscaled\b/.test(side);
       // Mimic the current position and rotation and scale of the turtle.
       out.css({
         turtlePosition: computeTargetAsTurtlePosition(
             out.get(0), this.pagexy(), null, 0, 0),
-        turtleRotation: this.css('turtleRotation'),
-        turtleScale: this.css('turtleScale')
+        turtleRotation: rotated ? this.css('turtleRotation') : 0,
+        turtleScale: scaled ? this.css('turtleScale') : 1
       });
+      // Modify top-left to slide to the given corner, if requested.
+      if (/\b(?:top|bottom)\b/.test(side)) {
+        applyStyles.top =
+            (/\btop\b/.test(side) ? -1 : 1) * out.outerHeight(true) / 2;
+      }
+      if (/\b(?:left|right)\b/.test(side)) {
+        applyStyles.left =
+            (/\bleft\b/.test(side) ? -1 : 1) * out.outerWidth(true) / 2;
+      }
       // Then finally apply styles (turtle styles may be overridden here).
       out.css(applyStyles);
       // Add a delay.
       if (!canMoveInstantly(this)) {
-        this.delay(animTime(elem));
+        this.delay(animTime(elem, intick));
       }
       this.plan(function() {
         cc.resolve(j);
