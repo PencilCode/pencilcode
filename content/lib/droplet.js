@@ -9667,11 +9667,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     exports.Editor = Editor = (function() {
       function Editor(wrapperElement, options) {
-        var binding, boundListeners, dispatchKeyEvent, dispatchMouseEvent, elements, eventName, _fn, _i, _len, _ref1, _ref2;
+        var binding, boundListeners, dispatchKeyEvent, dispatchMouseEvent, elements, eventName, _fn, _i, _len, _ref1, _ref2, _ref3;
         this.wrapperElement = wrapperElement;
         this.options = options;
         this.paletteGroups = this.options.palette;
-        if (this.options.mode === 'coffeescript') {
+        if ((_ref1 = this.options.mode) === 'coffee' || _ref1 === 'coffeescript') {
           this.mode = coffee;
         } else if (this.options.mode === 'javascript') {
           this.mode = javascript;
@@ -9728,9 +9728,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           respectEphemeral: false
         }));
         boundListeners = [];
-        _ref1 = editorBindings.populate;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          binding = _ref1[_i];
+        _ref2 = editorBindings.populate;
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          binding = _ref2[_i];
           binding.call(this);
         }
         window.addEventListener('resize', (function(_this) {
@@ -9740,15 +9740,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         })(this));
         dispatchMouseEvent = (function(_this) {
           return function(event) {
-            var handler, state, trackPoint, _j, _len1, _ref2;
+            var handler, state, trackPoint, _j, _len1, _ref3;
             if (event.type !== 'mousemove' && event.which !== 1) {
               return;
             }
             trackPoint = new _this.draw.Point(event.pageX, event.pageY);
             state = {};
-            _ref2 = editorBindings[event.type];
-            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-              handler = _ref2[_j];
+            _ref3 = editorBindings[event.type];
+            for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+              handler = _ref3[_j];
               handler.call(_this, trackPoint, event, state);
             }
             if (typeof event.stopPropagation === "function") {
@@ -9764,18 +9764,18 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         })(this);
         dispatchKeyEvent = (function(_this) {
           return function(event) {
-            var handler, state, _j, _len1, _ref2, _results;
+            var handler, state, _j, _len1, _ref3, _results;
             state = {};
-            _ref2 = editorBindings[event.type];
+            _ref3 = editorBindings[event.type];
             _results = [];
-            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-              handler = _ref2[_j];
+            for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+              handler = _ref3[_j];
               _results.push(handler.call(_this, event, state));
             }
             return _results;
           };
         })(this);
-        _ref2 = {
+        _ref3 = {
           keydown: [this.dropletElement, this.paletteElement],
           keyup: [this.dropletElement, this.paletteElement],
           mousedown: [this.dropletElement, this.paletteElement, this.dragCover],
@@ -9798,8 +9798,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return _results;
           };
         })(this);
-        for (eventName in _ref2) {
-          elements = _ref2[eventName];
+        for (eventName in _ref3) {
+          elements = _ref3[eventName];
           _fn(eventName, elements);
         }
         this.tree = new model.Segment();

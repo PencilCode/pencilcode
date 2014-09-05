@@ -125,6 +125,9 @@ body#pencildoc #diigolet-csm {
 .droplet-palette-wrapper:hover .closeblocks { color:dodgerblue; }
 .droplet-palette-wrapper .closeblocks:hover { background: dodgerblue; color: white; }
 .droplet-palette-wrapper .closeblocks:active { color: red; background: dodgerblue; }
+.gear{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARBAMAAADJQ1rJAAAAFVBMVEUAAAD///////////////////////9Iz20EAAAABnRSTlMAr++f37+5/Na4AAAATElEQVQI12MAArM0AQYICEsLgLLU0hRAFHOSW1pamlMyAwNbGgQwMIilpQlACKa0RAYGxrQkoMK0BNwEQh1CL9w8hB0wezHcIgZ2HwD3DBrdizr+iAAAAABJRU5ErkJggg==);
+  background-repeat:no-repeat;background-position:center;width:21px;opacity:0.6}
+.gear:hover{opacity:1}
 .preview{height:100%;overflow:hidden;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=);
   background-position:center;}
 .preview iframe{height:100%;width:100%;border:none;margin:0;padding:0;}
@@ -144,7 +147,6 @@ body#pencildoc #diigolet-csm {
 .droplet-toggle-button {
   text-decoration:none;color:inherit;cursor:pointer;}
 .droplet-toggle-button:hover {text-decoration:underline;color:white;}
-  
 .gadget {
   position: fixed; z-index: 2;
   border-radius: 8px;

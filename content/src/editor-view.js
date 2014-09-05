@@ -1324,7 +1324,7 @@ function clearPane(pane, loading) {
   paneState.fullScreenLink = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
-  $('#' + pane + 'title_text').html(''); $('#' + pane + 'title-extra').html('');
+  $('#' + pane + 'title_text').html('');
 }
 
 function modeForMimeType(mimeType) {
@@ -1345,6 +1345,28 @@ function modeForMimeType(mimeType) {
     result = 'text';
   }
   return 'ace/mode/' + result;
+}
+
+function dropletModeForMimeType(mimeType) {
+  if (!mimeType) {
+    return 'ace/mode/text';
+  }
+  mimeType = mimeType.replace(/;.*$/, '')
+  var result = {
+    'text/x-pencilcode': 'coffee',
+    'text/coffeescript': 'coffee',
+    'text/javascript': 'javascript',
+  }[mimeType];
+  if (!result) {
+    result = 'coffee';
+  }
+  return result;
+}
+
+function paletteForMimeType(mimeType) {
+  if (mimeType == 'text/x-pencilcode') return COFFEESCRIPT_PALETTE;
+  if (mimeType == 'text/coffeescript') return COFFEESCRIPT_PALETTE;
+  return [];
 }
 
 function uniqueId(name) {
@@ -1379,6 +1401,11 @@ function updatePaneTitle(pane) {
             '"><b>' + symbol + '</b> <span alt="' + alt + '">' +
             label + '</span></a>';
       }
+      if (/pencilcode/.test(paneState.mimeType)) {
+        label = '<div style="float:right" class="gear" ' +
+                'title="Languages and libraries">&nbsp;</div>'
+              + label;
+      }
     }
   } else if (paneState.links) {
     label = 'directory';
@@ -1398,7 +1425,7 @@ function updatePaneTitle(pane) {
       label = 'screen';
     }
   }
-  $('#' + pane + 'title_text').html(label).find('a[title]').
+  $('#' + pane + 'title_text').html(label).find('[title]').
       tooltipster({ position: 'top-left' });
 }
 
@@ -1413,6 +1440,12 @@ $('.panetitle').on('click', '.toggleblocks', function(e) {
   e.preventDefault();
   var newmode = !getPaneEditorBlockMode(pane);
   setPaneEditorBlockMode(pane, newmode);
+});
+
+$('.panetitle').on('click', '.gear', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  e.preventDefault();
+  showPaneEditorLanguages(pane);
 });
 
 $('.pane').on('click', '.closeblocks', function(e) {
@@ -1559,7 +1592,7 @@ function changeEditorText(paneState, text) {
 
 // The following palette description
 // is copied from compiled CoffeeScript.
-var ICE_EDITOR_PALETTE =[
+var COFFEESCRIPT_PALETTE =[
   {
     name: 'Draw',
     color: 'blue',
@@ -1749,6 +1782,16 @@ var ICE_EDITOR_PALETTE =[
   }
 ];
 
+function editorMimeType(paneState) {
+  if (!paneState.mimeType) {
+    return;
+  }
+  if (/pencilcode/.test(paneState.mimeType)) {
+    return filetype.effectiveMeta(paneState.meta).type;
+  }
+  return paneState.mimeType;
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1766,15 +1809,19 @@ function setPaneEditorData(pane, data, filename, useblocks) {
   paneState.cleanMeta = JSON.stringify(meta);
   paneState.dirtied = false;
   paneState.meta = meta;
-  if (!mimeTypeSupportsBlocks(paneState.mimeType)) {
-     useblocks = false;
+  var visibleMimeType = editorMimeType(paneState);
+  if (!mimeTypeSupportsBlocks(visibleMimeType)) {
+    useblocks = false;
   }
-
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var dropletMode = dropletModeForMimeType(visibleMimeType);
   var dropletEditor = paneState.dropletEditor =
       new droplet.Editor(
           document.getElementById(id),
-          {mode: 'coffeescript', palette:ICE_EDITOR_PALETTE});
+          {
+            mode: dropletMode,
+            palette: paletteForMimeType(visibleMimeType)
+          });
   whenCodeFontLoaded(function () {
     dropletEditor.setFontFamily("Source Code Pro");
     dropletEditor.setFontSize(16);
@@ -1829,7 +1876,7 @@ function setPaneEditorData(pane, data, filename, useblocks) {
   editor.getSession().setFoldStyle('markbeginend');
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
-  editor.getSession().setMode(modeForMimeType(paneState.mimeType));
+  editor.getSession().setMode(modeForMimeType(visibleMimeType));
 
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
@@ -1911,7 +1958,7 @@ function setPaneEditorData(pane, data, filename, useblocks) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript/.test(mimeType);
 }
 
 function setPaneEditorBlockMode(pane, useblocks) {
@@ -1919,7 +1966,8 @@ function setPaneEditorBlockMode(pane, useblocks) {
   if (!paneState.dropletEditor) return false;
   useblocks = !!useblocks;
   if (paneState.dropletEditor.currentlyUsingBlocks == useblocks) return false;
-  if (useblocks && !mimeTypeSupportsBlocks(paneState.mimeType)) return false;
+  var visibleMimeType = editorMimeType(paneState);
+  if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
   var togglingSucceeded = paneState.dropletEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
   fireEvent('toggleblocks', [pane, paneState.dropletEditor.currentlyUsingBlocks]);
@@ -2256,8 +2304,9 @@ function noteNewFilename(pane, filename) {
   if (paneState.editor) {
     paneState.mimeType = filetype.mimeForFilename(filename);
     paneState.editor.getSession().clearAnnotations();
-    paneState.editor.getSession().setMode(modeForMimeType(paneState.mimeType));
-    if (!mimeTypeSupportsBlocks(paneState.mimeType)) {
+    var visibleMimeType = editorMimeType(paneState);
+    paneState.editor.getSession().setMode(visibleMimeType);
+    if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);
     }
   }

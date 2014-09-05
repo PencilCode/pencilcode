@@ -12,15 +12,24 @@ function inferScriptType(filename) {
 function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   var result, j, scripts = [], script_pattern =
     /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g,
-    text = doc.data;
-  // Add the default turtle script.
-  // Note that we use crossorigin="anonymous" so that we can get
-  // more detailed error information (e.g., CoffeeScript compilation
-  // errors, using CORS rules.)  More discussion:
-  // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
-  scripts.push(
-    '<script src="//' + domain + '/turtlebits.js' +
-    '" crossorigin="anonymous">\n<\057script>');
+    text = doc.data,
+    meta = effectiveMeta(doc.meta), src;
+  // Add the default scripts.
+  for (j = 0; j < meta.libs.length; ++j) {
+    var src = meta.libs[j].src;
+    if (/{site}/.test(src)) {
+      src = src.replace(/{site}/g, domain);
+      // Note that for local scripts we use crossorigin="anonymous" so that
+      // we can get // more detailed error information (e.g., CoffeeScript
+      // compilation // errors, using CORS rules.)  More discussion:
+      // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
+      scripts.push(
+        '<script src="' + src + '" crossorigin="anonymous"><\057script>');
+    } else {
+      scripts.push(
+        '<script src="' + src + '"><\057script>');
+    }
+  }
   // Then add any setupScript supplied.
   if (setupScript) {
     for (j = 0; j < setupScript.length; ++j) {
@@ -130,9 +139,25 @@ function mimeForFilename(filename) {
   return result;
 }
 
+function effectiveMeta(meta) {
+  if (meta && meta.type && meta.lib) { return meta; }
+  meta = (meta && 'object' == typeof meta) ?
+    JSON.parse(JSON.stringify(meta)) : {};
+  if (!meta.type) {
+    meta.type = 'text/coffeescript';
+  }
+  if (!meta.libs) {
+    meta.libs = [
+      {name: 'turtle', src: '//{site}/turtlebits.js'}
+    ];
+  }
+  return meta;
+}
+
 var impl = {
   mimeForFilename: mimeForFilename,
   modifyForPreview: modifyForPreview,
+  effectiveMeta: effectiveMeta,
   wrapTurtle: wrapTurtle
 };
 

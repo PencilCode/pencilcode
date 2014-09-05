@@ -81,7 +81,7 @@ describe('proxy program', function() {
       // Return a ton of UI state.
       return {
         filename: $('#filename').text(),
-        title: lefttitle.text(),
+        title: lefttitle.text().trim(),
         text: ace_editor.getSession().getValue(),
         activeid: document.activeElement && document.activeElement.id,
         preview: $('.preview').length,
@@ -124,7 +124,7 @@ describe('proxy program', function() {
       if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
-        title: lefttitle.text(),
+        title: lefttitle.text().trim(),
         saved: $('#save').prop('disabled'),
         logout: $('#logout').length
       };

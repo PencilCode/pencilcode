@@ -131,7 +131,7 @@ describe('code editor', function() {
       // Return a ton of UI state.
       return {
         filename: $('#filename').text(),
-        title: lefttitle.text(),
+        title: lefttitle.text().trim(),
         text: ace_editor.getSession().getValue(),
         activeid: document.activeElement && document.activeElement.id,
         preview: $('.preview').length,
@@ -222,7 +222,7 @@ describe('code editor', function() {
       if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
-        title: lefttitle.text(),
+        title: lefttitle.text().trim(),
         saved: $('#save').prop('disabled')
       };
     }, function(err, result) {
@@ -320,7 +320,7 @@ describe('code editor', function() {
             .find('.panetitle-text');
         return {
           notification: $('#notification').text(),
-          lefttitle: lefttitle.text(),
+          lefttitle: lefttitle.text().trim(),
           url: window.location.href
         };
       }
@@ -523,7 +523,7 @@ describe('code editor', function() {
         notifytext: $('#notification').text(),
         login: $('#login').is(':visible'),
         logout: $('#logout').is(':visible'),
-        title: lefttitle.text()
+        title: lefttitle.text().trim()
       };
     }, function(err, result) {
       assert.ifError(err);
