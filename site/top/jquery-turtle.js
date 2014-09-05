@@ -2566,10 +2566,6 @@ function apiUrl(url, topdir) {
       // Replace a special topdir name.
       result = link.protocol + '//' + link.host + '/' + topdir + '/' +
         link.pathname.replace(/\/[^\/]*(?:\/|$)/, '') + link.search + link.hash;
-    } else {
-      // Prepend a topdir name if there is no special name already.
-      result = link.protocol + '//' + link.host + '/' + topdir +
-        link.pathname + link.search + link.hash;
     }
   } else if (isPencilHost(window.location.hostname)) {
     // Proxy offdomain requests to avoid CORS issues.
@@ -7138,9 +7134,9 @@ var dollar_turtle_methods = {
   }),
   load: wrapraw('load',
   ["<u>load(url, cb)</u> Loads data from the url and passes it to cb. " +
-      "<mark>load '/intro', (t) -> write 'intro contains', t</mark>"],
+      "<mark>load 'intro', (t) -> write 'intro contains', t</mark>"],
   function(url, cb) {
-    var val = null;
+    var val;
     $.ajax(apiUrl(url, 'load'), { async: !!cb, complete: function(xhr) {
       try {
         val = JSON.parse(xhr.responseText);
@@ -7162,7 +7158,7 @@ var dollar_turtle_methods = {
   }),
   save: wrapraw('save',
   ["<u>save(url, data, cb)</u> Posts data to the url and calls when done. " +
-      "<mark>save '/intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
+      "<mark>save 'intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
     var payload = data, url = apiUrl(url, 'save');
