@@ -6433,13 +6433,17 @@ var turtlefn = {
   label: wrapcommand('label', 1,
   ["<u>label(text)</u> Labels the current position with HTML: " +
       "<mark>label 'remember'</mark>",
-   "<u>label(text, position, styles)</u> Position is 'top', 'bottom', 'left'," +
-      "or 'right', and styles is an optional size or CSS object: " +
-      "<mark>label 'big', 'bottom', { color: red:, fontSize: 100 }</mark>"],
+   "<u>label(text, styles, position)</u> Optional position specifies " +
+      "'top', 'bottom', 'left', 'right', and optional styles is a size " +
+      "or CSS object: " +
+      "<mark>label 'big', { color: red, fontSize: 100 }, 'bottom'</mark>"],
   function label(cc, html, side, styles) {
-    if (!styles && ($.isNumeric(side) || $.isPlainObject(side))) {
+    if ((!styles || typeof(styles) == 'string') &&
+        ($.isNumeric(side) || $.isPlainObject(side))) {
+      // Handle switched second and third argument order.
+      var t = styles;
       styles = side;
-      side = null;
+      side = t;
     }
     if ($.isNumeric(styles)) {
       styles = { fontSize: styles };
