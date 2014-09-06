@@ -1,6 +1,7 @@
 .svn
 node_modules
 bower_components
+wsgi/config.pyc
 content/data
 content/cache
 content/top/builddate.txt

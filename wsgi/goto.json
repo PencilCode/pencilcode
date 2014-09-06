@@ -7,6 +7,6 @@
     "master": true,
     "workers": 1,
     "plugin": "python",
-    "file": "/srv/site/wsgi/goto.py"
+    "file": "/srv/site/root/wsgi/goto.py"
   }
 }
