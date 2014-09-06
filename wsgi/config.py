@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-datadir = '/srv/site/data'
-staticdir = '/srv/site/top'
-cachedir = '/srv/site/cache'
+datadir = '/srv/pencilcode.net/data'
+staticdir = '/srv/pencilcode.net/top'
+cachedir = '/srv/pencilcode.net/cache'
