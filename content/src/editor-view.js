@@ -770,8 +770,11 @@ function showDialog(opts) {
   var overlay = $('#overlay').show();
   if (!opts) { opts = {}; }
   overlay.html('');
+  var classes = ['dialog'];
+  if (opts.center) { classes.push('center'); }
+  if (opts.leftopts) { classes.push('leftopts'); }
   var dialogHTML =
-    '<div class="dialog' + (opts.center ? ' center' : '' ) + '">' +
+    '<div class="' + classes.join(' ') + '">' +
     '<div class="prompt">' + (opts.prompt ? opts.prompt : '') +
     '<div class="info">' + (opts.info ? opts.info : '') + '</div>' +
     (opts.content ? opts.content : '') + '</div></div>';
@@ -1456,6 +1459,45 @@ $('.pane').on('click', '.closeblocks', function(e) {
   setPaneEditorBlockMode(pane, false);
 });
 
+function showPaneEditorLanguages(pane) {
+  if (panepos(pane) != 'left') { return; }
+  var paneState = state.pane[pane];
+  var visibleMimeType = editorMimeType(paneState);
+  var opts = {leftopts: 1};
+  opts.content =
+      '<center>Language</center>' +
+      '<form style="align:left;padding:8px">' +
+      '<label><input type="radio" value="text/coffeescript" name="lang">' +
+      'Coffeescript</label><span> &nbsp; </span>' +
+      '<label><input type="radio" value="text/javascript" name="lang">' +
+      'Javascript</label>' +
+      '</form>' +
+      '<button class="ok">OK</button>' +
+      '<button class="cancel">Cancel</button>';
+
+  opts.init = function(dialog) {
+    dialog.find('[value="' + visibleMimeType + '"]').prop('checked', true);
+    dialog.find('button.ok').focus();
+  }
+
+  opts.retrieveState = function(dialog) {
+    return {
+      lang: dialog.find('[name=lang]:checked').val()
+    };
+  }
+
+  opts.done = function(state) {
+    console.log(state.lang, visibleMimeType);
+    if (state.lang && state.lang != visibleMimeType) {
+      setPaneEditorLanguageType(pane, state.lang);
+    }
+    state.update({cancel:true});
+  }
+
+  showDialog(opts);
+
+}
+
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");
   if (result.length && result.substr(result.length - 1) != '\n') {
@@ -2115,6 +2157,19 @@ function setPaneEditorData(pane, data, filename, useblocks) {
 
 function mimeTypeSupportsBlocks(mimeType) {
   return /x-pencilcode|coffeescript|javascript/.test(mimeType);
+}
+
+function setPaneEditorLanguageType(pane, type) {
+  var paneState = state.pane[pane];
+  if (!paneState.dropletEditor) return false;
+  var visibleMimeType = editorMimeType(paneState);
+  if (type == visibleMimeType) return false;
+  paneState.dropletEditor.setMode(dropletModeForMimeType(type));
+  paneState.dropletEditor.setPalette(paletteForMimeType(type));
+  paneState.editor.getSession().setMode(modeForMimeType(type));
+  paneState.meta = filetype.effectiveMeta(paneState.meta);
+  paneState.meta.type = type;
+  return true;
 }
 
 function setPaneEditorBlockMode(pane, useblocks) {
