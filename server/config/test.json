@@ -1,0 +1,9 @@
+{
+  "dirs": {
+    "datadir": "../content/data",
+    "staticdir": "../content/top",
+    "cachedir": "../content/cache"
+  },
+  "host": "pencilcode.net.dev",
+  "useProxy": 0
+}

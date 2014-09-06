@@ -2,7 +2,7 @@ var path = require('path');
 var fs = require('fs-ext');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
-var filetype = require('../top/src/filetype');
+var filetype = require('../content/top/src/filetype');
 
 exports.handleLoad = function(req, res, app, format) {
   var filename = req.param('file', utils.filenameFromUri(req));

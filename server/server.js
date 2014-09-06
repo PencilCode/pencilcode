@@ -3,7 +3,6 @@ var express = require('express'),
     save = require('./save.js'),
     load = require('./load.js'),
     app = module.exports = express(),
-    config = require(process.argv[2]),
     serverbase = require('./serverbase.js'),
     utils = require('./utils.js');
 

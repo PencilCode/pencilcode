@@ -3,7 +3,7 @@ var express = require('express'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
-    serverbase = require('../site/node/serverbase.js'),
+    serverbase = require('./serverbase.js'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
     proxy = new httpProxy.RoutingProxy();

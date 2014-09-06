@@ -15,7 +15,7 @@ module.exports = function(grunt) {
       },
       top: {
         options: {
-          destPrefix: 'site/top'
+          destPrefix: 'content/top'
         },
         files: {
           'jquery.js' : 'jquery/dist/jquery.js',
@@ -29,7 +29,7 @@ module.exports = function(grunt) {
       },
       zeroclipboard: {
         options: {
-          destPrefix: 'site/top/lib/zeroclipboard'
+          destPrefix: 'content/top/lib/zeroclipboard'
         },
         files: {
           'ZeroClipboard.js' : 'zeroclipboard/dist/ZeroClipboard.js',
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
       },
       tooltipster: {
         options: {
-          destPrefix: 'site/top/lib/tooltipster'
+          destPrefix: 'content/top/lib/tooltipster'
         },
         files: {
           'js': 'tooltipster/js',
@@ -47,7 +47,7 @@ module.exports = function(grunt) {
       },
       lib: {
         options: {
-          destPrefix: 'site/top/lib'
+          destPrefix: 'content/top/lib'
         },
         files: {
           'ace' : 'ace-builds/src-min-noconflict'
@@ -55,7 +55,7 @@ module.exports = function(grunt) {
       },
       src: {
         options: {
-          destPrefix: 'site/top/src'
+          destPrefix: 'content/top/src'
         },
         files: {
           'require.js': 'requirejs/require.js',
@@ -64,7 +64,7 @@ module.exports = function(grunt) {
       },
       sourcemap: {
         options: {
-          destPrefix: 'site/top/src/sourcemap'
+          destPrefix: 'content/top/src/sourcemap'
         },
         files: {
           'array-set.js': 'source-map/lib/source-map/array-set.js',
@@ -79,12 +79,12 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
-          baseUrl: 'site/top',
+          baseUrl: 'content/top',
           deps: ['src/editor-main'],
           name: 'src/almond',
-          out: 'site/top/editor.js',
+          out: 'content/top/editor.js',
           optimize: 'none',
-          mainConfigFile: 'site/top/src/editor-main.js',
+          mainConfigFile: 'content/top/src/editor-main.js',
           preserveLicenseComments: false
         }
       }
@@ -103,22 +103,22 @@ module.exports = function(grunt) {
           expand: true,
           flatten: true,
           src: [
-            'site/top/src/editor.html',
-            'site/top/src/framed.html'
+            'content/top/src/editor.html',
+            'content/top/src/framed.html'
           ],
-          dest: 'site/top'
+          dest: 'content/top'
         } ]
       }
     },
     uglify: {
       all: {
         files: {
-          'site/top/turtlebits.js': [
-            'site/top/iced-coffee-script.js',
-            'site/top/jquery.js',
-            'site/top/jquery-turtle.js',
-            'site/top/lodash.js',
-            'site/top/src/showturtle.js'
+          'content/top/turtlebits.js': [
+            'content/top/iced-coffee-script.js',
+            'content/top/jquery.js',
+            'content/top/jquery-turtle.js',
+            'content/top/lodash.js',
+            'content/top/src/showturtle.js'
           ]
         },
         options: {
@@ -133,13 +133,13 @@ module.exports = function(grunt) {
     concat: {
       all: {
         src: [
-          'site/top/iced-coffee-script.js',
-          'site/top/jquery.js',
-          'site/top/jquery-turtle.js',
-          'site/top/lodash.js',
-          'site/top/src/showturtle.js'
+          'content/top/iced-coffee-script.js',
+          'content/top/jquery.js',
+          'content/top/jquery-turtle.js',
+          'content/top/lodash.js',
+          'content/top/src/showturtle.js'
         ],
-        dest: 'site/top/turtlebits.js'
+        dest: 'content/top/turtlebits.js'
       },
       options: {
         separator: ';'
@@ -152,33 +152,26 @@ module.exports = function(grunt) {
       },
       dev: {
         options: {
-          script: 'dev/devserver.js',
+          script: 'server/devserver.js',
           node_env: 'development',
           //debug: true,
-          args: ['../../dev/configDev.json']
-        }
-      },
-      comp: {
-        options: {
-          script: 'site/node/server.js',
-          node_env: 'compiled',
-          args: ['./configProd.json']
+          args: ['../../server/configDev.json']
         }
       },
       devtest: {
         options: {
-          script: 'dev/devserver.js',
+          script: 'server/devserver.js',
           node_env: 'development',
-          args: ['../../dev/configTest.json'],
+          args: ['../../server/configTest.json'],
           port: 8193
         }
       },
       test: {
         options: {
-          script: 'dev/devserver.js',
-          node_env: 'compiled',
+          script: 'server/devserver.js',
+          node_env: 'test',
           //debug: true,
-          args: ['../../dev/configTest.json'],
+          args: ['../../server/configTest.json'],
           port: 8193,
         }
       }
@@ -187,27 +180,17 @@ module.exports = function(grunt) {
       iced: {
         pattern: '\n\\(function\\(root\\)',
         replacement: '\nthis.CoffeeScript||(function(root)',
-        path: 'site/top/iced-coffee-script.js',
+        path: 'content/top/iced-coffee-script.js',
         recursive: false
       }
     },
     watch: {
       dev: {
         files: [
-          'dev/*.js',
-          'dev/configDev.json',
-          'site/node/*.js',
-          'site/top/src/filetype.js' ],
+          'server/*.js',
+          'server/*.json',
+          'content/top/src/filetype.js' ],
         tasks: ['express:dev'],
-        options: { atBegin: true, spawn: false }
-      },
-      comp: {
-        files: [
-          'dev/*.js',
-          'site/node/*.js',
-          'site/node/*.json',
-          'site/top/src/filetype.js' ],
-        tasks: ['express:comp'],
         options: { atBegin: true, spawn: false }
       }
     },
@@ -215,10 +198,10 @@ module.exports = function(grunt) {
       testdata: {
         files: [ {
           expand: true,
-          cwd: 'testdata/',
+          cwd: 'test/data/',
           src: ['**'],
           dot: true,
-          dest: 'site/data'
+          dest: 'content/data'
         } ]
       }
     },
@@ -268,7 +251,7 @@ module.exports = function(grunt) {
 
   grunt.task.registerTask('builddate', 'Create builddate.txt file', function() {
     var stamp = grunt.template.today('dddd, mmmm dS, yyyy, HH:MM:ss Z');
-    grunt.file.write('site/top/builddate.txt', stamp);
+    grunt.file.write('content/top/builddate.txt', stamp);
     grunt.log.writeln('Build date: ' + stamp);
   });
 
@@ -296,8 +279,6 @@ module.exports = function(grunt) {
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
       ['proxymessage', 'watch:dev', 'node-inspector:dev']);
-  // "compserver" serves the compiled editor code, not the source.
-  grunt.registerTask('compserver', ['proxymessage', 'watch:comp']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.

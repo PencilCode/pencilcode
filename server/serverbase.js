@@ -6,7 +6,7 @@ var express = require('express'),
     save = require('./save.js'),
     load = require('./load.js'),
     httpProxy = require('http-proxy'),
-    config = require(process.argv[2]),
+    config = require('./config'),
     utils2 = require('./utils.js'),
     proxy = new httpProxy.RoutingProxy();
 
