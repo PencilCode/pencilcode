@@ -8,6 +8,6 @@
     "master": true,
     "workers": 3,
     "buffer-size": "65535",
-    "file": "/srv/site/wsgi/save.py"
+    "file": "/srv/site/root/wsgi/save.py"
   }
 }

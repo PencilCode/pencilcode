@@ -7,6 +7,6 @@
     "master": true,
     "workers": 3,
     "plugin": "python",
-    "file": "/srv/site/wsgi/load.py"
+    "file": "/srv/site/root/wsgi/load.py"
   }
 }
