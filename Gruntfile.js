@@ -153,16 +153,13 @@ module.exports = function(grunt) {
       dev: {
         options: {
           script: 'server/devserver.js',
-          node_env: 'development',
-          //debug: true,
-          args: ['../../server/configDev.json']
+          node_env: 'development'
         }
       },
       devtest: {
         options: {
           script: 'server/devserver.js',
           node_env: 'development',
-          args: ['../../server/configTest.json'],
           port: 8193
         }
       },
@@ -170,9 +167,7 @@ module.exports = function(grunt) {
         options: {
           script: 'server/devserver.js',
           node_env: 'test',
-          //debug: true,
-          args: ['../../server/configTest.json'],
-          port: 8193,
+          port: 8193
         }
       }
     },
