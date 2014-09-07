@@ -95,8 +95,9 @@ var model = {
   crossFrameContext: getCrossFrameContext()
 };
 
+// Log events interesting for academic study: how often code is
+// run, which code it is, and which mode the editor is in.
 function logEvent(action, filename, code, mode) {
-  console.log('logging', action, filename, code, mode);
   var c = encodeURIComponent(code.substring(0, 1024)).
           replace(/%20/g, '+').replace(/%0A/g, '|').replace(/%2C/g, ','),
       m = mode ? 'b' : 't';
