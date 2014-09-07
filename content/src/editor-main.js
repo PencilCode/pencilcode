@@ -95,6 +95,15 @@ var model = {
   crossFrameContext: getCrossFrameContext()
 };
 
+function logEvent(action, filename, code, mode) {
+  console.log('logging', action, filename, code, mode);
+  var c = encodeURIComponent(code.substring(0, 1024)).
+          replace(/%20/g, '+').replace(/%0A/g, '|').replace(/%2C/g, ','),
+      m = mode ? 'b' : 't';
+  $.get('/log/' + filename + '?' +
+      action + '&mode=' + m + '&code=' + c);
+}
+
 //
 // Retrieve model.pane object given position.  It will be one of
 // the alpha, bravo or charlie objects from above.
@@ -417,6 +426,10 @@ view.on('run', function() {
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
   runCodeAtPosition('right', runtext, modelatpos('left').filename, false);
+  if (runtext) {
+    logEvent('run', filename, runtext,
+        view.getPaneEditorBlockMode(paneatpos('left')));
+  }
   if (!specialowner()) {
     // Remember the most recently run program.
     cookie('recent', window.location.href,
@@ -525,6 +538,10 @@ view.on('guide', function() {
 
 view.on('toggleblocks', function(p, useblocks) {
   saveBlockMode(useblocks);
+  var filename = model.pane[p].filename;
+  var mimetext = view.getPaneEditorText(p),
+      code = (mimetext && mimetext.text) || model.pane[p].data.data;
+  logEvent('toggle', filename, code, useblocks);
 });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
@@ -1349,11 +1366,6 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
          model.ownername && !nosaveowner());
     }
   }, 1);
-  if (code) {
-    $.get('/log/' + filename + '?run=' +
-        encodeURIComponent(code).replace(/%20/g, '+').replace(/%0A/g, '|')
-        .replace(/%2C/g, ','));
-  }
 }
 
 function defaultDirSortingByDate() {
@@ -1391,9 +1403,11 @@ function createNewFileIntoPosition(position, filename, text) {
     data: text,
     mtime: 0
   };
-  view.setPaneEditorText(pane, text, filename, loadBlockMode());
+  var mode = loadBlockMode();
+  view.setPaneEditorText(pane, text, filename, mode);
   view.notePaneEditorCleanText(pane, '');
   mpp.running = false;
+  logEvent('new', filename, text, mode);
 }
 
 
@@ -1448,10 +1462,12 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         if (!m.data) { m.data = ''; }
         mpp.isdir = false;
         mpp.data = m;
-        view.setPaneEditorText(pane, m.data, filename, loadBlockMode());
+        var mode = loadBlockMode();
+        view.setPaneEditorText(pane, m.data, filename, mode);
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
+        logEvent('load', filename, m.data, mode);
       }
     });
   }

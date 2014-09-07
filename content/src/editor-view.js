@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1409,7 +1409,8 @@ $('.panetitle').on('click', '.fullscreen', function(e) {
 $('.panetitle').on('click', '.toggleblocks', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
-  setPaneEditorBlockMode(pane, !getPaneEditorBlockMode(pane));
+  var newmode = !getPaneEditorBlockMode(pane);
+  setPaneEditorBlockMode(pane, newmode);
 });
 
 $('.pane').on('click', '.closeblocks', function(e) {
