@@ -31,7 +31,13 @@ var expandSiteInclude = tamper(function(req, res) {
     return;
   }
   return function(body) {
-    return body.replace(/<!--#echo var="site"-->/g, res.locals.site);
+    if (res.locals.site) {
+      body = body.replace(/<!--#echo var="site"-->/g, res.locals.site);
+    }
+    if (res.locals.filepath) {
+      body = body.replace(/<!--#echo var="filepath"-->/g, res.locals.filepath);
+    }
+    return body;
   }
 });
 

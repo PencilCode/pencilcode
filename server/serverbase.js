@@ -17,9 +17,9 @@ exports.initialize = function(app) {
   }
   app.locals.config = config;
 
-  // Set up preprocessor to break hostname into site and user.
-  app.use(function(req, res, next) {
-    if (app.locals.config.host) {
+  // Set up preprocessor to break url into site and user and filepath.
+  if (config.host) {
+    app.use(function(req, res, next) {
       var index = req.hostname.lastIndexOf(app.locals.config.host);
       if (index == -1) {
         if (req.path.length > 1 &&
@@ -27,22 +27,28 @@ exports.initialize = function(app) {
           utils.errorExit('Host ' + req.hostname + ' not part of domain ' +
               app.locals.config.host);
         }
-        next();
-        return;
+      } else {
+        // Remove the '.' separator.
+        if (index > 0) { index -= 1; }
+        res.locals.site = app.locals.config.host;
+        res.locals.owner = req.hostname.substring(0, index);
+        res.locals.filepath = req.path.replace(/^\/[^\/]*/, '');
       }
-      // Remove the '.' separator.
-      if (index > 0) { index -= 1; }
-      res.locals.site = app.locals.config.host;
-      res.locals.owner = req.hostname.substring(0, index);
-    } else {
+      next();
+    });
+  } else {
+    app.use(function(req, res, next) {
       // Take part of domain up to TLD.  This assumes the TLD can be as
       // long as ".kitchen" or ".net.dev" (8 chars) but that the whole domain
       // name is no shorter than "code.org" (8 chars).
-      res.locals.site = req.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2');
-      res.locals.owner = req.hostname.replace(/\.[^.]*.{8}$/, '');
-    }
-    next();
-  });
+      var site = res.locals.site =
+          req.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2');
+      res.locals.owner = req.hostname.substring(0,
+          req.hostname.length - site.length - 1);
+      res.locals.filepath = req.path.replace(/^\/[^\/]*/, '');
+      next();
+    });
+  }
 };
 
 exports.initialize2 = function(app) {
