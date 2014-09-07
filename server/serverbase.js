@@ -43,9 +43,7 @@ exports.initialize2 = function(app) {
       req.url.replace(/^((?:[^\/]*\/\/[^\/]*)?\/)/, "$1" + user + "/");
     rawUserData(req, res, next);
   }
-
-  app.use('/code', rewrittenUserData);
-  app.use('/home', function(req, res, next) {
+  function expandedUserData(req, res, next) {
     if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
         test(req.url)) {
       load.handleLoad(req, res, app, 'execute');
@@ -53,7 +51,11 @@ exports.initialize2 = function(app) {
     else {
       rewrittenUserData(req, res, next);
     }
-  });
+  }
+  app.use('/code', rewrittenUserData);
+  app.use('/home', expandedUserData);
+  app.use('/execute', expandedUserData);
+
   if (config.servesrc) {
     app.use(express.static(path.join(config.dirs.staticdir, 'src')));
   }
