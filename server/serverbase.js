@@ -1,14 +1,12 @@
 var express = require('express'),
-    utils = require('connect').utils,
+    bodyParser = require('body-parser'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
     save = require('./save.js'),
     load = require('./load.js'),
-    httpProxy = require('http-proxy'),
     config = require('./config'),
-    utils2 = require('./utils.js'),
-    proxy = new httpProxy.RoutingProxy();
+    utils = require('./utils.js');
 
 exports.initialize = function(app) {
   // Remap any relative directories in the config to base off __dirname
@@ -27,7 +25,7 @@ exports.initialize2 = function(app) {
     next();
   });
 
-  app.use(express.bodyParser());
+  app.use(bodyParser.urlencoded({ extended: false }));
 
   app.use('/save', function(req, res) {
     save.handleSave(req, res, app);
@@ -40,7 +38,7 @@ exports.initialize2 = function(app) {
   // and then serve the static data.
   var rawUserData = express.static(config.dirs.datadir);
   function rewrittenUserData(req, res, next) {
-    var user = utils2.getUser(req, app);
+    var user = utils.getUser(req, app);
     req.url =
       req.url.replace(/^((?:[^\/]*\/\/[^\/]*)?\/)/, "$1" + user + "/");
     rawUserData(req, res, next);
@@ -56,9 +54,9 @@ exports.initialize2 = function(app) {
       rewrittenUserData(req, res, next);
     }
   });
-  app.configure('development', function() {
+  if (config.servesrc) {
     app.use(express.static(path.join(config.dirs.staticdir, 'src')));
-  });
+  }
   app.use(express.static(config.dirs.staticdir));
   app.get('*', function(req, res) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });

@@ -1,15 +1,15 @@
 var express = require('express'),
-    cnUtils = require('connect').utils,
+    parseUrl = require('parseurl'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
     serverbase = require('./serverbase.js'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
-    proxy = new httpProxy.RoutingProxy();
+    proxy = new httpProxy.createProxyServer({});
 
 function rewriteRules(req, res, next) {
-  var u = cnUtils.parseUrl(req);
+  var u = parseUrl(req);
   if (u.pathname == '/') { u.pathname = '/welcome.html'; }
   else if (/^\/edit\//.test(u.pathname)) {
     if (/^frame\./.test(req.headers['host'])) {
@@ -25,26 +25,25 @@ function rewriteRules(req, res, next) {
 }
 
 function noAppcache(req, res, next) {
-  var u = cnUtils.parseUrl(req);
+  var u = parseUrl(req);
   if (/\.appcache$/.test(u.pathname)) {
-    res.send(200, 'CACHE MANIFEST\nNETWORK:\n*');
+    res.status(404).send()
   } else {
     next();
   }
 }
 
 function proxyRules(req, res, next) {
-  var u = cnUtils.parseUrl(req);
+  var u = parseUrl(req);
   var exp = (req.app.locals.config.useProxy) ?
     /^\/(?:code|home|load|save|proxy|img|link)(?=\/)/ : /^\/(?:proxy)(?=\/)/;
   if (exp.test(u.pathname) &&
       /\.dev$/.test(u.host)) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
-    proxy.proxyRequest(req, res, {
-      host: host,
-      port: 80,
-      enable: { xforward: true }
+    proxy.web(req, res, {
+      target: { host: host, port: 80 },
+      xfwd: true
     });
   } else {
     next();
@@ -52,7 +51,7 @@ function proxyRules(req, res, next) {
 }
 
 function proxyPacGenerator(req, res, next) {
-  var u = cnUtils.parseUrl(req);
+  var u = parseUrl(req);
   if (u.pathname == '/proxy.pac') {
     var hostHeader = req.get('host'),
         hostMatch = /^([^:]+)(?::(\d*))?$/.exec(hostHeader || ''),

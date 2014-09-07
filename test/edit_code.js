@@ -94,7 +94,7 @@ describe('code editor', function() {
     }, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; }).find('.panetitle-text');
-      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return {poll:true, step:0};
+      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
       // Wait for both the directory div and the create link to appear.
       if (!$('.directory').length) return {poll:true, step:1};
       if (!$('.create').length) return {poll:true, step:2};

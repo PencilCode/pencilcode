@@ -14,7 +14,7 @@ exports.filenameFromUri = function(req) {
 };
 
 exports.getUser = function(req, app) {
-  var domainIndex = req.host.indexOf(app.locals.config.host);
+  var domainIndex = req.hostname.indexOf(app.locals.config.host);
   if (domainIndex < 0) {
     errorExit('Domain not found in host: ' + app.locals.config.host);
   }
@@ -22,7 +22,7 @@ exports.getUser = function(req, app) {
   // Adjust domainIndex for '.' separator                                     
   domainIndex = (domainIndex > 0) ? domainIndex - 1 : domainIndex;
 
-  var user = req.host.substring(0, domainIndex);
+  var user = req.hostname.substring(0, domainIndex);
 
   return (user == '') ? null : user;
 };
