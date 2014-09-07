@@ -301,6 +301,18 @@
         }
       }
     },
+    "log-timestamp": {
+      "version": "0.1.1",
+      "from": "log-timestamp@",
+      "resolved": "https://registry.npmjs.org/log-timestamp/-/log-timestamp-0.1.1.tgz",
+      "dependencies": {
+        "log-prefix": {
+          "version": "0.0.0",
+          "from": "log-prefix@0.0.0",
+          "resolved": "https://registry.npmjs.org/log-prefix/-/log-prefix-0.0.0.tgz"
+        }
+      }
+    },
     "parseurl": {
       "version": "1.3.0",
       "from": "parseurl@latest",

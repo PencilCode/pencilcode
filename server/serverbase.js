@@ -11,7 +11,7 @@ var express = require('express'),
 exports.initialize = function(app) {
   // Remap any relative directories in the config to base off __dirname
   for (var dir in config.dirs) {
-    config.dirs[dir] = path.join(__dirname, config.dirs[dir]);
+    config.dirs[dir] = path.resolve(__dirname, config.dirs[dir]);
   }
   app.locals.config = config;
   process.pencilcode = {
