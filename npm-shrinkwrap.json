@@ -317,6 +317,11 @@
       "version": "1.3.0",
       "from": "parseurl@latest",
       "resolved": "https://registry.npmjs.org/parseurl/-/parseurl-1.3.0.tgz"
+    },
+    "tamper": {
+      "version": "0.1.0",
+      "from": "tamper@latest",
+      "resolved": "https://registry.npmjs.org/tamper/-/tamper-0.1.0.tgz"
     }
   }
 }

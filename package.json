@@ -22,7 +22,8 @@
     "fs-extra": "latest",
     "http-proxy": "latest",
     "log-timestamp": "latest",
-    "parseurl": "latest"
+    "parseurl": "latest",
+    "tamper": "latest"
   },
   "devDependencies": {
     "grunt": "latest",

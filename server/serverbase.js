@@ -27,11 +27,11 @@ exports.initialize2 = function(app) {
 
   app.use(bodyParser.urlencoded({ extended: false }));
 
-  app.use('/save', function(req, res) {
-    save.handleSave(req, res, app);
-  });
   app.use('/load', function(req, res) {
     load.handleLoad(req, res, app, 'json');
+  });
+  app.use('/save', function(req, res) {
+    save.handleSave(req, res, app);
   });
 
   // Rewrite user.pencilcode.net/filename to user.pencilcode.net/user/filename,
@@ -46,7 +46,7 @@ exports.initialize2 = function(app) {
   function expandedUserData(req, res, next) {
     if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
         test(req.url)) {
-      load.handleLoad(req, res, app, 'execute');
+      load.handleLoad(req, res, app, 'run');
     }
     else {
       rewrittenUserData(req, res, next);
@@ -54,7 +54,7 @@ exports.initialize2 = function(app) {
   }
   app.use('/code', rewrittenUserData);
   app.use('/home', expandedUserData);
-  app.use('/execute', expandedUserData);
+  app.use('/run', expandedUserData);
 
   if (config.servesrc) {
     app.use(express.static(path.join(config.dirs.staticdir, 'src')));

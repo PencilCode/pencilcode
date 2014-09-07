@@ -15,7 +15,7 @@ module.exports = function(grunt) {
       },
       top: {
         options: {
-          destPrefix: 'content/top'
+          destPrefix: 'content'
         },
         files: {
           'jquery.js' : 'jquery/dist/jquery.js',
@@ -29,7 +29,7 @@ module.exports = function(grunt) {
       },
       zeroclipboard: {
         options: {
-          destPrefix: 'content/top/lib/zeroclipboard'
+          destPrefix: 'content/lib/zeroclipboard'
         },
         files: {
           'ZeroClipboard.js' : 'zeroclipboard/dist/ZeroClipboard.js',
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
       },
       tooltipster: {
         options: {
-          destPrefix: 'content/top/lib/tooltipster'
+          destPrefix: 'content/lib/tooltipster'
         },
         files: {
           'js': 'tooltipster/js',
@@ -47,7 +47,7 @@ module.exports = function(grunt) {
       },
       lib: {
         options: {
-          destPrefix: 'content/top/lib'
+          destPrefix: 'content/lib'
         },
         files: {
           'ace' : 'ace-builds/src-min-noconflict'
@@ -55,7 +55,7 @@ module.exports = function(grunt) {
       },
       src: {
         options: {
-          destPrefix: 'content/top/src'
+          destPrefix: 'content/src'
         },
         files: {
           'require.js': 'requirejs/require.js',
@@ -64,7 +64,7 @@ module.exports = function(grunt) {
       },
       sourcemap: {
         options: {
-          destPrefix: 'content/top/src/sourcemap'
+          destPrefix: 'content/src/sourcemap'
         },
         files: {
           'array-set.js': 'source-map/lib/source-map/array-set.js',
@@ -79,12 +79,12 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
-          baseUrl: 'content/top',
+          baseUrl: 'content',
           deps: ['src/editor-main'],
           name: 'src/almond',
-          out: 'content/top/editor.js',
+          out: 'content/editor.js',
           optimize: 'none',
-          mainConfigFile: 'content/top/src/editor-main.js',
+          mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
         }
       }
@@ -103,22 +103,22 @@ module.exports = function(grunt) {
           expand: true,
           flatten: true,
           src: [
-            'content/top/src/editor.html',
-            'content/top/src/framed.html'
+            'content/src/editor.html',
+            'content/src/framed.html'
           ],
-          dest: 'content/top'
+          dest: 'content'
         } ]
       }
     },
     uglify: {
       all: {
         files: {
-          'content/top/turtlebits.js': [
-            'content/top/iced-coffee-script.js',
-            'content/top/jquery.js',
-            'content/top/jquery-turtle.js',
-            'content/top/lodash.js',
-            'content/top/src/showturtle.js'
+          'content/turtlebits.js': [
+            'content/iced-coffee-script.js',
+            'content/jquery.js',
+            'content/jquery-turtle.js',
+            'content/lodash.js',
+            'content/src/showturtle.js'
           ]
         },
         options: {
@@ -133,13 +133,13 @@ module.exports = function(grunt) {
     concat: {
       all: {
         src: [
-          'content/top/iced-coffee-script.js',
-          'content/top/jquery.js',
-          'content/top/jquery-turtle.js',
-          'content/top/lodash.js',
-          'content/top/src/showturtle.js'
+          'content/iced-coffee-script.js',
+          'content/jquery.js',
+          'content/jquery-turtle.js',
+          'content/lodash.js',
+          'content/src/showturtle.js'
         ],
-        dest: 'content/top/turtlebits.js'
+        dest: 'content/turtlebits.js'
       },
       options: {
         separator: ';'
@@ -175,7 +175,7 @@ module.exports = function(grunt) {
       iced: {
         pattern: '\n\\(function\\(root\\)',
         replacement: '\nthis.CoffeeScript||(function(root)',
-        path: 'content/top/iced-coffee-script.js',
+        path: 'content/iced-coffee-script.js',
         recursive: false
       }
     },
@@ -184,7 +184,7 @@ module.exports = function(grunt) {
         files: [
           'server/*.js',
           'server/*.json',
-          'content/top/src/filetype.js' ],
+          'content/src/filetype.js' ],
         tasks: ['express:dev'],
         options: { atBegin: true, spawn: false }
       }
@@ -196,7 +196,7 @@ module.exports = function(grunt) {
           cwd: 'test/data/',
           src: ['**'],
           dot: true,
-          dest: 'content/data'
+          dest: 'local/data'
         } ]
       }
     },
@@ -246,7 +246,7 @@ module.exports = function(grunt) {
 
   grunt.task.registerTask('builddate', 'Create builddate.txt file', function() {
     var stamp = grunt.template.today('dddd, mmmm dS, yyyy, HH:MM:ss Z');
-    grunt.file.write('content/top/builddate.txt', stamp);
+    grunt.file.write('content/builddate.txt', stamp);
     grunt.log.writeln('Build date: ' + stamp);
   });
 

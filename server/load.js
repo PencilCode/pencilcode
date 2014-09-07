@@ -2,7 +2,7 @@ var path = require('path');
 var fs = require('fs-ext');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
-var filetype = require('../content/top/src/filetype');
+var filetype = require('../content/src/filetype');
 
 exports.handleLoad = function(req, res, app, format) {
   var filename = req.param('file', utils.filenameFromUri(req));
@@ -28,7 +28,7 @@ exports.handleLoad = function(req, res, app, format) {
         // Try the cache first if it exists
         var data = fsExtra.readJsonSync(utils.getRootCacheName(app));
 
-        res.set('Cache-Control', 'no-cache, must-revalidate');
+        res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/javascript');
 
         res.jsonp(data);
@@ -70,7 +70,7 @@ exports.handleLoad = function(req, res, app, format) {
 
         var mimetype = filetype.mimeForFilename(filename);
 
-        res.set('Cache-Control', 'no-cache, must-revalidate');
+        res.set('Cache-Control', 'must-revalidate');
         res.jsonp({'file': '/' + filename, 
                    'data': data,
                    'auth': haskey,
@@ -94,7 +94,7 @@ exports.handleLoad = function(req, res, app, format) {
         if (isrootlisting) {
           fsExtra.outputJsonSync(utils.getRootCacheName(app), jsonRet);
         }
-        res.set('Cache-Control', 'no-cache, must-revalidate');
+        res.set('Cache-Control', 'must-revalidate');
         res.jsonp(jsonRet);
         return;
       }
@@ -103,7 +103,7 @@ exports.handleLoad = function(req, res, app, format) {
       if (filename.length > 0 && 
           filename[filename.length - 1] != '/' && 
           isValidNewFile(absfile, app)) {
-        res.set('Cache-Control', 'no-cache, must-revalidate');
+        res.set('Cache-Control', 'must-revalidate');
         res.jsonp({'error': 'could not read file ' + filename,
                    'newfile': true,
                    'auth': haskey,
@@ -113,7 +113,7 @@ exports.handleLoad = function(req, res, app, format) {
 
       utils.errorExit('Could not read file ' + filename);
     }
-    else if (format == 'execute') { // File loading outside the editor
+    else if (format == 'run') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename);
         var data = fs.readFileSync(absfile, {'encoding': 'utf8'});
@@ -124,7 +124,7 @@ exports.handleLoad = function(req, res, app, format) {
           mt = mt.replace('x-pencilcode', 'html');
         }
 
-        res.set('Cache-Control', 'no-cache');
+        res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', mt);
         res.send(data);
         return;
@@ -136,7 +136,7 @@ exports.handleLoad = function(req, res, app, format) {
           return;
         }
 
-        res.set('Cache-Control', 'no-cache');
+        res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/html;charset=utf-8');
 
         var text = '<title>' + req.path + '</title>';
@@ -197,7 +197,7 @@ exports.handleLoad = function(req, res, app, format) {
         return;
       }
       else {
-        res.set('Cache-Control', 'no-cache');
+        res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/html;charset=utf-8');
 
         var text = '<pre>\n';

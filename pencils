@@ -3,12 +3,12 @@
 # An init.d script for running the Node.js pencilcode service.
 #
 # Typically installed by:
-# sudo cp pencilservice /etc/init.d
-# sudo chmod a+x /etc/init.d/pencilservice
-# sudo update-rc.d pencilservice defaults
+# sudo cp pencils /etc/init.d
+# sudo chmod a+x /etc/init.d/pencils
+# sudo update-rc.d pencils defaults
 
 ### BEGIN INIT INFO
-# Provides:             pencilservice
+# Provides:             pencils
 # Required-Start:       $syslog $remote_fs
 # Required-Stop:        $syslog $remote_fs
 # Should-Start:         $local_fs
@@ -33,8 +33,8 @@ NAME="Pencil Service"
 NODE_BIN_DIR="/usr/local/node/bin"
 NODE_PATH="/usr/local/lib/node_modules"
 APPLICATION_PATH="/srv/site/root/server/server.js"
-PIDFILE="/var/run/pencilservice.pid"
-LOGFILE="/var/log/pencilservice/event.log"
+PIDFILE="/var/run/pencils.pid"
+LOGFILE="/var/log/pencils/event.log"
 
 # Forever settings to prevent the application spinning if it fails on launch.
 MIN_UPTIME="5000"
@@ -123,7 +123,7 @@ restart() {
 
 status() {
     # On Ubuntu this isn't even necessary. To find out whether the service is
-    # running, use "service pencilservice status" which bypasses this script
+    # running, use "service pencils status" which bypasses this script
     # entirely provided you used the service utility to start the process.
     #
     # The commented line below is the obvious way of checking whether or not a

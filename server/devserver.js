@@ -3,7 +3,9 @@ var express = require('express'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
+    tamper = require('tamper'),
     serverbase = require('./serverbase.js'),
+    config = require('./config'),
     httpProxy = require('http-proxy'),
     app = module.exports = express(),
     proxy = new httpProxy.createProxyServer({});
@@ -23,6 +25,15 @@ function rewriteRules(req, res, next) {
   req.url = url.format(u);
   next();
 }
+
+var expandSiteInclude = tamper(function(req, res) {
+  if (!/^(?:(?:https?:)?\/\/[^\/]+)?\/[^\/]*\.html$/i.test(req.url)) {
+    return;
+  }
+  return function(body) {
+    return body.replace(/<!--#echo var="site"-->/g, config.host);
+  }
+});
 
 function noAppcache(req, res, next) {
   var u = parseUrl(req);
@@ -77,6 +88,7 @@ function proxyPacGenerator(req, res, next) {
 
 serverbase.initialize(app);
 app.use(rewriteRules);
+app.use(expandSiteInclude);
 app.use(noAppcache);
 app.use(proxyRules);
 app.use(proxyPacGenerator);

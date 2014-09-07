@@ -1,8 +1,8 @@
 {
   "dirs": {
-    "datadir": "../content/data",
-    "staticdir": "../content/top",
-    "cachedir": "../content/cache"
+    "staticdir": "../content",
+    "datadir": "../local/data",
+    "cachedir": "../local/cache"
   },
   "host": "pencilcode.net.dev",
   "servesrc": true,

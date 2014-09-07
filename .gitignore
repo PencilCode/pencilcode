@@ -2,10 +2,10 @@
 node_modules
 bower_components
 wsgi/config.pyc
-content/data
-content/cache
-content/top/builddate.txt
-content/top/editor.html
-content/top/editor.js
-content/top/framed.html
-content/top/turtlebits.js
+local/data
+local/cache
+content/builddate.txt
+content/editor.html
+content/editor.js
+content/framed.html
+content/turtlebits.js
