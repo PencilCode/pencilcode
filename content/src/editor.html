@@ -8,13 +8,6 @@
 <style>
 * {box-sizing:border-box;}
 </style>
-<script>
-// Fast fixup: framebust and url-based title.
-if (top != self) { top.location.replace(self.location.href); }
-window.pencilcode = {
-  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
-  owner: location.host.replace(/\.[^.]*.{8}$/, '')
-};
 </script>
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/editor.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css">
@@ -28,6 +21,15 @@ window.pencilcode = {
 <table id="top" width="100%"><tr><td id="topleft"><nobr>
 <script>
 (function(){
+// Fast fixup: framebust and url-based title.
+if (top != self) { top.location.replace(self.location.href); }
+window.pencilcode = {
+  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
+  owner: location.host.replace(/\.[^.]*.{8}$/, '')
+};
+window.preload = function(data) {
+  window.pencilcode.preloaded = data;
+}
 function htmlEscape(s){return s.replace(
   /[<>&]/g,function(c){return c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
 document.write([
@@ -61,7 +63,8 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 </div>
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div><!-- end clip -->
-<script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
+<script src="/load<!--#echo var="filepath"-->?callback=preload"></script>
+<script src="/lib/ace/ace.js"></script>
 <script data-main="/src/editor-main" src="/src/require.js"></script>
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

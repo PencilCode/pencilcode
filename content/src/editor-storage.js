@@ -125,6 +125,19 @@ window.pencilcode.storage = {
       }, 0);
       return;
     }
+    if (window.pencilcode.preloaded) {
+      var data = window.pencilcode.preloaded,
+          expect = (ownername ? '/' + ownername : '')  + '/' + filename;
+      window.pencilcode.preloaded = null;
+      console.log(expect, data.directory, data.file);
+      if (data.directory == expect || data.file == expect) {
+        console.log('Preloaded data', expect);
+        setTimeout(function() {
+          callback(data);
+        }, 0);
+        return;
+      }
+    }
     if (ownername == 'frame') {
       setTimeout(function() {
         callback({data: null, newfile: true});
