@@ -93,10 +93,10 @@ module.exports = function(grunt) {
       dist: {
         options: {
           patterns: [ {
-           match: /<script data-main=".*\/([^\/"-]*)-main" src=".*require.js">/,
-           replacement: "<script>document.write('<script src=\"//' + " +
-                        "window.pencilcode.domain + '/$1.js\"></' + " +
-                        "'script>');"
+            match:
+              /<script data-main=".*\/([^\/"-]*)-main" src=".*require.js">/,
+            replacement:
+              "<script src=\"//<!--#echo var=\"site\"-->/$1.js\"></script>"
           } ]
         },
         files: [ {
@@ -180,13 +180,12 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      dev: {
+      sources: {
         files: [
           'server/*.js',
           'server/*.json',
           'content/src/filetype.js' ],
-        tasks: ['express:dev'],
-        options: { atBegin: true, spawn: false }
+        options: { spawn: false }
       }
     },
     copy: {
@@ -273,7 +272,10 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
-      ['proxymessage', 'watch:dev', 'node-inspector:dev']);
+      ['proxymessage', 'express:dev', 'node-inspector:dev', 'watch']);
+  // "devserver" serves editor code directly from the src directory.
+  grunt.registerTask('testserver',
+      ['proxymessage', 'express:test', 'node-inspector:dev', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.

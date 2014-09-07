@@ -9,16 +9,42 @@ var express = require('express'),
     utils = require('./utils.js');
 
 exports.initialize = function(app) {
+  app.disable('x-powered-by');
+
   // Remap any relative directories in the config to base off __dirname
   for (var dir in config.dirs) {
     config.dirs[dir] = path.resolve(__dirname, config.dirs[dir]);
   }
   app.locals.config = config;
-  process.pencilcode = {
-    domain: config.host
-  };
-  console.log('using', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
+
+  // Set up preprocessor to break hostname into site and user.
+  app.use(function(req, res, next) {
+    if (app.locals.config.host) {
+      var index = req.hostname.lastIndexOf(app.locals.config.host);
+      if (index == -1) {
+        if (req.path.length > 1 &&
+            !/\.(?:pac|appcache|js|png)$/.test(req.path)) {
+          utils.errorExit('Host ' + req.hostname + ' not part of domain ' +
+              app.locals.config.host);
+        }
+        next();
+        return;
+      }
+      // Remove the '.' separator.
+      if (index > 0) { index -= 1; }
+      res.locals.site = app.locals.config.host;
+      res.locals.owner = req.hostname.substring(0, index);
+    } else {
+      // Take part of domain up to TLD.  This assumes the TLD can be as
+      // long as ".kitchen" or ".net.dev" (8 chars) but that the whole domain
+      // name is no shorter than "code.org" (8 chars).
+      res.locals.site = req.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2');
+      res.locals.owner = req.hostname.replace(/\.[^.]*.{8}$/, '');
+    }
+    next();
+  });
 };
+
 exports.initialize2 = function(app) {
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -38,7 +64,7 @@ exports.initialize2 = function(app) {
   // and then serve the static data.
   var rawUserData = express.static(config.dirs.datadir);
   function rewrittenUserData(req, res, next) {
-    var user = utils.getUser(req, app);
+    var user = res.locals.owner;
     req.url =
       req.url.replace(/^((?:[^\/]*\/\/[^\/]*)?\/)/, "$1" + user + "/");
     rawUserData(req, res, next);
@@ -64,5 +90,8 @@ exports.initialize2 = function(app) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('404 - ' + req.url);
   });
+
+  console.log('Serving', config.dirs.datadir,
+    'in', process.env.NODE_ENV, 'mode, on port', process.env.PORT);
 };
 

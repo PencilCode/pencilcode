@@ -23,7 +23,7 @@ describe('dev server', function() {
     _ph.exit();
   });
   it('should serve welcome page', function(done) {
-    _page.open('http://localhost:8193', function(err, status) {
+    _page.open('http://localhost:8193/', function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
       _page.evaluate(function() {

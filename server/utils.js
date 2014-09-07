@@ -13,20 +13,6 @@ exports.filenameFromUri = function(req) {
   return path.substring(1);
 };
 
-exports.getUser = function(req, app) {
-  var domainIndex = req.hostname.indexOf(app.locals.config.host);
-  if (domainIndex < 0) {
-    errorExit('Domain not found in host: ' + app.locals.config.host);
-  }
-
-  // Adjust domainIndex for '.' separator                                     
-  domainIndex = (domainIndex > 0) ? domainIndex - 1 : domainIndex;
-
-  var user = req.hostname.substring(0, domainIndex);
-
-  return (user == '') ? null : user;
-};
-
 exports.errorExit = errorExit;
 
 function errorExit(msg) {

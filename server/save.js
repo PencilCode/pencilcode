@@ -12,7 +12,7 @@ exports.handleSave = function(req, res, app) {
   var sourcekey = req.param('sourcekey', key);
 
   try {
-    var user = utils.getUser(req, app);
+    var user = res.locals.owner;
     var filename = req.param("file", utils.filenameFromUri(req));
     var origfilename = filename;
 
