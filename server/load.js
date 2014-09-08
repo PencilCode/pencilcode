@@ -120,7 +120,7 @@ exports.handleLoad = function(req, res, app, format) {
 
         // For turtle bits, assume it's coffeescript
         if (mt.indexOf('text/x-pencilcode') == 0) {
-          data = filetype.wrapTurtle(data);
+          data = filetype.wrapTurtle(data, res.locals.site);
           mt = mt.replace('x-pencilcode', 'html');
         }
 

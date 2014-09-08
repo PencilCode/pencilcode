@@ -9,7 +9,7 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
-function wrapTurtle(text, pragmasOnly, setupScript) {
+function wrapTurtle(text, domain, pragmasOnly, setupScript) {
   var result, j, scripts = [], script_pattern =
     /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g;
   // Add the default turtle script.
@@ -18,8 +18,7 @@ function wrapTurtle(text, pragmasOnly, setupScript) {
   // errors, using CORS rules.)  More discussion:
   // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
   scripts.push(
-    '<script src="//' +
-    top.pencilcode.domain + '/turtlebits.js' +
+    '<script src="//' + domain + '/turtlebits.js' +
     '" crossorigin="anonymous">\n<\057script>');
   // Then add any setupScript supplied.
   if (setupScript) {
@@ -54,10 +53,11 @@ function wrapTurtle(text, pragmasOnly, setupScript) {
   return result;
 }
 
-function modifyForPreview(text, filename, targetUrl, pragmasOnly, sScript) {
+function modifyForPreview(text, domain,
+       filename, targetUrl, pragmasOnly, sScript) {
   var mimeType = mimeForFilename(filename);
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text, pragmasOnly, sScript);
+    text = wrapTurtle(text, domain, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
     // For now, we don't support inserting startup script in anything
