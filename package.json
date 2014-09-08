@@ -27,6 +27,7 @@
     "url-template": "latest"
   },
   "devDependencies": {
+    "chai": "latest",
     "grunt": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",

@@ -125,7 +125,9 @@ var delimiter = [
     end: "\nMETA@###",
     escape: function(s) { return s.replace(/###/g, '##\\u0023'); }
   },
-  { start: "/**@META\n",
+  {
+    type: /\bjava(?:script)?\b/i,
+    start: "/**@META\n",
     end: "\nMETA@**/",
     escape: function(s) { return s.replace(/\*\//g, '*\\/'); }
   }
@@ -141,7 +143,6 @@ function parseMetaString(str) {
     if (limit < 0) continue;
     start = limit + d.start.length;
     if (start >= end) continue;
-    console.log('trim is', (str.substring(end + d.end.length).trim()));
     if (str.substring(end + d.end.length).trim()) continue;
     try {
       return {
@@ -158,8 +159,11 @@ function printMetaString(data, meta) {
     return data;
   }
   var d = delimiter[0];
-  if (meta.langaguage == 'javascript') { d = delimiter[1]; }
-  console.log(data + d.start + d.escape(JSON.stringify(meta)) + d.end);
+  if (meta.type) {
+    for (var j = 1; j < delimiter.length; ++j) {
+      if (delimiter[j].type.test(meta.type)) { d = delimiter[j]; break; }
+    }
+  }
   return (data + d.start + d.escape(JSON.stringify(meta)) + d.end);
 }
 
