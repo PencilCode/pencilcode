@@ -26,7 +26,7 @@ exports.handleLoad = function(req, res, app, format) {
     if (isrootlisting) {
       try {
         // Try the cache first if it exists
-        var data = fsExtra.readJsonSync(utils.getRootCacheName(app));
+        var data = fsExtra.readJsonSync(utils.getRootCacheName(app, res));
 
         res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/javascript');
@@ -55,10 +55,10 @@ exports.handleLoad = function(req, res, app, format) {
       }
     }
 
-    var absfile = utils.makeAbsolute(filename, app);
+    var absfile = utils.makeAbsolute(filename, app, res);
 
     if (format == 'json') {
-      var haskey = userhaskey(user, app);
+      var haskey = userhaskey(user, app, res);
 
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
@@ -92,7 +92,7 @@ exports.handleLoad = function(req, res, app, format) {
 
         // Write to cache if this is a top dir listing
         if (isrootlisting) {
-          fsExtra.outputJsonSync(utils.getRootCacheName(app), jsonRet);
+          fsExtra.outputJsonSync(utils.getRootCacheName(app, res), jsonRet);
         }
         res.set('Cache-Control', 'must-revalidate');
         res.jsonp(jsonRet);
@@ -306,12 +306,12 @@ function readtail(filename, lines) {
   // TODO : Implement this
 }
 
-function userhaskey(user, app) {
+function userhaskey(user, app, res) {
   if (!user) {
     return false;
   }
 
-  var keydir = utils.getKeyDir(user, app);
+  var keydir = utils.getKeyDir(user, app, res);
 
   if (!utils.isPresent(keydir, 'dir')) {
     return false;

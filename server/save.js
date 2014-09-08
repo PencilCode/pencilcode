@@ -28,7 +28,7 @@ exports.handleSave = function(req, res, app) {
     */
 
     try {
-      fsExtra.removeSync(utils.getRootCacheName(app));
+      fsExtra.removeSync(utils.getRootCacheName(app, res));
     }
     catch (e) { }
 
@@ -76,7 +76,7 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
-      userdir = utils.getUserHomeDir(user, app);
+      userdir = utils.getUserHomeDir(user, app, res);
     }
 
     var topdir = false;
@@ -91,13 +91,13 @@ exports.handleSave = function(req, res, app) {
       }
     }
 
-    var absfile = utils.makeAbsolute(filename, app);
+    var absfile = utils.makeAbsolute(filename, app, res);
 
     //
     // Validate that users key matches the supplied key
     //
 
-    if (!isValidKey(user, key, app)) {
+    if (!isValidKey(user, key, app, res)) {
       var msg = (key) ? 'Incorrect password.' : 'Password protected.';
       res.json({error: msg, 'needauth': 'key'});
       return;
@@ -128,7 +128,7 @@ exports.handleSave = function(req, res, app) {
 
       sourceuser = filenameuser(sourcefile);
 
-      var absSourceFile = utils.makeAbsolute(sourcefile, app);
+      var absSourceFile = utils.makeAbsolute(sourcefile, app, res);
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
       }
@@ -140,7 +140,7 @@ exports.handleSave = function(req, res, app) {
 
       // mv requires authz on the source dir
       if (mode == 'mv') {
-        if (!isValidKey(sourceuser, sourcekey, app)) {
+        if (!isValidKey(sourceuser, sourcekey, app, res)) {
           var msg = (!key) ?
               'Source password protected.' : 'Incorrect source password.';
           res.json({error: msg, 'auth': 'key'});
@@ -350,7 +350,7 @@ function removeDirsSync(dirStart) {
   }
 }
 
-function isValidKey(user, key, app) {
+function isValidKey(user, key, app, res) {
   //
   // keydir is the directory containing the hashed user password.
   // It's a subdir off the user home directory called '.key'.
@@ -358,7 +358,7 @@ function isValidKey(user, key, app) {
   // with the hashed user password
   //
 
-  var keydir = utils.getKeyDir(user, app);
+  var keydir = utils.getKeyDir(user, app, res);
   var statObj = null;
 
   if (!utils.isPresent(keydir, 'dir')) {
@@ -397,7 +397,7 @@ function doSetKey(user, oldkey, newkey, res, app) {
     return;
   }
 
-  var keydir = utils.getKeyDir(user, app);
+  var keydir = utils.getKeyDir(user, app, res);
 
   try {
     // Create directory if not present

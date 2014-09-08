@@ -1,7 +1,12 @@
 var path = require('path');
 var fs = require('fs');
+var urltemplate = require('url-template');
 
-exports.getRootCacheName = function(app) {
+function expandPath(pathname, res) {
+  return urltemplate.parse(path.resolve(pathname)).expand(res.locals);
+}
+
+exports.getRootCacheName = function(app, res) {
   return path.join(app.locals.config.dirs.cachedir, 'rootcache');
 };
 
@@ -31,8 +36,9 @@ ImmediateReturnError.prototype = Error.prototype;
 //                                                                            
 // Return user key directory where password is stored.                        
 //                                                                            
-exports.getKeyDir = function(user, app) {
-  return path.resolve(path.join(app.locals.config.dirs.datadir, user, '.key'));
+exports.getKeyDir = function(user, app, res) {
+  return expandPath(
+      path.join(app.locals.config.dirs.datadir, user, '.key'), res);
 };
 
 //
@@ -63,8 +69,8 @@ exports.isPresent = function(filename, fileordir) {
 //                                                                             
 // Return user home dir                                                        
 //                                                                            
-exports.getUserHomeDir = function(user, app) {
-  return path.resolve(path.join(app.locals.config.dirs.datadir, user));
+exports.getUserHomeDir = function(user, app, res) {
+  return expandPath(path.join(app.locals.config.dirs.datadir, user), res);
 };
 
 //
@@ -92,12 +98,11 @@ exports.isFileNameValid = function(filename, needone) {
   return true;
 };
 
-exports.makeAbsolute = function(filename, app) {
+exports.makeAbsolute = function(filename, app, res) {
   var absfile = path.join(app.locals.config.dirs.datadir, filename);
   if (absfile.indexOf(app.locals.config.dirs.datadir) != 0) {
     errorExit('Illegal filename ' + filename);
   }
-  absfile = path.resolve(absfile); // Resolve to absolute path                  
-  return absfile;
+  return expandPath(absfile, res);
 };
 

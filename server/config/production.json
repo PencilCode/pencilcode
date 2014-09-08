@@ -1,8 +1,7 @@
 {
   "dirs": {
-    "datadir": "/srv/pencilcode.net/data",
-    "staticdir": "/srv/pencilcode.net/top",
-    "cachedir": "/srv/pencilcode.net/cache"
+    "datadir": "/srv/{site}/data",
+    "cachedir": "/srv/{site}/cache"
   },
   "compactjson": true,
   "uid": "davidbau",

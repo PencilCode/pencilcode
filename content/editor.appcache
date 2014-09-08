@@ -7,34 +7,33 @@ CACHE MANIFEST
 /lib/ace/mode-coffee.js
 /lib/ace/worker-coffee.js
 
-http://fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400
-http://fonts.googleapis.com/css?family=Lato:400,700
-http://fonts.gstatic.com/s/lato/v10/1YwB1sO8YE1Lyjf12WNiUA.woff2
-http://fonts.gstatic.com/s/lato/v10/EsvMC5un3kjyUhB9ZEPPwg.woff2
-http://fonts.gstatic.com/s/lato/v10/H2DMvhDLycM56KNuAtbJYA.woff2
-http://fonts.gstatic.com/s/sourcecodepro/v5/mrl8jkM18OlOQN8JLgasDxM0YzuT7MdOe03otPbuUS0.woff
-http://fonts.gstatic.com/s/sourcecodepro/v6/mrl8jkM18OlOQN8JLgasD_ytCVloACqnDHJwh-em2k8.woff2
-http://www.google-analytics.com/analytics.js
+//fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400
+//fonts.googleapis.com/css?family=Lato:400,700
+//fonts.gstatic.com/s/lato/v10/1YwB1sO8YE1Lyjf12WNiUA.woff2
+//fonts.gstatic.com/s/lato/v10/EsvMC5un3kjyUhB9ZEPPwg.woff2
+//fonts.gstatic.com/s/lato/v10/H2DMvhDLycM56KNuAtbJYA.woff2
+//fonts.gstatic.com/s/sourcecodepro/v6/mrl8jkM18OlOQN8JLgasD_ytCVloACqnDHJwh-em2k8.woff2
+//www.google-analytics.com/analytics.js
 
-http://<!--#echo var="site"-->/editor.css
-http://<!--#echo var="site"-->/editor.js
-http://<!--#echo var="site"-->/favicon.ico
-http://<!--#echo var="site"-->/folder_32.png
-http://<!--#echo var="site"-->/pencil_16.png
-http://<!--#echo var="site"-->/gray_pencil_16.png
-http://<!--#echo var="site"-->/pencil_32.png
-http://<!--#echo var="site"-->/pencil_48.png
-http://<!--#echo var="site"-->/pencil_64.png
-http://<!--#echo var="site"-->/pencil_192.png
-http://<!--#echo var="site"-->/pencil_avatar.png
-http://<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css
-http://<!--#echo var="site"-->/lib/droplet.css
-http://<!--#echo var="site"-->/turtlebits.js
-http://<!--#echo var="site"-->/jquery.js
+//<!--#echo var="site"-->/editor.css
+//<!--#echo var="site"-->/editor.js
+//<!--#echo var="site"-->/favicon.ico
+//<!--#echo var="site"-->/folder_32.png
+//<!--#echo var="site"-->/pencil_16.png
+//<!--#echo var="site"-->/gray_pencil_16.png
+//<!--#echo var="site"-->/pencil_32.png
+//<!--#echo var="site"-->/pencil_48.png
+//<!--#echo var="site"-->/pencil_64.png
+//<!--#echo var="site"-->/pencil_192.png
+//<!--#echo var="site"-->/pencil_avatar.png
+//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css
+//<!--#echo var="site"-->/lib/droplet.css
+//<!--#echo var="site"-->/turtlebits.js
+//<!--#echo var="site"-->/jquery.js
 
-http://<!--#echo var="site"-->/terms.html
-http://<!--#echo var="site"-->/privacy.html
-http://<!--#echo var="site"-->/license.html
+//<!--#echo var="site"-->/terms.html
+//<!--#echo var="site"-->/privacy.html
+//<!--#echo var="site"-->/license.html
 
 FALLBACK:
 /edit/ /edit/

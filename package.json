@@ -23,7 +23,8 @@
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
-    "tamper": "latest"
+    "tamper": "latest",
+    "url-template": "latest"
   },
   "devDependencies": {
     "grunt": "latest",

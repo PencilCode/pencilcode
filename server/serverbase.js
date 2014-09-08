@@ -88,10 +88,13 @@ exports.initialize2 = function(app) {
   app.use('/home', expandedUserData);
   app.use('/run', expandedUserData);
 
-  if (config.servesrc) {
-    app.use(express.static(path.join(config.dirs.staticdir, 'src')));
+  if (config.dirs.staticdir) {
+    if (config.servesrc) {
+      app.use(express.static(path.join(config.dirs.staticdir, 'src')));
+    }
+    app.use(express.static(config.dirs.staticdir));
   }
-  app.use(express.static(config.dirs.staticdir));
+
   app.get('*', function(req, res) {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('404 - ' + req.url);
