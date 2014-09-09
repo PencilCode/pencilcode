@@ -1641,8 +1641,8 @@ var ICE_EDITOR_PALETTE =[
         block: 'for x in [1..3]\n  ``',
         title: 'Do something multiple times...?'
       }, {
-        block: 'while ``\n  ``',
-        title: 'Repeat something while a condition is true'
+        block: 'tick 30, ->\n  ``',
+        title: 'Repeat something forever at qually-spaced times'
       }, {
         block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
         title: 'Read input from the user'
@@ -1718,9 +1718,6 @@ var ICE_EDITOR_PALETTE =[
       }, {
         block: 'wear \'/img/cat-icon\'',
         title: 'Change the turtle picture'
-      }, {
-        block: 'tick 1, ->\n  ``',
-        title: 'Do something at equally-spaced times'
       }, {
         block: 'moveto lastclick',
         title: 'Move to a location'
