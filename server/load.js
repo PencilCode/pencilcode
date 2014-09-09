@@ -3,6 +3,7 @@ var fs = require('fs-ext');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
+var filemeta = require('./filemeta');
 
 exports.handleLoad = function(req, res, app, format) {
   var filename = req.param('file', utils.filenameFromUri(req));
@@ -62,23 +63,30 @@ exports.handleLoad = function(req, res, app, format) {
 
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
-        var data = (tail != null) ?
-            readtail(absfile, tail) :
-            fs.readFileSync(absfile, {encoding: 'utf8'});
+        var m = filemeta.parseMetaString(
+            fs.readFileSync(absfile, {encoding: 'utf8'})),
+            data = m.data,
+            meta = m.meta;
 
         var statObj = fs.statSync(absfile);
 
         var mimetype = filetype.mimeForFilename(filename);
 
         res.set('Cache-Control', 'must-revalidate');
-        res.jsonp({'file': '/' + filename, 
-                   'data': data,
-                   'auth': haskey,
-                   'mtime': statObj.mtime.getTime(), 
-                   'mime': mimetype});
+        resp = {
+          file: '/' + filename,
+          data: data,
+          auth: haskey,
+          mtime: statObj.mtime.getTime(),
+          mime: mimetype
+        };
+        if (meta != null) {
+          resp.meta = meta;
+        }
+        res.jsonp(resp);
         return;
       }
-    
+
       // Handle the case of a directory that's present
       if (utils.isPresent(absfile, 'dir')) {
         if (filename.length > 0 && filename[filename.length - 1] != '/') {
@@ -87,7 +95,7 @@ exports.handleLoad = function(req, res, app, format) {
 
         var list = buildDirList(absfile, fs.readdirSync(absfile).sort());
 
-        var jsonRet = 
+        var jsonRet =
           {'directory': '/' + filename, 'list': list, 'auth': haskey};
 
         // Write to cache if this is a top dir listing
@@ -100,8 +108,8 @@ exports.handleLoad = function(req, res, app, format) {
       }
 
       // Handle the case of a new file create
-      if (filename.length > 0 && 
-          filename[filename.length - 1] != '/' && 
+      if (filename.length > 0 &&
+          filename[filename.length - 1] != '/' &&
           isValidNewFile(absfile, app)) {
         res.set('Cache-Control', 'must-revalidate');
         res.jsonp({'error': 'could not read file ' + filename,
@@ -115,8 +123,11 @@ exports.handleLoad = function(req, res, app, format) {
     }
     else if (format == 'run') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
-        var mt = filetype.mimeForFilename(filename);
-        var data = fs.readFileSync(absfile, {'encoding': 'utf8'});
+        var mt = filetype.mimeForFilename(filename),
+            m = filemeta.parseMetaString(
+                fs.readFileSync(absfile, {'encoding': 'utf8'})),
+            data = m.data,
+            meta = m.meta;
 
         // For turtle bits, assume it's coffeescript
         if (mt.indexOf('text/x-pencilcode') == 0) {
@@ -129,7 +140,7 @@ exports.handleLoad = function(req, res, app, format) {
         res.send(data);
         return;
       }
-      else if (utils.isPresent(absfile, 'dir') || 
+      else if (utils.isPresent(absfile, 'dir') ||
                filename.indexOf('/') == filename.length) {
         if (filename.length > 0 && filename[filename.length - 1] != '/') {
           res.redirect(301, '/home' + req.path + '/');
@@ -161,18 +172,18 @@ exports.handleLoad = function(req, res, app, format) {
             text += '</a>\n';
           }
         }
-        
-        var contents = (utils.isPresent(absfile, 'dir')) ? 
+
+        var contents = (utils.isPresent(absfile, 'dir')) ?
           fs.readdirSync(absfile).sort() : new Array();
         for (var i = 0; i < contents.length; i++) {
           if (contents[i][0] == '.') {
             // Skip past any dirs starting with a '.'
             continue;
           }
-          
+
           var name = contents[i];
           var af = path.join(absfile, name);
-          if (utils.isPresent(af, 'dir') && 
+          if (utils.isPresent(af, 'dir') &&
               name.charAt(name.length - 1) != '/') {
             name += '/';
           }
@@ -192,7 +203,7 @@ exports.handleLoad = function(req, res, app, format) {
         return;
       }
       else if (filename.charAt(filename.length - 1) == '/') {
-        res.redirect(301, 
+        res.redirect(301,
             path.dirname(filename.substring(0, filename.length-1)) + '/');
         return;
       }
@@ -206,7 +217,7 @@ exports.handleLoad = function(req, res, app, format) {
           req.path.substring(0, req.path.length - 1) : req.path;
         var parentDir = path.dirname(strip) + '/';
         text += '<a href="' + parentDir + '">Up to ' + parentDir + '</a>\n';
-        
+
         var extIdx = filename.lastIndexOf('.');
         if (extIdx > 0) {
           var ext = filename.substring(extIdx + 1);
@@ -292,18 +303,6 @@ function buildDirList(absdir, contents) {
   }
 
   return list;
-}
-
-function readtail(filename, lines) {
-  if (lines <= 0) {
-    return '';
-  }
-
-  var fd = fs.openSync(filename, 'r');
-  // seek to the end
-  fd.seekSync(fd, 0, 2);
-
-  // TODO : Implement this
 }
 
 function userhaskey(user, app, res) {

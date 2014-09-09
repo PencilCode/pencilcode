@@ -2,9 +2,11 @@ var path = require('path');
 var fs = require('fs');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
+var filemeta = require('./filemeta');
 
 exports.handleSave = function(req, res, app) {
   var data = req.param('data', null);
+  var meta = req.param('meta', null);
   var sourcefile = req.param('source', null);
   var mode = req.param('mode', null);
   var conditional = req.param('conditional', null);
@@ -286,12 +288,18 @@ exports.handleSave = function(req, res, app) {
     }
 
     var statObj;
+    if (meta != null) {
+      try {
+        meta = JSON.parse(meta);
+      } catch (e) { }
+    }
     try {
-      var openMode = (mode == 'a') ? 'a' : 'w';
+      var openMode = (mode == 'a') ? 'a' : 'w',
+          content = filemeta.printMetaString(data, meta);
       fd = fs.openSync(absfile, openMode);
 
       writeStream = fs.createWriteStream(absfile, {flags: openMode});
-      writeStream.write(data);
+      writeStream.write(content);
       writeStream.end();
 
       writeStream.on('close', function() {

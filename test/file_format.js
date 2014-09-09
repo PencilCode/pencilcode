@@ -1,4 +1,4 @@
-var filetype = require('../content/src/filetype');
+var filemeta = require('../server/filemeta');
     chai = require('chai'),
     assert = chai.assert;
 
@@ -6,7 +6,7 @@ describe('meta string parser', function() {
 
   it('should parse a simple file with META.', function() {
     assert.deepEqual(
-      filetype.parseMetaString('file\ntext\n' +
+      filemeta.parseMetaString('file\ntext\n' +
           '###@META\n { "a": "b##\\u0023" } \nMETA@###\n'),
       {
         data: "file\ntext\n",
@@ -17,13 +17,13 @@ describe('meta string parser', function() {
 
   it('should print a simple file with meta.', function() {
     assert.equal(
-      filetype.printMetaString("abc\ndef", { "something": "####data####"}),
+      filemeta.printMetaString("abc\ndef", { "something": "####data####"}),
       'abc\ndef###@META\n{"something":"##\\u0023#data##\\u0023#"}\nMETA@###');
   });
 
   it('should parse a simple javascript file with META.', function() {
     assert.deepEqual(
-      filetype.parseMetaString('/* this is a test file */\n' +
+      filemeta.parseMetaString('/* this is a test file */\n' +
           '/**@META\n { "a": "b/**\\/" } \nMETA@**/\n\n\n'),
       {
         data: "/* this is a test file */\n",
@@ -34,7 +34,7 @@ describe('meta string parser', function() {
 
   it('should print a simple javascript file.', function() {
     assert.equal(
-      filetype.printMetaString("hello();", {
+      filemeta.printMetaString("hello();", {
          "type": "text/javascript", "something": "/*data*/" }),
       'hello();/**@META\n{"type":"text/javascript",' +
       '"something":"/*data*\\/"}\nMETA@**/');
@@ -88,8 +88,8 @@ describe('meta string parser', function() {
   it('should round-trip 100 random files.', function() {
     for (var j = 0; j < 100; ++j) {
       var v = { data: randString(), meta: randData() };
-      var s = filetype.printMetaString(v.data, v.meta);
-      var r = filetype.parseMetaString(s);
+      var s = filemeta.printMetaString(v.data, v.meta);
+      var r = filemeta.parseMetaString(s);
       assert.deepEqual(v, r);
     }
   });
