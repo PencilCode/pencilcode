@@ -71,21 +71,27 @@ function deleteBackupPrefix(filename) {
 function isBackupPreferred(filename, m, preferUnsaved) {
   try {
     if (!window.localStorage) return false;
-    var result = JSON.parse(window.localStorage['backup:' + filename]);
+    var backup = JSON.parse(window.localStorage['backup:' + filename]);
     // If backup is empty, then don't prefer the backup.
-    if (/^\s*$/.test(result.data)) {
+    if (/^\s*$/.test(backup.data)) {
       return false;
     }
     // If backup is identical to net file (ignoring extra blank lines),
     // then don't prefer the backup.
-    if (result.data.replace(/\s*($|\n)/g, '$1') ===
+    if (backup.data.replace(/\s*($|\n)/g, '$1') ===
         m.data.replace(/\s*($|\n)/g, '$1')) {
       return false;
     }
-    if (preferUnsaved && result.unsaved) { return true; }
-    if (result.mtime && m.mtime && result.mtime > m.mtime) { return true; }
-  } catch(e) {
-  }
+    // If we have an unsaved backup, show it.
+    if (preferUnsaved && backup.unsaved) { return true; }
+    if (backup.mtime && m.mtime && backup.mtime > m.mtime) {
+      // If the backup is newer than original file and still
+      // less than 12 hours old then prefer it; otherwise discard it.
+      if ((new Date - backup.mtime) / 1000 / 60 / 60 < 12) {
+        return true;
+      }
+    }
+  } catch(e) { }
   return false;
 }
 
@@ -170,7 +176,7 @@ window.pencilcode.storage = {
         callback(m);
         return;
       }
-      if (!ignoreBackup && isBackupPreferred(filename, m, true)) {
+      if (!ignoreBackup && isBackupPreferred(filename, m)) {
         // If the backup is preferred (newer or unsaved), then return it
         // and mark it as a backup.
         callback(loadBackup(filename, {backup:true,offline:false}));
@@ -206,8 +212,16 @@ window.pencilcode.storage = {
   saveFile: function(ownername,
       filename, data, force, key, backupOnly, callback) {
     // Always stick the data in the backup immediately, marked as unsaved.
-    var msg = $.extend({}, data);
-    msg.unsaved = true;
+    var msg = $.extend({}, data), now = +(new Date);
+    // When backupOnly is requested, it's not a network-save request.
+    if (!backupOnly) {
+      // The unsaved flag will indicate that the user wanted to do a
+      // full save.
+      msg.unsaved = true;
+      if (!msg.mtime || msg.mtime < now) {
+        msg.mtime = now;
+      }
+    }
     delete msg.offline;
     if (data == '' || data == '\n') {
       // If saving an empty file, delete the backup.
@@ -232,6 +246,8 @@ window.pencilcode.storage = {
     if (key) {
       payload.key = key;
     }
+
+    // Do the network save.
     var domain = (ownername ? ownername + '.' : '') + window.pencilcode.domain;
     var crossdomain = (window.location.hostname != domain);
     $.ajax({
@@ -239,7 +255,10 @@ window.pencilcode.storage = {
           '/save/' + filename,
       data: payload,
       dataType: 'json',
-      type: crossdomain ? 'GET' : 'POST',
+      // Use a GET if crossdomain and the payload is short.  Note that
+      // a longer payload will fail on IE, and anecdotally a crossdomain
+      // POST (even with CORS) will fail on mobile browsers.
+      type: (crossdomain && payload.data.length < 1024) ? 'GET' : 'POST',
       success: function(m) {
         var check;
         if (m.error) {
@@ -258,7 +277,7 @@ window.pencilcode.storage = {
           // been entered in the backup).
           check = loadBackup(filename);
           if (check && check.data === msg.data) {
-            // Commit backup if it is still unchanged.
+            // Commit backup without 'unsaved' if it is still unchanged.
             delete msg.unsaved;
             delete msg.offline;
             if (m.mtime) { msg.mtime = m.mtime; }
