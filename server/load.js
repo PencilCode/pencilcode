@@ -121,6 +121,17 @@ exports.handleLoad = function(req, res, app, format) {
 
       utils.errorExit('Could not read file ' + filename);
     }
+    else if (format == 'code') { // For loading the code only
+      var mt = filetype.mimeForFilename(filename),
+          m = filemeta.parseMetaString(
+              fs.readFileSync(absfile, {'encoding': 'utf8'})),
+          data = m.data,
+          meta = m.meta;
+      res.set('Cache-Control', 'must-revalidate');
+      res.set('Content-Type', (meta && meta.type) || mt);
+      res.send(data);
+      return;
+    }
     else if (format == 'run') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename),

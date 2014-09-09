@@ -69,7 +69,7 @@ exports.initialize2 = function(app) {
   // Rewrite user.pencilcode.net/filename to user.pencilcode.net/user/filename,
   // and then serve the static data.
   var rawUserData = express.static(config.dirs.datadir);
-  function rewrittenUserData(req, res, next) {
+  function staticUserData(req, res, next) {
     var user = res.locals.owner;
     req.url =
       req.url.replace(/^((?:[^\/]*\/\/[^\/]*)?\/)/, "$1" + user + "/");
@@ -81,10 +81,20 @@ exports.initialize2 = function(app) {
       load.handleLoad(req, res, app, 'run');
     }
     else {
-      rewrittenUserData(req, res, next);
+      staticUserData(req, res, next);
     }
   }
-  app.use('/code', rewrittenUserData);
+  function bareUserData(req, res, next) {
+    if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
+        test(req.url)) {
+      // This strips metadata off of the file.
+      load.handleLoad(req, res, app, 'code');
+    }
+    else {
+      staticUserData(req, res, next);
+    }
+  }
+  app.use('/code', bareUserData);
   app.use('/home', expandedUserData);
   app.use('/run', expandedUserData);
 
