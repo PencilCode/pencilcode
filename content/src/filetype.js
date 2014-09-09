@@ -121,7 +121,8 @@ function mimeForFilename(filename) {
 
 
 var delimiter = [
-  { start: "###@META\n",
+  {
+    start: "###@META\n",
     end: "\nMETA@###",
     escape: function(s) { return s.replace(/###/g, '##\\u0023'); }
   },
@@ -155,11 +156,11 @@ function parseMetaString(str) {
 }
 
 function printMetaString(data, meta) {
-  if (meta == null) {
+  if (meta == null && data.indexOf('@META') == -1) {
     return data;
   }
   var d = delimiter[0];
-  if (meta.type) {
+  if (meta && meta.type) {
     for (var j = 1; j < delimiter.length; ++j) {
       if (delimiter[j].type.test(meta.type)) { d = delimiter[j]; break; }
     }

@@ -40,7 +40,7 @@ describe('meta string parser', function() {
       '"something":"/*data*\\/"}\nMETA@**/');
   });
 
-  var randstring = ['type', 'f()', '*', '###', '/', '\n'];
+  var randstring = ['type', '0', '*', '/', '###@META\n', '\nMETA@###', ' '];
 
   function randValue() {
     var r = Math.random();
@@ -52,38 +52,34 @@ describe('meta string parser', function() {
   }
   function randString() {
     var s = '';
-    var r = Math.random() * Math.random();
-    while (Math.random() > r) {
+    var n = Math.floor(Math.random() * Math.random() * 20);
+    while (n-- > 0) {
       s += randstring[Math.floor(Math.random() * randstring.length)];
     }
     return s;
   }
   function randJson(depth) {
+    if (!Math.floor(Math.random() * depth)) {
+      return randValue();
+    }
     var count = Math.ceil(Math.random() * 3), result, key;
     if (Math.random() > 0.5) {
       result = [];
       while (count-- > 0) {
-        if (Math.floor(Math.random() * depth)) {
-          result.push(randJson(depth - 1));
-        } else {
-          result.push(randValue());
-        }
+        result.push(randJson(depth - 1));
       }
     } else {
       result = {};
       while (count-- > 0) {
-        if (Math.floor(Math.random() * depth)) {
-          result[randString()] = randJson(depth - 1);
-        } else {
-          result[randString()] = randValue();
-        }
+        result[randString()] = randJson(depth - 1);
       }
     }
     return result;
   }
   function randData() {
     var x = randJson(6);
-    if (!(x instanceof Array) && Math.random() < .5) {
+    if (x && typeof x == 'object' && !(x instanceof Array)
+        && Math.random() < .5) {
       x.type = 'javascript';
     }
     return x;
