@@ -21,6 +21,12 @@
 <table id="top" width="100%"><tr><td id="topleft"><nobr>
 <script>
 (function(){
+// First, register an error event logger.
+window.addEventListener('error', function(ev) {
+  (new Image).src = '/log/error' + window.location.pathname + '?message=' +
+  encodeURIComponent(ev.message) + (!ev.error || !ev.error.stack ? '' :
+  '&stack=' + encodeURIComponent(ev.error.stack));
+});
 // Fast fixup: framebust and url-based title.
 if (top != self) { top.location.replace(self.location.href); }
 window.pencilcode = {
