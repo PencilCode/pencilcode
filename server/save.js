@@ -151,7 +151,8 @@ exports.handleSave = function(req, res, app) {
       }
 
       // Create target parent directory if needed
-      if (!fs.statSync(path.dirname(absfile)).isDirectory()) {
+      if (!fs.existsSync(path.dirname(absfile)) ||
+          !fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
         try {
           fs.mkdirSync(path.dirname(absfile));
