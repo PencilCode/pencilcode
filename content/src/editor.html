@@ -8,7 +8,6 @@
 <style>
 * {box-sizing:border-box;}
 </style>
-</script>
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/editor.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/droplet.css">
@@ -23,8 +22,9 @@
 (function(){
 // First, register an error event logger.
 window.addEventListener('error', function(ev) {
-  (new Image).src = '/log/error' + window.location.pathname + '?message=' +
-  encodeURIComponent(ev.message) + (!ev.error || !ev.error.stack ? '' :
+  (new Image).src = '/log/error' + window.location.pathname + '?error' +
+  '&message=' + encodeURIComponent(ev.message) +
+  (!ev.error || !ev.error.stack ? '' :
   '&stack=' + encodeURIComponent(ev.error.stack));
 });
 // Fast fixup: framebust and url-based title.

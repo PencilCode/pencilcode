@@ -11,21 +11,9 @@
 .framed .panetitle {top:0}
 .framed .pane {top:0}
 </style>
-<script>
-window.pencilcode = {
-  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
-  owner: location.host.replace(/\.[^.]*.{8}$/, '')
-};
-// Preload some CSS and scripts from the top-level pencilcode domain,
-// so that they are cached across different users.
-document.write(
-  '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/editor.css">' +
-  '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
-  '<link rel="stylesheet" type="text/css" href="//' +
-  pencilcode.domain + '/lib/droplet.css">');
-</script>
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/editor.css">
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css">
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/droplet.css">
 </head>
 <body id="pencildoc" class="framed">
 <div id="overflow">
@@ -41,6 +29,19 @@ document.write(
 <div id="charlietitle" class="right panetitle" style="height:0;left:100%"></div>
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div>
+<script>
+// First, register an error event logger.
+window.addEventListener('error', function(ev) {
+  (new Image).src = '/log/error' + window.location.pathname + '?error' +
+  '&message=' + encodeURIComponent(ev.message) +
+  (!ev.error || !ev.error.stack ? '' :
+  '&stack=' + encodeURIComponent(ev.error.stack));
+});
+window.pencilcode = {
+  domain: location.hostname.replace(/(?:(.*)\.)?([^.]*.{8})$/, '$2'),
+  owner: location.host.replace(/\.[^.]*.{8}$/, '')
+};
+</script>
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
 <script data-main="/src/editor-main" src="/src/require.js"></script>
 </body>
