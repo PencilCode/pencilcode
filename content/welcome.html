@@ -467,8 +467,6 @@ hatch(3).plan (i) ->
     if @touches lastmousemove
       if t
         @wear random color
-        if not $('#overlay').is(':visible')
-          @play {volume: 0.01}, note
         t = null
       @pause random()
     else
