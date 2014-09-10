@@ -418,11 +418,11 @@ view.on('run', function() {
   }
   var runtext = mimetext && mimetext.text;
   var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  var filename = modelatpos('left').filename;
   view.clearPaneEditorMarks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
-    storage.saveFile(model.ownername,
-        modelatpos('left').filename, newdata, false, null, true);
+    storage.saveFile(model.ownername, filename, newdata, false, null, true);
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
