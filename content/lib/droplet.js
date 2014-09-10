@@ -1926,6 +1926,18 @@ QUAD.init = function (args) {
             return this.y += y;
           };
 
+          Point.prototype.plus = function(_arg) {
+            var x, y;
+            x = _arg.x, y = _arg.y;
+            return new Point(this.x + x, this.y + y);
+          };
+
+          Point.prototype.toMagnitude = function(mag) {
+            var r;
+            r = mag / this.magnitude();
+            return new Point(this.x * r, this.y * r);
+          };
+
           Point.prototype.copy = function(point) {
             this.x = point.x;
             return this.y = point.y;
@@ -2934,6 +2946,15 @@ QUAD.init = function (args) {
         return head === parent;
       };
 
+      Token.prototype.visParent = function() {
+        var head;
+        head = this.parent;
+        while ((head != null ? head.type : void 0) === 'segment' && head.isLassoSegment) {
+          head = head.parent;
+        }
+        return head;
+      };
+
       Token.prototype.getCommonParent = function(other) {
         var head;
         head = this;
@@ -3316,9 +3337,11 @@ QUAD.init = function (args) {
       }
 
       IndentEndToken.prototype.stringify = function(state) {
-        state.indent = state.indent.slice(0, -this.container.depth);
+        if (this.container.prefix.length !== 0) {
+          state.indent = state.indent.slice(0, -this.container.prefix.length);
+        }
         if (this.previousVisibleToken().previousVisibleToken() === this.container.start) {
-          return '``';
+          return state.emptyToken;
         } else {
           return '';
         }
@@ -3544,7 +3567,8 @@ QUAD.init = function (args) {
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __modulo = function(a, b) { return (a % b + +b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
@@ -3715,7 +3739,7 @@ QUAD.init = function (args) {
         GenericViewNode.prototype.serialize = function(line) {
           var child, i, prop, result, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
           result = [];
-          _ref = ['lineLength', 'margins', 'topLineSticksToBottom', 'bottomLineSticksToTop', 'changedBoundingBox', 'path', 'highlightArea', 'computedVersion', 'carriageArrow'];
+          _ref = ['lineLength', 'margins', 'topLineSticksToBottom', 'bottomLineSticksToTop', 'changedBoundingBox', 'path', 'highlightArea', 'computedVersion', 'carriageArrow', 'bevels'];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             prop = _ref[_i];
             result.push(prop + ': ' + JSON.stringify(this[prop]));
@@ -3773,7 +3797,7 @@ QUAD.init = function (args) {
           if (parenttype === 'block' && this.model.type === 'indent') {
             this.margins = {
               top: this.view.opts.padding,
-              bottom: this.view.opts.indentTongueHeight,
+              bottom: this.lineLength > 1 ? this.view.opts.indentTongueHeight : this.view.opts.padding,
               firstLeft: 0,
               midLeft: this.view.opts.indentWidth,
               lastLeft: this.view.opts.indentWidth,
@@ -4301,22 +4325,23 @@ QUAD.init = function (args) {
         };
 
         ContainerViewNode.prototype.computeBevels = function() {
-          var childObj, _i, _len, _ref, _ref1;
+          var childObj, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+          this.bevels = {
+            top: true,
+            bottom: true
+          };
+          if ((((_ref = this.model.visParent()) != null ? _ref.type : void 0) === 'indent' || ((_ref1 = this.model.visParent()) != null ? _ref1.isRoot : void 0)) && ((_ref2 = this.model.start.previousAffectToken()) != null ? _ref2.type : void 0) === 'newline' && ((_ref3 = this.model.start.previousAffectToken()) != null ? _ref3.previousAffectToken() : void 0) !== this.model.visParent().start) {
+            this.bevels.top = false;
+          }
+          if ((((_ref4 = this.model.visParent()) != null ? _ref4.type : void 0) === 'indent' || ((_ref5 = this.model.visParent()) != null ? _ref5.isRoot : void 0)) && ((_ref6 = this.model.end.nextAffectToken()) != null ? _ref6.type : void 0) === 'newline') {
+            this.bevels.bottom = false;
+          }
           if (this.computedVersion === this.model.version) {
             return null;
           }
-          this.bevels = {
-            topLeft: false,
-            topRight: true,
-            bottomLeft: false,
-            bottomRight: this.carriageArrow === CARRIAGE_ARROW_NONE
-          };
-          if ((this.model.parent == null) || (!this.view.hasViewNodeFor(this.model.parent)) || ((_ref = this.model.parent.type) === 'block' || _ref === 'socket')) {
-            this.bevels.topLeft = this.bevels.bottomLeft = this.bevels.topRight = this.bevels.bottomRight = true;
-          }
-          _ref1 = this.children;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            childObj = _ref1[_i];
+          _ref7 = this.children;
+          for (_i = 0, _len = _ref7.length; _i < _len; _i++) {
+            childObj = _ref7[_i];
             this.view.getViewNodeFor(childObj.child).computeBevels();
           }
           return null;
@@ -4513,64 +4538,29 @@ QUAD.init = function (args) {
         };
 
         ContainerViewNode.prototype.computeOwnPath = function() {
-          var bounds, destinationBounds, el, glueTop, innerLeft, innerRight, left, leftmost, line, multilineBounds, multilineChild, multilineNode, multilineView, parentViewNode, path, right, rightmost, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+          var bounds, destinationBounds, el, glueTop, i, innerLeft, innerRight, left, leftmost, line, multilineBounds, multilineChild, multilineNode, multilineView, newPath, next, parentViewNode, path, point, prev, right, rightmost, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
           left = [];
           right = [];
           if (this.shouldAddTab() && this.model.isFirstOnLine() && this.carriageArrow !== CARRIAGE_ARROW_SIDEALONG) {
-            this.addTab(left, new this.view.draw.Point(this.bounds[0].x + this.view.opts.tabOffset, this.bounds[0].y));
+            this.addTabReverse(right, new this.view.draw.Point(this.bounds[0].x + this.view.opts.tabOffset, this.bounds[0].y));
           }
           _ref = this.bounds;
           for (line = _i = 0, _len = _ref.length; _i < _len; line = ++_i) {
             bounds = _ref[line];
             if (this.multilineChildrenData[line] === NO_MULTILINE) {
-              if (this.bevels.topLeft && line === 0) {
-                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
-                left.push(new this.view.draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
-              } else {
-                left.push(new this.view.draw.Point(bounds.x, bounds.y));
-              }
-              if (this.bevels.bottomLeft && line === this.lineLength - 1) {
-                left.push(new this.view.draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
-                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
-              } else {
-                left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
-              }
-              if (this.bevels.topRight) {
-                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
-              } else {
-                right.push(new this.view.draw.Point(bounds.right(), bounds.y));
-              }
-              if (this.bevels.bottomRight && !((_ref1 = (_ref2 = this.glue[line]) != null ? _ref2.draw : void 0) != null ? _ref1 : false)) {
-                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
-              } else {
-                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
-              }
+              left.push(new this.view.draw.Point(bounds.x, bounds.y));
+              left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
+              right.push(new this.view.draw.Point(bounds.right(), bounds.y));
+              right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
             }
             if (this.multilineChildrenData[line] === MULTILINE_START) {
-              if (this.bevels.topLeft && line === 0) {
-                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.y));
-                left.push(new this.view.draw.Point(bounds.x, bounds.y + this.view.opts.bevelClip));
-              } else {
-                left.push(new this.view.draw.Point(bounds.x, bounds.y));
-              }
-              if (this.bevels.bottomLeft && line === this.lineLength - 1) {
-                left.push(new this.view.draw.Point(bounds.x, bounds.bottom() - this.view.opts.bevelClip));
-                left.push(new this.view.draw.Point(bounds.x + this.view.opts.bevelClip, bounds.bottom()));
-              } else {
-                left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
-              }
+              left.push(new this.view.draw.Point(bounds.x, bounds.y));
+              left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
               multilineView = this.view.getViewNodeFor(multilineChild.child);
               multilineBounds = multilineView.bounds[line - multilineChild.startLine];
               if (multilineBounds.width === 0) {
-                if (this.bevels.topRight) {
-                  right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                  right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
-                } else {
-                  right.push(new this.view.draw.Point(bounds.right(), bounds.y));
-                }
+                right.push(new this.view.draw.Point(bounds.right(), bounds.y));
               } else {
                 right.push(new this.view.draw.Point(bounds.right(), bounds.y));
                 right.push(new this.view.draw.Point(bounds.right(), multilineBounds.y));
@@ -4586,15 +4576,19 @@ QUAD.init = function (args) {
               multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[line - multilineChild.startLine];
               left.push(new this.view.draw.Point(bounds.x, bounds.y));
               left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
-              right.push(new this.view.draw.Point(multilineBounds.x, bounds.y));
+              if (!(((_ref1 = this.multilineChildrenData[line - 1]) === MULTILINE_START || _ref1 === MULTILINE_END_START) && multilineChild.child.type === 'indent')) {
+                right.push(new this.view.draw.Point(multilineBounds.x, bounds.y));
+              }
               right.push(new this.view.draw.Point(multilineBounds.x, bounds.bottom()));
             }
-            if ((_ref3 = this.multilineChildrenData[line]) === MULTILINE_END || _ref3 === MULTILINE_END_START) {
+            if ((_ref2 = this.multilineChildrenData[line]) === MULTILINE_END || _ref2 === MULTILINE_END_START) {
               left.push(new this.view.draw.Point(bounds.x, bounds.y));
               left.push(new this.view.draw.Point(bounds.x, bounds.bottom()));
               multilineChild = this.lineChildren[line][0];
               multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[line - multilineChild.startLine];
-              right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y));
+              if (!(((_ref3 = this.multilineChildrenData[line - 1]) === MULTILINE_START || _ref3 === MULTILINE_END_START) && multilineChild.child.type === 'indent')) {
+                right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y));
+              }
               right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.bottom()));
               if (multilineChild.child.type === 'indent') {
                 this.addTabReverse(right, new this.view.draw.Point(multilineBounds.x + this.view.opts.tabOffset, multilineBounds.bottom()));
@@ -4611,30 +4605,14 @@ QUAD.init = function (args) {
                   multilineBounds = multilineView.bounds[line - multilineChild.startLine];
                   right.push(new this.view.draw.Point(bounds.right(), bounds.y));
                   if (multilineBounds.width === 0) {
-                    if (this.bevels.topRight) {
-                      right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.y));
-                      right.push(new this.view.draw.Point(bounds.right(), bounds.y + this.view.opts.bevelClip));
-                    } else {
-                      right.push(new this.view.draw.Point(bounds.right(), bounds.y));
-                    }
-                    if (this.bevels.bottomRight && !((_ref4 = this.glue[line]) != null ? _ref4.draw : void 0)) {
-                      right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                      right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
-                    } else {
-                      right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
-                    }
+                    right.push(new this.view.draw.Point(bounds.right(), bounds.y));
+                    right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
                   } else {
                     right.push(new this.view.draw.Point(bounds.right(), multilineBounds.y));
-                    right.push(new this.view.draw.Point(multilineBounds.x + this.view.opts.bevelClip, multilineBounds.y));
-                    right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y + this.view.opts.bevelClip));
+                    right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.y));
                     right.push(new this.view.draw.Point(multilineBounds.x, multilineBounds.bottom()));
                   }
                 }
-              } else if (line === this.lineLength - 1) {
-                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, multilineBounds.bottom()));
-                right.push(new this.view.draw.Point(bounds.right(), multilineBounds.bottom() + this.view.opts.bevelClip));
-                right.push(new this.view.draw.Point(bounds.right(), bounds.bottom() - this.view.opts.bevelClip));
-                right.push(new this.view.draw.Point(bounds.right() - this.view.opts.bevelClip, bounds.bottom()));
               } else {
                 right.push(new this.view.draw.Point(bounds.right(), multilineBounds.bottom()));
                 right.push(new this.view.draw.Point(bounds.right(), bounds.bottom()));
@@ -4657,7 +4635,7 @@ QUAD.init = function (args) {
               innerRight = Math.min(this.bounds[line + 1].right(), this.bounds[line].right());
               left.push(new this.view.draw.Point(innerLeft, this.bounds[line].bottom()));
               left.push(new this.view.draw.Point(innerLeft, this.bounds[line + 1].y));
-              if ((_ref5 = this.multilineChildrenData[line]) !== MULTILINE_START && _ref5 !== MULTILINE_END_START) {
+              if ((_ref4 = this.multilineChildrenData[line]) !== MULTILINE_START && _ref4 !== MULTILINE_END_START) {
                 right.push(new this.view.draw.Point(innerRight, this.bounds[line].bottom()));
                 right.push(new this.view.draw.Point(innerRight, this.bounds[line + 1].y));
               }
@@ -4675,7 +4653,7 @@ QUAD.init = function (args) {
               left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.y - this.view.opts.padding));
               left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.y));
               this.addTab(right, new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset, destinationBounds.y));
-            } else if (this.carriageArrow === CARRIAGE_ARROW_SIDEALONG) {
+            } else if (this.carriageArrow === CARRIAGE_ARROW_SIDEALONG && this.model.isLastOnLine()) {
               parentViewNode = this.view.getViewNodeFor(this.model.visParent());
               destinationBounds = parentViewNode.bounds[this.model.getLinesToParent()];
               right.push(new this.view.draw.Point(this.bounds[line].right(), destinationBounds.bottom() + this.view.opts.padding));
@@ -4685,23 +4663,24 @@ QUAD.init = function (args) {
               left.push(new this.view.draw.Point(destinationBounds.x, destinationBounds.bottom() + this.view.opts.padding));
               this.addTab(right, new this.view.draw.Point(destinationBounds.x + this.view.opts.tabOffset, destinationBounds.bottom() + this.view.opts.padding));
             }
-            if ((_ref6 = this.multilineChildrenData[line]) === MULTILINE_START || _ref6 === MULTILINE_END_START) {
+            if ((_ref5 = this.multilineChildrenData[line]) === MULTILINE_START || _ref5 === MULTILINE_END_START) {
               multilineChild = this.lineChildren[line][this.lineChildren[line].length - 1];
               multilineNode = this.view.getViewNodeFor(multilineChild.child);
               multilineBounds = multilineNode.bounds[line - multilineChild.startLine];
-              if ((_ref7 = this.glue[line]) != null ? _ref7.draw : void 0) {
+              if ((_ref6 = this.glue[line]) != null ? _ref6.draw : void 0) {
                 glueTop = this.bounds[line + 1].y - this.glue[line].height + this.view.opts.padding;
               } else {
                 glueTop = this.bounds[line].bottom();
               }
               if (multilineChild.child.type === 'indent' && multilineChild.child.start.next.type === 'newline') {
-                right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop - this.view.opts.bevelClip));
-                right.push(new this.view.draw.Point(this.bounds[line].right() - this.view.opts.bevelClip, glueTop));
+                right.push(new this.view.draw.Point(this.bounds[line].right(), glueTop));
                 this.addTab(right, new this.view.draw.Point(this.bounds[line + 1].x + this.view.opts.indentWidth + this.view.opts.tabOffset, glueTop), true);
               } else {
                 right.push(new this.view.draw.Point(multilineBounds.x, glueTop));
               }
-              right.push(new this.view.draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, glueTop));
+              if (glueTop !== this.bounds[line + 1].y) {
+                right.push(new this.view.draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, glueTop));
+              }
               right.push(new this.view.draw.Point(multilineNode.bounds[line - multilineChild.startLine + 1].x, this.bounds[line + 1].y));
             }
           }
@@ -4709,9 +4688,29 @@ QUAD.init = function (args) {
             this.addTab(right, new this.view.draw.Point(this.bounds[this.lineLength - 1].x + this.view.opts.tabOffset, this.bounds[this.lineLength - 1].bottom()));
           }
           path = left.reverse().concat(right);
+          newPath = [];
+          for (i = _j = 0, _len1 = path.length; _j < _len1; i = ++_j) {
+            point = path[i];
+            if (i === 0 && !this.bevels.bottom) {
+              newPath.push(point);
+              continue;
+            }
+            if (i === (left.length - 1) && !this.bevels.top) {
+              newPath.push(point);
+              continue;
+            }
+            next = path[__modulo(i + 1, path.length)];
+            prev = path[__modulo(i - 1, path.length)];
+            if ((point.x === next.x) !== (point.y === next.y) && (point.x === prev.x) !== (point.y === prev.y)) {
+              newPath.push(point.plus(point.from(prev).toMagnitude(-this.view.opts.bevelClip)));
+              newPath.push(point.plus(point.from(next).toMagnitude(-this.view.opts.bevelClip)));
+            } else {
+              newPath.push(point);
+            }
+          }
           this.path = new this.view.draw.Path();
-          for (_j = 0, _len1 = path.length; _j < _len1; _j++) {
-            el = path[_j];
+          for (_k = 0, _len2 = newPath.length; _k < _len2; _k++) {
+            el = newPath[_k];
             this.path.push(el);
           }
           return this.path;
@@ -4794,12 +4793,12 @@ QUAD.init = function (args) {
         };
 
         BlockViewNode.prototype.shouldAddTab = function() {
-          var parent, _ref;
+          var parent;
           if (this.model.parent != null) {
             parent = this.model.visParent();
             return (parent != null ? parent.type : void 0) !== 'socket';
           } else {
-            return !((_ref = this.model.socketLevel) === MOSTLY_VALUE || _ref === VALUE_ONLY);
+            return !(__indexOf.call(this.model.classes, 'mostly-value') >= 0 || __indexOf.call(this.model.classes, 'value-only') >= 0);
           }
         };
 
@@ -5423,7 +5422,7 @@ QUAD.init = function (args) {
         for (i = _j = 0, _len1 = lines.length; _j < _len1; i = ++_j) {
           line = lines[i];
           if (!(i in markupOnLines)) {
-            if (indentDepth >= line.length || line.slice(0, +indentDepth + 1 || 9e9).trim().length > 0) {
+            if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
               head.specialIndent = ((function() {
                 var _k, _ref1, _results;
                 _results = [];
@@ -5451,7 +5450,7 @@ QUAD.init = function (args) {
             }
             head = head.append(new model.NewlineToken());
           } else {
-            if (indentDepth >= line.length || line.slice(0, +indentDepth + 1 || 9e9).trim().length > 0) {
+            if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
               lastIndex = line.length - line.trimLeft().length;
               head.specialIndent = line.slice(0, lastIndex);
             } else {
@@ -5474,7 +5473,7 @@ QUAD.init = function (args) {
                   if ((stack != null ? (_ref6 = stack[stack.length - 1]) != null ? _ref6.type : void 0 : void 0) !== 'block') {
                     throw new Error('Improper parser: indent must be inside block, but is inside ' + (stack != null ? (_ref7 = stack[stack.length - 1]) != null ? _ref7.type : void 0 : void 0));
                   }
-                  indentDepth += mark.token.container.depth;
+                  indentDepth += mark.token.container.prefix.length;
                   break;
                 case 'blockStart':
                   if (((_ref8 = stack[stack.length - 1]) != null ? _ref8.type : void 0) === 'block') {
@@ -5487,7 +5486,7 @@ QUAD.init = function (args) {
                   }
                   break;
                 case 'indentEnd':
-                  indentDepth -= mark.token.container.depth;
+                  indentDepth -= mark.token.container.prefix.length;
               }
               if (mark.token instanceof model.StartToken) {
                 stack.push(mark.token.container);
@@ -5613,7 +5612,7 @@ QUAD.init = function (args) {
       return _results;
     };
     Parser.parens = function(leading, trailing, node, context) {
-      if (context === null || context.type !== 'socket' || context.precedence < node.precedence) {
+      if (context === null || context.type !== 'socket' || (context != null ? context.precedence : void 0) < node.precedence) {
         while (true) {
           if ((leading.match(/^\s*\(/) != null) && (trailing.match(/\)\s*/) != null)) {
             leading = leading.replace(/^\s*\(\s*/, '');
@@ -5675,7 +5674,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-coffee',['droplet-helper', 'droplet-model', 'droplet-parser', 'coffee-script'], function(helper, model, parser, CoffeeScript) {
-    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptParser, EITHER_FUNCTIONS, FORBID_ALL, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
+    var ANY_DROP, BLOCK_FUNCTIONS, BLOCK_ONLY, CoffeeScriptParser, EITHER_FUNCTIONS, FORBID_ALL, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_FUNCTIONS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, annotateCsNodes, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
     exports = {};
     ANY_DROP = ['any-drop'];
     BLOCK_ONLY = ['block-only'];
@@ -5732,6 +5731,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return classes;
     };
+    annotateCsNodes = function(tree) {
+      tree.eachChild(function(child) {
+        child.dropletParent = tree;
+        return annotateCsNodes(child);
+      });
+      return tree;
+    };
     exports.CoffeeScriptParser = CoffeeScriptParser = (function(_super) {
       __extends(CoffeeScriptParser, _super);
 
@@ -5749,13 +5755,15 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
 
       CoffeeScriptParser.prototype.markRoot = function() {
-        var e, firstError, node, nodes, retries, _i, _len;
+        var e, firstError, node, nodes, retries, tree, _i, _len;
         this.stripComments();
         retries = Math.max(1, Math.min(5, Math.ceil(this.lines.length / 2)));
         firstError = null;
         while (true) {
           try {
-            nodes = CoffeeScript.nodes(this.text).expressions;
+            tree = CoffeeScript.nodes(this.text);
+            annotateCsNodes(tree);
+            nodes = tree.expressions;
             break;
           } catch (_error) {
             e = _error;
@@ -5807,7 +5815,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref21, _ref22, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
+        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref21, _ref22, _ref23, _ref24, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -6029,12 +6037,19 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Arr':
-            this.csBlock(node, depth, 100, 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 100, 'violet', wrappingParen, VALUE_ONLY);
+            if (node.objects.length > 0) {
+              this.csIndentAndMark(indentDepth, node.objects, depth + 1);
+            }
             _ref19 = node.objects;
             _results3 = [];
             for (_q = 0, _len7 = _ref19.length; _q < _len7; _q++) {
               object = _ref19[_q];
-              _results3.push(this.csSocketAndMark(object, depth + 1, 0, indentDepth));
+              if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref20 = (_ref21 = object.properties) != null ? _ref21.length : void 0) === 0 || _ref20 === (void 0))) {
+                _results3.push(this.csBlock(object, depth + 2, 100, 'return', null, VALUE_ONLY));
+              } else {
+                _results3.push(void 0);
+              }
             }
             return _results3;
             break;
@@ -6056,13 +6071,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.subject != null) {
               this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
-            _ref20 = node.cases;
-            for (_r = 0, _len8 = _ref20.length; _r < _len8; _r++) {
-              switchCase = _ref20[_r];
+            _ref22 = node.cases;
+            for (_r = 0, _len8 = _ref22.length; _r < _len8; _r++) {
+              switchCase = _ref22[_r];
               if (switchCase[0].constructor === Array) {
-                _ref21 = switchCase[0];
-                for (_s = 0, _len9 = _ref21.length; _s < _len9; _s++) {
-                  condition = _ref21[_s];
+                _ref23 = switchCase[0];
+                for (_s = 0, _len9 = _ref23.length; _s < _len9; _s++) {
+                  condition = _ref23[_s];
                   this.csSocketAndMark(condition, depth + 1, 0, indentDepth);
                 }
               } else {
@@ -6087,11 +6102,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Obj':
-            this.csBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
-            _ref22 = node.properties;
+            this.csBlock(node, depth, 0, 'violet', wrappingParen, VALUE_ONLY);
+            _ref24 = node.properties;
             _results4 = [];
-            for (_t = 0, _len10 = _ref22.length; _t < _len10; _t++) {
-              property = _ref22[_t];
+            for (_t = 0, _len10 = _ref24.length; _t < _len10; _t++) {
+              property = _ref24[_t];
               if (property.nodeType() === 'Assign') {
                 this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
                 _results4.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -6132,7 +6147,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.getBounds = function(node) {
-        var bounds, property, _i, _len, _ref;
+        var bounds, match, property, _i, _len, _ref, _ref1, _ref2, _ref3;
         bounds = {
           start: {
             line: node.locationData.first_line,
@@ -6181,6 +6196,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
           }
         }
+        if (((_ref1 = node.dropletParent) != null ? typeof _ref1.nodeType === "function" ? _ref1.nodeType() : void 0 : void 0) === 'Arr' || ((_ref2 = node.dropletParent) != null ? typeof _ref2.nodeType === "function" ? _ref2.nodeType() : void 0 : void 0) === 'Value' && ((_ref3 = node.dropletParent.dropletParent) != null ? typeof _ref3.nodeType === "function" ? _ref3.nodeType() : void 0 : void 0) === 'Arr') {
+          match = this.lines[bounds.end.line].slice(bounds.end.column).match(/^\s*,\s*/);
+          if (match != null) {
+            bounds.end.column += match[0].length;
+          }
+        }
         return bounds;
       };
 
@@ -6213,6 +6234,43 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           classes: getClassesFor(node).concat(classes),
           parenWrapped: wrappingParen != null
         });
+      };
+
+      CoffeeScriptParser.prototype.csIndent = function(indentDepth, firstNode, lastNode, depth) {
+        var first, last, prefix, trueDepth;
+        first = this.getBounds(firstNode).start;
+        last = this.getBounds(lastNode).end;
+        if (this.lines[first.line].slice(0, first.column).trim().length === 0) {
+          first.line -= 1;
+          first.column = this.lines[first.line].length;
+        }
+        if (first.line !== last.line) {
+          trueDepth = this.lines[last.line].length - this.lines[last.line].trimLeft().length;
+          prefix = this.lines[last.line].slice(indentDepth, trueDepth);
+        } else {
+          trueDepth = indentDepth + 2;
+          prefix = '  ';
+        }
+        this.addIndent({
+          bounds: {
+            start: first,
+            end: last
+          },
+          depth: depth,
+          prefix: prefix
+        });
+        return trueDepth;
+      };
+
+      CoffeeScriptParser.prototype.csIndentAndMark = function(indentDepth, nodes, depth) {
+        var node, trueDepth, _i, _len, _results;
+        trueDepth = this.csIndent(indentDepth, nodes[0], nodes[nodes.length - 1], depth);
+        _results = [];
+        for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+          node = nodes[_i];
+          _results.push(this.mark(node, depth + 1, 0, null, trueDepth));
+        }
+        return _results;
       };
 
       CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes) {
@@ -6335,12 +6393,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     CoffeeScriptParser.empty = "``";
     CoffeeScriptParser.drop = function(block, context, pred) {
-      var _ref;
+      var _ref, _ref1;
       if (context.type === 'socket') {
-        if (__indexOf.call(context.classes, 'forbid-all') >= 0 || block.type === 'segment') {
-          return helper.FORBID;
-        } else if (__indexOf.call(context.classes, 'lvalue') >= 0) {
-          if (__indexOf.call(block.classes, 'Value') >= 0) {
+        if (__indexOf.call(context.classes, 'lvalue') >= 0) {
+          if (__indexOf.call(block.classes, 'Value') >= 0 && ((_ref = block.properties) != null ? _ref.length : void 0) > 0) {
             return helper.ENCOURAGE;
           } else {
             return helper.FORBID;
@@ -6352,12 +6408,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return helper.FORBID;
           }
         } else if (__indexOf.call(block.classes, 'value-only') >= 0 || __indexOf.call(block.classes, 'mostly-value') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0) {
-          console.log(block.classes);
           return helper.ENCOURAGE;
         } else if (__indexOf.call(block.classes, 'mostly-block') >= 0) {
           return helper.DISCOURAGE;
         }
-      } else if ((_ref = context.type) === 'indent' || _ref === 'segment') {
+      } else if ((_ref1 = context.type) === 'indent' || _ref1 === 'segment') {
         if (__indexOf.call(block.classes, 'block-only') >= 0 || __indexOf.call(block.classes, 'mostly-block') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0 || block.type === 'segment') {
           return helper.ENCOURAGE;
         } else if (__indexOf.call(block.classes, 'mostly-value') >= 0) {
@@ -6365,6 +6420,23 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
       }
       return helper.DISCOURAGE;
+    };
+    CoffeeScriptParser.parens = function(leading, trailing, node, context) {
+      trailing = trailing.replace(/\s*,\s*$/, '');
+      if (context === null || context.type !== 'socket' || context.precedence < node.precedence) {
+        while (true) {
+          if ((leading.match(/^\s*\(/) != null) && (trailing.match(/\)\s*/) != null)) {
+            leading = leading.replace(/^\s*\(\s*/, '');
+            trailing = trailing.replace(/^\s*\)\s*/, '');
+          } else {
+            break;
+          }
+        }
+      } else {
+        leading = '(' + leading;
+        trailing = trailing + ')';
+      }
+      return [leading, trailing];
     };
     parser.makeParser(CoffeeScriptParser);
     return CoffeeScriptParser;
@@ -8913,19 +8985,18 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-javascript',['droplet-helper', 'droplet-model', 'droplet-parser', 'acorn'], function(helper, model, parser, acorn) {
-    var COLORS, DEFAULT_INDENT_DEPTH, JavaScriptParser, STATEMENT_NODE_TYPES, exports, operatorPrecedences;
+    var BLOCK_FUNCTIONS, CLASS_EXCEPTIONS, COLORS, DEFAULT_INDENT_DEPTH, EITHER_FUNCTIONS, FUNCTION_WHITELIST, JavaScriptParser, NEVER_PAREN, OPERATOR_PRECEDENCES, STATEMENT_NODE_TYPES, VALUE_FUNCTIONS, exports;
     exports = {};
-    operatorPrecedences = {
-      '+': 0,
-      '-': 0,
-      '/': 1,
-      '*': 1
-    };
     STATEMENT_NODE_TYPES = ['ExpressionStatement', 'ReturnStatement', 'BreakStatement', 'ThrowStatement'];
+    NEVER_PAREN = 100;
+    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
+    VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
+    EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
+    FUNCTION_WHITELIST = BLOCK_FUNCTIONS.concat(EITHER_FUNCTIONS).concat(VALUE_FUNCTIONS);
     COLORS = {
       'BinaryExpression': 'value',
       'FunctionExpression': 'value',
-      'FunctionDeclaration': 'control',
+      'FunctionDeclaration': 'violet',
       'AssignmentExpression': 'command',
       'CallExpression': 'command',
       'ReturnStatement': 'return',
@@ -8946,6 +9017,39 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       'ArrayExpression': 'value',
       'SequenceExpression': 'command',
       'ConditionalExpression': 'value'
+    };
+    OPERATOR_PRECEDENCES = {
+      '*': 5,
+      '/': 5,
+      '%': 5,
+      '+': 6,
+      '-': 6,
+      '<<': 7,
+      '>>': 7,
+      '>>>': 7,
+      '<': 8,
+      '>': 8,
+      '>=': 8,
+      'in': 8,
+      'instanceof': 8,
+      '==': 9,
+      '!=': 9,
+      '===': 9,
+      '!==': 9,
+      '&': 10,
+      '^': 10,
+      '|': 10,
+      '&&': 10,
+      '||': 10
+    };
+    CLASS_EXCEPTIONS = {
+      'ForStatement': ['ends-with-brace', 'block-only'],
+      'FunctionDeclaration': ['ends-with-brace', 'block-only'],
+      'IfStatement': ['ends-with-brace', 'block-only'],
+      'WhileStatement': ['ends-with-brace', 'block-only'],
+      'DoWhileStatement': ['ends-with-brace', 'block-only'],
+      'SwitchStatement': ['ends-with-brace', 'block-only'],
+      'AssignmentExpression': ['mostly-block']
     };
     DEFAULT_INDENT_DEPTH = '  ';
     exports.JavaScriptParser = JavaScriptParser = (function(_super) {
@@ -8972,15 +9076,37 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.getClasses = function(node) {
-        return [];
+        var _ref, _ref1;
+        if (node.type in CLASS_EXCEPTIONS) {
+          return CLASS_EXCEPTIONS[node.type].concat([node.type]);
+        } else {
+          if (node.type === 'CallExpression') {
+            if (node.callee.type === 'Identifier' && (_ref = node.callee.name, __indexOf.call(BLOCK_FUNCTIONS, _ref) >= 0)) {
+              return [node.type, 'mostly-block'];
+            } else if (_ref1 = node.callee.name, __indexOf.call(VALUE_FUNCTIONS, _ref1) >= 0) {
+              return [node.type, 'mostly-value'];
+            } else {
+              return [node.type, 'any-drop'];
+            }
+          }
+          if (node.type.match(/Expression$/) != null) {
+            return [node.type, 'mostly-value'];
+          } else if (node.type.match(/(Statement|Declaration)$/) != null) {
+            return [node.type, 'mostly-block'];
+          } else {
+            return [node.type, 'any-drop'];
+          }
+        }
       };
 
       JavaScriptParser.prototype.getPrecedence = function(node) {
         switch (node.type) {
           case 'BinaryExpression':
-            return operatorPrecedences[node.operator];
+            return OPERATOR_PRECEDENCES[node.operator];
+          case 'AssignStatement':
+            return 17;
           case 'CallExpression':
-            return 10;
+            return 2;
           case 'ExpressionStatement':
             return this.getPrecedence(node.expression);
           default:
@@ -8989,9 +9115,21 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.getColor = function(node) {
+        var _ref, _ref1;
         switch (node.type) {
           case 'ExpressionStatement':
             return this.getColor(node.expression);
+          case 'CallExpression':
+            if (node.callee.type === 'Identifier') {
+              if (_ref = node.callee.name, __indexOf.call(BLOCK_FUNCTIONS, _ref) >= 0) {
+                return 'command';
+              } else if (_ref1 = node.callee.name, __indexOf.call(VALUE_FUNCTIONS, _ref1) >= 0) {
+                return 'value';
+              } else {
+                return 'violet';
+              }
+            }
+            break;
           default:
             return COLORS[node.type];
         }
@@ -9080,7 +9218,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-        var argument, declaration, element, expression, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9;
+        var argument, block, declaration, element, expression, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results10, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9, _s;
         switch (node.type) {
           case 'Program':
             _ref = node.body;
@@ -9107,20 +9245,28 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'FunctionDeclaration':
             this.jsBlock(node, depth, bounds);
             this.mark(indentDepth, node.body, depth + 1, null);
-            return this.jsSocketAndMark(indentDepth, node.id, depth + 1);
-          case 'FunctionExpression':
-            this.jsBlock(node, depth, bounds);
-            this.mark(indentDepth, node.body, depth + 1, null);
-            if (node.id != null) {
-              this.jsSocketAndMark(indentDepth, node.id, depth + 1);
-            }
+            this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
             _ref2 = node.params;
             _results2 = [];
             for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
               param = _ref2[_k];
-              _results2.push(this.jsSocketAndMark(indentDepth, param, depth + 1));
+              _results2.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
             }
             return _results2;
+            break;
+          case 'FunctionExpression':
+            this.jsBlock(node, depth, bounds);
+            this.mark(indentDepth, node.body, depth + 1, null);
+            if (node.id != null) {
+              this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
+            }
+            _ref3 = node.params;
+            _results3 = [];
+            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+              param = _ref3[_l];
+              _results3.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
+            }
+            return _results3;
             break;
           case 'AssignmentExpression':
             this.jsBlock(node, depth, bounds);
@@ -9145,7 +9291,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'IfStatement':
           case 'ConditionalExpression':
             this.jsBlock(node, depth, bounds);
-            this.jsSocketAndMark(indentDepth, node.test, depth + 1, 10);
+            this.jsSocketAndMark(indentDepth, node.test, depth + 1, NEVER_PAREN);
             this.jsSocketAndMark(indentDepth, node.consequent, depth + 1, null);
             if (node.alternate != null) {
               return this.jsSocketAndMark(indentDepth, node.alternate, depth + 1, 10);
@@ -9154,7 +9300,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'ForStatement':
             this.jsBlock(node, depth, bounds);
             if (node.init != null) {
-              this.jsSocketAndMark(indentDepth, node.init, depth + 1, 10);
+              this.jsSocketAndMark(indentDepth, node.init, depth + 1, NEVER_PAREN, null, ['for-statement-init']);
             }
             if (node.test != null) {
               this.jsSocketAndMark(indentDepth, node.test, depth + 1, 10);
@@ -9171,33 +9317,39 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               depth: depth,
               prefix: prefix
             });
-            _ref3 = node.body;
-            _results3 = [];
-            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-              statement = _ref3[_l];
-              _results3.push(this.mark(indentDepth, statement, depth + 1, null));
+            _ref4 = node.body;
+            _results4 = [];
+            for (_m = 0, _len4 = _ref4.length; _m < _len4; _m++) {
+              statement = _ref4[_m];
+              _results4.push(this.mark(indentDepth, statement, depth + 1, null));
             }
-            return _results3;
+            return _results4;
             break;
           case 'BinaryExpression':
             this.jsBlock(node, depth, bounds);
-            this.jsSocketAndMark(indentDepth, node.left, depth + 1, operatorPrecedences[node.operator]);
-            return this.jsSocketAndMark(indentDepth, node.right, depth + 1, operatorPrecedences[node.operator]);
+            this.jsSocketAndMark(indentDepth, node.left, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
+            return this.jsSocketAndMark(indentDepth, node.right, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
           case 'ExpressionStatement':
             return this.mark(indentDepth, node.expression, depth + 1, this.getBounds(node));
+          case 'Identifier':
+            if (node.name === '__') {
+              block = this.jsBlock(node, depth, bounds);
+              return block.flagToRemove = true;
+            }
+            break;
           case 'CallExpression':
           case 'NewExpression':
             this.jsBlock(node, depth, bounds);
-            if (node.callee.type !== 'Identifier') {
-              this.jsSocketAndMark(indentDepth, node.callee, depth + 1, 10);
+            if (node.callee.type !== 'Identifier' || (_ref5 = node.callee.name, __indexOf.call(FUNCTION_WHITELIST, _ref5) < 0)) {
+              this.jsSocketAndMark(indentDepth, node.callee, depth + 1, NEVER_PAREN);
             }
-            _ref4 = node["arguments"];
-            _results4 = [];
-            for (_m = 0, _len4 = _ref4.length; _m < _len4; _m++) {
-              argument = _ref4[_m];
-              _results4.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, 10));
+            _ref6 = node["arguments"];
+            _results5 = [];
+            for (_n = 0, _len5 = _ref6.length; _n < _len5; _n++) {
+              argument = _ref6[_n];
+              _results5.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN));
             }
-            return _results4;
+            return _results5;
             break;
           case 'MemberExpression':
             this.jsBlock(node, depth, bounds);
@@ -9208,13 +9360,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
           case 'VariableDeclaration':
             this.jsBlock(node, depth, bounds);
-            _ref5 = node.declarations;
-            _results5 = [];
-            for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
-              declaration = _ref5[_n];
-              _results5.push(this.mark(indentDepth, declaration, depth + 1));
+            _ref7 = node.declarations;
+            _results6 = [];
+            for (_o = 0, _len6 = _ref7.length; _o < _len6; _o++) {
+              declaration = _ref7[_o];
+              _results6.push(this.mark(indentDepth, declaration, depth + 1));
             }
-            return _results5;
+            return _results6;
             break;
           case 'VariableDeclarator':
             this.jsSocketAndMark(indentDepth, node.id, depth);
@@ -9233,25 +9385,25 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
           case 'ObjectExpression':
             this.jsBlock(node, depth, bounds);
-            _ref6 = node.properties;
-            _results6 = [];
-            for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
-              property = _ref6[_o];
+            _ref8 = node.properties;
+            _results7 = [];
+            for (_p = 0, _len7 = _ref8.length; _p < _len7; _p++) {
+              property = _ref8[_p];
               this.jsSocketAndMark(indentDepth, property.key, depth + 1);
-              _results6.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
+              _results7.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
             }
-            return _results6;
+            return _results7;
             break;
           case 'SwitchStatement':
             this.jsBlock(node, depth, bounds);
             this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
-            _ref7 = node.cases;
-            _results7 = [];
-            for (_p = 0, _len7 = _ref7.length; _p < _len7; _p++) {
-              switchCase = _ref7[_p];
-              _results7.push(this.mark(indentDepth, switchCase, depth + 1, null));
+            _ref9 = node.cases;
+            _results8 = [];
+            for (_q = 0, _len8 = _ref9.length; _q < _len8; _q++) {
+              switchCase = _ref9[_q];
+              _results8.push(this.mark(indentDepth, switchCase, depth + 1, null));
             }
-            return _results7;
+            return _results8;
             break;
           case 'SwitchCase':
             if (node.test != null) {
@@ -9266,13 +9418,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 depth: depth + 1,
                 prefix: prefix
               });
-              _ref8 = node.consequent;
-              _results8 = [];
-              for (_q = 0, _len8 = _ref8.length; _q < _len8; _q++) {
-                statement = _ref8[_q];
-                _results8.push(this.mark(indentDepth, statement, depth + 2));
+              _ref10 = node.consequent;
+              _results9 = [];
+              for (_r = 0, _len9 = _ref10.length; _r < _len9; _r++) {
+                statement = _ref10[_r];
+                _results9.push(this.mark(indentDepth, statement, depth + 2));
               }
-              return _results8;
+              return _results9;
             }
             break;
           case 'TryStatement':
@@ -9293,17 +9445,17 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'ArrayExpression':
             this.jsBlock(node, depth, bounds);
-            _ref9 = node.elements;
-            _results9 = [];
-            for (_r = 0, _len9 = _ref9.length; _r < _len9; _r++) {
-              element = _ref9[_r];
+            _ref11 = node.elements;
+            _results10 = [];
+            for (_s = 0, _len10 = _ref11.length; _s < _len10; _s++) {
+              element = _ref11[_s];
               if (element != null) {
-                _results9.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
+                _results10.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
               } else {
-                _results9.push(void 0);
+                _results10.push(void 0);
               }
             }
-            return _results9;
+            return _results10;
         }
       };
 
@@ -9318,12 +9470,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         });
       };
 
-      JavaScriptParser.prototype.jsSocketAndMark = function(indentDepth, node, depth, precedence, bounds) {
+      JavaScriptParser.prototype.jsSocketAndMark = function(indentDepth, node, depth, precedence, bounds, classes) {
         if (node.type !== 'BlockStatement') {
           this.addSocket({
             bounds: bounds != null ? bounds : this.getBounds(node),
             depth: depth,
             precedence: precedence,
+            classes: classes != null ? classes : [],
             accepts: this.getAcceptsRule(node)
           });
         }
@@ -9334,12 +9487,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
     })(parser.Parser);
     JavaScriptParser.parens = function(leading, trailing, node, context) {
-      if ((context != null ? context.type : void 0) === 'socket') {
+      if ((context != null ? context.type : void 0) === 'socket' || ((context == null) && __indexOf.call(node.classes, 'mostly-value') >= 0 || __indexOf.call(node.classes, 'value-only') >= 0) || __indexOf.call(node.classes, 'ends-with-brace') >= 0 || node.type === 'segment') {
         trailing = trailing.replace(/;?\s*$/, '');
       } else {
         trailing = trailing.replace(/;?\s*$/, ';');
       }
-      if (context === null || context.type !== 'socket' || context.precedence < node.precedence) {
+      if (context === null || context.type !== 'socket' || context.precedence > node.precedence) {
         while (true) {
           if ((leading.match(/^\s*\(/) != null) && (trailing.match(/\)\s*/) != null)) {
             leading = leading.replace(/^\s*\(\s*/, '');
@@ -9354,7 +9507,38 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return [leading, trailing];
     };
-    JavaScriptParser.empty = "eval('')";
+    JavaScriptParser.drop = function(block, context, pred) {
+      var _ref, _ref1;
+      if (context.type === 'socket') {
+        if (__indexOf.call(context.classes, 'lvalue') >= 0) {
+          if (__indexOf.call(block.classes, 'Value') >= 0 && ((_ref = block.properties) != null ? _ref.length : void 0) > 0) {
+            return helper.ENCOURAGE;
+          } else {
+            return helper.FORBID;
+          }
+        } else if (__indexOf.call(context.classes, 'no-drop') >= 0) {
+          return helper.FORBID;
+        } else if (__indexOf.call(context.classes, 'property-access') >= 0) {
+          if (__indexOf.call(block.classes, 'works-as-method-call') >= 0) {
+            return helper.ENCOURAGE;
+          } else {
+            return helper.FORBID;
+          }
+        } else if (__indexOf.call(block.classes, 'value-only') >= 0 || __indexOf.call(block.classes, 'mostly-value') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0 || __indexOf.call(context.classes, 'for-statement-init') >= 0) {
+          return helper.ENCOURAGE;
+        } else if (__indexOf.call(block.classes, 'mostly-block') >= 0) {
+          return helper.DISCOURAGE;
+        }
+      } else if ((_ref1 = context.type) === 'indent' || _ref1 === 'segment') {
+        if (__indexOf.call(block.classes, 'block-only') >= 0 || __indexOf.call(block.classes, 'mostly-block') >= 0 || __indexOf.call(block.classes, 'any-drop') >= 0 || block.type === 'segment') {
+          return helper.ENCOURAGE;
+        } else if (__indexOf.call(block.classes, 'mostly-value') >= 0) {
+          return helper.DISCOURAGE;
+        }
+      }
+      return helper.DISCOURAGE;
+    };
+    JavaScriptParser.empty = "__";
     parser.makeParser(JavaScriptParser);
     return JavaScriptParser;
   });
@@ -10049,16 +10233,17 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var leading, trailing, _ref1;
       leading = node.getLeadingText();
       trailing = node.getTrailingText();
-      _ref1 = this.mode.parens(leading, trailing, node, null), leading = _ref1[0], trailing = _ref1[1];
+      _ref1 = this.mode.parens(leading, trailing, node.getReader(), null), leading = _ref1[0], trailing = _ref1[1];
       node.setLeadingText(leading);
       node.setTrailingText(trailing);
       return node.spliceOut();
     };
     Editor.prototype.spliceIn = function(node, location) {
-      var leading, trailing, _ref1, _ref2;
+      var container, leading, trailing, _ref1, _ref2, _ref3, _ref4;
       leading = node.getLeadingText();
       trailing = node.getTrailingText();
-      _ref2 = this.mode.parens(leading, trailing, node, (_ref1 = location.container) != null ? _ref1 : location.parent), leading = _ref2[0], trailing = _ref2[1];
+      container = (_ref1 = location.container) != null ? _ref1 : location.visParent();
+      _ref4 = this.mode.parens(leading, trailing, node.getReader(), (_ref2 = (_ref3 = (container.type === 'block' ? container.visParent() : container)) != null ? typeof _ref3.getReader === "function" ? _ref3.getReader() : void 0 : void 0) != null ? _ref2 : null), leading = _ref4[0], trailing = _ref4[1];
       node.setLeadingText(leading);
       node.setTrailingText(trailing);
       return node.spliceIn(location);
@@ -10211,9 +10396,18 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     });
     Editor.prototype.getAcceptLevel = function(drag, drop) {
       if (drop.type === 'socket') {
-        return this.mode.drop(drag.getReader(), drop.getReader(), null);
+        if (drag.type === 'segment') {
+          return helper.FORBID;
+        } else {
+          return this.mode.drop(drag.getReader(), drop.getReader(), null);
+        }
       } else if (drop.type === 'block') {
-        return this.mode.drop(drag.getReader(), drop.visParent().getReader(), drop);
+        console.log(drop.visParent());
+        if (drop.visParent().type === 'socket') {
+          return helper.FORBID;
+        } else {
+          return this.mode.drop(drag.getReader(), drop.visParent().getReader(), drop);
+        }
       } else {
         return this.mode.drop(drag.getReader(), drop.getReader(), drop.getReader());
       }
@@ -11659,7 +11853,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           this.setTextInputFocus(null);
           newBlock = new model.Block();
           newSocket = new model.Socket(-Infinity);
-          this.spliceIn(newSocket, newBlock.start);
+          newSocket.spliceIn(newBlock.start);
           newSocket.handwritten = true;
           this.handwrittenBlocks.push(newBlock);
           head = this.cursor.prev;
@@ -11677,9 +11871,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
       }
     });
-    hook('keyup', 0, function(point, event, state) {
+    hook('keyup', 0, function(event, state) {
       if (event.which === ENTER_KEY) {
         if (this.newHandwrittenSocket != null) {
+          console.log('setting tif');
           this.setTextInputFocus(this.newHandwrittenSocket);
           return this.newHandwrittenSocket = null;
         }
@@ -12457,7 +12652,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.touchEventToPoint = function(event, index) {
       var absolutePoint;
       absolutePoint = new this.draw.Point(event.changedTouches[index].pageX, event.changedTouches[index].pageY);
-      return absolutePoint.from(this.absoluteOffset(this.dropletElement));
+      return absolutePoint;
     };
     Editor.prototype.queueLassoMousedown = function(trackPoint, event) {
       return this.lassoSelectStartTimeout = setTimeout(((function(_this) {
@@ -12741,6 +12936,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       pressedXKey = false;
       this.copyPasteInput.addEventListener('keydown', function(event) {
         if (event.keyCode === 86) {
+          console.log('PressedVKey');
           return pressedVKey = true;
         } else if (event.keyCode === 88) {
           return pressedXKey = true;
@@ -12755,7 +12951,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       });
       return this.copyPasteInput.addEventListener('input', (function(_this) {
         return function() {
-          var blocks, line, minIndent, str, _i, _len, _ref1, _ref2;
+          var blocks, e, line, minIndent, str, _i, _len, _ref1, _ref2;
           if (pressedVKey) {
             try {
               str = _this.copyPasteInput.value;
@@ -12791,7 +12987,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               _this.addMicroUndoOperation(new DestroySegmentOperation(blocks));
               blocks.unwrap();
               _this.redrawMain();
-            } catch (_error) {}
+            } catch (_error) {
+              e = _error;
+              console.log(e.stack);
+            }
             return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
           } else if (pressedXKey && (_this.lassoSegment != null)) {
             _this.addMicroUndoOperation('CAPTURE_POINT');
@@ -12807,6 +13006,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var _ref1;
       if (_ref1 = event.which, __indexOf.call(command_modifiers, _ref1) >= 0) {
         if (this.textFocus == null) {
+          console.log('focusing', this.copyPasteInput);
           this.copyPasteInput.focus();
           if (this.lassoSegment != null) {
             this.copyPasteInput.value = this.lassoSegment.stringify(this.mode.empty);
