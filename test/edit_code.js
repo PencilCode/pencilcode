@@ -406,6 +406,46 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should show the change-user dialog', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Enter an incorrect password, and click OK.
+      $('.switchuser').click();
+    }, function() {
+      // Wait for a dialog with a visible password box to appear.
+      if (!$('.password').is(':visible')) return;
+      return {
+        // First sentence of prompt text.
+        prompttext: $('.prompt').text().replace(/\..*$/, ''),
+        username: $('.username').val(),
+        password: $('.password').val()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // The dialog should have a blank username/pass
+      assert.equal('Choose an account name to save', result.prompttext);
+      assert.equal('', result.username);
+      assert.equal('', result.password);
+      done();
+    });
+  });
+  it('should recognize existing user in save-as dialog', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Enter an incorrect password, and click OK.
+      $('.username').val('livetest').trigger('keyup')
+    }, function() {
+      // Wait for the terms of service to disappear.
+      if (/terms of service/.test($('.info').text())) { return; }
+      return {
+        // First sentence of prompt text.
+        infotext: $('.info').text()
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // The dialog should have a blank username/pass
+      assert.equal('Will log in as "livetest" and save.', result.infotext);
+      done();
+    });
+  });
   it('should accept the right password', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Fill the textarea with some code to ensure

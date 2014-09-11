@@ -642,6 +642,9 @@ function signUpAndSave(options) {
   storage.loadUserList(function(list) {
     if (list) {
       userList = list;
+      // Hackish: trigger a keyup on the $('.username') field to force
+      // a revalidate after we have a userlist.
+      $('.username').trigger('keyup');
     }
   });
   view.showLoginDialog({
