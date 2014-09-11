@@ -37,6 +37,7 @@ function loadBackup(filename, annotation) {
 function saveBackup(filename, msg) {
   try {
     if (!window.localStorage) return;
+    if (msg == null) { msg = null; }
     window.localStorage['backup:' + filename] = JSON.stringify(msg);
   } catch(e) { }
 }
@@ -71,7 +72,9 @@ function deleteBackupPrefix(filename) {
 function isBackupPreferred(filename, m, preferUnsaved) {
   try {
     if (!window.localStorage) return false;
-    var backup = JSON.parse(window.localStorage['backup:' + filename]);
+    var backup = window.localStorage.getItem('backup:' + filename);
+    if (!backup) return false;
+    backup = JSON.parse(backup);
     // If backup is empty, then don't prefer the backup.
     if (/^\s*$/.test(backup.data)) {
       return false;

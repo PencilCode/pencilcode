@@ -786,6 +786,7 @@ function signUpAndSave(options) {
             storage.deleteBackup(mp.filename);
             storage.deleteBackup(rename);
             state.update({cancel: true});
+            view.flashNotification('Saved.');
             var newurl =
                 '//' + username + '.' + window.pencilcode.domain +
                 '/edit/' + rename +
@@ -1202,7 +1203,9 @@ function readNewUrl(undo) {
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
-      editmode = /^\/edit\//.test(window.location.pathname);
+      editmode = /^\/edit\//.test(window.location.pathname),
+  // Login from cookie.
+      cookielogin = null;
   // Give the user a chance to abort navigation.
   if (undo && view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
     view.flashButton('save');
@@ -1214,18 +1217,19 @@ function readNewUrl(undo) {
     }
   }
   if (!login) {
-    var savedlogin = cookie('login');
-    login = savedlogin && /\b^([^:]*)(?::(\w*))?$/.exec(cookie('login'));
-  } else if (ownername) {
-    // Remember credentials for 24 hours.
-    cookie('login', login, { expires: 1, path: '/' });
-    // Also remember as the most recently used program (without hash).
-    cookie('recent', window.location.href.replace(/#.*$/, ''),
-        { expires: 7, path: '/', domain: window.pencilcode.domain });
+    cookielogin = cookie('login');
+    login = cookielogin && /\b^([^:]*)(?::(\w*))?$/.exec(cookielogin);
   }
   if (login) {
     model.username = login[1] || null;
     model.passkey = login[2] || null;
+  }
+  if (ownername) {
+    // Remember credentials.
+    if (!cookielogin && login) { saveLoginCookie(); }
+    // Also remember as the most recently used program (without hash).
+    cookie('recent', window.location.href.replace(/#.*$/, ''),
+        { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
   // Handle #blocks
   if (blocks) {
@@ -1422,6 +1426,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   // Now if the file or owner are different from what is currently shown,
   // update the model and execute the load.
   if (mpp.filename === filename && !forcenet) {
+    updateTopControls(false);
     cb && cb();
   } else {
     view.clearPane(pane, true); // show loading animation.
