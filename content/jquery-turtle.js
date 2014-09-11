@@ -5623,6 +5623,17 @@ function wrapglobalcommand(name, helptext, fn) {
   return wrapraw(name, helptext, wrapper);
 }
 
+function wrapwindowevent(name, helptext) {
+  return wrapraw(name, helptext, function(fn) {
+    var wrapped = /^key/.test(name) ? pressedKey.wrap(fn, arguments[1]) : fn;
+    var filtered = function(e) {
+      if ($(e.target).closest('input,button').length) { return; }
+      wrapped.apply(this, arguments);
+    }
+    $(window).on(name, filtered);
+  });
+}
+
 // Wrapraw sets up help text for a function (such as "sqrt") that does
 // not need any other setup.
 function wrapraw(name, helptext, fn) {
@@ -7282,48 +7293,27 @@ var dollar_turtle_methods = {
      (s * 100).toFixed(0) + '%',
      (l * 100).toFixed(0) + '%',
      a]); }),
-  click: wrapraw('click',
+  click: wrapwindowevent('click',
   ["<u>click(fn)</u> Calls fn(event) whenever the mouse is clicked. " +
-      "<mark>click (e) -> moveto e; label 'clicked'</mark>"],
-  function(fn) {
-    $(window).click(fn);
-  }),
-  mouseup: wrapraw('mouseup',
+      "<mark>click (e) -> moveto e; label 'clicked'</mark>"]),
+  mouseup: wrapwindowevent('mouseup',
   ["<u>mouseup(fn)</u> Calls fn(event) whenever the mouse is released. " +
-      "<mark>mouseup (e) -> moveto e; label 'up'</mark>"],
-  function(fn) {
-    $(window).mouseup(fn);
-  }),
-  mousedown: wrapraw('mousedown',
+      "<mark>mouseup (e) -> moveto e; label 'up'</mark>"]),
+  mousedown: wrapwindowevent('mousedown',
   ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is pressed. " +
-      "<mark>mousedown (e) -> moveto e; label 'down'</mark>"],
-  function(fn) {
-    $(window).mousedown(fn);
-  }),
-  mousemove: wrapraw('mousemove',
+      "<mark>mousedown (e) -> moveto e; label 'down'</mark>"]),
+  mousemove: wrapwindowevent('mousemove',
   ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is moved. " +
-      "<mark>mousemove (e) -> moveto e</mark>"],
-  function(fn) {
-    $(window).mousemove(fn);
-  }),
-  keydown: wrapraw('keydown',
+      "<mark>mousemove (e) -> moveto e</mark>"]),
+  keydown: wrapwindowevent('keydown',
   ["<u>keydown(fn)</u> Calls fn(event) whenever a key is pushed down. " +
-      "<mark>keydown (e) -> write 'down ' + e.which</mark>"],
-  function(fn) {
-    $(window).keydown(pressedKey.wrap(fn, arguments[1]));
-  }),
-  keyup: wrapraw('keyup',
+      "<mark>keydown (e) -> write 'down ' + e.which</mark>"]),
+  keyup: wrapwindowevent('keyup',
   ["<u>keyup(fn)</u> Calls fn(event) whenever a key is released. " +
-      "<mark>keyup (e) -> write 'up ' + e.which</mark>"],
-  function(fn) {
-    $(window).keyup(pressedKey.wrap(fn, arguments[1]));
-  }),
-  keypress: wrapraw('keypress',
+      "<mark>keyup (e) -> write 'up ' + e.which</mark>"]),
+  keypress: wrapwindowevent('keypress',
   ["<u>keypress(fn)</u> Calls fn(event) whenever a letter is typed. " +
-      "<mark>keypress (e) -> write 'press ' + e.which</mark>"],
-  function(fn) {
-    $(window).keypress(pressedKey.wrap(fn, arguments[1]));
-  }),
+      "<mark>keypress (e) -> write 'press ' + e.which</mark>"]),
   send: wrapraw('send',
   ["<u>send(name)</u> Sends a message to be received by recv. " +
       "<mark>send 'go'; recv 'go', -> fd 100</mark>"],
@@ -8312,19 +8302,27 @@ function turtleevents(prefix) {
   if (prefix || prefix === '') {
     eventsaver = (function(e) {
       // Keep the old instance if possible.
-      var old = window[prefix + e.type], prop;
-      if (old && old.__proto__ === e.__proto__) {
-        for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
-        for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
-        return;
+      var names = [prefix + e.type], j, old, name, prop;
+      if ((e.originalEvent || e) instanceof MouseEvent) {
+        names.push(prefix + 'mouse');
       }
-      window[prefix + e.type] = e;
+      for (j = 0; j < names.length; ++j) {
+        name = names[j];
+        old = window[name], prop;
+        if (old && old.__proto__ === e.__proto__) {
+          for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
+          for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
+        } else {
+          window[name] = e;
+        }
+      }
     });
-    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
-        eventsaver);
+    window[prefix + 'mouse'] = new $.Event();
     for (var k in eventfn) {
       window[prefix + k] = new $.Event();
     }
+    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
+        eventsaver);
   }
 }
 

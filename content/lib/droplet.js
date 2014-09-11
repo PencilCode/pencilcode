@@ -6345,8 +6345,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
     })(parser.Parser);
     fixCoffeeScriptError = function(lines, e) {
-      var unmatchedline, _ref;
-      console.log('encountered error', e.message, 'line', (_ref = e.location) != null ? _ref.first_line : void 0);
+      var unmatchedline;
       if (/unexpected\s*(?:newline|if|for|while|switch|unless|end of input)/.test(e.message) && /^\s*(?:if|for|while|unless)\s+\S+/.test(lines[e.location.first_line])) {
         return addEmptyBackTickLineAfter(lines, e.location.first_line);
       }
@@ -9686,12 +9685,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         this.wrapperElement.style.backgroundColor = '#FFF';
         this.mainCanvas = document.createElement('canvas');
         this.mainCanvas.className = 'droplet-main-canvas';
+        this.mainCanvas.width = this.mainCanvas.height = 0;
         this.mainCtx = this.mainCanvas.getContext('2d');
         this.dropletElement.appendChild(this.mainCanvas);
         this.paletteWrapper = this.paletteElement = document.createElement('div');
         this.paletteWrapper.className = 'droplet-palette-wrapper';
         this.paletteCanvas = document.createElement('canvas');
         this.paletteCanvas.className = 'droplet-palette-canvas';
+        this.paletteCanvas.height = this.paletteCanvas.width = 0;
         this.paletteCtx = this.paletteCanvas.getContext('2d');
         this.paletteWrapper.appendChild(this.paletteCanvas);
         this.paletteElement.style.position = 'absolute';
@@ -10402,7 +10403,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           return this.mode.drop(drag.getReader(), drop.getReader(), null);
         }
       } else if (drop.type === 'block') {
-        console.log(drop.visParent());
         if (drop.visParent().type === 'socket') {
           return helper.FORBID;
         } else {
@@ -11874,7 +11874,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     hook('keyup', 0, function(event, state) {
       if (event.which === ENTER_KEY) {
         if (this.newHandwrittenSocket != null) {
-          console.log('setting tif');
           this.setTextInputFocus(this.newHandwrittenSocket);
           return this.newHandwrittenSocket = null;
         }
@@ -12514,33 +12513,43 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     };
     Editor.prototype.setValue_raw = function(value) {
       var newParse;
-      if (this.trimWhitespace) {
-        value = value.trim();
+      try {
+        if (this.trimWhitespace) {
+          value = value.trim();
+        }
+        newParse = this.mode.parse(value, {
+          wrapAtRoot: true
+        });
+        if (value !== this.tree.stringify(this.mode.empty)) {
+          this.addMicroUndoOperation('CAPTURE_POINT');
+        }
+        this.addMicroUndoOperation(new SetValueOperation(this.tree, newParse));
+        this.tree = newParse;
+        this.gutterVersion = -1;
+        this.tree.start.insert(this.cursor);
+        this.removeBlankLines();
+        this.redrawMain();
+        return {
+          success: true
+        };
+      } catch (_error) {
+        return {
+          success: false
+        };
       }
-      newParse = this.mode.parse(value, {
-        wrapAtRoot: true
-      });
-      if (value !== this.tree.stringify(this.mode.empty)) {
-        this.addMicroUndoOperation('CAPTURE_POINT');
-      }
-      this.addMicroUndoOperation(new SetValueOperation(this.tree, newParse));
-      this.tree = newParse;
-      this.gutterVersion = -1;
-      this.tree.start.insert(this.cursor);
-      this.removeBlankLines();
-      this.redrawMain();
-      return {
-        success: true
-      };
     };
     Editor.prototype.setValue = function(value) {
-      var oldScrollTop;
+      var oldScrollTop, result;
       oldScrollTop = this.aceEditor.session.getScrollTop();
       this.setAceValue(value);
       this.resizeTextMode();
       this.aceEditor.session.setScrollTop(oldScrollTop);
       if (this.currentlyUsingBlocks) {
-        return this.setValue_raw(value);
+        result = this.setValue_raw(value);
+        if (result.success === false) {
+          this.setEditorState(false);
+          return this.aceEditor.setValue(value);
+        }
       }
     };
     Editor.prototype.addEmptyLine = function(str) {
@@ -12936,7 +12945,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       pressedXKey = false;
       this.copyPasteInput.addEventListener('keydown', function(event) {
         if (event.keyCode === 86) {
-          console.log('PressedVKey');
           return pressedVKey = true;
         } else if (event.keyCode === 88) {
           return pressedXKey = true;
@@ -13006,7 +13014,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       var _ref1;
       if (_ref1 = event.which, __indexOf.call(command_modifiers, _ref1) >= 0) {
         if (this.textFocus == null) {
-          console.log('focusing', this.copyPasteInput);
           this.copyPasteInput.focus();
           if (this.lassoSegment != null) {
             this.copyPasteInput.value = this.lassoSegment.stringify(this.mode.empty);
