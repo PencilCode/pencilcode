@@ -53,7 +53,7 @@ function(
 
 eval(see.scope('controller'));
 
-var model = {
+var model = window.pencilcode.model = {
   // Owner name of this file or directory.
   ownername: null,
   // True if /edit/ url.
@@ -754,7 +754,7 @@ function signUpAndSave(options) {
       var key = keyFromPassword(username, state.password);
       var step2 = function() {
         storage.saveFile(
-            username, rename, $.extend({}, doc, {mtime: 1}),
+            username, rename, $.extend({}, doc),
             forceOverwrite, key, false,
             function(status) {
           if (status.needauth) {
