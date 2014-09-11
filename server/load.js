@@ -136,13 +136,11 @@ exports.handleLoad = function(req, res, app, format) {
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename),
             m = filemeta.parseMetaString(
-                fs.readFileSync(absfile, {'encoding': 'utf8'})),
-            data = m.data,
-            meta = m.meta;
+                fs.readFileSync(absfile, {'encoding': 'utf8'}));
 
         // For turtle bits, assume it's coffeescript
         if (mt.indexOf('text/x-pencilcode') == 0) {
-          data = filetype.wrapTurtle(data, res.locals.site);
+          data = filetype.wrapTurtle(m, res.locals.site);
           mt = mt.replace('x-pencilcode', 'html');
         }
 
