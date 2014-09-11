@@ -15,11 +15,11 @@ function get(user, path, onResult) {
       output += chunk;
     });
     res.on('end', function() {
-      onResult(res.statusCode, output);
+      onResult(res.statusCode, output, res);
     });
   });
   req.on('error', function(err) {
-    onResult(0, null);
+    onResult(0, null, err);
   });
   req.end();
 }
@@ -168,7 +168,7 @@ describe('test of server json apis', function() {
       done();
     });
   });
-  it('Loads a file thats present', function(done) {
+  it('loads a file thats present', function(done) {
     json('zzz', '/load/newfile', function(s, obj) {
       assert.equal(obj.file, '/zzz/newfile');
       assert.equal(obj.mime, 'text/x-pencilcode;charset=utf-8');
@@ -177,7 +177,7 @@ describe('test of server json apis', function() {
       done();
     });
   });
-  it('Loads a directory thats present', function(done) {
+  it('loads a directory thats present', function(done) {
     json('zzz', '/load', function(s, obj) {
       assert.equal(obj.directory, '/zzz/');
       assert.ok(obj.list.length > 0);
@@ -192,6 +192,36 @@ describe('test of server json apis', function() {
         }
       }
       assert.ok(i < obj.list.length); // make sure the object was found.
+      done();
+    });
+  });
+  it('saves a file with metadata', function(done) {
+    json('zzz', '/save/jsfile?data=alert("hello");' +
+                '&meta={"type":"text/javascript"}', function(s, obj) {
+      assert.equal(obj.saved, '/zzz/jsfile');
+      done();
+    });
+  });
+  it('loads a file with metadata', function(done) {
+    json('zzz', '/load/jsfile', function(s, obj) {
+      assert.equal(obj.file, '/zzz/jsfile');
+      assert.equal(obj.mime, 'text/x-pencilcode;charset=utf-8');
+      assert.equal(obj.data, 'alert("hello");');
+      assert.deepEqual(obj.meta, {type: "text/javascript"});
+      assert.ok(obj.mtime > 0);
+      done();
+    });
+  });
+  it('loads a file from code', function(done) {
+    get('zzz', '/code/jsfile', function(s, data, res) {
+      assert.equal('alert("hello");', data);
+      assert.equal(res.headers['content-type'], 'text/javascript; charset=utf-8');
+      done();
+    });
+  });
+  it('loads a file from home', function(done) {
+    get('zzz', '/home/jsfile', function(s, data) {
+      assert(/<script type="text\/javascript">[^<]*alert\("hello"\);\s*<\/script>/.test(data), data);
       done();
     });
   });
