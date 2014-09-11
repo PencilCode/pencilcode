@@ -84,14 +84,15 @@ function isBackupPreferred(filename, m, preferUnsaved) {
     }
     // If we have an unsaved backup, show it.
     if (preferUnsaved && backup.unsaved) { return true; }
-    if (backup.mtime && m.mtime && backup.mtime > m.mtime) {
+    var btime = backup.btime || backup.btime;
+    if (btime && m.mtime && btime > m.mtime) {
       // If the backup is newer than original file and still
       // less than 12 hours old then prefer it; otherwise discard it.
-      if ((new Date - backup.mtime) / 1000 / 60 / 60 < 12) {
+      if ((new Date - btime) / 1000 / 60 / 60 < 12) {
         return true;
       }
     }
-  } catch(e) { }
+  } catch(e) { console.log(e); }
   return false;
 }
 
@@ -131,17 +132,14 @@ window.pencilcode.storage = {
       }, 0);
       return;
     }
+    var preloaded = null;
     if (window.pencilcode.preloaded) {
       var data = window.pencilcode.preloaded,
           expect = (ownername ? '/' + ownername : '')  + '/' + filename;
       window.pencilcode.preloaded = null;
-      console.log(expect, data.directory, data.file);
       if (data.directory == expect || data.file == expect) {
         console.log('Preloaded data', expect);
-        setTimeout(function() {
-          callback(data);
-        }, 0);
-        return;
+        preloaded = data;
       }
     }
     if (ownername == 'frame') {
@@ -158,9 +156,15 @@ window.pencilcode.storage = {
       }, 0);
       return;
     }
-    $.getJSON((ownername ? '//' + ownername + '.' +
-               window.pencilcode.domain : '') +
-        '/load/' + filename, function(m) {
+    if (preloaded) {
+      setTimeout(function() { handleNetworkLoad(preloaded); }, 0);
+    } else {
+      $.getJSON((ownername ? '//' + ownername + '.' +
+                 window.pencilcode.domain : '') +
+          '/load/' + filename, handleNetworkLoad).error(handleNetworkError);
+    }
+
+    function handleNetworkLoad(m) {
       // If there is no owner, we are not allowed to load directories
       if (!ownername && filename && m.directory) {
         callback({error: "Cannot load."});
@@ -188,7 +192,9 @@ window.pencilcode.storage = {
         }
         callback(m);
       }
-    }).error(function() {
+    }
+
+    function handleNetworkError() {
       if (!ignoreBackup & hasBackup(filename)) {
         // If something failed in the load, fall back to the cached
         // backup {offline:true}.
@@ -198,7 +204,7 @@ window.pencilcode.storage = {
         // down error message.
         callback({error:"Network down.", down:true});
       }
-    });
+    }
   },
   // Given the filename (no owner, leading, or trailing slash),
   // attempts to save the file and then calls callback with the success code.
@@ -213,17 +219,18 @@ window.pencilcode.storage = {
       filename, data, force, key, backupOnly, callback) {
     // Always stick the data in the backup immediately, marked as unsaved.
     var msg = $.extend({}, data), now = +(new Date);
+    msg.unsaved = true;
     // When backupOnly is requested, it's not a network-save request.
     if (!backupOnly) {
-      // The unsaved flag will indicate that the user wanted to do a
+      // The needsave flag will indicate that the user wanted to do a
       // full save.
-      msg.unsaved = true;
-      if (!msg.mtime || msg.mtime < now) {
-        msg.mtime = now;
-      }
+      msg.needsave = true;
+    } else {
+      // When making a pure backup, stamp with the current backup time.
+      msg.btime = now;
     }
     delete msg.offline;
-    if (data == '' || data == '\n') {
+    if (!msg.data || msg.data == '' || msg.data == '\n') {
       // If saving an empty file, delete the backup.
       deleteBackup(filename);
     } else {
@@ -237,15 +244,16 @@ window.pencilcode.storage = {
         backupOnly ? {backup:true} : {offline:true}); }, 0);
       return;
     }
-    // Attempt the network save: set up the conditional argument and the
-    // weak authentication key.
-    var payload = { data: msg.data };
+    // Attempt the network save: pack up any metadata, and set up
+    // the conditional argument and the weak authentication key.
+    var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
     if (msg.mtime && !force) {
       payload.conditional = msg.mtime;
     }
     if (key) {
       payload.key = key;
     }
+    var payloadsize = payload.data.length + payload.meta.length;
 
     // Do the network save.
     var domain = (ownername ? ownername + '.' : '') + window.pencilcode.domain;
@@ -258,7 +266,7 @@ window.pencilcode.storage = {
       // Use a GET if crossdomain and the payload is short.  Note that
       // a longer payload will fail on IE, and anecdotally a crossdomain
       // POST (even with CORS) will fail on mobile browsers.
-      type: (crossdomain && payload.data.length < 1024) ? 'GET' : 'POST',
+      type: (crossdomain && payloadsize < 1024) ? 'GET' : 'POST',
       success: function(m) {
         var check;
         if (m.error) {
@@ -279,6 +287,8 @@ window.pencilcode.storage = {
           if (check && check.data === msg.data) {
             // Commit backup without 'unsaved' if it is still unchanged.
             delete msg.unsaved;
+            delete msg.needsave;
+            delete msg.btime;
             delete msg.offline;
             if (m.mtime) { msg.mtime = m.mtime; }
             saveBackup(filename, msg);

@@ -1,4 +1,4 @@
-
+///////////////////////////////////////////////////////////////////////////
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
@@ -108,23 +108,23 @@ window.pencilcode.view = {
   panepos: panepos,
   setPaneTitle: function(pane, html) { $('#' + pane + 'title_text').html(html); },
   clearPane: clearPane,
-  setPaneEditorText: setPaneEditorText,
+  setPaneEditorData: setPaneEditorData,
   changePaneEditorText: function(pane, text) {
     return changeEditorText(state.pane[pane], text);
   },
-  getPaneEditorText: getPaneEditorText,
+  getPaneEditorData: getPaneEditorData,
   setPaneEditorBlockMode: setPaneEditorBlockMode,
   getPaneEditorBlockMode: getPaneEditorBlockMode,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
-  notePaneEditorCleanText: notePaneEditorCleanText,
+  notePaneEditorCleanData: notePaneEditorCleanData,
   notePaneEditorCleanLineCount: notePaneEditorCleanLineCount,
   noteNewFilename: noteNewFilename,
   setPaneEditorReadOnly: setPaneEditorReadOnly,
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
-  setPaneRunText: setPaneRunText,
+  setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
@@ -1011,7 +1011,7 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
-function setPaneRunText(pane, html, filename, targetUrl, fullScreenLink) {
+function setPaneRunHtml(pane, html, filename, targetUrl, fullScreenLink) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.running = true;
@@ -1312,6 +1312,8 @@ function clearPane(pane, loading) {
   paneState.editor = null;
   paneState.filename = null;
   paneState.cleanText = null;
+  paneState.meta = null;
+  paneState.cleanMeta = null;
   paneState.cleanLineCount = 0;
   paneState.marked = {};
   paneState.mimeType = null;
@@ -1752,15 +1754,18 @@ var ICE_EDITOR_PALETTE =[
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorText(pane, text, filename, useblocks) {
+function setPaneEditorData(pane, data, filename, useblocks) {
   clearPane(pane);
-  text = normalizeCarriageReturns(text);
+  var text = normalizeCarriageReturns(data.data);
+  var meta = copyJSON(data.meta);
   var id = uniqueId('editor');
   var paneState = state.pane[pane];
   paneState.filename = filename;
   paneState.mimeType = filetype.mimeForFilename(filename);
   paneState.cleanText = text;
+  paneState.cleanMeta = JSON.stringify(meta);
   paneState.dirtied = false;
+  paneState.meta = meta;
   if (!mimeTypeSupportsBlocks(paneState.mimeType)) {
      useblocks = false;
   }
@@ -2086,17 +2091,18 @@ function isPaneEditorDirty(pane) {
   return false;
 }
 
-function getPaneEditorText(pane) {
+function getPaneEditorData(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return null;
   }
   var text = paneState.dropletEditor.getValue();
+  var metaCopy = copyJSON(paneState.meta);
   // TODO: differentiate with
   // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
-  return {text: text, mime: paneState.mimeType };
+  return {data: text, mime: paneState.mimeType, meta: metaCopy };
 }
 
 // Marks a line of the editor using the given CSS class
@@ -2218,16 +2224,21 @@ function clearPaneEditorMarks(pane, markclass) {
   paneState.dropletEditor.clearLineMarks(markclass);
 }
 
-function notePaneEditorCleanText(pane, text) {
-  text = normalizeCarriageReturns(text);
+function notePaneEditorCleanData(pane, data) {
+  var text = normalizeCarriageReturns(data.data);
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
   }
   var editortext = paneState.editor.getSession().getValue();
+  var editormeta = JSON.stringify(
+      paneState.meta == null ? null : paneState.meta);
+  var cleanmeta = JSON.stringify(
+      data.meta == null ? null : data.meta);
   paneState.cleanText = text;
-  if ((text == editortext) == (paneState.dirtied)) {
-    paneState.dirtied = (text != editortext);
+  paneState.cleanMeta = cleanmeta;
+  if ((text == editortext && cleanmeta == editormeta) == (paneState.dirtied)) {
+    paneState.dirtied = !paneState.dirtied;
     fireEvent('dirty', [pane]);
   }
 }
@@ -2277,6 +2288,11 @@ function whenCodeFontLoaded(callback) {
   } else{
     codeFontLoadingCallbacks.push(callback);
   }
+}
+
+function copyJSON(m) {
+  if (m == null) { return null; }
+  return JSON.parse(JSON.stringify(m));
 }
 
 window.FontLoader = FontLoader;

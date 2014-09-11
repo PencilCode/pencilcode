@@ -250,11 +250,10 @@ function updateTopControls(addHistory) {
   // Is this helpful or confusing?
   if (m.data && m.data.file) {
     if (!modelatpos('right').running) {
-      var mimetext = view.getPaneEditorText(paneatpos('left')),
-          code = (mimetext && mimetext.text) || m.data.data;
+      var doc = view.getPaneEditorData(paneatpos('left'));
       // The last flag here means: run the supporting scripts
       // but not the main program.
-      runCodeAtPosition('right', code, m.filename, true);
+      runCodeAtPosition('right', doc, doc.filename, true);
     }
   }
   // Update editability.
@@ -290,6 +289,7 @@ view.on('new', function() {
   }
   var directoryname =
       modelatpos('left').filename.replace(/(?:^|\/)[^\/]*$/, '/');
+  // Load the directory listing to find an unused name.
   storage.loadFile(model.ownername, directoryname, false, function(m) {
     var untitled = 'untitled';
     if (m.directory && m.list) {
@@ -409,15 +409,17 @@ view.on('editfocus', function(pane) {
 });
 
 view.on('run', function() {
-  var mimetext = view.getPaneEditorText(paneatpos('left'));
-  if (!mimetext) {
-    mimetext = view.getPaneEditorText(paneatpos('right'));
-    if (!mimetext) { return; }
+  var doc = view.getPaneEditorData(paneatpos('left'));
+  if (!doc) {
+    doc = view.getPaneEditorData(paneatpos('right'));
+    if (!doc) {
+      console.log('Nothing to run.');
+      return;
+    }
     cancelAndClearPosition('back');
     rotateModelLeft(true);
   }
-  var runtext = mimetext && mimetext.text;
-  var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
+  var newdata = $.extend({}, modelatpos('left').data, doc);
   var filename = modelatpos('left').filename;
   view.clearPaneEditorMarks(paneatpos('left'));
   if (!specialowner()) {
@@ -426,11 +428,9 @@ view.on('run', function() {
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.flashStopButton();
-  runCodeAtPosition('right', runtext, modelatpos('left').filename, false);
-  if (runtext) {
-    logEvent('run', filename, runtext,
-        view.getPaneEditorBlockMode(paneatpos('left')));
-  }
+  runCodeAtPosition('right', newdata, modelatpos('left').filename, false);
+  logEvent('run', filename, newdata.data,
+      view.getPaneEditorBlockMode(paneatpos('left')));
   if (!specialowner()) {
     // Remember the most recently run program.
     cookie('recent', window.location.href,
@@ -540,8 +540,8 @@ view.on('guide', function() {
 view.on('toggleblocks', function(p, useblocks) {
   saveBlockMode(useblocks);
   var filename = model.pane[p].filename;
-  var mimetext = view.getPaneEditorText(p),
-      code = (mimetext && mimetext.text) || model.pane[p].data.data;
+  var doc = view.getPaneEditorData(p),
+      code = (doc && doc.data) || model.pane[p].data.data;
   logEvent('toggle', filename, code, useblocks);
 });
 
@@ -553,21 +553,18 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     signUpAndSave();
     return;
   }
-  var mimetext = view.getPaneEditorText(paneatpos('left'));
-  var runtext = mimetext && mimetext.text;
+  var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
-  if (!runtext && runtext !== '') {
-    // TODO: error message or something - or is this a deletion?
+  if (!doc) {
+    // There is no editor on the left (or it is misbehaving) - do nothing.
+    console.log("Nothing to save.");
     return;
   }
-  // TODO: pick the right mime type here.
-  var newdata = $.extend({},
-      modelatpos('left').data, { data: runtext, mime: mimetext.mime });
+  var newdata = $.extend({}, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
-    view.notePaneEditorCleanText(
-        paneatpos('left'), newdata.data);
+    view.notePaneEditorCleanData(paneatpos('left'), newdata);
     if (modelatpos('left').filename == filename) {
       var oldmtime = modelatpos('left').data.mtime || 0;
       if (mtime) {
@@ -634,11 +631,11 @@ function letterComplexity(s) {
 
 function signUpAndSave(options) {
   if (!options) { options = {}; }
-  var mimetext = view.getPaneEditorText(paneatpos('left'));
+  var doc = view.getPaneEditorData(paneatpos('left'));
   var mp = modelatpos('left');
-  var runtext = mimetext && mimetext.text;
   var shouldCreateAccount = true;
-  if (!runtext) {
+  if (!doc) {
+    console.log("Nothing to save here.");
     return;
   }
   var userList = [];
@@ -757,7 +754,7 @@ function signUpAndSave(options) {
       var key = keyFromPassword(username, state.password);
       var step2 = function() {
         storage.saveFile(
-            username, rename, {data: runtext, mtime: 1},
+            username, rename, $.extend({}, m, {mtime: 1}),
             forceOverwrite, key, false,
             function(status) {
           if (status.needauth) {
@@ -785,7 +782,7 @@ function signUpAndSave(options) {
             });
             view.clearPane(paneatpos('right'));
           } else {
-            view.notePaneEditorCleanText(paneatpos('left'), runtext);
+            view.notePaneEditorCleanData(paneatpos('left'), doc);
             storage.deleteBackup(mp.filename);
             storage.deleteBackup(rename);
             state.update({cancel: true});
@@ -804,7 +801,7 @@ function signUpAndSave(options) {
       if (key && shouldCreateAccount) {
         storage.setPassKey(username, key, null, function(m) {
           if (m.error) {
-            console.log('got error');
+            console.log('got error', m.error);
             state.update({info: 'Could not create account.<br>' +
                 m.error });
             view.clearPane(paneatpos('right'), false);
@@ -913,6 +910,10 @@ function saveBlockMode(on) {
   if (model.ownername != 'frame') {
     cookie('blocks', on ? 'on' : 'off', { expires: 7, path: '/' });
   }
+}
+
+function loadDefaultMeta() {
+  return null;
 }
 
 function chooseNewFilename(dirlist) {
@@ -1144,7 +1145,7 @@ function noteIfUnsaved(position) {
           (m.offline ? '' :
           ' <a href="#netload" id="netload">Load last saved version.</a>'));
     }
-    view.notePaneEditorCleanText(paneatpos(position), '');
+    view.notePaneEditorCleanData(paneatpos(position), {data: ''});
   }
 }
 
@@ -1343,7 +1344,7 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
-function runCodeAtPosition(position, code, filename, emptyOnly) {
+function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
     cancelAndClearPosition(position);
@@ -1356,14 +1357,14 @@ function runCodeAtPosition(position, code, filename, emptyOnly) {
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
-      code, window.pencilcode.domain, filename, baseUrl,
+      doc, window.pencilcode.domain, filename, baseUrl,
       emptyOnly, model.setupScript)
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
   setTimeout(function() {
     if (m.running) {
-      view.setPaneRunText(pane, html, filename, baseUrl,
+      view.setPaneRunHtml(pane, html, filename, baseUrl,
          // Do not enable fullscreen mode when no owner, or a nosaveowner.
          model.ownername && !nosaveowner());
     }
@@ -1391,10 +1392,11 @@ function setDefaultDirSortingByDate(f) {
   }
 }
 
-function createNewFileIntoPosition(position, filename, text) {
+function createNewFileIntoPosition(position, filename, text, meta) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
   if (!text) { text = ''; }
+  if (!meta) { meta = loadDefaultMeta(); }
   view.clearPane(pane, false);
   mpp.loading = 0;
   mpp.filename = filename;
@@ -1406,8 +1408,8 @@ function createNewFileIntoPosition(position, filename, text) {
     mtime: 0
   };
   var mode = loadBlockMode();
-  view.setPaneEditorText(pane, text, filename, mode);
-  view.notePaneEditorCleanText(pane, '');
+  view.setPaneEditorData(pane, {data: text, meta: meta}, filename, mode);
+  view.notePaneEditorCleanData(pane, {data: ''});
   mpp.running = false;
   logEvent('new', filename, text, mode);
 }
@@ -1465,7 +1467,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         mpp.isdir = false;
         mpp.data = m;
         var mode = loadBlockMode();
-        view.setPaneEditorText(pane, m.data, filename, mode);
+        view.setPaneEditorData(pane, m, filename, mode);
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
@@ -1517,10 +1519,10 @@ function renderDirectory(position) {
 //
 
 function getEditTextIfAny() {
-  var m = modelatpos('left');
-  if (m.filename && m.data && m.data.file) {
-    var text = view.getPaneEditorText(paneatpos('left'));
-    return (text && text.text && text.text.trim())
+  var model = modelatpos('left');
+  if (model.filename && model.data && model.data.file) {
+    var doc = view.getPaneEditorData(paneatpos('left'));
+    return (doc && doc.data && doc.data.trim())
   }
   return null;
 }
@@ -1668,17 +1670,20 @@ $(window).on('message', function(e) {
   // invoke the requested method
   switch (data.methodName) {
     case 'setCode':
-      view.setPaneEditorText(
-          paneatpos('left'), data.args[0], modelatpos('left').filename,
+      var code = data.args[0];
+      if (!code || typeof(code) != 'object') {
+        code = { data: code };
+      }
+      view.setPaneEditorData(
+          paneatpos('left'), code, modelatpos('left').filename,
           loadBlockMode());
       break;
     case 'setupScript':
       model.setupScript = data.args[0];
       if (modelatpos('right').running) {
         // If we are currently showing a run pane, then reload it.
-        var mimetext = view.getPaneEditorText(paneatpos('left'));
-        var runtext = mimetext && mimetext.text;
-        runCodeAtPosition('right', runtext, modelatpos('left').filename, true);
+        var doc = view.getPaneEditorData(paneatpos('left'));
+        runCodeAtPosition('right', doc, modelatpos('left').filename, true);
       }
       break;
     case 'eval':

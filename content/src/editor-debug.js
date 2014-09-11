@@ -267,8 +267,8 @@ function debugError(err) {
   console.log('debugError', err);
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
-  var mimetext = view.getPaneEditorText(view.paneid('left'));
-  var text = getTextOnLine(mimetext && mimetext.text || '', line);
+  var m = view.getPaneEditorData(view.paneid('left'));
+  var text = getTextOnLine(m && m.data || '', line);
   var advice = errorAdvice(err.message, text);
   var script = (
     '(' + showPopupErrorMessage.toString() + '(' +

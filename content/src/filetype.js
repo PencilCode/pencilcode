@@ -9,9 +9,10 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
-function wrapTurtle(text, domain, pragmasOnly, setupScript) {
+function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   var result, j, scripts = [], script_pattern =
-    /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g;
+    /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g,
+    text = doc.data;
   // Add the default turtle script.
   // Note that we use crossorigin="anonymous" so that we can get
   // more detailed error information (e.g., CoffeeScript compilation
@@ -44,20 +45,30 @@ function wrapTurtle(text, domain, pragmasOnly, setupScript) {
       ' type="' + inferScriptType(result[1]) +
       '">\n<\057script>');
   }
+  var maintype = 'text/coffeescript';
+  if (doc.meta && doc.meta.type) {
+    maintype = doc.meta.type;
+  }
+  var seeline = '\n\n';
+  if (/javascript/.test(maintype)) {
+    seeline = 'window.see && window.see.init(eval(window.see.js));\n\n';
+  } else if (/coffeescript/.test(maintype)) {
+    seeline = 'window.see && window.see.init(eval(window.see.cs))\n\n';
+  }
   result = (
     '<!doctype html>\n<html>\n<body>' +
     scripts.join('') +
-    '<script type="text/coffeescript">\n' +
-    'window.see && window.see.init(eval(window.see.cs))\n\n' +
+    '<script type="' + maintype + '">\n' +
+    seeline +
     (pragmasOnly ? '' : text) + '\n<\057script></body></html>');
   return result;
 }
 
-function modifyForPreview(text, domain,
+function modifyForPreview(doc, domain,
        filename, targetUrl, pragmasOnly, sScript) {
-  var mimeType = mimeForFilename(filename);
+  var mimeType = mimeForFilename(filename), text = doc.data;
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(text, domain, pragmasOnly, sScript);
+    text = wrapTurtle(doc, domain, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
     // For now, we don't support inserting startup script in anything
