@@ -754,7 +754,7 @@ function signUpAndSave(options) {
       var key = keyFromPassword(username, state.password);
       var step2 = function() {
         storage.saveFile(
-            username, rename, $.extend({}, m, {mtime: 1}),
+            username, rename, $.extend({}, doc, {mtime: 1}),
             forceOverwrite, key, false,
             function(status) {
           if (status.needauth) {
