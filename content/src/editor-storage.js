@@ -2,8 +2,8 @@
 // STORAGE AND CACHE SERVICE
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'see'],
-function($, see) {
+define(['jquery', 'see', 'filetype'],
+function($, see, filetype) {
 
 eval(see.scope('storage'));
 function hasBackup(filename) {
@@ -222,6 +222,9 @@ window.pencilcode.storage = {
       filename, data, force, key, backupOnly, callback) {
     // Always stick the data in the backup immediately, marked as unsaved.
     var msg = $.extend({}, data), now = +(new Date);
+    if (filetype.isDefaultMeta(msg.meta)) {
+      msg.meta = null;
+    }
     msg.unsaved = true;
     // When backupOnly is requested, it's not a network-save request.
     if (!backupOnly) {

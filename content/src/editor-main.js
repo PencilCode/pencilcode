@@ -560,11 +560,15 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     console.log("Nothing to save.");
     return;
   }
+  // Remember meta in a cookie.
+  saveDefaultMeta(doc.meta);
   var newdata = $.extend({}, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
     view.notePaneEditorCleanData(paneatpos('left'), newdata);
+    logEvent('save', filename, newdata.data,
+      view.getPaneEditorBlockMode(paneatpos('left')));
     if (modelatpos('left').filename == filename) {
       var oldmtime = modelatpos('left').data.mtime || 0;
       if (mtime) {
@@ -917,7 +921,31 @@ function saveBlockMode(on) {
 }
 
 function loadDefaultMeta() {
+  if (model.ownername == 'frame') {
+    return null;
+  }
+  var m = cookie('meta');
+  if (!m) { return null; }
+  try {
+    return JSON.parse(m);
+  } catch (e) { }
   return null;
+}
+
+function saveDefaultMeta(meta) {
+  if (model.ownername == 'frame') {
+    return;
+  }
+  if (filetype.isDefaultMeta(meta)) {
+    meta = null;
+  }
+  if (meta == null) {
+    cookie('meta', '', { expires: -1, path: '/' });
+  } else {
+    try {
+      cookie('meta', JSON.stringify(meta), { expires: 7, path: '/' });
+    } catch (e) { }
+  }
 }
 
 function chooseNewFilename(dirlist) {

@@ -154,10 +154,19 @@ function effectiveMeta(meta) {
   return meta;
 }
 
+function isDefaultMeta(meta) {
+  if (meta == null) return true;
+  if (JSON.stringify(effectiveMeta(meta)) ==
+      '{"type":"text/coffeescript","libs":' +
+      '["name":"turtle","src":"//{site}/turtlebits.js"]}') return true;
+  return false;
+}
+
 var impl = {
   mimeForFilename: mimeForFilename,
   modifyForPreview: modifyForPreview,
   effectiveMeta: effectiveMeta,
+  isDefaultMeta: isDefaultMeta,
   wrapTurtle: wrapTurtle
 };
 
