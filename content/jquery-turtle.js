@@ -7172,9 +7172,17 @@ var dollar_turtle_methods = {
       "<mark>save 'intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
-    var payload = data, url = apiUrl(url, 'save');
-    if (typeof(payload) == 'string' || typeof(payload) == 'number') {
-      payload = { data: payload };
+    var payload = { }, url = apiUrl(url, 'save'), key;
+    if (typeof(data) == 'string' || typeof(data) == 'number') {
+      payload.data = data;
+    } else {
+      for (key in data) if (data.hasOwnProperty(key)) {
+        if (typeof data[key] == 'string') {
+          payload[key] = data[key];
+        } else {
+          payload[key] = JSON.stringify(data[key]);
+        }
+      }
     }
     if (payload && !payload.key) {
       var login = loginCookie();
