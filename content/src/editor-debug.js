@@ -93,9 +93,9 @@ var debug = window.ide = {
   },
   flashStopButton: flashStopButton,
   getEditorText: function() {
-    var mimetext = view.getPaneEditorText(view.paneid('left'));
-    if (mimetext) {
-      return mimetext.text;
+    var doc = view.getPaneEditorData(view.paneid('left'));
+    if (doc) {
+      return doc.data;
     }
     return '';
   },
