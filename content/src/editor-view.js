@@ -1408,7 +1408,7 @@ function updatePaneTitle(pane) {
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         label = '<div style="float:right" class="gear" ' +
-                'title="Languages and libraries">&nbsp;</div>'
+                'title="Languages">&nbsp;</div>'
               + label;
       }
     }
