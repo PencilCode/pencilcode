@@ -1417,7 +1417,7 @@ function updatePaneTitle(pane) {
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
-           paneState.filename + '" title="Click to open window">' +
+           paneState.filename + '" title="Click to run in a new window">' +
            '<img src="data:image/png;base64,iVBORw0KGgoAAAANS' +
            'UhEUgAAABsAAAAXCAYAAAD6FjQuAAAAAXNSR0IArs4c6QAAAARnQU1BA' +
            'ACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAAYdEVYdFNvZnR3Y' +
@@ -1425,9 +1425,9 @@ function updatePaneTitle(pane) {
            '6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp' +
            '5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRY' +
            'zBP6aySgZYAAAAASUVORK5CYII="> <span alt="open window">' +
-           'screen</span></a>';
+           'output</span></a>';
     } else {
-      label = 'screen';
+      label = 'output';
     }
   }
   $('#' + pane + 'title_text').html(label).find('[title]').
@@ -2169,6 +2169,7 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;
+  updatePaneTitle(pane);
   return true;
 }
 
