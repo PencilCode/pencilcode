@@ -1407,8 +1407,14 @@ function updatePaneTitle(pane) {
             label + '</span></a>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
-        label = '<div style="float:right" class="gear" ' +
-                'title="Languages">&nbsp;</div>'
+        var visibleMimeType = editorMimeType(paneState);
+        var langinfo = '';
+        if (/javascript/.test(visibleMimeType)) {
+          langinfo = 'JS';
+        }
+        label = '<div style="float:right" class="langmenu" title="Languages">' +
+                '<nobr>' + langinfo + '&nbsp;<div class="gear">' +
+                '&nbsp;</div></div>'
               + label;
       }
     }
@@ -1447,7 +1453,7 @@ $('.panetitle').on('click', '.toggleblocks', function(e) {
   setPaneEditorBlockMode(pane, newmode);
 });
 
-$('.panetitle').on('click', '.gear', function(e) {
+$('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
   showPaneEditorLanguages(pane);
