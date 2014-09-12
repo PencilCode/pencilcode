@@ -23,6 +23,7 @@ var cachedParsedStack = {}; // parsed stack traces for currently-running code.
 var pollTimer = null;       // poll for stop button.
 var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
 var throwNeeded = !(new Error).stack;
+var lineNumberOffset = 0;
 
 Error.stackTraceLimit = 20;
 
@@ -39,6 +40,7 @@ function bindframe(w) {
   everyRecord = [];
   cachedSourceMaps = {};
   cachedParseStack = {};
+  lineNumberOffset = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   firstSessionId = nextDebugId;
@@ -74,6 +76,7 @@ var debug = window.ide = {
     else if (name == 'exit') { debugExit.apply(null, data); }
     else if (name == 'appear') { debugAppear.apply(null, data); }
     else if (name == 'resolve') { debugResolve.apply(null, data); }
+    else if (name == 'init') { debugInit.apply(null, data); }
     else if (name == 'error') {
       debugError.apply(null, data);
 
@@ -103,6 +106,10 @@ var debug = window.ide = {
     view.changePaneEditorText(view.paneid('left'), text);
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+// DEBUG RECORD LOGGING
+//////////////////////////////////////////////////////////////////////
 
 // The "enter" event is triggered inside the call to a turtle command.
 // There is exactly one enter event for each debugId, and each corresponds
@@ -156,6 +163,9 @@ function debugResolve(method, debugId, length, index, elem) {
   updateLine(record);
 }
 
+//////////////////////////////////////////////////////////////////////
+// ERROR MESSAGE HINT SUPPORT
+//////////////////////////////////////////////////////////////////////
 function getTextOnLine(text, line) {
   var lines = text.split('\n'), index = line - 1;
   if (index >= 0 && index < lines.length) return lines[index];
@@ -264,7 +274,6 @@ function errorAdvice(msg, text) {
 // The err object is an exception or an Event object corresponding
 // to the error.
 function debugError(err) {
-  console.log('debugError', err);
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
   var m = view.getPaneEditorData(view.paneid('left'));
@@ -274,6 +283,19 @@ function debugError(err) {
     '(' + showPopupErrorMessage.toString() + '(' +
     JSON.stringify(advice) + '));');
   view.evalInRunningPane(view.paneid('right'), script, true);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// LINE HIGHLIGHT HANDLING
+//////////////////////////////////////////////////////////////////////
+
+function debugInit() {
+  // Grab exception for first line.
+  if (debugIdException.init) return;
+  var id = debug.nextId();
+  var exception = debugIdException.init = debugIdException[id];
+  lineNumberOffset = editorLineNumberForError(exception) + 1;
 }
 
 
@@ -488,9 +510,17 @@ function editorLineNumberForError(error) {
   if (!parsed) return null;
   if (!targetWindow || !targetWindow.CoffeeScript ||
       !targetWindow.CoffeeScript.code) return null;
-  // Find the innermost call that corresponds to compiled CoffeeScript.
+  // Find the innermost call that corresponds to compiled CoffeeScript
+  // or inline Javascript.
+  var ownurl = targetWindow.location.href;
+  var inline = false;
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
+    if (parsed[j].file == ownurl) {
+      frame = parsed[j];
+      inline = true;
+      break;
+    }
     if (parsed[j].file in targetWindow.CoffeeScript.code) {
       frame = parsed[j];
       break;
@@ -506,6 +536,11 @@ function editorLineNumberForError(error) {
     }
     return null;
   }
+
+  if (inline) {
+    return frame.line - 3 - lineNumberOffset;
+  }
+
   var smc = sourceMapConsumerForFile(frame.file);
   /* For debugging:
   var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
@@ -525,15 +560,15 @@ function editorLineNumberForError(error) {
   for (var col = Math.max(frame.column - 1, 0);
        col < Math.max(frame.column + 80, 80); col++) {
     var mapped = smc.originalPositionFor({line: frame.line, column: col});
-    if (mapped && mapped.line && mapped.line >= 4) {
+    if (mapped && mapped.line && (frame.line <= 2 || mapped.line >= 4)) {
       line = mapped.line;
       break;
     }
   }
 
-  if (!line || line < 4) return null;
+  if (line == null || (frame.line > 2 && line < 4)) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return line - 3;
+  return line - 3 - lineNumberOffset;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -564,12 +599,12 @@ view.on('icehover', function(pane, ev) {
   if (!(lineno in lineRecord)) return;
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  
+
   displayProtractorForRecord(lineRecord[lineno]);
 });
 
 function convertCoords(origin, astransform) {
-  if (!origin) { console.log('reason 1'); return null; }
+  if (!origin) { return null; }
   if (!astransform || !astransform.transform) { return null; }
   var parsed = parseTurtleTransform(astransform.transform);
   if (!parsed) return null;
@@ -688,7 +723,10 @@ view.on('stop', function() {
     // Do nothing if the program is not something that we can interrupt.
     return;
   }
-  targetWindow.jQuery.turtle.interrupt();
+  try {
+    targetWindow.jQuery.turtle.interrupt();
+  } catch(e) { }
+  startPollingWindow();
 });
 
 ///////////////////////////////////////////////////////////////////////////

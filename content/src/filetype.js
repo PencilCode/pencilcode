@@ -60,9 +60,9 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   }
   var seeline = '\n\n';
   if (/javascript/.test(maintype)) {
-    seeline = 'window.see && window.see.init(eval(window.see.js));\n\n';
+    seeline = 'eval(this._start_ide_js_);\n\n';
   } else if (/coffeescript/.test(maintype)) {
-    seeline = 'window.see && window.see.init(eval(window.see.cs))\n\n';
+    seeline = 'eval(this._start_ide_cs_)\n\n';
   }
   result = (
     '<!doctype html>\n<html>\n<body>' +
