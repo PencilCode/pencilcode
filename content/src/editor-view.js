@@ -1862,6 +1862,9 @@ var JAVASCRIPT_PALETTE = [
         block: 'speed(10);',
         title: 'Set the speed of the turtle'
       }, {
+        block: 'write(\'hello\');',
+        title: 'Write text on the screen'
+      }, {
         block: 'label(\'hello\');',
         title: 'Write text at the turtle'
       }, {
