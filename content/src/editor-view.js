@@ -1032,25 +1032,22 @@ function setPaneRunHtml(pane, html, filename, targetUrl, fullScreenLink) {
     if (p.data('session') == session) {
       p.html('');
       var iframe = $('<iframe></iframe>').appendTo(p);
-      // Destroy and create new iframe.
-      iframe.attr('src', 'about:blank');
       var framewin = iframe[0].contentWindow;
       var framedoc = framewin.document;
-      framedoc.open();
-      // Fake out /home URL instead of /edit URL if possible.
-      try {
-        if (framewin.history.replaceState) {
-          framewin.history.replaceState(null, targetUrl, targetUrl);
-        }
-      } catch (e) {
-        if (window.console) {
-          window.console.warn('https://bugzilla.mozilla.org/777526', e)
+      var randid = (Math.random() + '').substr(2);
+      var runurl = '/lib/local/run.html#' + randid;
+      function handler(e) {
+        if (e.data && e.data.v == 'run' &&
+            e.data.u.replace(/[^#]*#/, '') == randid) {
+          window.removeEventListener('message', handler);
+          framewin.postMessage(
+              { v: 'write', u: targetUrl, t: html }, '*');
         }
       }
-      framedoc.write(html);
-      framedoc.close();
+      window.addEventListener('message', handler);
       // Bind the key handlers to the iframe once it's loaded.
-      $(iframe).load(function() {
+      /*
+      iframe.load(function() {
         $('body', framedoc).on('keydown', function(e) {
           if (e.ctrlKey || e.metaKey || e.which === 8) {
             var handler = hotkeys[String.fromCharCode(e.which)];
@@ -1060,6 +1057,9 @@ function setPaneRunHtml(pane, html, filename, targetUrl, fullScreenLink) {
           }
         });
       });
+      */
+      // Destroy and create new iframe.
+      iframe.attr('src', runurl);
     }
     $(this).dequeue();
   });
@@ -1311,6 +1311,7 @@ function clearPane(pane, loading) {
   if (paneState.editor) {
     paneState.editor.destroy();
   }
+  $('#' + pane).find('iframe').attr('src', 'about:blank');
   paneState.dropletEditor = null;
   paneState.editor = null;
   paneState.filename = null;

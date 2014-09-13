@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- A self-writing frame that communicates via postMessage -->
+<html><body></body><script>
+(function() {
+  function handle(e) {
+    if (!e.data || e.data.v != 'write') return;
+    // window.removeEventListener('message', handle);
+    if (e.data.u && history.replaceState) try {
+      history.replaceState(null, e.data.u, e.data.u);
+    } catch (e) { console.log(e); }
+    document.write(e.data.t);
+    document.close();
+  }
+  window.addEventListener('message', handle);
+  parent.postMessage({v:'run', u:window.location.href}, '*');
+})();
+</script></html>
