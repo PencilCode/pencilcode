@@ -59,8 +59,10 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
     maintype = doc.meta.type;
   }
   var seeline = '\n\n';
+  var trailing = '\n';
   if (/javascript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_js_);\n\n';
+    seeline = 'eval(this._start_ide_js_);setTimeout(function(){\n\n';
+    trailing = '\n},0);';
   } else if (/coffeescript/.test(maintype)) {
     seeline = 'eval(this._start_ide_cs_)\n\n';
   }
@@ -69,7 +71,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
     scripts.join('') +
     '<script type="' + maintype + '">\n' +
     seeline +
-    (pragmasOnly ? '' : text) + '\n<\057script></body></html>');
+    (pragmasOnly ? '' : text) + trailing + '<\057script></body></html>');
   return result;
 }
 
