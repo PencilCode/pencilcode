@@ -4325,7 +4325,8 @@ QUAD.init = function (args) {
         };
 
         ContainerViewNode.prototype.computeBevels = function() {
-          var childObj, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+          var childObj, oldBevels, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+          oldBevels = this.bevels;
           this.bevels = {
             top: true,
             bottom: true
@@ -4335,6 +4336,9 @@ QUAD.init = function (args) {
           }
           if ((((_ref4 = this.model.visParent()) != null ? _ref4.type : void 0) === 'indent' || ((_ref5 = this.model.visParent()) != null ? _ref5.isRoot : void 0)) && ((_ref6 = this.model.end.nextAffectToken()) != null ? _ref6.type : void 0) === 'newline') {
             this.bevels.bottom = false;
+          }
+          if (!(oldBevels.top === this.bevels.top && oldBevels.bottom === this.bevels.bottom)) {
+            this.changedBoundingBox = true;
           }
           if (this.computedVersion === this.model.version) {
             return null;
@@ -8988,9 +8992,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     exports = {};
     STATEMENT_NODE_TYPES = ['ExpressionStatement', 'ReturnStatement', 'BreakStatement', 'ThrowStatement'];
     NEVER_PAREN = 100;
-    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
+    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'write', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
-    EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
+    EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'table', 'append', 'finish', 'loadscript'];
     FUNCTION_WHITELIST = BLOCK_FUNCTIONS.concat(EITHER_FUNCTIONS).concat(VALUE_FUNCTIONS);
     COLORS = {
       'BinaryExpression': 'value',
@@ -11806,7 +11810,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     });
     Editor.prototype.deleteAtCursor = function() {
-      var blockEnd, _ref1;
+      var before, blockEnd, start, _ref1, _ref2;
       this.setTextInputFocus(null);
       blockEnd = this.cursor.prev;
       while ((_ref1 = blockEnd != null ? blockEnd.type : void 0) !== 'blockEnd' && _ref1 !== 'indentStart' && _ref1 !== (void 0)) {
@@ -11818,6 +11822,23 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (blockEnd.type === 'blockEnd') {
         this.addMicroUndoOperation(new PickUpOperation(blockEnd.container));
         this.spliceOut(blockEnd.container);
+        return this.redrawMain();
+      } else if (blockEnd.type === 'indentStart') {
+        start = blockEnd.container.start.nextVisibleToken();
+        while (start.type === 'newline') {
+          start = start.nextVisibleToken();
+        }
+        if (start !== start.container.end) {
+          return;
+        }
+        before = blockEnd.container.parent.start;
+        while ((_ref2 = before.type) !== 'blockEnd' && _ref2 !== 'indentStart' && _ref2 !== 'segmentStart') {
+          before = before.previousVisibleToken();
+        }
+        this.addMicroUndoOperation(new PickUpOperation(blockEnd.container.parent));
+        this.spliceOut(blockEnd.container.parent);
+        this.moveCursorTo(before);
+        console.log('moving cursor to', before);
         return this.redrawMain();
       }
     };
