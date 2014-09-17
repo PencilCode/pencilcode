@@ -1,4 +1,5 @@
-var express = require('express'),
+var cluster = require('cluster'),
+    express = require('express'),
     path = require('path'),
     save = require('./save.js'),
     load = require('./load.js'),
@@ -7,7 +8,11 @@ var express = require('express'),
     serverbase = require('./serverbase.js'),
     utils = require('./utils.js');
 
-require('log-timestamp');
+if (cluster.isMaster) {
+  console.log('starting master');
+} else {
+  console.log('starting worker', cluster.worker.id);
+}
 
 if (config.compactjson) {
   app.set('json spaces', 0);
