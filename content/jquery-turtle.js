@@ -2608,7 +2608,7 @@ var stablyLoadedImages = {};
 // @param css is a dictionary of css props to set when the image is loaded.
 // @param cb is an optional callback, called after the loading is done.
 function setImageWithStableOrigin(elem, url, css, cb) {
-  var record, url = absoluteUrl(url);
+  var record, urlobj = absoluteUrlObject(url), url = urlobj.href;
   // The data-loading attr will always reflect the last URL requested.
   elem.setAttribute('data-loading', url);
   if (url in stablyLoadedImages) {
@@ -2629,7 +2629,11 @@ function setImageWithStableOrigin(elem, url, css, cb) {
       img: new Image(),
       queue: [{elem: elem, css: css, cb: cb}]
     };
-    record.img.crossOrigin = 'Anonymous';
+    if (isPencilHost(urlobj.hostname)) {
+      // When requesting through pencilcode, always make a
+      // cross-origin request.
+      record.img.crossOrigin = 'Anonymous';
+    }
     // Pop the element to the right dimensions early if possible.
     resizeEarlyIfPossible(url, elem, css);
     // First set up the onload callback, then start loading.
