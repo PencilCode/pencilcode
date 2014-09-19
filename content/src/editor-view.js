@@ -2165,7 +2165,7 @@ function setPaneEditorData(pane, data, filename, useblocks) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript/.test(mimeType);
+  return false && /x-pencilcode|coffeescript|javascript/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {

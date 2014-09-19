@@ -74,7 +74,7 @@ describe('proxy program', function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "blocks" in it.
-      if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
+      if (!lefttitle.length || !/blocks|code/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
       if (!$('.editor').length) return;
       var ace_editor = ace.edit($('.droplet-ace')[0]);
@@ -94,7 +94,7 @@ describe('proxy program', function() {
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename));
       // The title should say blocks
-      assert.equal('< blocks', result.title);
+      assert.ok(/blocks|code/.test(result.title));
       // The program text should be empty.
       assert.equal("", result.text);
       // The element with active focus should be the editable filename.
@@ -133,7 +133,7 @@ describe('proxy program', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal('> code', result.title);
+      assert.equal('code', result.title.replace(/[> ]*/, ''));
       // The "save" button should be enabled only if not logged in.
       assert.equal(result.logout, result.saved);
       done();

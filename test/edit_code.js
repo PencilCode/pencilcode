@@ -124,7 +124,7 @@ describe('code editor', function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "blocks" in it.
-      if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
+      if (!lefttitle.length || !/code|blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
       if (!$('.editor').length) return;
       var ace_editor = ace.edit($('.droplet-ace')[0]);
@@ -144,7 +144,7 @@ describe('code editor', function() {
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename), result.filename);
       // The title should say blocks
-      assert.equal('< blocks', result.title);
+      assert.ok(/blocks|code/.test(result.title));
       // The program text should be empty.
       assert.equal("", result.text);
       // The element with active focus should be the editable filename.
@@ -230,7 +230,7 @@ describe('code editor', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal('> code', result.title);
+      assert.equal('code', result.title.replace(/[> ]*/, ''));
       // The save button is still disabled, because the doc is unmodified.
       assert.equal(true, result.saved);
       done();
@@ -332,7 +332,7 @@ describe('code editor', function() {
       // The butter bar should show the new name.
       assert.equal(result.notification, 'Using name ' + name + '.');
       // The editor title should say 'code' since it's flipped.
-      assert.equal(result.lefttitle, '> code');
+      assert.equal(result.lefttitle.replace(/[> ]*/, ''), 'code');
       // The url should reflect the new name.
       assert.equal(result.url,
           'http://livetest.pencilcode.net.dev/edit/' + name);
