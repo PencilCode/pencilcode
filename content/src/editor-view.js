@@ -705,7 +705,8 @@ function showShareDialog(opts) {
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Posted on share.' + window.pencilcode.domain + '" href="' +
-          opts.shareStageURL + '">See it here</a> <input type="text" value="' +
+          opts.shareStageURL + '">See it here</a> ' +
+          '<input readonly type="text" value="' +
           opts.shareStageURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareStageURL + '"><img src="/copy.png" title="Copy"></button>' +
          '</div>' : '') +
@@ -713,7 +714,8 @@ function showShareDialog(opts) {
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Run without showing code" href="' +
-          opts.shareRunURL + '">See it here</a> <input type="text" value="' +
+          opts.shareRunURL + '">See it here</a> ' +
+          '<input readonly type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
@@ -721,7 +723,7 @@ function showShareDialog(opts) {
           '<a target="_blank" ' +
           'title="Link showing the code" href="' +
           opts.shareEditURL + '">Share code</a> ' +
-          '<input type="text" value="' +
+          '<input readonly type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' +

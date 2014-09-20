@@ -9757,15 +9757,17 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               handler = _ref3[_j];
               handler.call(_this, trackPoint, event, state);
             }
-            if (typeof event.stopPropagation === "function") {
-              event.stopPropagation();
+            if (event.type === 'mousedown') {
+              if (typeof event.stopPropagation === "function") {
+                event.stopPropagation();
+              }
+              if (typeof event.preventDefault === "function") {
+                event.preventDefault();
+              }
+              event.cancelBubble = true;
+              event.returnValue = false;
+              return false;
             }
-            if (typeof event.preventDefault === "function") {
-              event.preventDefault();
-            }
-            event.cancelBubble = true;
-            event.returnValue = false;
-            return false;
           };
         })(this);
         dispatchKeyEvent = (function(_this) {
