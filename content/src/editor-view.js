@@ -115,6 +115,7 @@ window.pencilcode.view = {
   getPaneEditorData: getPaneEditorData,
   setPaneEditorBlockMode: setPaneEditorBlockMode,
   getPaneEditorBlockMode: getPaneEditorBlockMode,
+  getPaneEditorLanguage: getPaneEditorLanguage,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
@@ -2201,6 +2202,15 @@ function getPaneEditorBlockMode(pane) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
   return paneState.dropletEditor.currentlyUsingBlocks;
+}
+
+function getPaneEditorLanguage(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.dropletEditor) return null;
+  var mimeType = editorMimeType(paneState);
+  if (!mimeType) return null;
+  return mimeType.replace(/^text\//, '')
+      .replace(/\bx-/, '').replace(/;.*$/, '');
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
