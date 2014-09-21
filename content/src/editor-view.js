@@ -115,6 +115,7 @@ window.pencilcode.view = {
   getPaneEditorData: getPaneEditorData,
   setPaneEditorBlockMode: setPaneEditorBlockMode,
   getPaneEditorBlockMode: getPaneEditorBlockMode,
+  getPaneEditorLanguage: getPaneEditorLanguage,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
@@ -705,7 +706,8 @@ function showShareDialog(opts) {
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Posted on share.' + window.pencilcode.domain + '" href="' +
-          opts.shareStageURL + '">See it here</a> <input type="text" value="' +
+          opts.shareStageURL + '">See it here</a> ' +
+          '<input readonly type="text" value="' +
           opts.shareStageURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareStageURL + '"><img src="/copy.png" title="Copy"></button>' +
          '</div>' : '') +
@@ -713,7 +715,8 @@ function showShareDialog(opts) {
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Run without showing code" href="' +
-          opts.shareRunURL + '">See it here</a> <input type="text" value="' +
+          opts.shareRunURL + '">See it here</a> ' +
+          '<input readonly type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' : '') +
@@ -721,7 +724,7 @@ function showShareDialog(opts) {
           '<a target="_blank" ' +
           'title="Link showing the code" href="' +
           opts.shareEditURL + '">Share code</a> ' +
-          '<input type="text" value="' +
+          '<input readonly type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
           opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
         '</div>' +
@@ -2199,6 +2202,15 @@ function getPaneEditorBlockMode(pane) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
   return paneState.dropletEditor.currentlyUsingBlocks;
+}
+
+function getPaneEditorLanguage(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.dropletEditor) return null;
+  var mimeType = editorMimeType(paneState);
+  if (!mimeType) return null;
+  return mimeType.replace(/^text\//, '')
+      .replace(/\bx-/, '').replace(/;.*$/, '');
 }
 
 // Kids often have trouble figuring out how to add empty lines at the end.
