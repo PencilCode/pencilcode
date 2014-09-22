@@ -1410,12 +1410,11 @@ function updatePaneTitle(pane) {
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         var visibleMimeType = editorMimeType(paneState);
-        var langinfo = '';
-        if (/javascript/.test(visibleMimeType)) {
-          langinfo = 'JS';
-        }
+        // Show the Javascript watermark if the language is JS.
+        var showjs = (/javascript/.test(visibleMimeType));
+        $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
         label = '<div style="float:right" class="langmenu" title="Languages">' +
-                '<nobr>' + langinfo + '&nbsp;<div class="gear">' +
+                '<nobr>&nbsp;<div class="gear">' +
                 '&nbsp;</div></div>'
               + label;
       }
@@ -2022,25 +2021,25 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   }
   var id = uniqueId('editor'), htmlid, cssid;
   var layout = [ '<div class="hpanelbox">' ];
-  if (meta.hasOwnProperty('html')) {
-    htmlid = uniqueId('htmledit');
-    layout.push(
-      '<div class="hpanel" share="25">',
-      '<div id="' + htmlid + '" class="editor htmledit"></div>',
-      '</div>');
-  }
-  if (meta.hasOwnProperty('css')) {
-    cssid = uniqueId('cssedit');
-    layout.push(
-      '<div class="hpanel" share="25">',
-      '<div id="' + cssid + '" class="editor cssedit"></div>',
-      '</div>');
-  }
   layout.push([
      '<div class="hpanel">',
      '<div id="' + id + '" class="editor"></div>',
      '</div>'
   ]);
+  if (meta.hasOwnProperty('css')) {
+    cssid = uniqueId('cssedit');
+    layout.push(
+      '<div class="hpanel" share="25">',
+      '<div id="' + cssid + '" class="editor cssmark"></div>',
+      '</div>');
+  }
+  if (meta.hasOwnProperty('html')) {
+    htmlid = uniqueId('htmledit');
+    layout.push(
+      '<div class="hpanel" share="25">',
+      '<div id="' + htmlid + '" class="editor htmlmark"></div>',
+      '</div>');
+  }
   layout.push('</div>');
   setupHpanelBox($('#' + pane).html(layout.join('')).find('.hpanelbox'));
 
@@ -2097,7 +2096,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       dropletEditor.paletteWrapper).tooltipster();
   }
 
-  updatePaneTitle(pane);
   var mainContainer = $('#' + id);
 
   setupResizeHandler(mainContainer.parent(), dropletEditor);
@@ -2107,6 +2105,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   setupAceEditor(pane, mainContainer, editor,
     modeForMimeType(editorMimeType(paneState)), text);
+
+  updatePaneTitle(pane);
 
   um.reset();
   publish('update', [text]);
@@ -2553,7 +2553,7 @@ function setupResizeHandler(container, editor) {
 }
 
 function setupHpanelBox(box) {
-  var hpb = $(box), minh = 25;
+  var hpb = $(box), minh = 29;
   function usePercentHeight(cur) {
     var height = cur.parent().height();
     cur.parent().find('.hpanel').each(function(i, e) {
