@@ -1470,14 +1470,26 @@ function showPaneEditorLanguages(pane) {
   if (panepos(pane) != 'left') { return; }
   var paneState = state.pane[pane];
   var visibleMimeType = editorMimeType(paneState);
+  updateMeta(paneState);
+  var hasHtml = paneState.htmlEditor != null;
+  var hasCss = paneState.cssEditor != null;
+  var emptyHtml = !(
+      paneState.meta && paneState.meta.html && paneState.meta.html.trim());
+  var emptyCss = !(
+      paneState.meta && paneState.meta.css && paneState.meta.css.trim());
+
   var opts = {leftopts: 1};
   opts.content =
-      '<center>Language</center>' +
+      '<center>Languages</center>' +
       '<form style="align:left;padding:8px">' +
-      '<label><input type="radio" value="text/coffeescript" name="lang">' +
-      'Coffeescript</label><span> &nbsp; </span>' +
-      '<label><input type="radio" value="text/javascript" name="lang">' +
-      'Javascript</label>' +
+      '<table align=center><tr><td style="text-align:left">' +
+      '<label><input type="radio" value="text/coffeescript" name="lang"> ' +
+      'Coffeescript</label><br>' +
+      '<label><input type="radio" value="text/javascript" name="lang"> ' +
+      'Javascript</label><br>' +
+      '<label><input type="checkbox" name="css"> CSS</label><br>' +
+      '<label><input type="checkbox" name="html"> HTML</label><br>' +
+      '</td></tr></table>' +
       '</form>' +
       '<button class="ok">OK</button>' +
       '<button class="cancel">Cancel</button>';
@@ -1485,6 +1497,20 @@ function showPaneEditorLanguages(pane) {
   opts.init = function(dialog) {
     dialog.find('[value="' + visibleMimeType + '"]').prop('checked', true);
     dialog.find('button.ok').focus();
+    if (hasHtml) {
+      dialog.find('[name=html]').prop('checked', true);
+      if (!emptyHtml) {
+        dialog.find('[name=html]')
+              .attr('disabled', true).parent().css('color', 'gray');
+      }
+    }
+    if (hasCss) {
+      dialog.find('[name=css]').prop('checked', true);
+      if (!emptyCss) {
+        dialog.find('[name=css]')
+              .attr('disabled', true).parent().css('color', 'gray');
+      }
+    }
   }
 
   opts.retrieveState = function(dialog) {
