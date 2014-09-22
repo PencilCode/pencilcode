@@ -32,4 +32,5 @@ for (var j = 0; j < accounts.length; ++j) {
   fs.mkdirSync(basedir + a.name);
   fs.mkdirSync(basedir + a.name + '/.key');
   fs.writeFileSync(basedir + a.name + '/.key/k' + k, '');
+  fs.writeFileSync(basedir + a.name + '/intro', 'pen red\nfd 100\n');
 }
