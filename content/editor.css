@@ -240,6 +240,28 @@ body#pencildoc #diigolet-csm {
   border-width: 0 0 10px 10px;
   cursor: default;
 }
+.hpanelbox {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+.hpanel {
+  position: relative;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-top: 7px solid #cdf;
+  cursor: row-resize;
+}
+.hpanel:nth-of-type(1) {
+  border-top:none;
+}
+.hoverlay {
+  cursor: row-resize;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999999
+}
 #pencildoc .droplet-palette-header {
   border: 0;
   background-color: #e8e8e8;
