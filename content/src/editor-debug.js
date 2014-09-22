@@ -656,7 +656,9 @@ function parseTurtleTransform(transform) {
 ///////////////////////////////////////////////////////////////////////////
 
 // Flashes the stop button for half a second.
+var lastRunTime = 0;
 function flashStopButton() {
+  lastRunTime = +new Date;
   if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
   if (!stopButtonShown) {
     view.showMiddleButton('stop');
@@ -689,6 +691,14 @@ function startPollingWindow() {
   pollTimer = setTimeout(pollForStop, 100);
 }
 
+function stopPollingWindow() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (stopButtonShown) {
+    view.showMiddleButton('run');
+    stopButtonShown = 0;
+  }
+}
+
 function pollForStop() {
   pollTimer = null;
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
@@ -718,6 +728,9 @@ document.addEventListener('visibilityChange', function() {
 });
 
 view.on('stop', function() {
+  if ((new Date) - lastRunTime < 1000) {
+    return;
+  }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
       typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
     // Do nothing if the program is not something that we can interrupt.
@@ -726,7 +739,7 @@ view.on('stop', function() {
   try {
     targetWindow.jQuery.turtle.interrupt();
   } catch(e) { }
-  startPollingWindow();
+  stopPollingWindow();
 });
 
 ///////////////////////////////////////////////////////////////////////////
