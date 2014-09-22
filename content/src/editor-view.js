@@ -2320,32 +2320,39 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
+  updateMeta(paneState);
   var text = paneState.dropletEditor.getValue();
-  if (!sameDisregardingTrailingSpace(text, paneState.cleanText)) {
+  if (!sameDisregardingTrailingSpace(text, paneState.cleanText)
+      || paneState.cleanMeta != JSON.stringify(paneState.meta || null)) {
     paneState.dirtied = true;
     return true;
   }
   return false;
 }
 
+function updateMeta(paneState) {
+  if (!paneState.meta) {
+    if (paneState.htmlEditor || paneState.cssEditor) {
+      paneState.meta = filetype.effectiveMeta(null);
+    }
+  }
+  // Grab the html and the CSS from the editors.
+  if (paneState.htmlEditor) {
+    paneState.meta.html = paneState.htmlEditor.getValue();
+  }
+  if (paneState.cssEditor) {
+    paneState.meta.css = paneState.cssEditor.getValue();
+  }
+}
 function getPaneEditorData(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return null;
   }
   var text = paneState.dropletEditor.getValue();
-  var metaCopy = copyJSON(paneState.meta);
-  // TODO: differentiate with
-  // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
-  // Grab the html
-  if (paneState.htmlEditor) {
-    metaCopy.html = paneState.htmlEditor.getValue();
-  }
-  if (paneState.cssEditor) {
-    metaCopy.css = paneState.cssEditor.getValue();
-  }
-  // TODO: pick the right mime type
+  updateMeta(paneState);
+  var metaCopy = copyJSON(paneState.meta);
   return {data: text, mime: paneState.mimeType, meta: metaCopy };
 }
 
@@ -2474,6 +2481,7 @@ function notePaneEditorCleanData(pane, data) {
   if (!paneState.editor) {
     return;
   }
+  updateMeta(paneState);
   var editortext = paneState.editor.getSession().getValue();
   var editormeta = JSON.stringify(
       paneState.meta == null ? null : paneState.meta);
