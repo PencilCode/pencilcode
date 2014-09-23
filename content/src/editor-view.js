@@ -804,9 +804,15 @@ function showDialog(opts) {
         }
       } else {
         var x = dialog.find('.' + attr);
-
         if (x.prop('tagName') == "INPUT") {
-          x.val(up[attr]);
+          if (x.prop('type') == 'checkbox') {
+            console.log('updating checkbox', attr);
+            x.prop('checked', up[attr]);
+          } if (x.prop('type') == 'radio') {
+            x.find('[value=' + up[attr] + ']').prop('checked', true);
+          } else {
+            x.val(up[attr]);
+          }
         }
         else {
           x.html(up[attr]);
@@ -828,15 +834,12 @@ function showDialog(opts) {
     return retVal;
   }
   function validate(e) {
-    if (e && ($(e.target).attr('target') == '_blank' ||
-              $(e.target).attr('type') == 'checkbox' ||
-              $(e.target).is('label'))) {
-      // Don't validate on mousedown of a new-window hyperlink
-      // Or a checkbox or checkbox label.
+    if (e && ($(e.target).attr('target') == '_blank')) {
+      // Don't validate on mousedown of a new-window hyperlink.
       return true;
     }
     if (opts.validate) {
-      update(opts.validate(state()));
+      update(opts.validate(state(), e));
     }
   }
   dialog.on('keyup mousedown change', validate);
@@ -1461,7 +1464,7 @@ $('.panetitle').on('click', '.toggleblocks', function(e) {
 $('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
-  showPaneEditorLanguages(pane);
+  showPaneEditorLanguagesDialog(pane);
 });
 
 $('.pane').on('click', '.closeblocks', function(e) {
@@ -1470,49 +1473,65 @@ $('.pane').on('click', '.closeblocks', function(e) {
   setPaneEditorBlockMode(pane, false);
 });
 
-function showPaneEditorLanguages(pane) {
+function showPaneEditorLanguagesDialog(pane) {
   if (panepos(pane) != 'left') { return; }
   var paneState = state.pane[pane];
   var visibleMimeType = editorMimeType(paneState);
   updateMeta(paneState);
   var hasHtml = paneState.htmlEditor != null;
   var hasCss = paneState.cssEditor != null;
-  var emptyHtml = !(
-      paneState.meta && paneState.meta.html && paneState.meta.html.trim());
-  var emptyCss = !(
-      paneState.meta && paneState.meta.css && paneState.meta.css.trim());
+  var meta = filetype.effectiveMeta(paneState.meta);
+  var emptyHtml = !(meta && meta.html && meta.html.trim());
+  var emptyCss = !(meta && meta.css && meta.css.trim());
+  var turtlebits = findLibrary(meta, 'turtle');
+  var hasBits = turtlebits != null;
+  var hasTurtle = turtlebits && (!turtlebits.attrs ||
+      turtlebits.attrs.turtle == null ||
+      turtlebits.attrs.turtle != 'false');
 
   var opts = {leftopts: 1};
   opts.content =
+      '<div style="text-align:left">' +
       '<center>Languages</center>' +
-      '<form style="align:left;padding:8px">' +
-      '<table align=center><tr><td style="text-align:left">' +
+      '<div style="padding:8px 5px">' +
       '<label><input type="radio" value="text/coffeescript" name="lang"> ' +
       'Coffeescript</label><br>' +
       '<label><input type="radio" value="text/javascript" name="lang"> ' +
       'Javascript</label><br>' +
-      '<label><input type="checkbox" name="css"> CSS</label><br>' +
-      '<label><input type="checkbox" name="html"> HTML</label><br>' +
-      '</td></tr></table>' +
-      '</form>' +
+      '<label><input type="checkbox" class="css"> CSS</label><br>' +
+      '<label><input type="checkbox" class="html"> HTML</label><br>' +
+      '</div>' +
+      '<center style="padding-top:5px">Libraries</center>' +
+      '<div style="padding:8px 5px">' +
+      '<label><input type="checkbox" class="bits"> Common Library</label><br>' +
+      '<label><input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '</div>' +
+      '<center>' +
       '<button class="ok">OK</button>' +
-      '<button class="cancel">Cancel</button>';
+      '<button class="cancel">Cancel</button>' +
+      '</center>';
 
   opts.init = function(dialog) {
     dialog.find('[value="' + visibleMimeType + '"]').prop('checked', true);
     dialog.find('button.ok').focus();
     if (hasHtml) {
-      dialog.find('[name=html]').prop('checked', true);
+      dialog.find('.html').prop('checked', true);
       if (!emptyHtml) {
-        dialog.find('[name=html]')
+        dialog.find('.html')
               .attr('disabled', true).parent().css('color', 'gray');
       }
     }
     if (hasCss) {
-      dialog.find('[name=css]').prop('checked', true);
+      dialog.find('.css').prop('checked', true);
       if (!emptyCss) {
-        dialog.find('[name=css]')
+        dialog.find('.css')
               .attr('disabled', true).parent().css('color', 'gray');
+      }
+    }
+    if (hasBits) {
+      dialog.find('.bits').prop('checked', true);
+      if (hasTurtle) {
+        dialog.find('.turtle').prop('checked', true);
       }
     }
   }
@@ -1520,15 +1539,51 @@ function showPaneEditorLanguages(pane) {
   opts.retrieveState = function(dialog) {
     return {
       lang: dialog.find('[name=lang]:checked').val(),
-      html: dialog.find('[name=html]').prop('checked'),
-      css: dialog.find('[name=css]').prop('checked')
+      html: dialog.find('.html').prop('checked'),
+      css: dialog.find('.css').prop('checked'),
+      turtle: dialog.find('.turtle').prop('checked'),
+      bits: dialog.find('.bits').prop('checked')
     };
+  }
+
+  opts.validate = function(state, ev) {
+    if (state.turtle && !state.bits) {
+      if (ev && $(ev.target).hasClass('bits')) {
+        state.turtle = false;
+      }
+      else {
+        state.bits = true;
+      }
+      return state;
+    }
   }
 
   opts.done = function(state) {
     state.update({cancel:true});
+    var change = false;
     if (state.lang && state.lang != visibleMimeType) {
       setPaneEditorLanguageType(pane, state.lang);
+      change = true;
+    }
+    if (state.bits != hasBits || state.turtle != hasTurtle) {
+      console.log('turtle lib update to', state);
+      var lib = { name: 'turtle', src: '//{site}/turtlebits.js' };
+      if (!state.turtle) { lib.attrs = { turtle: 'false' }; }
+      if (!paneState.meta) { paneState.meta = {}; }
+      toggleLibrary(paneState.meta, lib, state.bits);
+      change = true;
+    }
+    var wantCoffeeScript = false;
+    if (change && paneState.meta && /coffeescript/.test(state.lang) &&
+        !findLibrary(paneState.meta, 'turtle')) {
+      wantCoffeeScript = true;
+      if (!paneState.meta) { paneState.meta = {}; }
+    }
+    if (paneState.meta) {
+      toggleLibrary(
+          paneState.meta,
+          {name: 'coffeescript', src: '//{site}/coffee-script.js'},
+          wantCoffeeScript);
     }
     var box = $('#' + pane + ' .hpanelbox');
     var layoutchange = false;
@@ -1539,7 +1594,7 @@ function showPaneEditorLanguages(pane) {
         } else {
           tearDownSubEditor(box, pane, paneState, 'html');
         }
-        layoutchange = true;
+        change = layoutchange = true;
       }
       if (state.css != hasCss) {
         if (state.css) {
@@ -1547,10 +1602,13 @@ function showPaneEditorLanguages(pane) {
         } else {
           tearDownSubEditor(box, pane, paneState, 'css');
         }
-        layoutchange = true;
+        change = layoutchange = true;
       }
       if (layoutchange) {
         box.trigger('distribute');
+      }
+      if (change) {
+        fireEvent('dirty', [pane]);
       }
     }
   }
@@ -1558,6 +1616,36 @@ function showPaneEditorLanguages(pane) {
   showDialog(opts);
 
 }
+
+function findLibrary(meta, name) {
+  if (!meta.libs) return false;
+  for (var j = 0; j < meta.libs.length; ++j) {
+    if (meta.libs[j].name == name) return meta.libs[j];
+  }
+  return null;
+}
+
+function toggleLibrary(meta, obj, enable) {
+  if (!meta.libs) { meta.libs = []; }
+  var j;
+  for (j = 0; j < meta.libs.length; ++j ) {
+    if (meta.libs[j].name == obj.name) break;
+  }
+  if (enable) {
+    if (j >= meta.libs.length) {
+      if (obj.name == 'turtle') {
+        meta.libs.unshift(obj);
+      } else {
+        meta.libs.push(obj);
+      }
+    } else {
+      meta.libs[j] = obj;
+    }
+  } else if (j < meta.libs.length) {
+    meta.libs.splice(j, 1);
+  }
+}
+
 
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");

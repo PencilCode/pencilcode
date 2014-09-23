@@ -176,7 +176,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   return result;
 }
 
-function htmlEscape(s) {
+function escapeHtml(s) {
   return ('' + s).replace(/"/g, '&quot;').replace(/</g, '&lt;')
                  .replace(/>/g, '&gt;').replace(/\&/g, '&amp;');
 }
