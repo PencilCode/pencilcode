@@ -2696,10 +2696,10 @@ function setupHpanelBox(box) {
           grow, shrink, changed = [];
       if (dh >= 0) {
         grow = cur;
-        shrink = cur.prev('.hpanel:visible');
+        shrink = cur.prevAll('.hpanel:visible:first');
         back = true;
       } else {
-        grow = cur.prev('.hpanel:visible');
+        grow = cur.prevAll('.hpanel:visible:first');
         shrink = cur;
         dh = -dh;
       }
@@ -2713,7 +2713,8 @@ function setupHpanelBox(box) {
           changed.push(shrink.get(0));
         }
         shrink =
-          (back ? shrink.prev : shrink.next).call(shrink, '.hpanel:visible');
+          (back ? shrink.prevAll : shrink.nextAll).call(
+              shrink, '.hpanel:visible:first');
       }
       if (dd) {
         grow.height(grow.height() + dd);
