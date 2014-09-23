@@ -100,6 +100,34 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
 .editor{position:absolute;top:0;height:100%;left:0;width:100%;
   background-color:white;font:24px "Source Code Pro";font-weight:400;
   overflow: hidden}
+.htmlmark:before, .cssmark:before, .jsmark:before {
+  color:#8bf;
+  font-size:60px;
+  font-family:Arial, sans-serif;
+  font-weight:bold;
+  pointer-events:none;
+  opacity:0.5;
+  transition:opacity 0.3s;
+  z-index:10;
+  position:absolute;
+  display:table;
+  margin:auto;
+  top:7px;bottom:0;
+  text-align:center;
+  right:6%;
+}
+.htmlmark:hover:before, .cssmark:hover:before, .jsmark:hover:before {
+  opacity:0.3;
+}
+.jsmark:before {
+  content:'JS';
+}
+.htmlmark:before {
+  content:'HTML';
+}
+.cssmark:before {
+  content:'CSS';
+}
 #pencildoc .ace_editor {
   font-family: "Source Code Pro";
   font-weight: 500;
@@ -239,6 +267,28 @@ body#pencildoc #diigolet-csm {
 .gadget.minimized .sizer {
   border-width: 0 0 10px 10px;
   cursor: default;
+}
+.hpanelbox {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+.hpanel {
+  position: relative;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-top: 7px solid #cdf;
+  cursor: row-resize;
+}
+.hpanel:nth-of-type(1) {
+  border-top:none;
+}
+.hoverlay {
+  cursor: row-resize;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999999
 }
 #pencildoc .droplet-palette-header {
   border: 0;

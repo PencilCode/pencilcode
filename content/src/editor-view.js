@@ -190,12 +190,7 @@ window.pencilcode.view = {
 
 $(window).on('resize.editor', function() {
   var pane;
-  for (var pane in state.pane) {
-    var paneState = state.pane[pane];
-    if (paneState.dropletEditor) {
-      paneState.dropletEditor.resize();
-    }
-  }
+  $('.hpanel').trigger('panelsize');
 });
 
 function publish(method, args, requestid){
@@ -809,9 +804,15 @@ function showDialog(opts) {
         }
       } else {
         var x = dialog.find('.' + attr);
-
         if (x.prop('tagName') == "INPUT") {
-          x.val(up[attr]);
+          if (x.prop('type') == 'checkbox') {
+            console.log('updating checkbox', attr);
+            x.prop('checked', up[attr]);
+          } if (x.prop('type') == 'radio') {
+            x.find('[value=' + up[attr] + ']').prop('checked', true);
+          } else {
+            x.val(up[attr]);
+          }
         }
         else {
           x.html(up[attr]);
@@ -833,15 +834,12 @@ function showDialog(opts) {
     return retVal;
   }
   function validate(e) {
-    if (e && ($(e.target).attr('target') == '_blank' ||
-              $(e.target).attr('type') == 'checkbox' ||
-              $(e.target).is('label'))) {
-      // Don't validate on mousedown of a new-window hyperlink
-      // Or a checkbox or checkbox label.
+    if (e && ($(e.target).attr('target') == '_blank')) {
+      // Don't validate on mousedown of a new-window hyperlink.
       return true;
     }
     if (opts.validate) {
-      update(opts.validate(state()));
+      update(opts.validate(state(), e));
     }
   }
   dialog.on('keyup mousedown change', validate);
@@ -1314,8 +1312,16 @@ function clearPane(pane, loading) {
   if (paneState.editor) {
     paneState.editor.destroy();
   }
+  if (paneState.htmlEditor) {
+    paneState.htmlEditor.destroy();
+  }
+  if (paneState.cssEditor) {
+    paneState.cssEditor.destroy();
+  }
   paneState.dropletEditor = null;
   paneState.editor = null;
+  paneState.htmlEditor = null;
+  paneState.cssEditor = null;
   paneState.filename = null;
   paneState.cleanText = null;
   paneState.meta = null;
@@ -1411,12 +1417,11 @@ function updatePaneTitle(pane) {
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         var visibleMimeType = editorMimeType(paneState);
-        var langinfo = '';
-        if (/javascript/.test(visibleMimeType)) {
-          langinfo = 'JS';
-        }
+        // Show the Javascript watermark if the language is JS.
+        var showjs = (/javascript/.test(visibleMimeType));
+        $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
         label = '<div style="float:right" class="langmenu" title="Languages">' +
-                '<nobr>' + langinfo + '&nbsp;<div class="gear">' +
+                '<nobr>&nbsp;<div class="gear">' +
                 '&nbsp;</div></div>'
               + label;
       }
@@ -1459,7 +1464,7 @@ $('.panetitle').on('click', '.toggleblocks', function(e) {
 $('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
-  showPaneEditorLanguages(pane);
+  showPaneEditorLanguagesDialog(pane);
 });
 
 $('.pane').on('click', '.closeblocks', function(e) {
@@ -1468,44 +1473,179 @@ $('.pane').on('click', '.closeblocks', function(e) {
   setPaneEditorBlockMode(pane, false);
 });
 
-function showPaneEditorLanguages(pane) {
+function showPaneEditorLanguagesDialog(pane) {
   if (panepos(pane) != 'left') { return; }
   var paneState = state.pane[pane];
   var visibleMimeType = editorMimeType(paneState);
+  updateMeta(paneState);
+  var hasHtml = paneState.htmlEditor != null;
+  var hasCss = paneState.cssEditor != null;
+  var meta = filetype.effectiveMeta(paneState.meta);
+  var emptyHtml = !(meta && meta.html && meta.html.trim());
+  var emptyCss = !(meta && meta.css && meta.css.trim());
+  var turtlebits = findLibrary(meta, 'turtle');
+  var hasBits = turtlebits != null;
+  var hasTurtle = turtlebits && (!turtlebits.attrs ||
+      turtlebits.attrs.turtle == null ||
+      turtlebits.attrs.turtle != 'false');
+
   var opts = {leftopts: 1};
   opts.content =
-      '<center>Language</center>' +
-      '<form style="align:left;padding:8px">' +
-      '<label><input type="radio" value="text/coffeescript" name="lang">' +
-      'Coffeescript</label><span> &nbsp; </span>' +
-      '<label><input type="radio" value="text/javascript" name="lang">' +
-      'Javascript</label>' +
-      '</form>' +
+      '<div style="text-align:left">' +
+      '<center>Languages</center>' +
+      '<div style="padding:8px 5px">' +
+      '<label><input type="radio" value="text/coffeescript" name="lang"> ' +
+      'Coffeescript</label><br>' +
+      '<label><input type="radio" value="text/javascript" name="lang"> ' +
+      'Javascript</label><br>' +
+      '<label><input type="checkbox" class="css"> CSS</label><br>' +
+      '<label><input type="checkbox" class="html"> HTML</label><br>' +
+      '</div>' +
+      '<center style="padding-top:5px">Libraries</center>' +
+      '<div style="padding:8px 5px">' +
+      '<label><input type="checkbox" class="bits"> Common Library</label><br>' +
+      '<label><input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '</div>' +
+      '<center>' +
       '<button class="ok">OK</button>' +
-      '<button class="cancel">Cancel</button>';
+      '<button class="cancel">Cancel</button>' +
+      '</center>';
 
   opts.init = function(dialog) {
     dialog.find('[value="' + visibleMimeType + '"]').prop('checked', true);
     dialog.find('button.ok').focus();
+    if (hasHtml) {
+      dialog.find('.html').prop('checked', true);
+      if (!emptyHtml) {
+        dialog.find('.html')
+              .attr('disabled', true).parent().css('color', 'gray');
+      }
+    }
+    if (hasCss) {
+      dialog.find('.css').prop('checked', true);
+      if (!emptyCss) {
+        dialog.find('.css')
+              .attr('disabled', true).parent().css('color', 'gray');
+      }
+    }
+    if (hasBits) {
+      dialog.find('.bits').prop('checked', true);
+      if (hasTurtle) {
+        dialog.find('.turtle').prop('checked', true);
+      }
+    }
   }
 
   opts.retrieveState = function(dialog) {
     return {
-      lang: dialog.find('[name=lang]:checked').val()
+      lang: dialog.find('[name=lang]:checked').val(),
+      html: dialog.find('.html').prop('checked'),
+      css: dialog.find('.css').prop('checked'),
+      turtle: dialog.find('.turtle').prop('checked'),
+      bits: dialog.find('.bits').prop('checked')
     };
   }
 
+  opts.validate = function(state, ev) {
+    if (state.turtle && !state.bits) {
+      if (ev && $(ev.target).hasClass('bits')) {
+        state.turtle = false;
+      }
+      else {
+        state.bits = true;
+      }
+      return state;
+    }
+  }
+
   opts.done = function(state) {
-    console.log(state.lang, visibleMimeType);
+    state.update({cancel:true});
+    var change = false;
     if (state.lang && state.lang != visibleMimeType) {
       setPaneEditorLanguageType(pane, state.lang);
+      change = true;
     }
-    state.update({cancel:true});
+    if (state.bits != hasBits || state.turtle != hasTurtle) {
+      console.log('turtle lib update to', state);
+      var lib = { name: 'turtle', src: '//{site}/turtlebits.js' };
+      if (!state.turtle) { lib.attrs = { turtle: 'false' }; }
+      if (!paneState.meta) { paneState.meta = {}; }
+      toggleLibrary(paneState.meta, lib, state.bits);
+      change = true;
+    }
+    var wantCoffeeScript = false;
+    if (change && paneState.meta && /coffeescript/.test(state.lang) &&
+        !findLibrary(paneState.meta, 'turtle')) {
+      wantCoffeeScript = true;
+      if (!paneState.meta) { paneState.meta = {}; }
+    }
+    if (paneState.meta) {
+      toggleLibrary(
+          paneState.meta,
+          {name: 'coffeescript', src: '//{site}/coffee-script.js'},
+          wantCoffeeScript);
+    }
+    var box = $('#' + pane + ' .hpanelbox');
+    var layoutchange = false;
+    if (box.length) {
+      if (state.html != hasHtml) {
+        if (state.html) {
+          setupSubEditor(box, pane, paneState, '', 'html');
+        } else {
+          tearDownSubEditor(box, pane, paneState, 'html');
+        }
+        change = layoutchange = true;
+      }
+      if (state.css != hasCss) {
+        if (state.css) {
+          setupSubEditor(box, pane, paneState, '', 'css');
+        } else {
+          tearDownSubEditor(box, pane, paneState, 'css');
+        }
+        change = layoutchange = true;
+      }
+      if (layoutchange) {
+        box.trigger('distribute');
+      }
+      if (change) {
+        fireEvent('dirty', [pane]);
+      }
+    }
   }
 
   showDialog(opts);
 
 }
+
+function findLibrary(meta, name) {
+  if (!meta.libs) return false;
+  for (var j = 0; j < meta.libs.length; ++j) {
+    if (meta.libs[j].name == name) return meta.libs[j];
+  }
+  return null;
+}
+
+function toggleLibrary(meta, obj, enable) {
+  if (!meta.libs) { meta.libs = []; }
+  var j;
+  for (j = 0; j < meta.libs.length; ++j ) {
+    if (meta.libs[j].name == obj.name) break;
+  }
+  if (enable) {
+    if (j >= meta.libs.length) {
+      if (obj.name == 'turtle') {
+        meta.libs.unshift(obj);
+      } else {
+        meta.libs.push(obj);
+      }
+    } else {
+      meta.libs[j] = obj;
+    }
+  } else if (j < meta.libs.length) {
+    meta.libs.splice(j, 1);
+  }
+}
+
 
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");
@@ -2007,11 +2147,10 @@ function editorMimeType(paneState) {
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorData(pane, data, filename, useblocks) {
+function setPaneEditorData(pane, doc, filename, useblocks) {
   clearPane(pane);
-  var text = normalizeCarriageReturns(data.data);
-  var meta = copyJSON(data.meta);
-  var id = uniqueId('editor');
+  var text = normalizeCarriageReturns(doc.data);
+  var meta = copyJSON(doc.meta);
   var paneState = state.pane[pane];
   paneState.filename = filename;
   paneState.mimeType = filetype.mimeForFilename(filename);
@@ -2023,7 +2162,29 @@ function setPaneEditorData(pane, data, filename, useblocks) {
   if (!mimeTypeSupportsBlocks(visibleMimeType)) {
     useblocks = false;
   }
-  $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
+  var id = uniqueId('editor');
+  var layout = [
+    '<div class="hpanelbox">',
+    '<div class="hpanel">',
+    '<div id="' + id + '" class="editor"></div>',
+    '</div>',
+    '<div class="hpanel cssmark" style="display:none" share="25">',
+    '</div>',
+    '<div class="hpanel htmlmark" style="display:none" share="25">',
+    '</div>'
+  ];
+  var box = $('#' + pane).html(layout.join('')).find('.hpanelbox');
+  var addhtml = meta && meta.hasOwnProperty('html');
+  var addcss = meta && meta.hasOwnProperty('css');
+  if (addhtml) {
+    box.find('.htmlmark').css('display', 'block');
+  }
+  if (addcss) {
+    box.find('.cssmark').css('display', 'block');
+  }
+  setupHpanelBox(box);
+
+  // Set up the main editor.
   var dropletMode = dropletModeForMimeType(visibleMimeType);
   var dropletEditor = paneState.dropletEditor =
       new droplet.Editor(
@@ -2076,41 +2237,95 @@ function setPaneEditorData(pane, data, filename, useblocks) {
       dropletEditor.paletteWrapper).tooltipster();
   }
 
-  var editor = paneState.editor = dropletEditor.aceEditor;
+  var mainContainer = $('#' + id);
 
-  fixRepeatedCtrlFCommand(editor);
+  setupResizeHandler(mainContainer.parent(), dropletEditor);
+  var editor = paneState.editor = dropletEditor.aceEditor;
+  var um = editor.getSession().getUndoManager();
+  setPrimaryFocus();
+
+  setupAceEditor(pane, mainContainer, editor,
+    modeForMimeType(editorMimeType(paneState)), text);
+
+  um.reset();
+  publish('update', [text]);
+  editor.getSession().setUndoManager(um);
+
+  var gutter = mainContainer.find('.ace_gutter');
+  gutter.on('mouseenter', '.guttermouseable', function() {
+    fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('mouseleave', '.guttermouseable', function() {
+    fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
+  });
+  gutter.on('click', '.guttermouseable', function() {
+    fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
+  });
+
+  if (addhtml) {
+    setupSubEditor(box, pane, paneState, meta.html, 'html');
+  }
+
+  if (addcss) {
+    setupSubEditor(box, pane, paneState, meta.css, 'css');
+  }
+
   updatePaneTitle(pane);
+}
+
+function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
+  var id = uniqueId(htmlorcss + 'edit');
+  box.find('.' + htmlorcss + 'mark').html(
+     '<div id="' + id + '" class="editor"></div>').css('display', 'block');
+  var container = $('#' + id);
+  var editor = paneState[htmlorcss + 'Editor'] = ace.edit(id);
+  setupAceEditor(pane, container, editor, "ace/mode/" + htmlorcss, text);
+  console.log(htmlorcss, text);
+  editor.setValue(text, -1);
+  setupResizeHandler(container.parent(), editor);
+}
+
+function tearDownSubEditor(box, pane, paneState, htmlorcss) {
+  if (paneState[htmlorcss + 'Editor']) {
+    paneState[htmlorcss + 'Editor'].destroy();
+    paneState[htmlorcss + 'Editor'] = null;
+  }
+  box.find('.' + htmlorcss + 'mark').html('').css('display', 'none');
+  if (paneState.meta) {
+    delete paneState.meta[htmlorcss];
+  }
+}
+
+function setupAceEditor(pane, elt, editor, mode, text) {
+  fixRepeatedCtrlFCommand(editor);
   editor.setTheme("ace/theme/chrome");
   editor.setBehavioursEnabled(false);
   editor.setHighlightActiveLine(false);
   editor.getSession().setFoldStyle('markbeginend');
   editor.getSession().setUseWrapMode(true);
   editor.getSession().setTabSize(2);
-  editor.getSession().setMode(modeForMimeType(visibleMimeType));
+  editor.getSession().setMode(mode);
 
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
   // We're "long" if we bump out of the pane rectangle.
-  var long = ((dimensions.rows + 2) * big.height > $('#' + pane).height() ||
-              (dimensions.columns + 5) * big.width > $('#' + pane).width());
+  var long = ((dimensions.rows + 2) * big.height > elt.height() ||
+              (dimensions.columns + 5) * big.width > elt.width());
   if (long) {
     // Use a small font for long documents.
-    $('#' + pane + ' .editor').css({lineHeight: '119%'});
+    $(elt).css({lineHeight: '119%'});
     editor.setFontSize(16);
   } else {
     // Use a giant font for short documents.
-    $('#' + pane + ' .editor').css({lineHeight: '121%'});
+    $(elt).css({lineHeight: '121%'});
     editor.setFontSize(24);
   }
-  setupAutofoldScriptPragmas(paneState);
-  var um = editor.getSession().getUndoManager();
-  um.reset();
-  publish('update', [text]);
-  editor.getSession().setUndoManager(um);
-  var changeHandler = paneState.changeHandler = (function changeHandler() {
+  var paneState = state.pane[pane];
+  var changeHandler = (function changeHandler() {
     if (changeHandler.suppressChange ||
-        (paneState.dropletEditor && paneState.dropletEditor.suppressAceChangeEvent)) {
+        (paneState.dropletEditor &&
+         paneState.dropletEditor.suppressAceChangeEvent)) {
       return;
     }
     // Add an empty last line on a timer, because the editor doesn't
@@ -2119,7 +2334,7 @@ function setPaneEditorData(pane, data, filename, useblocks) {
     var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
     if (editor.getFontSize() > 16) {
-      var long = (session.getLength() * big.height > $('#' + pane).height());
+      var long = (session.getLength() * big.height > elt.height());
       if (!long) {
         // Scan for wrapped lines.
         for (var j = 0; j < session.getLength(); ++j) {
@@ -2145,26 +2360,13 @@ function setPaneEditorData(pane, data, filename, useblocks) {
       fireEvent('changelines', [pane]);
     }
   });
+  $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);
   if (long) {
     editor.gotoLine(0);
   } else {
     editor.gotoLine(editor.getSession().getLength(), 0);
   }
-  setPrimaryFocus();
-  editor.on('focus', function() {
-    fireEvent('editfocus', [pane]);
-  });
-  var gutter = $('#' + id + ' .ace_gutter');
-  gutter.on('mouseenter', '.guttermouseable', function() {
-    fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
-  });
-  gutter.on('mouseleave', '.guttermouseable', function() {
-    fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
-  });
-  gutter.on('click', '.guttermouseable', function() {
-    fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
-  });
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -2232,96 +2434,6 @@ function ensureEmptyLastLine(editor) {
   }
 }
 
-function setupAutofoldScriptPragmas(paneState) {
-  var editor = paneState.editor,
-      session = editor.getSession(),
-      foldlines = autofoldScriptPragmas(editor),
-      selfmove = 0;
-  if (foldlines) {
-    // Don't allow the cursor to be on the same line as the fold
-    function onChangeCursor() {
-      if (selfmove) return;
-      var curpos = editor.getCursorPosition(),
-          fold = session.getFoldAt(curpos.row, curpos.column);
-      if (fold && fold.placeholder == '#@script' &&
-          foldlines.length > curpos.row) {
-        // If the fold has text after it on the same line (a newline
-        // was deleted, then insert a newline here.
-        if (curpos.column > 0 &&
-            session.getLine(curpos.row).length > curpos.column) {
-          session.insert(curpos, '\n');
-        }
-        selfmove += 1;
-        editor.selection.moveCursorTo(foldlines.length, 0);
-        selfmove -= 1;
-      }
-    };
-    session.on('changeFold', function(e) {
-      // Don't do anything special if changeHandler is suppressed.
-      if (paneState.changeHandler &&
-          paneState.changeHandler.suppressChange) return;
-      var value;
-      if (e.action == 'remove' && e.data && e.data.placeholder == '#@script') {
-        // Don't allow the fold to be deleted.
-        value = editor.getValue();
-        if (foldlines && value.indexOf(foldlines.join('\n')) < 0) {
-          setTimeout(function() {
-            if (paneState.editor === editor) {
-              changeEditorText(paneState, foldlines.join('\n') +
-                  ((value.indexOf('\n') != 0) ? '\n' : '') + value);
-              foldlines = autofoldScriptPragmas(editor);
-              onChangeCursor();
-            }
-          }, 0);
-        } else {
-          setTimeout(function() {
-            foldlines = autofoldScriptPragmas(editor);
-            if (foldlines) {
-              editor.selection.clearSelection();
-              onChangeCursor();
-            }
-          }, 1000);
-        }
-      }
-    });
-    editor.selection.on('changeSelection', onChangeCursor);
-    editor.selection.on('changeCursor', onChangeCursor);
-  }
-}
-
-function autofoldScriptPragmas(editor) {
-  var session = editor.getSession(),
-      lines = session.getLength(),
-      curpos = editor.getCursorPosition(),
-      foldlines = [], folds,
-      newpos, j, line, foldrange;
-  if (!lines) { return; }
-  for (j = 0; j < lines; ++j) {
-    line = session.getLine(j);
-    if (!/^#\s*@script\b/.test(line)) {
-      break;
-    }
-    foldlines.push(line);
-  }
-  // First remove all folds inside this line range.
-  // (In case the autofolder has inserted some folds for a multiline comment)
-  folds = session.getAllFolds();
-  for (j = 0; j < folds.length; ++j) {
-    if (folds[j].range.endRow < foldlines.length) {
-      session.removeFold(folds[j]);
-    }
-  }
-  // autofold only if cursor is not inside script pragmas.
-  if (foldlines.length > 0 && (
-      curpos.row >= foldlines.length || curpos.column == 0)) {
-    foldrange = new (ace.require('ace/range').Range)(
-        0, 0, foldlines.length - 1, Infinity);
-    session.addFold('#@script', foldrange);
-    return foldlines;
-  }
-  return null;
-}
-
 function setPrimaryFocus() {
   var pane = paneid('left');
   var paneState = state.pane[pane];
@@ -2364,25 +2476,39 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
+  updateMeta(paneState);
   var text = paneState.dropletEditor.getValue();
-  if (!sameDisregardingTrailingSpace(text, paneState.cleanText)) {
+  if (!sameDisregardingTrailingSpace(text, paneState.cleanText)
+      || paneState.cleanMeta != JSON.stringify(paneState.meta || null)) {
     paneState.dirtied = true;
     return true;
   }
   return false;
 }
 
+function updateMeta(paneState) {
+  if (!paneState.meta) {
+    if (paneState.htmlEditor || paneState.cssEditor) {
+      paneState.meta = filetype.effectiveMeta(null);
+    }
+  }
+  // Grab the html and the CSS from the editors.
+  if (paneState.htmlEditor) {
+    paneState.meta.html = paneState.htmlEditor.getValue();
+  }
+  if (paneState.cssEditor) {
+    paneState.meta.css = paneState.cssEditor.getValue();
+  }
+}
 function getPaneEditorData(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return null;
   }
   var text = paneState.dropletEditor.getValue();
-  var metaCopy = copyJSON(paneState.meta);
-  // TODO: differentiate with
-  // paneState.editor.getSession().getValue();
   text = normalizeCarriageReturns(text);
-  // TODO: pick the right mime type
+  updateMeta(paneState);
+  var metaCopy = copyJSON(paneState.meta);
   return {data: text, mime: paneState.mimeType, meta: metaCopy };
 }
 
@@ -2511,6 +2637,7 @@ function notePaneEditorCleanData(pane, data) {
   if (!paneState.editor) {
     return;
   }
+  updateMeta(paneState);
   var editortext = paneState.editor.getSession().getValue();
   var editormeta = JSON.stringify(
       paneState.meta == null ? null : paneState.meta);
@@ -2575,6 +2702,122 @@ function whenCodeFontLoaded(callback) {
 function copyJSON(m) {
   if (m == null) { return null; }
   return JSON.parse(JSON.stringify(m));
+}
+
+function setupResizeHandler(container, editor) {
+  var needed = false;
+  $(container).on('panelsize', function() {
+    if (needed) return;
+    needed = true;
+    setTimeout(function() {
+      needed = false;
+      editor.resize();
+    }, 0);
+  });
+}
+
+function setupHpanelBox(box) {
+  var hpb = $(box), minh = 29;
+  function usePercentHeight(cur) {
+    var height = cur.parent().height();
+    cur.parent().find('.hpanel').each(function(i, e) {
+      var cssh = parseInt($(e).css('height'));
+      $(e).css('height', (100 * cssh / height).toFixed(4) + '%');
+    });
+  }
+  hpb.each(function(i, c) {
+    var box = $(c);
+    function distribute() {
+      var total = box.height(), totalShare = 0;
+      box.find('.hpanel:visible').each(function (i, p) {
+        totalShare += parseFloat($(p).attr('share') || 50);
+        total -= parseInt($(p).css('border-top-width') || 0);
+      });
+      var mh = Math.min(
+          minh, Math.floor(total / box.find('.hpanel').length)),
+          resize = [];
+      box.find('.hpanel:visible').each(function (i, p) {
+        var share = parseFloat($(p).attr('share') || 50);
+        var height = Math.round(Math.max(mh, total * share / totalShare));
+        if ($(p).height() != height) {
+          $(p).height(height);
+          resize.push(p);
+        }
+        total -= height;
+        totalShare -= share;
+      });
+      usePercentHeight(box);
+      $(resize).trigger('panelsize');
+    }
+    box.on('distribute', distribute);
+    distribute();
+  });
+  function trackDragHpanel(e, cbdelta) {
+    var startX = e.pageX, startY = e.pageY, which = e.which,
+        dragcapture = $('<div class="hoverlay"></div>').appendTo('body');
+    function watcher(e) {
+      if (e.type == 'dragstart') {
+        e.preventDefault();
+        return false;
+      }
+      // If mouse is up then we've lost things.
+      var lost = (e.type == 'mousemove' && 'which' in e && e.which != e.which);
+      var ending = (e.type == 'mouseup' || lost);
+      var retval = cbdelta(ending,
+            lost ? 0 : e.pageX - startX,
+            lost ? 0 : e.pageY - startY);
+      if ((retval === false) || ending) {
+        dragcapture.remove();
+        $(window).off('mousemove mouseup dragstart', watcher);
+        e.preventDefault();
+        return false;
+      }
+    }
+    $(window).on('mousemove mouseup dragstart', watcher);
+    return false;
+  }
+  hpb.on('mousedown', '.hpanel:visible', function(e) {
+    if (this !== e.target || e.which != 1) return;
+    var cur = $(this), pdy = 0;
+    trackDragHpanel(e, function(end, dx, dy) {
+      var dh = pdy - dy, ds, dd = 0, hh, back = false,
+          grow, shrink, changed = [];
+      if (dh >= 0) {
+        grow = cur;
+        shrink = cur.prevAll('.hpanel:visible:first');
+        back = true;
+      } else {
+        grow = cur.prevAll('.hpanel:visible:first');
+        shrink = cur;
+        dh = -dh;
+      }
+      while (dh && shrink && grow && shrink.length && grow.length) {
+        hh = shrink.height();
+        if (hh > minh) {
+          ds = Math.min(dh, hh - minh);
+          shrink.height(hh - ds);
+          dd += ds;
+          dh -= ds;
+          changed.push(shrink.get(0));
+        }
+        shrink =
+          (back ? shrink.prevAll : shrink.nextAll).call(
+              shrink, '.hpanel:visible:first');
+      }
+      if (dd) {
+        grow.height(grow.height() + dd);
+        pdy += (back ? -1 : +1) * dd;
+        changed.push(grow.get(0));
+      }
+      if (end) {
+        // Convert sizes to percentages at the end of dragging.
+        usePercentHeight(cur);
+      }
+      if (changed.length) {
+        $(changed).trigger('panelsize');
+      }
+    });
+  });
 }
 
 window.FontLoader = FontLoader;

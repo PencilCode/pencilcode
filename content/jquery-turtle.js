@@ -1578,18 +1578,20 @@ function createSurfaceAndField() {
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: cw + "px " + ch + "px",
+      pointerEvents: 'none',
       overflow: 'hidden'
     });
   $(field).attr('id', 'field')
     .css({
       position: 'absolute',
       display: 'inline-block',
-      top: ch, left: cw, width: '100%', height: '100%',
+      top: ch, left: cw, width: '0', height: '0',
       font: 'inherit',
       // Setting transform origin for the turtle field
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: "0px 0px",
+      pointerEvents: 'all'
     }).appendTo(surface);
   globalDrawing.surface = surface;
   globalDrawing.field = field;
@@ -1598,6 +1600,10 @@ function createSurfaceAndField() {
 
 function attachClipSurface() {
   if (document.body) {
+    if ($('html').attr('style') == null) {
+      // This prevents the body from shrinking.
+      $('html').css('min-height', '100%');
+    }
     $(globalDrawing.surface).prependTo('body');
     // Attach an event handler to forward mouse events from the body
     // to turtles in the turtle field layer.
@@ -7557,6 +7563,9 @@ $.turtle = function turtle(id, options) {
     id = 'turtle';
   }
   options = options || {};
+  if ('turtle' in options) {
+    id = options.turtle;
+  }
   // Clear any previous turtle methods.
   clearGlobalTurtle();
   // Expand any <script type="text/html"> unless htmlscript is false.

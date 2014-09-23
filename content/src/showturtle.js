@@ -1,5 +1,22 @@
 (function(ww) {
-  $.turtle();
+  var script = document.currentScript || (function() {
+     var scripts = document.getElementsByTagName("script");
+     return scripts[scripts.length - 1];
+  })();
+  var map = {};
+  if (script) {
+    for (var j = 0, atts = script.attributes; j < atts.length; j++) {
+      var value = atts[j].value;
+      if (value == 'false') value = false;
+      else if (value == 'true') value = true;
+      else if (value == 'null') value = null;
+      else if (/^(?:\d+\.?|\d*\.\d+)(?:e[-+]?\d+)?$/.test(value)) {
+        value = Number(value);
+      }
+      map[atts[j].name] = value;
+    }
+  }
+  $.turtle(map);
   if (ww.ide == null) try {
     ww.ide = null;
     // Propagate the ide variable from the parent window, if present.

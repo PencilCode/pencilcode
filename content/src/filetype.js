@@ -9,14 +9,115 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
+// Scans for HTML HEAD content at the top, remembering the positions
+// after any start-tags seen and before any legal end-tags.
+// Returns {
+//   pos: { map of tagname -> [index, length] }
+//   hasbody: true if <body> tag starts the content.
+//   bodypos: index of the <body> tag or first content text.
+//
+function scanHtmlTop(html) {
+  var sofar = html, len, match, seen = {}, endpat, scanned = false,
+      result = { pos: {} };
+  for (;;) {
+    len = sofar.length;
+    // Trim leading space.
+    sofar = html.replace(/^\s*/, '');
+    if (sofar.length < len) { continue; }
+    // Trim leading comment.
+    sofar = html.replace(/^<!--[^-]*(?:-(?:[^-]|-[^>])[^-]*)*-*-->/, '');
+    if (sofar.length < len) { scanned = true; continue; }
+    // Detect acceptable tags within the HEAD.
+    match = /^<([^\s>]+\b)\s*(?:[^\s=>]+\s*=\s*(?:[^\s>]+|'[^']*'|"[^"]")\s*)*\s*>/.exec(sofar);
+    if (match && /^(?:!doctype|html|head|link|meta|base|title|script|style|\/\w+)$/i.test(match[1])) {
+      scanned = true;
+      if (!result.start.hasOwnProperty(match[1].toLowerCase())) {
+        result.pos[match[1].toLowerCase()] = {
+          index: html.length - sofar.length,
+          length: match[0].length
+        };
+      }
+      sofar = sofar.substr(match[0].length);
+      if (!/^(?:title|style|script)$/i.test(match[1])) {
+        continue;
+      }
+      // Special cases: title, style, and script: skip any content text.
+      endpat = new RegExp('</(' + match[1] + '\\b)[^>]*>', 'i');
+      match = endpat.exec(sofar);
+      if (match) {
+        if (!result.end.hasOwnProperty(match[1].toLowerCase())) {
+          result.pos[match[1].toLowerCase()] = {
+            index: html.length - sofar.length,
+            length: match[0].length
+          };
+        }
+        sofar = sofar.substr(match.index + match[0].length);
+      }
+      continue;
+    }
+    // The head ends here: notice if there is a body tag.
+    if (match && /^body$/i.test(match[1])) {
+      scanned = true;
+      result.hasbody = true;
+    }
+    result.bodypos = scanned ? (html.length - sofar.length) : 0;
+    return result;
+  }
+}
+
+// The job of this function is to take: HTML, CSS, and script content,
+// and merge them into one HTML file.
 function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
-  var result, j, scripts = [], script_pattern =
-    /(?:^|\n)#[^\S\n]*@script[^\S\n<>]+(\S+|"[^"\n]*"|'[^'\n]*')/g,
-    text = doc.data,
-    meta = effectiveMeta(doc.meta), src;
+  // Construct the HTML for running a program.
+  var meta = effectiveMeta(doc.meta);
+  var html = meta.html || '';
+  var topinfo = scanHtmlTop(html);
+  var prefix = [], suffix = [];
+  if (topinfo.pos['!doctype'] == null) {
+    prefix.push('<!doctype html>');
+    if (topinfo.pos['html'] == null) {
+      prefix.push('<html>');
+      suffix.unshift('</html>');
+    }
+  }
+  // If any head items are required, find a location for them.
+  if (meta.css) {
+    var headneeded = (topinfo.bodypos == 0);
+    if (headneeded) {
+      // Create a head tag if the HTML has no leading items.
+      prefix.push('<head>');
+    }
+    else {
+      var splithead = topinfo.bodypos, newline = 0;
+      if (topinfo.pos['/head']) {
+        splithead = Math.min(splithead, topinfo.pos['/head'].index);
+      }
+      if (splithead > 0) {
+        if (html.substr(splithead, 1) == '\n') { newline = 1; }
+        prefix.push(html.substr(0, splithead - newline));
+        html = html.substr(splithead);
+      }
+    }
+    // Now insert the head items.
+    prefix.push.apply(prefix, ['<style>', meta.css, '</style>']);
+    if (headneeded) {
+      prefix.push('</head>');
+      if (!topinfo.hasbody) {
+        prefix.push('<body>');
+        suffix.unshift('</body>');
+      }
+    }
+  }
   // Add the default scripts.
+  var j, scripts = [], src, text = doc.data;
   for (j = 0; j < meta.libs.length; ++j) {
-    var src = meta.libs[j].src;
+    src = meta.libs[j].src;
+    var attrs = '';
+    if (meta.libs[j].attrs) {
+      for (var att in meta.libs[j].attrs) {
+        attrs += ' ' + att + '="' + escapeHtml(meta.libs[j].attrs[att]) + '"';
+      }
+    }
     if (/{site}/.test(src)) {
       src = src.replace(/{site}/g, domain);
       // Note that for local scripts we use crossorigin="anonymous" so that
@@ -24,10 +125,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
       // compilation // errors, using CORS rules.)  More discussion:
       // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
       scripts.push(
-        '<script src="' + src + '" crossorigin="anonymous"><\057script>');
+        '<script src="' + src + '" crossorigin="anonymous"' +
+        attrs + '><\057script>');
     } else {
       scripts.push(
-        '<script src="' + src + '"><\057script>');
+        '<script src="' + src + '"' + attrs + '><\057script>');
     }
   }
   // Then add any setupScript supplied.
@@ -48,12 +150,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
       }
     }
   }
-  while (null != (result = script_pattern.exec(text))) {
-    scripts.push(
-      '<script src=' + result[1] +
-      ' type="' + inferScriptType(result[1]) +
-      '">\n<\057script>');
-  }
+  // Finally assemble the main script.
   var maintype = 'text/coffeescript';
   if (doc.meta && doc.meta.type) {
     maintype = doc.meta.type;
@@ -61,18 +158,27 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   var seeline = '\n\n';
   var trailing = '\n';
   if (/javascript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_js_);$(function(){\n\n';
-    trailing = '\n});';
+    seeline = 'eval(this._start_ide_js_);\n\n';
   } else if (/coffeescript/.test(maintype)) {
     seeline = 'eval(this._start_ide_cs_)\n\n';
   }
-  result = (
-    '<!doctype html>\n<html>\n<body>' +
+  var mainscript = '<script type="' + maintype + '">\n' + seeline;
+  if (!pragmasOnly) {
+    mainscript += text;
+  }
+  mainscript += trailing + '<\057script>';
+  var result = (
+    prefix.join('\n') +
+    html +
     scripts.join('') +
-    '<script type="' + maintype + '">\n' +
-    seeline +
-    (pragmasOnly ? '' : text) + trailing + '<\057script></body></html>');
+    mainscript +
+    suffix.join(''));
   return result;
+}
+
+function escapeHtml(s) {
+  return ('' + s).replace(/"/g, '&quot;').replace(/</g, '&lt;')
+                 .replace(/>/g, '&gt;').replace(/\&/g, '&amp;');
 }
 
 function modifyForPreview(doc, domain,
@@ -95,7 +201,7 @@ function modifyForPreview(doc, domain,
     var firstLink = text.match(
           /(?:<link|<script|<style|<body|<img|<iframe|<frame|<meta|<a)\b/i),
         insertLocation = [
-          text.match(/(?:<head)\b[^>]*>\n?/i),
+          text.match(/<head\b[^>]*>\n?/i),
           text.match(/<html\b[^>]*>\n?/i),
           text.match(/<\!doctype\b[^>]*>\n?/i)
         ],
