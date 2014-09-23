@@ -117,7 +117,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   right:6%;
 }
 .htmlmark:hover:before, .cssmark:hover:before, .jsmark:hover:before {
-  opacity:0.3;
+  opacity:0.15;
 }
 .jsmark:before {
   content:'JS';
