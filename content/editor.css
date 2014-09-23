@@ -93,7 +93,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   border-left:36px solid dodgerblue; margin-left: 6px;}
 #stop .square {width:0;height:0;font-size:0;line-height:0;
   border:14px solid dodgerblue; margin: 4px 5px;}
-.panetitle,#owner{user-select:none;-webkit-user-select:none;
+body,.panetitle,#owner{user-select:none;-webkit-user-select:none;
   -moz-user-select:none;cursor:default;}
 #owner:hover{text-decoration:underline;}
 #folder:hover{border-radius:3px;box-shadow:0 0 6px black;}
@@ -117,7 +117,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   right:6%;
 }
 .htmlmark:hover:before, .cssmark:hover:before, .jsmark:hover:before {
-  opacity:0.3;
+  opacity:0.15;
 }
 .jsmark:before {
   content:'JS';

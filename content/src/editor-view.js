@@ -1334,6 +1334,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   paneState.palette = null;
   paneState.fullScreenLink = false;
+  paneState.settingUp = null;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
   $('#' + pane + 'title_text').html('');
@@ -2158,6 +2159,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.cleanMeta = JSON.stringify(meta);
   paneState.dirtied = false;
   paneState.meta = meta;
+  paneState.settingUp = true;
   var visibleMimeType = editorMimeType(paneState);
   if (!mimeTypeSupportsBlocks(visibleMimeType)) {
     useblocks = false;
@@ -2218,6 +2220,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   dropletEditor.on('change', function() {
+    if (paneState.settingUp) return;
     fireEvent('dirty', [pane]);
     publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
@@ -2270,6 +2273,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     setupSubEditor(box, pane, paneState, meta.css, 'css');
   }
 
+  paneState.settingUp = null;
   updatePaneTitle(pane);
 }
 
@@ -2328,6 +2332,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
          paneState.dropletEditor.suppressAceChangeEvent)) {
       return;
     }
+    if (paneState.settingUp) return;
     // Add an empty last line on a timer, because the editor doesn't
     // return accurate values for contents in the middle of the change event.
     setTimeout(function() { ensureEmptyLastLine(editor); }, 0);
@@ -2367,6 +2372,9 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   } else {
     editor.gotoLine(editor.getSession().getLength(), 0);
   }
+  editor.on('focus', function() {
+    fireEvent('editfocus', [pane]);
+  });
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -2452,9 +2460,19 @@ function setPrimaryFocus() {
 
 function setPaneEditorReadOnly(pane, ro) {
   var paneState = state.pane[pane];
+  var containers = [];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
-  $(paneState.editor.container).find('.ace_content').css({
+  containers.push(paneState.editor.container);
+  if (paneState.htmlEditor) {
+    paneState.htmlEditor.setReadOnly(ro);
+    containers.push(paneState.htmlEditor.container);
+  }
+  if (paneState.cssEditor) {
+    paneState.cssEditor.setReadOnly(ro);
+    containers.push(paneState.cssEditor.container);
+  }
+  $(containers).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
   // Only if the editor is read only do we want to blur it.

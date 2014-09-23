@@ -258,7 +258,7 @@ function updateTopControls(addHistory) {
       var doc = view.getPaneEditorData(paneatpos('left'));
       // The last flag here means: run the supporting scripts
       // but not the main program.
-      runCodeAtPosition('right', doc, doc.filename, true);
+      runCodeAtPosition('right', doc, m.filename, true);
     }
   }
   // Update editability.
@@ -408,7 +408,6 @@ view.on('changelines', function(pane) {
 });
 
 view.on('editfocus', function(pane) {
-  console.log('editfocus', pane);
   if (posofpane(pane) == 'right') {
     rotateModelLeft(true);
   }
@@ -1100,6 +1099,11 @@ view.on('rename', function(newname) {
   function completeRename(newfile) {
     view.flashNotification(
         (newfile ? 'Using name ' : 'Renamed to ') + newname + '.');
+    // If there is a running on the right, bring it along
+    var rp = modelatpos('right');
+    if (rp.running && rp.filename == mp.filename) {
+      rp.filename = newname;
+    }
     mp.filename = newname;
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
