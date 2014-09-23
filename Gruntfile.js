@@ -24,7 +24,11 @@ module.exports = function(grunt) {
           'lodash.js': 'lodash/dist/lodash.js',
           'seedrandom.js': 'seedrandom/seedrandom.js',
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
-          'lib/droplet.css': 'droplet/dist/droplet.min.css'
+          'lib/droplet.css': 'droplet/dist/droplet.min.css',
+          'lib/jquery.autocomplete.js':
+              'devbridge-autocomplete/dist/jquery.autocomplete.js',
+          'lib/jquery.autocomplete.min.js':
+              'devbridge-autocomplete/dist/jquery.autocomplete.min.js'
         }
       },
       zeroclipboard: {
