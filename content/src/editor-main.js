@@ -952,6 +952,9 @@ function saveDefaultMeta(meta) {
     cookie('meta', '', { expires: -1, path: '/' });
   } else {
     try {
+      meta = JSON.parse(JSON.stringify(meta));
+      if (meta.html) { meta.html = ''; }
+      if (meta.css) { meta.css = ''; }
       cookie('meta', JSON.stringify(meta), { expires: 7, path: '/' });
     } catch (e) { }
   }

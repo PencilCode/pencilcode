@@ -981,7 +981,6 @@ function setPreviewMode(shown, instant) {
 }
 
 function rotateLeft() {
-  console.trace('rotating left');
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
@@ -996,7 +995,6 @@ function rotateLeft() {
 }
 
 function rotateRight() {
-  console.trace('rotating right');
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
@@ -1311,6 +1309,12 @@ function clearPane(pane, loading) {
   if (paneState.editor) {
     paneState.editor.destroy();
   }
+  if (paneState.htmlEditor) {
+    paneState.htmlEditor.destroy();
+  }
+  if (paneState.cssEditor) {
+    paneState.cssEditor.destroy();
+  }
   paneState.dropletEditor = null;
   paneState.editor = null;
   paneState.htmlEditor = null;
@@ -1515,15 +1519,40 @@ function showPaneEditorLanguages(pane) {
 
   opts.retrieveState = function(dialog) {
     return {
-      lang: dialog.find('[name=lang]:checked').val()
+      lang: dialog.find('[name=lang]:checked').val(),
+      html: dialog.find('[name=html]').prop('checked'),
+      css: dialog.find('[name=css]').prop('checked')
     };
   }
 
   opts.done = function(state) {
+    state.update({cancel:true});
     if (state.lang && state.lang != visibleMimeType) {
       setPaneEditorLanguageType(pane, state.lang);
     }
-    state.update({cancel:true});
+    var box = $('#' + pane + ' .hpanelbox');
+    var layoutchange = false;
+    if (box.length) {
+      if (state.html != hasHtml) {
+        if (state.html) {
+          setupSubEditor(box, pane, paneState, '', 'html');
+        } else {
+          tearDownSubEditor(box, pane, paneState, 'html');
+        }
+        layoutchange = true;
+      }
+      if (state.css != hasCss) {
+        if (state.css) {
+          setupSubEditor(box, pane, paneState, '', 'css');
+        } else {
+          tearDownSubEditor(box, pane, paneState, 'css');
+        }
+        layoutchange = true;
+      }
+      if (layoutchange) {
+        box.trigger('distribute');
+      }
+    }
   }
 
   showDialog(opts);
@@ -2045,29 +2074,27 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   if (!mimeTypeSupportsBlocks(visibleMimeType)) {
     useblocks = false;
   }
-  var id = uniqueId('editor'), htmlid, cssid;
-  var layout = [ '<div class="hpanelbox">' ];
-  layout.push([
-     '<div class="hpanel">',
-     '<div id="' + id + '" class="editor"></div>',
-     '</div>'
-  ]);
-  if (meta.hasOwnProperty('css')) {
-    cssid = uniqueId('cssedit');
-    layout.push(
-      '<div class="hpanel" share="25">',
-      '<div id="' + cssid + '" class="editor cssmark"></div>',
-      '</div>');
+  var id = uniqueId('editor');
+  var layout = [
+    '<div class="hpanelbox">',
+    '<div class="hpanel">',
+    '<div id="' + id + '" class="editor"></div>',
+    '</div>',
+    '<div class="hpanel cssmark" style="display:none" share="25">',
+    '</div>',
+    '<div class="hpanel htmlmark" style="display:none" share="25">',
+    '</div>'
+  ];
+  var box = $('#' + pane).html(layout.join('')).find('.hpanelbox');
+  var addhtml = meta && meta.hasOwnProperty('html');
+  var addcss = meta && meta.hasOwnProperty('css');
+  if (addhtml) {
+    box.find('.htmlmark').css('display', 'block');
   }
-  if (meta.hasOwnProperty('html')) {
-    htmlid = uniqueId('htmledit');
-    layout.push(
-      '<div class="hpanel" share="25">',
-      '<div id="' + htmlid + '" class="editor htmlmark"></div>',
-      '</div>');
+  if (addcss) {
+    box.find('.cssmark').css('display', 'block');
   }
-  layout.push('</div>');
-  setupHpanelBox($('#' + pane).html(layout.join('')).find('.hpanelbox'));
+  setupHpanelBox(box);
 
   // Set up the main editor.
   var dropletMode = dropletModeForMimeType(visibleMimeType);
@@ -2132,8 +2159,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   setupAceEditor(pane, mainContainer, editor,
     modeForMimeType(editorMimeType(paneState)), text);
 
-  updatePaneTitle(pane);
-
   um.reset();
   publish('update', [text]);
   editor.getSession().setUndoManager(um);
@@ -2149,20 +2174,37 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
 
-  if (htmlid) {
-    var htmlEditor = paneState.htmlEditor = ace.edit(htmlid);
-    var htmlContainer = $('#' + htmlid);
-    htmlEditor.setValue(meta.html, -1);
-    setupAceEditor(pane, htmlContainer, htmlEditor, "ace/mode/html", meta.html);
-    setupResizeHandler(htmlContainer.parent(), htmlEditor);
+  if (addhtml) {
+    setupSubEditor(box, pane, paneState, meta.html, 'html');
   }
 
-  if (cssid) {
-    var cssEditor = paneState.cssEditor = ace.edit(cssid);
-    var cssContainer = $('#' + cssid);
-    cssEditor.setValue(meta.css, -1);
-    setupAceEditor(pane, cssContainer, cssEditor, "ace/mode/css", meta.css);
-    setupResizeHandler(cssContainer.parent(), cssEditor);
+  if (addcss) {
+    setupSubEditor(box, pane, paneState, meta.css, 'css');
+  }
+
+  updatePaneTitle(pane);
+}
+
+function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
+  var id = uniqueId(htmlorcss + 'edit');
+  box.find('.' + htmlorcss + 'mark').html(
+     '<div id="' + id + '" class="editor"></div>').css('display', 'block');
+  var container = $('#' + id);
+  var editor = paneState[htmlorcss + 'Editor'] = ace.edit(id);
+  setupAceEditor(pane, container, editor, "ace/mode/" + htmlorcss, text);
+  console.log(htmlorcss, text);
+  editor.setValue(text, -1);
+  setupResizeHandler(container.parent(), editor);
+}
+
+function tearDownSubEditor(box, pane, paneState, htmlorcss) {
+  if (paneState[htmlorcss + 'Editor']) {
+    paneState[htmlorcss + 'Editor'].destroy();
+    paneState[htmlorcss + 'Editor'] = null;
+  }
+  box.find('.' + htmlorcss + 'mark').html('').css('display', 'none');
+  if (paneState.meta) {
+    delete paneState.meta[htmlorcss];
   }
 }
 
@@ -2596,21 +2638,31 @@ function setupHpanelBox(box) {
     });
   }
   hpb.each(function(i, c) {
-    var total = $(c).height(), totalShare = 0;
-    $(c).find('.hpanel').each(function (i, p) {
-      totalShare += parseFloat($(p).attr('share') || 50);
-      total -= parseInt($(p).css('border-top-width') || 0);
-    });
-    var mh = Math.min(
-        minh, Math.floor(total / $(c).find('.hpanel').length));
-    $(c).find('.hpanel').each(function (i, p) {
-      var share = parseFloat($(p).attr('share') || 50);
-      var height = Math.round(Math.max(mh, total * share / totalShare));
-      $(p).height(height);
-      total -= height;
-      totalShare -= share;
-    });
-    usePercentHeight($(c));
+    var box = $(c);
+    function distribute() {
+      var total = box.height(), totalShare = 0;
+      box.find('.hpanel:visible').each(function (i, p) {
+        totalShare += parseFloat($(p).attr('share') || 50);
+        total -= parseInt($(p).css('border-top-width') || 0);
+      });
+      var mh = Math.min(
+          minh, Math.floor(total / box.find('.hpanel').length)),
+          resize = [];
+      box.find('.hpanel:visible').each(function (i, p) {
+        var share = parseFloat($(p).attr('share') || 50);
+        var height = Math.round(Math.max(mh, total * share / totalShare));
+        if ($(p).height() != height) {
+          $(p).height(height);
+          resize.push(p);
+        }
+        total -= height;
+        totalShare -= share;
+      });
+      usePercentHeight(box);
+      $(resize).trigger('panelsize');
+    }
+    box.on('distribute', distribute);
+    distribute();
   });
   function trackDragHpanel(e, cbdelta) {
     var startX = e.pageX, startY = e.pageY, which = e.which,
@@ -2636,7 +2688,7 @@ function setupHpanelBox(box) {
     $(window).on('mousemove mouseup dragstart', watcher);
     return false;
   }
-  hpb.on('mousedown', '.hpanel', function(e) {
+  hpb.on('mousedown', '.hpanel:visible', function(e) {
     if (this !== e.target || e.which != 1) return;
     var cur = $(this), pdy = 0;
     trackDragHpanel(e, function(end, dx, dy) {
@@ -2644,10 +2696,10 @@ function setupHpanelBox(box) {
           grow, shrink, changed = [];
       if (dh >= 0) {
         grow = cur;
-        shrink = cur.prev('.hpanel');
+        shrink = cur.prev('.hpanel:visible');
         back = true;
       } else {
-        grow = cur.prev('.hpanel');
+        grow = cur.prev('.hpanel:visible');
         shrink = cur;
         dh = -dh;
       }
@@ -2661,7 +2713,7 @@ function setupHpanelBox(box) {
           changed.push(shrink.get(0));
         }
         shrink =
-          (back ? shrink.prev : shrink.next).call(shrink, '.hpanel');
+          (back ? shrink.prev : shrink.next).call(shrink, '.hpanel:visible');
       }
       if (dd) {
         grow.height(grow.height() + dd);
