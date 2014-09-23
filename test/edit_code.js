@@ -315,6 +315,8 @@ describe('code editor', function() {
       try {
         // Wait for the notifcation butter bar to show
         if (!$('#notification').is(':visible')) return;
+        // Skip "Using" and skip empty notification bar.
+        if (/Using|^$/.test($('#notification').text())) return;
         var lefttitle = $('.panetitle').filter(
             function() { return $(this).position().left == 0; })
             .find('.panetitle-text');
@@ -330,7 +332,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The butter bar should show the new name.
-      assert.equal(result.notification, 'Using name ' + name + '.');
+      assert.equal(result.notification, 'Saved.');
       // The editor title should say 'code' since it's flipped.
       assert.equal(result.lefttitle, '> code');
       // The url should reflect the new name.

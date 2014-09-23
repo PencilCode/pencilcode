@@ -1104,6 +1104,9 @@ view.on('rename', function(newname) {
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
     view.setPrimaryFocus();
+    if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
+      saveAction(true, 'Login to save');
+    }
   }
   var payload = {
     source: model.ownername + '/' + mp.filename,
