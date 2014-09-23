@@ -258,7 +258,7 @@ function updateTopControls(addHistory) {
       var doc = view.getPaneEditorData(paneatpos('left'));
       // The last flag here means: run the supporting scripts
       // but not the main program.
-      runCodeAtPosition('right', doc, doc.filename, true);
+      runCodeAtPosition('right', doc, m.filename, true);
     }
   }
   // Update editability.
