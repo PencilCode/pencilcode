@@ -112,6 +112,12 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   var j, scripts = [], src, text = doc.data;
   for (j = 0; j < meta.libs.length; ++j) {
     src = meta.libs[j].src;
+    var attrs = '';
+    if (meta.libs[j].attrs) {
+      for (var att in meta.libs[j].attrs) {
+        attrs += ' ' + att + '="' + escapeHtml(meta.libs[j].attrs[att]) + '"';
+      }
+    }
     if (/{site}/.test(src)) {
       src = src.replace(/{site}/g, domain);
       // Note that for local scripts we use crossorigin="anonymous" so that
@@ -119,10 +125,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
       // compilation // errors, using CORS rules.)  More discussion:
       // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
       scripts.push(
-        '<script src="' + src + '" crossorigin="anonymous"><\057script>');
+        '<script src="' + src + '" crossorigin="anonymous"' +
+        attrs + '><\057script>');
     } else {
       scripts.push(
-        '<script src="' + src + '"><\057script>');
+        '<script src="' + src + '"' + attrs + '><\057script>');
     }
   }
   // Then add any setupScript supplied.
@@ -167,6 +174,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
     mainscript +
     suffix.join(''));
   return result;
+}
+
+function htmlEscape(s) {
+  return ('' + s).replace(/"/g, '&quot;').replace(/</g, '&lt;')
+                 .replace(/>/g, '&gt;').replace(/\&/g, '&amp;');
 }
 
 function modifyForPreview(doc, domain,
