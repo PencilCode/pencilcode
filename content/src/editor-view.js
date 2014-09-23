@@ -2367,6 +2367,9 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   } else {
     editor.gotoLine(editor.getSession().getLength(), 0);
   }
+  editor.on('focus', function() {
+    fireEvent('editfocus', [pane]);
+  });
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -2452,9 +2455,19 @@ function setPrimaryFocus() {
 
 function setPaneEditorReadOnly(pane, ro) {
   var paneState = state.pane[pane];
+  var containers = [];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
-  $(paneState.editor.container).find('.ace_content').css({
+  containers.push(paneState.editor.container);
+  if (paneState.htmlEditor) {
+    paneState.htmlEditor.setReadOnly(ro);
+    containers.push(paneState.htmlEditor.container);
+  }
+  if (paneState.cssEditor) {
+    paneState.cssEditor.setReadOnly(ro);
+    containers.push(paneState.cssEditor.container);
+  }
+  $(containers).find('.ace_content').css({
     backgroundColor: ro ? 'gainsboro' : 'transparent'
   });
   // Only if the editor is read only do we want to blur it.
