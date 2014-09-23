@@ -1863,6 +1863,9 @@ var COFFEESCRIPT_PALETTE =[
         block: 'button \'Click\', ->\n  ``',
         title: 'Make a button and do something when clicked'
       }, {
+        block: 'keydown \'X\', ->\n  ``',
+        title: 'Do something when a keyboard key is pressed'
+      }, {
         block: 'for [1..3]\n  ``',
         title: 'Do something multiple times'
       }, {
@@ -1938,9 +1941,6 @@ var COFFEESCRIPT_PALETTE =[
     color: 'violet',
     blocks: [
       {
-        block: 'speed Infinity',
-        title: 'Make the turtle move immediately'
-      }, {
         block: 'play \'GEC\'',
         title: 'Play music notes'
       }, {
