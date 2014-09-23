@@ -1100,6 +1100,11 @@ view.on('rename', function(newname) {
   function completeRename(newfile) {
     view.flashNotification(
         (newfile ? 'Using name ' : 'Renamed to ') + newname + '.');
+    // If there is a running on the right, bring it along
+    var rp = modelatpos('right');
+    if (rp.running && rp.filename == mp.filename) {
+      rp.filename = newname;
+    }
     mp.filename = newname;
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
