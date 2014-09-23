@@ -408,7 +408,6 @@ view.on('changelines', function(pane) {
 });
 
 view.on('editfocus', function(pane) {
-  console.log('editfocus', pane);
   if (posofpane(pane) == 'right') {
     rotateModelLeft(true);
   }
