@@ -1610,6 +1610,7 @@ function showPaneEditorLanguagesDialog(pane) {
       }
       if (change) {
         fireEvent('dirty', [pane]);
+        fireEvent('changehtmlcss', [pane]);
       }
     }
   }
@@ -2274,7 +2275,9 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   var htmlCssChangeTimer = null;
+  var htmlCssRetryCounter = 5;
   function handleHtmlCssChange() {
+    htmlCssRetryCounter = 5;
     if (htmlCssChangeTimer) {
       clearTimeout(htmlCssChangeTimer);
     }
@@ -2292,7 +2295,14 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   function checkForHtmlCssChange() {
     htmlCssChangeTimer = null;
     if (hasAnyErrors(paneState.htmlEditor) ||
-        hasAnyErrors(paneState.cssEditor)) return;
+        hasAnyErrors(paneState.cssEditor)) {
+      if (htmlCssRetryCounter > 0) {
+        console.log('retry', htmlCssRetryCounter);
+        htmlCssRetryCounter -= 1;
+        htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 1000);
+      }
+      return;
+    }
     fireEvent('changehtmlcss', [pane]);
   }
   paneState.handleHtmlCssChange = handleHtmlCssChange;
