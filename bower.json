@@ -3,18 +3,19 @@
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
   "dependencies": {
+    "ace-builds": "ajaxorg/ace-builds#v1.1.6",
+    "almond": "latest",
+    "devbridge-autocomplete": "latest",
+    "droplet": "Pencilcode/droplet#master",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
     "jquery": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
     "requirejs": "latest",
-    "ace-builds": "ajaxorg/ace-builds#v1.1.6",
-    "almond": "latest",
     "seedrandom": "latest",
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
-    "zeroclipboard": "latest",
-    "droplet": "Pencilcode/droplet#master"
+    "zeroclipboard": "latest"
   },
   "resolutions": {
     "ace-builds": "v1.1.6"
