@@ -491,21 +491,22 @@ hatch(3).plan (i) ->
         @rt 135, 0.5 * @distance t
 
 </script>
+<script src="/seedrandom.js"></script>
 <script src="/lib/jquery.autocomplete.js"></script>
 <style>
 .loginblock { position: fixed; text-align:right; top:8px; right:8px; }
 .hidden { display:none }
 .loginblock input { background: transparent; }
-.loginblock label { opacity: 0.3; transition: opacity 0.3s }
+.loginblock label { opacity: 0.5; transition: opacity 0.3s }
 
 .loginblock.active .hidden { display: block; }
 .loginblock.active label { opacity: 1 }
 .loginblock.active input { background: white; }
 input { font-family: inherit; font-size: inherit; }
-.autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; }
+.autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; cursor: default; }
 .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-.autocomplete-selected { background: #F0F0F0; }
-.autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+.autocomplete-suggestions strong { font-weight: normal; color: dodgerblue; }
+.autocomplete-selected, .autocomplete-selected strong { background: dodgerblue; color: white; }
 .autocomplete-group { padding: 2px 5px; }
 .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
 .loginblock button{border:none;background-color:white;
@@ -518,8 +519,8 @@ input { font-family: inherit; font-size: inherit; }
   box-shadow:0 0 7px darkgray;color:gray;opacity:0.7}
 .loginblock button:not([disabled]):hover {
   box-shadow:0 0 7px black}
+#msg { color: red }
 </style>
-
 <script>
 loadusers.then(function(data) {
   if (!data || data.directory != '/' || !data.list) return;
@@ -527,32 +528,68 @@ loadusers.then(function(data) {
       return /d/.test(x.mode); });
   users.sort(function(a, b) { return b.mtime - a.mtime; });
   var usernames = _.map(users, function(u) { return u.name; });
-  console.log(users);
   $('<div class=loginblock><label>Login: <input id=user></label>' +
-    '<label class=hidden>Password: <input id=pass></label>' +
-    '<label class=hidden><button id=login disabled>Login' +
+    '<label class=hidden>Password: <input type=password id=pass></label>' +
+    '<label class=hidden><span id=msg></span>&nbsp;<button id=login disabled>Login' +
     '<span id=asuser></span></button></label>' +
     '</div>')
-      .appendTo('body');
-  $('#user').one('keydown',
+      .prependTo('.fixedpage');
+  $('#user').one('keypress',
       function() { $('.loginblock').addClass('active'); });
   $('#user').focus();
-  $('#user').on('change blur', validateUser);
+  $('#user').on('change', validateUser);
   $('#user').autocomplete({
-       lookup: usernames,
-       forceFixPosition: true,
-       onSelect: validateUser
-     });
+    autoSelectFirst: true,
+    lookup: usernames,
+    forceFixPosition: true,
+    onSelect: function() { validateUser(); setTimeout(function() {
+      if (!document.activeElement ||
+          !$(document.activeElement).closest('.loginblock').length) {
+        $('#pass').select().focus();
+      }
+    }, 0)}
+  });
   function validateUser(e) {
     var user = $('#user').val().toLowerCase().trim();
-    if (e && e.type == 'blur') { $('#user').val(user); }
     var found = usernames.indexOf(user) >= 0;
     $('#asuser').text(found ? ' as ' + user : '');
     $('#login').prop('disabled', !found);
-    if (!found && user.length) {
-      $('#user').focus();
-    }
+    return true;
   };
+  function keyFromPassword(username, p) {
+    if (!p) { return ''; }
+    if (/^[0-9]{3}$/.test(p)) { return p; }
+    var key = '';
+    var prng = new Math.seedrandom('turtlebits:' + username + ':' + p + '.');
+    for (var j = 0; j < 3; j++) {
+      key += Math.floor(prng() * 10);
+    }
+    return key;
+  }
+  $('#login').on('click', tryLogin);
+  $('#pass,#user').on('keyup', function(e) {
+    $('#msg').text('');
+    if (e.which == 13) tryLogin();
+  });
+  function tryLogin() {
+    var user = $('#user').val().toLowerCase().trim();
+    if (!user) return;
+    $('#msg').text('Logging in...');
+    var key = keyFromPassword(user, $('#pass').val());
+    $.getJSON('//' + user + '.' + location.hostname +
+        '/save/?mode=setkey&key=' + key + '&data=' + key).done(function(resp) {
+      if (resp.keyset) {
+        window.location =
+           '//' + user + '.' + location.hostname +
+                '/edit/#login=' + user + ':' + (key ? key : '');
+      } else {
+        $('#pass').select().focus();
+        $('#msg').text('Wrong password.');
+      }
+    }).fail(function() {
+      $('#msg').text('Network error.');
+    });
+  }
 });
 </script>
 <script>
