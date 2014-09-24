@@ -4,6 +4,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   position:fixed;height:100%;width:100%; }
 #overlay{position:absolute;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.1);display:none;z-index:3}
+body.modal #overlay { display:block; }
 #overlay .dialog{
   position:absolute;right:12px;top:68px;display:table;margin:auto;
   border:none;background-color:white;box-shadow:0 0 7px black;color:black;
@@ -81,6 +82,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
 .rightpal{left:50vw;box-sizing:content-box;border-left:35px solid gainsboro;}
 .ace_search.right{left:auto;width:60%;max-width:400px;}
 #middle{z-index:2;display:none;}
+body.modal #middle{visibility:hidden;}
 #middle,.vcenter{position:absolute;left:50%;top:50%}
 .hcenter{margin:-50% -50%;}
 #run,#stop {border:0;background-color:rgba(255,255,255,0.7);opacity:0.7;

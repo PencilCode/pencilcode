@@ -765,7 +765,7 @@ function showShareDialog(opts) {
 }
 
 function showDialog(opts) {
-  var overlay = $('#overlay').show();
+  var overlay = $('#overlay');
   if (!opts) { opts = {}; }
   overlay.html('');
   var classes = ['dialog'];
@@ -777,6 +777,8 @@ function showDialog(opts) {
     '<div class="info">' + (opts.info ? opts.info : '') + '</div>' +
     (opts.content ? opts.content : '') + '</div></div>';
   var dialog = $(dialogHTML).appendTo(overlay);
+  // The following class shows the overlay and adjusts other page UI.
+  $('body').addClass('modal');
 
   ////////////////////////////////////////////////////////////////
   //
@@ -791,7 +793,7 @@ function showDialog(opts) {
     if (!up) return;
     if (up.cancel) {
       dialog.remove();
-      overlay.hide();
+      $('body').removeClass('modal');
       if (opts.cancel) { opts.cancel(); }
       return;
     }
@@ -2249,6 +2251,14 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   setupAceEditor(pane, mainContainer, editor,
     modeForMimeType(editorMimeType(paneState)), text);
+  var session = editor.getSession();
+  session.on('change', function() {
+    // Any editing that changes the line count ends the debugging session.
+    if (paneState.cleanLineCount != session.getLength()) {
+      clearPaneEditorMarks(pane);
+      fireEvent('changelines', [pane]);
+    }
+  });
 
   um.reset();
   publish('update', [text]);
@@ -2264,6 +2274,33 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   gutter.on('click', '.guttermouseable', function() {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
+
+  var htmlCssChangeTimer = null;
+  function handleHtmlCssChange() {
+    console.log('handlehtmlcss');
+    if (htmlCssChangeTimer) {
+      clearTimeout(htmlCssChangeTimer);
+    }
+    htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 1000);
+  }
+  function hasAnyErrors(editor) {
+    if (!editor) return false;
+    var annot = editor.getSession().getAnnotations();
+    for (var j = 0; j < annot.length; ++j) {
+      if (annot[j].type == 'error')
+        return true;
+    }
+    return false;
+  }
+  function checkForHtmlCssChange() {
+    htmlCssChangeTimer = null;
+    console.log('filterhtmlcss');
+    if (hasAnyErrors(paneState.htmlEditor) ||
+        hasAnyErrors(paneState.cssEditor)) return;
+    console.log('changehtmlcss');
+    fireEvent('changehtmlcss', [pane]);
+  }
+  paneState.handleHtmlCssChange = handleHtmlCssChange;
 
   if (addhtml) {
     setupSubEditor(box, pane, paneState, meta.html, 'html');
@@ -2286,6 +2323,7 @@ function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   setupAceEditor(pane, container, editor, "ace/mode/" + htmlorcss, text);
   console.log(htmlorcss, text);
   editor.setValue(text, -1);
+  editor.getSession().on('change', paneState.handleHtmlCssChange);
   setupResizeHandler(container.parent(), editor);
 }
 
@@ -2359,11 +2397,6 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
     // Publish the update event for hosting frame.
     publish('update', [session.getValue()]);
-    // Any editing that changes the line count ends the debugging session.
-    if (paneState.cleanLineCount != session.getLength()) {
-      clearPaneEditorMarks(pane);
-      fireEvent('changelines', [pane]);
-    }
   });
   $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);

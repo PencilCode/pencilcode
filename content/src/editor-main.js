@@ -413,6 +413,16 @@ view.on('editfocus', function(pane) {
   }
 });
 
+view.on('changehtmlcss', function(pane) {
+  if (posofpane(pane) != 'left' || debug.stopButton()) {
+    return;
+  }
+  var doc = view.getPaneEditorData(pane);
+  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var filename = modelatpos('left').filename;
+  runCodeAtPosition('right', newdata, filename, true);
+});
+
 view.on('run', function() {
   var doc = view.getPaneEditorData(paneatpos('left'));
   if (!doc) {
@@ -432,8 +442,8 @@ view.on('run', function() {
     storage.saveFile(model.ownername, filename, newdata, false, null, true);
   }
   // Provide instant (momentary) feedback that the program is now running.
-  debug.flashStopButton();
-  runCodeAtPosition('right', newdata, modelatpos('left').filename, false);
+  debug.stopButton('flash');
+  runCodeAtPosition('right', newdata, filename, false);
   logEvent('run', filename, newdata.data,
       view.getPaneEditorBlockMode(paneatpos('left')),
       view.getPaneEditorLanguage(paneatpos('left')));
@@ -1384,8 +1394,6 @@ var loadNumber = 0;
 function nextLoadNumber() {
   return ++loadNumber;
 }
-
-var stopButtonTimer = null;
 
 function cancelAndClearPosition(pos) {
   debug.bindframe(null);

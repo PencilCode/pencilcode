@@ -94,7 +94,7 @@ var debug = window.ide = {
       view.publish('error', [simpleData]);
     }
   },
-  flashStopButton: flashStopButton,
+  stopButton: stopButton,
   getEditorText: function() {
     var doc = view.getPaneEditorData(view.paneid('left'));
     if (doc) {
@@ -657,24 +657,27 @@ function parseTurtleTransform(transform) {
 
 // Flashes the stop button for half a second.
 var lastRunTime = 0;
-function flashStopButton() {
-  lastRunTime = +new Date;
-  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
-  if (!stopButtonShown) {
-    view.showMiddleButton('stop');
-    stopButtonShown = 1;
-  }
-  // Within one second, startPollingWindow should be called,
-  // cancelling this timer.  If it is not (for example, if we
-  // are running a plain HTML file or something else that does
-  // not bind to the IDE debugger API), then we just clear
-  // the stop button ourselves.
-  pollTimer = setTimeout(function() {
-    if (stopButtonShown) {
-      view.showMiddleButton('run');
-      stopButtonShown = 0;
+function stopButton(command) {
+  if (command == 'flash') {
+    lastRunTime = +new Date;
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    if (!stopButtonShown) {
+      view.showMiddleButton('stop');
+      stopButtonShown = 1;
     }
-  }, 1000);
+    // Within one second, startPollingWindow should be called,
+    // cancelling this timer.  If it is not (for example, if we
+    // are running a plain HTML file or something else that does
+    // not bind to the IDE debugger API), then we just clear
+    // the stop button ourselves.
+    pollTimer = setTimeout(function() {
+      if (stopButtonShown) {
+        view.showMiddleButton('run');
+        stopButtonShown = 0;
+      }
+    }, 1000);
+  }
+  return stopButtonShown;
 }
 
 
