@@ -71,6 +71,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   // Construct the HTML for running a program.
   var meta = effectiveMeta(doc.meta);
   var html = meta.html || '';
+  // pragmasOnly should never run dangerous script, so do not run
+  // meta.html if the HTML has script.
+  if (pragmasOnly && /<\/?script/i.test(html)) {
+    html = '';
+  }
   var topinfo = scanHtmlTop(html);
   var prefix = [], suffix = [];
   if (topinfo.pos['!doctype'] == null) {

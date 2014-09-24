@@ -2297,7 +2297,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     if (hasAnyErrors(paneState.htmlEditor) ||
         hasAnyErrors(paneState.cssEditor)) {
       if (htmlCssRetryCounter > 0) {
-        console.log('retry', htmlCssRetryCounter);
         htmlCssRetryCounter -= 1;
         htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 1000);
       }
