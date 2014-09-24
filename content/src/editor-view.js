@@ -2275,13 +2275,13 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   var htmlCssChangeTimer = null;
-  var htmlCssRetryCounter = 5;
+  var htmlCssRetryCounter = 10;
   function handleHtmlCssChange() {
-    htmlCssRetryCounter = 5;
+    htmlCssRetryCounter = 10;
     if (htmlCssChangeTimer) {
       clearTimeout(htmlCssChangeTimer);
     }
-    htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 1000);
+    htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 500);
   }
   function hasAnyErrors(editor) {
     if (!editor) return false;
