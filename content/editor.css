@@ -9,7 +9,7 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden;
   border:none;background-color:white;box-shadow:0 0 7px black;color:black;
   border-radius:8px;font-family:inherit;font-size:18px;line-height:21px;
   padding:12px;font-weight:300;text-align:center;overflow:hidden;}
-#overlay .dialog.center{left:0;right:0;bottom:25vh;top:0;}
+#overlay .dialog.center{left:0;right:0;bottom:25vh;top:0;width:320px;}
 #overlay .dialog.leftopts{right:50%;top:90px}
 .framed #overlay .dialog{top:12px;font-weight:300;}
 #overlay .prompt{padding:8px;}
