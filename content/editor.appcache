@@ -28,6 +28,8 @@ CACHE MANIFEST
 //<!--#echo var="site"-->/pencil_avatar.png
 //<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css
 //<!--#echo var="site"-->/lib/droplet.css
+//<!--#echo var="site"-->/lib/jquery.autocomplete.min.js
+//<!--#echo var="site"-->/seedrandom.js
 //<!--#echo var="site"-->/turtlebits.js
 //<!--#echo var="site"-->/jquery.js
 
