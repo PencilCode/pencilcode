@@ -1808,14 +1808,14 @@ var COFFEESCRIPT_PALETTE =[
         block: 'bk 100',
         title: 'Move backward'
       }, {
+        block: 'speed 10',
+        title: 'Set the speed of the turtle'
+      }, {
         block: 'dot blue, 50',
         title: 'Make a dot'
       }, {
         block: 'box green, 50',
         title: 'Make a square'
-      }, {
-        block: 'speed 10',
-        title: 'Set the speed of the turtle'
       }, {
         block: 'label \'hello\'',
         title: 'Write text at the turtle'
