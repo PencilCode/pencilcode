@@ -107,7 +107,15 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
         suffix.unshift('</body>');
       }
     }
+  } else if (topinfo.bodypos == 0 && !topinfo.hasbody) {
+    // Surround by a body if no head content was present, and no body tag.
+    prefix.push('<body>');
+    suffix.unshift('</body>');
+  } else if (html.substr(topinfo.bodypos).trim() == '') {
+    // Append an empty body if the HTML is all head.
+    suffix.unshift('<body></body>');
   }
+
   // Add the default scripts.
   var j, scripts = [], src, text = doc.data;
   for (j = 0; j < meta.libs.length; ++j) {

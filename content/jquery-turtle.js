@@ -8378,9 +8378,11 @@ function autoScrollBottomSeen() {
     autoScrollState.timer = setTimeout(function() {
       autoScrollState.timer = null;
     }, 0);
+    var offset = $('body').offset();
+    var doctop = offset ? offset.top : 8;
     autoScrollState.bottomSeen = Math.min(
         $(window).height() + $(window).scrollTop(),
-        $('body').height() + $('body').offset().top);
+        $('body').height() + doctop);
   }
   return autoScrollState.bottomSeen;
 }
