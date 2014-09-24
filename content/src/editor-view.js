@@ -808,7 +808,6 @@ function showDialog(opts) {
         var x = dialog.find('.' + attr);
         if (x.prop('tagName') == "INPUT") {
           if (x.prop('type') == 'checkbox') {
-            console.log('updating checkbox', attr);
             x.prop('checked', up[attr]);
           } if (x.prop('type') == 'radio') {
             x.find('[value=' + up[attr] + ']').prop('checked', true);
@@ -1569,7 +1568,6 @@ function showPaneEditorLanguagesDialog(pane) {
       change = true;
     }
     if (state.bits != hasBits || state.turtle != hasTurtle) {
-      console.log('turtle lib update to', state);
       var lib = { name: 'turtle', src: '//{site}/turtlebits.js' };
       if (!state.turtle) { lib.attrs = { turtle: 'false' }; }
       if (!paneState.meta) { paneState.meta = {}; }
@@ -2277,7 +2275,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   var htmlCssChangeTimer = null;
   function handleHtmlCssChange() {
-    console.log('handlehtmlcss');
     if (htmlCssChangeTimer) {
       clearTimeout(htmlCssChangeTimer);
     }
@@ -2294,10 +2291,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   }
   function checkForHtmlCssChange() {
     htmlCssChangeTimer = null;
-    console.log('filterhtmlcss');
     if (hasAnyErrors(paneState.htmlEditor) ||
         hasAnyErrors(paneState.cssEditor)) return;
-    console.log('changehtmlcss');
     fireEvent('changehtmlcss', [pane]);
   }
   paneState.handleHtmlCssChange = handleHtmlCssChange;
@@ -2321,7 +2316,6 @@ function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   var container = $('#' + id);
   var editor = paneState[htmlorcss + 'Editor'] = ace.edit(id);
   setupAceEditor(pane, container, editor, "ace/mode/" + htmlorcss, text);
-  console.log(htmlorcss, text);
   editor.setValue(text, -1);
   editor.getSession().on('change', paneState.handleHtmlCssChange);
   setupResizeHandler(container.parent(), editor);
