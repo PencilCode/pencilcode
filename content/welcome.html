@@ -540,6 +540,7 @@ loadusers.then(function(data) {
   $('#user').on('change', validateUser);
   $('#user').autocomplete({
     autoSelectFirst: true,
+    triggerSelectOnValidInput: false,
     lookup: usernames,
     forceFixPosition: true,
     onSelect: function() { validateUser(); setTimeout(function() {
