@@ -123,6 +123,7 @@ window.pencilcode.view = {
   notePaneEditorCleanLineCount: notePaneEditorCleanLineCount,
   noteNewFilename: noteNewFilename,
   setPaneEditorReadOnly: setPaneEditorReadOnly,
+  isPaneEditorEmpty: isPaneEditorEmpty,
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
   setPaneRunHtml: setPaneRunHtml,
@@ -2536,6 +2537,24 @@ function isPaneEditorDirty(pane) {
       || paneState.cleanMeta != JSON.stringify(paneState.meta || null)) {
     paneState.dirtied = true;
     return true;
+  }
+  return false;
+}
+
+function isPaneEditorEmpty(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.editor) { return false; }
+  updateMeta(paneState);
+  if (!sameDisregardingTrailingSpace(paneState.dropletEditor.getValue(), '')) {
+    return false;
+  }
+  if (paneState.htmlEditor &&
+      !sameDisregardingTrailingSpace(paneState.htmlEditor.getValue(), '')) {
+    return false;
+  }
+  if (paneState.cssEditor &&
+      !sameDisregardingTrailingSpace(paneState.cssEditor.getValue(), '')) {
+    return false;
   }
   return false;
 }

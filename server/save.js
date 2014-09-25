@@ -3,6 +3,7 @@ var fs = require('fs');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filemeta = require('./filemeta');
+var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
   var data = req.param('data', null);
@@ -92,6 +93,20 @@ exports.handleSave = function(req, res, app) {
         utils.errorExit('Bad filename ' + filename);
       }
     }
+
+    // Parse and validate meta.
+    if (meta != null) {
+      try {
+        meta = JSON.parse(meta);
+      } catch (e) {
+        utils.errorExit('Malformed json meta: ' + meta);
+      }
+    }
+
+    if (filetype.isDefaultMeta(meta)) {
+      meta = null;
+    }
+
 
     var absfile = utils.makeAbsolute(filename, app, res);
 
@@ -243,7 +258,7 @@ exports.handleSave = function(req, res, app) {
     // Handle the delete case
     //
 
-    if (!data) {
+    if (!data && !(meta && (meta.html || meta.css))) {
         //if (!req.body.hasOwnProperty('data')) {
         //utils.errorExit('Missing data= form field argument.');
         //}
@@ -289,11 +304,6 @@ exports.handleSave = function(req, res, app) {
     }
 
     var statObj;
-    if (meta != null) {
-      try {
-        meta = JSON.parse(meta);
-      } catch (e) { }
-    }
     try {
       var openMode = (mode == 'a') ? 'a' : 'w',
           content = filemeta.printMetaString(data, meta);

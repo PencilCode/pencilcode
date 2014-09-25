@@ -1118,7 +1118,8 @@ view.on('rename', function(newname) {
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
     view.setPrimaryFocus();
-    if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
+    if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner() &&
+        !view.isPaneEditorEmpty(paneatpos('left'))) {
       saveAction(true, 'Login to save');
     }
   }
