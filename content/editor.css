@@ -153,6 +153,7 @@ body#pencildoc #diigolet-csm {
 .closeblocks { font-size: 26px; font-weight: bold; font-family: sans-serif;
  position: absolute; right: 0px; top: 0px; line-height: 15px;
  padding: 0 1px 2px 1px; color: skyblue; z-index: 2000; cursor: pointer; }
+.droplet-palette-wrapper { cursor: default; }
 .droplet-palette-wrapper:hover .closeblocks { color:dodgerblue; }
 .droplet-palette-wrapper .closeblocks:hover { background: dodgerblue; color: white; }
 .droplet-palette-wrapper .closeblocks:active { color: red; background: dodgerblue; }
