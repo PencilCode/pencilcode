@@ -22,8 +22,13 @@ def application(env, start_response):
     form = cgi.FieldStorage(fp=env['wsgi.input'], environ=env)
     request_uri = env['REQUEST_URI']
     host_name = env['HTTP_HOST']
-    referer = env.get('HTTP_REFERER',
-      env['UWSGI_SCHEME'] + '://' + host_name + '/')
+    if env.has_key('UWSGI_SCHEME'):
+      scheme = env['UWSGI_SCHEME']
+    elif env.has_key('HTTPS'):
+      scheme = 'https'
+    else:
+      scheme = 'http'
+    referer = env.get('HTTP_REFERER', scheme + '://' + host_name + '/')
     agent = env.get('HTTP_USER_AGENT', scrapeagent)
     cache_control = env.get('HTTP_CACHE_CONTROL', '')
     pragma = env.get('HTTP_PRAGMA', '')
