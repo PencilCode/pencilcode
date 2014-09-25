@@ -2556,7 +2556,7 @@ function isPaneEditorEmpty(pane) {
       !sameDisregardingTrailingSpace(paneState.cssEditor.getValue(), '')) {
     return false;
   }
-  return false;
+  return true;
 }
 
 function updateMeta(paneState) {
