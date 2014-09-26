@@ -318,7 +318,7 @@ function cookie(key) {
 };
 
 var olduser = false;
-if (cookie('recent')) {
+if (cookie('recent') && !/\/\/frame\./.test(cookie('recent'))) {
   document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
       cookie('recent').replace(/^https?:\/\//, '').
       replace(/^(\w+)\.[^\/]+\/edit\//, '$1&nbsp;/ ').
