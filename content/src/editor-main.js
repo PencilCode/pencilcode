@@ -465,6 +465,7 @@ $(window).on('beforeunload', function() {
 view.on('logout', function() {
   model.username = null;
   model.passkey = null;
+  // Erase some cookies after logout.
   cookie('login', '', { expires: -1, path: '/' });
   cookie('recent', '',
       { expires: -1, path: '/', domain: window.pencilcode.domain });
@@ -887,7 +888,7 @@ function handleSaveStatus(status, filename, noteclean) {
   } else if (status.deleted) {
     view.flashNotification('Deleted ' + filename.replace(/^.*\//, '') + '.');
     saveLoginCookie();
-    if (model.ownername) {
+    if (!specialowner()) {
       cookie('recent', window.location.href,
              { expires: 7, path: '/', domain: window.pencilcode.domain });
     }
@@ -1188,7 +1189,7 @@ function logInAndMove(filename, newfilename, completeRename) {
           view.flashNotification(m.error);
         } else {
           saveLoginCookie();
-          if (model.ownername) {
+          if (!specialowner()) {
             cookie('recent', window.location.href,
                 { expires: 7, path: '/', domain: window.pencilcode.domain });
           }
@@ -1288,9 +1289,6 @@ function readNewUrl(undo) {
   if (ownername) {
     // Remember credentials.
     if (!cookielogin && login) { saveLoginCookie(); }
-    // Also remember as the most recently used program (without hash).
-    cookie('recent', window.location.href.replace(/#.*$/, ''),
-        { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
   // Handle #blocks
   if (blocks) {
@@ -1324,6 +1322,11 @@ function readNewUrl(undo) {
     model.ownername = ownername;
     model.editmode = editmode;
     forceRefresh = true;
+  }
+  if (!specialowner()) {
+    // Remember as the most recently used program (without hash).
+    cookie('recent', window.location.href.replace(/#.*$/, ''),
+        { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
   // Update setup scripts if specified.
   if (setup) {
