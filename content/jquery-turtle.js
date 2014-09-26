@@ -6910,7 +6910,7 @@ function checkForHungLoop(fname) {
         '<b style="background:yellow">tick</b> ' +
         'to make an animation.</span>');
     }
-    $.turtle.interrupt();
+    $.turtle.interrupt('hung');
   }
 }
 
@@ -7030,7 +7030,8 @@ var dollar_turtle_methods = {
       }
     }
     // Throw an interrupt exception.
-    throw new Error('interrupt() called');
+    var msg = option ? "'" + option + "'" : '';
+    throw new Error('interrupt(' + msg + ') called');
   }),
   cs: wrapglobalcommand('cs',
   ["<u>cs()</u> Clear screen. Erases both graphics canvas and " +
@@ -7599,11 +7600,12 @@ $.turtle = function turtle(id, options) {
     } else {
       window.onerror = see;
     }
+    // Set up an alias.
+    window.log = see;
   }
   // Copy $.turtle.* functions into global namespace.
   if (!('functions' in options) || options.functions) {
     window.printpage = window.print;
-    window.print = null;
     $.extend(window, dollar_turtle_methods);
   }
   // Set default turtle speed

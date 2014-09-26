@@ -265,6 +265,10 @@ function errorAdvice(msg, text) {
     advice += "<p>It might be missing on an higher line.";
   } else if ((m = /unexpected (\w+)$/.exec(msg))) {
     advice += "<p>You might try removing '" + m[1] + "'";
+  } else if (/interrupt\('hung'\)/.test(msg)) {
+    advice = '<p>Oops, the computer got stuck in calculations.' +
+             '<p>The program was stopped so you can edit it.' +
+             '<p>Maybe reduce the number of repeats?';
   }
   return advice;
 }
