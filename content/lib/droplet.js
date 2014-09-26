@@ -5688,7 +5688,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     LVALUE = ['lvalue'];
     FORBID_ALL = ['forbid-all'];
     PROPERTY_ACCESS = ['prop-access'];
-    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert'];
+    BLOCK_FUNCTIONS = ['fd', 'bk', 'rt', 'lt', 'slide', 'movexy', 'moveto', 'jump', 'jumpto', 'turnto', 'home', 'pen', 'fill', 'dot', 'box', 'mirror', 'twist', 'scale', 'pause', 'st', 'ht', 'cs', 'cg', 'ct', 'pu', 'pd', 'pe', 'pf', 'play', 'tone', 'silence', 'speed', 'wear', 'drawon', 'label', 'reload', 'see', 'sync', 'send', 'recv', 'click', 'mousemove', 'mouseup', 'mousedown', 'keyup', 'keydown', 'keypress', 'alert', 'prompt', 'done', 'tick'];
     VALUE_FUNCTIONS = ['abs', 'acos', 'asin', 'atan', 'atan2', 'cos', 'sin', 'tan', 'ceil', 'floor', 'round', 'exp', 'ln', 'log10', 'pow', 'sqrt', 'max', 'min', 'random', 'pagexy', 'getxy', 'direction', 'distance', 'shown', 'hidden', 'inside', 'touches', 'within', 'notwithin', 'nearest', 'pressed', 'canvas', 'hsl', 'hsla', 'rgb', 'rgba', 'cell'];
     EITHER_FUNCTIONS = ['button', 'read', 'readstr', 'readnum', 'write', 'table', 'append', 'finish', 'loadscript'];
     STATEMENT_KEYWORDS = ['break', 'continue'];
@@ -5819,7 +5819,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, line, lines, methodname, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref21, _ref22, _ref23, _ref24, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
+        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, line, lines, methodname, namenode, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref21, _ref22, _ref23, _ref24, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -5952,8 +5952,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               unrecognized = false;
               if (((_ref9 = node.variable.properties) != null ? _ref9.length : void 0) > 0) {
                 methodname = (_ref10 = node.variable.properties[node.variable.properties.length - 1].name) != null ? _ref10.value : void 0;
+                namenode = node.variable.properties[node.variable.properties.length - 1].name;
               } else if ((_ref11 = node.variable.base) != null ? _ref11.value : void 0) {
                 methodname = node.variable.base.value;
+                namenode = node.variable.base;
               }
               if (__indexOf.call(BLOCK_FUNCTIONS, methodname) >= 0) {
                 this.csBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
@@ -5963,10 +5965,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 this.csBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
                 unrecognized = !(__indexOf.call(EITHER_FUNCTIONS, methodname) >= 0);
               }
-              if ((methodname != null ? methodname.length : void 0) > 1 && (node != null ? (_ref12 = node.variable) != null ? _ref12.locationData : void 0 : void 0) && node.variable.locationData.first_column === node.variable.locationData.last_column && node.variable.locationData.first_line === node.variable.locationData.last_line) {
+              if (((_ref12 = node.variable.base) != null ? _ref12.nodeType() : void 0) !== 'Literal' || ((_ref13 = node.variable.properties) != null ? _ref13.length : void 0) > 1) {
+                unrecognized = true;
+              }
+              if ((methodname != null ? methodname.length : void 0) > 1 && (namenode != null ? namenode.locationData : void 0) && namenode.locationData.first_column === namenode.locationData.last_column && namenode.locationData.first_line === namenode.locationData.last_line) {
                 unrecognized = false;
               }
-              if (unrecognized || ((_ref13 = node.variable.base) != null ? _ref13.nodeType() : void 0) !== 'Literal') {
+              if (unrecognized) {
                 this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth);
               } else if (((_ref14 = node.variable.properties) != null ? _ref14.length : void 0) > 0) {
                 this.csSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
