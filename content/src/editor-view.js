@@ -1878,9 +1878,6 @@ var COFFEESCRIPT_PALETTE =[
         block: 'tick 30, ->\n  ``',
         title: 'Repeat something forever at qually-spaced times'
       }, {
-        block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
-        title: 'Read input from the user'
-      }, {
         block: 'if ``\n  ``',
         title: 'Do something only if a condition is true'
       }, {
@@ -1944,6 +1941,12 @@ var COFFEESCRIPT_PALETTE =[
     color: 'violet',
     blocks: [
       {
+        block: 'write \'Let\\\'s play!\'',
+        title: 'Write a message'
+      }, {
+        block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
+        title: 'Read input from the user'
+      }, {
         block: 'play \'GEC\'',
         title: 'Play music notes'
       }, {
@@ -1953,14 +1956,23 @@ var COFFEESCRIPT_PALETTE =[
         block: 'moveto lastclick',
         title: 'Move to a location'
       }, {
+        block: 'moveto x, y',
+        title: 'Move to a coordinate'
+      }, {
         block: 'turnto lastmousemove',
         title: 'Turn towards a location'
       }, {
-        block: 'click ->\n  write \'Heh!\'',
+        block: 'click ->\n  write \'Ouch!\'',
         title: 'Do something when the turtle is clicked'
+      }, {
+        block: 'done ->\n  write \'Whew!\'',
+        title: 'Do something when turtles are done moving'
       }, {
         block: 'if pressed \'enter\'\n  write \'Holding.\'',
         title: 'Test if a key is pressed'
+      }, {
+        block: 'tick 30, ->\n  if pressed \'w\'\n    write \'w\'',
+        title: 'Test if a key 30 times per second'
       }, {
         block: 'p = new Piano',
         title: 'Make a new piano'
