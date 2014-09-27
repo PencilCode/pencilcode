@@ -22,16 +22,16 @@ function scanHtmlTop(html) {
   for (;;) {
     len = sofar.length;
     // Trim leading space.
-    sofar = html.replace(/^\s*/, '');
+    sofar = sofar.replace(/^\s*/, '');
     if (sofar.length < len) { continue; }
     // Trim leading comment.
-    sofar = html.replace(/^<!--[^-]*(?:-(?:[^-]|-[^>])[^-]*)*-*-->/, '');
+    sofar = sofar.replace(/^<!--[^-]*(?:-(?:[^-]|-[^>])[^-]*)*-*-->/, '');
     if (sofar.length < len) { scanned = true; continue; }
     // Detect acceptable tags within the HEAD.
     match = /^<([^\s>]+\b)\s*(?:[^\s=>]+\s*=\s*(?:[^\s>]+|'[^']*'|"[^"]")\s*)*\s*>/.exec(sofar);
     if (match && /^(?:!doctype|html|head|link|meta|base|title|script|style|\/\w+)$/i.test(match[1])) {
       scanned = true;
-      if (!result.start.hasOwnProperty(match[1].toLowerCase())) {
+      if (!result.pos.hasOwnProperty(match[1].toLowerCase())) {
         result.pos[match[1].toLowerCase()] = {
           index: html.length - sofar.length,
           length: match[0].length
@@ -45,7 +45,7 @@ function scanHtmlTop(html) {
       endpat = new RegExp('</(' + match[1] + '\\b)[^>]*>', 'i');
       match = endpat.exec(sofar);
       if (match) {
-        if (!result.end.hasOwnProperty(match[1].toLowerCase())) {
+        if (!result.pos.hasOwnProperty(match[1].toLowerCase())) {
           result.pos[match[1].toLowerCase()] = {
             index: html.length - sofar.length,
             length: match[0].length
