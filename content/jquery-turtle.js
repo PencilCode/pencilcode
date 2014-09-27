@@ -7536,6 +7536,7 @@ var colors = [
   }
   dollar_turtle_methods.PI = Math.PI;
   dollar_turtle_methods.E = Math.E;
+  dollar_turtle_methods.print = dollar_turtle_methods.write
   extrahelp.colors = {helptext:
       ["Defined colors: " + colors.join(" ")]};
   extrahelp.see = {helptext:
