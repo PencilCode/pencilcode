@@ -1262,6 +1262,12 @@ function readNewUrl(undo) {
       newuser = /(?:^|#|&)new(?:[=&]|$)/.exec(hash),
   // Extract blocks flag from hash if present.
       blocks = /(?:^|#|&)blocks=([^&]*)(?:&|$)/.exec(hash),
+  // Extract lang from hash if present.
+      lang = /(?:^|#|&)lang=([^&]*)(?:&|$)/.exec(hash),
+  // Extract html from hash if present.
+      html = /(?:^|#|&)html=?([^&]*)(?:&|$)/.exec(hash),
+  // Extract css from hash if present.
+      css = /(?:^|#|&)css=?([^&]*)(?:&|$)/.exec(hash),
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
@@ -1367,12 +1373,30 @@ function readNewUrl(undo) {
   view.setPreviewMode(
       model.editmode && (model.ownername !== "" || filename !== ""), firsturl);
   // Preload text if specified.
-  if (text != null) {
+  if (text != null || html != null || css != null || lang != null) {
     var code = '';
-    try {
-       code = decodeURIComponent(text[1].replace(/\+/g, ' '));
-    } catch (e) { }
-    createNewFileIntoPosition('left', filename, code);
+    var meta = {};
+    if (lang) {
+      if (/js|javascript/.test(lang[1])) {
+        meta.type = 'text/javascript';
+      }
+    }
+    if (html) {
+      try {
+        meta.html = decodeURIComponent(html[1].replace(/\+/g, ' '));
+      } catch (e) { }
+    }
+    if (css) {
+      try {
+        meta.css = decodeURIComponent(css[1].replace(/\+/g, ' '));
+      } catch (e) { }
+    }
+    if (text) {
+      try {
+         code = decodeURIComponent(text ? text[1].replace(/\+/g, ' ') : '');
+      } catch (e) { }
+    }
+    createNewFileIntoPosition('left', filename, code, meta);
     updateTopControls(false);
     return;
   }
