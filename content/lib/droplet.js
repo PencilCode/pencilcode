@@ -5777,6 +5777,12 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (retries > 0 && fixCoffeeScriptError(this.lines, e)) {
               this.text = this.lines.join('\n');
             } else {
+              if (firstError.location) {
+                firstError.loc = {
+                  line: firstError.location.first_line,
+                  column: firstError.location.first_column
+                };
+              }
               throw firstError;
             }
           }
@@ -5794,11 +5800,22 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.stripComments = function() {
-        var i, line, token, tokens, _i, _j, _len, _ref, _ref1;
-        tokens = CoffeeScript.tokens(this.text, {
-          rewrite: false,
-          preserveComments: true
-        });
+        var i, line, syntaxError, token, tokens, _i, _j, _len, _ref, _ref1;
+        try {
+          tokens = CoffeeScript.tokens(this.text, {
+            rewrite: false,
+            preserveComments: true
+          });
+        } catch (_error) {
+          syntaxError = _error;
+          if (syntaxError.location) {
+            syntaxError.loc = {
+              line: syntaxError.location.first_line,
+              column: syntaxError.location.first_column
+            };
+          }
+          throw syntaxError;
+        }
         for (_i = 0, _len = tokens.length; _i < _len; _i++) {
           token = tokens[_i];
           if (token[0] === 'COMMENT') {
@@ -11969,7 +11986,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
       return this.changeFromAceTimer = setTimeout(((function(_this) {
         return function() {
-          return _this.copyAceEditor();
+          var result;
+          result = _this.copyAceEditor();
+          if (!result.success && result.error) {
+            return _this.fireEvent('parseerror', [result.error]);
+          }
         };
       })(this)), 0);
     };
@@ -12227,6 +12248,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (!this.currentlyUsingBlocks && !this.currentlyAnimating) {
         setValueResult = this.copyAceEditor();
         if (!setValueResult.success) {
+          if (setValueResult.error) {
+            this.fireEvent('parseerror', [setValueResult.error]);
+          }
           return setValueResult;
         }
         if (this.aceEditor.getFirstVisibleRow() === 0) {
@@ -12551,7 +12575,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.trimWhitespace = trimWhitespace;
     };
     Editor.prototype.setValue_raw = function(value) {
-      var newParse;
+      var e, newParse;
       try {
         if (this.trimWhitespace) {
           value = value.trim();
@@ -12572,8 +12596,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           success: true
         };
       } catch (_error) {
+        e = _error;
         return {
-          success: false
+          success: false,
+          error: e
         };
       }
     };
@@ -12587,7 +12613,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         result = this.setValue_raw(value);
         if (result.success === false) {
           this.setEditorState(false);
-          return this.aceEditor.setValue(value);
+          this.aceEditor.setValue(value);
+          if (result.error) {
+            return this.fireEvent('parseerror', [result.error]);
+          }
         }
       }
     };

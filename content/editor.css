@@ -12,6 +12,9 @@ body.modal #overlay { display:block; }
   padding:12px;font-weight:300;text-align:center;overflow:hidden;}
 #overlay .dialog.center{left:0;right:0;bottom:25vh;top:0;width:320px;}
 #overlay .dialog.leftopts{right:50%;top:90px}
+#overlay .dialog label.tooltipstered:hover { border: 1px dotted dimgray; }
+#overlay .dialog label.tooltipstered {
+  border: 1px solid transparent; padding-right: 5px; }
 .framed #overlay .dialog{top:12px;font-weight:300;}
 #overlay .prompt{padding:8px;}
 #overlay .info{padding:3px;color:red;}

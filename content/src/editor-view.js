@@ -1496,18 +1496,26 @@ function showPaneEditorLanguagesDialog(pane) {
   opts.content =
       '<div style="text-align:left">' +
       '<center>Languages</center>' +
-      '<div style="padding:8px 5px">' +
-      '<label><input type="radio" value="text/coffeescript" name="lang"> ' +
+      '<div style="padding:8px 5px 4px">' +
+      '<label title="Use a Concise Indent Language">' +
+      '<input type="radio" value="text/coffeescript" name="lang"> ' +
       'Coffeescript</label><br>' +
-      '<label><input type="radio" value="text/javascript" name="lang"> ' +
-      'Javascript</label><br>' +
-      '<label><input type="checkbox" class="css"> CSS</label><br>' +
-      '<label><input type="checkbox" class="html"> HTML</label><br>' +
+      '<label title="Use the Standard Web Language">' +
+      '<input type="radio" value="text/javascript" name="lang"> ' +
+      'Javascript</label>' +
+      '</div>' +
+      '<div style="padding:4px 5px 12px">' +
+      '<label title="Edit Cascading Style Sheets">' +
+      '<input type="checkbox" class="css"> CSS</label><br>' +
+      '<label title="Edit Hypertext Markup Language">' +
+      '<input type="checkbox" class="html"> HTML</label>' +
       '</div>' +
       '<center style="padding-top:5px">Libraries</center>' +
-      '<div style="padding:8px 5px">' +
-      '<label><input type="checkbox" class="bits"> Common Library</label><br>' +
-      '<label><input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '<div style="padding:8px 5px 15px">' +
+      '<label title="Include jQuery, LoDash, and jQ-Turtle">' +
+      '<input type="checkbox" class="bits"> Common Library</label><br>' +
+      '<label title="Start with a turtle">' +
+      '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -1515,6 +1523,7 @@ function showPaneEditorLanguagesDialog(pane) {
       '</center>';
 
   opts.init = function(dialog) {
+    dialog.find('[title]').tooltipster({position:'left'});
     dialog.find('[value="' + visibleMimeType + '"]').prop('checked', true);
     dialog.find('button.ok').focus();
     if (hasHtml) {
@@ -2011,14 +2020,14 @@ var JAVASCRIPT_PALETTE = [
         block: 'bk(100);',
         title: 'Move backward'
       }, {
+        block: 'speed(10);',
+        title: 'Set the speed of the turtle'
+      }, {
         block: 'dot(blue, 50);',
         title: 'Make a dot'
       }, {
         block: 'box(green, 50);',
         title: 'Make a square'
-      }, {
-        block: 'speed(10);',
-        title: 'Set the speed of the turtle'
       }, {
         block: 'write(\'hello\');',
         title: 'Write text on the screen'
@@ -2209,16 +2218,23 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
             mode: dropletMode,
             palette: paletteForMimeType(visibleMimeType)
           });
+  // Set up fonts - once they are loaded.
   whenCodeFontLoaded(function () {
     dropletEditor.setFontFamily("Source Code Pro");
     dropletEditor.setFontSize(16);
   });
   dropletEditor.setPaletteWidth(250);
   if (!/^frame\./.test(window.location.hostname)) {
+    // Blue nubby when inside pencilcode.
     dropletEditor.setTopNubbyStyle(0, '#1e90ff');
   } else {
+    // Gray nubby when framed.
     dropletEditor.setTopNubbyStyle(0, '#dddddd');
   }
+  // Listen to parseerror event before setting up text.
+  dropletEditor.on('parseerror', function(e) {
+    fireEvent('parseerror', [pane, e]);
+  });
   dropletEditor.setEditorState(useblocks);
   dropletEditor.setValue(text);
 

@@ -96,10 +96,23 @@ describe('code editor', function() {
           function() { return $(this).position().left == 0; }).find('.panetitle-text');
       if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
       // Wait for both the directory div and the create link to appear.
-      if (!$('.directory').length) return {poll:true, step:1};
-      if (!$('.create').length) return {poll:true, step:2};
+      if (!$('.directory').length) return {poll:true, step:1,
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
+      if (!$('.create').length) return {poll:true, step:2,
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
       // Race condition: also wait for 'first' to vanish from filename
-      if (/first/.test($('#filename').text())) return { poll: true, step:3, msg: window.lasterrorevent && window.lasterrorevent.message };
+      if (/first/.test($('#filename').text())) return {
+        poll: true, step:3,
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
       // Return an array of all the link text within the directory listing.
       var dirs = []
       $('.directory a').each(function() { dirs.push($(this).text()); });

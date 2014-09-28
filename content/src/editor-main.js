@@ -421,6 +421,7 @@ view.on('changehtmlcss', function(pane) {
   var newdata = $.extend({}, modelatpos('left').data, doc);
   var filename = modelatpos('left').filename;
   runCodeAtPosition('right', newdata, filename, true);
+  saveDefaultMeta(doc.meta);
 });
 
 view.on('run', function() {

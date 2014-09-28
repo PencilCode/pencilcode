@@ -283,9 +283,12 @@ function debugError(err) {
   var m = view.getPaneEditorData(view.paneid('left'));
   var text = getTextOnLine(m && m.data || '', line);
   var advice = errorAdvice(err.message, text);
+  showDebugMessage(m);
+}
+
+function showDebugMessage(m) {
   var script = (
-    '(' + showPopupErrorMessage.toString() + '(' +
-    JSON.stringify(advice) + '));');
+    '(' + showPopupErrorMessage.toString() + '(' + JSON.stringify(m) + '));');
   view.evalInRunningPane(view.paneid('right'), script, true);
 }
 
@@ -574,6 +577,23 @@ function editorLineNumberForError(error) {
   // Subtract a few lines of boilerplate from the top of the script.
   return line - 3 - lineNumberOffset;
 }
+
+//////////////////////////////////////////////////////////////////////
+// PARSE ERROR HIGHLIGHTING
+//////////////////////////////////////////////////////////////////////
+
+view.on('parseerror', function(pane, err) {
+  if (err.loc) {
+    // The markPaneEditorLine function uses 1-based line numbering.
+    var line = err.loc.line + 1;
+    view.markPaneEditorLine(pane, line, 'debugerror');
+  }
+  if (err.message){
+    showDebugMessage(
+      "<p>Oops, the computer could not show blocks." +
+      "<p>It says:" + err.message.replace(/^.*Error:/i, ''));
+  }
+});
 
 //////////////////////////////////////////////////////////////////////
 // GUTTER HIGHLIGHTING SUPPORT
