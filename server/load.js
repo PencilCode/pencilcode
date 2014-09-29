@@ -142,6 +142,8 @@ exports.handleLoad = function(req, res, app, format) {
         if (mt.indexOf('text/x-pencilcode') == 0) {
           data = filetype.wrapTurtle(m, res.locals.site);
           mt = mt.replace('x-pencilcode', 'html');
+        } else {
+          data = m.data;
         }
 
         res.set('Cache-Control', 'must-revalidate');
