@@ -29,16 +29,14 @@ describe('dev server', function() {
       _page.evaluate(function() {
         return {
           h1: $('h1').eq(0).text(),
-          a0: $('.choices a').eq(0).text().replace(/\s+/g, ' '),
-          a1: $('.choices a').eq(1).text().replace(/\s+/g, ' '),
-          a2: $('.choices a').eq(2).text().replace(/\s+/g, ' ')
+          a0: $('.choices a').eq(0).text().replace(/\s+/g, ' ').trim(),
+          na: $('.newaccount').eq(0).text().replace(/\s+/g, ' ').trim()
         };
       }, function(err, result) {
         assert.ifError(err);
         assert.equal(result.h1, "Pencil");
-        assert.equal(result.a0, "I'm new here. Let's play. blank editor");
-        assert.equal(result.a1, "New account.");
-        assert.equal(result.a2, "Browse users. random sample");
+        assert.equal(result.a0, "I'm new here. Let's play.");
+        assert.equal(result.na, "Make new account.");
         done();
       });
     });
