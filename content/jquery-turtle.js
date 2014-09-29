@@ -1585,7 +1585,8 @@ function createSurfaceAndField() {
     .css({
       position: 'absolute',
       display: 'inline-block',
-      top: ch, left: cw, width: '0', height: '0',
+      // Setting with to 100% allows label text to not wrap.
+      top: ch, left: cw, width: '100%', height: '0',
       font: 'inherit',
       // Setting transform origin for the turtle field
       // fixes a "center" point in page coordinates that
