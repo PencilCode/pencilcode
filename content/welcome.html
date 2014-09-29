@@ -72,6 +72,23 @@ h1, h2 {
   text-transform: capitalize;
   text-decoration: underline;
 }
+.newaccount, .goback {
+  padding: 6px 10px 10px 10px;
+  border-radius: 8px;
+  color: dimgray;
+}
+.newaccount {
+  background: rgba(152, 251, 152, 0.5);
+}
+.newaccount:hover {
+  background: palegreen;
+}
+.goback {
+  background: rgba(255, 240, 120, 0.5);
+}
+.goback:hover {
+  background: #fff066;
+}
 #what,#guide,.whiteback {
   font-size: 16px;
   line-height: 16px;
@@ -85,6 +102,7 @@ h1, h2 {
 .info,.link {
   color: gray;
   text-decoration: none;
+  cursor: pointer;
 }
 #what:hover,#guide:hover,.info:hover,.link:hover {
   color: blue;
@@ -285,11 +303,22 @@ Contribute to the development of Pencil Code at
 <br>
 <a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
 <br>
+<table class="gray" align="center" style="border-spacing:20px 0;margin-top:20px"><tr>
+<td style="min-width:100px">
+<a href="/edit/untitled" class="link">Blank editor.</a>
+</td>
+<td>
+<a href="/edit/intro#new" class="link newaccount">Make new account.</a>
+</td>
+<td style="min-width:100px">
+<a href="/edit/" class="link">Browse users.</a>
+</td>
+</tr></table>
+
 <div class="choices">
 <a href="//gym.pencilcode.net/draw/">I'm new here.
 <span class="em">Let's play.</span>
-<span class="extrabutton"
-  id="blank" href="/edit/untitled">blank editor</span></a>
+</a>
 <script>
 function cookie(key) {
   // read
@@ -319,16 +348,7 @@ function cookie(key) {
 
 var olduser = false;
 if (cookie('recent') && !/\/\/frame\./.test(cookie('recent'))) {
-  document.write('<a href="' + cookie('recent') + '">Go back to<br>' +
-      cookie('recent').replace(/^https?:\/\//, '').
-      replace(/^(\w+)\.[^\/]+\/edit\//, '$1&nbsp;/ ').
-      replace(/\//g, '<wbr>/') +
-      '. <span class="extrabutton" id="reset">reset this</span></a>');
-  olduser = true;
-} else {
-  document.write('<a href="/edit/intro#new">' +
-     '<span class="nw">New account.</span>' +
-     '</a>');
+  olduser = cookie('recent');
 }
 if (!olduser) {
   $('.em').addClass('glow');
@@ -394,22 +414,25 @@ function clearCookie() {
   document.cookie = 'recent=0;expires=' + (new Date(0)).toUTCString() + ';domain=' + location.hostname + ';';
 }
 
+document.write('</div><br clear="all">');
+
+if (olduser) {
+  document.write('<div style="margin-bottom:8px"><span class="goback">' +
+      '<a href="' + olduser + '" class="link">Go back to ' +
+      olduser.replace(/^https?:\/\//, '').
+      replace(/^(\w+)\.[^\/]+\/edit\//, '$1/').
+      replace(/\//g, '<wbr>/') +
+      '.</a> <a id="reset" class="link">(reset)</a></span></div>');
+}
+
+
 $('#reset').click(function(e) {
   e.preventDefault();
   clearCookie();
   window.location.reload();
 });
 
-document.write('<a href="/edit/">Browse users. ' +
-    '<span class="extrabutton" id="randfirst" ' +
-    'href="/edit/first">random sample</span></a></div>');
 
-if (false && !olduser) {
-  document.write('<br clear="all">');
-} else {
-  document.write('<div class="new">' +
-     '<a href="/edit/intro#new" class="link">Make new account</a></div>');
-}
 </script>
 
 <h2>A Modern Sandbox<br>
