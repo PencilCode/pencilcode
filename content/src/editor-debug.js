@@ -283,7 +283,7 @@ function debugError(err) {
   var m = view.getPaneEditorData(view.paneid('left'));
   var text = getTextOnLine(m && m.data || '', line);
   var advice = errorAdvice(err.message, text);
-  showDebugMessage(m);
+  showDebugMessage(advice);
 }
 
 function showDebugMessage(m) {
