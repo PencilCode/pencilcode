@@ -1863,6 +1863,25 @@ function evalAndPostback(requestid, code) {
   view.publish("response", resultanderror, requestid);
 }
 
+// Detect when the page was refreshed and log it.
+(function() {
+  $(window).on('unload', function() {
+    cookie('unloaded', +(new Date) + ':'
+        + window.location.href.replace(/#.*$/, ''));
+  });
+  // After a refresh, the session cookie is present.
+  var unloaded = cookie('unloaded'),
+      unloadedmatch = unloaded && /^(\d+):(.*)$/.exec(unloaded);
+  if (unloadedmatch && +(new Date) - unloadedmatch[1] < 5000 &&
+      window.location.href.replace(/#.*$/, '') == unloadedmatch[2]) {
+    $.get('/log/' + window.location.pathname.replace(
+            /^\/[^\/]+\//, '').replace(/\/+$/, '') + '?refresh');
+  }
+})();
+
+
+
+
 // For a hosting frame, publish the 'load' event before publishing
 // the first 'update' events.
 view.publish('load');
