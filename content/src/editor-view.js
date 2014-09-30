@@ -1950,6 +1950,12 @@ var COFFEESCRIPT_PALETTE =[
     color: 'violet',
     blocks: [
       {
+        block: 'mycommand = ->\n  ``',
+        title: 'Define a custom command'
+      }, {
+        block: 'do mycommand',
+        title: 'Do a custom command'
+      }, {
         block: 'write \'Let\\\'s play!\'',
         title: 'Write a message'
       }, {
