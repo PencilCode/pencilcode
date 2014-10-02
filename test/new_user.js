@@ -86,8 +86,9 @@ describe('new user', function() {
       assert.ok(/# Welcome/.test(result.text), 'Got ' + result.text);
       // The save button should not be disabled (even though unmodified).
       assert.equal(result.saved, false);
-      // There should be no login or logout buton.
-      assert.equal(result.login, 0);
+      // There should be one login button.
+      assert.equal(result.login, 1);
+      // There should be no logout buton.
       assert.equal(result.logout, 0);
       // The element with focus should NOT be the editor - it should be
       // the username field.
