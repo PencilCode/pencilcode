@@ -235,7 +235,7 @@ function updateTopControls(addHistory) {
       } else if (!nosaveowner()) {
         buttons.push({
           id: 'login', label: 'Log in',
-          title: 'Enter password for ' + model.ownername});
+          title: 'Log in and save.'});
       }
     }
     buttons.push(
