@@ -232,6 +232,10 @@ function updateTopControls(addHistory) {
         } else {
           buttons.push({id: 'bydate', label: 'Sort by Date'});
         }
+      } else if (!nosaveowner()) {
+        buttons.push({
+          id: 'login', label: 'Log in',
+          title: 'Enter password for ' + model.ownername});
       }
     }
     buttons.push(
@@ -475,6 +479,10 @@ view.on('logout', function() {
 });
 
 view.on('login', function() {
+  if (specialowner()) {
+    saveAction(false, 'Log in and save.', null);
+    return;
+  }
   view.showLoginDialog({
     prompt: 'Log in.',
     username: model.ownername,
@@ -569,7 +577,11 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     return;
   }
   if (specialowner()) {
-    signUpAndSave();
+    var options = {};
+    if (loginPrompt) {
+      options.prompt = loginPrompt;
+    }
+    signUpAndSave(options);
     return;
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
