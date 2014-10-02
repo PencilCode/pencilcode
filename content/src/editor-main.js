@@ -235,7 +235,7 @@ function updateTopControls(addHistory) {
       } else if (!nosaveowner()) {
         buttons.push({
           id: 'login', label: 'Log in',
-          title: 'Log in and save.'});
+          title: 'Log in and save'});
       }
     }
     buttons.push(
