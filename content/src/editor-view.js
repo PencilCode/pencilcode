@@ -2386,6 +2386,26 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   editor.getSession().setTabSize(2);
   editor.getSession().setMode(mode);
 
+  // Set up sensitivity to touch events - this makes it so
+  // that a brief touch brings up the editor.
+  $(elt).find('.ace_content').on('touchstart', function(e) {
+    // Unwrap jquery event.
+    if (e.originalEvent) { e = e.originalEvent; }
+    var moved = false;
+    if (e.touches.length) {
+      var rc = editor.renderer.screenToTextCoordinates(
+        e.touches[0].pageX, e.touches[0].pageY);
+      editor.moveCursorToPosition(rc);
+      moved = true;
+    }
+    if (!editor.isFocused()) {
+      editor.focus();
+    } else if (moved) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -2524,7 +2544,10 @@ function setPrimaryFocus() {
         selectContentsOf(elt, untitled.index ? untitled.index + 1 : 0);
       }, 0);
     } else {
-      paneState.editor.focus();
+      if (!/mobile/i.test(navigator.userAgent)) {
+        // Focus the editor by default except on mobile.
+        paneState.editor.focus();
+      }
     }
   }
 }
