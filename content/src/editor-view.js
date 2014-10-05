@@ -2391,16 +2391,21 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   $(elt).find('.ace_content').on('touchstart', function(e) {
     // Unwrap jquery event.
     if (e.originalEvent) { e = e.originalEvent; }
-    var moved = false;
     if (e.touches.length) {
+      // The renderer really expects screen (scrolled) coordinates,
+      // not page coordinates.
       var rc = editor.renderer.screenToTextCoordinates(
-        e.touches[0].pageX, e.touches[0].pageY);
+        e.touches[0].pageX - window.pageXOffset,
+        e.touches[0].pageY - window.pageYOffset);
       editor.moveCursorToPosition(rc);
-      moved = true;
     }
     if (!editor.isFocused()) {
+      // A single touch will focus the editor and bring up
+      // the onscreen keyboard.
       editor.focus();
-    } else if (moved) {
+    } else {
+      // If already focused, a touch will just move the cursor
+      // but not blur focus nor dismiss the onscreen keyboard.
       e.preventDefault();
       return false;
     }
@@ -2545,7 +2550,10 @@ function setPrimaryFocus() {
       }, 0);
     } else {
       if (!/mobile/i.test(navigator.userAgent)) {
-        // Focus the editor by default except on mobile.
+        // Focus the editor by default except on mobile.  The reason is
+        // that iOS does not bring up the onscreen keyboard when there
+        // is default focus; and then it becomes difficult to get the
+        // keyboard, because re-touching will not change focus.
         paneState.editor.focus();
       }
     }
