@@ -32,6 +32,10 @@ exports.initialize = function(app) {
         if (index > 0) { index -= 1; }
         res.locals.site = app.locals.config.host;
         res.locals.owner = req.hostname.substring(0, index);
+        res.locals.portpart = '';
+        if (req.headers.host && /:/.test(req.headers.host)) {
+          res.locals.portpart = /(:.*)$/.exec(req.headers.host)[1];
+        }
         res.locals.filepath = req.path.replace(/^\/[^\/]*/, '');
       }
       next();

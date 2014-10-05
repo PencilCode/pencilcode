@@ -32,7 +32,8 @@ var expandSiteInclude = tamper(function(req, res) {
   }
   return function(body) {
     if (res.locals.site) {
-      body = body.replace(/<!--#echo var="site"-->/g, res.locals.site);
+      body = body.replace(/<!--#echo var="site"-->/g,
+          res.locals.site + res.locals.portpart);
     }
     if (res.locals.filepath) {
       body = body.replace(/<!--#echo var="filepath"-->/g, res.locals.filepath);
