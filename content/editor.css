@@ -70,7 +70,7 @@ body.modal #overlay { display:block; }
 .panetitle a {color:inherit; text-decoration: none; display: block;}
 .panetitle a b {font-family: Courier New,monospace; font-size: 34px;
   line-height:30px;font-weight:bold; vertical-align: top;}
-.panetitle a span {text-decoration: none; underline;}
+.panetitle a span {text-decoration: none;}
 .panetitle a:hover {color:white;}
 .panetitle a:active {color:red;}
 .panetitle a:hover span {text-decoration:underline;color:white;}
