@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
   "dependencies": {
-    "ace-builds": "ajaxorg/ace-builds#v1.1.6",
+    "ace-builds": "ajaxorg/ace-builds#v1.1.7",
     "almond": "latest",
     "devbridge-autocomplete": "latest",
     "droplet": "Pencilcode/droplet#master",
@@ -18,6 +18,6 @@
     "zeroclipboard": "latest"
   },
   "resolutions": {
-    "ace-builds": "v1.1.6"
+    "ace-builds": "v1.1.7"
   }
 }
