@@ -5,6 +5,7 @@
   "dependencies": {
     "ace-builds": "ajaxorg/ace-builds#v1.1.7",
     "almond": "latest",
+    "bootstrap": "latest",
     "devbridge-autocomplete": "latest",
     "droplet": "Pencilcode/droplet#master",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",

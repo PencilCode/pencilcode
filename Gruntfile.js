@@ -54,7 +54,8 @@ module.exports = function(grunt) {
           destPrefix: 'content/lib'
         },
         files: {
-          'ace' : 'ace-builds/src-min-noconflict'
+          'ace' : 'ace-builds/src-min-noconflict',
+          'bootstrap' : 'bootstrap'
         }
       },
       src: {
@@ -75,7 +76,8 @@ module.exports = function(grunt) {
           'base64.js': 'source-map/lib/source-map/base64.js',
           'base64-vlq.js': 'source-map/lib/source-map/base64-vlq.js',
           'binary-search.js': 'source-map/lib/source-map/binary-search.js',
-          'source-map-consumer.js': 'source-map/lib/source-map/source-map-consumer.js',
+          'source-map-consumer.js':
+              'source-map/lib/source-map/source-map-consumer.js',
           'util.js': 'source-map/lib/source-map/util.js'
         }
       }
@@ -131,6 +133,14 @@ module.exports = function(grunt) {
           beautify: {
             ascii_only: true
           }
+        }
+      }
+    },
+    less: {
+      all: {
+        options: { compress: true },
+        files: {
+          "content/welcome.css": "content/src/welcome.less"
         }
       }
     },
@@ -220,14 +230,15 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-requirejs');
-  grunt.loadNpmTasks('grunt-replace');
-  grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-node-inspector');
+  grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-sed');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
@@ -286,6 +297,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build', ['requirejs', 'replace', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
-      ['requirejs', 'replace', 'uglify', 'builddate', 'test']);
+      ['requirejs', 'replace', 'uglify', 'less', 'builddate', 'test']);
 };
 
