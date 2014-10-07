@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<title>Pencil</title>
+<meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
+
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400">
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:400,700&subset=latin">
+<link rel="stylesheet" type="text/css" href="welcome.css">
+<style>
+</style>
+<body>
+<div class="container shadowcard">
+<div class="row">
+<div class="col-sm-12 vpadding">
+<!-- login bar -->
+<ul class="pull-right list-inline"><li class="btn btn-clear"><span class="glyphicon glyphicon-star newicon"></span> New Account<li class="btn btn-clear"><span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul>
+<!-- branding -->
+<img class="pull-left" src="/pencil_32.png" style="margin:10px 15px 10px 3px;">
+<div class="pull-left">
+<h1 style="margin:0;"><span style="text-transform:uppercase">Pencil</span><span style="display:block;text-transform:lowercase;margin-top:-6px;letter-spacing:12px;padding:0 1px;">Code</span></h1>
+</div>
+</div>
+</div>
+<!-- splash row -->
+<div class="row topline">
+<div class="col-sm-6 vpadding">
+<h1 style="font-size:48px;margin:0 0 10px;text-align:center;text-shadow:0 0 8px white;">Learn to Code Visually</h1>
+<p>Learn professional programming languages using
+an editor that can switch freely between blocks and text.
+Create art, music, games, or stories. Or
+invent a program that will change the world.
+<p style="text-align:center"><button class="btn btn-primary">Let's play!</button>
+</div>
+<div class="col-sm-6 vpadding" style="min-height:300px">
+<iframe id="demo" style="height:100%;width:100%;border:0"></iframe>
+</div>
+</div>
+</div>
+</body>
+<script>
+(function() {
+var index = 1;
+var count = 2;
+function advance() {
+  document.getElementById('demo').src =
+     "http://promo.pencilcode.net/home/promo" + (index++);
+  if (index > count) { index = 1; }
+}
+advance();
+setInterval(advance, 20000);
+})();
+</script>
+</html>

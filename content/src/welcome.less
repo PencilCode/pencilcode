@@ -1,7 +1,42 @@
 @import "../lib/bootstrap/less/variables.less";
 @import "../lib/bootstrap/less/mixins.less";
-
+@import "../lib/bootstrap/less/type.less";
+@import "../lib/bootstrap/less/glyphicons.less";
 @import "../lib/bootstrap/less/normalize.less";
-
 @import "../lib/bootstrap/less/scaffolding.less";
 @import "../lib/bootstrap/less/grid.less";
+@import "../lib/bootstrap/less/buttons.less";
+@import "../lib/bootstrap/less/utilities.less";
+
+@icon-font-path: "http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/fonts/";
+@font-family-sans-serif: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+.btn-clear {
+  .button-variant(@btn-default-color, @btn-default-bg, transparent)
+}
+@brand-primary: dodgerblue;
+
+.btn:hover .newicon { color: orange; }
+.btn:hover .loginicon { color: green; }
+
+body { background: url(src/shavings.jpg) }
+
+.shadowcard {
+  box-shadow: 0 0 30px black;
+  background: white;
+}
+.vpadding {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.topline {
+  border-top:1px solid #eee;
+}
+.row {
+  display: table;
+}
+
+[class*="col-"] {
+  float: none;
+  display: table-cell;
+  vertical-align: top;
+}
