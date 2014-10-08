@@ -12,13 +12,18 @@
 <body>
 <div class="container shadowcard">
 <div class="row">
-<div class="col-sm-12 vpadding">
-<!-- login bar -->
-<ul class="pull-right list-inline"><li class="btn btn-clear"><span class="glyphicon glyphicon-star newicon"></span> New Account<li class="btn btn-clear"><span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul>
+<div class="col-xs-6 vpadding">
 <!-- branding -->
-<h1 style="margin:0;" style="display:inline-block">
-<img class="pull-left" src="/pencil_32.png" style="margin:10px 12px 10px 2px;">
-<div style="display:inline-block"><span style="display:block;text-transform:uppercase">Pencil</span><span style="display:block;text-transform:lowercase;margin-top:-5px;letter-spacing:12px;padding:1px;">Code</span></div></h1>
+<h1
+style="margin:0;min-width:115px;max-width:170px;min-height:67px;width:100%;padding-top:12px;"
+class="pull-left">
+<div style="display:inline-block" class="pull-right"><span style="display:block;text-transform:uppercase;margin-top:-12px;">Pencil</span><span style="display:block;text-transform:lowercase;margin-top:-5px;letter-spacing:12px;padding:1px 3px;">Code</span></div>
+<center><img src="/pencil_32.png"></center>
+</h1>
+</div>
+<div class="col-xs-6 vpadding">
+<!-- login bar -->
+<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><span class="glyphicon glyphicon-star newicon"></span> New Account<li class="btn btn-clear" id="login"><span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul>
 </div>
 </div>
 <!-- splash row -->
@@ -27,27 +32,87 @@
 <h1 style="font-size:48px;margin:0 0 10px;text-align:center;text-shadow:0 0 8px white;">Learn to Code Visually</h1>
 <p>Learn professional programming languages using
 an editor that can switch freely between blocks and text.
-Create art, music, games, or stories. Or
+Create art, music, games, and stories. Or
 invent a program that will change the world.
-<p style="text-align:center"><button class="btn btn-primary">Let's play!</button>
+<p style="text-align:center"><a class="btn btn-primary" href="http://gym.pencilcode.net/draw/">Let's play!</a>
+<p>Pencil Code supports CoffeeScript, Javascript, CSS, and HTML.
 </div>
 <div class="col-sm-6 vpadding">
 <iframe id="demo" style="min-height:300px;height:100%;width:100%;border:0"></iframe>
 </div>
 </div>
+<div class="row topline">
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3>Draw</h3>
+<p><a href="http://gym.pencilcode.net/draw/" class="btn btn-default" style="white-space:normal">Code your own art</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3>Jam</h3>
+<p><a href="http://gym.pencilcode.net/jam/" class="btn btn-default" style="white-space:normal">Code some music</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3>Imagine</h3>
+<p><a href="http://gym.pencilcode.net/imagine/" class="btn btn-default" style="white-space:normal">Code an adventure</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h2 style="padding:10px 0">Get Creative</h2>
+</div>
+</div>
+<div class="row topline">
+<div class="col-sm-12 vpadding text-center">
+<h2 style="padding:10px 0">Resources</h2>
+<ul class="list-inline">
+<li><a href="x">About Pencil Code</a>
+<li>
+<li><a href="x">Material for Teachers</a>
+<li>
+<li><a href="x">Open Source Hub</a>
+</ul>
+</div>
+</div>
 </div>
 </body>
 <script>
-(function() {
-var index = 1;
-var count = 2;
+// Preload support.
+function loadusers(data) {
+  loadusers.data = data;
+  loadusers.callback && loadusers.callback(data);
+}
+loadusers.then = function(callback) {
+  if (loadusers.data) { callback(loadusers.data); }
+  else { loadusers.callback = callback; }
+}
+</script>
+<script src="/load/?callback=loadusers"></script>
+<script src="/jquery.js"></script>
+<script>
+$(function() {
+// Demo Animation
+var index = 0;
+var count = 3;
+var sleeptime = +(new Date) + 100 * 1000;
+function motion() {
+  sleeptime = Math.max(sleeptime, +(new Date) + 30 * 1000);
+}
 function advance() {
+  if (+(new Date) > sleeptime) return;
   document.getElementById('demo').src =
      "http://promo.pencilcode.net/home/promo" + (index++);
-  if (index > count) { index = 1; }
+  if (index >= count) { index = 0; }
 }
+// New account link
+$('#newaccount').on('click', function() {
+  window.location = '/edit/intro#new';
+});
+$('#login').on('click', function() {
+  loadusers.then(function() {
+
+  });
+});
 advance();
 setInterval(advance, 20000);
-})();
+window.addEventListener('mousemove', motion);
+window.addEventListener('touchstart', motion);
+});
 </script>
 </html>
