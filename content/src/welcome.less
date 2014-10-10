@@ -56,8 +56,10 @@ body { background: dodgerblue; }
   padding: 20px;
   top: 30px;
   box-sizing: border-box;
+  display: none;
 }
 .pclogo {
+  text-align: center;
   text-decoration: inherit;
   color: inherit;
   display: block;
@@ -68,9 +70,15 @@ body { background: dodgerblue; }
   max-width: 150px;
   min-height: 67px;
 }
+a.pclogo[href]:hover {
+  background: lightblue;
+  color: inherit;
+  border-radius: 8px;
+}
 .pctext {
   display: inline-block;
   float: right;
+  margin-left: 3px;
 }
 .pcline1 {
   text-transform: uppercase;
