@@ -1,0 +1,164 @@
+<!doctype html>
+<html manifest="/nocache.appcache">
+<head>
+<title>Pencil</title>
+<meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
+
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400">
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:400,700&subset=latin">
+<style>
+body {
+  font-family: Lato;
+  font-weight: 400;
+}
+h1, h2 {
+  font-weight: 300;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  margin: 15px;
+  text-shadow:0 0 6px white;
+  box-shadow: 0 0 16px 16px rgba(255, 255, 255, .6);
+}
+.about {
+  left: 0;
+  right: 0;
+  position: absolute;
+  max-width: 768px;
+  padding: 20px;
+  margin: auto;
+  box-sizing: border-box;
+}
+#intro {
+  display: block;
+}
+.about h1 {
+  margin: 0;
+  padding: 0;
+}
+.about code {
+  font-weight: bold;
+  background: gainsboro;
+  color: saddlebrown;
+}
+.about pre {
+  font-weight: bold;
+  display: inline-block;
+  padding: 5px 10px;
+  margin: 0;
+  background: gainsboro;
+  color: saddlebrown;
+}
+.about pre:hover {
+  background: lightgray;
+}
+.about b {
+  text-transform: capitalize;
+  text-decoration: underline;
+}
+.bottomnote, .bottomnote a {
+  color: darkgray;
+  margin-bottom: 0;
+  text-decoration: none;
+}
+.bottomnote a:hover {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+<div class="about" id="intro">
+<img src="/image/pencil_32.png"
+style="border:0;float:left;padding-right:10px;margin-top:3px;"
+title="pencilcode.net">
+<h1>Pencil</h1>
+<p>Pencil is a collaborative programming site for drawing
+art, playing music, and creating games.  Pencil is also
+a place to experiment with mathematical functions, geometry,
+graphing, webpages, simulations, and algorithms.  Programs are
+open for all to see and copy.
+<p><a target="_blank"
+href="http://www.youtube.com/watch?v=JJzFD4EdeuY"
+data-vimeo="79743491"
+>Watch a video overview</a> or
+<a href="http://www.youtube.com/watch?v=edN07wcbj2w"
+data-vimeo="79743492" target="_blank"
+>watch a video tutorial</a>.
+</p>
+<div id="video"></div>
+<p>The main language is Coffeescript.  Professional software engineers
+use Coffeescript to build complex websites, but Coffeescript code can
+also be very simple.
+<p><table width=100%><tr><td width=30% valign=top>Play three notes:</p>
+<a style="text-decoration:none" href="http://goo.gl/iYnZIj"
+target="_blank">
+<pre>
+play 'CDE'
+</pre>
+</a>
+</td><td width=30% valign=top>
+Draw a gold star:</p>
+<a style="text-decoration:none" href="http://goo.gl/985CPX"
+target="_blank">
+<pre>
+pen gold
+for x in [1..5]
+  fd 100
+  rt 144
+</pre>
+</a>
+</td><td width=30% valign=top>
+Follow the mouse:</p>
+<a style="text-decoration:none" href="http://goo.gl/MtbKxd"
+target="_blank">
+<pre>
+speed Infinity
+tick 3, ->
+  turnto lastmousemove
+  fd 15
+  dot green
+</pre>
+</a>
+</td></tr></table>
+
+<p>Programs preload the pencilcode library to use
+functions such as <code>pen</code> (sets the turtle's pen color),
+<code>fd</code> (moves the turtle forward), and <code>play</code>
+(plays musical notes).
+Pencil is all <a href="/license.html" target="_blank">open source</a>.
+Hang out on the <a href="/group" target="_blank">Pencil
+discussion forum</a> or check out
+<a href="//pencilcode.net/material/reference.pdf" target="_blank"
+>the quick reference</a>
+or
+<a href="//guide.pencilcode.net/" target="_blank">the online guide</a>
+to find out more.  There is also an illustrated
+<a href="//pencilcode.net/book" target="_blank">Pencil Code book</a> with more than 100 small projects.
+<p>Anybody can save programs and web pages, but read the
+<a href="/terms.html" target="_blank">Terms of Service</a> and the
+<a href="/privacy.html" target="_blank">Privacy Policy</a> first.
+Two rules:
+<p><u>Be Nice.</u> Do not mess up other peoples' work.
+<strong>Do not post content that detracts from education on the site.</strong>
+This a learning space that is not locked down
+(for example, passwords are optional). So feel free to explore, create,
+and link, but also please be considerate.
+<p><u>Be Careful.</u> Do not depend on Pencil to keep your data safe.
+Data posted here is public, and data is not secured from loss.
+<strong>Do not post private or personally identifiable
+information.</strong>  Passwords on Pencil
+do not prevent malicious interference.
+<p class="bottomnote"
+>The Pencil Code Foundation, Inc., is devoted to advancing computer
+science education by making programming as simple and as
+powerful as using a pencil.
+Contribute to the development of Pencil Code at
+<a href="//dev.pencilcode.net/" target="_blank"
+>dev.pencilcode.net</a> or
+<a href="https://github.com/PencilCode">github</a>.
+&nbsp;&mdash;
+<a href="mailto:info@pencilcode.net" target="_top"
+>info@pencilcode.net</a>.
+</div>
+</body>
+</html>

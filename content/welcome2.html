@@ -10,16 +10,109 @@
 <style>
 </style>
 <body>
+<div id="overlay">
+<div class="about" id="intro">
+<img src="/image/pencil_32.png"
+style="border:0;float:left;padding-right:10px;margin-top:3px;"
+title="pencilcode.net">
+<h1>Pencil</h1>
+<p>Pencil is a collaborative programming site for drawing
+art, playing music, and creating games.  Pencil is also
+a place to experiment with mathematical functions, geometry,
+graphing, webpages, simulations, and algorithms.  Programs are
+open for all to see and copy.
+<p><a target="_blank"
+href="http://www.youtube.com/watch?v=JJzFD4EdeuY"
+data-vimeo="79743491"
+>Watch a video overview</a> or
+<a href="http://www.youtube.com/watch?v=edN07wcbj2w"
+data-vimeo="79743492" target="_blank"
+>watch a video tutorial</a>.
+</p>
+<div id="video"></div>
+<p>The main language is Coffeescript.  Professional software engineers
+use Coffeescript to build complex websites, but Coffeescript code can
+also be very simple.
+<p><table width=100%><tr><td width=30% valign=top>Play three notes:</p>
+<a style="text-decoration:none" href="http://goo.gl/iYnZIj"
+target="_blank">
+<pre>
+play 'CDE'
+</pre>
+</a>
+</td><td width=30% valign=top>
+Draw a gold star:</p>
+<a style="text-decoration:none" href="http://goo.gl/985CPX"
+target="_blank">
+<pre>
+pen gold
+for x in [1..5]
+  fd 100
+  rt 144
+</pre>
+</a>
+</td><td width=30% valign=top>
+Follow the mouse:</p>
+<a style="text-decoration:none" href="http://goo.gl/MtbKxd"
+target="_blank">
+<pre>
+speed Infinity
+tick 3, ->
+  turnto lastmousemove
+  fd 15
+  dot green
+</pre>
+</a>
+</td></tr></table>
+
+<p>Programs preload the pencilcode library to use
+functions such as <code>pen</code> (sets the turtle's pen color),
+<code>fd</code> (moves the turtle forward), and <code>play</code>
+(plays musical notes).
+Pencil is all <a href="/license.html" target="_blank">open source</a>.
+Hang out on the <a href="/group" target="_blank">Pencil
+discussion forum</a> or check out
+<a href="//pencilcode.net/material/reference.pdf" target="_blank"
+>the quick reference</a>
+or
+<a href="//guide.pencilcode.net/" target="_blank">the online guide</a>
+to find out more.  There is also an illustrated
+<a href="//pencilcode.net/book" target="_blank">Pencil Code book</a> with more than 100 small projects.
+<p>Anybody can save programs and web pages, but read the
+<a href="/terms.html" target="_blank">Terms of Service</a> and the
+<a href="/privacy.html" target="_blank">Privacy Policy</a> first.
+Two rules:
+<p><u>Be Nice.</u> Do not mess up other peoples' work.
+<strong>Do not post content that detracts from education on the site.</strong>
+This a learning space that is not locked down
+(for example, passwords are optional). So feel free to explore, create,
+and link, but also please be considerate.
+<p><u>Be Careful.</u> Do not depend on Pencil to keep your data safe.
+Data posted here is public, and data is not secured from loss.
+<strong>Do not post private or personally identifiable
+information.</strong>  Passwords on Pencil
+do not prevent malicious interference.
+<p class="bottomnote"
+>The Pencil Code Foundation, Inc., is devoted to advancing computer
+science education by making programming as simple and as
+powerful as using a pencil.
+Contribute to the development of Pencil Code at
+<a href="//dev.pencilcode.net/" target="_blank"
+>dev.pencilcode.net</a> or
+<a href="https://github.com/PencilCode">github</a>.
+&nbsp;&mdash;
+<a href="mailto:info@pencilcode.net" target="_top"
+>info@pencilcode.net</a>.
+</div>
+</div>
+<!-- end of overlay -->
+
+
 <div class="container shadowcard">
 <div class="row">
 <div class="col-xs-6 vpadding">
 <!-- branding -->
-<h1
-style="margin:0;min-width:150px;max-width:170px;min-height:67px;width:100%;"
-class="pull-left">
-<div style="display:inline-block" class="pull-right"><span style="display:block;text-transform:uppercase">Pencil</span><span style="display:block;text-transform:lowercase;margin-top:-5px;letter-spacing:12px;padding:1px 3px;">Code</span></div>
-<center><img src="/image/vpencil-20-64.png"></center>
-</h1>
+<a class="pclogo pull-left" href="/about.html"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
 </div>
 <div class="col-xs-6 vpadding">
 <!-- login bar -->
@@ -36,6 +129,8 @@ Create art, music, games, and stories. Or
 invent a program that will change the world.
 <p style="text-align:center"><a class="btn btn-primary" href="http://gym.pencilcode.net/draw/">Let's play!</a>
 <p>Pencil Code supports CoffeeScript, Javascript, CSS, and HTML.
+Everything posted on Pencil Code is public and free to view, share,
+and copy.  <a href="/about.html">Find out more about Pencil Code</a>.
 </div>
 <div class="col-sm-6 vpadding">
 <iframe id="demo" style="min-height:300px;height:100%;width:100%;border:0"></iframe>
@@ -44,14 +139,17 @@ invent a program that will change the world.
 <div class="row topline">
 <div class="col-sm-3 col-xs-6 vpadding text-center">
 <h3><img src="/image/art.png" style="height:74px"><br>Draw</h3>
-<p><a href="http://gym.pencilcode.net/draw/" class="btn btn-default" style="white-space:normal">Code your own art</a>
+<p><a href="http://gym.pencilcode.net/draw/" class="btn btn-default" style="white-space:normal">Create art</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h3><img src="/image/music.png" style="height:74px"><br>Jam</h3>
-<p><a href="http://gym.pencilcode.net/jam/" class="btn btn-default" style="white-space:normal">Code some music</a>
+<h3><img src="/image/music.png" style="height:74px"
+title="Image credit: http://www.clker.com/clipart-334772.html"><br>Jam</h3>
+<p><a href="http://gym.pencilcode.net/jam/" class="btn btn-default" style="white-space:normal">Make music</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h3><img src="/image/adventure.png" style="height:74px"><br>Imagine</h3>
+<h3><img src="/image/adventure.png" style="height:74px"
+title="Image credit: http://jumpfer-stock.deviantart.com/art/Steam-Dragon-01-PNG-Stock-415712374"
+><br>Imagine</h3>
 <p><a href="http://gym.pencilcode.net/imagine/" class="btn btn-default" style="white-space:normal">Code an adventure</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
@@ -62,11 +160,15 @@ invent a program that will change the world.
 <div class="col-sm-12 vpadding text-center">
 <h2 style="padding:10px 0">Resources</h2>
 <ul class="list-inline">
-<li><a href="x">About Pencil Code</a>
+<li><a href="/about.html">About Pencil Code</a>
 <li>
-<li><a href="x">Material for Teachers</a>
+<li><a href="/edit/untitled">Open Blank Editor</a>
 <li>
-<li><a href="x">Open Source Hub</a>
+<li><a href="//guide.pencilcode.net/">Material for Teachers</a>
+<li>
+<li><a href="/edit/">Browse All Users</a>
+<li>
+<li><a href="//dev.pencilcode.net/">Open Source Hub</a>
 </ul>
 </div>
 </div>
