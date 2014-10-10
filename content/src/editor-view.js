@@ -705,7 +705,7 @@ function showShareDialog(opts) {
           opts.shareStageURL + '">See it here</a> ' +
           '<input readonly type="text" value="' +
           opts.shareStageURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareStageURL + '"><img src="/copy.png" title="Copy"></button>' +
+          opts.shareStageURL + '"><img src="/image/copy.png" title="Copy"></button>' +
          '</div>' : '') +
         ((opts.shareRunURL && !opts.shareStageURL) ?
         '<div class="field">' +
@@ -714,7 +714,7 @@ function showShareDialog(opts) {
           opts.shareRunURL + '">See it here</a> ' +
           '<input readonly type="text" value="' +
           opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareRunURL + '"><img src="/copy.png" title="Copy"></button>' +
+          opts.shareRunURL + '"><img src="/image/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         '<div class="field">' +
           '<a target="_blank" ' +
@@ -722,7 +722,7 @@ function showShareDialog(opts) {
           opts.shareEditURL + '">Share code</a> ' +
           '<input readonly type="text" value="' +
           opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareEditURL + '"><img src="/copy.png" title="Copy"></button>' +
+          opts.shareEditURL + '"><img src="/image/copy.png" title="Copy"></button>' +
         '</div>' +
       '</div><br>' +
     '<button class="cancel">OK</button>' +

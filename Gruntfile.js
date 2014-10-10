@@ -170,6 +170,12 @@ module.exports = function(grunt) {
           node_env: 'development'
         }
       },
+      localtest: {
+        options: {
+          script: 'server/devserver.js',
+          node_env: 'test'
+        }
+      },
       devtest: {
         options: {
           script: 'server/devserver.js',
@@ -290,7 +296,7 @@ module.exports = function(grunt) {
       ['proxymessage', 'express:dev', 'node-inspector:dev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:test', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:localtest', 'node-inspector:dev', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.

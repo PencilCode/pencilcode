@@ -28,7 +28,7 @@ def filename_from_uri(uri):
   return '/'.join(splituri(uri)[1:])
 
 def application(env, start_response):
-  redirect_url = 'http://pencilcode.net/pencil_32.png'
+  redirect_url = 'http://pencilcode.net/image/pencil_32.png'
   try:
     form = cgi.FieldStorage(fp=env['wsgi.input'], environ=env)
     request_uri = env['REQUEST_URI']

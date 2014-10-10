@@ -45,9 +45,9 @@ body.modal #overlay { display:block; }
   font-weight:300;vertical-align:middle;height:28px;
   padding:2px 8px;margin:5px;display:inline-block;}
 #topright button#save {
-  padding-left: 28px; background-image: url(/pencil_16.png);
+  padding-left: 28px; background-image: url(/image/pencil_16.png);
   background-repeat: no-repeat; background-position: 8px center; }
-#topright button#save[disabled] { background-image: url(/gray_pencil_16.png); }
+#topright button#save[disabled] { background-image: url(/image/gray_pencil_16.png); }
 #topright button[disabled],#overlay button[disabled] {
   box-shadow:0 0 7px darkgray;color:gray;opacity:0.7}
 #topright button:not([disabled]):hover,#overlay button:not([disabled]):hover,

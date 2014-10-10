@@ -6430,6 +6430,40 @@ var turtlefn = {
     });
     return this;
   }),
+  saveimg: wrapcommand('saveimg', 1,
+  ["<u>saveimg(filename)</u> Saves the turtle's image as a file." +
+      "<mark>t.saveimg 'mypicture.png'</mark>"],
+  function saveimg(cc, filename) {
+    return this.plan(function(j, elem) {
+      cc.appear(j);
+      var ok = false;
+      if (!filename) { filename = 'img'; }
+      var canvas = this.canvas();
+      if (!canvas) {
+        see.html('<span style="color:red">Cannot saveimg: not a canvas</span>');
+      } else {
+        var dataurl = canvas.toDataURL();
+        var dparts = /^data:image\/(\w+);base64,(.*)$/i.exec(dataurl);
+        if (!dparts) {
+          see.html('<span style="color:red">Cannot saveimg: ' +
+              'canvas toDataURL did not work as expected.</span>');
+        } else {
+          if (dparts[1] && filename.toLowerCase().lastIndexOf(
+                '.' + dparts[1].toLowerCase()) !=
+                    Math.max(0, filename.length - dparts[1].length - 1)) {
+            filename += '.' + dparts[1];
+          }
+          ok = true;
+          dollar_turtle_methods.save(filename, atob(dparts[2]), function() {
+            cc.resolve(j);
+          });
+        }
+      }
+      if (!ok) {
+        cc.resolve(j);
+      }
+    });
+  }),
   drawon: wrapcommand('drawon', 1,
   ["<u>drawon(canvas)</u> Switches to drawing on the specified canvas. " +
       "<mark>A = new Sprite('100x100'); " +
