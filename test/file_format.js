@@ -85,6 +85,17 @@ describe('meta string parser', function() {
     return x;
   }
 
+  it('should round-trip one troublesone file.', function() {
+    var v = {
+       data: "0type \nMETA@###\nMETA@######@META\n###@META\n\n" +
+             "META@### ###@META\n   0type/0type###@META\nnull\nMETA@###",
+       meta: null
+    };
+    var s = filemeta.printMetaString(v.data, v.meta);
+    var r = filemeta.parseMetaString(s);
+    assert.deepEqual(v, r);
+  });
+
   it('should round-trip 100 random files.', function() {
     for (var j = 0; j < 100; ++j) {
       var v = { data: randString(), meta: randData() };

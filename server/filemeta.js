@@ -36,7 +36,7 @@ function parseMetaString(buf) {
       // Redecode.  Meta part is always encoded as utf8.
       meta = JSON.parse(buf.toString('utf8', start, end));
       // Data part is usually encoded as binary but can be overridden.
-      if (meta.encoding && Buffer.isEncoding(meta.encoding)) {
+      if (meta && meta.encoding && Buffer.isEncoding(meta.encoding)) {
         enc = meta.encoding;
       } else {
         enc = 'binary';
