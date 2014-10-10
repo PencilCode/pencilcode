@@ -50,11 +50,6 @@ exports.handleSave = function(req, res, app) {
             utils.errorExit('No source specified for mv');
           }
           break;
-        case 'a':
-          if (!data) {
-            utils.errorExit('No data specified for append');
-          }
-          break;
         case 'setkey':
           if (!data && sourcefile) {
             utils.errorExit('Invalid parameters specified for setkey');
@@ -305,26 +300,14 @@ exports.handleSave = function(req, res, app) {
 
     var statObj;
     try {
-      var openMode = (mode == 'a') ? 'a' : 'w',
-          content = filemeta.printMetaString(data, meta);
-      fd = fs.openSync(absfile, openMode);
-
-      writeStream = fs.createWriteStream(absfile, {flags: openMode});
-      writeStream.write(content);
-      writeStream.end();
-
-      writeStream.on('close', function() {
-        fs.fsyncSync(fd);
-        fs.closeSync(fd);
-
-        statObj = fs.statSync(absfile);
-        touchUserDir(userdir);
-
-        res.json({
-          saved: '/' + filename,
-          mtime: statObj.mtime.getTime(),
-          size: statObj.size
-        });
+      var content = filemeta.printMetaString(data, meta);
+      fd = fs.writeFileSync(absfile, content);
+      var statObj = fs.statSync(absfile);
+      touchUserDir(userdir);
+      res.json({
+        saved: '/' + filename,
+        mtime: statObj.mtime.getTime(),
+        size: statObj.size
       });
       return;
     }

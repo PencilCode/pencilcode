@@ -6,8 +6,8 @@ describe('meta string parser', function() {
 
   it('should parse a simple file with META.', function() {
     assert.deepEqual(
-      filemeta.parseMetaString('file\ntext\n' +
-          '###@META\n { "a": "b##\\u0023" } \nMETA@###\n'),
+      filemeta.parseMetaString(new Buffer('file\ntext\n' +
+          '###@META\n { "a": "b##\\u0023" } \nMETA@###\n')),
       {
         data: "file\ntext\n",
         meta: { "a": "b###" }
@@ -23,8 +23,8 @@ describe('meta string parser', function() {
 
   it('should parse a simple javascript file with META.', function() {
     assert.deepEqual(
-      filemeta.parseMetaString('/* this is a test file */\n' +
-          '/**@META\n { "a": "b/**\\/" } \nMETA@**/\n\n\n'),
+      filemeta.parseMetaString(new Buffer('/* this is a test file */\n' +
+          '/**@META\n { "a": "b/**\\/" } \nMETA@**/\n\n\n')),
       {
         data: "/* this is a test file */\n",
         meta: { "a": "b/**/" }
