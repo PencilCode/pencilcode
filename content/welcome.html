@@ -1,211 +1,27 @@
 <!doctype html>
-<html manifest="/nocache.appcache">
+<html>
 <head>
 <title>Pencil</title>
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
-
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400">
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:400,700&subset=latin">
+<link rel="stylesheet" type="text/css" href="welcome.css">
 <style>
-body {
-  font-family: Lato;
-  font-weight: 400;
-}
-h1, h2 {
-  font-weight: 300;
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 10px;
-  margin: 15px;
-  text-shadow:0 0 6px white;
-  box-shadow: 0 0 16px 16px rgba(255, 255, 255, .6);
-}
-#overlay {
-  display: none;
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  background: rgba(0, 0, 0, 0.1);
-  left: 0;
-  top: 0;
-  margin: 0;
-  z-index: 1;
-  overflow: auto;
-}
-.about {
-  left: 0;
-  position: absolute;
-  width: 70%;
-  margin-left: 15%;
-  border: 3px solid blue;
-  border-radius: 8px;
-  background: white;
-  text-align: left;
-  padding: 20px;
-  top: 30px;
-  box-sizing: border-box;
-}
-#intro {
-  display: block;
-}
-.about h1 {
-  margin: 0;
-  padding: 0;
-}
-.about code {
-  font-weight: bold;
-  background: gainsboro;
-  color: saddlebrown;
-}
-.about pre {
-  font-weight: bold;
-  display: inline-block;
-  padding: 5px 10px;
-  margin: 0;
-  background: gainsboro;
-  color: saddlebrown;
-}
-.about pre:hover {
-  background: lightgray;
-}
-.about b {
-  text-transform: capitalize;
-  text-decoration: underline;
-}
-.newaccount, .goback {
-  padding: 6px 10px 10px 10px;
-  border-radius: 8px;
-  color: dimgray;
-}
-.newaccount {
-  background: rgba(152, 251, 152, 0.5);
-}
-.newaccount:hover {
-  background: palegreen;
-}
-.goback {
-  background: rgba(255, 240, 120, 0.5);
-}
-.goback:hover {
-  background: #fff066;
-}
-#what,#guide,.whiteback {
-  font-size: 16px;
-  line-height: 16px;
-  color: gray;
-  text-decoration: none;
-  background: rgba(255, 255, 255, 0.6);
-}
-.whiteback {
-  box-shadow: 0 0 16px 16px rgba(255, 255, 255, 0.6);
-}
-.info,.link {
-  color: gray;
-  text-decoration: none;
-  cursor: pointer;
-}
-#what:hover,#guide:hover,.info:hover,.link:hover {
-  color: blue;
-  text-decoration: underline;
-}
-#what:hover,#guide:hover,.whiteback:hover {
-  background: white;
-}
-.whiteback:hover {
-  box-shadow: 0 0 16px 16px white;
-}
-.corners {
-  display: inline-block;
-}
-.choices {
-  display: inline-table;
-  border-spacing: 30px;
-}
-.choices a {
-  display: table-cell;
-  vertical-align: middle;
-  text-align: center;
-  width: 160px;
-  height: 160px;
-  padding: 8px;
-  background: rgba(30,144,255,0.9);
-  color: white;
-  border-radius: 5px;
-  text-decoration: none;
-  position: relative;
-}
-.choices a:hover {
-  background: blue;
-}
-.extrabutton {
-  display:none;
-}
-.choices a:hover .extrabutton {
-  display: block;
-  position:absolute;
-  bottom: 0;
-  width: 100%;
-  margin: 3px -5px;
-  text-align: center;
-  color: dodgerblue;
-}
-.choices a:hover .extrabutton:hover {
-  text-decoration: underline;
-  color: white;
-}
-.em, .nw {
-  white-space: nowrap;
-}
-.glow {
-  font-size: 125%;
-  font-weight: 700;
-  text-shadow:0 0 10px white;
-}
-.fixedpage {
-  position:fixed;
-  top: 0;
-  left: 0;
-  display:inline-table;
-  width:100%;
-  height:100%;
-}
-.vcenter {
-  display: table-cell;
-  vertical-align: middle;
-  text-align: center;
-}
-.bottomnote, .bottomnote a {
-  color: darkgray;
-  margin-bottom: 0;
-  text-decoration: none;
-}
-.bottomnote a:hover {
-  text-decoration: underline;
-}
 </style>
-</head>
 <body>
-<script>
-function loadusers(data) {
-  loadusers.data = data;
-  loadusers.callback && loadusers.callback(data);
-}
-loadusers.then = function(callback) {
-  if (loadusers.data) { callback(loadusers.data); }
-  else { loadusers.callback = callback; }
-}
-</script>
-<script src="/load/?callback=loadusers"></script>
-<script src="/turtlebits.js"></script>
-
 <div id="overlay">
+<div class="loginblock">
+<label class="toggler">
+<span id=msg></span>&nbsp; <span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul></label>
+<label>Name: <input id=user></label>
+<label>Password: <input type=password id=pass></label>
+<label><button id=login disabled>Login <span id=asuser></span></button></label>
+</div>
 <div class="about" id="intro">
-<img src="/image/pencil_32.png"
-style="border:0;float:left;padding-right:10px;margin-top:3px;"
-title="pencilcode.net">
-<h1>Pencil</h1>
-<p>Pencil is a collaborative programming site for drawing
-art, playing music, and creating games.  Pencil is also
+<h1 style="margin-top:0">About Pencil Code</h1>
+<p>Pencil Code is a collaborative programming site for drawing
+art, playing music, and creating games.  It is also
 a place to experiment with mathematical functions, geometry,
 graphing, webpages, simulations, and algorithms.  Programs are
 open for all to see and copy.
@@ -221,44 +37,12 @@ data-vimeo="79743492" target="_blank"
 <p>The main language is Coffeescript.  Professional software engineers
 use Coffeescript to build complex websites, but Coffeescript code can
 also be very simple.
-<p><table width=100%><tr><td width=30% valign=top>Play three notes:</p>
-<a style="text-decoration:none" href="http://goo.gl/iYnZIj"
-target="_blank">
-<pre>
-play 'CDE'
-</pre>
-</a>
-</td><td width=30% valign=top>
-Draw a gold star:</p>
-<a style="text-decoration:none" href="http://goo.gl/985CPX"
-target="_blank">
-<pre>
-pen gold
-for x in [1..5]
-  fd 100
-  rt 144
-</pre>
-</a>
-</td><td width=30% valign=top>
-Follow the mouse:</p>
-<a style="text-decoration:none" href="http://goo.gl/MtbKxd"
-target="_blank">
-<pre>
-speed Infinity
-tick 3, ->
-  turnto lastmousemove
-  fd 15
-  dot green
-</pre>
-</a>
-</td></tr></table>
-
+<p>Pencil Code can also be used to explore and learn Javascript, HTML,
+and CSS: when you are ready, just find the "gear" button to adjust languages.
 <p>Programs preload the pencilcode library to use
-functions such as <code>pen</code> (sets the turtle's pen color),
-<code>fd</code> (moves the turtle forward), and <code>play</code>
-(plays musical notes).
-Pencil is all <a href="/license.html" target="_blank">open source</a>.
-Hang out on the <a href="/group" target="_blank">Pencil
+turtle graphics functions.
+Pencil Code is all <a href="/license.html" target="_blank">open source</a>.
+Hang out on the <a href="/group" target="_blank">Pencil Code
 discussion forum</a> or check out
 <a href="//pencilcode.net/material/reference.pdf" target="_blank"
 >the quick reference</a>
@@ -275,10 +59,10 @@ Two rules:
 This a learning space that is not locked down
 (for example, passwords are optional). So feel free to explore, create,
 and link, but also please be considerate.
-<p><u>Be Careful.</u> Do not depend on Pencil to keep your data safe.
+<p><u>Be Careful.</u> Do not depend on Pencil Code to keep your data safe.
 Data posted here is public, and data is not secured from loss.
 <strong>Do not post private or personally identifiable
-information.</strong>  Passwords on Pencil
+information.</strong>  Passwords on Pencil Code
 do not prevent malicious interference.
 <p class="bottomnote"
 >The Pencil Code Foundation, Inc., is devoted to advancing computer
@@ -293,273 +77,99 @@ Contribute to the development of Pencil Code at
 >info@pencilcode.net</a>.
 </div>
 </div>
+<!-- end of overlay -->
 
-<div class="fixedpage">
-<div class="vcenter">
-<div class="corners">
-<h1>Pencil</h1>
-<br>
-<a href="#" id="what">What's this?</a>
-<br>
-<a href="//guide.pencilcode.net/home/" id="guide">See the guide</a>
-<br>
-<table class="gray" align="center" style="border-spacing:20px 0;margin-top:20px"><tr>
-<td style="min-width:100px">
-<a href="/edit/untitled" class="link">Blank editor.</a>
-</td>
-<td>
-<a href="/edit/intro#new" class="link newaccount">Make new account.</a>
-</td>
-<td style="min-width:100px">
-<a href="/edit/" class="link">Browse users.</a>
-</td>
-</tr></table>
 
-<div class="choices">
-<a href="//gym.pencilcode.net/draw/">I'm new here.
-<span class="em">Let's play.</span>
-</a>
+<div class="container shadowcard">
+<div class="row">
+<div class="col-xs-6 vpadding">
+<!-- branding -->
+<a class="pclogo pull-left aboutlink" href="#about"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
+</div>
+<div class="col-xs-6 vpadding">
+<!-- login bar -->
+<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><span class="glyphicon glyphicon-star newicon"></span> New Account<li class="btn btn-clear" style="opacity:0" id="showlogin"><span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul>
+</div>
+</div>
+<!-- splash row -->
+<div class="row topline">
+<div class="col-sm-6 vpadding">
+<h1 style="font-size:48px;margin:0 0 10px;text-align:center;text-shadow:0 0 8px white;"><nobr>Dream it.</nobr> <nobr>Code it.</nobr></h1>
+<p>Learn professional programming languages using
+an editor that lets you work in either blocks or text.
+Create art, music, games, and stories. Or
+invent a program that will change the world.
+<p style="text-align:center"><a class="btn btn-primary" href="/edit/first">Let's play!</a>
+<p>Pencil Code supports CoffeeScript, Javascript, CSS, and HTML.
+Everything posted on Pencil Code is public and free to view, share,
+and copy.  <a class="aboutlink" href="#about">Find out more about Pencil Code</a>.
+</div>
+<div class="col-sm-6 vpadding">
+<iframe id="demo" style="min-height:300px;height:100%;width:100%;border:0"></iframe>
+</div>
+</div>
+<div class="row topline">
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3><img src="/image/art.png" style="height:74px"><br>Draw</h3>
+<p><a href="http://gym.pencilcode.net/draw/" class="btn btn-default" style="white-space:normal">Create art</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3><img src="/image/music.png" style="height:74px"
+title="Image credit: http://www.clker.com/clipart-334772.html"><br>Jam</h3>
+<p><a href="http://gym.pencilcode.net/jam/" class="btn btn-default" style="white-space:normal">Make music</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h3><img src="/image/adventure.png" style="height:74px"
+title="Image credit: http://jumpfer-stock.deviantart.com/art/Steam-Dragon-01-PNG-Stock-415712374"
+><br>Imagine</h3>
+<p><a href="http://gym.pencilcode.net/imagine/" class="btn btn-default" style="white-space:normal">Code an adventure</a>
+</div>
+<div class="col-sm-3 col-xs-6 vpadding text-center">
+<h2 style="padding:36px 0"><a class="nofeedback" title="Start from a blank program" href="/edit/myprogram">Get Creative</a></h2>
+</div>
+</div>
+<div class="row topline">
+<div class="col-sm-12 vpadding text-center">
+<h2 style="padding:10px 0">Resources</h2>
+<ul class="list-inline">
+<li><a class="aboutlink" href="#about">About Pencil Code</a>
+<li>
+<li><a href="/edit/untitled">Open Blank Editor</a>
+<li>
+<li><a href="//guide.pencilcode.net/">Material for Teachers</a>
+<li>
+<li><a href="/edit/">Browse All Users</a>
+<li>
+<li><a href="//dev.pencilcode.net/">Open Source Hub</a>
+</ul>
+</div>
+</div>
+</div>
+</body>
 <script>
-function cookie(key) {
-  // read
-  var decode = function(s) {return decodeURIComponent(s.replace(/\+/g, ' '));}
-  var converted = function(s) {
-    if (s.indexOf('"') === 0) {
-      s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-    }
-    return s;
-  }
-  var cookies = document.cookie.split('; ');
-  var result = key ? undefined : {};
-  for (var i = 0, l = cookies.length; i < l; i++) {
-    var parts = cookies[i].split('=');
-    var name = decode(parts.shift());
-    var cookie = decode(parts.join('='));
-    if (key && key === name) {
-      result = converted(cookie);
-      break;
-    }
-    if (!key && parts.length) {
-      result[name] = converted(cookie);
-    }
-  }
-  return result;
-};
-
-var olduser = false;
-if (cookie('recent') && !/\/\/frame\./.test(cookie('recent'))) {
-  olduser = cookie('recent');
+// Preload support.
+function loadusers(data) {
+  loadusers.data = data;
+  loadusers.callback && loadusers.callback(data);
 }
-if (!olduser) {
-  $('.em').addClass('glow');
+loadusers.then = function(callback) {
+  if (loadusers.data) { callback(loadusers.data); }
+  else { loadusers.callback = callback; }
 }
-// Detect if youtube is blocked.
-var ytpresent = true;
-var ytprobe = new Image();
-ytprobe.onerror = function(){
-  ytpresent = false;
-};
-ytprobe.src = "//youtube.com/favicon.ico?r=" + Math.random();
-$('a[data-vimeo]').click(function(e) {
-  if (ytpresent) {
-    var href = $(this).attr('href');
-    var match = /youtube.com.*v=([^&">]*)/.exec(href);
-    if (match && match[1]) {
-      if ($('#video iframe').attr('src') &&
-          $('#video iframe').attr('src').indexOf(match[1]) >= 0) {
-        $('#video').html('');
-        return false;
-      } else {
-        $('#video').html(
-          '<iframe type="text/html" width="640" height="390" ' +
-          'src="//www.youtube.com/embed/' + match[1] +
-          '?autoplay=1&origin=http://pencilcode.net" ' +
-          'frameborder="0"></iframe>');
-        return false;
-      }
-    }
-  } else {
-    var vimeo = $(this).data('vimeo');
-    if (vimeo) {
-      if ($('#video iframe').attr('src') &&
-          $('#video iframe').attr('src').indexOf(vimeo) >= 0) {
-        $('#video').html('');
-        return false;
-      } else {
-        $('#video').html(
-          '<iframe type="text/html" width="640" height="390" ' +
-          'src="//player.vimeo.com/video/' + vimeo +
-          '?autoplay=1" ' +
-          'frameborder="0"></iframe>');
-        return false;
-      }
-    }
-  }
-  return true;
-});
-
-$('#clickvideo').click(function() {
-  var vimeoFrame = '<iframe src="//player.vimeo.com/video/79743491?autoplay=1" ' +
-    'width="640" height="390" frameborder="0" webkitallowfullscreen ' +
-    'mozallowfullscreen allowfullscreen></iframe>'
-  var youtubeFrame = '<iframe type="text/html" width="640" height="390" ' +
-    'src="//www.youtube.com/embed/JJzFD4EdeuY?autoplay=1&' +
-    'origin=http://pencilcode.net" frameborder="0" webkitallowfullscreen ' +
-    'mozallowfullscreen allowfullscreen></iframe>';
-  $('#video').html(ytpresent ? youtubeFrame : vimeoFrame);
-  return false;
-});
-
-function clearCookie() {
-  document.cookie = 'recent=0;expires=' + (new Date(0)).toUTCString() + ';domain=' + location.hostname + ';';
-}
-
-document.write('</div><br clear="all">');
-
-if (olduser) {
-  document.write('<div style="margin-bottom:8px"><span class="goback">' +
-      '<a href="' + olduser + '" class="link">Go back to ' +
-      olduser.replace(/^https?:\/\//, '').
-      replace(/^(\w+)\.[^\/]+\/edit\//, '$1/').
-      replace(/\//g, '<wbr>/') +
-      '.</a> <a id="reset" class="link">(reset)</a></span></div>');
-}
-
-
-$('#reset').click(function(e) {
-  e.preventDefault();
-  clearCookie();
-  window.location.reload();
-});
-
-
 </script>
-
-<h2>Creative Coding<br>
-from Turtles to jQuery</h2>
-<p align="center" class="whiteback">
-<a href="#" class="info">By the Pencil Code Foundation</a> -
-<a href="mailto:info@pencilcode.net" class="link"
-target="_top">info@pencilcode.net</a>
-</p>
-<p align="center"><a href="http://dev.pencilcode.net/" class="link"
->Want to improve Pencil Code?
-Participate in an open-source Hackathon.</a></p>
-</div>
-</div>
-</div>
-
-<script>
-$('#randfirst').mouseenter(function() {
-  var choices = [
-    '/edit/first',
-    '/edit/dandelion',
-    '/edit/rainbow',
-    '/edit/sailboat',
-    '/edit/house',
-    '/edit/square',
-    '/edit/violet',
-    '/edit/polygon',
-    '/edit/movedraw',
-    '/edit/euclidsmethod',
-    '/edit/polygonread',
-    '/edit/guessmynumber',
-    '/edit/hi',
-    '/edit/infinity'
-  ];
-  $('#randfirst').attr('href',
-      choices[Math.floor(Math.random() * choices.length)]);
-});
-
-$('.extrabutton[href]').click(function(e) {
-  e.preventDefault();
-  window.location.href = $(e.target).attr('href');
-});
-
-$('#about').hide();
-</script>
-<script type="text/coffeescript">
-$.turtle({panel: false});
-
-$('#what, #overlay, .info').click (e) ->
-  if $(e.target).closest('pre').length or $(e.target).attr('target')
-    return
-  $('#video').html('');
-  $('#overlay').toggle(400)
-  false
-
-ht()
-while not lastmousemove?.pageY
-  pause 3
-  await done defer()
-hatch(3).plan (i) ->
-  note = ["c'/4", "e'/3", "g'/2"][i]
-  steps = 0
-  @pen lightgray
-  while true
-    await @done defer()
-    if @touches lastmousemove
-      if t
-        @wear random color
-        t = null
-      @pause random()
-    else
-      @pause random()
-      t = lastmousemove
-      if random [0..1]
-        @turnto 90 + @direction t
-        @lt 135, 0.5 * @distance t
-      else
-        @turnto -90 + @direction t
-        @rt 135, 0.5 * @distance t
-
-</script>
-<script src="/seedrandom.js"></script>
+<script src="/load/?callback=loadusers"></script>
+<script src="/jquery.js"></script>
 <script src="/lib/jquery.autocomplete.min.js"></script>
-<style>
-.loginblock { position: fixed; text-align:right; top:8px; right:8px; }
-.hidden { display:none }
-.loginblock input { background: transparent; }
-.loginblock label { opacity: 0.5; transition: opacity 0.3s }
-
-.loginblock.active .hidden { display: block; }
-.loginblock.active label { opacity: 1 }
-.loginblock.active input { background: white; }
-input { font-family: inherit; font-size: inherit; }
-.autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; cursor: default; }
-.autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-.autocomplete-suggestions strong { font-weight: normal; color: dodgerblue; }
-.autocomplete-selected, .autocomplete-selected strong { background: dodgerblue; color: white; }
-.autocomplete-group { padding: 2px 5px; }
-.autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-.loginblock button{border:none;background-color:white;
-  -moz-appearance: none !important;
-  box-shadow:0 0 7px gray;color:black;
-  border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
-  font-weight:300;vertical-align:middle;height:28px;
-  padding:2px 8px;margin:5px;display:inline-block;}
-.loginblock button[disabled],#overlay button[disabled] {
-  box-shadow:0 0 7px darkgray;color:gray;opacity:0.7}
-.loginblock button:not([disabled]):hover {
-  box-shadow:0 0 7px black}
-#msg { color: red }
-</style>
+<script src="/seedrandom.js"></script>
 <script>
+$(function() {
 loadusers.then(function(data) {
   if (!data || data.directory != '/' || !data.list) return;
-  var users = _.filter(data.list, function(x) {
+  var users = data.list.filter(function(x) {
       return /d/.test(x.mode); });
   users.sort(function(a, b) { return b.mtime - a.mtime; });
-  var usernames = _.map(users, function(u) { return u.name; });
-  $('<div class=loginblock><label>Login: <input id=user></label>' +
-    '<label class=hidden>Password: <input type=password id=pass></label>' +
-    '<label class=hidden><span id=msg></span>&nbsp;<button id=login disabled>Login' +
-    '<span id=asuser></span></button></label>' +
-    '</div>')
-      .prependTo('.fixedpage');
-  $('#user').one('keypress',
-      function() { $('.loginblock').addClass('active'); });
-  $('#user').focus();
+  var usernames = users.map(function(u) { return u.name; });
+  $('#showlogin').css('opacity', 1);
   $('#user').on('change', validateUser);
   $('#user').autocomplete({
     autoSelectFirst: true,
@@ -615,14 +225,102 @@ loadusers.then(function(data) {
     });
   }
 });
+// Demo Animation
+var index = 0;
+var count = 3;
+var sleeptime = +(new Date) + 100 * 1000;
+function motion() {
+  sleeptime = Math.max(sleeptime, +(new Date) + 30 * 1000);
+}
+function advance() {
+  if (+(new Date) > sleeptime || $('#overlay').is(':visible')) return;
+  document.getElementById('demo').src =
+     "http://promo.pencilcode.net/home/promo" + (index++);
+  if (index >= count) { index = 0; }
+}
+// New account link
+$('#newaccount').on('click', function() {
+  window.location = '/edit/intro#new';
+});
+$('#showlogin').on('click', function() {
+  if (!$(this).css('opacity')) return;
+  $('#overlay,.loginblock').show();
+  var ofs = $('#showlogin').offset();
+  $('.loginblock').css({
+    top: ofs.top - 8 + 1,
+    right: $(document).width() - (ofs.left + $('#showlogin').outerWidth()) - 8
+  });
+  $('#user').focus();
+});
+$('a.aboutlink').click(function() {
+  location.hash = '#about';
+  $('#overlay,.about').show();
+  return false;
+});
+$('#overlay').click(function(e) {
+  if (e.target == this || $(e.target).is('.loginblock .toggler')) {
+    $('#video').html('');
+    $('#overlay,.about,.loginblock').hide();
+    location.hash = '';
+  }
+});
+$(window).on('hashchange load', function() {
+  if (/\babout\b/.test(location.hash)) {
+    $('#overlay,.about').show();
+  } else {
+    $('#overlay,.about,.loginblock').hide();
+  }
+});
+// Video clicking setup
+// Detect if youtube is blocked.
+var ytpresent = true;
+var ytprobe = new Image();
+ytprobe.onerror = function(){
+  ytpresent = false;
+};
+ytprobe.src = "//youtube.com/favicon.ico?r=" + Math.random();
+$('a[data-vimeo]').click(function(e) {
+  if (ytpresent) {
+    var href = $(this).attr('href');
+    var match = /youtube.com.*v=([^&">]*)/.exec(href);
+    if (match && match[1]) {
+      if ($('#video iframe').attr('src') &&
+          $('#video iframe').attr('src').indexOf(match[1]) >= 0) {
+        $('#video').html('');
+        return false;
+      } else {
+        $('#video').html(
+          '<iframe type="text/html" width="640" height="390" ' +
+          'src="//www.youtube.com/embed/' + match[1] +
+          '?autoplay=1&origin=http://pencilcode.net" ' +
+          'frameborder="0"></iframe>');
+        return false;
+      }
+    }
+  } else {
+    var vimeo = $(this).data('vimeo');
+    if (vimeo) {
+      if ($('#video iframe').attr('src') &&
+          $('#video iframe').attr('src').indexOf(vimeo) >= 0) {
+        $('#video').html('');
+        return false;
+      } else {
+        $('#video').html(
+          '<iframe type="text/html" width="640" height="390" ' +
+          'src="//player.vimeo.com/video/' + vimeo +
+          '?autoplay=1" ' +
+          'frameborder="0"></iframe>');
+        return false;
+      }
+    }
+  }
+  return true;
+});
+// Now start the animation and things.
+advance();
+setInterval(advance, 20000);
+window.addEventListener('mousemove', motion);
+window.addEventListener('touchstart', motion);
+});
 </script>
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-45359764-1', 'pencilcode.net');
-ga('send', 'pageview');
-</script>
-</body>
 </html>
