@@ -20,7 +20,7 @@
 @border-radius-small:       6px;
 
 .btn:hover .newicon { color: orange; }
-.btn:hover .loginicon { color: green; }
+.btn:hover .loginicon, .loginblock .loginicon { color: green; }
 
 body { background: dodgerblue; }
 
@@ -89,3 +89,65 @@ a.pclogo[href]:hover {
   margin-right: -14px;
   padding: 0 1px;
 }
+a.nofeedback, a.nofeedback:hover {
+  color: black;
+  text-decoration: none;
+}
+.loginblock {
+  display: none;
+  position: absolute;
+  text-align: right;
+  top: 30px;
+  right:8px;
+  border: 3px solid blue;
+  border-radius: 8px;
+  background: white;
+  padding: 8px;
+}
+input {
+  font-family: inherit;
+  font-size: inherit;
+}
+.autocomplete-suggestions {
+  border: 1px solid #999;
+  background: #FFF;
+  overflow: auto;
+  cursor: default;
+}
+.autocomplete-suggestion {
+  padding: 2px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.autocomplete-suggestions strong {
+  font-weight: normal;
+  color: dodgerblue;
+}
+.autocomplete-selected, .autocomplete-selected strong {
+  background: dodgerblue;
+  color: white;
+}
+.autocomplete-group {
+  padding: 2px 5px;
+}
+.autocomplete-group strong {
+  display: block;
+  border-bottom: 1px solid #000;
+}
+.loginblock label {
+  display: block;
+  padding: 3px;
+}
+.loginblock button {
+  border:none;background-color:white;
+  -moz-appearance: none !important;
+  box-shadow:0 0 7px gray;color:black;
+  border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
+  font-weight:300;vertical-align:middle;height:28px;
+  padding:2px 8px;margin:5px;display:inline-block;
+}
+.loginblock button[disabled],#overlay button[disabled] {
+  box-shadow:0 0 7px darkgray;color:gray;opacity:0.7}
+.loginblock button:not([disabled]):hover {
+  box-shadow:0 0 7px black}
+#msg { color: red }
