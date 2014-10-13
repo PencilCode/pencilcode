@@ -29,14 +29,10 @@ describe('dev server', function() {
       _page.evaluate(function() {
         return {
           h1: $('h1').eq(0).text(),
-          a0: $('.choices a').eq(0).text().replace(/\s+/g, ' ').trim(),
-          na: $('.newaccount').eq(0).text().replace(/\s+/g, ' ').trim()
         };
       }, function(err, result) {
         assert.ifError(err);
-        assert.equal(result.h1, "Pencil");
-        assert.equal(result.a0, "I'm new here. Let's play.");
-        assert.equal(result.na, "Make new account.");
+        assert.equal(result.h1, "About Pencil Code");
         done();
       });
     });
