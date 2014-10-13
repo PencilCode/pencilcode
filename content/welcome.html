@@ -11,13 +11,6 @@
 </style>
 <body>
 <div id="overlay">
-<div class="loginblock">
-<label class="toggler">
-<span id=msg></span>&nbsp; <span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul></label>
-<label>Name: <input id=user></label>
-<label>Password: <input type=password id=pass></label>
-<label><button id=login disabled>Login <span id=asuser></span></button></label>
-</div>
 <div class="about" id="intro">
 <h1 style="margin-top:0">About Pencil Code</h1>
 <p>Pencil Code is a collaborative programming site for drawing
@@ -75,6 +68,13 @@ Contribute to the development of Pencil Code at
 &nbsp;&mdash;
 <a href="mailto:info@pencilcode.net" target="_top"
 >info@pencilcode.net</a>.
+</div>
+<div class="loginblock">
+<label class="toggler">
+<span id=msg></span>&nbsp; <span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul></label>
+<label>Name: <input id=user></label>
+<label>Password: <input type=password id=pass></label>
+<label><button id=login disabled>Login <span id=asuser></span></button></label>
 </div>
 </div>
 <!-- end of overlay -->
@@ -203,7 +203,13 @@ loadusers.then(function(data) {
   $('#login').on('click', tryLogin);
   $('#pass,#user').on('keyup', function(e) {
     $('#msg').text('');
-    if (e.which == 13) tryLogin();
+    if (e.which == 13) {
+      if ($(this).attr('id') == 'user') {
+        $('#pass').focus();
+      } else {
+        tryLogin();
+      }
+    }
   });
   function tryLogin() {
     var user = $('#user').val().toLowerCase().trim();
@@ -238,6 +244,11 @@ function advance() {
      "http://promo.pencilcode.net/home/promo" + (index++);
   if (index >= count) { index = 0; }
 }
+// Now start the animation and things.
+advance();
+setInterval(advance, 20000);
+window.addEventListener('mousemove', motion);
+window.addEventListener('touchstart', motion);
 // New account link
 $('#newaccount').on('click', function() {
   window.location = '/edit/intro#new';
@@ -257,11 +268,19 @@ $('a.aboutlink').click(function() {
   $('#overlay,.about').show();
   return false;
 });
+function closeoverlay() {
+ $('#video').html('');
+ $('#overlay,.about,.loginblock').hide();
+ location.hash = '';
+}
 $('#overlay').click(function(e) {
   if (e.target == this || $(e.target).is('.loginblock .toggler')) {
-    $('#video').html('');
-    $('#overlay,.about,.loginblock').hide();
-    location.hash = '';
+    closeoverlay();
+  }
+});
+$('#overlay').keydown(function(e) {
+  if (e.which == 27) {
+    closeoverlay();
   }
 });
 $(window).on('hashchange load', function() {
@@ -316,11 +335,6 @@ $('a[data-vimeo]').click(function(e) {
   }
   return true;
 });
-// Now start the animation and things.
-advance();
-setInterval(advance, 20000);
-window.addEventListener('mousemove', motion);
-window.addEventListener('touchstart', motion);
 });
 </script>
 </html>
