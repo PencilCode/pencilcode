@@ -545,7 +545,7 @@ function editorLineNumberForError(error) {
   }
 
   if (inline) {
-    return frame.line - 3 - lineNumberOffset;
+    return frame.line - 2 - lineNumberOffset;
   }
 
   var smc = sourceMapConsumerForFile(frame.file);
@@ -575,7 +575,7 @@ function editorLineNumberForError(error) {
 
   if (line == null || (frame.line > 2 && line < 4)) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return line - 3 - lineNumberOffset;
+  return line - 2 - lineNumberOffset;
 }
 
 //////////////////////////////////////////////////////////////////////
