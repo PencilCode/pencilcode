@@ -5,6 +5,7 @@ wsgi/config.pyc
 local/data
 local/cache
 content/builddate.txt
+content/editor.css
 content/editor.html
 content/editor.js
 content/framed.html
