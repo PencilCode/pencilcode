@@ -5753,11 +5753,11 @@ function movexy(cc, x, y) {
     return this;
   }
   this.plan(function(j, elem) {
-    cc.appear(j);
+    cc && cc.appear(j);
     var tr = getElementTranslation(elem);
     this.animate(
       { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-      animTime(elem, intick), animEasing(elem), cc.resolver(j));
+      animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
   });
   return this;
 }
@@ -5795,9 +5795,9 @@ function moveto(cc, x, y) {
     }
     if (!pos || !isPageCoordinate(pos)) return;
     if ($.isWindow(elem)) {
-      cc.appear(j);
+      cc && cc.appear(j);
       scrollWindowToDocumentPosition(pos, limit);
-      cc.resolve(j);
+      cc && cc.resolve(j);
       return;
     } else if (elem.nodeType === 9) {
       return;
