@@ -5719,6 +5719,115 @@ function fdbk(cc, amount) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// CARTESIAN MOVEMENT FUNCTIONS
+//////////////////////////////////////////////////////////////////////////
+
+function slide(cc, x, y) {
+  if ($.isArray(x)) {
+    y = x[1];
+    x = x[0];
+  }
+  if (!y) { y = 0; }
+  if (!x) { x = 0; }
+  var intick = insidetick;
+  this.plan(function(j, elem) {
+    cc && cc.appear(j);
+    this.animate({turtlePosition: displacedPosition(elem, y, x)},
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+  });
+  return this;
+}
+
+function movexy(cc, x, y) {
+  if ($.isArray(x)) {
+    y = x[1];
+    x = x[0];
+  }
+  if (!y) { y = 0; }
+  if (!x) { x = 0; }
+  var elem, intick = insidetick;
+  if ((elem = canMoveInstantly(this))) {
+    cc && cc.appear(0);
+    doQuickMoveXY(elem, x, y);
+    cc && cc.resolve(0);
+    return this;
+  }
+  this.plan(function(j, elem) {
+    cc.appear(j);
+    var tr = getElementTranslation(elem);
+    this.animate(
+      { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
+      animTime(elem, intick), animEasing(elem), cc.resolver(j));
+  });
+  return this;
+}
+
+function moveto(cc, x, y) {
+  var position = x, localx = 0, localy = 0, limit = null, intick = insidetick;
+  if ($.isNumeric(position) && $.isNumeric(y)) {
+    // moveto x, y: use local coordinates.
+    localx = parseFloat(position);
+    localy = parseFloat(y);
+    position = null;
+    limit = null;
+  } else if ($.isArray(position)) {
+    // moveto [x, y], limit: use local coordinates (limit optional).
+    localx = position[0];
+    localy = position[1];
+    position = null;
+    limit = y;
+  } else if ($.isNumeric(y)) {
+    // moveto obj, limit: limited motion in the direction of obj.
+    limit = y;
+  }
+  // Otherwise moveto {pos}, limit: absolute motion with optional limit.
+  this.plan(function(j, elem) {
+    var pos = position;
+    if (pos === null) {
+      pos = $(homeContainer(elem)).pagexy();
+    }
+    if (pos && !isPageCoordinate(pos)) {
+      try {
+        pos = $(pos).pagexy();
+      } catch (e) {
+        return;
+      }
+    }
+    if (!pos || !isPageCoordinate(pos)) return;
+    if ($.isWindow(elem)) {
+      cc.appear(j);
+      scrollWindowToDocumentPosition(pos, limit);
+      cc.resolve(j);
+      return;
+    } else if (elem.nodeType === 9) {
+      return;
+    }
+    cc && cc.appear(j);
+    this.animate({turtlePosition:
+        computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+  });
+  return this;
+}
+
+// Deals with jump, jumpxy, and jumpto functions
+function makejump(move) {
+  return (function(cc, x, y) {
+    this.plan(function(j, elem) {
+      cc.appear(j);
+      var down = this.css('turtlePenDown');
+      this.css({turtlePenDown: 'up'});
+      move.call(this, null, x, y);
+      this.plan(function() {
+        this.css({turtlePenDown: down});
+        cc.resolve(j);
+      });
+    });
+    return this;
+  });
+}
+
+//////////////////////////////////////////////////////////////////////////
 // DOT AND BOX FUNCTIONS
 // Support for animated drawing of dots and boxes.
 //////////////////////////////////////////////////////////////////////////
@@ -5842,133 +5951,25 @@ var turtlefn = {
       "<mark>bk 100</mark>"], fdbk),
   slide: wrapcommand('slide', 1,
   ["<u>slide(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>slide 50, 100</mark>"],
-  function slide(cc, x, y) {
-    if ($.isArray(x)) {
-      y = x[1];
-      x = x[0];
-    }
-    if (!y) { y = 0; }
-    if (!x) { x = 0; }
-    var intick = insidetick;
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      this.animate({turtlePosition: displacedPosition(elem, y, x)},
-          animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>slide 50, 100</mark>"], slide),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
-      "<mark>movexy 50, 100</mark>"],
-  function movexy(cc, x, y) {
-    if ($.isArray(x)) {
-      y = x[1];
-      x = x[0];
-    }
-    if (!y) { y = 0; }
-    if (!x) { x = 0; }
-    var elem, intick = insidetick;
-    if ((elem = canMoveInstantly(this))) {
-      cc.appear(0);
-      doQuickMoveXY(elem, x, y);
-      cc.resolve(0);
-      return this;
-    }
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var tr = getElementTranslation(elem);
-      this.animate(
-        { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-        animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>movexy 50, 100</mark>"], movexy),
   moveto: wrapcommand('moveto', 1,
   ["<u>moveto(x, y)</u> Move to graphing coordinates (see <u>getxy</u>): " +
       "<mark>moveto 50, 100</mark>",
    "<u>moveto(obj)</u> Move to page coordinates " +
       "or an object on the page (see <u>pagexy</u>): " +
-      "<mark>moveto lastmousemove</mark>"],
-  function moveto(cc, x, y) {
-    var position = x, localx = 0, localy = 0, limit = null, intick = insidetick;
-    if ($.isNumeric(position) && $.isNumeric(y)) {
-      // moveto x, y: use local coordinates.
-      localx = parseFloat(position);
-      localy = parseFloat(y);
-      position = null;
-      limit = null;
-    } else if ($.isArray(position)) {
-      // moveto [x, y], limit: use local coordinates (limit optional).
-      localx = position[0];
-      localy = position[1];
-      position = null;
-      limit = y;
-    } else if ($.isNumeric(y)) {
-      // moveto obj, limit: limited motion in the direction of obj.
-      limit = y;
-    }
-    // Otherwise moveto {pos}, limit: absolute motion with optional limit.
-    this.plan(function(j, elem) {
-      var pos = position;
-      if (pos === null) {
-        pos = $(homeContainer(elem)).pagexy();
-      }
-      if (pos && !isPageCoordinate(pos)) {
-        try {
-          pos = $(pos).pagexy();
-        } catch (e) {
-          return;
-        }
-      }
-      if (!pos || !isPageCoordinate(pos)) return;
-      if ($.isWindow(elem)) {
-        cc.appear(j);
-        scrollWindowToDocumentPosition(pos, limit);
-        cc.resolve(j);
-        return;
-      } else if (elem.nodeType === 9) {
-        return;
-      }
-      cc.appear(j);
-      this.animate({turtlePosition:
-          computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
-          animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
   ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
-      "<mark>jump 0, 50</mark>"],
-  function jump(cc, x, y) {
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var down = this.css('turtlePenDown');
-      this.css({turtlePenDown: 'up'});
-      this.slide.apply(this, cc.args);
-      this.plan(function() {
-        this.css({turtlePenDown: down});
-        cc.resolve(j);
-      });
-    });
-    return this;
-  }),
+      "<mark>jump 0, 50</mark>"], makejump(slide)),
+  jumpxy: wrapcommand('jumpxy', 1,
+  ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(movexy)),
   jumpto: wrapcommand('jumpto', 1,
   ["<u>jumpto(x, y)</u> Move without drawing (compare to <u>moveto</u>): " +
-      "<mark>jumpto 50, 100</mark>"],
-  function jumpto(cc, x, y) {
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var down = this.css('turtlePenDown');
-      this.css({turtlePenDown: 'up'});
-      this.moveto.apply(this, cc.args);
-      this.plan(function() {
-        this.css({turtlePenDown: down});
-        cc.resolve(j);
-      });
-    });
-    return this;
-  }),
+      "<mark>jumpto 50, 100</mark>"], makejump(moveto)),
   turnto: wrapcommand('turnto', 1,
   ["<u>turnto(degrees)</u> Turn to a direction. " +
       "North is 0, East is 90: <mark>turnto 270</turnto>",
