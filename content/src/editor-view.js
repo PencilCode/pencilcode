@@ -1839,6 +1839,9 @@ var COFFEESCRIPT_PALETTE =[
         block: 'do cg',
         title: 'Clear graphics'
       }, {
+        block: 'do ht',
+        title: 'Hide the turtle'
+      }, {
         block: 'do st',
         title: 'Show the turtle'
       }, {
