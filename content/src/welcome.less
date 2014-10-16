@@ -22,9 +22,14 @@
 .btn:hover .newicon { color: orange; }
 .btn:hover .loginicon, .loginblock .loginicon { color: green; }
 
+html {
+  height: 100%;
+}
+
 body {
-  position: relative;
   background: dodgerblue;
+  position: relative;
+  min-height: 100%;
 }
 
 .shadowcard {
@@ -38,6 +43,15 @@ body {
 .topline {
   border-top:1px solid #eee;
 }
+a.nofeedback, a.nofeedback:hover {
+  color: black;
+  text-decoration: none;
+}
+.list-inline.spaced > li {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 #overlay {
   display: none;
   width: 100%;
@@ -72,6 +86,8 @@ body {
   min-width: 135px;
   max-width: 150px;
   min-height: 67px;
+  margin: -5px;
+  padding: 5px;
 }
 a.pclogo[href]:hover {
   background: lightblue;
@@ -91,10 +107,6 @@ a.pclogo[href]:hover {
   letter-spacing: 14px;
   margin-right: -14px;
   padding: 0 1px;
-}
-a.nofeedback, a.nofeedback:hover {
-  color: black;
-  text-decoration: none;
 }
 .loginblock {
   display: none;

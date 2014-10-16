@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-<title>Pencil</title>
+<title>Pencil Code</title>
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
 <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400">
@@ -132,15 +132,11 @@ anything, <a href="/edit/myprogram">start on a blank page</a>.
 <div class="row topline">
 <div class="col-sm-12 vpadding text-center">
 <h2 style="padding:10px 0">Resources</h2>
-<ul class="list-inline">
+<ul class="list-inline spaced">
 <li><a class="aboutlink" href="#about">About Pencil Code</a>
-<li>
 <li><a href="/edit/untitled">Open Blank Editor</a>
-<li>
 <li><a href="//guide.pencilcode.net/">Material for Teachers</a>
-<li>
 <li><a href="/edit/">Browse All Users</a>
-<li>
 <li><a href="//dev.pencilcode.net/">Open Source Hub</a>
 </ul>
 </div>
@@ -148,8 +144,7 @@ anything, <a href="/edit/myprogram">start on a blank page</a>.
 <div class="row topline">
 <div class="col-sm-12 vpadding text-center">
 <p>Pencil Code supports CoffeeScript, Javascript, CSS, and HTML.
-<p>
-Everything posted on Pencil Code is public and free to view, share,
+<p>Everything posted on Pencil Code is public and free to view, share,
 and copy.
 </div>
 </div>
@@ -281,7 +276,11 @@ function closeoverlay() {
  $('#video').html('');
  $('#overlay,.about,.loginblock').hide();
  if (location.hash.length > 1) {
-   location.hash = '';
+   if (window.history.pushState) {
+     window.history.pushState(null, null, window.location.pathname);
+   } else {
+     location.hash = '';
+   }
  }
 }
 $('#overlay').click(function(e) {
