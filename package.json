@@ -23,6 +23,7 @@
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
+    "socket.io": "latest",
     "tamper": "latest",
     "url-template": "latest"
   },
