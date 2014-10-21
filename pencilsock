@@ -4,8 +4,8 @@
 #
 # Typically installed by:
 # sudo cp pencils /etc/init.d
-# sudo chmod a+x /etc/init.d/pencils
-# sudo update-rc.d pencils defaults
+# sudo chmod a+x /etc/init.d/pencilsock
+# sudo update-rc.d pencilsock defaults
 
 ### BEGIN INIT INFO
 # Provides:             pencilsock
@@ -32,7 +32,7 @@
 NAME="Pencil Socketio Service"
 NODE_BIN_DIR="/usr/local/node/bin"
 NODE_PATH="/usr/local/lib/node_modules"
-APPLICATION_PATH="/srv/site/root/socket/socketserver.js"
+APPLICATION_PATH="/srv/site/root/server/socket.js"
 PIDFILE="/var/run/pencilsock.pid"
 LOGFILE="/var/log/pencilsock/event.log"
 
