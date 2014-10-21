@@ -345,6 +345,19 @@ $('a[data-vimeo]').click(function(e) {
   }
   return true;
 });
+
+function preload(urls) {
+  for (var i = 0; i < urls.length; ++i) {
+    var o = document.createElement('script');
+    o.src = urls[i];
+    document.body.appendChild(o);
+  }
+}
+
+setTimeout(function() {
+  preload(['/editor.js', '/lib/ace/ace.js', '/lib/ace/worker-coffee.js']);
+}, 700);
+
 });
 </script>
 </html>
