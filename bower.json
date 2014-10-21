@@ -6,6 +6,7 @@
     "ace-builds": "ajaxorg/ace-builds#v1.1.7",
     "almond": "latest",
     "bootstrap": "latest",
+    "coffee-script": "latest",
     "devbridge-autocomplete": "latest",
     "droplet": "Pencilcode/droplet#master",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
@@ -14,11 +15,13 @@
     "lodash": "latest",
     "requirejs": "latest",
     "seedrandom": "latest",
+    "socket.io-client": "latest",
     "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
     "zeroclipboard": "latest"
   },
   "resolutions": {
-    "ace-builds": "v1.1.7"
+    "ace-builds": "v1.1.7",
+    "coffee-script": "1.8.0"
   }
 }

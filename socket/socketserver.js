@@ -10,6 +10,7 @@ io.on('connect', function(socket) {
       args.push(this.ack(packet.id));
     }
     var s = socket.nsp.to(hroom);
+    console.log('sending', args, 'to', hroom);
     s.emit.apply(s, args);
   }
 });

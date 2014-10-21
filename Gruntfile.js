@@ -18,17 +18,22 @@ module.exports = function(grunt) {
           destPrefix: 'content'
         },
         files: {
-          'jquery.js' : 'jquery/dist/jquery.js',
-          'iced-coffee-script.js': 'iced-coffee-script/extras/coffee-script.js',
-          'jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
-          'lodash.js': 'lodash/dist/lodash.js',
-          'seedrandom.js': 'seedrandom/seedrandom.js',
+          'lib/almond.js': 'almond/almond.js',
+          'lib/coffee-script.js': 'coffee-script/extras/coffee-script.js',
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
           'lib/droplet.css': 'droplet/dist/droplet.min.css',
+          'lib/iced-coffee-script.js':
+             'iced-coffee-script/extras/coffee-script.js',
+          'lib/jquery.js' : 'jquery/dist/jquery.js',
           'lib/jquery.autocomplete.js':
               'devbridge-autocomplete/dist/jquery.autocomplete.js',
           'lib/jquery.autocomplete.min.js':
-              'devbridge-autocomplete/dist/jquery.autocomplete.min.js'
+              'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
+          'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
+          'lib/lodash.js': 'lodash/dist/lodash.js',
+          'lib/require.js': 'requirejs/require.js',
+          'lib/seedrandom.js': 'seedrandom/seedrandom.js',
+          'lib/socket.io.js': 'socket.io-client/socket.io.js'
         }
       },
       zeroclipboard: {
@@ -58,18 +63,9 @@ module.exports = function(grunt) {
           'bootstrap' : 'bootstrap'
         }
       },
-      src: {
-        options: {
-          destPrefix: 'content/src'
-        },
-        files: {
-          'require.js': 'requirejs/require.js',
-          'almond.js': 'almond/almond.js'
-        }
-      },
       sourcemap: {
         options: {
-          destPrefix: 'content/src/sourcemap'
+          destPrefix: 'content/lib/sourcemap'
         },
         files: {
           'array-set.js': 'source-map/lib/source-map/array-set.js',
@@ -87,7 +83,7 @@ module.exports = function(grunt) {
         options: {
           baseUrl: 'content',
           deps: ['src/editor-main'],
-          name: 'src/almond',
+          name: 'lib/almond',
           out: 'content/editor.js',
           // optimize: 'none',
           mainConfigFile: 'content/src/editor-main.js',
@@ -120,10 +116,12 @@ module.exports = function(grunt) {
       all: {
         files: {
           'content/turtlebits.js': [
-            'content/iced-coffee-script.js',
-            'content/jquery.js',
-            'content/jquery-turtle.js',
-            'content/lodash.js',
+            'content/lib/iced-coffee-script.js',
+            'content/lib/jquery.js',
+            'content/lib/jquery-turtle.js',
+            'content/lib/lodash.js',
+            'content/lib/seedrandom.js',
+            'content/lib/socket.io.js',
             'content/src/showturtle.js'
           ]
         },
@@ -148,10 +146,12 @@ module.exports = function(grunt) {
     concat: {
       all: {
         src: [
-          'content/iced-coffee-script.js',
-          'content/jquery.js',
-          'content/jquery-turtle.js',
-          'content/lodash.js',
+          'content/lib/iced-coffee-script.js',
+          'content/lib/jquery.js',
+          'content/lib/jquery-turtle.js',
+          'content/lib/lodash.js',
+          'content/lib/seedrandom.js',
+          'content/lib/socket.io.js',
           'content/src/showturtle.js'
         ],
         dest: 'content/turtlebits.js'

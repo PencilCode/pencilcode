@@ -4,17 +4,20 @@
 require.config({
   baseUrl: '/',
   paths: {
+    'draw-protractor': 'src/draw-protractor',
+    'droplet': 'lib/droplet',
     'editor-view': 'src/editor-view',
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
-    'draw-protractor': 'src/draw-protractor',
-    'gadget': 'src/gadget',
-    'filetype': 'src/filetype',
-    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'sourcemap': 'src/sourcemap',
-    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
     'FontLoader': 'src/FontLoader',
-    'droplet': 'lib/droplet'
+    'filetype': 'src/filetype',
+    'gadget': 'src/gadget',
+    'jquery': 'lib/jquery',
+    'see': 'lib/see',
+    'seedrandom': 'lib/seedrandom',
+    'sourcemap': 'lib/sourcemap',
+    'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
   },
   shim: {
     'tooltipster': {
