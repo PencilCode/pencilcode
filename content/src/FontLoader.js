@@ -34,7 +34,7 @@ define([], function() {
   function FontLoader(fontFamiliesArray, delegate, timeout) {
     // Public
     this.delegate = delegate;
-    this.timeout = (typeof timeout !== "undefined") ? timeout : 3000;
+    this.timeout = (typeof timeout !== "undefined") ? timeout : 60000;
 
     // Private
     this._fontFamiliesArray = fontFamiliesArray.slice(0);
