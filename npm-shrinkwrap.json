@@ -2549,7 +2549,7 @@
         "requirejs": {
           "version": "2.1.14",
           "from": "requirejs@>=2.1.0 <2.2.0",
-          "resolved": "https://registry.npmjs.org/requirejs/-/requirejs-2.1.15.tgz"
+          "resolved": "https://registry.npmjs.org/requirejs/-/requirejs-2.1.14.tgz"
         }
       }
     },
