@@ -85,7 +85,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'lib/almond',
           out: 'content/editor.js',
-          // optimize: 'none',
+          optimize: 'none',
           mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
         }
