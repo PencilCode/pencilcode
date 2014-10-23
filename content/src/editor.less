@@ -9,7 +9,9 @@
 body {
   margin: 0;
   padding: 0;
-  font: 24px/28px Lato;
+  font-size: 24px;
+  font-family: Lato, Verdana, Helvetica, sans-serif;
+  line-height:28px;
   font-weight: 400;
   overflow: hidden;
   position: fixed;
@@ -426,7 +428,6 @@ body, .panetitle, #owner {
   left: 0;
   width: 100%;
   background-color: #fff;
-  font: 24px "Source Code Pro";
   overflow: hidden
 }
 
@@ -465,7 +466,7 @@ body, .panetitle, #owner {
 }
 
 #pencildoc .ace_editor {
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   font-weight: 500;
   line-height: 121%
 }
@@ -674,7 +675,6 @@ body#pencildoc #diigolet-csm {
   z-index: 1;
   margin: 0;
   padding: 2px 8px;
-  font-family: Lato;
   font-size: 18px;
   height: 28px;
   background: #fff;
@@ -786,7 +786,7 @@ body#pencildoc #diigolet-csm {
 }
 
 #pencildoc .droplet-palette-group-header {
-  font-family: Lato;
+  font-family: Lato, Verdana, Helvetica, sans-serif;
   font-size: 22px;
   line-height: 26px;
   padding-left: 5px;
@@ -794,9 +794,6 @@ body#pencildoc #diigolet-csm {
 }
 
 #pencildoc .droplet-palette-group-header:not(.droplet-palette-group-header-selected):hover {
-  font-family: Lato;
-  font-size: 22px;
-  line-height: 26px;
   background-color: #fff
 }
 
