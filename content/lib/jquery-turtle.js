@@ -3381,7 +3381,7 @@ var pressedKey = (function() {
     254: 'clear'
   };
   // :-@, 0-9, a-z(lowercased)
-  for (i = 48; i < 91; ++i) {
+  for (var i = 48; i < 91; ++i) {
     keyCodeName[i] = String.fromCharCode(i).toLowerCase();
   }
   // num-0-9 numeric keypad
@@ -8367,7 +8367,7 @@ function turtleevents(prefix) {
         names.push(prefix + 'mouse');
       }
       for (j = 0; j < names.length; ++j) {
-        name = names[j];
+        var name = names[j];
         old = window[name], prop;
         if (old && old.__proto__ === e.__proto__) {
           for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
