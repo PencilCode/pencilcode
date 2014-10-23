@@ -258,7 +258,7 @@ $('#newaccount').on('click', function() {
   window.location = '/edit/intro#new';
 });
 $('#showlogin').on('click', function() {
-  if (!$(this).css('opacity')) return;
+  if ($(this).css('opacity') == 0) return;
   $('#overlay,.loginblock').show();
   var ofs = $('#showlogin').offset();
   $('.loginblock').css({
@@ -354,8 +354,10 @@ function preload(urls) {
   }
 }
 
+window.pencilcode = {domain: location.hostname};
+
 setTimeout(function() {
-  preload(['/editor.js', '/lib/ace/ace.js', '/lib/ace/worker-coffee.js']);
+  preload(['/editor.js', '/lib/ace/ace.js']);
 }, 700);
 
 });
