@@ -128,6 +128,9 @@ window.pencilcode.view = {
   setPaneLinkText: setPaneLinkText,
   setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
+  showGuide: showGuide,
+  isGuideVisible: isGuideVisible,
+  setGuideUrl: setGuideUrl,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
@@ -237,6 +240,9 @@ function setVisibleUrl(targetUrl, addToHistory) {
   var currentDepth = history.state && history.state.depth || 0;
   var currentUrl = history.state && history.state.current || null;
   var previousUrl = history.state && history.state.previous || null;
+  if (window.query && !/[\?#]/.test(targetUrl)) {
+    targetUrl += window.query;
+  }
   if (addToHistory) {
     if (window.history.pushState) {
       window.history.pushState(
@@ -1089,6 +1095,26 @@ function evalInRunningPane(pane, code, raw) {
   } catch(e) {
     return [null, 'error: ' + e.message];
   }
+}
+
+function showGuide(show) {
+  if (show === undefined) { show = true; }
+  var width = $('#guidepane').width();
+  var pos = parseInt($('#guidepane').css('right'));
+  var goal = (show ? 0 : -Math.max(width, 640));
+  if (pos != goal) {
+    $('#guidepane').css('right', goal);
+  }
+}
+
+function isGuideVisible() {
+  var width = $('#guidepane').width();
+  var pos = parseInt($('#guidepane').css('right'));
+  return (pos + width > 0);
+}
+
+function setGuideUrl(url) {
+  $('#guidepane iframe').attr('src', url);
 }
 
 function hideProtractor(pane) {

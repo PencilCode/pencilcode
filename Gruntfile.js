@@ -29,6 +29,7 @@ module.exports = function(grunt) {
               'devbridge-autocomplete/dist/jquery.autocomplete.js',
           'lib/jquery.autocomplete.min.js':
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
+          'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lib/lodash.js': 'lodash/dist/lodash.js',
           'lib/require.js': 'requirejs/require.js',
@@ -196,7 +197,7 @@ module.exports = function(grunt) {
       iced: {
         pattern: '\n\\(function\\(root\\)',
         replacement: '\nthis.CoffeeScript||(function(root)',
-        path: 'content/iced-coffee-script.js',
+        path: 'content/lib/iced-coffee-script.js',
         recursive: false
       }
     },

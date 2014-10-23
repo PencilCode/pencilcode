@@ -167,9 +167,10 @@ function updateTopControls(addHistory) {
   // Update visible URL and main title name.
   view.setNameText(m.filename);
   var slashed = m.filename;
+  var savehash = location.hash.length > 1 ? location.hash : '';
   if (m.isdir && slashed.length) { slashed += '/'; }
   view.setVisibleUrl((model.editmode ? '/edit/' : '/home/') +
-      slashed, addHistory)
+      slashed + savehash, addHistory)
   // Update top buttons.
   var buttons = [];
 
@@ -564,7 +565,9 @@ view.on('setpass', function() {
 view.on('save', function() { saveAction(false, null, null); });
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
-  window.open('//guide.' + window.pencilcode.domain + '/home/'); });
+  view.showGuide(!view.isGuideVisible());
+  // window.open('//guide.' + window.pencilcode.domain + '/home/');
+});
 
 view.on('toggleblocks', function(p, useblocks) {
   saveBlockMode(useblocks);
@@ -1286,6 +1289,8 @@ function readNewUrl(undo) {
       css = /(?:^|#|&)css=?([^&]*)(?:&|$)/.exec(hash),
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
+  // Extract guide url from hash if present.
+      guide = /(?:^|#|&)guide=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname),
   // Login from cookie.
@@ -1312,6 +1317,11 @@ function readNewUrl(undo) {
     // Remember credentials.
     if (!cookielogin && login) { saveLoginCookie(); }
   }
+  if (guide) {
+    var guideurl = unescape(guide[1]);
+    view.setGuideUrl(guideurl);
+    view.showGuide(true);
+  }
   // Handle #blocks
   if (blocks) {
     var f = blocks[1];
@@ -1335,7 +1345,8 @@ function readNewUrl(undo) {
   if (hash.length) {
     readNewUrl.suppress = true;
     window.location.replace('#');
-    view.setVisibleUrl(window.location.pathname);
+    var savehash = guide ? '#guide=' + guide[1] : '';
+    view.setVisibleUrl(window.location.pathname + savehash);
     readNewUrl.suppress = false;
   }
   // Update global model state.

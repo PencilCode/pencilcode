@@ -11,6 +11,7 @@
     "droplet": "Pencilcode/droplet#master",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
     "jquery": "latest",
+    "jquery-deparam": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
     "requirejs": "latest",

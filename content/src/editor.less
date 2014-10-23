@@ -27,7 +27,7 @@ body {
   height: 100%;
   background: rgba(0, 0, 0, 0.1);
   display: none;
-  z-index: 3
+  z-index: 4
 }
 
 body.modal #overlay {
@@ -73,6 +73,41 @@ body.modal #overlay {
 #overlay .dialog label.tooltipstered {
   border: 1px solid transparent;
   padding-right: 5px
+}
+
+#guidepane {
+  position: absolute;
+  background: #1e90ff;
+  width: 640px;
+  max-width: 50%;
+  right: -640px;
+  bottom: 0;
+  top: 56px;
+  z-index: 2;  /* above editors, below "run" button. */
+  transition: right 0.5s;
+}
+
+#guidepane .guidetitle {
+  padding: 0 20px;
+  color: #87ceeb;
+  letter-spacing: 2px;
+}
+
+#guidepane .guidepreview {
+  position: absolute;
+  left: 16px;
+  right: 0;
+  bottom: 0;
+  top: 28px;
+  height: auto;
+  width: auto;
+  background: whitesmoke;
+}
+
+#guidepane .guidepreview iframe {
+  height: 100%;
+  width: 100%;
+  border: 0;
 }
 
 .framed #overlay .dialog {
@@ -132,7 +167,7 @@ body.modal #overlay {
   top: 12px;
   left: 0;
   display: none;
-  z-index: 1;
+  z-index: 2;
   background-color: #ffd700;
   box-shadow: 0 0 7px gray;
   color: #000;
@@ -345,7 +380,7 @@ body.modal #overlay {
 }
 
 #middle {
-  z-index: 2;
+  z-index: 3;
   display: none
 }
 
@@ -439,7 +474,7 @@ body, .panetitle, #owner {
   pointer-events: none;
   opacity: .5;
   transition: opacity .3s;
-  z-index: 10;
+  z-index: 3;
   position: absolute;
   display: table;
   margin: auto;
@@ -648,7 +683,7 @@ body#pencildoc #diigolet-csm {
 
 .gadget {
   position: fixed;
-  z-index: 2;
+  z-index: 3;
   border-radius: 8px;
   border-bottom-right-radius: 0;
   overflow: hidden;
