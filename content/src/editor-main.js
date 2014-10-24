@@ -450,6 +450,9 @@ function runAction() {
     cancelAndClearPosition('back');
     rotateModelLeft(true);
   }
+  // Hide the guide, if any
+  guide.show(false);
+  // Grab the code.
   var newdata = $.extend({}, modelatpos('left').data, doc);
   var filename = modelatpos('left').filename;
   view.clearPaneEditorMarks(paneatpos('left'));
