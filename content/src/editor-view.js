@@ -23,6 +23,11 @@ function(
   FontLoader
 ) {
 
+function htmlEscape(s) {
+  return s.replace(/[<>&"]/g, function(c) {
+    return c=='<'?'&lt;':c=='>'?'&gt;':c=='&'?'&amp;':'&quot;';});
+}
+
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
 // Any of the three panes can show:
@@ -698,6 +703,11 @@ function showShareDialog(opts) {
   bodyText = escape(bodyText);
   subjectText = escape(subjectText);
 
+  var embedText = null;
+  if (opts.shareRunURL && !/[>"]/.test(opts.shareRunURL)) {
+    embedText = '<iframe src="' + opts.shareRunURL + '" ' +
+       'width="640" height="640" frameborder="0" allowfullScreen></iframe>';
+  }
   opts.prompt = (opts.prompt) ? opts.prompt : 'Shared &#x2713;';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
@@ -705,28 +715,45 @@ function showShareDialog(opts) {
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Posted on share.' + window.pencilcode.domain + '" href="' +
-          opts.shareStageURL + '">See it here</a> ' +
+          htmlEscape(addProtocol(opts.shareStageURL)) + '">See it here</a> ' +
           '<input readonly type="text" value="' +
-          opts.shareStageURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareStageURL + '"><img src="/image/copy.png" title="Copy"></button>' +
+          htmlEscape(addProtocol(opts.shareStageURL)) +
+          '"><button class="copy" data-clipboard-text="' +
+          htmlEscape(addProtocol(opts.shareStageURL)) +
+          '"><img src="/image/copy.png" title="Copy"></button>' +
          '</div>' : '') +
         ((opts.shareRunURL && !opts.shareStageURL) ?
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Run without showing code" href="' +
-          opts.shareRunURL + '">See it here</a> ' +
+          htmlEscape(opts.shareRunURL) + '">See it here</a> ' +
           '<input readonly type="text" value="' +
-          opts.shareRunURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareRunURL + '"><img src="/image/copy.png" title="Copy"></button>' +
+          htmlEscape(opts.shareRunURL) +
+          '"><button class="copy" data-clipboard-text="' +
+          htmlEscape(opts.shareRunURL) +
+          '"><img src="/image/copy.png" title="Copy"></button>' +
         '</div>' : '') +
         '<div class="field">' +
           '<a target="_blank" ' +
           'title="Link showing the code" href="' +
-          opts.shareEditURL + '">Share code</a> ' +
+          htmlEscape(opts.shareEditURL) + '">Share code</a> ' +
           '<input readonly type="text" value="' +
-          opts.shareEditURL + '"><button class="copy" data-clipboard-text="' +
-          opts.shareEditURL + '"><img src="/image/copy.png" title="Copy"></button>' +
+          htmlEscape(opts.shareEditURL) +
+          '"><button class="copy" data-clipboard-text="' +
+          htmlEscape(opts.shareEditURL) +
+          '"><img src="/image/copy.png" title="Copy"></button>' +
         '</div>' +
+        (embedText ?
+        '<div class="field">' +
+          '<span target="_blank" ' +
+          'title="HTML code to embed" href="' +
+          htmlEscape(opts.shareRunURL) + '">Embed code</span> ' +
+          '<input readonly type="text" left="1" value="' +
+          htmlEscape(embedText) +
+          '"><button class="copy" data-clipboard-text="' +
+          htmlEscape(embedText) +
+          '"><img src="/image/copy.png" title="Copy"></button>' +
+        '</div>' : '') +
       '</div><br>' +
     '<button class="cancel">OK</button>' +
     '<button class="ok" title="Share by email">Email</button>';
@@ -735,9 +762,14 @@ function showShareDialog(opts) {
     dialog.find('a.quiet').tooltipster();
     dialog.find('button.ok').tooltipster();
     dialog.find('button.copy').tooltipster();
-    dialog.find('.field input').each(function() {
-      this.scrollLeft = this.scrollWidth;
+    dialog.find('.field input').on('click', function() {
+      $(this).select();
+    }).each(function() {
+      if (!$(this).attr('left')) {
+        this.scrollLeft = this.scrollWidth;
+      }
     });
+
     var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
     var tooltipTimer = null;
     clipboardClient.on('ready', function() {
