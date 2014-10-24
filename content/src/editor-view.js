@@ -388,7 +388,7 @@ function flashButton(id) {
       j;
   for (j = 0; j < 2; ++j) {
     button.animate({opacity:1},
-      function(n){$(this).css({backgroundColor: 'red'});})
+      function(n){$(this).css({backgroundColor: 'dodgerblue'});})
           .animate({opacity:1},
       function(n){$(this).css({backgroundColor: bg});});
   }

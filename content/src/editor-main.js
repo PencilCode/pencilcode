@@ -451,7 +451,14 @@ function runAction() {
     rotateModelLeft(true);
   }
   // Hide the guide, if any
-  guide.show(false);
+  if (guide.isVisible()) {
+    guide.show(false);
+    // Blink the guide button.
+    // view.flashButton('guide');
+    // Let the animation complete before running.
+    setTimeout(runAction, 500);
+    return;
+  }
   // Grab the code.
   var newdata = $.extend({}, modelatpos('left').data, doc);
   var filename = modelatpos('left').filename;
