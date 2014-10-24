@@ -10,11 +10,8 @@ function showGuide(show, instant) {
   var pos = parseInt($('#guidepane').css('right'));
   var goal = (show ? 0 : -Math.max(width, 640));
   if (pos != goal) {
-    if (instant) {
-      $('#guidepane').css('transition', 'right 0');
-    }
-    $('#guidepane').css('right', goal);
-    $('#guidepane').css('transition', '');
+    $('#guidepane').css('transition', instant ? 'right 0' : '')
+                   .css('right', goal);
   }
 }
 
@@ -24,7 +21,18 @@ function isGuideVisible() {
   return (pos + width > 0);
 }
 
+var allowedOrigins = {};
+
+function addGuideOrigin(url) {
+  var originmatch = /^(https?:\/\/[a-z0-9]+(?:[\.-][a-z0-9]+)*)(?:\/|$)/
+        .exec(url);
+  if (originmatch) {
+    allowedOrigins[originmatch[1]] = true;
+  }
+}
+
 function setGuideUrl(url) {
+  addGuideOrigin(url);
   $('#guidepane iframe').attr('src', url);
 }
 
@@ -44,10 +52,28 @@ function triggerCallback(event, args) {
 }
 
 $(window).on('message', function(event) {
+  if (event.originalEvent) { event = event.originalEvent; }
   var data = event.data;
-  if (data && 'object' == typeof data && data.type == 'guideurl' &&
-      'string' == typeof data.url && data.url.indexOf(event.origin) == 0) {
-    triggerCallback('guideurl', data.url);
+  if (event.source != $('#guidepane iframe').prop('contentWindow') ||
+      !allowedOrigins.hasOwnProperty(event.origin) ||
+      !data || 'object' != typeof data || !data.type) {
+    return;
+  }
+  if (data.type == 'guideurl') {
+    if ('string' == typeof data.url && data.url.indexOf(event.origin) == 0) {
+      triggerCallback('guideurl', [data.url]);
+    }
+  }
+  if (data.type == 'allow') {
+    if ('string' == typeof data.url) {
+      addGuideOrigin(data.url);
+    }
+  }
+  if (data.type == 'show') {
+    showGuide(true);
+  }
+  if (data.type == 'hide') {
+    showGuide(false);
   }
 });
 

@@ -437,7 +437,9 @@ view.on('changehtmlcss', function(pane) {
   saveDefaultMeta(doc.meta);
 });
 
-view.on('run', function() {
+view.on('run', runAction);
+
+function runAction() {
   var doc = view.getPaneEditorData(paneatpos('left'));
   if (!doc) {
     doc = view.getPaneEditorData(paneatpos('right'));
@@ -466,7 +468,7 @@ view.on('run', function() {
     cookie('recent', window.location.href,
         { expires: 7, path: '/', domain: window.pencilcode.domain });
   }
-});
+}
 
 $(window).on('beforeunload', function() {
   if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
@@ -576,6 +578,14 @@ view.on('guide', function() {
     return;
   }
   guide.show(!guide.isVisible());
+});
+
+guide.on('guideurl', function(guideurl) {
+  readNewUrl.suppress = true;
+  var savehash = guideurl ? '#guide=' + (/[&#%]/.test(guideurl) ?
+      encodeURIComponent(guideurl) : encodeURI(guideurl)) : '';
+  view.setVisibleUrl(window.location.pathname + savehash, false);
+  readNewUrl.suppress = false;
 });
 
 view.on('toggleblocks', function(p, useblocks) {
@@ -1300,6 +1310,7 @@ function readNewUrl(undo) {
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract guide url from hash if present.
       guidehash = /(?:^|#|&)guide=([^&]*)(?:&|$)/.exec(hash),
+      guideurl = null,
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname),
   // Login from cookie.
@@ -1326,8 +1337,12 @@ function readNewUrl(undo) {
     // Remember credentials.
     if (!cookielogin && login) { saveLoginCookie(); }
   }
-  if (guidehash) {
-    var guideurl = unescape(guidehash[1]);
+  if (guidehash) { try { guideurl = unescape(guidehash[1]); } catch (e) { } }
+  if (guideurl) {
+    if (!/^https?:\/\/\w/i.test(guideurl)) {
+      var prefix = location.protocol + (/^\/\//.test(guideurl) ? '' : '//');
+      guideurl = prefix + guideurl;
+    }
     guide.setUrl(guideurl);
     guide.show(true, firsturl);
     model.guideUrl = guideurl;
@@ -1355,8 +1370,11 @@ function readNewUrl(undo) {
   if (hash.length) {
     readNewUrl.suppress = true;
     window.location.replace('#');
-    var savehash = guidehash ? '#guide=' + guidehash[1] : '';
-    view.setVisibleUrl(window.location.pathname + savehash);
+    /*
+    var savehash = guideurl ? ('#guide=' + /[&#%]/.test(guideurl) ?
+        encodeURI(guideurl) : encodeURIComponent(guideurl)) : '';
+    */
+    view.setVisibleUrl(window.location.pathname);
     readNewUrl.suppress = false;
   }
   // Update global model state.

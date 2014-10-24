@@ -190,6 +190,8 @@ window.pencilcode.view = {
   },
   // Sets visible URL without navigating.
   setVisibleUrl: setVisibleUrl,
+  // For other modules to fire view events.
+  fireEvent: fireEvent,
   // For debugging only
   _state: state
 };
