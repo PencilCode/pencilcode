@@ -498,6 +498,7 @@ view.on('login', function() {
     prompt: 'Log in.',
     username: model.ownername,
     validate: function(state) { return {}; },
+    switchuser: signUpAndSave,
     done: function(state) {
       model.username = model.ownername;
       model.passkey = keyFromPassword(model.username, state.password);
@@ -779,6 +780,12 @@ function signUpAndSave(options) {
         return {
           disable: true,
           info: 'Name should not start with pencil.'
+        };
+      }
+      if (options.oldonly) {
+        return {
+          disable: true,
+          info: 'Looking for name "' + username + '"...'
         };
       }
       if (state.username.length < 3) {
