@@ -12,6 +12,7 @@ require.config({
     'FontLoader': 'src/FontLoader',
     'filetype': 'src/filetype',
     'gadget': 'src/gadget',
+    'guide': 'src/guide',
     'jquery': 'lib/jquery',
     'see': 'lib/see',
     'seedrandom': 'lib/seedrandom',
@@ -41,6 +42,7 @@ require([
   'editor-storage',
   'editor-debug',
   'filetype',
+  'guide',
   'seedrandom',
   'see',
   'draw-protractor'],
@@ -50,6 +52,7 @@ function(
   storage,
   debug,
   filetype,
+  guide,
   seedrandom,
   see,
   drawProtractor) {
@@ -65,6 +68,8 @@ var model = window.pencilcode.model = {
   // scaffold instructional examples.  See filetype.js wrapTurtle and
   // PencilCodeEmbed.setupScript to see how extra scripts are passed through.
   setupScript: null,
+  // Url used for starting the guide.
+  guideUrl: null,
   // Contents of the three panes.
   pane: {
     alpha: {
@@ -565,8 +570,12 @@ view.on('setpass', function() {
 view.on('save', function() { saveAction(false, null, null); });
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
-  view.showGuide(!view.isGuideVisible());
-  // window.open('//guide.' + window.pencilcode.domain + '/home/');
+  if (!model.guideUrl) {
+    window.open(
+       '//guide.' + window.pencilcode.domain + '/home/');
+    return;
+  }
+  guide.show(!guide.isVisible());
 });
 
 view.on('toggleblocks', function(p, useblocks) {
@@ -1290,7 +1299,7 @@ function readNewUrl(undo) {
   // Extract setup script spec from hash if present.
       setup = /(?:^|#|&)setup=([^&]*)(?:&|$)/.exec(hash),
   // Extract guide url from hash if present.
-      guide = /(?:^|#|&)guide=([^&]*)(?:&|$)/.exec(hash),
+      guidehash = /(?:^|#|&)guide=([^&]*)(?:&|$)/.exec(hash),
   // Extract edit mode
       editmode = /^\/edit\//.test(window.location.pathname),
   // Login from cookie.
@@ -1317,10 +1326,11 @@ function readNewUrl(undo) {
     // Remember credentials.
     if (!cookielogin && login) { saveLoginCookie(); }
   }
-  if (guide) {
-    var guideurl = unescape(guide[1]);
-    view.setGuideUrl(guideurl);
-    view.showGuide(true);
+  if (guidehash) {
+    var guideurl = unescape(guidehash[1]);
+    guide.setUrl(guideurl);
+    guide.show(true, firsturl);
+    model.guideUrl = guideurl;
   }
   // Handle #blocks
   if (blocks) {
@@ -1345,7 +1355,7 @@ function readNewUrl(undo) {
   if (hash.length) {
     readNewUrl.suppress = true;
     window.location.replace('#');
-    var savehash = guide ? '#guide=' + guide[1] : '';
+    var savehash = guidehash ? '#guide=' + guidehash[1] : '';
     view.setVisibleUrl(window.location.pathname + savehash);
     readNewUrl.suppress = false;
   }
