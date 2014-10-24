@@ -582,6 +582,7 @@ view.on('guide', function() {
 
 guide.on('guideurl', function(guideurl) {
   readNewUrl.suppress = true;
+  model.guideUrl = guideurl;
   var savehash = guideurl ? '#guide=' + (/[&#%]/.test(guideurl) ?
       encodeURIComponent(guideurl) : encodeURI(guideurl)) : '';
   view.setVisibleUrl(window.location.pathname + savehash, false);
@@ -855,6 +856,11 @@ function signUpAndSave(options) {
                 '//' + username + '.' + window.pencilcode.domain +
                 '/edit/' + rename +
                 '#login=' + username + ':' + (key ? key : '');
+            if (model.guideUrl) {
+              var guideurl = model.guideUrl;
+              newurl += '&guide=' + (/[&#%]/.test(guideurl) ?
+                encodeURIComponent(guideurl) : encodeURI(guideurl));
+            }
             if (options.nohistory) {
               window.location.replace(newurl);
             } else {
@@ -1346,6 +1352,9 @@ function readNewUrl(undo) {
     guide.setUrl(guideurl);
     guide.show(true, firsturl);
     model.guideUrl = guideurl;
+  } else {
+    guide.show(false, firsturl);
+    model.guideUrl = null;
   }
   // Handle #blocks
   if (blocks) {
