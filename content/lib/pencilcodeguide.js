@@ -26,6 +26,10 @@
       global.parent.postMessage({
         type: 'allow', url: absoluteUrl(url)}, '*');
     },
+    login: function(options) {
+      global.parent.postMessage({
+        type: 'login', options: options}, '*');
+    },
     hide: function() {
       global.parent.postMessage({type: 'hide'}, '*');
     },

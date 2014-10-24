@@ -600,6 +600,16 @@ guide.on('guideurl', function(guideurl) {
   readNewUrl.suppress = false;
 });
 
+guide.on('login', function(options) {
+  if (!options) {
+    options = {
+      oldonly: true,
+      center: true
+    };
+  }
+  signUpAndSave(options);
+});
+
 view.on('toggleblocks', function(p, useblocks) {
   saveBlockMode(useblocks);
   var filename = model.pane[p].filename;
@@ -795,7 +805,7 @@ function signUpAndSave(options) {
       if (options.oldonly) {
         return {
           disable: true,
-          info: 'Looking for name "' + username + '"...'
+          info: 'Use an existing account.'
         };
       }
       if (state.username.length < 3) {

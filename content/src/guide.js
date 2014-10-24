@@ -69,6 +69,9 @@ $(window).on('message', function(event) {
       addGuideOrigin(data.url);
     }
   }
+  if (data.type == 'login') {
+    triggerCallback('login', [data.options]);
+  }
   if (data.type == 'show') {
     showGuide(true);
   }
