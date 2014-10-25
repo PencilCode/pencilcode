@@ -8,8 +8,13 @@
 
   // Look at the current script to get the origin domain.
   var scripts = document.getElementsByTagName('script');
-  var src = absoluteUrl(scripts.length && scripts[scripts.length - 1].src);
-  var origin = src.replace(/^(https?:\/\/[^\/]*)(?:\/.*)?$/, "$1");
+  var srcobj = absoluteUrl(scripts.length && scripts[scripts.length - 1].src);
+  var origin = srcobj.url.replace(/^(https?:\/\/[^\/]*)(?:\/.*)?$/, "$1");
+
+  function checkOrigin(event) {
+    return (event.origin == origin ||
+        event.origin.replace(/^(https?:\/\/)(?:\w+\.)/, '$1') == origin);
+  }
 
   // calculates an absolute URL
   function absoluteUrl(url) {
@@ -40,7 +45,7 @@
   window.addEventListener('message', function(event) {
     var data = event.data;
     if (event.source != window.parent ||
-        event.origin != origin ||
+        // !checkOrigin(event) ||
         !data || 'object' != typeof data || !data.type) {
       return;
     }
@@ -65,7 +70,7 @@
     },
     allow: function(url) {
       global.parent.postMessage({
-        type: 'allow', url: absoluteUrl(url)}, '*');
+        type: 'allow', url: absoluteUrl(url).url}, '*');
     },
     login: function(options) {
       global.parent.postMessage({
@@ -77,7 +82,7 @@
         id = new Date % 86400000 + Math.random();
         queries[id] = callback;
       }
-      global.parent(postMessage({type: 'query', id: id}, '*'));
+      global.parent.postMessage({type: 'query', id: id}, '*');
     },
     state: function() {
       return state;
