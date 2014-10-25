@@ -1,11 +1,9 @@
 define([
   'jquery',
-  'view',
-  'controller'
+  'view'
 ], function(
   $,
-  view,
-  model
+  view
 ){
 
 function showGuide(show, instant) {
@@ -84,6 +82,7 @@ $(window).on('message', function(event) {
     showGuide(false);
   }
   if (data.type == 'query') {
+    var model = require('controller');
     var pane = view.paneid('left');
     var doc = view.getPaneEditorData(pane);
     var state = {
@@ -93,7 +92,8 @@ $(window).on('message', function(event) {
       isdir: model.pane[pane].isdir,
       doc: doc
     };
-    postMessage({type: 'response', id: data.id, state: state}, event.origin);
+    guideWindow.postMessage(
+        {type: 'response', id: data.id, state: state}, event.origin);
   }
 });
 
