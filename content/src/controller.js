@@ -172,10 +172,8 @@ function updateTopControls(addHistory) {
   // Update visible URL and main title name.
   view.setNameText(m.filename);
   var slashed = m.filename;
-  var savehash = location.hash.length > 1 ? location.hash : '';
   if (m.isdir && slashed.length) { slashed += '/'; }
-  view.setVisibleUrl((model.editmode ? '/edit/' : '/home/') +
-      slashed + savehash, addHistory)
+  updateVisibleUrl('/edit/' + slashed, model.guideUrl, addHistory)
   // Update top buttons.
   var buttons = [];
 
@@ -593,12 +591,19 @@ view.on('guide', function() {
 
 guide.on('guideurl', function(guideurl) {
   readNewUrl.suppress = true;
-  model.guideUrl = guideurl;
-  var savehash = guideurl ? '#guide=' + (/[&#%]/.test(guideurl) ?
-      encodeURIComponent(guideurl) : encodeURI(guideurl)) : '';
-  view.setVisibleUrl(window.location.pathname + savehash, false);
+  updateVisibleUrl(window.location.pathname, guideurl, false);
   readNewUrl.suppress = false;
 });
+
+function guideHash(guideurl) {
+  return guideurl ? '#guide=' + (/[&#%]/.test(guideurl) ?
+      encodeURIComponent(guideurl) : encodeURI(guideurl)) : '';
+}
+
+function updateVisibleUrl(baseurl, guideurl, addHistory) {
+  model.guideUrl = guideurl;
+  view.setVisibleUrl(baseurl + guideHash(guideurl), addHistory);
+}
 
 guide.on('login', function(options) {
   if (!options) {
@@ -1405,12 +1410,8 @@ function readNewUrl(undo) {
   // Clean up the hash if present, and absorb the new auth information.
   if (hash.length) {
     readNewUrl.suppress = true;
-    window.location.replace('#');
-    /*
-    var savehash = guideurl ? ('#guide=' + /[&#%]/.test(guideurl) ?
-        encodeURI(guideurl) : encodeURIComponent(guideurl)) : '';
-    */
-    view.setVisibleUrl(window.location.pathname);
+    // window.location.replace('#');
+    updateVisibleUrl(window.location.pathname, guideurl, false);
     readNewUrl.suppress = false;
   }
   // Update global model state.
