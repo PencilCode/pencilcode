@@ -21,7 +21,7 @@
     ww.ide = null;
     // Propagate the ide variable from the parent window, if present.
     // When running framed inside in the pencilcode ide, this object
-    // is set up by editor-debug.js.
+    // is set up by debug.js.
     if (ww.parent !== ww && ww.parent.ide &&
         $.isFunction(ww.parent.ide.getEditorText)) {
       ww.ide = ww.parent.ide;

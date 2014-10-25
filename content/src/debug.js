@@ -4,7 +4,7 @@
 
 define([
   'jquery',
-  'editor-view',
+  'view',
   'see',
   'sourcemap/source-map-consumer'],
 function($, view, see, sourcemap) {

@@ -1,7 +1,11 @@
 define([
-  'jquery'
+  'jquery',
+  'view',
+  'controller'
 ], function(
-  $
+  $,
+  view,
+  model
 ){
 
 function showGuide(show, instant) {
@@ -53,8 +57,9 @@ function triggerCallback(event, args) {
 
 $(window).on('message', function(event) {
   if (event.originalEvent) { event = event.originalEvent; }
+  var guideWindow = $('#guidepane iframe').prop('contentWindow');
   var data = event.data;
-  if (event.source != $('#guidepane iframe').prop('contentWindow') ||
+  if (event.source != guideWindow ||
       !allowedOrigins.hasOwnProperty(event.origin) ||
       !data || 'object' != typeof data || !data.type) {
     return;
@@ -77,6 +82,18 @@ $(window).on('message', function(event) {
   }
   if (data.type == 'hide') {
     showGuide(false);
+  }
+  if (data.type == 'query') {
+    var pane = view.paneid('left');
+    var doc = view.getPaneEditorData(pane);
+    var state = {
+      owner: model.ownername,
+      user: model.username,
+      filename: model.pane[pane].filename,
+      isdir: model.pane[pane].isdir,
+      doc: doc
+    };
+    postMessage({type: 'response', id: data.id, state: state}, event.origin);
   }
 });
 
