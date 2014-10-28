@@ -1867,25 +1867,25 @@ var COFFEESCRIPT_PALETTE =[
         block: 'label \'hello\'',
         title: 'Write text at the turtle'
       }, {
-        block: 'do home',
+        block: 'home()',
         title: 'Move the turtle back to start'
       }, {
-        block: 'do cs',
+        block: 'cs()',
         title: 'Clear screen'
       }, {
-        block: 'do cg',
+        block: 'cg()',
         title: 'Clear graphics'
       }, {
-        block: 'do ht',
+        block: 'ht()',
         title: 'Hide the turtle'
       }, {
-        block: 'do st',
+        block: 'st()',
         title: 'Show the turtle'
       }, {
-        block: 'do pu',
+        block: 'pu()',
         title: 'Lift the pen up'
       }, {
-        block: 'do pd',
+        block: 'pd()',
         title: 'Put the pen down'
       }, {
         block: 'scale 3',
@@ -1993,7 +1993,7 @@ var COFFEESCRIPT_PALETTE =[
         block: 'mycommand = ->\n  ``',
         title: 'Define a custom command'
       }, {
-        block: 'do mycommand',
+        block: 'mycommand()',
         title: 'Do a custom command'
       }, {
         block: 'write \'Let\\\'s play!\'',
