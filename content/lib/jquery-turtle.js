@@ -1580,7 +1580,7 @@ function createSurfaceAndField() {
       transformOrigin: cw + "px " + ch + "px",
       pointerEvents: 'none',
       overflow: 'hidden'
-    });
+    }).addClass('turtlefield');
   $(field).attr('id', 'field')
     .css({
       position: 'absolute',
@@ -2068,13 +2068,16 @@ function clearField(arg) {
       sel.remove();
     }
   }
+  if (!arg || /\blabels\b/.test(arg)) {
+    if (globalDrawing.surface) {
+      var sel = $(globalDrawing.surface).find('.turtlelabel');
+      sel.remove();
+    }
+  }
   if (!arg || /\btext\b/.test(arg)) {
     // "turtlefield" is a CSS class to use to mark top-level
     // elements that should not be deleted by clearscreen.
     var keep = $('.turtlefield');
-    if (globalDrawing.surface) {
-      keep = keep.add(globalDrawing.surface);
-    }
     $('body').contents().not(keep).remove();
   }
 }
@@ -3491,11 +3494,15 @@ var pressedKey = (function() {
       choices = ch.replace(/\s/g, '').toLowerCase().split(',');
       return function(e) {
         if (match(choices, e.which)) {
-          fn.call(this, e);
+          e.keyname = keyCodeName[e.which];
+          return fn.apply(this, arguments);
         }
       }
     } else {
-      return fn;
+      return function(e) {
+        e.keyname = keyCodeName[e.which];
+        return fn.apply(this, arguments);
+      }
     }
   }
   pressed.enable = enablePressListener;
@@ -5636,12 +5643,17 @@ function wrapglobalcommand(name, helptext, fn) {
 
 function wrapwindowevent(name, helptext) {
   return wrapraw(name, helptext, function(fn) {
-    var wrapped = /^key/.test(name) ? pressedKey.wrap(fn, arguments[1]) : fn;
-    var filtered = function(e) {
-      if ($(e.target).closest('input,button').length) { return; }
-      wrapped.apply(this, arguments);
-    }
-    $(window).on(name, filtered);
+    var forKey = /^key/.test(name),
+        forMouse = /^mouse|click$/.test(name),
+        wrapped = forKey ? pressedKey.wrap(fn, arguments[1])
+            : forMouse ? wrapmouselistener(fn) : fn,
+        filter = forMouse ? 'input,button' : forKey ?
+            'textarea,input:not([type]),input[type=text],input[type=password]'
+            : null;
+    $(window).on(name, !filter ? wrapped : function(e) {
+          if ($(e.target).closest(filter).length) { return; }
+          return wrapped.apply(this, arguments);
+    });
   });
 }
 
@@ -5651,6 +5663,20 @@ function wrapraw(name, helptext, fn) {
   fn.helpname = name;
   fn.helptext = helptext;
   return fn;
+}
+
+// Adds center-up x and y coordinates to the mouse event.
+function wrapmouselistener(fn) {
+  return function(event) {
+    if ('pageX' in event && 'pageY' in event) {
+      var origin = $('#field').offset();
+      if (origin) {
+        event.x = event.pageX - origin.left;
+        event.y = origin.top - event.pageY;
+      }
+    }
+    return fn.apply(this, arguments);
+  };
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -6530,7 +6556,7 @@ var turtlefn = {
       }, styles);
       // Place the label on the screen using the figured styles.
       var out = output(html, 'label').css(applyStyles)
-          .addClass('turtle').appendTo(getTurtleField());
+          .addClass('turtlelabel').appendTo(getTurtleField());
       var rotated = /\brotated\b/.test(side),
           scaled = /\bscaled\b/.test(side);
       // Mimic the current position and rotation and scale of the turtle.
@@ -7079,7 +7105,7 @@ var dollar_turtle_methods = {
   ["<u>cg()</u> Clear graphics. Does not alter body text: " +
       "<mark>do cg</mark>"],
   function cg() {
-    clearField('canvas');
+    clearField('canvas labels');
   }),
   ct: wrapglobalcommand('ct',
   ["<u>ct()</u> Clear text. Does not alter graphics canvas: " +
