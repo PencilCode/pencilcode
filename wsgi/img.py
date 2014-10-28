@@ -65,14 +65,14 @@ def application(env, start_response):
 
       # path with /a/, /i/, /s/, /m/, /l/, or /1024x768/ sizes image
       isz = 's'
-      if m.append(re.match(r'([aisml])/(.*)$', terms)) or any(m):
+      if m.append(re.match(r'([aisml])[-/](.*)$', terms)) or any(m):
         p = m.pop()
         if p.group(1) == 'a':
           isz = None
         else:
           isz = p.group(1)
         terms = p.group(2)
-      elif m.append(re.match(r'(\d+)x(\d+)/(.*)$', terms)) or any(m):
+      elif m.append(re.match(r'(\d+)x(\d+)[-/](.*)$', terms)) or any(m):
         p = m.pop()
         isz = 'ex,iszw:' + p.group(1) + ',iszh:' + p.group(2)
         terms = p.group(3)
@@ -92,7 +92,7 @@ def application(env, start_response):
 
       # path with /face/, /photo/, /clipart/, /lineart/
       if m.append(re.match(r'(face|photo|clipart|lineart|animated)' +
-          r'/(.*)$', terms)) or any(m):
+          r'[-/](.*)$', terms)) or any(m):
         p = m.pop()
         tbs += ',itp:' + p.group(1)
         terms = p.group(2)
