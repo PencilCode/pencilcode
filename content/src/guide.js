@@ -6,21 +6,19 @@ define([
   view
 ){
 
+var guideShown = false;
+
 function showGuide(show, instant) {
   if (show === undefined) { show = true; }
-  var width = $('#guidepane').width();
-  var pos = parseInt($('#guidepane').css('right'));
-  var goal = (show ? 0 : -Math.max(width, 640));
-  if (pos != goal) {
-    $('#guidepane').css('transition', instant ? 'right 0' : '')
-                   .css('right', goal);
-  }
+  if (show == guideShown) return;
+  var goal = (show ? '0' : '-50%');
+  $('#guidepane').css('transition', instant ? 'right 0' : 'right 0.5s')
+                 .css('right', goal);
+  guideShown = show;
 }
 
 function isGuideVisible() {
-  var width = $('#guidepane').width();
-  var pos = parseInt($('#guidepane').css('right'));
-  return (pos + width > 0);
+  return guideShown;
 }
 
 var allowedOrigins = {};
