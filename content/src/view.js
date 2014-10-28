@@ -2267,7 +2267,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   // Set up fonts - once they are loaded.
   whenCodeFontLoaded(function () {
     dropletEditor.setFontFamily("Source Code Pro");
-    dropletEditor.setFontSize(14);
+    dropletEditor.setFontSize(15);
   });
   dropletEditor.setPaletteWidth(250);
   if (!/^frame\./.test(window.location.hostname)) {
@@ -2460,7 +2460,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   if (long) {
     // Use a small font for long documents.
     $(elt).css({lineHeight: '119%'});
-    editor.setFontSize(14);
+    editor.setFontSize(15);
   } else {
     // Use a giant font for short documents.
     $(elt).css({lineHeight: '121%'});
@@ -2479,7 +2479,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     setTimeout(function() { ensureEmptyLastLine(editor); }, 0);
     var session = editor.getSession();
     // Flip editor to small font size when it doesn't fit any more.
-    if (editor.getFontSize() > 14) {
+    if (editor.getFontSize() > 15) {
       var long = (session.getLength() * big.height > elt.height());
       if (!long) {
         // Scan for wrapped lines.
@@ -2491,7 +2491,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
         }
       }
       if (long) {
-        editor.setFontSize(14);
+        editor.setFontSize(15);
         $('#' + pane + ' .editor').css({lineHeight: '119%'});
       }
     }
