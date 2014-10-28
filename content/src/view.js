@@ -747,9 +747,9 @@ function showShareDialog(opts) {
         '</div>' +
         (embedText ?
         '<div class="field">' +
-          '<span target="_blank" ' +
+          '<a target="_blank" ' +
           'title="HTML code to embed" href="' +
-          htmlEscape(opts.shareRunURL) + '">Embed code</span> ' +
+          htmlEscape(opts.shareRunURL) + '">Embed code</a> ' +
           '<input readonly type="text" left="1" value="' +
           htmlEscape(embedText) +
           '"><button class="copy" data-clipboard-text="' +
