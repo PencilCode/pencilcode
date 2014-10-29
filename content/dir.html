@@ -4,9 +4,9 @@
 <title>Pencil Code Directory</title>
 <meta charset="utf-8">
 <style>
-@import url("http://fonts.googleapis.com/css?family=Lato:300|Source+Code+Pro:400");
+@import url("http://fonts.googleapis.com/css?family=Lato:400|Source+Code+Pro:400");
 * {box-sizing:border-box;}
-body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden}
+body {margin:0;padding:0;font:24px/28px "Lato";font-weight:400;overflow:hidden}
 #top{position:absolute;top:0;left:0;right:0;width:100%;height:56px;
   table-layout:auto;overflow:hidden;max-height:56px;border-spacing:0}
 #topleft,#topright{padding:0 12px;height:56px;vertical-align:middle;
@@ -14,8 +14,8 @@ body {margin:0;padding:0;font:24px/28px "Lato";font-weight:300;overflow:hidden}
 #topright{text-align:right;width:1%;}
 #topright button,#overlay button{border:none;background-color:white;
   box-shadow:0 0 7px gray;color:black;
-  border-radius:8px;font-family:inherit;font-size:18px;line-height:18px;
-  font-weight:300;vertical-align:middle;height:28px;
+  border-radius:8px;font-family:inherit;font-size:16px;line-height:18px;
+  font-weight:400;vertical-align:middle;height:28px;
   padding:2px 8px;margin:5px;display:inline-block;}
 #topright button[disabled],#overlay button[disabled] {
   box-shadow:0 0 7px lightgray;color:lightgray;}
@@ -70,7 +70,7 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')) +
 <div id="bravo" class="full pane"
 ><div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<script src="/jquery.js"></script>
+<script src="/lib/jquery.js"></script>
 <script>
 (function() {
 
