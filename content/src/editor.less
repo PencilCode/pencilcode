@@ -330,11 +330,33 @@ body.modal #overlay {
 
 .panetitle a:hover span[alt]:before {
   content: attr(alt);
-  font-size: 24px
 }
 
-.panetitle a:hover span[alt] {
-  font-size: 0
+.panetitle a:hover span[alt] span {
+  display: none;
+}
+
+.panetitle .blockicon, .panetitle .codeicon {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 32px;
+  height: 28px;
+  vertical-align: bottom;
+  opacity: .6;
+}
+
+.panetitle a:hover .blockicon, .panetitle a:hover .codeicon {
+  vertical-align: bottom;
+  opacity: 1;
+}
+
+.panetitle .blockicon {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAcCAYAAAAAwr0iAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuM4zml1AAAADBSURBVEjH7ZdbDoUwCETZl4tjaV0a96dGJQO0FVsT7yT8GMucvimJCK0M+iYAbT7ArukAjxtbAGcNz6Uj2MkKsQxg/66HnsWWNh0VQ4DAXEPcFV8AVFIGUUCSYvwbRe3KBgG8pCXB/MgzAJAVLwSoC2IqwHUvrgb4r4E3AcgEALF2QXQU40QZR3HjZSSZ5hAAXaEOGFOHmq5jr4GC6DIPARCE1SAqPh4bgVaD1mrJLMmyATzz1CnwALrfBXcK0V6AH0gNYFHIcN57AAAAAElFTkSuQmCC")
+}
+
+.panetitle .codeicon {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAcCAYAAAAAwr0iAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuM4zml1AAAACOSURBVEjH7ZY9DsAgCIU9V7eejKO/bh3AUhEiDLzExQT8+FEZAEbmkhsLUh0a7d+N614zjpA4rzQAAAKT4piLXACzw40AUwgLgBrJT5rpC9gM4Kh1A+wDaDW0AvAesgKQA4C2ACKi17KgArC7TwEAwl/tDJTogRK3oB+iBqjyHecOJOkj2dGh9KTSAUrpAUQvT3cWdmdvAAAAAElFTkSuQmCC")
 }
 
 .pane {

@@ -1441,19 +1441,19 @@ function updatePaneTitle(pane) {
     } else {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
-        symbol = '&gt;'
+        symbol = 'codeicon'
         alt = 'show blocks'
         tooltip = 'Click to show blocks';
         if (paneState.dropletEditor.currentlyUsingBlocks) {
           label = 'blocks';
           alt = 'show code'
-          symbol = '&lt;';
+          symbol = 'blockicon';
           tooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
             paneState.filename + '" title="' + tooltip +
-            '"><b>' + symbol + '</b> <span alt="' + alt + '">' +
-            label + '</span></a>';
+            '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
+            '<span>' + label + '</span></span></a>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         var visibleMimeType = editorMimeType(paneState);

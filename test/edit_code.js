@@ -157,7 +157,7 @@ describe('code editor', function() {
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename), result.filename);
       // The title should say blocks
-      assert.equal('< blocks', result.title);
+      assert.equal('blocks', result.title);
       // The program text should be empty.
       assert.equal("", result.text);
       // The element with active focus should be the editable filename.
@@ -243,7 +243,7 @@ describe('code editor', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal('> code', result.title);
+      assert.equal('code', result.title);
       // The save button is still disabled, because the doc is unmodified.
       assert.equal(true, result.saved);
       done();
@@ -347,7 +347,7 @@ describe('code editor', function() {
       // The butter bar should show the new name.
       assert.equal(result.notification, 'Saved.');
       // The editor title should say 'code' since it's flipped.
-      assert.equal(result.lefttitle, '> code');
+      assert.equal(result.lefttitle, 'code');
       // The url should reflect the new name.
       assert.equal(result.url,
           'http://livetest.pencilcode.net.dev/edit/' + name);

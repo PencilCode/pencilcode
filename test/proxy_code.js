@@ -94,7 +94,7 @@ describe('proxy program', function() {
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename));
       // The title should say blocks
-      assert.equal('< blocks', result.title);
+      assert.equal('blocks', result.title);
       // The program text should be empty.
       assert.equal("", result.text);
       // The element with active focus should be the editable filename.
@@ -133,7 +133,7 @@ describe('proxy program', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal('> code', result.title);
+      assert.equal('code', result.title);
       // The "save" button should be enabled only if not logged in.
       assert.equal(result.logout, result.saved);
       done();
