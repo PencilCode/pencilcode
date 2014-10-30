@@ -1479,7 +1479,7 @@ function updatePaneTitle(pane) {
            '6fjpXDAKO42A9YlZOsKViEsQIRDI+PuCCjEMtotECmS5TD3iwGIaGdwp' +
            '5HRdsHLkz1ZGV5+IpuBCLGMeVrQboHIz0HVyE6AQiTL4W4KIhwXZWYRY' +
            'zBP6aySgZYAAAAASUVORK5CYII="> <span alt="open window">' +
-           'output</span></a>';
+           '<span>output</span></span></a>';
     } else {
       label = 'output';
     }
