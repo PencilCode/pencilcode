@@ -779,7 +779,7 @@ function signUpAndSave(options) {
           info: 'Use an existing account.'
         };
       }
-      if (state.username.length < 3) {
+      if (state.username.length < 4) {
         return {
           disable: true,
           info: 'Real names are <a target=_blank ' +
