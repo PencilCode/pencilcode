@@ -349,8 +349,9 @@ $('a[data-vimeo]').click(function(e) {
 
 function preload(urls) {
   for (var i = 0; i < urls.length; ++i) {
-    var o = document.createElement('script');
-    o.src = urls[i];
+    var o = document.createElement('object');
+    o.style.display = 'none';
+    o.data = urls[i];
     document.body.appendChild(o);
   }
 }
@@ -358,7 +359,9 @@ function preload(urls) {
 window.pencilcode = {domain: location.hostname};
 
 setTimeout(function() {
-  preload(['/editor.js', '/lib/ace/ace.js']);
+  preload(['/editor.js', '/editor.css', '/folder_32.png', '/droplet.css',
+           '/lib/ace/ace.js', '/lib/ace/mode-coffee.js',
+           '/lib/ace/theme-chrome.js', ]);
 }, 700);
 
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
