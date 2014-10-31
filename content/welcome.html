@@ -349,10 +349,8 @@ $('a[data-vimeo]').click(function(e) {
 
 function preload(urls) {
   for (var i = 0; i < urls.length; ++i) {
-    var o = document.createElement('object');
-    o.style.display = 'none';
-    o.data = urls[i];
-    document.body.appendChild(o);
+    var o = new Image();
+    o.src = urls[i];
   }
 }
 
