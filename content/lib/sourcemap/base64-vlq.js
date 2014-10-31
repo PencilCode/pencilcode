@@ -115,9 +115,9 @@ define(function (require, exports, module) {
 
   /**
    * Decodes the next base 64 VLQ value from the given string and returns the
-   * value and the rest of the string via the out parameter.
+   * value and the rest of the string.
    */
-  exports.decode = function base64VLQ_decode(aStr, aOutParam) {
+  exports.decode = function base64VLQ_decode(aStr) {
     var i = 0;
     var strLen = aStr.length;
     var result = 0;
@@ -135,8 +135,10 @@ define(function (require, exports, module) {
       shift += VLQ_BASE_SHIFT;
     } while (continuation);
 
-    aOutParam.value = fromVLQSigned(result);
-    aOutParam.rest = aStr.slice(i);
+    return {
+      value: fromVLQSigned(result),
+      rest: aStr.slice(i)
+    };
   };
 
 });
