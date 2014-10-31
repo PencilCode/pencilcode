@@ -5467,27 +5467,7 @@ function visiblePause(elem, seconds) {
   }
   var thissel = $(elem);
   if (ms) {
-    if (thissel.is(':visible')) {
-      // Generic indication of taking some time for an action
-      // A visual indicator of a pen color change.
-      var circle = new Turtle('gray radius');
-      circle.css({
-        zIndex: 1,
-        turtlePosition: thissel.css('turtlePosition'),
-        turtleRotation: thissel.css('turtleRotation')
-      });
-      circle.animate({
-        turtleRotation: '+=360'
-      }, ms, 'linear');
-      thissel.queue(function(next) {
-        circle.done(function() {
-          circle.remove();
-          next();
-        });
-      });
-    } else {
-      thissel.delay(ms);
-    }
+    thissel.delay(ms);
   }
 }
 
