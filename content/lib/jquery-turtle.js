@@ -1578,18 +1578,21 @@ function createSurfaceAndField() {
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: cw + "px " + ch + "px",
+      pointerEvents: 'none',
       overflow: 'hidden'
-    });
+    }).addClass('turtlefield');
   $(field).attr('id', 'field')
     .css({
       position: 'absolute',
       display: 'inline-block',
-      top: ch, left: cw, width: '100%', height: '100%',
+      // Setting with to 100% allows label text to not wrap.
+      top: ch, left: cw, width: '100%', height: '0',
       font: 'inherit',
       // Setting transform origin for the turtle field
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: "0px 0px",
+      pointerEvents: 'all'
     }).appendTo(surface);
   globalDrawing.surface = surface;
   globalDrawing.field = field;
@@ -1598,6 +1601,10 @@ function createSurfaceAndField() {
 
 function attachClipSurface() {
   if (document.body) {
+    if ($('html').attr('style') == null) {
+      // This prevents the body from shrinking.
+      $('html').css('min-height', '100%');
+    }
     $(globalDrawing.surface).prependTo('body');
     // Attach an event handler to forward mouse events from the body
     // to turtles in the turtle field layer.
@@ -2061,13 +2068,16 @@ function clearField(arg) {
       sel.remove();
     }
   }
+  if (!arg || /\blabels\b/.test(arg)) {
+    if (globalDrawing.surface) {
+      var sel = $(globalDrawing.surface).find('.turtlelabel');
+      sel.remove();
+    }
+  }
   if (!arg || /\btext\b/.test(arg)) {
     // "turtlefield" is a CSS class to use to mark top-level
     // elements that should not be deleted by clearscreen.
     var keep = $('.turtlefield');
-    if (globalDrawing.surface) {
-      keep = keep.add(globalDrawing.surface);
-    }
     $('body').contents().not(keep).remove();
   }
 }
@@ -2608,7 +2618,7 @@ var stablyLoadedImages = {};
 // @param css is a dictionary of css props to set when the image is loaded.
 // @param cb is an optional callback, called after the loading is done.
 function setImageWithStableOrigin(elem, url, css, cb) {
-  var record, url = absoluteUrl(url);
+  var record, urlobj = absoluteUrlObject(url), url = urlobj.href;
   // The data-loading attr will always reflect the last URL requested.
   elem.setAttribute('data-loading', url);
   if (url in stablyLoadedImages) {
@@ -2629,7 +2639,11 @@ function setImageWithStableOrigin(elem, url, css, cb) {
       img: new Image(),
       queue: [{elem: elem, css: css, cb: cb}]
     };
-    record.img.crossOrigin = 'Anonymous';
+    if (isPencilHost(urlobj.hostname)) {
+      // When requesting through pencilcode, always make a
+      // cross-origin request.
+      record.img.crossOrigin = 'Anonymous';
+    }
     // Pop the element to the right dimensions early if possible.
     resizeEarlyIfPossible(url, elem, css);
     // First set up the onload callback, then start loading.
@@ -2749,6 +2763,12 @@ function applyLoadedImage(loaded, elem, css) {
       // Do not do this if the image can't be loaded.
     }
   }
+  moveToPreserveOrigin(elem, oldOrigin, newOrigin);
+}
+
+function moveToPreserveOrigin(elem, oldOrigin, newOrigin) {
+  var sel = $(elem);
+  if (!sel.hasClass('turtle')) return;
   // If there was a change, then translate the element to keep the origin
   // in the same location on the screen.
   if (newOrigin[0] != oldOrigin[0] || newOrigin[1] != oldOrigin[1]) {
@@ -2768,7 +2788,6 @@ function applyLoadedImage(loaded, elem, css) {
     }
   }
 }
-
 
 function withinOrNot(obj, within, distance, x, y) {
   var sel, elem, gbcr, pos, d2;
@@ -3370,7 +3389,7 @@ var pressedKey = (function() {
     254: 'clear'
   };
   // :-@, 0-9, a-z(lowercased)
-  for (i = 48; i < 91; ++i) {
+  for (var i = 48; i < 91; ++i) {
     keyCodeName[i] = String.fromCharCode(i).toLowerCase();
   }
   // num-0-9 numeric keypad
@@ -3480,11 +3499,15 @@ var pressedKey = (function() {
       choices = ch.replace(/\s/g, '').toLowerCase().split(',');
       return function(e) {
         if (match(choices, e.which)) {
-          fn.call(this, e);
+          e.keyname = keyCodeName[e.which];
+          return fn.apply(this, arguments);
         }
       }
     } else {
-      return fn;
+      return function(e) {
+        e.keyname = keyCodeName[e.which];
+        return fn.apply(this, arguments);
+      }
     }
   }
   pressed.enable = enablePressListener;
@@ -5623,12 +5646,42 @@ function wrapglobalcommand(name, helptext, fn) {
   return wrapraw(name, helptext, wrapper);
 }
 
+function wrapwindowevent(name, helptext) {
+  return wrapraw(name, helptext, function(fn) {
+    var forKey = /^key/.test(name),
+        forMouse = /^mouse|click$/.test(name),
+        wrapped = forKey ? pressedKey.wrap(fn, arguments[1])
+            : forMouse ? wrapmouselistener(fn) : fn,
+        filter = forMouse ? 'input,button' : forKey ?
+            'textarea,input:not([type]),input[type=text],input[type=password]'
+            : null;
+    $(window).on(name, !filter ? wrapped : function(e) {
+          if ($(e.target).closest(filter).length) { return; }
+          return wrapped.apply(this, arguments);
+    });
+  });
+}
+
 // Wrapraw sets up help text for a function (such as "sqrt") that does
 // not need any other setup.
 function wrapraw(name, helptext, fn) {
   fn.helpname = name;
   fn.helptext = helptext;
   return fn;
+}
+
+// Adds center-up x and y coordinates to the mouse event.
+function wrapmouselistener(fn) {
+  return function(event) {
+    if ('pageX' in event && 'pageY' in event) {
+      var origin = $('#field').offset();
+      if (origin) {
+        event.x = event.pageX - origin.left;
+        event.y = origin.top - event.pageY;
+      }
+    }
+    return fn.apply(this, arguments);
+  };
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -5694,6 +5747,115 @@ function fdbk(cc, amount) {
         animTime(elem, intick), animEasing(elem), cc.resolver(0));
   });
   return this;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// CARTESIAN MOVEMENT FUNCTIONS
+//////////////////////////////////////////////////////////////////////////
+
+function slide(cc, x, y) {
+  if ($.isArray(x)) {
+    y = x[1];
+    x = x[0];
+  }
+  if (!y) { y = 0; }
+  if (!x) { x = 0; }
+  var intick = insidetick;
+  this.plan(function(j, elem) {
+    cc && cc.appear(j);
+    this.animate({turtlePosition: displacedPosition(elem, y, x)},
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+  });
+  return this;
+}
+
+function movexy(cc, x, y) {
+  if ($.isArray(x)) {
+    y = x[1];
+    x = x[0];
+  }
+  if (!y) { y = 0; }
+  if (!x) { x = 0; }
+  var elem, intick = insidetick;
+  if ((elem = canMoveInstantly(this))) {
+    cc && cc.appear(0);
+    doQuickMoveXY(elem, x, y);
+    cc && cc.resolve(0);
+    return this;
+  }
+  this.plan(function(j, elem) {
+    cc && cc.appear(j);
+    var tr = getElementTranslation(elem);
+    this.animate(
+      { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
+      animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+  });
+  return this;
+}
+
+function moveto(cc, x, y) {
+  var position = x, localx = 0, localy = 0, limit = null, intick = insidetick;
+  if ($.isNumeric(position) && $.isNumeric(y)) {
+    // moveto x, y: use local coordinates.
+    localx = parseFloat(position);
+    localy = parseFloat(y);
+    position = null;
+    limit = null;
+  } else if ($.isArray(position)) {
+    // moveto [x, y], limit: use local coordinates (limit optional).
+    localx = position[0];
+    localy = position[1];
+    position = null;
+    limit = y;
+  } else if ($.isNumeric(y)) {
+    // moveto obj, limit: limited motion in the direction of obj.
+    limit = y;
+  }
+  // Otherwise moveto {pos}, limit: absolute motion with optional limit.
+  this.plan(function(j, elem) {
+    var pos = position;
+    if (pos === null) {
+      pos = $(homeContainer(elem)).pagexy();
+    }
+    if (pos && !isPageCoordinate(pos)) {
+      try {
+        pos = $(pos).pagexy();
+      } catch (e) {
+        return;
+      }
+    }
+    if (!pos || !isPageCoordinate(pos)) return;
+    if ($.isWindow(elem)) {
+      cc && cc.appear(j);
+      scrollWindowToDocumentPosition(pos, limit);
+      cc && cc.resolve(j);
+      return;
+    } else if (elem.nodeType === 9) {
+      return;
+    }
+    cc && cc.appear(j);
+    this.animate({turtlePosition:
+        computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+  });
+  return this;
+}
+
+// Deals with jump, jumpxy, and jumpto functions
+function makejump(move) {
+  return (function(cc, x, y) {
+    this.plan(function(j, elem) {
+      cc.appear(j);
+      var down = this.css('turtlePenDown');
+      this.css({turtlePenDown: 'up'});
+      move.call(this, null, x, y);
+      this.plan(function() {
+        this.css({turtlePenDown: down});
+        cc.resolve(j);
+      });
+    });
+    return this;
+  });
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -5820,133 +5982,25 @@ var turtlefn = {
       "<mark>bk 100</mark>"], fdbk),
   slide: wrapcommand('slide', 1,
   ["<u>slide(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>slide 50, 100</mark>"],
-  function slide(cc, x, y) {
-    if ($.isArray(x)) {
-      y = x[1];
-      x = x[0];
-    }
-    if (!y) { y = 0; }
-    if (!x) { x = 0; }
-    var intick = insidetick;
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      this.animate({turtlePosition: displacedPosition(elem, y, x)},
-          animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>slide 50, 100</mark>"], slide),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
-      "<mark>movexy 50, 100</mark>"],
-  function movexy(cc, x, y) {
-    if ($.isArray(x)) {
-      y = x[1];
-      x = x[0];
-    }
-    if (!y) { y = 0; }
-    if (!x) { x = 0; }
-    var elem, intick = insidetick;
-    if ((elem = canMoveInstantly(this))) {
-      cc.appear(0);
-      doQuickMoveXY(elem, x, y);
-      cc.resolve(0);
-      return this;
-    }
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var tr = getElementTranslation(elem);
-      this.animate(
-        { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-        animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>movexy 50, 100</mark>"], movexy),
   moveto: wrapcommand('moveto', 1,
   ["<u>moveto(x, y)</u> Move to graphing coordinates (see <u>getxy</u>): " +
       "<mark>moveto 50, 100</mark>",
    "<u>moveto(obj)</u> Move to page coordinates " +
       "or an object on the page (see <u>pagexy</u>): " +
-      "<mark>moveto lastmousemove</mark>"],
-  function moveto(cc, x, y) {
-    var position = x, localx = 0, localy = 0, limit = null, intick = insidetick;
-    if ($.isNumeric(position) && $.isNumeric(y)) {
-      // moveto x, y: use local coordinates.
-      localx = parseFloat(position);
-      localy = parseFloat(y);
-      position = null;
-      limit = null;
-    } else if ($.isArray(position)) {
-      // moveto [x, y], limit: use local coordinates (limit optional).
-      localx = position[0];
-      localy = position[1];
-      position = null;
-      limit = y;
-    } else if ($.isNumeric(y)) {
-      // moveto obj, limit: limited motion in the direction of obj.
-      limit = y;
-    }
-    // Otherwise moveto {pos}, limit: absolute motion with optional limit.
-    this.plan(function(j, elem) {
-      var pos = position;
-      if (pos === null) {
-        pos = $(homeContainer(elem)).pagexy();
-      }
-      if (pos && !isPageCoordinate(pos)) {
-        try {
-          pos = $(pos).pagexy();
-        } catch (e) {
-          return;
-        }
-      }
-      if (!pos || !isPageCoordinate(pos)) return;
-      if ($.isWindow(elem)) {
-        cc.appear(j);
-        scrollWindowToDocumentPosition(pos, limit);
-        cc.resolve(j);
-        return;
-      } else if (elem.nodeType === 9) {
-        return;
-      }
-      cc.appear(j);
-      this.animate({turtlePosition:
-          computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
-          animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
   ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
-      "<mark>jump 0, 50</mark>"],
-  function jump(cc, x, y) {
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var down = this.css('turtlePenDown');
-      this.css({turtlePenDown: 'up'});
-      this.slide.apply(this, cc.args);
-      this.plan(function() {
-        this.css({turtlePenDown: down});
-        cc.resolve(j);
-      });
-    });
-    return this;
-  }),
+      "<mark>jump 0, 50</mark>"], makejump(slide)),
+  jumpxy: wrapcommand('jumpxy', 1,
+  ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(movexy)),
   jumpto: wrapcommand('jumpto', 1,
   ["<u>jumpto(x, y)</u> Move without drawing (compare to <u>moveto</u>): " +
-      "<mark>jumpto 50, 100</mark>"],
-  function jumpto(cc, x, y) {
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      var down = this.css('turtlePenDown');
-      this.css({turtlePenDown: 'up'});
-      this.moveto.apply(this, cc.args);
-      this.plan(function() {
-        this.css({turtlePenDown: down});
-        cc.resolve(j);
-      });
-    });
-    return this;
-  }),
+      "<mark>jumpto 50, 100</mark>"], makejump(moveto)),
   turnto: wrapcommand('turnto', 1,
   ["<u>turnto(degrees)</u> Turn to a direction. " +
       "North is 0, East is 90: <mark>turnto 270</turnto>",
@@ -6408,6 +6462,40 @@ var turtlefn = {
     });
     return this;
   }),
+  saveimg: wrapcommand('saveimg', 1,
+  ["<u>saveimg(filename)</u> Saves the turtle's image as a file." +
+      "<mark>t.saveimg 'mypicture.png'</mark>"],
+  function saveimg(cc, filename) {
+    return this.plan(function(j, elem) {
+      cc.appear(j);
+      var ok = false;
+      if (!filename) { filename = 'img'; }
+      var canvas = this.canvas();
+      if (!canvas) {
+        see.html('<span style="color:red">Cannot saveimg: not a canvas</span>');
+      } else {
+        var dataurl = canvas.toDataURL();
+        var dparts = /^data:image\/(\w+);base64,(.*)$/i.exec(dataurl);
+        if (!dparts) {
+          see.html('<span style="color:red">Cannot saveimg: ' +
+              'canvas toDataURL did not work as expected.</span>');
+        } else {
+          if (dparts[1] && filename.toLowerCase().lastIndexOf(
+                '.' + dparts[1].toLowerCase()) !=
+                    Math.max(0, filename.length - dparts[1].length - 1)) {
+            filename += '.' + dparts[1];
+          }
+          ok = true;
+          dollar_turtle_methods.save(filename, atob(dparts[2]), function() {
+            cc.resolve(j);
+          });
+        }
+      }
+      if (!ok) {
+        cc.resolve(j);
+      }
+    });
+  }),
   drawon: wrapcommand('drawon', 1,
   ["<u>drawon(canvas)</u> Switches to drawing on the specified canvas. " +
       "<mark>A = new Sprite('100x100'); " +
@@ -6473,7 +6561,7 @@ var turtlefn = {
       }, styles);
       // Place the label on the screen using the figured styles.
       var out = output(html, 'label').css(applyStyles)
-          .addClass('turtle').appendTo(getTurtleField());
+          .addClass('turtlelabel').appendTo(getTurtleField());
       var rotated = /\brotated\b/.test(side),
           scaled = /\bscaled\b/.test(side);
       // Mimic the current position and rotation and scale of the turtle.
@@ -6624,6 +6712,57 @@ var turtlefn = {
       "c.fillRect(10, 10, 30, 30)</mark>"],
   function canvas() {
     return this.filter('canvas').get(0);
+  }),
+  imagedata: wrapraw('imagedata',
+  ["<u>imagedata()</u> Returns the image data for the turtle. " +
+      "<mark>imdat = imagedata(); write imdat.data.length, 'bytes'</mark>",
+   "<u>imagedata(imdat)</u> Sets the image data for the turtle. " +
+      "<mark>imagedata({width: 1, height:1, data:[255,0,0,255]});</mark>",
+  ],
+  function imagedata(val) {
+    var canvas = this.canvas();
+    if (!canvas) {
+      if (val) throw new Error(
+        'can only set imagedata on a canvas like a Sprite');
+      var img = this.filter('img').get(0);
+      if (!img) return;
+      canvas = getOffscreenCanvas(img.naturalWidth, img.naturalHeight);
+      canvas.getContext('2d').drawImage(img, 0, 0);
+    }
+    var ctx = canvas.getContext('2d');
+    if (!val) {
+      // The read case: return the image data for the whole canvas.
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    // The write case: if it's not an ImageData, convert it to one.
+    if (!(val instanceof ImageData)) {
+      if (typeof val != 'object' ||
+          !$.isNumeric(val.width) || !$.isNumeric(val.height) ||
+          !($.isArray(val.data) || val.data instanceof Uint8ClampedArray ||
+            val.data instanceof Unit8Array)) {
+        return;
+      }
+      var imdat = ctx.createImageData(
+          Math.round(val.width), Math.round(val.height));
+      var minlen = Math.min(val.data.length, imdat.data.length);
+      for (var j = 0; j < minlen; ++j) { imdat.data[j] = val.data[j]; }
+      val = imdat;
+    }
+    // If the size must be changed, resize it.
+    if (val.width != canvas.width ||
+        val.height != canvas.height) {
+      var oldOrigin = readTransformOrigin(canvas);
+      canvas.width = val.width;
+      canvas.height = val.height;
+      var newOrigin = readTransformOrigin(canvas);
+      // Preserve the origin if it's a turtle.
+      moveToPreserveOrigin(canvas, oldOrigin, newOrigin);
+      // Drop the turtle hull, if any.
+      $(canvas).css('turtleHull', 'auto');
+      ctx = canvas.getContext('2d');
+    }
+    // Finally put the image data into the canvas.
+    ctx.putImageData(val, 0, 0);
   }),
   cell: wrapraw('cell',
   ["<u>cell(r, c)</u> Row r and column c in a table. " +
@@ -6889,7 +7028,7 @@ function checkForHungLoop(fname) {
         '<b style="background:yellow">tick</b> ' +
         'to make an animation.</span>');
     }
-    $.turtle.interrupt();
+    $.turtle.interrupt('hung');
   }
 }
 
@@ -7009,7 +7148,8 @@ var dollar_turtle_methods = {
       }
     }
     // Throw an interrupt exception.
-    throw new Error('interrupt() called');
+    var msg = option ? "'" + option + "'" : '';
+    throw new Error('interrupt(' + msg + ') called');
   }),
   cs: wrapglobalcommand('cs',
   ["<u>cs()</u> Clear screen. Erases both graphics canvas and " +
@@ -7021,7 +7161,7 @@ var dollar_turtle_methods = {
   ["<u>cg()</u> Clear graphics. Does not alter body text: " +
       "<mark>do cg</mark>"],
   function cg() {
-    clearField('canvas');
+    clearField('canvas labels');
   }),
   ct: wrapglobalcommand('ct',
   ["<u>ct()</u> Clear text. Does not alter graphics canvas: " +
@@ -7161,9 +7301,17 @@ var dollar_turtle_methods = {
       "<mark>save 'intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
-    var payload = data, url = apiUrl(url, 'save');
-    if (typeof(payload) == 'string' || typeof(payload) == 'number') {
-      payload = { data: payload };
+    var payload = { }, url = apiUrl(url, 'save'), key;
+    if (typeof(data) == 'string' || typeof(data) == 'number') {
+      payload.data = data;
+    } else {
+      for (key in data) if (data.hasOwnProperty(key)) {
+        if (typeof data[key] == 'string') {
+          payload[key] = data[key];
+        } else {
+          payload[key] = JSON.stringify(data[key]);
+        }
+      }
     }
     if (payload && !payload.key) {
       var login = loginCookie();
@@ -7282,48 +7430,27 @@ var dollar_turtle_methods = {
      (s * 100).toFixed(0) + '%',
      (l * 100).toFixed(0) + '%',
      a]); }),
-  click: wrapraw('click',
+  click: wrapwindowevent('click',
   ["<u>click(fn)</u> Calls fn(event) whenever the mouse is clicked. " +
-      "<mark>click (e) -> moveto e; label 'clicked'</mark>"],
-  function(fn) {
-    $(window).click(fn);
-  }),
-  mouseup: wrapraw('mouseup',
+      "<mark>click (e) -> moveto e; label 'clicked'</mark>"]),
+  mouseup: wrapwindowevent('mouseup',
   ["<u>mouseup(fn)</u> Calls fn(event) whenever the mouse is released. " +
-      "<mark>mouseup (e) -> moveto e; label 'up'</mark>"],
-  function(fn) {
-    $(window).mouseup(fn);
-  }),
-  mousedown: wrapraw('mousedown',
+      "<mark>mouseup (e) -> moveto e; label 'up'</mark>"]),
+  mousedown: wrapwindowevent('mousedown',
   ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is pressed. " +
-      "<mark>mousedown (e) -> moveto e; label 'down'</mark>"],
-  function(fn) {
-    $(window).mousedown(fn);
-  }),
-  mousemove: wrapraw('mousemove',
+      "<mark>mousedown (e) -> moveto e; label 'down'</mark>"]),
+  mousemove: wrapwindowevent('mousemove',
   ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is moved. " +
-      "<mark>mousemove (e) -> moveto e</mark>"],
-  function(fn) {
-    $(window).mousemove(fn);
-  }),
-  keydown: wrapraw('keydown',
+      "<mark>mousemove (e) -> moveto e</mark>"]),
+  keydown: wrapwindowevent('keydown',
   ["<u>keydown(fn)</u> Calls fn(event) whenever a key is pushed down. " +
-      "<mark>keydown (e) -> write 'down ' + e.which</mark>"],
-  function(fn) {
-    $(window).keydown(pressedKey.wrap(fn, arguments[1]));
-  }),
-  keyup: wrapraw('keyup',
+      "<mark>keydown (e) -> write 'down ' + e.which</mark>"]),
+  keyup: wrapwindowevent('keyup',
   ["<u>keyup(fn)</u> Calls fn(event) whenever a key is released. " +
-      "<mark>keyup (e) -> write 'up ' + e.which</mark>"],
-  function(fn) {
-    $(window).keyup(pressedKey.wrap(fn, arguments[1]));
-  }),
-  keypress: wrapraw('keypress',
+      "<mark>keyup (e) -> write 'up ' + e.which</mark>"]),
+  keypress: wrapwindowevent('keypress',
   ["<u>keypress(fn)</u> Calls fn(event) whenever a letter is typed. " +
-      "<mark>keypress (e) -> write 'press ' + e.which</mark>"],
-  function(fn) {
-    $(window).keypress(pressedKey.wrap(fn, arguments[1]));
-  }),
+      "<mark>keypress (e) -> write 'press ' + e.which</mark>"]),
   send: wrapraw('send',
   ["<u>send(name)</u> Sends a message to be received by recv. " +
       "<mark>send 'go'; recv 'go', -> fd 100</mark>"],
@@ -7527,6 +7654,7 @@ var colors = [
   }
   dollar_turtle_methods.PI = Math.PI;
   dollar_turtle_methods.E = Math.E;
+  dollar_turtle_methods.print = dollar_turtle_methods.write
   extrahelp.colors = {helptext:
       ["Defined colors: " + colors.join(" ")]};
   extrahelp.see = {helptext:
@@ -7555,6 +7683,9 @@ $.turtle = function turtle(id, options) {
     id = 'turtle';
   }
   options = options || {};
+  if ('turtle' in options) {
+    id = options.turtle;
+  }
   // Clear any previous turtle methods.
   clearGlobalTurtle();
   // Expand any <script type="text/html"> unless htmlscript is false.
@@ -7588,11 +7719,12 @@ $.turtle = function turtle(id, options) {
     } else {
       window.onerror = see;
     }
+    // Set up an alias.
+    window.log = see;
   }
   // Copy $.turtle.* functions into global namespace.
   if (!('functions' in options) || options.functions) {
     window.printpage = window.print;
-    window.print = null;
     $.extend(window, dollar_turtle_methods);
   }
   // Set default turtle speed
@@ -8038,14 +8170,20 @@ function createRectangleShape(width, height, subpixels) {
       ctx.fillRect(0, 0, width, height);
     }
     var sw = width / subpixels, sh = height / subpixels;
-    return {
-      url: c.toDataURL(),
-      css: {
+    var css = {
         width: sw,
         height: sh,
         transformOrigin: (sw / 2) + 'px + ' + (sh / 2) + 'px',
         opacity: 1
-      }
+    };
+    if (subpixels < 1) {
+      // Requires newer than Chrome 40.
+      // Avoid smooth interpolation of big pixels.
+      css.imageRendering = 'pixelated';
+    }
+    return {
+      url: c.toDataURL(),
+      css: css
     };
   });
 }
@@ -8068,7 +8206,7 @@ function lookupShape(shapename) {
 function specToImage(spec, defaultshape) {
   var width = spec.width || spec.height || 256;
   var height = spec.height || spec.width || 256;
-  var subpixel = spec.subpixel || 1;
+  var subpixel = spec.subpixel || 1 / (spec.scale || 1);
   var color = spec.color || 'transparent';
   var shape = createRectangleShape(width, height, subpixel);
   return shape(color);
@@ -8312,19 +8450,27 @@ function turtleevents(prefix) {
   if (prefix || prefix === '') {
     eventsaver = (function(e) {
       // Keep the old instance if possible.
-      var old = window[prefix + e.type], prop;
-      if (old && old.__proto__ === e.__proto__) {
-        for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
-        for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
-        return;
+      var names = [prefix + e.type], j, old, name, prop;
+      if ((e.originalEvent || e) instanceof MouseEvent) {
+        names.push(prefix + 'mouse');
       }
-      window[prefix + e.type] = e;
+      for (j = 0; j < names.length; ++j) {
+        var name = names[j];
+        old = window[name], prop;
+        if (old && old.__proto__ === e.__proto__) {
+          for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
+          for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
+        } else {
+          window[name] = e;
+        }
+      }
     });
-    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
-        eventsaver);
+    window[prefix + 'mouse'] = new $.Event();
     for (var k in eventfn) {
       window[prefix + k] = new $.Event();
     }
+    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
+        eventsaver);
   }
 }
 
@@ -8359,9 +8505,11 @@ function autoScrollBottomSeen() {
     autoScrollState.timer = setTimeout(function() {
       autoScrollState.timer = null;
     }, 0);
+    var offset = $('body').offset();
+    var doctop = offset ? offset.top : 8;
     autoScrollState.bottomSeen = Math.min(
         $(window).height() + $(window).scrollTop(),
-        $('body').height() + $('body').offset().top);
+        $('body').height() + doctop);
   }
   return autoScrollState.bottomSeen;
 }
