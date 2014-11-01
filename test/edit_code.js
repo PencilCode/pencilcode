@@ -17,6 +17,9 @@ describe('code editor', function() {
       _ph = ph;
       _ph.createPage(function(err, page) {
         _page = page;
+        page.onConsoleMessage = function(msg) {
+          console.log(msg);
+        }
         // Set the size to a modern laptop size.
         page.set('viewportSize', { width: 1200, height: 900 }, function(err) {
           assert.ifError(err);
@@ -109,6 +112,7 @@ describe('code editor', function() {
       // Race condition: also wait for 'first' to vanish from filename
       if (/first/.test($('#filename').text())) return {
         poll: true, step:3,
+        filename: $('#filename').text(),
         msg: window.lasterrorevent && window.lasterrorevent.message,
         fn: window.lasterrorevent && window.lasterrorevent.filename,
         line: window.lasterrorevent && window.lasterrorevent.lineno

@@ -2509,6 +2509,12 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     editor.gotoLine(editor.getSession().getLength(), 0);
   }
   editor.on('focus', function() {
+    var style = editor.container.style;
+    if (parseInt(style.left) < -parseInt(style.width) ||
+        parseInt(style.top) < -parseInt(style.height)) {
+      // Do not pay attention to focus if the editor is positioned offscreen.
+      return;
+    }
     fireEvent('editfocus', [pane]);
   });
 }
