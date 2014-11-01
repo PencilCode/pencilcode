@@ -42,7 +42,7 @@ for color in [red, gold, green, blue]
       lt 360 / sides
     pen null
     fd 40
-  slide 40, -160
+  move 40, -160
 </pre>
 
 [Try an interactive demo (CoffeeScript syntax) here.](
@@ -61,8 +61,8 @@ $(q).fd(100)      // Forward relative motion in local coordinates.
 $(q).bk(50)       // Back.
 $(q).rt(90)       // Right turn.  Optional second arg is turning radius.
 $(q).lt(45)       // Left turn.  Optional second arg is turning radius.
-$(q).slide(x, y)  // Slide right by x while sliding forward by y.
-$(q).jump(x, y)   // Like slide, but without drawing.
+$(q).move(x, y)   // Move right by x while moving forward by y.
+$(q).jump(x, y)   // Like move, but without drawing.
 $(q).moveto({pageX:x,pageY:y} | [x,y])  // Absolute motion on page.
 $(q).jumpto({pageX:x,pageY:y} | [x,y])  // Like moveto, without drawing.
 $(q).turnto(direction || position)      // Absolute direction adjustment.
@@ -3637,7 +3637,6 @@ function keypressFilterHook(event, original) {
 
 // Intercept on('keydown/keyup/keypress')
 function keyAddHook(handleObj) {
-  focusWindowIfFirst();
   if (typeof(handleObj.data) != 'string') return;
   var choices = handleObj.data.replace(/\s/g, '').toLowerCase().split(',');
   var original = handleObj.handler;
@@ -5781,6 +5780,7 @@ function wrapwindowevent(name, helptext) {
         filter = forMouse ? 'input,button' : forKey ?
             'textarea,input:not([type]),input[type=text],input[type=password]'
             : null;
+    if (forKey) { focusWindowIfFirst(); }
     if (fn == null && typeof(d) == 'function') { fn = d; d = null; }
     $(window).on(name, null, d, !filter ? fn : function(e) {
       if ($(e.target).closest(filter).length) { return; }
@@ -5866,7 +5866,7 @@ function fdbk(cc, amount) {
 // CARTESIAN MOVEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////
 
-function slide(cc, x, y) {
+function move(cc, x, y) {
   if ($.isArray(x)) {
     y = x[1];
     x = x[0];
@@ -6093,9 +6093,9 @@ var turtlefn = {
   bk: wrapcommand('bk', 1,
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"], fdbk),
-  slide: wrapcommand('slide', 1,
-  ["<u>slide(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>slide 50, 100</mark>"], slide),
+  move: wrapcommand('move', 1,
+  ["<u>move(x, y)</u> Slides right x and forward y pixels without turning: " +
+      "<mark>move 50, 100</mark>"], move),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
       "<mark>movexy 50, 100</mark>"], movexy),
@@ -6106,8 +6106,8 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
-  ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
-      "<mark>jump 0, 50</mark>"], makejump(slide)),
+  ["<u>jump(x, y)</u> Move without drawing (compare to <u>move</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(move)),
   jumpxy: wrapcommand('jumpxy', 1,
   ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
       "<mark>jump 0, 50</mark>"], makejump(movexy)),
@@ -6765,7 +6765,7 @@ var turtlefn = {
   }),
   getxy: wrappredicate('getxy',
   ["<u>getxy()</u> Graphing coordinates [x, y], center-based: " +
-      "<mark>v = getxy(); slide -v[0], -v[1]</mark>"],
+      "<mark>v = getxy(); move -v[0], -v[1]</mark>"],
   function getxy() {
     if (!this.length) return;
     return computePositionAsLocalOffset(this[0]);
@@ -7192,6 +7192,7 @@ function deprecate(map, oldname, newname) {
     __extends(map[oldname], map[newname]);
   }
 }
+deprecate(turtlefn, 'slide', 'move');
 deprecate(turtlefn, 'direct', 'plan');
 deprecate(turtlefn, 'enclosedby', 'inside');
 deprecate(turtlefn, 'bearing', 'direction');

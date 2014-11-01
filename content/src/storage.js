@@ -76,7 +76,7 @@ function isBackupPreferred(filename, m, preferUnsaved) {
     if (!backup) return false;
     backup = JSON.parse(backup);
     // If backup is empty, then don't prefer the backup.
-    if (/^\s*$/.test(backup.data)) {
+    if (!backup.data || /^\s*$/.test(backup.data)) {
       return false;
     }
     // If backup is identical to net file (ignoring extra blank lines),
