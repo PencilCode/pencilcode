@@ -216,6 +216,7 @@ $.turtle() are as follows:
 
 <pre>
 lastclick             // Event object of the last click event in the doc.
+lastdblclick          // The last double-click event.
 lastmousemove         // The last mousemove event.
 lastmouseup           // The last mouseup event.
 lastmousedown         // The last mousedown event.
@@ -1470,7 +1471,7 @@ function readTurtleTransform(elem, computed) {
 
 function cssNum(n) {
   var r = n.toString();
-  if (r.indexOf('e') >= 0) {
+  if (~r.indexOf('e')) {
     r = Number(n).toFixed(17);
   }
   return r;
@@ -1541,6 +1542,8 @@ var globalDrawing = {
   ctx: null,
   canvas: null,
   timer: null,
+  fieldMouse: false,  // if a child of the field listens to mouse events.
+  fieldHook: false,   // once the body-event-forwarding logic is set up.
   subpixel: 1
 };
 
@@ -1597,6 +1600,9 @@ function createSurfaceAndField() {
   globalDrawing.surface = surface;
   globalDrawing.field = field;
   attachClipSurface();
+  // Now that we have a surface, the upward-center cartesian coordinate
+  // system based on that exists, so we can hook mouse events to add x, y.
+  addMouseEventHooks();
 }
 
 function attachClipSurface() {
@@ -1608,27 +1614,7 @@ function attachClipSurface() {
     $(globalDrawing.surface).prependTo('body');
     // Attach an event handler to forward mouse events from the body
     // to turtles in the turtle field layer.
-    $('body').on('click.turtle ' +
-      'mouseup.turtle mousedown.turtle mousemove.turtle', function(e) {
-      if (e.target === this && !e.isTrigger) {
-        // Only forward events directly on the body that (geometrically)
-        // touch a turtle directly within the turtlefield.
-        var warn = $.turtle.nowarn;
-        $.turtle.nowarn = true;
-        var sel = $(globalDrawing.surface)
-            .find('.turtle').within('touch', e).eq(0);
-        $.turtle.nowarn = warn;
-        if (sel.length === 1) {
-          // Erase portions of the event that are wrong for the turtle.
-          e.target = null;
-          e.relatedTarget = null;
-          e.fromElement = null;
-          e.toElement = null;
-          sel.trigger(e);
-          return false;
-        }
-      }
-    });
+    forwardBodyMouseEventsIfNeeded();
   } else {
     $(document).ready(attachClipSurface);
   }
@@ -2890,6 +2876,46 @@ var Sprite = (function(_super) {
 
 })(jQuery.fn.init);
 
+// Pencil extends Sprite, and is invisible and fast by default.
+var Pencil = (function(_super) {
+  __extends(Pencil, _super);
+
+  function Pencil(canvas) {
+    // A pencil draws on a canvas.  Allow a selector or element.
+    if (canvas && canvas.jquery && $.isFunction(canvas.canvas)) {
+      canvas = canvas.canvas();
+    }
+    if (canvas && (canvas.tagName != 'CANVAS' ||
+        typeof canvas.getContext != 'function')) {
+      canvas = $(canvas).filter('canvas').get(0);
+    }
+    if (!canvas || canvas.tagName != 'CANVAS' ||
+        typeof canvas.getContext != 'function') {
+      canvas = null;
+    }
+    // The pencil is a sprite that just defaults to zero size.
+    var context = canvas ? canvas.parentElement : null;
+    var settings = { width: 0, height: 0, color: transparent };
+    Pencil.__super__.constructor.call(this, settings, context);
+    // Set the pencil to hidden, infinite speed,
+    // and drawing on the specifed canvas.
+    this.each(function() {
+      var state = getTurtleData(this);
+      state.speed = Infinity;
+      state.drawOnCanvas = canvas;
+      this.style.display = 'none';
+      if (canvas) {
+        this.style[transform] = writeTurtleTransform(
+            readTurtleTransform(canvas, true));
+      }
+    });
+  }
+
+  return Pencil;
+
+})(Sprite);
+
+
 // Turtle extends Sprite, and draws a turtle by default.
 var Turtle = (function(_super) {
   __extends(Turtle, _super);
@@ -3261,19 +3287,20 @@ var Piano = (function(_super) {
 // Implementation of the "pressed" function
 //////////////////////////////////////////////////////////////////////////
 
-// The implementation of the "pressed" function is captured in a closure.
-var pressedKey = (function() {
-  var focusTakenOnce = false;
-  function focusWindowIfFirst() {
-    if (focusTakenOnce) return;
-    focusTakenOnce = true;
-    try {
-      // If we are in a frame with access to a parent with an activeElement,
-      // then try to blur it (as is common inside the pencilcode IDE).
-      window.parent.document.activeElement.blur();
-    } catch (e) {}
-    window.focus();
-  }
+var focusTakenOnce = false;
+function focusWindowIfFirst() {
+  if (focusTakenOnce) return;
+  focusTakenOnce = true;
+  try {
+    // If we are in a frame with access to a parent with an activeElement,
+    // then try to blur it (as is common inside the pencilcode IDE).
+    window.parent.document.activeElement.blur();
+  } catch (e) {}
+  window.focus();
+}
+
+// Construction of keyCode names.
+var keyCodeName = (function() {
   var ua = typeof window !== 'undefined' ? window.navigator.userAgent : '',
       isOSX = /OS X/.test(ua),
       isOpera = /Opera/.test(ua),
@@ -3282,6 +3309,7 @@ var pressedKey = (function() {
       preventable = 'contextmenu',
       events = 'mousedown mouseup keydown keyup blur ' + preventable,
       keyCodeName = {
+    0:  'null',
     1:  'mouse1',
     2:  'mouse2',
     3:  'break',
@@ -3394,43 +3422,45 @@ var pressedKey = (function() {
   }
   // num-0-9 numeric keypad
   for (i = 96; i < 106; ++i) {
-    keyCodeName[i] = 'num ' +  (i - 96);
+    keyCodeName[i] = 'numpad' +  (i - 96);
   }
   // f1-f24
   for (i = 112; i < 136; ++i) {
     keyCodeName[i] = 'f' + (i-111);
   }
+  return keyCodeName;
+})();
+
+var pressedKey = (function() {
   // Listener for keyboard, mouse, and focus events that updates pressedState.
-  function pressListener(event) {
-    var name, simplified, down;
-    if (event.type == 'mousedown' || event.type == 'mouseup') {
-      name = 'mouse ' + event.which;
-      down = (event.type == 'mousedown');
-    } else if (event.type == 'keydown' || event.type == 'keyup') {
-      name = keyCodeName[event.which];
-      down = (event.type == 'keydown');
-      if (event.which >= 160 && event.which <= 165) {
-        // For "shift left", also trigger "shift"; same for control and alt.
-        simplified = name.replace(/(?:left|right)$/, '');
+  function makeEventListener(mouse, down) {
+    return (function(event) {
+      var name, simplified, which = event.which;
+      if (mouse) {
+        name = 'mouse' + which;
+      } else {
+        // For testability, support whichSynth when which is zero, because
+        // it is impossible to simulate .which on phantom.
+        if (!which && event.whichSynth) { which = event.whichSynth; }
+        name = keyCodeName[which];
+        if (which >= 160 && which <= 165) {
+          // For "shift left", also trigger "shift"; same for control and alt.
+          updatePressedState(name.replace(/(?:left|right)$/, ''), down);
+        }
       }
-    } else if (event.type == 'blur' || event.type == 'contextmenu') {
-      // When losing focus, clear all keyboard state.
-      if (!event.isDefaultPrevented() || preventable != event.type) {
-        resetPressedState();
-      }
-      return;
-    }
-    updatePressedState(name, down);
-    updatePressedState(simplified, down);
-    if (down) {
-      // After any down event, unlisten and relisten to contextmenu,
-      // to put oursleves last.  This allows us to test isDefaultPrevented.
-      $(window).off(preventable, pressListener);
-      $(window).on(preventable, pressListener);
-    }
-  }
+      updatePressedState(name, down);
+    });
+  };
+  var eventMap = {
+    'mousedown': makeEventListener(1, 1),
+    'mouseup': makeEventListener(1, 0),
+    'keydown': makeEventListener(0, 1),
+    'keyup': makeEventListener(0, 0),
+    'blur': resetPressedState
+  };
   // The pressedState map just has an entry for each pressed key.
   // Unpressing a key will delete the actual key from the map.
+  var pressedState = {};
   function updatePressedState(name, down) {
     if (name != null) {
       if (!down) {
@@ -3449,10 +3479,12 @@ var pressedKey = (function() {
   // The pressed listener can be turned on and off using pressed.enable(flag).
   function enablePressListener(turnon) {
     resetPressedState();
-    if (turnon) {
-      $(window).on(events, pressListener);
-    } else {
-      $(window).off(events, pressListener);
+    for (var name in eventMap) {
+      if (turnon) {
+        window.addEventListener(name, eventMap[name], true);
+      } else {
+        window.removeEventListener(name, eventMap[name]);
+      }
     }
   }
   // All pressed keys known can be listed using pressed.list().
@@ -3475,47 +3507,163 @@ var pressedKey = (function() {
       return listPressedKeys();
     }
   }
-  // Used to get names for key codes.
-  function match(choices, code) {
-    var name = keyCodeName[code];
-    if (choices.indexOf(name) >= 0) return true;
-    if (code >= 160 && code <= 165) {
-      // For "shift left", also trigger "shift"; same for control and alt.
-      simplified = name.replace(/(?:left|right)$/, '');
-      if (choices.indexOf(simplified) >= 0) return true;
-    }
-    return false;
-  }
-  // Keyup, keydown, and keypress handlers all can accept an optional
-  // string which is a name of a key to handle (or a comma-separated
-  // list of names of keys to handle.
-  function makeKeyHandler(fn, ch) {
-    focusWindowIfFirst();
-    var t, listener, choices;
-    if (typeof(fn) == 'string' && typeof(ch) == 'function') {
-      t = ch; ch = fn; fn = t;
-    }
-    if (ch) {
-      choices = ch.replace(/\s/g, '').toLowerCase().split(',');
-      return function(e) {
-        if (match(choices, e.which)) {
-          e.keyname = keyCodeName[e.which];
-          return fn.apply(this, arguments);
-        }
-      }
-    } else {
-      return function(e) {
-        e.keyname = keyCodeName[e.which];
-        return fn.apply(this, arguments);
-      }
-    }
-  }
   pressed.enable = enablePressListener;
   pressed.list = listPressedKeys;
-  pressed.wrap = makeKeyHandler;
   return pressed;
 })();
 
+
+//////////////////////////////////////////////////////////////////////////
+// JQUERY EVENT ENHANCEMENT
+//  - Keyboard events get the .keyname property.
+//  - Keyboard event listening with a string first (data) arg
+//    automatically filter out events that don't match the keyname.
+//  - Mouse events get .x and .y (center-up) if there is a turtle field.
+//  - If a turtle in the field is listening to mouse events, unhandled
+//    body mouse events are manually forwarded to turtles.
+//////////////////////////////////////////////////////////////////////////
+
+function addEventHook(hookobj, field, defobj, name, fn) {
+  var names = name.split(/\s+/);
+  for (var j = 0; j < names.length; ++j) {
+    name = names[j];
+    var hooks = hookobj[name];
+    if (!hooks) {
+      hooks = hookobj[name] = $.extend({}, defobj);
+    }
+    if (typeof hooks[field] != 'function') {
+      hooks[field] = fn;
+    } else if (hooks[field] != fn) {
+      // Multiple event hooks just listed in an array.
+      if (hooks[field].hooklist) {
+        if (hooks[field].hooklist.indexOf(fn) < 0) {
+          hooks[field].hooklist.push(fn);
+        }
+      } else {
+        (function() {
+          var hooklist = [hooks[field], fn];
+          (hooks[field] = function(event, original) {
+            var current = event;
+            for (var j = 0; j < hooklist.length; ++j) {
+              current = hooklist[j](current, original) || current;
+            }
+            return current;
+          }).hooklist = hooklist;
+        })();
+      }
+    }
+  }
+}
+
+function mouseFilterHook(event, original) {
+  if (globalDrawing.field && 'pageX' in event && 'pageY' in event) {
+    var origin = $(globalDrawing.field).offset();
+    if (origin) {
+      event.x = event.pageX - origin.left;
+      event.y = origin.top - event.pageY;
+    }
+  }
+  return event;
+}
+
+function mouseSetupHook(data, ns, fn) {
+  if (globalDrawing.field && !globalDrawing.fieldMouse &&
+      this.parentElement === globalDrawing.field ||
+      /(?:^|\s)turtle(?:\s|$)/.test(this.class)) {
+    globalDrawing.fieldMouse = true;
+    forwardBodyMouseEventsIfNeeded();
+  }
+  return false;
+}
+
+function forwardBodyMouseEventsIfNeeded() {
+  if (globalDrawing.fieldHook) return;
+  if (globalDrawing.surface && globalDrawing.fieldMouse) {
+    globalDrawing.fieldHook = true;
+    setTimeout(function() {
+      // TODO: check both globalDrawing.surface and
+      // globalDrawing.turtleMouseListener
+      $('body').on('click.turtle dblclick.turtle ' +
+        'mouseup.turtle mousedown.turtle mousemove.turtle', function(e) {
+        if (e.target === this && !e.isTrigger) {
+          // Only forward events directly on the body that (geometrically)
+          // touch a turtle directly within the turtlefield.
+          var warn = $.turtle.nowarn;
+          $.turtle.nowarn = true;
+          var sel = $(globalDrawing.surface)
+              .find('.turtle').within('touch', e).eq(0);
+          $.turtle.nowarn = warn;
+          if (sel.length === 1) {
+            // Erase portions of the event that are wrong for the turtle.
+            e.target = null;
+            e.relatedTarget = null;
+            e.fromElement = null;
+            e.toElement = null;
+            sel.trigger(e);
+            return false;
+          }
+        }
+      });
+    }, 0);
+  }
+}
+
+function addMouseEventHooks() {
+  var hookedEvents = 'mousedown mouseup mousemove click dblclick';
+  addEventHook($.event.fixHooks, 'filter', $.event.mouseHooks,
+       hookedEvents, mouseFilterHook);
+  addEventHook($.event.special, 'setup', {}, hookedEvents, mouseSetupHook);
+}
+
+function keyFilterHook(event, original) {
+  var which = event.which;
+  if (!which) {
+    which = (original || event.originalEvent).whichSynth;
+  }
+  var name = keyCodeName[which];
+  if (!name && which) {
+    name = String.fromCharCode(which);
+  }
+  event.keyname = name;
+  return event;
+}
+
+// Add .keyname to each keyboard event.
+function keypressFilterHook(event, original) {
+  if (event.charCode != null) {
+    event.keyname = String.fromCharCode(event.charCode);
+  }
+}
+
+// Intercept on('keydown/keyup/keypress')
+function keyAddHook(handleObj) {
+  focusWindowIfFirst();
+  if (typeof(handleObj.data) != 'string') return;
+  var choices = handleObj.data.replace(/\s/g, '').toLowerCase().split(',');
+  var original = handleObj.handler;
+  var wrapped = function(event) {
+    if (choices.indexOf(event.keyname) < 0) return;
+    return original.apply(this, arguments);
+  }
+  if (original.guid) { wrapped.guid = original.guid; }
+  handleObj.handler = wrapped;
+}
+
+function addKeyEventHooks() {
+  // Add the "keyname" field to keydown and keyup events - this uses
+  // the lowercase key names listed in the pressedKey utility.
+  addEventHook($.event.fixHooks, 'filter', $.event.keyHooks,
+      'keydown keyup', keyFilterHook);
+  // Add "keyname" to keypress also.  This is just the unicode character
+  // corresponding to event.charCode.
+  addEventHook($.event.fixHooks, 'filter', $.event.keyHooks,
+      'keypress', keypressFilterHook);
+  // Finally, add special forms for the keyup/keydown/keypress events
+  // where the first argument can be the comma-separated name of keys
+  // to target (instead of just data)
+  addEventHook($.event.special, 'add', {},
+      'keydown keyup keypress', keyAddHook);
+}
 
 //////////////////////////////////////////////////////////////////////////
 // WEB AUDIO SUPPORT
@@ -4492,7 +4640,7 @@ var Instrument = (function() {
     for (j = 0; j < parts.length; ++j) {
       // It could be reversed, like "66=1/4", or just "120", so
       // determine what is going on by looking for a slash etc.
-      if (parts[j].indexOf('/') >= 0 || /^[1-4]$/.test(parts[j])) {
+      if (~parts[j].indexOf('/') || /^[1-4]$/.test(parts[j])) {
         // The note-unit (e.g., 1/4).
         unit = unit || durationToTime(parts[j]);
       } else {
@@ -5466,7 +5614,7 @@ function visiblePause(elem, seconds) {
     ms = seconds * 1000;
   }
   var thissel = $(elem);
-  if (ms) {
+  if (ms > 0) {
     thissel.delay(ms);
   }
 }
@@ -5627,17 +5775,16 @@ function wrapglobalcommand(name, helptext, fn) {
 }
 
 function wrapwindowevent(name, helptext) {
-  return wrapraw(name, helptext, function(fn) {
+  return wrapraw(name, helptext, function(d, fn) {
     var forKey = /^key/.test(name),
         forMouse = /^mouse|click$/.test(name),
-        wrapped = forKey ? pressedKey.wrap(fn, arguments[1])
-            : forMouse ? wrapmouselistener(fn) : fn,
         filter = forMouse ? 'input,button' : forKey ?
             'textarea,input:not([type]),input[type=text],input[type=password]'
             : null;
-    $(window).on(name, !filter ? wrapped : function(e) {
-          if ($(e.target).closest(filter).length) { return; }
-          return wrapped.apply(this, arguments);
+    if (fn == null && typeof(d) == 'function') { fn = d; d = null; }
+    $(window).on(name, null, d, !filter ? fn : function(e) {
+      if ($(e.target).closest(filter).length) { return; }
+      return fn.apply(this, arguments);
     });
   });
 }
@@ -5648,20 +5795,6 @@ function wrapraw(name, helptext, fn) {
   fn.helpname = name;
   fn.helptext = helptext;
   return fn;
-}
-
-// Adds center-up x and y coordinates to the mouse event.
-function wrapmouselistener(fn) {
-  return function(event) {
-    if ('pageX' in event && 'pageY' in event) {
-      var origin = $('#field').offset();
-      if (origin) {
-        event.x = event.pageX - origin.left;
-        event.y = origin.top - event.pageY;
-      }
-    }
-    return fn.apply(this, arguments);
-  };
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -7080,8 +7213,7 @@ $.fn.extend(turtlefn);
 
 var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7"
 
-var eventfn = { click:1, mouseup:1, mousedown:1, mousemove:1,
-    keydown:1, keypress:1, keyup:1 };
+var eventfn = { click:1, dblclick:1, mouseup:1, mousedown:1, mousemove:1 };
 
 var global_turtle = null;
 var global_turtle_methods = [];
@@ -7413,6 +7545,9 @@ var dollar_turtle_methods = {
   click: wrapwindowevent('click',
   ["<u>click(fn)</u> Calls fn(event) whenever the mouse is clicked. " +
       "<mark>click (e) -> moveto e; label 'clicked'</mark>"]),
+  dblclick: wrapwindowevent('dblclick',
+  ["<u>dblclick(fn)</u> Calls fn(event) whenever the mouse is double-clicked. " +
+      "<mark>dblclick (e) -> moveto e; label 'double'</mark>"]),
   mouseup: wrapwindowevent('mouseup',
   ["<u>mouseup(fn)</u> Calls fn(event) whenever the mouse is released. " +
       "<mark>mouseup (e) -> moveto e; label 'up'</mark>"]),
@@ -7420,17 +7555,17 @@ var dollar_turtle_methods = {
   ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is pressed. " +
       "<mark>mousedown (e) -> moveto e; label 'down'</mark>"]),
   mousemove: wrapwindowevent('mousemove',
-  ["<u>mousedown(fn)</u> Calls fn(event) whenever the mouse is moved. " +
-      "<mark>mousemove (e) -> moveto e</mark>"]),
+  ["<u>mousemove(fn)</u> Calls fn(event) whenever the mouse is moved. " +
+      "<mark>mousemove (e) -> write 'at ', e.x, ',', e.y</mark>"]),
   keydown: wrapwindowevent('keydown',
   ["<u>keydown(fn)</u> Calls fn(event) whenever a key is pushed down. " +
-      "<mark>keydown (e) -> write 'down ' + e.which</mark>"]),
+      "<mark>keydown (e) -> write 'down ' + e.keyname</mark>"]),
   keyup: wrapwindowevent('keyup',
   ["<u>keyup(fn)</u> Calls fn(event) whenever a key is released. " +
-      "<mark>keyup (e) -> write 'up ' + e.which</mark>"]),
+      "<mark>keyup (e) -> write 'up ' + e.keyname</mark>"]),
   keypress: wrapwindowevent('keypress',
-  ["<u>keypress(fn)</u> Calls fn(event) whenever a letter is typed. " +
-      "<mark>keypress (e) -> write 'press ' + e.which</mark>"]),
+  ["<u>keypress(fn)</u> Calls fn(event) whenever a character key is pressed. " +
+      "<mark>keypress (e) -> write 'press ' + e.keyname</mark>"]),
   send: wrapraw('send',
   ["<u>send(name)</u> Sends a message to be received by recv. " +
       "<mark>send 'go'; recv 'go', -> fd 100</mark>"],
@@ -7522,6 +7657,12 @@ var dollar_turtle_methods = {
   min: wrapraw('min',
   ["<u>min(x, y, ...)</u> The minimum of a set of values. " +
       "<mark>see min 2, -5, 1</mark>"], Math.min),
+  Pencil: wrapraw('Pencil',
+  ["<u>new Pencil(canvas)</u> " +
+      "Make an invisble pencil for drawing on a canvas." +
+      "<mark>s = new Sprite; p = new Pencil(s); " +
+      "p.pen red; p.fd 100; remove p</mark>"],
+      Pencil),
   Turtle: wrapraw('Turtle',
   ["<u>new Turtle(color)</u> Make a new turtle. " +
       "<mark>t = new Turtle; t.fd 100</mark>"], Turtle),
@@ -7688,6 +7829,7 @@ $.turtle = function turtle(id, options) {
     turtleevents(options.eventprefix);
   }
   if (!('pressed' in options) || options.pressed) {
+    addKeyEventHooks();
     pressedKey.enable(true);
   }
   // Set up global log function.
@@ -8746,7 +8888,7 @@ function input(name, callback, numeric) {
     }
     if (numeric > 0 && (e.which >= 32 && e.which <= 127) &&
         (e.which < '0'.charCodeAt(0) || e.which > '9'.charCodeAt(0)) &&
-        (e.which != '.'.charCodeAt(0) || textbox.val().indexOf('.') >= 0)) {
+        (e.which != '.'.charCodeAt(0) || ~textbox.val().indexOf('.'))) {
       return false;
     }
   }
