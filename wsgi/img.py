@@ -80,12 +80,12 @@ def application(env, start_response):
         tbs += ',isz:' + isz
 
       # path with /color/, /gray/, /red/, /orange/, etc, selects color
-      if m.append(re.match(r'(color|gray|trans)/(.*)$', terms)) or any(m):
+      if m.append(re.match(r'(color|gray|trans)[-/](.*)$', terms)) or any(m):
         p = m.pop()
         tbs += ',ic:' + p.group(1)
         terms = p.group(2)
       elif m.append(re.match(r'(red|orange|yellow|green|teal|blue|purple|' +
-          r'pink|white|gray|black|brown)/(.*)$', terms)) or any(m):
+          r'pink|white|gray|black|brown)[-/](.*)$', terms)) or any(m):
         p = m.pop()
         tbs += ',ic:specific,isc:' + p.group(1)
         terms = p.group(2)
