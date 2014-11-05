@@ -1256,11 +1256,18 @@ $(window).on('resize.listing', function() {
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, directory, tag, colsdone, list;
+  function fwidth(elem) {
+    // Get the width, including fractional width.
+    if (elem.getBoundingClientRect) {
+      return elem.getBoundingClientRect().width;
+    }
+    return $(elem).outerWidth();
+  }
   list = state.pane[pane].links;
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-  width = $('#' + pane).outerWidth() - getScrollbarWidth();
+  width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     tag = list[j].href ? 'a' : 'div';
@@ -1275,7 +1282,7 @@ function updatePaneLinks(pane) {
   items = directory.find('.item');
   maxwidth = 0;
   for (j = 0; j < items.length; j++) {
-    maxwidth = Math.max(maxwidth, items.eq(j).outerWidth());
+    maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
   }
   colcount = Math.min(items.length, Math.floor(width / Math.max(1, maxwidth)));
   colsize = items.length;
@@ -1289,7 +1296,7 @@ function updatePaneLinks(pane) {
       maxwidth = 0;
       for (j = colnum * colsize;
            j < items.length && j < (colnum + 1) * colsize; j++) {
-        maxwidth = Math.max(maxwidth, items.eq(j).outerWidth());
+        maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
       }
       tightwidth += maxwidth;
       colsdone += 1;

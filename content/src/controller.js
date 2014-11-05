@@ -1656,7 +1656,7 @@ function renderDirectory(position) {
   }
   if (model.ownername !== '') {
     links.push({html:''});
-    links.push({html:'<span class="create">Create new file</span>',
+    links.push({html:'<nobr class="create">Create new file</nobr>',
         link:'#new'});
   }
   view.setPaneLinkText(pane, links, filename);
