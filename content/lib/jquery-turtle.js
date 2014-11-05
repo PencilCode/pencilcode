@@ -1952,6 +1952,8 @@ function setCanvasPageTransform(ctx, canvas) {
   }
 }
 
+var buttOverlap = 0.67;
+
 function drawAndClearPath(drawOnCanvas, path, style, scale) {
   var ctx = drawOnCanvas.getContext('2d'),
       isClosed, skipLast,
@@ -1968,7 +1970,21 @@ function drawAndClearPath(drawOnCanvas, path, style, scale) {
       isClosed = segment.length > 2 && isPointNearby(
           segment[0], segment[segment.length - 1]);
       skipLast = isClosed && (!('pageX2' in segment[segment.length - 1]));
-      ctx.moveTo(segment[0].pageX, segment[0].pageY);
+      var startx = segment[0].pageX;
+      var starty = segment[0].pageY;
+      if (ctx.lineCap == 'butt' && segment.length > 0) {
+        var dx = segment[1].pageX - startx,
+            dy = segment[1].pageY - starty;
+        if (dx || dy) {
+          // Increase the distance of the starting point if using
+          // butt ends, so that they definitely overlap when animating.
+          var adjust = Math.min(1, buttOverlap /
+              Math.max(Math.abs(dx), Math.abs(dy)));
+          startx -= dx * adjust;
+          startx -= dy * adjust;
+        }
+      }
+      ctx.moveTo(startx, starty);
       for (var k = 1; k < segment.length - (skipLast ? 1 : 0); ++k) {
         if ('pageX2' in segment[k] &&
             !isBezierTiny(segment[k - 1], segment[k])) {
