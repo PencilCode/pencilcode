@@ -1,6 +1,6 @@
 // A standalone socket.io reflector server.
 
-var DynamicServer = require('./dynamic.io'),
+var DynamicServer = require('dynamic.io'),
     debug = require('debug')('reflector-socket.io'),
     config = require('./config');
 
