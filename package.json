@@ -17,13 +17,14 @@
   "homepage": "https://github.com/PencilCode/pencilcode-site",
   "dependencies": {
     "body-parser": "latest",
+    "debug": "latest",
+    "dynamic.io": "latest",
     "express": "latest",
     "fs-ext": "latest",
     "fs-extra": "latest",
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
-    "socket.io": "latest",
     "tamper": "latest",
     "url-template": "latest"
   },
