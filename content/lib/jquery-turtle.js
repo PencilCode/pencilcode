@@ -3515,7 +3515,7 @@ var pressedKey = (function() {
 
 //////////////////////////////////////////////////////////////////////////
 // JQUERY EVENT ENHANCEMENT
-//  - Keyboard events get the .keyname property.
+//  - Keyboard events get the .key property.
 //  - Keyboard event listening with a string first (data) arg
 //    automatically filter out events that don't match the keyname.
 //  - Mouse events get .x and .y (center-up) if there is a turtle field.
@@ -3624,14 +3624,14 @@ function keyFilterHook(event, original) {
   if (!name && which) {
     name = String.fromCharCode(which);
   }
-  event.keyname = name;
+  event.key = name;
   return event;
 }
 
-// Add .keyname to each keyboard event.
+// Add .key to each keyboard event.
 function keypressFilterHook(event, original) {
   if (event.charCode != null) {
-    event.keyname = String.fromCharCode(event.charCode);
+    event.key = String.fromCharCode(event.charCode);
   }
 }
 
@@ -3641,7 +3641,7 @@ function keyAddHook(handleObj) {
   var choices = handleObj.data.replace(/\s/g, '').toLowerCase().split(',');
   var original = handleObj.handler;
   var wrapped = function(event) {
-    if (choices.indexOf(event.keyname) < 0) return;
+    if (choices.indexOf(event.key) < 0) return;
     return original.apply(this, arguments);
   }
   if (original.guid) { wrapped.guid = original.guid; }
@@ -3649,11 +3649,11 @@ function keyAddHook(handleObj) {
 }
 
 function addKeyEventHooks() {
-  // Add the "keyname" field to keydown and keyup events - this uses
+  // Add the "key" field to keydown and keyup events - this uses
   // the lowercase key names listed in the pressedKey utility.
   addEventHook($.event.fixHooks, 'filter', $.event.keyHooks,
       'keydown keyup', keyFilterHook);
-  // Add "keyname" to keypress also.  This is just the unicode character
+  // Add "key" to keypress also.  This is just the unicode character
   // corresponding to event.charCode.
   addEventHook($.event.fixHooks, 'filter', $.event.keyHooks,
       'keypress', keypressFilterHook);
@@ -7565,13 +7565,13 @@ var dollar_turtle_methods = {
       "<mark>mousemove (e) -> write 'at ', e.x, ',', e.y</mark>"]),
   keydown: wrapwindowevent('keydown',
   ["<u>keydown(fn)</u> Calls fn(event) whenever a key is pushed down. " +
-      "<mark>keydown (e) -> write 'down ' + e.keyname</mark>"]),
+      "<mark>keydown (e) -> write 'down ' + e.key</mark>"]),
   keyup: wrapwindowevent('keyup',
   ["<u>keyup(fn)</u> Calls fn(event) whenever a key is released. " +
-      "<mark>keyup (e) -> write 'up ' + e.keyname</mark>"]),
+      "<mark>keyup (e) -> write 'up ' + e.key</mark>"]),
   keypress: wrapwindowevent('keypress',
   ["<u>keypress(fn)</u> Calls fn(event) whenever a character key is pressed. " +
-      "<mark>keypress (e) -> write 'press ' + e.keyname</mark>"]),
+      "<mark>keypress (e) -> write 'press ' + e.key</mark>"]),
   send: wrapraw('send',
   ["<u>send(name)</u> Sends a message to be received by recv. " +
       "<mark>send 'go'; recv 'go', -> fd 100</mark>"],
@@ -7742,29 +7742,31 @@ var colors = [
   "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown",
   "burlywood", "cadetblue", "chartreuse", "chocolate", "coral",
   "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
-  "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta",
-  "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon",
-  "darkseagreen", "darkslateblue", "darkslategray", "darkturquoise",
-  "darkviolet", "deeppink", "deepskyblue", "dimgray", "dodgerblue",
-  "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro",
-  "ghostwhite", "gold", "goldenrod", "gray", "green", "greenyellow",
-  "honeydew", "hotpink", "indianred", "indigo", "ivory", "khaki",
-  "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
-  "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray",
-  "lightgreen", "lightpink", "lightsalmon", "lightseagreen", "lightskyblue",
-  "lightslategray", "lightsteelblue", "lightyellow", "lime", "limegreen",
-  "linen", "magenta", "maroon", "mediumaquamarine", "mediumblue",
-  "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue",
-  "mediumspringgreen", "mediumturquoise", "mediumvioletred", "midnightblue",
-  "mintcream", "mistyrose", "moccasin", "navajowhite", "navy", "oldlace",
-  "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
-  "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff",
-  "peru", "pink", "plum", "powderblue", "purple", "red", "rosybrown",
-  "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
-  "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray",
-  "snow", "springgreen", "steelblue", "tan", "teal", "thistle", "tomato",
+  "darkgoldenrod", "darkgray", "darkgrey", "darkgreen", "darkkhaki",
+  "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred",
+  "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
+  "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue",
+  "dimgray", "dimgrey", "dodgerblue", "firebrick", "floralwhite",
+  "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+  "gray", "grey", "green", "greenyellow", "honeydew", "hotpink",
+  "indianred", "indigo", "ivory", "khaki", "lavender", "lavenderblush",
+  "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
+  "lightgoldenrodyellow", "lightgray", "lightgrey", "lightgreen",
+  "lightpink", "lightsalmon", "lightseagreen", "lightskyblue",
+  "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow",
+  "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
+  "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen",
+  "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+  "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin",
+  "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange",
+  "orangered", "orchid", "palegoldenrod", "palegreen", "paleturquoise",
+  "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum",
+  "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
+  "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna",
+  "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow",
+  "springgreen", "steelblue", "tan", "teal", "thistle", "tomato",
   "turquoise", "violet", "wheat", "white", "whitesmoke", "yellow",
-  "yellowgreen", "transparent",
+  "yellowgreen", "transparent"
 ];
 
 (function() {
@@ -8650,7 +8652,12 @@ function undoScrollAfter(f) {
   $(window).scrollTop(scrollPos);
 }
 
-// Simplify $('body').append(html).
+//////////////////////////////////////////////////////////////////////////
+// OUTPUT AND WIDGETS
+// functions to create basic HTML widgets for containing written output
+// and controls for reading input.
+//////////////////////////////////////////////////////////////////////////
+
 function output(html, defaulttag) {
   if (html === undefined || html === null) {
     // Print a turtle shell when no arguments.
@@ -8845,6 +8852,11 @@ function button(name, callback) {
   return result;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// ONE-SHOT INPUT SUPPORT
+// for creating an input box with a label, for one-shot input
+//////////////////////////////////////////////////////////////////////////
+
 // Simplify $('body').append('<input>' + label) and onchange hookup.
 function input(name, callback, numeric) {
   if ($.isFunction(name) && !callback) {
@@ -8855,7 +8867,6 @@ function input(name, callback, numeric) {
   var textbox = $('<input>').css({margin:0, padding:0}),
       label = $('<label style="display:table">' + name + '&nbsp;' +
         '</label>').append(textbox),
-      thisval = $([textbox[0], label[0]]),
       debounce = null,
       lastseen = textbox.val();
   function dodebounce() {
@@ -8875,7 +8886,8 @@ function input(name, callback, numeric) {
       numeric >= 0 && $.isNumeric(val) && ('' + parseFloat(val) == val))) {
       val = parseFloat(val);
     }
-    if (callback) { setTimeout(function() {callback.call(thisval, val); }, 0); }
+    label.prop('value', val);
+    if (callback) { setTimeout(function() {callback.call(label, val); }, 0); }
   }
   function validate() {
     if (numeric <= 0) return true;
@@ -8915,13 +8927,12 @@ function input(name, callback, numeric) {
   });
   // Focus, but don't cause autoscroll to occur due to focus.
   undoScrollAfter(function() { textbox.focus(); });
-  return thisval;
+  return label;
 }
 
-// Functions to generate CSS color strings
-function componentColor(t, args) {
-  return t + '(' + Array.prototype.join.call(args, ',') + ')';
-}
+//////////////////////////////////////////////////////////////////////////
+// TABLE PRINTER
+//////////////////////////////////////////////////////////////////////////
 
 // Simplify creation of tables with cells.
 function table(height, width, cellCss, tableCss) {
@@ -8980,6 +8991,16 @@ function table(height, width, cellCss, tableCss) {
   return result;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+// COLOR SUPPORT
+// TODO: import chroma.js
+//////////////////////////////////////////////////////////////////////////
+
+// Functions to generate CSS color strings
+function componentColor(t, args) {
+  return t + '(' + Array.prototype.join.call(args, ',') + ')';
+}
 
 //////////////////////////////////////////////////////////////////////////
 // DEBUGGING SUPPORT
