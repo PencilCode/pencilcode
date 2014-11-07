@@ -6206,24 +6206,22 @@ var turtlefn = {
       "<mark>pen off</mark>; <mark>pen on</mark>."
   ],
   function pen(cc, penstyle, lineWidth) {
+    var args = autoArgs(arguments, 1, {
+      lineCap: /^(?:butt|square|round)$/,
+      lineJoin: /^(?:bevel|round|miter)$/,
+      lineWidth: $.isNumeric,
+      penStyle: '*'
+    });
+    penstyle = args.penStyle;
     if (penstyle && (typeof(penstyle) == "function") && (
         penstyle.helpname || penstyle.name)) {
       // Deal with "tan" and "fill".
       penstyle = (penstyle.helpname || penstyle.name);
     }
-    if (typeof(penstyle) == "number" && typeof(lineWidth) != "number") {
-      // Deal with swapped argument order.
-      var swap = penstyle;
-      penstyle = lineWidth;
-      lineWidth = swap;
-    }
-    if (lineWidth === 0) {
+    if (args.lineWidth === 0 || penstyle === null) {
       penstyle = "none";
-    }
-    if (penstyle === undefined) {
+    } else if (penstyle === undefined) {
       penstyle = 'black';
-    } else if (penstyle === null) {
-      penstyle = 'none';
     } else if ($.isPlainObject(penstyle)) {
       penstyle = writePenStyle(penstyle);
     }
@@ -6239,8 +6237,14 @@ var turtlefn = {
         this.css('turtlePenDown', penstyle);
         moved = true;
       } else {
-        if (lineWidth) {
-          penstyle += ";lineWidth:" + lineWidth;
+        if (args.lineWidth) {
+          penstyle += ";lineWidth:" + args.lineWidth;
+        }
+        if (args.lineCap) {
+          penstyle += ";lineCap:" + args.lineCap;
+        }
+        if (args.lineJoin) {
+          penstyle += ";lineJoin:" + args.lineJoin;
         }
         this.css('turtlePenStyle', penstyle);
       }
@@ -8996,10 +9000,43 @@ function table(height, width, cellCss, tableCss) {
 // COLOR SUPPORT
 // TODO: import chroma.js
 //////////////////////////////////////////////////////////////////////////
-
 // Functions to generate CSS color strings
 function componentColor(t, args) {
   return t + '(' + Array.prototype.join.call(args, ',') + ')';
+}
+
+function autoArgs(arguments, start, map) {
+  var j = 0;
+  var taken = [];
+  var result = {};
+  for (var key in map) {
+    var pattern = map[key];
+    for (j = start; j < arguments.length; ++j) {
+      if (~taken.indexOf(j)) continue;
+      if (pattern == '*') {
+        break;
+      } else if (pattern instanceof RegExp && pattern.test(arguments[j])) {
+        break;
+      } else if (pattern instanceof Function && pattern(arguments[j])) {
+        break;
+      } else if (pattern == typeof arguments[j]) {
+        break;
+      }
+    }
+    if (j < arguments.length) {
+      taken.push(j);
+      result[key] = arguments[j];
+    }
+  }
+  if (taken.length + start < arguments.length) {
+    var extra = [];
+    for (j = start; j < arguments.length; ++j) {
+      if (~taken.indexOf(j)) continue;
+      extra.push(arguments[j]);
+    }
+    result.extra = extra;
+  }
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////
