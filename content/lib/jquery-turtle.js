@@ -1981,7 +1981,7 @@ function drawAndClearPath(drawOnCanvas, path, style, scale) {
           var adjust = Math.min(1, buttOverlap /
               Math.max(Math.abs(dx), Math.abs(dy)));
           startx -= dx * adjust;
-          startx -= dy * adjust;
+          starty -= dy * adjust;
         }
       }
       ctx.moveTo(startx, starty);
@@ -2063,7 +2063,7 @@ function clearField(arg) {
   }
   if (!arg || /\bturtles\b/.test(arg)) {
     if (globalDrawing.surface) {
-      var sel = $(globalDrawing.surface).find('.turtle');
+      var sel = $(globalDrawing.surface).find('.turtle').not('.turtlefield');
       if (global_turtle) {
         sel = sel.not(global_turtle);
       }
@@ -2072,15 +2072,15 @@ function clearField(arg) {
   }
   if (!arg || /\blabels\b/.test(arg)) {
     if (globalDrawing.surface) {
-      var sel = $(globalDrawing.surface).find('.turtlelabel');
+      var sel = $(globalDrawing.surface).find('.turtlelabel')
+                .not('.turtlefield');
       sel.remove();
     }
   }
   if (!arg || /\btext\b/.test(arg)) {
-    // "turtlefield" is a CSS class to use to mark top-level
-    // elements that should not be deleted by clearscreen.
-    var keep = $('.turtlefield');
-    $('body').contents().not(keep).remove();
+    // "turtlefield" is a CSS class to use to mark elements that
+    // should not be deleted by clearscreen.
+    $('body').contents().not('.turtlefield').remove();
   }
 }
 
