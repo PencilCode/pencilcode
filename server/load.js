@@ -128,7 +128,8 @@ exports.handleLoad = function(req, res, app, format) {
           data = m.data,
           meta = m.meta;
       res.set('Cache-Control', 'must-revalidate');
-      res.set('Content-Type', (meta && meta.type) || mt);
+      res.set('Content-Type', (meta && meta.type) ||
+          mt.replace(/\bx-pencilcode\b/, 'cofeescript'));
       res.send(data);
       return;
     }
