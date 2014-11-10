@@ -5,7 +5,7 @@ var DynamicServer = require('dynamic.io'),
     config = require('./config');
 
 io = DynamicServer({
-  mainHost: process.env.HOST,     // Enable virtual host handling
+  host: process.env.HOST,         // Enable virtual host handling
   publicStatus: true              // Enable /socket.io/status page.
 });
 io.setupNamespace('*', function(nsp) {
