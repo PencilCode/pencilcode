@@ -6454,7 +6454,7 @@ var turtlefn = {
       "<u>pen path</u>: " +
       "<mark>pen path; rt 100, 90; fill blue</mark>"],
   function fill(cc, style) {
-    if (!style) { style = 'black'; }
+    if (!style) { style = 'none'; }
     else if ($.isPlainObject(style)) {
       style = writePenStyle(style);
     }
