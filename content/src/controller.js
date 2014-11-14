@@ -400,6 +400,7 @@ view.on('changehtmlcss', function(pane) {
   var newdata = $.extend({}, modelatpos('left').data, doc);
   var filename = modelatpos('left').filename;
   runCodeAtPosition('right', newdata, filename, true);
+  view.showMiddleButton('run');
   saveDefaultMeta(doc.meta);
 });
 
@@ -1516,7 +1517,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
     if (m.running) {
       view.setPaneRunHtml(pane, html, filename, baseUrl,
          // Do not enable fullscreen mode when no owner, or a nosaveowner.
-         model.ownername && !nosaveowner());
+         model.ownername && !nosaveowner(), emptyOnly);
     }
   }, 1);
 }

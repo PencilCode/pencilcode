@@ -634,26 +634,31 @@ function enableButton(id, enable) {
 function centerMiddle() {
   var m = $('#middle');
   // Horizontal center taking into account the button width.
-  m.css({left:($(window).width() - m.outerWidth()) / 2});
+  m.css({marginRight: -m.outerWidth() / 2});
   // Vertical center taking into the editor height and button height.
+  /*
   m.css({top:($(window).height() -
       ($('.pane').height() + m.outerHeight()) / 2)})
+  */
 }
 
 $(window).on('resize.middlebutton', centerMiddle);
 
 function showMiddleButton(which) {
   if (which == 'run') {
-    var icon = 'triangle',
+    var html,
         rightpane = state.pane[paneid('right')],
         leftpane = state.pane[paneid('left')];
     if (rightpane.running && leftpane.editor &&
         rightpane.lastChangeTime >= leftpane.lastChangeTime) {
-      icon = 'reload';
+      html = '<button id="run" class="quiet" ' +
+             'title="Restart program (Ctrl+Enter)">' +
+             '<div class="reload"></div></button>';
+    } else {
+      html = '<button id="run" title="Run program (Ctrl+Enter)">' +
+             '<div class="triangle"></div></button>';
     }
-    $('#middle').find('div').eq(0).html(
-      '<button id="run" title="Run program (Ctrl+Enter)">' +
-      '<div class="' + icon + '"></div></button>');
+    $('#middle').find('div').eq(0).html(html);
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
@@ -1061,10 +1066,11 @@ function rotateRight() {
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
 
-function setPaneRunHtml(pane, html, filename, targetUrl, fullScreenLink) {
+function setPaneRunHtml(
+    pane, html, filename, targetUrl, fullScreenLink, nocode) {
   clearPane(pane);
   var paneState = state.pane[pane];
-  paneState.lastChangeTime = +(new Date);
+  if (!nocode) { paneState.lastChangeTime = +(new Date); }
   paneState.running = true;
   paneState.filename = filename;
   paneState.fullScreenLink = fullScreenLink;
@@ -1672,6 +1678,7 @@ function showPaneEditorLanguagesDialog(pane) {
         box.trigger('distribute');
       }
       if (change) {
+        paneState.lastChangeTime = +(new Date);
         fireEvent('dirty', [pane]);
         fireEvent('changehtmlcss', [pane]);
       }
@@ -2397,6 +2404,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       }
       return;
     }
+    paneState.lastChangeTime = +(new Date);
     fireEvent('changehtmlcss', [pane]);
   }
   paneState.handleHtmlCssChange = handleHtmlCssChange;
@@ -2516,6 +2524,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       }
     }
     if (!paneState.dirtied) {
+      paneState.lastChangeTime = +(new Date);
       fireEvent('dirty', [pane]);
     }
     // Publish the update event for hosting frame.

@@ -411,8 +411,9 @@ body.modal #middle {
 
 #middle, .vcenter {
   position: absolute;
-  left: 50%;
-  top: 50%
+  top: 50%;
+  right: 50%;
+  margin-right: -28px;
 }
 
 .hcenter {
@@ -431,14 +432,24 @@ body.modal #middle {
   display: inline-block
 }
 
-#run:hover, #stop:hover {
+#run.quiet {
+  box-shadow: none;
+  opacity: 0.6;
+  padding: 0;
+  margin: 10px;
+  background-color: transparent;
+}
+
+#run:hover, #stop:hover, #run.quiet:hover {
   box-shadow: 0 0 7px #000;
-  opacity: .9
+  opacity: .9;
+  padding: 10px;
+  margin: 0;
 }
 
 #run.pressed:hover, #stop.pressed:hover {
   box-shadow: 0 0 14px #000;
-  opacity: 1
+  opacity: 1;
 }
 
 #run .triangle {
@@ -449,13 +460,19 @@ body.modal #middle {
   border-bottom: 20px solid transparent;
   border-top: 20px solid transparent;
   border-left: 36px solid #1e90ff;
-  margin-left: 6px
+  margin: -2px -4px -2px 4px;
 }
 
 #run .reload {
-  width: 40px;
+  width: 36px;
   height: 36px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='40' height='36'><path d='M31,11.5 a13,13 0 1,0 0,13' fill='none' stroke='dodgerblue' stroke-width='9'/><path d='M20,18 l17,0 l0,-17 z' fill='dodgerblue'/></svg>")
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='36' height='36'><path d='M29,11.5 a13,13 0 1,0 0,13' fill='none' stroke='dodgerblue' stroke-width='9'/><path d='M18,18 l17,0 l0,-17 z' fill='dodgerblue'/></svg>");
+  background-position: center;
+  opacity: 0.6;
+}
+
+#run:hover .reload {
+  opacity: 1;
 }
 
 #stop .square {
@@ -464,7 +481,7 @@ body.modal #middle {
   font-size: 0;
   line-height: 0;
   border: 14px solid #1e90ff;
-  margin: 4px 5px
+  margin: 4px 4px;
 }
 
 body, .panetitle, #owner {
@@ -629,7 +646,9 @@ body#pencildoc #diigolet-csm {
   height: 100%;
   overflow: hidden;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=");
-  background-position: center
+  background-position: center;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
 }
 
 .preview iframe {
