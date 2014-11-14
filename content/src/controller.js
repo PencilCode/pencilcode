@@ -374,6 +374,8 @@ view.on('byname', function() {
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
     view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
+    // Toggle button between triangle and refresh.
+    view.showMiddleButton('run');
   }
 });
 

@@ -644,9 +644,16 @@ $(window).on('resize.middlebutton', centerMiddle);
 
 function showMiddleButton(which) {
   if (which == 'run') {
+    var icon = 'triangle',
+        rightpane = state.pane[paneid('right')],
+        leftpane = state.pane[paneid('left')];
+    if (rightpane.running && leftpane.editor &&
+        rightpane.lastChangeTime >= leftpane.lastChangeTime) {
+      icon = 'reload';
+    }
     $('#middle').find('div').eq(0).html(
       '<button id="run" title="Run program (Ctrl+Enter)">' +
-      '<div class="triangle"></div></button>');
+      '<div class="' + icon + '"></div></button>');
     if (state.previewMode) {
       $('#middle').show();
       centerMiddle();
@@ -1057,6 +1064,7 @@ function rotateRight() {
 function setPaneRunHtml(pane, html, filename, targetUrl, fullScreenLink) {
   clearPane(pane);
   var paneState = state.pane[pane];
+  paneState.lastChangeTime = +(new Date);
   paneState.running = true;
   paneState.filename = filename;
   paneState.fullScreenLink = fullScreenLink;
@@ -1378,6 +1386,7 @@ function clearPane(pane, loading) {
   paneState.dirtied = false;
   paneState.links = null;
   paneState.running = false;
+  paneState.lastChangeTime = 0;
   paneState.palette = null;
   paneState.fullScreenLink = false;
   paneState.settingUp = null;
@@ -2302,8 +2311,11 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     fireEvent('icehover', [pane, ev]);
   });
 
+  paneState.lastChangeTime = +(new Date);
+
   dropletEditor.on('change', function() {
     if (paneState.settingUp) return;
+    paneState.lastChangeTime = +(new Date);
     fireEvent('dirty', [pane]);
     publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
@@ -2335,6 +2347,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   var session = editor.getSession();
   session.on('change', function() {
     // Any editing that changes the line count ends the debugging session.
+    paneState.lastChangeTime = +(new Date);
     if (paneState.cleanLineCount != session.getLength()) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);

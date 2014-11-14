@@ -689,7 +689,7 @@ function stopButton(command) {
       view.showMiddleButton('stop');
       stopButtonShown = 1;
     }
-    // Within one second, startPollingWindow should be called,
+    // Within two seconds, startPollingWindow should be called,
     // cancelling this timer.  If it is not (for example, if we
     // are running a plain HTML file or something else that does
     // not bind to the IDE debugger API), then we just clear
@@ -699,7 +699,7 @@ function stopButton(command) {
         view.showMiddleButton('run');
         stopButtonShown = 0;
       }
-    }, 1000);
+    }, 2000);
   }
   return stopButtonShown;
 }
