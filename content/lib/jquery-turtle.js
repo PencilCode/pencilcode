@@ -1005,6 +1005,10 @@ function dw() {
   return document.body ? $(document).width() : document.width;
 }
 
+function invisible(elem) {
+  return elem.offsetHeight <= 0 && elem.offsetWidth <= 0;
+}
+
 function makeGbcrLTWH(left, top, width, height) {
   return {
     left: left, top: top, right: left + width, bottom: top + height,
@@ -1781,7 +1785,8 @@ function getTurtleData(elem) {
   var state = $.data(elem, 'turtleData');
   if (!state) {
     state = $.data(elem, 'turtleData', {
-      style: null,
+      styte: null,
+      corners: [[]],
       path: [[]],
       down: true,
       speed: 'turtle',
@@ -1835,10 +1840,16 @@ function makePenStyleHook() {
       return writePenStyle(getTurtleData(elem).style);
     },
     set: function(elem, value) {
-      var style = parsePenStyle(value, 'strokeStyle');
-      getTurtleData(elem).style = style;
+      var style = parsePenStyle(value, 'strokeStyle'),
+          state = getTurtleData(elem);
+      if (state.style) {
+        // Switch to an empty pen first, to terminate paths.
+        state.style = null;
+        flushPenState(elem, state, true);
+      }
+      state.style = style;
       elem.style.turtlePenStyle = writePenStyle(style);
-      flushPenState(elem);
+      flushPenState(elem, state, true);
     }
   };
 }
@@ -1857,7 +1868,7 @@ function makePenDownHook() {
         state.quickpagexy = null;
         state.quickhomeorigin = null;
         elem.style.turtlePenDown = writePenDown(style);
-        flushPenState(elem);
+        flushPenState(elem, state, true);
       }
     }
   };
@@ -1866,6 +1877,11 @@ function makePenDownHook() {
 function isPointNearby(a, b) {
   return Math.round(a.pageX - b.pageX) === 0 &&
          Math.round(a.pageY - b.pageY) === 0;
+}
+
+function isPointVeryNearby(a, b) {
+  return Math.round(1000 * (a.pageX - b.pageX)) === 0 &&
+         Math.round(1000 * (a.pageY - b.pageY)) === 0;
 }
 
 function isBezierTiny(a, b) {
@@ -1888,8 +1904,11 @@ function applyPenStyle(ctx, ps, scale) {
   scale = scale || 1;
   var extraWidth = ps.eraseMode ? 1 : 0;
   if (!ps || !('strokeStyle' in ps)) { ctx.strokeStyle = 'black'; }
-  if (!ps || !('lineWidth' in ps)) { ctx.lineWidth = 1.62 * scale + extraWidth; }
+  if (!ps || !('lineWidth' in ps)) {
+    ctx.lineWidth = 1.62 * scale + extraWidth;
+  }
   if (!ps || !('lineCap' in ps)) { ctx.lineCap = 'round'; }
+  if (!ps || !('lineJoin' in ps)) { ctx.lineJoin = 'round'; }
   if (ps) {
     for (var a in ps) {
       if (a === 'savePath' || a === 'eraseMode') { continue; }
@@ -1954,7 +1973,7 @@ function setCanvasPageTransform(ctx, canvas) {
 
 var buttOverlap = 0.67;
 
-function drawAndClearPath(drawOnCanvas, path, style, scale) {
+function drawAndClearPath(drawOnCanvas, path, style, scale, truncateTo) {
   var ctx = drawOnCanvas.getContext('2d'),
       isClosed, skipLast,
       j = path.length,
@@ -1967,23 +1986,12 @@ function drawAndClearPath(drawOnCanvas, path, style, scale) {
   while (j--) {
     if (path[j].length > 1) {
       segment = path[j];
-      isClosed = segment.length > 2 && isPointNearby(
-          segment[0], segment[segment.length - 1]);
+      isClosed = segment.length > 2 &&
+          isPointNearby(segment[0], segment[segment.length - 1]) &&
+          !isPointNearby(segment[0], segment[Math.floor(segment.length / 2)]);
       skipLast = isClosed && (!('pageX2' in segment[segment.length - 1]));
       var startx = segment[0].pageX;
       var starty = segment[0].pageY;
-      if (ctx.lineCap == 'butt' && segment.length > 0) {
-        var dx = segment[1].pageX - startx,
-            dy = segment[1].pageY - starty;
-        if (dx || dy) {
-          // Increase the distance of the starting point if using
-          // butt ends, so that they definitely overlap when animating.
-          var adjust = Math.min(1, buttOverlap /
-              Math.max(Math.abs(dx), Math.abs(dy)));
-          startx -= dx * adjust;
-          starty -= dy * adjust;
-        }
-      }
       ctx.moveTo(startx, starty);
       for (var k = 1; k < segment.length - (skipLast ? 1 : 0); ++k) {
         if ('pageX2' in segment[k] &&
@@ -2003,7 +2011,7 @@ function drawAndClearPath(drawOnCanvas, path, style, scale) {
   if ('strokeStyle' in style) { ctx.stroke(); }
   ctx.restore();
   path.length = 1;
-  path[0].splice(0, path[0].length - 1);
+  path[0].splice(0, Math.max(0, path[0].length - truncateTo));
 }
 
 function addBezierToPath(path, start, triples) {
@@ -2018,35 +2026,62 @@ function addBezierToPath(path, start, triples) {
   }
 }
 
-function flushPenState(elem) {
-  var state = getTurtleData(elem);
-  if (!state.style || (!state.down && !state.style.savePath)) {
-    if (state.path.length > 1) { state.path.length = 1; }
-    if (state.path[0].length) { state.path[0].length = 0; }
+function addToPathList(pathList, point) {
+  if (pathList.length &&
+      (point.corner ? isPointVeryNearby(point, pathList[pathList.length - 1]) :
+                      isPointNearby(point, pathList[pathList.length - 1]))) {
     return;
   }
-  if (!state.down) {
-    // Penup when saving path will start a new segment if one isn't started.
-    if (state.path.length && state.path[0].length) {
-      state.path.unshift([]);
+  pathList.push(point);
+}
+
+function flushPenState(elem, state, corner) {
+  if (!state) {
+    // Default is no pen and no path, so nothing to do.
+    return;
+  }
+  var path = state.path, style = state.style, corners = state.corners;
+  if (!style || !state.down) {
+    if (corner) {
+      if (style && style.savePath) {
+        // Penup when saving path will create a new path if needed.
+        if (corners.length && corners[0].length) {
+          if (corners[0].length == 1) {
+            corners[0].length = 0;
+          } else {
+            corners.unshift([]);
+          }
+        }
+      } else {
+        if (corners.length > 1) corners.length = 1;
+        if (corners[0].length) corners[0].length = 0;
+      }
     }
+    // Penup when not saving path will clear the saved path.
+    if (path.length > 1) { path.length = 1; }
+    if (path[0].length) { path[0].length = 0; }
     return;
   }
+  if (!corner && style.savePath) return;
   var center = getCenterInPageCoordinates(elem);
-  if (!state.path[0].length ||
-      !isPointNearby(center, state.path[0][state.path[0].length - 1])) {
-    state.path[0].push(center);
+  if (corner) {
+    center.corner = true;
+    addToPathList(corners[0], center);
   }
-  if (!state.style.savePath) {
-    var ts = readTurtleTransform(elem, true);
-    drawAndClearPath(getDrawOnCanvas(state), state.path, state.style, ts.sx);
-  }
+  if (style.savePath) return;
+  addToPathList(path[0], center);
+  var ts = readTurtleTransform(elem, true);
+  drawAndClearPath(getDrawOnCanvas(state), state.path, style, ts.sx, 2);
 }
 
 function endAndFillPenPath(elem, style) {
   var ts = readTurtleTransform(elem, true),
       state = getTurtleData(elem);
-  drawAndClearPath(getDrawOnCanvas(state), state.path, style);
+  if (state.style) {
+    // Apply a default style.
+    style = $.extend({}, state.style, style);
+  }
+  drawAndClearPath(getDrawOnCanvas(state), state.corners, style, ts.sx, 1);
   if (state.style && state.style.savePath) {
     $.style(elem, 'turtlePenStyle', 'none');
   }
@@ -2235,7 +2270,7 @@ function doQuickMove(elem, distance, sideways) {
   ts.tx += dx;
   ts.ty += dy;
   elem.style[transform] = writeTurtleTransform(ts);
-  flushPenState(elem);
+  flushPenState(elem, state, true);
 }
 
 function doQuickMoveXY(elem, dx, dy) {
@@ -2252,7 +2287,7 @@ function doQuickMoveXY(elem, dx, dy) {
   ts.tx += dx;
   ts.ty -= dy;
   elem.style[transform] = writeTurtleTransform(ts);
-  flushPenState(elem);
+  flushPenState(elem, state, true);
 }
 
 function doQuickRotate(elem, degrees) {
@@ -2367,7 +2402,7 @@ function makeTurtleForwardHook() {
       ts.tx = ntx;
       ts.ty = nty;
       elem.style[transform] = writeTurtleTransform(ts);
-      flushPenState(elem);
+      flushPenState(elem, state);
     }
   };
 }
@@ -2394,82 +2429,126 @@ function makeTurtleHook(prop, normalize, unit, displace) {
             pageY: qpxy.pageY + (ts.ty - oty)
           };
         }
-        flushPenState(elem);
+        flushPenState(elem, state);
       }
     }
   };
 }
 
+// Given a starting direction, angle change, and turning radius,
+// this computes the side-radius (with a sign flip indicating
+// the other side), the coordinates of the center dc, and the dx/dy
+// displacement of the final location after the arc.
+function setupArc(
+    r0,         // starting direction in local coordinates
+    r1,         // ending direction local coordinates
+    turnradius  // turning radius in local coordinates
+) {
+  var delta = normalizeRotationDelta(r1 - r0),
+      sradius = delta > 0 ? turnradius : -turnradius,
+      r0r = convertToRadians(r0),
+      dc = [Math.cos(r0r) * sradius, Math.sin(r0r) * sradius],
+      r1r = convertToRadians(r1);
+  return {
+    delta: delta,
+    sradius: sradius,
+    dc: dc,
+    dx: dc[0] - Math.cos(r1r) * sradius,
+    dy: dc[1] - Math.sin(r1r) * sradius
+  };
+}
+
+// Given a path array, a pageX/pageY starting position,
+// arc information in local coordinates, and a 2d transform
+// between page and local coordinates, this function adds to
+// the path scaled page-coorindate beziers following the arc.
+function addArcBezierPaths(
+    path,       // path to add on to in page coordinates
+    start,      // starting location in page coordinates
+    r0,         // starting direction in local coordinates
+    end,        // ending direction in local coordinates
+    turnradius, // turning radius in local coordinates
+    transform   // linear distortion between page and local
+) {
+  var a = setupArc(r0, end, turnradius),
+      sradius = a.sradius, dc = a.dc,
+      r1, a1r, a2r, j, r, pts, triples,
+      splits, splita, absang, relative, points;
+  // Decompose an arc into equal arcs, all 45 degrees or less.
+  splits = 1;
+  splita = a.delta;
+  absang = Math.abs(a.delta);
+  if (absang > 45) {
+    splits = Math.ceil(absang / 45);
+    splita = a.delta / splits;
+  }
+  // Relative traces out the unit-radius arc centered at the origin.
+  relative = [];
+  while (--splits >= 0) {
+    r1 = splits === 0 ? end : r0 + splita;
+    a1r = convertToRadians(r0 + 180);
+    a2r = convertToRadians(r1 + 180);
+    relative.push.apply(relative, approxBezierUnitArc(a1r, a2r));
+    r0 = r1;
+  }
+  points = [];
+  for (j = 0; j < relative.length; j++) {
+    // Multiply each coordinate by radius scale up to the right
+    // turning radius and add to dc to center the turning radius
+    // at the right local coordinate position; then apply parent
+    // distortions to get page-coordinate relative offsets to the
+    // turtle's original position.
+    r = matrixVectorProduct(transform,
+        addVector(scaleVector(relative[j], sradius), dc));
+    // Finally add these to the turtle's actual original position
+    // to get page-coordinate control points for the bezier curves.
+    // (start is the starting position in absolute coordinates,
+    // and dc is the local coordinate offset from the starting
+    // position to the center of the turning radius.)
+    points.push({
+      pageX: r[0] + start.pageX,
+      pageY: r[1] + start.pageY});
+  }
+  // Divide control points into triples again to form bezier curves.
+  triples = [];
+  for (j = 0; j < points.length; j += 3) {
+    triples.push(points.slice(j, j + 3));
+  }
+  addBezierToPath(path, start, triples);
+  return a;
+}
+
+// An animation driver for rotation, including the possibility of
+// tracing out an arc.  Reads an element's turningRadius to see if
+// changing ts.rot should also sweep out an arc.  If so, calls
+// addArcBezierPath to directly add that arc to the drawing path.
 function maybeArcRotation(end, elem, ts, opt) {
   end = parseFloat(end);
   var state = $.data(elem, 'turtleData'),
       tradius = state ? state.turningRadius : 0;
-  if (tradius === 0) {
+  if (tradius === 0 || ts.rot == end) {
     // Avoid drawing a line if zero turning radius.
     opt.displace = false;
-    return normalizeRotation(end);
+    return tradius === 0 ? normalizeRotation(end) : end;
   }
   var tracing = (state && state.style && state.down),
-      r0 = ts.rot, r1, r1r, a1r, a2r, j, r, pts, triples,
-      r0r = convertToRadians(ts.rot),
-      delta = normalizeRotationDelta(end - r0),
-      radius = (delta > 0 ? tradius : -tradius) * ts.sy,
-      dc = [Math.cos(r0r) * radius, Math.sin(r0r) * radius],
-      splits, splita, absang, dx, dy, qpxy,
-      path, totalParentTransform, start, relative, points;
+      turnradius = tradius * ts.sy, a;
   if (tracing) {
-    // Decompose an arc into equal arcs, all 45 degrees or less.
-    splits = 1;
-    splita = delta;
-    absang = Math.abs(delta);
-    if (absang > 45) {
-      splits = Math.ceil(absang / 45);
-      splita = delta / splits;
-    }
-    path = state.path[0];
-    totalParentTransform = totalTransform2x2(elem.parentElement);
-    // Relative traces out the unit-radius arc centered at the origin.
-    relative = [];
-    while (--splits >= 0) {
-      r1 = splits === 0 ? end : r0 + splita;
-      a1r = convertToRadians(r0 + 180);
-      a2r = convertToRadians(r1 + 180);
-      relative.push.apply(relative, approxBezierUnitArc(a1r, a2r));
-      r0 = r1;
-    }
-    points = [];
-    // start is the starting position in absolute coordinates,
-    // and dc is the local coordinate offset from the starting
-    // position to the center of the turning radius.
-    start = getCenterInPageCoordinates(elem);
-    for (j = 0; j < relative.length; j++) {
-      // Multiply each coordinate by radius scale up to the right
-      // turning radius and add to dc to center the turning radius
-      // at the right local coordinate position; then apply parent
-      // distortions to get page-coordinate relative offsets to the
-      // turtle's original position.
-      r = matrixVectorProduct(totalParentTransform,
-          addVector(scaleVector(relative[j], radius), dc));
-      // Finally add these to the turtle's actual original position
-      // to get page-coordinate control points for the bezier curves.
-      points.push({
-        pageX: r[0] + start.pageX,
-        pageY: r[1] + start.pageY});
-    }
-    // Divide control points into triples again to form bezier curves.
-    triples = [];
-    for (j = 0; j < points.length; j += 3) {
-      triples.push(points.slice(j, j + 3));
-    }
-    addBezierToPath(path, start, triples);
+    a = addArcBezierPaths(
+      state.path[0],                            // path to add to
+      getCenterInPageCoordinates(elem),         // starting location
+      ts.rot,                                   // starting direction
+      end,                                      // ending direction
+      turnradius,                               // scaled turning radius
+      totalTransform2x2(elem.parentElement));   // totalParentTransform
+  } else {
+    a = setupArc(
+      ts.rot,                                   // starting direction
+      end,                                      // degrees change
+      turnradius);                              // scaled turning radius
   }
-  // Now move turtle to its final position: in local coordinates,
-  // translate to the turning center plus the vector to the arc end.
-  r1r = convertToRadians(end);
-  dx = dc[0] - Math.cos(r1r) * radius;
-  dy = dc[1] - Math.sin(r1r) * radius;
-  ts.tx += dx;
-  ts.ty += dy;
+  ts.tx += a.dx;
+  ts.ty += a.dy;
   opt.displace = true;
   return end;
 }
@@ -2542,7 +2621,7 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
             pageY: qpxy.pageY + (ts.ty - oty)
           };
         }
-        flushPenState(elem);
+        flushPenState(elem, state);
       }
     }
   };
@@ -2626,7 +2705,7 @@ function setImageWithStableOrigin(elem, url, css, cb) {
   if (url in stablyLoadedImages) {
     // Already requested this image?
     record = stablyLoadedImages[url];
-    if (record.img.complete) {
+    if (record.queue === null) {
       // If already complete, then flip the image right away.
       finishSet(record.img, elem, css, cb);
     } else {
@@ -2649,15 +2728,7 @@ function setImageWithStableOrigin(elem, url, css, cb) {
     // Pop the element to the right dimensions early if possible.
     resizeEarlyIfPossible(url, elem, css);
     // First set up the onload callback, then start loading.
-    function poll() {
-      if (!record.img.complete) {
-        // Guard against browsers that may fire onload too early or never.
-        setTimeout(poll, 100);
-        return;
-      }
-      record.img.removeEventListener('load', poll);
-      record.img.removeEventListener('error', poll);
-      // TODO: compute the convex hull of the image.
+    afterImageLoadOrError(record.img, url, function() {
       var j, queue = record.queue;
       record.queue = null;
       if (queue) {
@@ -2666,12 +2737,7 @@ function setImageWithStableOrigin(elem, url, css, cb) {
           finishSet(record.img, queue[j].elem, queue[j].css, queue[j].cb);
         }
       }
-    }
-    record.img.addEventListener('load', poll);
-    record.img.addEventListener('error', poll);
-    record.img.src = url;
-    // Start polling immediately, because some browser may never fire onload.
-    poll();
+    });
   }
   // This is the second step, done after the async load is complete:
   // the parameter "loaded" contains the fully loaded Image.
@@ -2688,6 +2754,34 @@ function setImageWithStableOrigin(elem, url, css, cb) {
       cb();
     }
   }
+}
+
+function afterImageLoadOrError(img, url, fn) {
+  if (url == null) { url = img.src; }
+  // If already loaded, then just call fn.
+  if (url == img.src && (!url || img.complete)) {
+    fn();
+    return;
+  }
+  // Otherwise, set up listeners and wait.
+  var timeout = null;
+  function poll(e) {
+    // If we get a load or error event, notice img.complete
+    // or see that the src was changed, we're done here.
+    if (e || img.complete || img.src != url) {
+      img.removeEventListener('load', poll);
+      img.removeEventListener('error', poll);
+      clearTimeout(timeout);
+      fn();
+    } else {
+      // Otherwise, continue waiting and also polling.
+      timeout = setTimeout(poll, 100);
+    }
+  }
+  img.addEventListener('load', poll);
+  img.addEventListener('error', poll);
+  img.src = url;
+  poll();
 }
 
 // In the special case of loading a data: URL onto an element
@@ -5454,7 +5548,8 @@ function sync() {
     for (j = 0; j < cb.length; ++j) { cb[j](); }
   }
   for (j = 0; j < elts.length; ++j) {
-    $(elts[j]).queue(function(next) {
+    queueWaitIfLoadingImg(elts[j]);
+    $.queue(elts[j], 'fx', function(next) {
       if (ready) {
         ready.push(next);
         if (ready.length == elts.length) {
@@ -5673,6 +5768,7 @@ function continuationArg(args, argcount) {
 //        as each of the elements' animations completes; when the jth
 //        element completes, resolve(j) should be called.  The last time
 //        it is called, it will trigger the continuation callback, if any.
+//        Call resolve(j, true) if a corner pen state should be marked.
 //    resolver: a function that returns a closure that calls resolve(j).
 //    start: a function to be called once to enable triggering of the callback.
 // the last argument in an argument list if it is a function, and if the
@@ -5685,10 +5781,13 @@ function setupContinuation(thissel, name, args, argcount) {
       countdown = length + 1,
       sync = true,
       debugId = debug.nextId();
-  function resolve(j) {
+  function resolve(j, corner) {
     if (j != null) {
-      debug.reportEvent('resolve',
-          [name, debugId, length, j, thissel && thissel[j]]);
+      var elem = thissel && thissel[j];
+      if (corner && elem) {
+        flushPenState(elem, $.data(elem, 'turtleData'), true);
+      }
+      debug.reportEvent('resolve', [name, debugId, length, j, elem]);
     }
     if ((--countdown) == 0) {
       // A subtlety: if we still have not yet finished setting things up
@@ -5721,7 +5820,7 @@ function setupContinuation(thissel, name, args, argcount) {
     args: mainargs,
     appear: appear,
     resolve: resolve,
-    resolver: function(j) { return function() { resolve(j); }; },
+    resolver: function(j, c) { return function() { resolve(j, c); }; },
     exit: function exit() {
       debug.reportEvent('exit', [name, debugId, length, mainargs]);
       // Resolve one extra countdown; this is needed for a done callback
@@ -5830,6 +5929,8 @@ function wrapraw(name, helptext, fn) {
 function rtlt(cc, degrees, radius) {
   if (degrees == null) {
     degrees = 90;  // zero-argument default.
+  } else {
+    degrees = normalizeRotationDelta(degrees);
   }
   var elem, left = (cc.name === 'lt'), intick = insidetick;
   if ((elem = canMoveInstantly(this)) &&
@@ -5850,13 +5951,33 @@ function rtlt(cc, degrees, radius) {
   } else {
     this.plan(function(j, elem) {
       cc.appear(j);
-      var oldRadius = this.css('turtleTurningRadius');
-      this.css({turtleTurningRadius: (degrees < 0) ? -radius : radius});
+      var state = getTurtleData(elem),
+          oldRadius = state.turningRadius,
+          newRadius = (degrees < 0) ? -radius : radius,
+          addCorner = null;
+      if (state.style && state.down) {
+        addCorner = (function() {
+          var oldPos = getCenterInPageCoordinates(elem),
+              oldTs = readTurtleTransform(elem, true),
+              oldTransform = totalTransform2x2(elem.parentElement);
+          return (function() {
+            addArcBezierPaths(
+              state.corners[0],
+              oldPos,
+              oldTs.rot,
+              oldTs.rot + (left ? -degrees : degrees),
+              newRadius * oldTs.sy,
+              oldTransform);
+          });
+        })();
+      }
+      state.turningRadius = newRadius;
       this.animate({turtleRotation: operator + cssNum(degrees) + 'deg'},
           animTime(elem, intick), animEasing(elem));
       this.plan(function() {
-        this.css({turtleTurningRadius: oldRadius});
-        cc.resolve(j);
+        if (addCorner) addCorner();
+        state.turningRadius = oldRadius;
+        cc.resolve(j, true);
       });
     });
     return this;
@@ -5875,13 +5996,13 @@ function fdbk(cc, amount) {
   if ((elem = canMoveInstantly(this))) {
     cc.appear(0);
     doQuickMove(elem, amount, 0);
-    cc.resolve(0);
+    cc.resolve(0, true);
     return this;
   }
   this.plan(function(j, elem) {
-    cc.appear(0);
+    cc.appear(j);
     this.animate({turtleForward: '+=' + cssNum(amount || 0) + 'px'},
-        animTime(elem, intick), animEasing(elem), cc.resolver(0));
+        animTime(elem, intick), animEasing(elem), cc.resolver(j, true));
   });
   return this;
 }
@@ -5901,7 +6022,7 @@ function move(cc, x, y) {
   this.plan(function(j, elem) {
     cc && cc.appear(j);
     this.animate({turtlePosition: displacedPosition(elem, y, x)},
-        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j, true));
   });
   return this;
 }
@@ -5925,7 +6046,7 @@ function movexy(cc, x, y) {
     var tr = getElementTranslation(elem);
     this.animate(
       { turtlePosition: cssNum(tr[0] + x) + ' ' + cssNum(tr[1] - y) },
-      animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+      animTime(elem, intick), animEasing(elem), cc && cc.resolver(j, true));
   });
   return this;
 }
@@ -5973,7 +6094,7 @@ function moveto(cc, x, y) {
     cc && cc.appear(j);
     this.animate({turtlePosition:
         computeTargetAsTurtlePosition(elem, pos, limit, localx, localy)},
-        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j));
+        animTime(elem, intick), animEasing(elem), cc && cc.resolver(j, true));
   });
   return this;
 }
@@ -5988,7 +6109,7 @@ function makejump(move) {
       move.call(this, null, x, y);
       this.plan(function() {
         this.css({turtlePenDown: down});
-        cc.resolve(j);
+        cc.resolve(j, true);
       });
     });
     return this;
@@ -6193,8 +6314,14 @@ var turtlefn = {
         dir = limitRotation(ts.rot, dir, limit === null ? 360 : limit);
       }
       dir = ts.rot + normalizeRotation(dir - ts.rot);
+      var oldRadius = this.css('turtleTurningRadius');
+      this.css({turtleTurningRadius: 0});
       this.animate({turtleRotation: dir},
-          animTime(elem, intick), animEasing(elem), cc.resolver(j));
+          animTime(elem, intick), animEasing(elem));
+      this.plan(function() {
+        this.css({turtleTurningRadius: oldRadius});
+        cc.resolve(j);
+      });
     });
     return this;
   }),
@@ -6252,7 +6379,7 @@ var turtlefn = {
     var intick = insidetick;
     this.plan(function(j, elem) {
       cc.appear(j);
-      var animate = !canMoveInstantly(this) && this.is(':visible'),
+      var animate = !invisible(elem) && !canMoveInstantly(this),
           oldstyle = animate && parsePenStyle(this.css('turtlePenStyle')),
           olddown = animate && this.css('turtlePenDown'),
           moved = false;
@@ -6279,11 +6406,12 @@ var turtlefn = {
                     (oldstyle && oldstyle.strokeStyle) || 'gray',
             target = {},
             newdown = this.css('turtlePenDown'),
-            pencil = new Turtle(color + ' pencil'),
+            pencil = new Turtle(color + ' pencil', this.parent()),
             distance = this.height();
         pencil.css({
           zIndex: 1,
-          turtlePosition: this.css('turtlePosition'),
+          turtlePosition: computeTargetAsTurtlePosition(
+              pencil.get(0), this.pagexy(), null, 0, 0),
           turtleRotation: this.css('turtleRotation'),
           turtleSpeed: Infinity
         });
@@ -6924,13 +7052,15 @@ var turtlefn = {
   ["<u>shown()</u> True if turtle is shown, false if hidden: " +
       "<mark>do ht; write shown()</mark>"],
   function shown() {
-    return this.is(':visible');
+    var elem = this.get(0);
+    return elem && !invisible(elem);
   }),
   hidden: wrappredicate('hidden',
   ["<u>hidden()</u> True if turtle is hidden: " +
       "<mark>do ht; write hidden()</mark>"],
   function hidden() {
-    return !this.is(':visible');
+    var elem = this.get(0);
+    return !elem || invisible(elem);
   }),
   inside: wrappredicate('inside',
   ["<u>inside(obj)</u> True if the turtle is encircled by obj: " +
@@ -6941,7 +7071,7 @@ var turtlefn = {
       elem = $(elem);
     }
     if (elem.jquery) {
-      if (!elem.length || !elem.is(':visible')) return false;
+      if (!elem.length || invisible(elem[0])) return false;
       elem = elem[0];
     }
     var gbcr0 = getPageGbcr(elem),
@@ -6976,7 +7106,7 @@ var turtlefn = {
    "<u>touches(color)</u> True if the turtle touches a drawn color: " +
       "<mark>touches red</mark>"],
   function touches(arg, y) {
-    if (!this.is(':visible') || !this.length) { return false; }
+    if (!this.length || invisible(this[0])) { return false; }
     if (arg == 'color' || isCSSColor(arg)) {
       return touchesPixel(this[0], arg == 'color' ? null : arg);
     }
@@ -7094,7 +7224,7 @@ var turtlefn = {
       callback = qname;
       qname = 'fx';
     }
-    // If animation is active, then direct will queue the callback.
+    // If animation is active, then plan will queue the callback.
     // It will also arrange things so that if the callback enqueues
     // further animations, they are inserted at the same location,
     // so that the callback can expand into several animations,
@@ -7105,24 +7235,26 @@ var turtlefn = {
             (function() { callback.call($(elem), index, elem); })),
           lastanim = elemqueue.length && elemqueue[elemqueue.length - 1],
           animation = (function() {
-          var saved = $.queue(this, qname),
-              subst = [], inserted;
-          if (saved[0] === 'inprogress') {
-            subst.unshift(saved.shift());
-          }
-          $.queue(elem, qname, subst);
-          action();
-          // The Array.prototype.push is faster.
-          // $.merge($.queue(elem, qname), saved);
-          Array.prototype.push.apply($.queue(elem, qname), saved);
-          nonrecursive_dequeue(elem, qname);
-        });
+            var saved = $.queue(this, qname),
+                subst = [], inserted;
+            if (saved[0] === 'inprogress') {
+              subst.unshift(saved.shift());
+            }
+            $.queue(elem, qname, subst);
+            action();
+            // The Array.prototype.push is faster.
+            // $.merge($.queue(elem, qname), saved);
+            Array.prototype.push.apply($.queue(elem, qname), saved);
+            nonrecursive_dequeue(elem, qname);
+          });
       animation.finish = action;
       $.queue(elem, qname, animation);
     }
     var elem, sel, length = this.length, j = 0;
     for (; j < length; ++j) {
       elem = this[j];
+      // Special case: first wait for an unloaded image to load.
+      queueWaitIfLoadingImg(elem, qname);
       // Queue an animation if there is a queue.
       var elemqueue = $.queue(elem, qname);
       if (elemqueue.length) {
@@ -7136,6 +7268,20 @@ var turtlefn = {
     return this;
   })
 };
+
+// If the queue for an image is empty, starts by queuing a wait-for-load.
+function queueWaitIfLoadingImg(img, qname) {
+  if (!qname) qname = 'fx';
+  if (img.tagName == 'IMG' && img.src && !img.complete) {
+    var queue = $.queue(img, qname);
+    if (queue.length == 0) {
+      $.queue(img, qname, function(next) {
+        afterImageLoadOrError(img, null, next);
+      });
+      nonrecursive_dequeue(img, qname);
+    }
+  }
+}
 
 var warning_shown = {},
     loopCounter = 0,
@@ -8487,9 +8633,8 @@ function hatchone(name, container, defaultshape) {
 
   // Move it to the starting pos.
   result.css({
-    turtlePosition:
-        computeTargetAsTurtlePosition(
-              result[0], $(container).pagexy(), null, 0, 0),
+    turtlePosition: computeTargetAsTurtlePosition(
+        result[0], $(container).pagexy(), null, 0, 0),
     turtleRotation: 0,
     turtleScale: 1});
 
