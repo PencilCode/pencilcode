@@ -10,6 +10,9 @@ var express = require('express'),
     app = module.exports = express(),
     proxy = new httpProxy.createProxyServer({});
 
+proxy.on('error', function() {
+});
+
 function rewriteRules(req, res, next) {
   var u = parseUrl(req);
   if (u.pathname == '/') { u.pathname = '/welcome.html'; }
