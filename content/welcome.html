@@ -19,10 +19,10 @@ a place to experiment with mathematical functions, geometry,
 graphing, webpages, simulations, and algorithms.  Programs are
 open for all to see and copy.
 <p><a target="_blank"
-href="http://www.youtube.com/watch?v=JJzFD4EdeuY"
+href="//www.youtube.com/watch?v=JJzFD4EdeuY"
 data-vimeo="79743491"
 >Watch a video overview</a> or
-<a href="http://www.youtube.com/watch?v=edN07wcbj2w"
+<a href="//www.youtube.com/watch?v=edN07wcbj2w"
 data-vimeo="79743492" target="_blank"
 >watch a video tutorial</a>.
 </p>
@@ -245,7 +245,7 @@ function motion() {
 function advance() {
   if (+(new Date) > sleeptime || $('#overlay').is(':visible')) return;
   document.getElementById('demo').src =
-     "http://promo.pencilcode.net/home/promo" + (index++);
+     "//promo.pencilcode.net/home/promo" + (index++);
   if (index >= count) { index = 0; }
 }
 // Now start the animation and things.
@@ -321,7 +321,8 @@ $('a[data-vimeo]').click(function(e) {
         $('#video').html(
           '<iframe type="text/html" width="640" height="390" ' +
           'src="//www.youtube.com/embed/' + match[1] +
-          '?autoplay=1&origin=http://pencilcode.net" ' +
+          '?autoplay=1&origin=' +
+          location.protocol + '//' + location.host + '" ' +
           'frameborder="0"></iframe>');
         return false;
       }
