@@ -2043,8 +2043,8 @@ function flushPenState(elem, state, corner) {
   var path = state.path, style = state.style, corners = state.corners;
   if (!style || !state.down) {
     if (corner) {
-      if (style && style.savePath) {
-        // Penup when saving path will create a new path if needed.
+      if (style) {
+        // Penup when saving path will create a new segment if needed.
         if (corners.length && corners[0].length) {
           if (corners[0].length == 1) {
             corners[0].length = 0;
