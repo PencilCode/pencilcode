@@ -252,8 +252,8 @@ function updateTopControls(addHistory) {
 //
 
 view.on('help', function() {
-  view.flashNotification('<a href="//' +
-     window.pencilcode.domain + '/group" target="_blank">Ask a question.</a>' +
+  view.flashNotification('<a href="//group.' +
+     window.pencilcode.domain + '/" target="_blank">Ask a question.</a>' +
     (model.username ?
         '&emsp; <a id="setpass" href="#setpass">Change password.</a>' : '')
   );
