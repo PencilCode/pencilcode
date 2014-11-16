@@ -1514,14 +1514,16 @@ function updatePaneTitle(pane) {
   if (blockToggleTooltip && !seenBlockToggle) {
     var toggler = title.filter('.toggleblocks');
     if (toggler.length) {
+      toggler.find('.blockicon,.codeicon').css('opacity', 1);
       var timer;
       var canceler = function() {
+        seenBlockToggle = true;
+        toggler.find('.blockicon,.codeicon').css('opacity', '');
         clearTimeout(timer);
         timer = null;
       }
       toggler.tooltipster('option', 'functionAfter', canceler);
       var timer = setTimeout(function() {
-        seenBlockToggle = true;
         toggler.tooltipster('show');
         timer = setTimeout(function() {
           toggler.tooltipster('hide');
