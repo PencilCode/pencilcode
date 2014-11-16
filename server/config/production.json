@@ -4,6 +4,6 @@
     "cachedir": "/srv/pencilcode.net/cache"
   },
   "compactjson": true,
-  "uid": "davidbau",
-  "gid": "davidbau"
+  "uid": "www-data",
+  "gid": "www-data"
 }

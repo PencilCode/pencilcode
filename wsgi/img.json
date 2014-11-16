@@ -1,7 +1,7 @@
 {
   "uwsgi": {
-    "uid": "davidbau",
-    "gid": "davidbau",
+    "uid": "www-data",
+    "gid": "www-data",
     "umask": "022",
     "chmod-socket": "666",
     "master": true,
