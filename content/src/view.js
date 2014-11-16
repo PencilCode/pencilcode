@@ -1449,9 +1449,12 @@ function uniqueId(name) {
   return name + '_' + ('' + Math.random()).substr(2);
 }
 
+var seenBlockToggle = false;
+
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var label = '';
+  var blockToggleTooltip = null;
   if (paneState.editor) {
     if (/^text\/plain/.test(paneState.mimeType)) {
       label = 'text';
@@ -1465,15 +1468,15 @@ function updatePaneTitle(pane) {
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         symbol = 'codeicon'
         alt = 'show blocks'
-        tooltip = 'Click to show blocks';
+        blockToggleTooltip = 'Click to show blocks';
         if (paneState.dropletEditor.currentlyUsingBlocks) {
           label = 'blocks';
           alt = 'show code'
           symbol = 'blockicon';
-          tooltip = 'Click to show code';
+          blockToggleTooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
-            paneState.filename + '" title="' + tooltip +
+            paneState.filename + '" title="' + blockToggleTooltip +
             '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
             '<span>' + label + '</span></span></a>';
       }
@@ -1506,8 +1509,26 @@ function updatePaneTitle(pane) {
       label = 'output';
     }
   }
-  $('#' + pane + 'title_text').html(label).find('[title]').
+  var title = $('#' + pane + 'title_text').html(label).find('[title]').
       tooltipster({ position: 'top-left' });
+  if (blockToggleTooltip && !seenBlockToggle) {
+    var toggler = title.filter('.toggleblocks');
+    if (toggler.length) {
+      var timer;
+      var canceler = function() {
+        clearTimeout(timer);
+        timer = null;
+      }
+      toggler.tooltipster('option', 'functionAfter', canceler);
+      var timer = setTimeout(function() {
+        seenBlockToggle = true;
+        toggler.tooltipster('show');
+        timer = setTimeout(function() {
+          toggler.tooltipster('hide');
+        }, 5000);
+      }, 5000);
+    }
+  }
 }
 
 $('.panetitle').on('click', '.fullscreen', function(e) {
