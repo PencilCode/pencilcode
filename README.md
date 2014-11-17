@@ -77,9 +77,7 @@ How To Experiment with PencilCode
 =================================
 
 To experiment with PencilCode, you will want to run a local
-copy of the site's frontend.  The development server actually
-runs as a proxy server, which allows the server to intercept
-full hostnames without actually owning the DNS names.
+copy of the site's frontend.
 
 To start the dev server (by default it runs on localhost:8008):
 
@@ -87,14 +85,13 @@ To start the dev server (by default it runs on localhost:8008):
 grunt devserver
 </pre>
 
-To use the devserver, launch your web browser pointing to the
-devserver's `http://localhost:8008/proxy.pac`.  For example, with chrome
-on OSX, add a couple aliases to your .profile by running the following:
+To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to localhost.
+For example, with chrome on OSX, add a couple aliases to your .profile by running the following:
 
 <pre>
 cat &gt;&gt; ~/.profile &lt;&lt;EOF
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
-alias devchrome="chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
+alias devchrome="chrome --host-resolver-rules="MAP *.pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors https://pencilcode.net.dev/"
 EOF
 source ~/.profile
 </pre>
@@ -104,17 +101,19 @@ And then "devchrome" will launch an instance of Chrome with the right proxy.
 On Linux, add something like this to your .bashrc:
 
 <pre>
-alias devchrome="google-chrome --proxy-pac-url=http://127.0.0.1:8008/proxy.pac --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/"
+alias devchrome="google-chrome --host-resolver-rules="MAP *.pencilcode.net.dev localhost:8008" --ignore-certificate-errors --user-data-dir=$HOME/devchrome https://pencilcode.net.dev/"
 </pre>
 
 On Windows:
 
-Start up devchrome and then open up the browser connection settings.  Set
-the checkbox for 'Use automatic configuration script'.  And then set the 
-Address to point to 'http://localhost:8008/proxy.pac'.  
+You can set up command line options for the Canary Chrome shortcut, with the following options.
+
+<pre>
+--host-resolver-rules="MAP *.pencilcode.net.dev localhost:8008" --ignore-certificate-errors https://pencilcode.net.dev/"
+</pre>
 
 When running devchrome, any URL with a hostname that ends with ".dev"
-will be routed to the development server.  Visit http://pencilcode.net.dev/
+will be routed to the development server.  Visit https://pencilcode.net.dev/
 to browse your local copy of the website.
 
 
