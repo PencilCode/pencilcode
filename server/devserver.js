@@ -1,7 +1,7 @@
 var express = require('express'),
     parseUrl = require('parseurl'),
     path = require('path'),
-    http = require('http'),
+    https = require('https'),
     url = require('url'),
     tamper = require('tamper'),
     serverbase = require('./serverbase.js'),
@@ -64,7 +64,7 @@ function proxyRules(req, res, next) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
     proxy.web(req, res, {
-      target: { host: host, port: 80 },
+      target: { host: host, port: 443 },
       xfwd: true
     });
   } else {
@@ -104,6 +104,11 @@ app.use(noAppcache);
 app.use(proxyRules);
 app.use(proxyPacGenerator);
 serverbase.initialize2(app);
-app.listen(process.env.PORT, function() {
-  console.log('Express server listening on ' + process.env.PORT);
-});
+
+var fs = require('fs')
+var options = {
+  key: fs.readFileSync('server/devserver-key.pem'),
+  cert: fs.readFileSync('server/devserver-cert.pem')
+};
+
+https.createServer(options, app).listen(process.env.PORT);
