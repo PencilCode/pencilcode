@@ -9,6 +9,7 @@ version 2.0.8
 jQuery-turtle is a jQuery plugin for turtle graphics.
 
 With jQuery-turtle, every DOM element is a turtle that can be
+
 moved using turtle graphics methods like fd (forward), bk (back),
 rt (right turn), and lt (left turn).  The pen function allows
 a turtle to draw on a full-document canvas as it moves.
@@ -1788,7 +1789,7 @@ function getTurtleData(elem) {
       styte: null,
       corners: [[]],
       path: [[]],
-      down: true,
+      down: false,
       speed: 'turtle',
       easing: 'swing',
       turningRadius: 0,
@@ -2040,11 +2041,21 @@ function flushPenState(elem, state, corner) {
     // Default is no pen and no path, so nothing to do.
     return;
   }
-  var path = state.path, style = state.style, corners = state.corners;
+  var path = state.path,
+      style = state.style,
+      corners = state.corners;
   if (!style || !state.down) {
+    // pen up or pen null will clear the tracing path.
+    if (path.length > 1) { path.length = 1; }
+    if (path[0].length) { path[0].length = 0; }
     if (corner) {
-      if (style && style.savePath) {
-        // Penup when saving path will create a new path if needed.
+      if (!style) {
+        if (window.buggy) console.trace('clearing the retracing path');
+        // pen null will clear the retracing path too.
+        if (corners.length > 1) corners.length = 1;
+        if (corners[0].length) corners[0].length = 0;
+      } else {
+        // pen up with a non-null pen will start a new discontinuous segment.
         if (corners.length && corners[0].length) {
           if (corners[0].length == 1) {
             corners[0].length = 0;
@@ -2052,25 +2063,23 @@ function flushPenState(elem, state, corner) {
             corners.unshift([]);
           }
         }
-      } else {
-        if (corners.length > 1) corners.length = 1;
-        if (corners[0].length) corners[0].length = 0;
       }
     }
-    // Penup when not saving path will clear the saved path.
-    if (path.length > 1) { path.length = 1; }
-    if (path[0].length) { path[0].length = 0; }
     return;
   }
   if (!corner && style.savePath) return;
+  // Accumulate retracing path using only corners.
   var center = getCenterInPageCoordinates(elem);
   if (corner) {
     center.corner = true;
     addToPathList(corners[0], center);
   }
   if (style.savePath) return;
+  // Add to tracing path, and trace it righ away.
   addToPathList(path[0], center);
   var ts = readTurtleTransform(elem, true);
+  // Last argument 2 means that the last two points are saved, which
+  // allows us to draw corner miters and also avoid 'butt' lineCap gaps.
   drawAndClearPath(getDrawOnCanvas(state), state.path, style, ts.sx, 2);
 }
 
@@ -5873,24 +5882,35 @@ function wrappredicate(name, helptext, fn) {
 // Wrapglobalcommand does boilerplate setup for global commands that should
 // queue on the main turtle queue when there is a main turtle, but that
 // should execute immediately otherwise.
-function wrapglobalcommand(name, helptext, fn) {
+function wrapglobalcommand(name, helptext, fn, fnfilter) {
   var wrapper = function globalcommandwrapper() {
     checkForHungLoop(name);
     if (interrupted) { throw new Error(name + ' interrupted'); }
-    if (global_turtle) {
+    var early = null;
+    var argcount = 0;
+    var animate = global_turtle;
+    if (fnfilter) {
+      early = fnfilter.apply(null, arguments);
+      argcount = arguments.length;
+      animate = global_turtle_animating();
+    }
+    if (animate) {
       var thissel = $(global_turtle).eq(0),
           args = arguments,
-          cc = setupContinuation(thissel, name, arguments, 0);
+          cc = setupContinuation(thissel, name, arguments, argcount);
       thissel.plan(function(j, elem) {
         cc.appear(j);
-        fn.apply(null, args);
+        fn.apply(early, args);
         this.plan(cc.resolver(j));
       });
       cc.exit();
     } else {
-      cc = setupContinuation(null, name, arguments, 0);
-      fn.apply(null, arguments);
+      cc = setupContinuation(null, name, arguments, argcount);
+      fn.apply(early, arguments);
       cc.exit();
+    }
+    if (early) {
+      return early.result;
     }
   };
   return wrapraw(name, helptext, wrapper);
@@ -6381,7 +6401,7 @@ var turtlefn = {
       cc.appear(j);
       var animate = !invisible(elem) && !canMoveInstantly(this),
           oldstyle = animate && parsePenStyle(this.css('turtlePenStyle')),
-          olddown = animate && this.css('turtlePenDown'),
+          olddown = oldstyle && ('down' == this.css('turtlePenDown')),
           moved = false;
       if (penstyle === false || penstyle === true ||
           penstyle == 'down' || penstyle == 'up') {
@@ -6398,14 +6418,16 @@ var turtlefn = {
           penstyle += ";lineJoin:" + args.lineJoin;
         }
         this.css('turtlePenStyle', penstyle);
+        this.css('turtlePenDown', penstyle == 'none' ? 'up' : 'down');
       }
       if (animate) {
         // A visual indicator of a pen color change.
         var style = parsePenStyle(this.css('turtlePenStyle')),
-            color = (style && style.strokeStyle) ||
+            color = (style && (style.strokeStyle ||
+                        (style.savePath && 'gray'))) ||
                     (oldstyle && oldstyle.strokeStyle) || 'gray',
             target = {},
-            newdown = this.css('turtlePenDown'),
+            newdown = style && 'down' == this.css('turtlePenDown'),
             pencil = new Turtle(color + ' pencil', this.parent()),
             distance = this.height();
         pencil.css({
@@ -6415,14 +6437,14 @@ var turtlefn = {
           turtleRotation: this.css('turtleRotation'),
           turtleSpeed: Infinity
         });
-        if (olddown == "up") {
+        if (!olddown) {
           pencil.css({ turtleForward: "+=" + distance, opacity: 0 });
-          if (newdown == "down") {
+          if (newdown) {
             target.turtleForward = "-=" + distance;
             target.opacity = 1;
           }
         } else {
-          if (newdown == "up") {
+          if (!newdown) {
             target.turtleForward = "+=" + distance;
             target.opacity = 0;
           }
@@ -6833,7 +6855,7 @@ var turtlefn = {
         left: 0
       }, styles);
       // Place the label on the screen using the figured styles.
-      var out = output(html, 'label').css(applyStyles)
+      var out = prepareOutput(html, 'label').result.css(applyStyles)
           .addClass('turtlelabel').appendTo(getTurtleField());
       var rotated = /\brotated\b/.test(side),
           scaled = /\bscaled\b/.test(side);
@@ -7395,6 +7417,10 @@ var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP
 
 var eventfn = { click:1, dblclick:1, mouseup:1, mousedown:1, mousemove:1 };
 
+function global_turtle_animating() {
+  return (global_turtle && $.queue(global_turtle).length > 0);
+}
+
 var global_turtle = null;
 var global_turtle_methods = [];
 var attaching_ids = false;
@@ -7417,7 +7443,7 @@ var dollar_turtle_methods = {
       if (tickinterval) return true;
       if ($.timers.length) return true;
       if (async_pending) return true;
-      if (global_turtle && $.queue(global_turtle).length > 0) return true;
+      if (global_turtle_animating()) return true;
       if ($(':animated').length) return true;
       return ($('.turtle').filter(function() {
         return $.queue(this).length > 0;
@@ -7477,7 +7503,7 @@ var dollar_turtle_methods = {
       "<u>tick</u> is called again: " +
       "<mark>c = 10; tick 1, -> c and write(c--) or tick()</mark>"],
   function tick(tps, fn) {
-    if (global_turtle) {
+    if (global_turtle_animating()) {
       var sel = $(global_turtle);
       sel.plan(function() {
         globaltick(tps, fn);
@@ -7629,42 +7655,54 @@ var dollar_turtle_methods = {
       }
     });
   }),
-  append: wrapraw('append',
+  append: wrapglobalcommand('append',
   ["<u>append(html)</u> Appends text to the document without a new line. " +
       "<mark>append 'try this twice...'</mark>"],
   function append(html) {
     $.fn.append.apply($('body'), arguments);
   }),
-  write: wrapraw('write',
-  ["<u>write(html)</u> Writes a line of text. Arbitrary HTML may be written: " +
-      "<mark>write 'Hello, world!'</mark>"],
-  function write(html) {
-    return output(Array.prototype.join.call(arguments, ' '), 'div');
-  }),
-  type: wrapraw('type',
+  type: wrapglobalcommand('type',
   ["<u>type(text)</u> Types preformatted text like a typewriter. " +
       "<mark>type 'Hello!\n'</mark>"], plainTextPrint),
-  read: wrapraw('read',
+  write: wrapglobalcommand('write',
+  ["<u>write(html)</u> Writes a line of text. Arbitrary HTML may be written: " +
+      "<mark>write 'Hello, world!'</mark>"], doOutput, function() {
+    return prepareOutput(Array.prototype.join.call(arguments, ' '), 'div');
+  }),
+  read: wrapglobalcommand('read',
   ["<u>read(fn)</u> Reads text or numeric input. " +
       "Calls fn once: " +
       "<mark>read (x) -> write x</mark>",
    "<u>read(html, fn)</u> Prompts for input: " +
       "<mark>read 'Your name?', (v) -> write 'Hello ' + v</mark>"],
-  function read(a, b) { return input(a, b, 0); }),
-  readnum: wrapraw('readnum',
+  doOutput, function read(a, b) { return prepareInput(a, b, 0); }),
+  readnum: wrapglobalcommand('readnum',
   ["<u>readnum(html, fn)</u> Reads numeric input. Only numbers allowed: " +
       "<mark>readnum 'Amount?', (v) -> write 'Tip: ' + (0.15 * v)</mark>"],
-  function readnum(a, b) { return input(a, b, 1); }),
-  readstr: wrapraw('readstr',
+  doOutput, function readnum(a, b) { return prepareInput(a, b, 1); }),
+  readstr: wrapglobalcommand('readstr',
   ["<u>readstr(html, fn)</u> Reads text input. Never " +
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
-  function readstr(a, b) { return input(a, b, -1); }),
-  menu: wrapraw('menu',
+  doOutput, function readstr(a, b) { return prepareInput(a, b, -1); }),
+  menu: wrapglobalcommand('menu',
   ["<u>menu(map)</u> shows a menu of choices and calls a function " +
       "based on the user's choice: " +
       "<mark>menu {A: (-> write 'chose A'), B: (-> write 'chose B')}</mark>"],
-  menu),
+  doOutput, prepareMenu),
+  button: wrapraw('button',
+  ["<u>button(text, fn)</u> Writes a button. Calls " +
+      "fn whenever the button is clicked: " +
+      "<mark>button 'GO', -> fd 100</mark>"],
+  doOutput, prepareButton),
+  table: wrapraw('table',
+  ["<u>table(m, n)</u> Writes m rows and c columns. " +
+      "Access cells using <u>cell</u>: " +
+      "<mark>g = table 8, 8; g.cell(2,3).text 'hello'</mark>",
+   "<u>table(array)</u> Writes tabular data. " +
+      "Each nested array is a row: " +
+      "<mark>table [[1,2,3],[4,5,6]]</mark>"],
+  doOutput, prepareTable),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -7675,23 +7713,6 @@ var dollar_turtle_methods = {
    "<u>random('color')</u> Random color: " +
       "<mark>pen random 'color'</mark>"],
   random),
-  hatch:
-  function hatch(count, spec) {
-    return $(document).hatch(count, spec);
-  },
-  button: wrapraw('button',
-  ["<u>button(text, fn)</u> Writes a button. Calls " +
-      "fn whenever the button is clicked: " +
-      "<mark>button 'GO', -> fd 100</mark>"],
-  button),
-  table: wrapraw('table',
-  ["<u>table(m, n)</u> Writes m rows and c columns. " +
-      "Access cells using <u>cell</u>: " +
-      "<mark>g = table 8, 8; g.cell(2,3).text 'hello'</mark>",
-   "<u>table(array)</u> Writes tabular data. " +
-      "Each nested array is a row: " +
-      "<mark>table [[1,2,3],[4,5,6]]</mark>"],
-  table),
   rgb: wrapraw('rgb',
   ["<u>rgb(r,g,b)</u> Makes a color out of red, green, and blue parts. " +
       "<mark>pen rgb(150,88,255)</mark>"],
@@ -7699,6 +7720,10 @@ var dollar_turtle_methods = {
       Math.max(0, Math.min(255, Math.floor(r))),
       Math.max(0, Math.min(255, Math.floor(g))),
       Math.max(0, Math.min(255, Math.floor(b))) ]); }),
+  hatch: // Deprecated - no docs.
+  function hatch(count, spec) {
+    return $(document).hatch(count, spec);
+  },
   rgba: wrapraw('rgba',
   ["<u>rgba(r,g,b,a)</u> Makes a color out of red, green, blue, and alpha. " +
       "<mark>pen rgba(150,88,255,0.5)</mark>"],
@@ -8831,30 +8856,6 @@ function undoScrollAfter(f) {
 // and controls for reading input.
 //////////////////////////////////////////////////////////////////////////
 
-function output(html, defaulttag) {
-  if (html === undefined || html === null) {
-    // Print a turtle shell when no arguments.
-    return $('<img>').wear('turtle').css({background: 'none'}).appendTo('body');
-  }
-  var wrapped = false, result = null;
-  html = '' + html;
-  while ((result === null || result.length != 1) && !wrapped) {
-    // Wrap if obviously not surrounded by a tag already, or if we tried
-    // to trust a surrounding tag but found multiple bits.
-    if (html.charAt(0) != '<' || html.charAt(html.length - 1) != '>' ||
-        (result !== null && result.length != 1)) {
-      html = '<' + defaulttag + ' style="display:table;">' +
-          html + '</' + defaulttag + '>';
-      wrapped = true;
-    }
-    result = $(html);
-  }
-  autoScrollAfter(function() {
-    result.appendTo('body');
-  });
-  return result;
-}
-
 // Simplify output of preformatted text inside a <pre>.
 function plainTextPrint() {
   var args = arguments;
@@ -8868,6 +8869,40 @@ function plainTextPrint() {
       pre.appendChild(document.createTextNode(String(args[j])));
     }
   });
+}
+
+// Put this output on the screen.  Called some time after prepareOutput
+// if the turtle is animating.
+function doOutput() {
+  var early = this;
+  autoScrollAfter(function() {
+    early.result.appendTo('body');
+    if (early.setup) {
+      early.setup();
+    }
+  });
+}
+
+// Prepares some output to create, but doesn't put it on the screen yet.
+function prepareOutput(html, tag) {
+  var prefix = '<' + tag + ' style="display:table">',
+      suffix = '</' + tag + '>';
+  if (html === undefined || html === null) {
+    // Make empty line when no arguments.
+    return {result: $(prefix + '<br>' + suffix)};
+  } else {
+    var wrapped = false, result = null;
+    html = '' + html;
+    // Try parsing a tag if possible.
+    if (/^\s*<.*>\s*$/.test(html)) {
+      result = $(html);
+    }
+    // If it wasn't a single element, then try to wrap it in an element.
+    if (result == null || result.length != 1 || result[0].nodeType != 1) {
+      result = $(prefix + html + suffix);
+    }
+    return {result: result};
+  }
 }
 
 // Creates and displays a one-shot input menu as a set of.
@@ -8888,7 +8923,7 @@ function plainTextPrint() {
 // invokes the outcome value if it is a function.  That way, the
 // first argument can be a list of functions or a map from
 // text labels to functions.
-function menu(choices, fn) {
+function prepareMenu(choices, fn) {
   var result = $('<form>')
           .css({display:'table',marginLeft:'20px'})
           .submit(function(){return false;}),
@@ -8974,9 +9009,6 @@ function menu(choices, fn) {
   } else {
     addChoice(choices, choices);
   }
-  autoScrollAfter(function() {
-    result.appendTo('body');
-  });
   // Accessibility support: deal with arrow keys.
   result.on('keydown', function(e) {
     if (e.which >= 37 && e.which <= 40 || e.which == 32) {
@@ -9004,12 +9036,17 @@ function menu(choices, fn) {
       focusCursor();
     }
   });
-  // Focus, but don't cause autoscroll to occur due to focus.
-  undoScrollAfter(function() { focusCursor(true); });
+  return {
+    result: result,
+    setup: function() {
+      // Focus, but don't cause autoscroll to occur due to focus.
+      undoScrollAfter(function() { focusCursor(true); });
+    }
+  }
 }
 
 // Simplify $('body'>.append('<button>' + label + '</button>').click(fn).
-function button(name, callback) {
+function prepareButton(name, callback) {
   if ($.isFunction(name) && callback === undefined) {
     callback = name;
     name = null;
@@ -9018,11 +9055,10 @@ function button(name, callback) {
     name = '\u25CE';
   }
   var result = $('<button>' + escapeHtml(name) + '</button>');
-  result.appendTo('body');
   if (callback) {
     result.click(callback);
   }
-  return result;
+  return {result: result};
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -9031,7 +9067,7 @@ function button(name, callback) {
 //////////////////////////////////////////////////////////////////////////
 
 // Simplify $('body').append('<input>' + label) and onchange hookup.
-function input(name, callback, numeric) {
+function prepareInput(name, callback, numeric) {
   if ($.isFunction(name) && !callback) {
     callback = name;
     name = null;
@@ -9083,24 +9119,25 @@ function input(name, callback, numeric) {
       return false;
     }
   }
-  dodebounce();
   textbox.on('keypress keydown', key);
   textbox.on('change', newval);
-  autoScrollAfter(function() {
-    $('body').append(label);
-    if (numeric < 0) {
-      // Widen a "readstr" textbox to make it fill the line.
-      var availwidth = label.parent().width(),
-          freewidth = availwidth + label.offset().left - textbox.offset().left,
-          bigwidth = Math.max(256, availwidth / 2),
-          desiredwidth = freewidth < bigwidth ? availwidth : freewidth,
-          marginwidth = textbox.outerWidth(true) - textbox.width();
-      textbox.width(desiredwidth - marginwidth);
+  return {
+    result: label,
+    setup: function() {
+      dodebounce();
+      if (numeric < 0) {
+        // Widen a "readstr" textbox to make it fill the line.
+        var availwidth = label.parent().width(),
+            freewidth = availwidth + label.offset().left - textbox.offset().left,
+            bigwidth = Math.max(256, availwidth / 2),
+            desiredwidth = freewidth < bigwidth ? availwidth : freewidth,
+            marginwidth = textbox.outerWidth(true) - textbox.width();
+        textbox.width(desiredwidth - marginwidth);
+      }
+      // Focus, but don't cause autoscroll to occur due to focus.
+      undoScrollAfter(function() { textbox.focus(); });
     }
-  });
-  // Focus, but don't cause autoscroll to occur due to focus.
-  undoScrollAfter(function() { textbox.focus(); });
-  return label;
+  };
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -9108,7 +9145,7 @@ function input(name, callback, numeric) {
 //////////////////////////////////////////////////////////////////////////
 
 // Simplify creation of tables with cells.
-function table(height, width, cellCss, tableCss) {
+function prepareTable(height, width, cellCss, tableCss) {
   var contents = null, row, col;
   if ($.isArray(height)) {
     tableCss = cellCss;
@@ -9158,10 +9195,9 @@ function table(height, width, cellCss, tableCss) {
     { width: 'auto', height: 'auto', maxWidth: 'auto', border: 'none'},
     tableCss));
   result.find('td').css($.extend({}, defaultCss, cellCss));
-  autoScrollAfter(function() {
-    result.appendTo('body');
-  });
-  return result;
+  return {
+    result: result
+  };
 }
 
 
@@ -10138,7 +10174,8 @@ function tryinitpanel() {
   }
 }
 
-eval("scope('jquery-turtle', " + seejs + ", this)");
+// Removing this debugging line saves 20kb in minification.
+// eval("scope('jquery-turtle', " + seejs + ", this)");
 
 function transparentHull(image, threshold) {
   var c = document.createElement('canvas');
