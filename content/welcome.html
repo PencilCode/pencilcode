@@ -371,4 +371,11 @@ ga('create', 'UA-45359764-1', window.pencilcode.domain);
 ga('send', 'pageview');
 });
 </script>
+<script>
+  navigator.serviceWorker.register('/worker.js').then(function(reg) {
+    console.log('happy', reg);
+  }, function(err) {
+    console.log('sad', err);
+  });
+</script>
 </html>
