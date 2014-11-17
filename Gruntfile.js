@@ -129,8 +129,13 @@ module.exports = function(grunt) {
         options: {
           preserveComments: false,
           report: 'min',
+          compress: {
+            unsafe: true,
+            "screw_ie8": true,
+            "pure_getters": true
+          },
           beautify: {
-            ascii_only: true
+            semicolons: false
           }
         }
       }
