@@ -139,7 +139,7 @@ module.exports = function(grunt) {
       all: {
         options: { compress: true },
         files: {
-          "content/welcombe.css": "content/src/welcome.less",
+          "content/welcome.css": "content/src/welcome.less",
           "content/editor.css": "content/src/editor.less"
         }
       }
