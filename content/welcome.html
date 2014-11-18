@@ -372,10 +372,12 @@ ga('send', 'pageview');
 });
 </script>
 <script>
-  navigator.serviceWorker.register('/worker.js').then(function(reg) {
-    console.log('happy', reg);
-  }, function(err) {
-    console.log('sad', err);
-  });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/worker.js').then(function(reg) {
+      console.log('happy', reg);
+    }, function(err) {
+      console.log('sad', err);
+    });
+  }
 </script>
 </html>
