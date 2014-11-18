@@ -7,15 +7,8 @@ var filemeta = require('./filemeta');
 
 exports.handleLoad = function(req, res, app, format) {
   var filename = req.param('file', utils.filenameFromUri(req));
-  var callback = req.param('callback', null);
-  var tail = req.param('tail', null);
   var user = res.locals.owner;
   var origfilename = filename;
-
-  tail = parseInt(tail);
-  if (Number.isNaN(tail)) {
-    tail = null;
-  }
 
   if (filename == null) {
     filename = '';
