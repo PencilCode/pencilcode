@@ -1087,7 +1087,7 @@ function setPaneRunHtml(
       p.html('');
       var iframe = $('<iframe></iframe>').appendTo(p);
       // Destroy and create new iframe.
-      iframe.attr('src', 'about:blank');
+      iframe.attr('src', '/blankframe.html');
       var framewin = iframe[0].contentWindow;
       var framedoc = framewin.document;
       framedoc.open();
