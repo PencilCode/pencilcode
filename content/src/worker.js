@@ -91,15 +91,32 @@ function killCache() {
   return p;
 }
 
+var blacklisted_prefixes = [
+    '/load', '/save', '/log'
+    ];
+
 function onfetch(event) {
   console.log(event.request.url);
   var myurl = new URL(event.request.url);
-  if (myurl.pathname === '/stats') {
-    event.respondWith(returnStatsPage());
-    return;
+  var scopeurl = new URL(self.scope);
+  if (myurl.host === myurl.host) {
+    if (myurl.pathname === '/stats') {
+      event.respondWith(returnStatsPage());
+      return;
+    }
+    if (myurl.pathname === '/killcache') {
+      event.respondWith(killCache());
+      return;
+    }
+    if (blacklisted_prefixes.some(function(prefix) {
+        return myurl.pathname.indexOf(prefix) == 0;
+      })) {
+      event.default();
+      return;
+    }
   }
-  if (myurl.pathname === '/killcache') {
-    event.respondWith(killCache());
+  if (myurl.host === 'www.google-analytics.com') {
+    event.default();
     return;
   }
   event.respondWith(lookupRequestOnCache(event.request));
