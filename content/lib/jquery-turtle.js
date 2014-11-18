@@ -6792,6 +6792,7 @@ var turtlefn = {
       "<mark>A = new Sprite('100x100'); " +
       "drawon A; pen red; fd 50; done -> A.rt 360</mark>"],
   function drawon(cc, canvas) {
+    sync(canvas, this);
     return this.plan(function(j, elem) {
       cc.appear(j);
       var state = getTurtleData(elem);
