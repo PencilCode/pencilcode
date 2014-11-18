@@ -34,6 +34,14 @@ function lookupRequestOnCache(request) {
         } else {
           ++cache_hits;
           console.log('Cache hit for ' + request.url);
+
+	  // Return the cached response but update the cache with the online
+	  // version in the background.
+	  fetch(request).then(function(response) {
+	      if (response)
+		  my_cache.put(request, response);
+	  });
+
           return response;
         }
       })
