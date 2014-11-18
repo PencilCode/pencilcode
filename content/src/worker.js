@@ -64,14 +64,44 @@ function returnStatsPage() {
   return p;
 }
 
+function serveEditPage(request, filename) {
+  var p = self.caches.open('main')
+    .then(function(cache) {
+      return cache.match('/editor.html');
+    }).then(function(response) {
+      if (response) {
+        // Replace some of the text.
+        console.log('serving editor.html');
+        return response.text().then(function(text) {
+          var sub_text = text.replace('<!--#echo var="filepath"-->', filename);
+          var b = new Blob([sub_text], {'type': 'text/html'});
+          return new Response(b);
+        });
+      } else {
+        // Just go back to the origin server if possible.
+        return fetch(request);
+      }
+   });
+  return p;
+}
+
 function onfetch(event) {
-  console.log(event.request.url);
   var myurl = new URL(event.request.url);
   if (myurl.pathname === '/stats') {
     event.respondWith(returnStatsPage());
+  } else if (myurl.pathname.indexOf('/edit/') == 0) {
+    event.respondWith(serveEditPage(event.request, myurl.pathname.substr('/edit'.length)));
+  } else {
+    event.respondWith(lookupRequestOnCache(event.request));
   }
-  event.respondWith(lookupRequestOnCache(event.request));
 }
+
+function oninstall(event) {
+  console.log('oninstall');
+  event.waitUntil(lookupRequestOnCache('/editor.html'));
+}
+
+self.addEventListener('install', oninstall);
 
 self.addEventListener('activate', onactivate);
 
