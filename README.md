@@ -91,7 +91,7 @@ For example, with chrome on OSX, add a couple aliases to your .profile by runnin
 <pre>
 cat &gt;&gt; ~/.profile &lt;&lt;EOF
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
-alias devchrome="chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificates https://pencilcode.net.dev/"
+alias devchrome="chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors https://pencilcode.net.dev/"
 EOF
 source ~/.profile
 </pre>
