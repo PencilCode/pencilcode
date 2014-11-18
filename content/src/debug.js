@@ -105,7 +105,7 @@ var debug = window.ide = {
   setEditorText: function(text) {
     view.changePaneEditorText(view.paneid('left'), text);
   },
-  serviceWorker: '/worker.js'
+  serviceWorker: false // '/worker.js'
 };
 
 //////////////////////////////////////////////////////////////////////
