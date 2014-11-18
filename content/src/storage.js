@@ -5,6 +5,16 @@
 define(['jquery', 'see', 'filetype'],
 function($, see, filetype) {
 
+var sw = null;
+function installServiceWorker() {
+  navigator.serviceWorker.register('/worker.js').then(function(reg) {
+    console.log('happy', reg);
+  }, function(err) {
+    console.log('sad', err);
+  });
+}
+installServiceWorker();
+
 eval(see.scope('storage'));
 function hasBackup(filename) {
   try {
