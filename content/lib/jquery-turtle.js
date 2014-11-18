@@ -8089,6 +8089,8 @@ $.turtle = function turtle(id, options) {
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
     global_turtle = selector[0];
+    // Make sure the main turtle is visible over other normal sprites.
+    selector.css({zIndex: 1});
   }
   // Set up global objects by id.
   if (!('ids' in options) || options.ids) {
