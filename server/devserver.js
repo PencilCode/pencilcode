@@ -1,6 +1,7 @@
 var express = require('express'),
     parseUrl = require('parseurl'),
     path = require('path'),
+    http = require('http'),
     https = require('https'),
     url = require('url'),
     tamper = require('tamper'),
@@ -105,10 +106,17 @@ app.use(proxyRules);
 app.use(proxyPacGenerator);
 serverbase.initialize2(app);
 
-var fs = require('fs')
-var options = {
-  key: fs.readFileSync('server/devserver-key.pem'),
-  cert: fs.readFileSync('server/devserver-cert.pem')
-};
-
-https.createServer(options, app).listen(process.env.PORT);
+var server = false;
+if (app.locals.config.useHttps) {
+  var fs = require('fs')
+  var options = {
+    key: fs.readFileSync('server/devserver-key.pem'),
+    cert: fs.readFileSync('server/devserver-cert.pem')
+  };
+  server = https.createServer(options, app);
+} else {
+  server = http.createServer(app);
+}
+server.listen(process.env.PORT, function() {
+  console.log('Express server listening on ' + process.env.PORT);
+});
