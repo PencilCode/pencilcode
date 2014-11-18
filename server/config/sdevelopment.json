@@ -7,5 +7,5 @@
   "host": "pencilcode.net.dev",
   "servesrc": true,
   "useProxy": 1,
-  "useHttps": false
+  "useHttps": true
 }
