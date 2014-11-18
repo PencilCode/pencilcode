@@ -143,14 +143,13 @@ function onfetch(event) {
     if (blacklisted_prefixes.some(function(prefix) {
         return myurl.pathname.indexOf(prefix) == 0;
       })) {
-      event.default();
       return;
     }
   }
   if (myurl.host === 'www.google-analytics.com') {
-    event.default();
     return;
   }
+  event.respondWith(lookupRequestOnCache(event.request));
 }
 
 function oninstall(event) {
