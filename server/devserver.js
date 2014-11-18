@@ -65,7 +65,7 @@ function proxyRules(req, res, next) {
     var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
     req.headers['url'] = u.path;
     proxy.web(req, res, {
-      target: { host: host, port: 443 },
+      target: { host: host, port: 80 },
       xfwd: true
     });
   } else {
