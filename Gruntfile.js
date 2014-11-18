@@ -108,7 +108,8 @@ module.exports = function(grunt) {
           src: [
             'content/src/editor.html',
             'content/src/framed.html',
-            'content/src/worker.js'
+            'content/src/worker.js',
+            'content/src/worker-stats.html'
           ],
           dest: 'content'
         } ]

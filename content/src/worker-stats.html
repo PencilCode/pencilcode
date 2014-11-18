@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ServiceWorker stats for ${worker_scope}</title>
+    <script>
+function killCache() {
+  var r = new XMLHttpRequest();
+  r.open("GET", "/stats/killcache");
+  r.addEventListener("readystatechange", function() {
+    if (r.readyState == 4) {
+      loadData();
+    }
+  });
+  r.send();
+}
+
+function loadData() {
+  var r = new XMLHttpRequest();
+  r.open("GET", "/stats/get");
+  r.responseType = "json";
+  r.addEventListener("readystatechange", function() {
+    if (r.readyState == 4) {
+      onDataReady(r.response);
+    }
+  });
+  r.send();
+}
+
+function constructListElement(parentNode, list) {
+  while (parentNode.hasChildNodes()) {
+    parentNode.removeChild(parentNode.childNodes[0]);
+  }
+  if (!Array.isArray(list)) {
+    return;
+  }
+
+  var ul_el = document.createElement('UL');
+  list.sort().forEach(function(value) {
+    var el = document.createElement('LI');
+    if (Array.isArray(value)) {
+      var span = document.createElement('SPAN');
+      span.textContent = value[0];
+      el.appendChild(span);
+      value.shift();
+      value.forEach(function(tag) {
+        span = document.createElement('SPAN');
+        text = tag;
+        color = "black";
+        if (tag === 'hit') {
+          text = " HIT ";
+          color = "green";
+        } else if (tag === 'miss') {
+          text = " MISS ";
+          color = "red";
+        } else if (tag === 'updated') {
+          text = " Updated ";
+          color = "orange";
+        } else if (tag === 'fallback') {
+          text = " Network failed ";
+          color = "red";
+        } else if (tag === 'skip') {
+          text = " Skipped ";
+          color = "gray";
+        }
+        span.textContent = text;
+        span.style.color = color;
+        el.appendChild(span);
+      });
+    } else {
+      el.textContent = value;
+    }
+    ul_el.appendChild(el);
+  });
+
+  parentNode.appendChild(ul_el);
+}
+function onDataReady(data) {
+  ["worker_scope", "cache_hits", "cache_misses", "cache_errors"].forEach(function(key) {
+    var el = document.getElementById(key);
+    el.textContent = data[key];
+  });
+  constructListElement(document.getElementById('main-cache-keys'), data.main_cache_keys);
+  constructListElement(document.getElementById('user-cache-keys'), data.user_cache_keys);
+  constructListElement(document.getElementById('recent'), data.recent_requests);
+}
+    </script>
+  </head>
+  <body onload="loadData()">
+    <h1>ServiceWorker stats for <span id="worker_scope">PencilCode</span></h1>
+    <p>Cache hits: <span id="cache_hits">Loading...</span></p>
+    <p>Cache misses: <span id="cache_misses">Loading...</span></p>
+    <p>Cache errors: <span id="cache_errors">Loading...</span></p>
+    <p><input type="button" onclick="killCache()" value="Kill caches"></input></p>
+    <h3>Recent activity</h3>
+    <div id="recent">
+    </div>
+    <h3>Main cache keys</h3>
+    <div id="main-cache-keys">
+    </div>
+    <h3>User cache keys</h3>
+    <div id="user-cache-keys">
+    </div>
+  </body>
+</html>

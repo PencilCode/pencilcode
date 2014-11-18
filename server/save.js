@@ -30,7 +30,6 @@ exports.handleSave = function(req, res, app) {
       conditional: conditional});
     */
 
-    // TODO: Remove file after validation below.
     try {
       fsExtra.removeSync(utils.getRootCacheName(app, res));
     }
