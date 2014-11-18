@@ -79,14 +79,18 @@ How To Experiment with PencilCode
 To experiment with PencilCode, you will want to run a local
 copy of the site's frontend.
 
-To start the dev server (by default it runs on localhost:8008):
+To start the https version of the
+dev server (by default it runs on localhost:8008):
 
 <pre>
-grunt devserver
+grunt sdevserver
 </pre>
 
-To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to localhost.
-For example, with chrome on OSX, add a couple aliases to your .profile by running the following:
+(Without the s it runs http instead of https.)
+
+To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to
+localhost.  For example, with chrome on OSX, add a couple aliases to
+your .profile by running the following:
 
 <pre>
 cat &gt;&gt; ~/.profile &lt;&lt;EOF

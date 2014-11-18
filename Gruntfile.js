@@ -177,6 +177,12 @@ module.exports = function(grunt) {
           node_env: 'development'
         }
       },
+      sdev: {
+        options: {
+          script: 'server/devserver.js',
+          node_env: 'sdevelopment'
+        }
+      },
       localtest: {
         options: {
           script: 'server/devserver.js',
@@ -301,6 +307,9 @@ module.exports = function(grunt) {
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
       ['proxymessage', 'express:dev', 'node-inspector:dev', 'watch']);
+  // "devserver" serves editor code directly from the src directory.
+  grunt.registerTask('sdevserver',
+      ['proxymessage', 'express:sdev', 'node-inspector:dev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
       ['proxymessage', 'express:localtest', 'node-inspector:dev', 'watch']);
