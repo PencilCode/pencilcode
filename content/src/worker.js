@@ -51,15 +51,42 @@ function returnStatsPage() {
         return cache.keys();
       })
     .then(function(keys) {
-        var body = 'Cache hits = ' + cache_hits + '\n';
-        body += 'Cache misses = ' + cache_misses + '\n';
-        body += 'Cache errors = ' + cache_errors + '\n';
-        body += 'Keys:\n' + keys.map(function(response) {
-          return response.url;
-        }).sort().join('\n');
+        var key_list = keys.map(function(response) {
+            return response.url;
+          }).sort().join('<br>');
+        var body = '<html>\
+          <script>\
+          function killcache() {\
+            var r = new XMLHttpRequest();\
+            r.open("GET", "/killcache");\
+            r.addEventListener("readystatechange", function() {\
+              if (r.readyState == 4) { document.location.reload(); };\
+            });\
+            r.send();\
+          }\
+          </script>\
+          <body>\
+          <p> Cache hits = ' + cache_hits + ' </p>\
+          <p> Cache misses = ' + cache_misses + ' </p>\
+          <p> Cache errors = ' + cache_errors + ' </p>\
+          <p><input type="button" onclick="killcache()" value="Kill cache"></input></p>\
+          <p> Keys :</p>\
+          <p>' + key_list + '\
+          </p>\
+          </body>\
+          </html>\
+          ';
         return new Response(body, {
-            headers: { 'Content-Type': 'text/plain' }
+            headers: { 'Content-Type': 'text/html' }
           });
+      });
+  return p;
+}
+
+function killCache() {
+  var p = self.caches.delete('main')
+    .then(function() {
+        return new Response('OK');
       });
   return p;
 }
@@ -69,6 +96,11 @@ function onfetch(event) {
   var myurl = new URL(event.request.url);
   if (myurl.pathname === '/stats') {
     event.respondWith(returnStatsPage());
+    return;
+  }
+  if (myurl.pathname === '/killcache') {
+    event.respondWith(killCache());
+    return;
   }
   event.respondWith(lookupRequestOnCache(event.request));
 }
