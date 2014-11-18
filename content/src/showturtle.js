@@ -26,6 +26,10 @@
         $.isFunction(ww.parent.ide.getEditorText)) {
       ww.ide = ww.parent.ide;
     }
+    // Now try to register a service worker if possible
+    if (ww.ide && ww.ide.serviceWorker) {
+      navigator.serviceWorker.register(ww.ide.serviceWorker);
+    }
   } catch (e) {}
   ww._start_ide_ = function(pump) {
     if (ww.see) ww.see.init(pump);
