@@ -1901,17 +1901,14 @@ var COFFEESCRIPT_PALETTE =[
         block: 'bk 100',
         title: 'Move backward'
       }, {
-        block: 'speed 10',
-        title: 'Set the speed of the turtle'
+        block: 'fill blue',
+        title: 'Fill traced shape'
       }, {
-        block: 'dot blue, 50',
+        block: 'dot green, 50',
         title: 'Make a dot'
       }, {
-        block: 'box green, 50',
+        block: 'box yellow, 50',
         title: 'Make a square'
-      }, {
-        block: 'label \'hello\'',
-        title: 'Write text at the turtle'
       }, {
         block: 'home()',
         title: 'Move the turtle back to start'
@@ -1922,12 +1919,6 @@ var COFFEESCRIPT_PALETTE =[
         block: 'cg()',
         title: 'Clear graphics'
       }, {
-        block: 'ht()',
-        title: 'Hide the turtle'
-      }, {
-        block: 'st()',
-        title: 'Show the turtle'
-      }, {
         block: 'pu()',
         title: 'Lift the pen up'
       }, {
@@ -1935,22 +1926,16 @@ var COFFEESCRIPT_PALETTE =[
         title: 'Put the pen down'
       }, {
         block: 'scale 3',
-        title: 'Change the size of the turtle'
+        title: 'Scale turtle drawing'
       }, {
         block: 'pen purple, 10',
-        title: 'Set the pen color and size'
+        title: 'Set pen color and size'
       }, {
         block: 'rt 180, 100',
-        title: 'Make a wide right turn'
+        title: 'Make a wide right arc'
       }, {
         block: 'lt 180, 100',
-        title: 'Make a wide left turn'
-      }, {
-        block: 'slide 100, 20',
-        title: 'Slide diagonally or sideways'
-      }, {
-        block: 'jump 100, 20',
-        title: 'Jump without drawing'
+        title: 'Make a wide left arc'
       }
     ]
   }, {
@@ -1958,26 +1943,83 @@ var COFFEESCRIPT_PALETTE =[
     color: 'orange',
     blocks: [
       {
-        block: 'button \'Click\', ->\n  ``',
-        title: 'Make a button and do something when clicked'
-      }, {
-        block: 'keydown \'X\', ->\n  ``',
-        title: 'Do something when a keyboard key is pressed'
-      }, {
         block: 'for [1..3]\n  ``',
         title: 'Do something multiple times'
       }, {
         block: 'for x in [1..3]\n  ``',
         title: 'Do something multiple times...?'
       }, {
-        block: 'tick 30, ->\n  ``',
-        title: 'Repeat something forever at qually-spaced times'
-      }, {
-        block: 'if ``\n  ``',
+        block: 'if `` is ``\n  ``',
         title: 'Do something only if a condition is true'
       }, {
-        block: 'if ``\n  ``\nelse\n  ``',
+        block: 'if `` is ``\n  ``\nelse\n  ``',
         title: 'Do something if a condition is true, otherwise something else'
+      }, {
+        block: "tick 1, ->\n  write 'ticked'",
+        title: 'Repeat something forever at qually-spaced times'
+      }, {
+        block: "button \'Click\', ->\n  write 'clicked'",
+        title: 'Make a button and do something when clicked'
+      }, {
+        block: "keydown \'X\', ->\n  write 'x pressed'",
+        title: 'Do something when a keyboard key is pressed'
+      }
+    ]
+  }, {
+    name: 'Move',
+    color: 'red',
+    blocks: [
+      {
+        block: 'speed 10',
+        title: 'Set the speed of the turtle'
+      }, {
+        block: 'speed Infinity',
+        title: 'Use infinite speed'
+      }, {
+        block: 'home()',
+        title: 'Jump back to starting spot'
+      }, {
+        block: 'turnto 270',
+        title: 'Turn to absolute direction'
+      }, {
+        block: 'turnto lastclick',
+        title: 'Turn toward a located object'
+      }, {
+        block: 'moveto 100, 50',
+        title: 'Move to coordinates'
+      }, {
+        block: 'movexy 30, 20',
+        title: 'Move by changing x and y'
+      }, {
+        block: 'move 10, 5',
+        title: "Move sideways or diagonal from turtle's view"
+      }, {
+        block: 'jumpto 100, 50',
+        title: 'Jump to coordinates without drawing'
+      }, {
+        block: 'jumpxy 30, 20',
+        title: 'Jump changing x and y without drawing'
+      }, {
+        block: 'jump 10, 5',
+        title: "Move sideways or diagonal without drawing"
+      }, {
+        block: "tick 10, ->\n  turnto lastmouse\n  fd 2",
+        title: 'Turn and move at regularly-spaced times'
+      }, {
+        block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
+        title: 'Poll a key and move while it is depressed'
+      }, {
+        block: "click (e) ->\n  moveto e",
+        title: 'Move to a location when document is clicked'
+      }, {
+        block: "button \'Right\', ->\n  rt 90",
+        title: 'Trigger a motion when a button is clicked'
+      }, {
+        block: "keydown \'S\', ->\n  bk 50",
+        title: 'Trigger a motion when a key is pressed'
+      }, {
+        block: 'done ->\n  write \'Whew!\'',
+        title: 'Do something when turtles are done moving'
       }
     ]
   }, {
@@ -2032,60 +2074,99 @@ var COFFEESCRIPT_PALETTE =[
       }
     ]
   }, {
-    name: 'Interact',
-    color: 'violet',
+    name: 'Text',
+    color: 'yellow',
     blocks: [
       {
-        block: 'mycommand = ->\n  ``',
-        title: 'Define a custom command'
+        block: 'label \'spot\'',
+        title: 'Write text at the turtle'
       }, {
-        block: 'mycommand()',
-        title: 'Do a custom command'
+        block: 'type \'zz*(-.-)*zz\'',
+        title: 'Typewrite text in the document'
       }, {
-        block: 'write \'Let\\\'s play!\'',
-        title: 'Write a message'
+        block: 'write \'Hello.\'',
+        title: 'Write text in the document'
       }, {
         block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
         title: 'Read input from the user'
       }, {
-        block: 'play \'GEC\'',
-        title: 'Play music notes'
+        block: 'readnum \'Side\', (n) ->\n  write \'A\' + n * n',
+        title: 'Read a number from the user'
       }, {
-        block: 'wear \'/img/cat-icon\'',
-        title: 'Change the turtle picture'
+        block: 'readstr \'Idea?\', (n) ->\n  write n.length',
+        title: 'Read a whole line of text'
       }, {
-        block: 'moveto lastclick',
-        title: 'Move to a location'
+        block: "table [\n  ['a','b','c']\n  [1,2,3]\n]",
+        title: 'Write a table in the document'
       }, {
-        block: 'moveto x, y',
-        title: 'Move to a coordinate'
+        block: 'log [1..10]',
+        title: 'Log an object to debug'
       }, {
-        block: 'turnto lastmousemove',
-        title: 'Turn towards a location'
+        block: 'd = write \'dice\'',
+        title: 'Remember d as a text element'
       }, {
-        block: 'click ->\n  write \'Ouch!\'',
-        title: 'Do something when the turtle is clicked'
+        block: 'tick 1, ->\n  d.text random [1..6]',
+        title: 'Change d text content'
+      }
+    ]
+  }, {
+    name: 'Sprites',
+    color: 'violet',
+    blocks: [
+      {
+        block: 'ht()',
+        title: 'Hide the main turtle'
       }, {
-        block: 'done ->\n  write \'Whew!\'',
-        title: 'Do something when turtles are done moving'
+        block: 'st()',
+        title: 'Show the main turtle'
       }, {
-        block: 'if pressed \'enter\'\n  write \'Holding.\'',
-        title: 'Test if a key is pressed'
+        block: 'r = new Turtle red',
+        title: 'Make a new turtle'
       }, {
-        block: 'tick 30, ->\n  if pressed \'w\'\n    write \'w\'',
-        title: 'Test if a key 30 times per second'
+        block: 'r.fd 100',
+        title: 'Move turtle r forward'
+      }, {
+        block: 'r.rt 90',
+        title: 'Turn turtle r right'
+      }, {
+        block: 'r.lt 90',
+        title: 'Turn turtle r left'
+      }, {
+        block: 'r.bk 100',
+        title: 'Move turtle r backward'
+      }, {
+        block: 's = new Sprite',
+        title: 'Make a blank sprite'
+      }, {
+        block: 's.wear \'/img/apple\'',
+        title: 'Load an image in sprite s'
+      }, {
+        block: 'drawon s',
+        title: 'Draw on sprite s'
+      }, {
+        block: 'drawon document',
+        title: 'Draw on the document'
       }, {
         block: 'p = new Piano',
-        title: 'Make a new piano'
+        title: 'Make a visible insturment'
       }, {
-        block: 'p.play \'EDC\'',
-        title: 'Tell a piano to play notes'
+        block: 'p.play \'CDEDC\'',
+        title: 'Play and show music notes'
       }, {
-        block: 'w = new Webcam',
-        title: 'Make a new webcam'
+        block: 'q = new Pencil',
+        title: 'Make an invisible and fast drawing sprite'
       }, {
-        block: 't = new Turtle',
-        title: 'Make a new turtle'
+        block: 'q.pen black, 1',
+        title: 'Use a thin black pen'
+      }, {
+        block: 'q.rt 360, 100',
+        title: 'Trace a circle on the right'
+      }, {
+        block: 'q.lt 360, 100',
+        title: 'Trace a circle on the left'
+      }, {
+        block: 'q.fill pink',
+        title: 'Fill the traced path'
       }
     ]
   }
