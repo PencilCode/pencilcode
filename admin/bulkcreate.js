@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-var seedrandom = require('../content/seedrandom');
+var seedrandom = require('../content/lib/seedrandom');
 var filename = process.argv[2];
 
 if (!filename) {
