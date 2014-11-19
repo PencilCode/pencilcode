@@ -8889,7 +8889,6 @@ function plainTextPrint() {
 function doOutput() {
   var early = this;
   autoScrollAfter(function() {
-    console.log('early', early);
     early.result.appendTo('body');
     if (early.setup) {
       early.setup();
