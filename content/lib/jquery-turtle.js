@@ -7701,12 +7701,12 @@ var dollar_turtle_methods = {
       "based on the user's choice: " +
       "<mark>menu {A: (-> write 'chose A'), B: (-> write 'chose B')}</mark>"],
   doOutput, prepareMenu),
-  button: wrapraw('button',
+  button: wrapglobalcommand('button',
   ["<u>button(text, fn)</u> Writes a button. Calls " +
       "fn whenever the button is clicked: " +
       "<mark>button 'GO', -> fd 100</mark>"],
   doOutput, prepareButton),
-  table: wrapraw('table',
+  table: wrapglobalcommand('table',
   ["<u>table(m, n)</u> Writes m rows and c columns. " +
       "Access cells using <u>cell</u>: " +
       "<mark>g = table 8, 8; g.cell(2,3).text 'hello'</mark>",
@@ -8889,6 +8889,7 @@ function plainTextPrint() {
 function doOutput() {
   var early = this;
   autoScrollAfter(function() {
+    console.log('early', early);
     early.result.appendTo('body');
     if (early.setup) {
       early.setup();
@@ -9065,7 +9066,7 @@ function prepareButton(name, callback) {
     name = null;
   }
   if (name === null || name === undefined) {
-    name = '\u25CE';
+    name = 'button';
   }
   var result = $('<button>' + escapeHtml(name) + '</button>');
   if (callback) {
