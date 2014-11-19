@@ -5556,7 +5556,7 @@ function sync() {
     // Unblock all animation queues.
     for (j = 0; j < cb.length; ++j) { cb[j](); }
   }
-  for (j = 0; j < elts.length; ++j) {
+  if (elts.length > 1) for (j = 0; j < elts.length; ++j) {
     queueWaitIfLoadingImg(elts[j]);
     $(elts[j]).queue(function(next) {
       if (ready) {
@@ -6792,16 +6792,26 @@ var turtlefn = {
       "<mark>A = new Sprite('100x100'); " +
       "drawon A; pen red; fd 50; done -> A.rt 360</mark>"],
   function drawon(cc, canvas) {
+    this.each(function() {
+      var state = getTurtleData(this);
+      if (state.drawOnCanvasSync) sync(this, state.drawOnCanvasSync);
+      state.drawOnCanvasSync = canvas;
+    });
     sync(canvas, this);
     return this.plan(function(j, elem) {
       cc.appear(j);
       var state = getTurtleData(elem);
+      if (state.drawOnCanvas) {
+        sync(elem, state.drawOnCanvas);
+      }
       if (!canvas) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {
         state.drawOnCanvas = canvas.canvas();
       } else if (canvas.tagName && canvas.tagName == 'CANVAS') {
         state.drawOnCanvas = canvas;
+      } else if (canvas.nodeType == 1 || canvas.nodeType == 9) {
+        state.drawOnCanvas = $(canvas).canvas();
       }
       cc.resolve(j);
     });
@@ -7008,7 +7018,7 @@ var turtlefn = {
       "<mark>c = turtle.canvas().getContext('2d'); c.fillStyle = red; " +
       "c.fillRect(10, 10, 30, 30)</mark>"],
   function canvas() {
-    return this.filter('canvas').get(0);
+    return this.filter('canvas').get(0) || this.find('canvas').get(0);
   }),
   imagedata: wrapraw('imagedata',
   ["<u>imagedata()</u> Returns the image data for the turtle. " +
