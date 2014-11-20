@@ -43,6 +43,7 @@ SPIN_SLEEP_TIME="2000"
 # Put server in production mode
 NODE_ENV="production"
 PORT=8811
+HOST="pencilcode.net"
 
 # Add node to the path for situations in which the environment is passed.
 PATH=$NODE_BIN_DIR:$PATH
@@ -52,6 +53,7 @@ PATH=$NODE_BIN_DIR:$PATH
 export NODE_PATH=$NODE_PATH
 export NODE_ENV=$NODE_ENV
 export PORT=$PORT
+export HOST=$HOST
 
 start() {
     if [ -f $PIDFILE ]; then
