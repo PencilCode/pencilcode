@@ -2057,6 +2057,9 @@ var COFFEESCRIPT_PALETTE =[
         block: 'min ``, ``',
         title: 'Get the smaller on two numbers'
       }, {
+        block: 'text.match /pattern/',
+        title: 'Test if pattern is found in text'
+      }, {
         block: 'f = (param) ->\n  ``',
         title: 'Define a new function'
       }, {
@@ -2105,31 +2108,34 @@ var COFFEESCRIPT_PALETTE =[
     color: 'violet',
     blocks: [
       {
+        block: 'wear \'/img/apple\'',
+        title: 'Use an image for the turtle'
+      }, {
+        block: 't = new Turtle red',
+        title: 'Make a new turtle'
+      }, {
+        block: 't.fd 100',
+        title: 'Move turtle t forward'
+      }, {
+        block: 't.rt 90',
+        title: 'Turn turtle t right'
+      }, {
+        block: 't.lt 90',
+        title: 'Turn turtle t left'
+      }, {
+        block: 't.bk 100',
+        title: 'Move turtle t backward'
+      }, {
         block: 'ht()',
         title: 'Hide the main turtle'
       }, {
         block: 'st()',
         title: 'Show the main turtle'
       }, {
-        block: 'r = new Turtle red',
-        title: 'Make a new turtle'
-      }, {
-        block: 'r.fd 100',
-        title: 'Move turtle r forward'
-      }, {
-        block: 'r.rt 90',
-        title: 'Turn turtle r right'
-      }, {
-        block: 'r.lt 90',
-        title: 'Turn turtle r left'
-      }, {
-        block: 'r.bk 100',
-        title: 'Move turtle r backward'
-      }, {
         block: 's = new Sprite',
         title: 'Make a blank sprite'
       }, {
-        block: 's.wear \'/img/apple\'',
+        block: 's.wear \'/img/dragon\'',
         title: 'Load an image in sprite s'
       }, {
         block: 'drawon s',
@@ -2149,6 +2155,9 @@ var COFFEESCRIPT_PALETTE =[
       }, {
         block: 'q.pen black, 1',
         title: 'Use a thin black pen'
+      }, {
+        block: 'q.drawon s',
+        title: 'Use q to draw on sprite s'
       }, {
         block: 'q.rt 360, 100',
         title: 'Trace a circle on the right'
