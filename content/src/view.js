@@ -1977,10 +1977,10 @@ var COFFEESCRIPT_PALETTE =[
         title: 'Use infinite speed'
       }, {
         block: 'home()',
-        title: 'Jump back to starting spot'
+        title: 'Jump to the origin, turned up'
       }, {
         block: 'turnto 270',
-        title: 'Turn to absolute direction'
+        title: 'Turn to an absolute direction'
       }, {
         block: 'turnto lastclick',
         title: 'Turn toward a located object'
@@ -1992,7 +1992,7 @@ var COFFEESCRIPT_PALETTE =[
         title: 'Move by changing x and y'
       }, {
         block: 'move 10, 5',
-        title: "Move sideways or diagonal from turtle's view"
+        title: "Move sideways or diagonal from turtle's angle"
       }, {
         block: 'jumpto 100, 50',
         title: 'Jump to coordinates without drawing'
@@ -2011,15 +2011,6 @@ var COFFEESCRIPT_PALETTE =[
       }, {
         block: "click (e) ->\n  moveto e",
         title: 'Move to a location when document is clicked'
-      }, {
-        block: "button \'Right\', ->\n  rt 90",
-        title: 'Trigger a motion when a button is clicked'
-      }, {
-        block: "keydown \'S\', ->\n  bk 50",
-        title: 'Trigger a motion when a key is pressed'
-      }, {
-        block: 'done ->\n  write \'Whew!\'',
-        title: 'Do something when turtles are done moving'
       }
     ]
   }, {
