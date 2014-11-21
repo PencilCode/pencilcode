@@ -1413,7 +1413,8 @@ function modeForMimeType(mimeType) {
     'text/css': 'css',
     'text/javascript': 'javascript',
     'text/plain': 'text',
-    'text/xml': 'xml',
+    'image/svg+xml': 'xml',
+    'text/xml': 'xml'
   }[mimeType];
   if (!result) {
     result = 'text';
@@ -2339,6 +2340,28 @@ function editorMimeType(paneState) {
   return paneState.mimeType;
 }
 
+function editorHasAnyErrors(editor) {
+  if (!editor) return false;
+  var annot = editor.getSession().getAnnotations();
+  for (var j = 0; j < annot.length; ++j) {
+    if (annot[j].type == 'error')
+      return true;
+  }
+  return false;
+}
+
+function sizeHtmlCssPanels(pane) {
+  var box = $('#' + pane).find('.hpanelbox');
+  var paneState = state.pane[pane];
+  var meta = paneState.meta;
+  var multipane = /pencil/.test(paneState.mimeType);
+  var addhtml = multipane && meta && meta.hasOwnProperty('html');
+  var addcss = multipane && meta && meta.hasOwnProperty('css');
+  box.find('.htmlmark').css('display', addhtml ? 'block' : 'none');
+  box.find('.cssmark').css('display', addcss ? 'block' : 'none');
+  setupHpanelBox(box);
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -2371,16 +2394,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel htmlmark" style="display:none" share="25">',
     '</div>'
   ];
-  var box = $('#' + pane).html(layout.join('')).find('.hpanelbox');
-  var addhtml = meta && meta.hasOwnProperty('html');
-  var addcss = meta && meta.hasOwnProperty('css');
-  if (addhtml) {
-    box.find('.htmlmark').css('display', 'block');
-  }
-  if (addcss) {
-    box.find('.cssmark').css('display', 'block');
-  }
-  setupHpanelBox(box);
+  var box = $('#' + pane).html(layout.join(''));
+  sizeHtmlCssPanels(pane);
 
   // Set up the main editor.
   var dropletMode = dropletModeForMimeType(visibleMimeType);
@@ -2489,19 +2504,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     }
     htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 500);
   }
-  function hasAnyErrors(editor) {
-    if (!editor) return false;
-    var annot = editor.getSession().getAnnotations();
-    for (var j = 0; j < annot.length; ++j) {
-      if (annot[j].type == 'error')
-        return true;
-    }
-    return false;
-  }
   function checkForHtmlCssChange() {
     htmlCssChangeTimer = null;
-    if (hasAnyErrors(paneState.htmlEditor) ||
-        hasAnyErrors(paneState.cssEditor)) {
+    if (editorHasAnyErrors(paneState.htmlEditor) ||
+        editorHasAnyErrors(paneState.cssEditor)) {
       if (htmlCssRetryCounter > 0) {
         htmlCssRetryCounter -= 1;
         htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 1000);
@@ -2513,11 +2519,11 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   }
   paneState.handleHtmlCssChange = handleHtmlCssChange;
 
-  if (addhtml) {
+  if (box.find('.htmlmark').is(':visible')) {
     setupSubEditor(box, pane, paneState, meta.html, 'html');
   }
 
-  if (addcss) {
+  if (box.find('.cssmark').is(':visible')) {
     setupSubEditor(box, pane, paneState, meta.css, 'css');
   }
 
@@ -2631,6 +2637,9 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       paneState.lastChangeTime = +(new Date);
       fireEvent('dirty', [pane]);
     }
+    if (/^text\/html|^image\/svg/.test(paneState.mimeType)) {
+      handleHtmlChange();
+    }
     // Publish the update event for hosting frame.
     publish('update', [session.getValue()]);
   });
@@ -2650,6 +2659,31 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
     fireEvent('editfocus', [pane]);
   });
+  // Also special-case html change handling.
+  var htmlChangeTimer = null;
+  var htmlChangeRetryCounter = 10;
+  function handleHtmlChange() {
+    htmlRetryCounter = 10;
+    if (htmlChangeTimer) {
+      clearTimeout(htmlChangeTimer);
+    }
+    htmlChangeTimer = setTimeout(checkForHtmlChange, 500);
+  }
+  function checkForHtmlChange() {
+    htmlChangeTimer = null;
+    if (!/^text\/html|^image\/svg/.test(paneState.mimeType)) {
+      return;
+    }
+    if (editorHasAnyErrors(paneState.editor)) {
+      if (htmlRetryCounter > 0) {
+        htmlRetryCounter -= 1;
+        htmlChangeTimer = setTimeout(checkForHtmlChange, 1000);
+      }
+      return;
+    }
+    paneState.lastChangeTime = +(new Date);
+    fireEvent('changehtmlcss', [pane]);
+  }
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -2987,6 +3021,7 @@ function noteNewFilename(pane, filename) {
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);
     }
+    sizeHtmlCssPanels(pane);
   }
   updatePaneTitle(pane);
 }
@@ -3067,7 +3102,8 @@ function setupHpanelBox(box) {
       usePercentHeight(box);
       $(resize).trigger('panelsize');
     }
-    box.on('distribute', distribute);
+    box.off('distribute.hpb');
+    box.on('distribute.hpb', distribute);
     distribute();
   });
   function trackDragHpanel(e, cbdelta) {
@@ -3094,7 +3130,8 @@ function setupHpanelBox(box) {
     $(window).on('mousemove mouseup dragstart', watcher);
     return false;
   }
-  hpb.on('mousedown', '.hpanel:visible', function(e) {
+  hpb.off('mousedown.hpb');
+  hpb.on('mousedown.hpb', '.hpanel:visible', function(e) {
     if (this !== e.target || e.which != 1) return;
     var cur = $(this), pdy = 0;
     trackDragHpanel(e, function(end, dx, dy) {

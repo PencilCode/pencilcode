@@ -1143,6 +1143,7 @@ view.on('rename', function(newname) {
     // Nothing to do
     return;
   }
+  var oldMimeType = filetype.mimeForFilename(mp.filename);
   // Error cases: go back to original name.
   // Can't rename the root (for now).
   // TODO: check for:
@@ -1164,9 +1165,18 @@ view.on('rename', function(newname) {
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
     view.setPrimaryFocus();
-    if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner() &&
+    var changed = view.isPaneEditorDirty(paneatpos('left')) ||
+        oldMimeType != filetype.mimeForFilename(newname);
+    if (changed && model.ownername && !nosaveowner() &&
         !view.isPaneEditorEmpty(paneatpos('left'))) {
-      saveAction(true, 'Login to save');
+      saveAction(true, 'Login to save', function() {
+        if (modelatpos('right').running) {
+          // After a change-rename-save, reset the run preview if any.
+          // (Possible mime type change.)
+          var doc = view.getPaneEditorData(paneatpos('left'));
+          runCodeAtPosition('right', doc, modelatpos('left').filename, true);
+        }
+      });
     }
   }
   var payload = {

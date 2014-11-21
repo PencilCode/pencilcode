@@ -201,11 +201,26 @@ function modifyForPreview(doc, domain,
     text = wrapTurtle(doc, domain, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
+    var safe = false;
+    if (mimeType && /^text\/html/.test(mimeType) &&
+        !text.match(/<script|<i?frame|<object/i)) {
+      // Only preview HTML if there is no script.
+      safe = true;
+    }
+    if (mimeType && /^image\/svg/.test(mimeType)) {
+      // SVG preview is useful.
+      safe = true;
+    }
     // For now, we don't support inserting startup script in anything
-    // other than a pencil-code file.
-    return '';
+    // other than the types above.
+    if (!safe) {
+      return '';
+    }
   }
   if (!text) return '';
+  if (mimeType && /^image\//.test(mimeType)) {
+    return text;
+  }
   if (mimeType && !/^text\/html/.test(mimeType)) {
     return '<PLAINTEXT>' + text;
   }
@@ -240,6 +255,7 @@ function mimeForFilename(filename) {
     'jpeg' : 'image/jpeg',
     'gif'  : 'image/gif',
     'png'  : 'image/png',
+    'svg'  : 'image/svg+xml',
     'bmp'  : 'image/x-ms-bmp',
     'ico'  : 'image/x-icon',
     'htm'  : 'text/html',
