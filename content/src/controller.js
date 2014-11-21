@@ -1619,6 +1619,8 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         updateTopControls(false);
         view.flashNotification('New file ' + filename + '.');
         cb && cb();
+      } else if (/^image\//.test(m.mime) && !/^image\/svg/.test(m.mime)) {
+        runCodeAtPosition(position, m, filename, false);
       } else {
         // The single file case.
         // TODO:
