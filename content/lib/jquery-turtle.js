@@ -1915,6 +1915,8 @@ function applyPenStyle(ctx, ps, scale) {
       if (a === 'savePath' || a === 'eraseMode') { continue; }
       if (scale && a === 'lineWidth') {
         ctx[a] = scale * ps[a] + extraWidth;
+      } else if (a === 'lineDash') {
+        ctx.setLineDash(('' + ps[a]).split(/[,\s]/g));
       } else {
         ctx[a] = ps[a];
       }
@@ -2091,9 +2093,6 @@ function endAndFillPenPath(elem, style) {
     style = $.extend({}, state.style, style);
   }
   drawAndClearPath(getDrawOnCanvas(state), state.corners, style, ts.sx, 1);
-  if (state.style && state.style.savePath) {
-    $.style(elem, 'turtlePenStyle', 'none');
-  }
 }
 
 function clearField(arg) {
