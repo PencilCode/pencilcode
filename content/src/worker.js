@@ -296,6 +296,7 @@ function serveEditPage(request, filename) {
 }
 
 function onInstall(event) {
+  console.log('onInstall');
   // Kick off an update, but don't wait for it.
   fetchUserDirectory();
   // TODO: Should also fetch on Sync.
@@ -303,9 +304,11 @@ function onInstall(event) {
 }
 
 function onActivate(event) {
+  console.log('onActivate');
   var p = preloadInternalPages()
     .then(function() {
-        return lookupRequestOnCache('/editor.html');
+        console.log('Going to lookup request on cache.');
+        return getCachedResponse('/editor.html');
       })
     .catch(function() {});
   event.waitUntil(p);
