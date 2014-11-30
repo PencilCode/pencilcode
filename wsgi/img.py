@@ -33,11 +33,15 @@ def splituri(uri):
 def filename_from_uri(uri):
   return '/'.join(splituri(uri)[1:])
 
-keepcharacters = ('-','.',' ','/')
-def safename(name):
-  return re.sub('[- /]+', '-',
+keepcharacters = ('-','.',' ','/','_',',',';')
+def normname(name):
+  safe = re.sub('[- /_,;]+', '-',
      "".join(c for c in name if c.isalnum() or c in keepcharacters)
      ).strip('-')
+  safe = re.sub('^s-', '', safe)
+  safe = re.sub('^([^-]+-)?t(?:ransparent)?-', '\\1trans-', safe)
+  safe = re.sub('\.jpg$', '.jpeg', safe)
+  return safe
 
 def application(env, start_response):
   redirect_url = None
@@ -57,7 +61,7 @@ def application(env, start_response):
     cache_control = env.get('HTTP_CACHE_CONTROL', '')
     pragma = env.get('HTTP_PRAGMA', '')
     userip = env['REMOTE_ADDR']
-    filename = safename(urllib.unquote(filename_from_uri(request_uri)))
+    filename = normname(urllib.unquote(filename_from_uri(request_uri)))
     m = []
 
     if m.append(re.match(r'(?i)(https?:)//?([^/]+/.*)$', filename)) or any(m):
