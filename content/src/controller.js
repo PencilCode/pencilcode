@@ -284,14 +284,13 @@ view.on('new', function() {
   });
 });
 
-var lastSharedCode = '';
 var lastSharedName = '';
 
 view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
-  var code = getEditTextIfAny() || '';
-  if (!code) { return; }
+  var doc = view.getPaneEditorData(paneatpos('left'));
+  if (isEmptyDoc(doc)) { return; }
   // First save if needed (including login user if necessary)
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     saveAction(false, 'Log in to share', shareAction);
@@ -306,12 +305,12 @@ view.on('share', function() {
         prefix + "-" + model.ownername + "-" +
         shortfilename.replace(/[^\w\.]+/g, '_').replace(/^_+|_+$/g, '');
     if (lastSharedName.substring(prefix.length) ==
-        sharename.substring(prefix.length) && lastShareCode == code) {
+        sharename.substring(prefix.length)) {
       // Don't pollute the shared space with duplicate code; use the
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, { data:code });
+    var data = $.extend({}, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
@@ -1678,18 +1677,13 @@ function renderDirectory(position) {
   updateTopControls(false);
 }
 
-//
-// Returns text content of the editor
-// or null if there's no file loaded.
-//
-
-function getEditTextIfAny() {
-  var model = modelatpos('left');
-  if (model.filename && model.data && model.data.file) {
-    var doc = view.getPaneEditorData(paneatpos('left'));
-    return (doc && doc.data && doc.data.trim())
-  }
-  return null;
+// True if the doc contains nothing, or nothing but spaces.
+function isEmptyDoc(doc) {
+  if (!doc) return true;
+  return ((!doc.data || !doc.data.trim()) &&
+      (!doc.meta || (
+        (!doc.meta.html || !doc.data.html.trim()) &&
+        (!doc.meta.css || !doc.data.css.trim()))));
 }
 
 function shortenUrl(url, cb) {
