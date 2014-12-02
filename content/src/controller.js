@@ -1465,7 +1465,7 @@ function readNewUrl(undo) {
   // Handle #blocks
   if (blocks) {
     var f = blocks[1];
-    requestedBlockMode = falsish(f);
+    requestedBlockMode = !falsish(f);
   }
   // Handle #new (new user) hash.
   var afterLoad = null;
