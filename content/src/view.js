@@ -68,7 +68,7 @@ var state = {
   nameText: $('#filename').text(),
   previewMode: true,
   callbacks: {},
-  subscriber: null,
+  subscribers: [],
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
   pane: {
@@ -105,7 +105,8 @@ window.pencilcode.view = {
   // publish/subscribe for global events; all global events are broadcast
   // to the parent frames using postMessage() if we are iframed
   subscribe: function(callback){
-    state.subscriber = callback; },
+    state.subscribers.push(callback);
+  },
   publish: publish,
 
   // Sets up the text-editor in the view.
@@ -202,7 +203,9 @@ $(window).on('resize.editor', function() {
 });
 
 function publish(method, args, requestid){
-  if (state.subscriber) { state.subscriber(method, args, requestid); }
+  for (var j = 0; j < state.subscribers.length; ++j) {
+    state.subscribers[j](method, args, requestid);
+  }
 }
 
 function paneid(position) {
@@ -1525,6 +1528,7 @@ function updatePaneTitle(pane) {
       }
       toggler.tooltipster('option', 'functionAfter', canceler);
       var timer = setTimeout(function() {
+        if (!$.contains(document.documentElement, toggler[0])) return;
         toggler.tooltipster('show');
         timer = setTimeout(function() {
           toggler.tooltipster('hide');
@@ -2446,6 +2450,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
+    fireEvent('delta', [pane]);
   });
 
   dropletEditor.on('toggledone', function() {
@@ -2478,6 +2483,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
     }
+    fireEvent('delta', [pane]);
   });
 
   um.reset();
@@ -2503,6 +2509,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       clearTimeout(htmlCssChangeTimer);
     }
     htmlCssChangeTimer = setTimeout(checkForHtmlCssChange, 500);
+    fireEvent('delta', [pane]);
   }
   function checkForHtmlCssChange() {
     htmlCssChangeTimer = null;

@@ -584,6 +584,89 @@ guide.on('login', function(options) {
   signUpAndSave(options);
 });
 
+// Used by a guide to set up a starting doc (or a remembered doc).
+var currentGuideSessionUrl = null;
+var currentGuideSessionFilename = null;
+var currentGuideSessionTimer = null;
+var currentGuideSessionSaveTime = 0;
+
+guide.on('session', function session(options) {
+  var url = options.url,
+      match = !url ? null :
+          /^(?:(?:\w+:)?\/\/(\w+)\.\w+.{8})?(?:\/\w+\/([^#?]*))?$/.exec(url),
+      ownername = match && match[1] || '',
+      filename = match && match[2] || options.filename || 'untitled';
+  if (options.remove || options.reset) {
+    localStorage.removeItem('pcgs:' + url);
+    if (options.remove) return;
+  }
+  currentGuideSessionUrl = url;
+  currentGuideSessionFilename = filename;
+  // Look for session from localStorage
+  var saved = localStorage.getItem('pcgs:' + url);
+  if (saved) {
+    try { saved = JSON.parse(saved); } catch (e) { saved = null; }
+  }
+  if (options && options.age && saved && (!saved.mtime ||
+      saved.mtime < (new Date).getTime() - options.age)) {
+    saved = null;
+  }
+  var doc = $.extend({}, options);
+  if (saved) {
+    $.extend(doc, saved);
+  }
+  // If we have data, load it right away; otherwise load it from the url.
+  if (doc.data != null) {
+    setupEditor();
+  } else {
+    storage.loadFile(ownername, filename, true, function(loptions) {
+      if (loptions.error) {
+        view.flashNotification(loptions.error);
+        return;
+      }
+      doc = $.extend(loptions, options);
+      setupEditor();
+    });
+  }
+  function setupEditor() {
+    var pane = paneatpos('left');
+    var mpp = model.pane[pane];
+    if (!doc.file) { doc.file = 'setdoc'; }
+    mpp.isdir = false;
+    mpp.data = doc;
+    var mode = doc.hasOwnProperty('blocks') ?
+        !falsish(doc.blocks) : loadBlockMode();
+    mpp.filename = filename;
+    mpp.isdir = false;
+    mpp.bydate = false;
+    mpp.loading = nextLoadNumber();
+    mpp.running = false;
+    view.setPaneEditorData(pane, doc, filename, mode);
+    updateTopControls();
+  }
+});
+
+view.on('delta', function(pane) {
+  // Listen to deltas if there is a guide session active.
+  if (!currentGuideSessionUrl || !currentGuideSessionFilename ||
+      currentGuideSessionTimer || posofpane(pane) != 'left' ||
+      model.pane[pane].filename != currentGuideSessionFilename) {
+    return;
+  }
+  // Save after every change, polling at most twice per second.
+  var delay =
+    Math.max(0, currentGuideSessionSaveTime + 500 - (new Date).getTime());
+  currentGuideSessionTimer = setTimeout(function() {
+    currentGuideSessionTimer = null;
+    var doc = view.getPaneEditorData(pane);
+    doc.mtime = currentGuideSessionSaveTime = +(new Date);
+    if (doc && doc.data != null) {
+      localStorage.setItem(
+          'pcgs:' + currentGuideSessionUrl, JSON.stringify(doc));
+    }
+  }, delay);
+});
+
 view.on('toggleblocks', function(p, useblocks) {
   saveBlockMode(useblocks);
   var filename = model.pane[p].filename;
@@ -1292,6 +1375,11 @@ function isFileWithin(base, candidate) {
       candidate.indexOf(base) === 0;
 }
 
+function falsish(s) {
+  return !s || s == '0' || s == 'false' || s == 'none' || s == 'null' ||
+         s == 'off' || s == 'no';
+}
+
 function readNewUrl(undo) {
   if (readNewUrl.suppress) {
     return;
@@ -1370,7 +1458,7 @@ function readNewUrl(undo) {
   // Handle #blocks
   if (blocks) {
     var f = blocks[1];
-    requestedBlockMode = (f != '0' && f != 'off' && f != 'false');
+    requestedBlockMode = falsish(f);
   }
   // Handle #new (new user) hash.
   var afterLoad = null;
@@ -1893,7 +1981,7 @@ $(window).on('message', function(e) {
 
 
 // posts message to the parent window, which may have embedded us
-function createMessageSinkFunction() {
+function createParentPostMessageSink() {
   var noneMessageSink = function(method, args){};
 
   // check we do have a parent window
@@ -1918,7 +2006,7 @@ function createMessageSinkFunction() {
   };
 }
 
-view.subscribe(createMessageSinkFunction());
+view.subscribe(createParentPostMessageSink());
 
 function evalAndPostback(requestid, code) {
   var resultanderror = null;

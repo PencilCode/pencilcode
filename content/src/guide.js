@@ -7,6 +7,7 @@ define([
 ){
 
 var guideShown = false;
+var guideFrame = $('#guidepane iframe');
 
 function showGuide(show, instant) {
   if (show === undefined) { show = true; }
@@ -33,7 +34,7 @@ function addGuideOrigin(url) {
 
 function setGuideUrl(url) {
   addGuideOrigin(url);
-  $('#guidepane iframe').attr('src', url);
+  guideFrame.attr('src', url);
 }
 
 var callbacks = {};
@@ -53,7 +54,7 @@ function triggerCallback(event, args) {
 
 $(window).on('message', function(event) {
   if (event.originalEvent) { event = event.originalEvent; }
-  var guideWindow = $('#guidepane iframe').prop('contentWindow');
+  var guideWindow = guideFrame.prop('contentWindow');
   var data = event.data;
   if (event.source != guideWindow ||
       !allowedOrigins.hasOwnProperty(event.origin) ||
@@ -72,6 +73,9 @@ $(window).on('message', function(event) {
   }
   if (data.type == 'login') {
     triggerCallback('login', [data.options]);
+  }
+  if (data.type == 'session') {
+    triggerCallback('session', [data.options]);
   }
   if (data.type == 'show') {
     showGuide(true);
