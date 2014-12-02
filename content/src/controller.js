@@ -602,13 +602,6 @@ guide.on('session', function session(options) {
   }
   currentGuideSessionUrl = url;
   currentGuideSessionFilename = filename;
-  // Do nothing if we are already at the right filename (any user).
-  if (!options.reset) {
-    var cm = model.pane[paneatpos('left')];
-    if (filename == cm.filename && cm.data && cm.data.data) {
-      return;
-    }
-  }
   // Look for session from localStorage
   var saved = localStorage.getItem('pcgs:' + url);
   if (saved) {
@@ -617,6 +610,13 @@ guide.on('session', function session(options) {
   if (options && options.age && saved && (!saved.mtime ||
       saved.mtime < (new Date).getTime() - options.age)) {
     saved = null;
+  }
+  // Do nothing if we are already at the right filename (any user).
+  if (!saved && !options.reset) {
+    var cm = model.pane[paneatpos('left')];
+    if (filename == cm.filename && cm.data && cm.data.data) {
+      return;
+    }
   }
   var doc = $.extend({}, options);
   if (saved) {
