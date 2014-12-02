@@ -602,6 +602,13 @@ guide.on('session', function session(options) {
   }
   currentGuideSessionUrl = url;
   currentGuideSessionFilename = filename;
+  // Do nothing if we are already at the right filename (any user).
+  if (!options.reset) {
+    var cm = model.pane[paneatpos('left')];
+    if (filename == cm.filename && cm.data && cm.data.data) {
+      return;
+    }
+  }
   // Look for session from localStorage
   var saved = localStorage.getItem('pcgs:' + url);
   if (saved) {
