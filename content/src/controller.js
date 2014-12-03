@@ -121,6 +121,7 @@ function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
           model.ownername === 'gymstage' ||
           model.ownername === 'share' ||
+          model.ownername === 'example' ||
           model.ownername === 'frame' ||
           model.ownername === 'event');
 }
