@@ -593,7 +593,7 @@ var currentGuideSessionSaveTime = 0;
 guide.on('session', function session(options) {
   var url = options.url,
       match = !url ? null :
-          /^(?:(?:\w+:)?\/\/(\w+)\.\w+.{8})?(?:\/\w+\/([^#?]*))?$/.exec(url),
+        /^(?:(?:\w+:)?\/\/(\w+)\.\w+[^\/]{8})?(?:\/\w+\/([^#?]*))?$/.exec(url);
       ownername = match && match[1] || '',
       filename = match && match[2] || options.filename || 'untitled';
   if (options.remove || options.reset) {
