@@ -189,7 +189,7 @@ body.modal #overlay {
   width: 100%;
   height: 56px;
   table-layout: auto;
-  overflow: hidden;
+  overflow: visible;
   max-height: 56px;
   border-spacing: 0
 }
@@ -198,11 +198,15 @@ body.modal #overlay {
   padding: 0 12px;
   height: 56px;
   vertical-align: middle;
-  overflow: hidden
+}
+
+#topleft {
+  overflow:hidden;
 }
 
 #topright {
   text-align: right;
+  overflow: visible;
   width: 1%
 }
 
@@ -211,26 +215,26 @@ body.modal #overlay {
   background-color: #fff;
   -moz-appearance: none!important;
   box-shadow: 0 0 7px gray;
-  color: #222;
-  border-radius: 8px;
-  font-family: inherit;
   font-size: 16px;
-  line-height: 18px;
+  margin: 5px;
+  display: inline-block;
+  line-height: 24px;
   vertical-align: middle;
   height: 28px;
   padding: 2px 8px;
-  margin: 5px;
-  display: inline-block
+  color: #222;
+  border-radius: 8px;
+  font-family: inherit;
 }
 
-#topright button#save {
+#topright button#save, #topright li#save2 {
   padding-left: 28px;
   background-image: url("/image/dpencil-16.png");
   background-repeat: no-repeat;
   background-position: 8px center
 }
 
-#topright button#save[disabled] {
+#topright button#save[disabled], #topright li#save2[disabled] {
   background-image: url("/image/dgpencil-16.png")
 }
 
@@ -243,6 +247,62 @@ body.modal #overlay {
 #topright button:not([disabled]):hover, #overlay button:not([disabled]):hover, #overlay .zeroclipboard-is-hover {
   box-shadow: 0 0 7px #000;
   color: black;
+}
+
+#topright button.splitmenu {
+  padding-right: 28px;
+  position: relative;
+}
+
+#topright button .droparrow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 28px;
+  width: 20px;
+  padding: 2px;
+  line-height: 24px;
+  vertical-align: middle;
+  border-left: 1px solid darkgray;
+  display: inline-block;
+  margin:0;
+}
+
+#topright button .droparrow ul {
+  list-style-type:none;
+  display: none;
+  position: absolute;
+  left: -70px;
+  border: 0;
+  white-space: nowrap;
+  z-index: 1;
+  background:white;
+  text-align: left;
+  top: -0px;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 0 7px gray;
+}
+
+#topright button .droparrow:hover ul, #topright button .droparrow ul:hover {
+  display: block;
+}
+
+#topright button .droparrow ul li {
+  padding: 2px 8px;
+}
+
+#topright button .droparrow ul li[disabled] {
+  color: silver;
+}
+
+#topright button .droparrow ul li:hover:not([disabled]) {
+  color: #eee;
+  background: dodgerblue;
+}
+
+#topright button .droparrow ul li:active:not([disabled]) {
+  color: white;
 }
 
 #overlay a.quiet {

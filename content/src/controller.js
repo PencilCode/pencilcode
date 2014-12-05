@@ -159,10 +159,16 @@ function updateTopControls(addHistory) {
       //
       // If so, then insert save button
       //
+      var cansave = specialowner() || !model.username ||
+                    view.isPaneEditorDirty(paneatpos('left'));
       buttons.push(
-        {id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
-         disabled: !specialowner() && model.username &&
-                   !view.isPaneEditorDirty(paneatpos('left')) });
+        { id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
+          menu: [
+            { id: 'save2', label: 'Save' },
+            { id: 'savecopy', label: 'Save a Copy as...' }
+          ],
+          disabled: !cansave,
+        });
 
       // Also insert share button
       if (!specialowner() || !model.ownername) {
@@ -373,7 +379,9 @@ view.on('byname', function() {
 
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
-    view.enableButton('save', specialowner() || view.isPaneEditorDirty(pane));
+    var cansave = specialowner() || view.isPaneEditorDirty(pane);
+    view.enableButton('save', cansave);
+    view.enableButton('save2', cansave);
     // Toggle button between triangle and refresh.
     view.showMiddleButton('run');
   }
@@ -548,6 +556,8 @@ view.on('setpass', function() {
 });
 
 view.on('save', function() { saveAction(false, null, null); });
+view.on('save2', function() { saveAction(false, null, null); });
+
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
   if (!model.guideUrl) {

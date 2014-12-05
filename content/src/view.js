@@ -587,10 +587,11 @@ $('#buttonbar,#middle').on('click', 'button', function(e) {
   if ($('#filename').is(document.activeElement)) {
     $('#filename').blur();
   }
-  if (this.id) {
+  var id = $(e.target).attr('id') || this.id;
+  if (id) {
     $(this).removeClass('pressed');
     $(this).tooltipster('hide');
-    fireEvent(this.id, []);
+    fireEvent(id, []);
     return false;
   }
 });
@@ -616,26 +617,41 @@ function showButtons(buttonlist) {
         (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
         '>' + buttonlist[j].label + '</label></button>';
     } else {
+      var submenu = '';
+      if (buttonlist[j].menu) {
+        submenu = ' <div class="droparrow">&#x25be;<ul>';
+        for (var k = 0; k < buttonlist[j].menu.length; ++k) {
+          var item = buttonlist[j].menu[k];
+          submenu += '<li id="' + item.id + '">' + item.label + '</li>';
+        }
+        submenu += '</ul></div>';
+      }
       html += '<button' +
         (buttonlist[j].id ? ' id="' + buttonlist[j].id + '"' : '') +
+        (buttonlist[j].menu ? ' class="splitmenu"' : '') +
         (buttonlist[j].disabled ? ' disabled' : '') +
         (buttonlist[j].title ? ' title="' + buttonlist[j].title + '"' : '') +
-        '>' + buttonlist[j].label + '</button>';
+        '>' + buttonlist[j].label + submenu + '</button>';
     }
   }
   bar.html(html);
+  bar.find('.droparrow').each(function() {
+    var arrowwidth = $(this).outerWidth(),
+        buttonwidth = $(this).parent().outerWidth();
+    $(this).find('ul').css('left', arrowwidth - buttonwidth - 1);
+  });
 
   // Enable tooltipster for any new buttons.
-  $('#buttonbar button').tooltipster();
+  $('#buttonbar button').not('.splitmenu').tooltipster();
+  $('#buttonbar button.splitmenu').tooltipster({position: 'left'});
+  $('#buttonbar button.splitmenu li').tooltipster({position: 'left'});
 }
 
 function enableButton(id, enable) {
   if (enable) {
     var inp = $('#' + id).removeAttr('disabled');
-    inp.closest('button').removeAttr('disabled');
   } else {
     var inp = $('#' + id).attr('disabled', true);
-    inp.closest('button').attr('disabled', true);
   }
 }
 
