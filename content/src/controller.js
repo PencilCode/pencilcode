@@ -121,6 +121,7 @@ function specialowner() {
   return (!model.ownername || model.ownername === 'guide' ||
           model.ownername === 'gymstage' ||
           model.ownername === 'share' ||
+          model.ownername === 'example' ||
           model.ownername === 'frame' ||
           model.ownername === 'event');
 }
@@ -284,14 +285,13 @@ view.on('new', function() {
   });
 });
 
-var lastSharedCode = '';
 var lastSharedName = '';
 
 view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
-  var code = getEditTextIfAny() || '';
-  if (!code) { return; }
+  var doc = view.getPaneEditorData(paneatpos('left'));
+  if (isEmptyDoc(doc)) { return; }
   // First save if needed (including login user if necessary)
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     saveAction(false, 'Log in to share', shareAction);
@@ -306,12 +306,12 @@ view.on('share', function() {
         prefix + "-" + model.ownername + "-" +
         shortfilename.replace(/[^\w\.]+/g, '_').replace(/^_+|_+$/g, '');
     if (lastSharedName.substring(prefix.length) ==
-        sharename.substring(prefix.length) && lastShareCode == code) {
+        sharename.substring(prefix.length)) {
       // Don't pollute the shared space with duplicate code; use the
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, { data:code });
+    var data = $.extend({}, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
@@ -582,6 +582,96 @@ guide.on('login', function(options) {
     };
   }
   signUpAndSave(options);
+});
+
+// Used by a guide to set up a starting doc (or a remembered doc).
+var currentGuideSessionUrl = null;
+var currentGuideSessionFilename = null;
+var currentGuideSessionTimer = null;
+var currentGuideSessionSaveTime = 0;
+
+guide.on('session', function session(options) {
+  var url = options.url,
+      match = !url ? null :
+        /^(?:(?:\w+:)?\/\/(\w+)\.\w+[^\/]{8})?(?:\/\w+\/([^#?]*))?$/.exec(url);
+      ownername = match && match[1] || '',
+      filename = match && match[2] || options.filename || 'untitled';
+  if (options.remove || options.reset) {
+    localStorage.removeItem('pcgs:' + url);
+    if (options.remove) return;
+  }
+  currentGuideSessionUrl = url;
+  currentGuideSessionFilename = filename;
+  // Look for session from localStorage
+  var saved = localStorage.getItem('pcgs:' + url);
+  if (saved) {
+    try { saved = JSON.parse(saved); } catch (e) { saved = null; }
+  }
+  if (options && options.age && saved && (!saved.mtime ||
+      saved.mtime < (new Date).getTime() - options.age)) {
+    saved = null;
+  }
+  // Do nothing if we are already at the right filename (any user).
+  if (!saved && !options.reset) {
+    var cm = model.pane[paneatpos('left')];
+    if (filename == cm.filename && cm.data && cm.data.data) {
+      return;
+    }
+  }
+  var doc = $.extend({}, options);
+  if (saved) {
+    $.extend(doc, saved);
+  }
+  // If we have data, load it right away; otherwise load it from the url.
+  if (doc.data != null) {
+    setupEditor();
+  } else {
+    storage.loadFile(ownername, filename, true, function(loptions) {
+      if (loptions.error) {
+        view.flashNotification(loptions.error);
+        return;
+      }
+      doc = $.extend(loptions, options);
+      setupEditor();
+    });
+  }
+  function setupEditor() {
+    var pane = paneatpos('left');
+    var mpp = model.pane[pane];
+    if (!doc.file) { doc.file = 'setdoc'; }
+    mpp.isdir = false;
+    mpp.data = doc;
+    var mode = doc.hasOwnProperty('blocks') ?
+        !falsish(doc.blocks) : loadBlockMode();
+    mpp.filename = filename;
+    mpp.isdir = false;
+    mpp.bydate = false;
+    mpp.loading = nextLoadNumber();
+    mpp.running = false;
+    view.setPaneEditorData(pane, doc, filename, mode);
+    updateTopControls();
+  }
+});
+
+view.on('delta', function(pane) {
+  // Listen to deltas if there is a guide session active.
+  if (!currentGuideSessionUrl || !currentGuideSessionFilename ||
+      currentGuideSessionTimer || posofpane(pane) != 'left' ||
+      model.pane[pane].filename != currentGuideSessionFilename) {
+    return;
+  }
+  // Save after every change, polling at most twice per second.
+  var delay =
+    Math.max(0, currentGuideSessionSaveTime + 500 - (new Date).getTime());
+  currentGuideSessionTimer = setTimeout(function() {
+    currentGuideSessionTimer = null;
+    var doc = view.getPaneEditorData(pane);
+    doc.mtime = currentGuideSessionSaveTime = +(new Date);
+    if (doc && doc.data != null) {
+      localStorage.setItem(
+          'pcgs:' + currentGuideSessionUrl, JSON.stringify(doc));
+    }
+  }, delay);
 });
 
 view.on('toggleblocks', function(p, useblocks) {
@@ -1143,6 +1233,7 @@ view.on('rename', function(newname) {
     // Nothing to do
     return;
   }
+  var oldMimeType = filetype.mimeForFilename(mp.filename);
   // Error cases: go back to original name.
   // Can't rename the root (for now).
   // TODO: check for:
@@ -1164,9 +1255,18 @@ view.on('rename', function(newname) {
     view.noteNewFilename(pp, newname);
     updateTopControls(false);
     view.setPrimaryFocus();
-    if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner() &&
+    var changed = view.isPaneEditorDirty(paneatpos('left')) ||
+        oldMimeType != filetype.mimeForFilename(newname);
+    if (changed && model.ownername && !nosaveowner() &&
         !view.isPaneEditorEmpty(paneatpos('left'))) {
-      saveAction(true, 'Login to save');
+      saveAction(true, 'Login to save', function() {
+        if (modelatpos('right').running) {
+          // After a change-rename-save, reset the run preview if any.
+          // (Possible mime type change.)
+          var doc = view.getPaneEditorData(paneatpos('left'));
+          runCodeAtPosition('right', doc, modelatpos('left').filename, true);
+        }
+      });
     }
   }
   var payload = {
@@ -1282,6 +1382,11 @@ function isFileWithin(base, candidate) {
       candidate.indexOf(base) === 0;
 }
 
+function falsish(s) {
+  return !s || s == '0' || s == 'false' || s == 'none' || s == 'null' ||
+         s == 'off' || s == 'no';
+}
+
 function readNewUrl(undo) {
   if (readNewUrl.suppress) {
     return;
@@ -1360,7 +1465,7 @@ function readNewUrl(undo) {
   // Handle #blocks
   if (blocks) {
     var f = blocks[1];
-    requestedBlockMode = (f != '0' && f != 'off' && f != 'false');
+    requestedBlockMode = !falsish(f);
   }
   // Handle #new (new user) hash.
   var afterLoad = null;
@@ -1609,6 +1714,8 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         updateTopControls(false);
         view.flashNotification('New file ' + filename + '.');
         cb && cb();
+      } else if (/^image\//.test(m.mime) && !/^image\/svg/.test(m.mime)) {
+        runCodeAtPosition(position, m, filename, false);
       } else {
         // The single file case.
         // TODO:
@@ -1666,18 +1773,13 @@ function renderDirectory(position) {
   updateTopControls(false);
 }
 
-//
-// Returns text content of the editor
-// or null if there's no file loaded.
-//
-
-function getEditTextIfAny() {
-  var model = modelatpos('left');
-  if (model.filename && model.data && model.data.file) {
-    var doc = view.getPaneEditorData(paneatpos('left'));
-    return (doc && doc.data && doc.data.trim())
-  }
-  return null;
+// True if the doc contains nothing, or nothing but spaces.
+function isEmptyDoc(doc) {
+  if (!doc) return true;
+  return ((!doc.data || !doc.data.trim()) &&
+      (!doc.meta || (
+        (!doc.meta.html || !doc.data.html.trim()) &&
+        (!doc.meta.css || !doc.data.css.trim()))));
 }
 
 function shortenUrl(url, cb) {
@@ -1886,7 +1988,7 @@ $(window).on('message', function(e) {
 
 
 // posts message to the parent window, which may have embedded us
-function createMessageSinkFunction() {
+function createParentPostMessageSink() {
   var noneMessageSink = function(method, args){};
 
   // check we do have a parent window
@@ -1911,7 +2013,7 @@ function createMessageSinkFunction() {
   };
 }
 
-view.subscribe(createMessageSinkFunction());
+view.subscribe(createParentPostMessageSink());
 
 function evalAndPostback(requestid, code) {
   var resultanderror = null;

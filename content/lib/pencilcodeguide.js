@@ -11,6 +11,20 @@
   var srcobj = absoluteUrl(scripts.length && scripts[scripts.length - 1].src);
   var origin = srcobj.url.replace(/^(https?:\/\/[^\/]*)(?:\/.*)?$/, "$1");
 
+  // Same as _.extend or $.extend; but without dependencies.
+  function extend(obj) {
+    var source, prop;
+    for (var i = 1, length = arguments.length; i < length; i++) {
+      source = arguments[i];
+      for (prop in source) {
+        if (hasOwnProperty.call(source, prop)) {
+            obj[prop] = source[prop];
+        }
+      }
+    }
+    return obj;
+  }
+
   function checkOrigin(event) {
     return (event.origin == origin ||
         event.origin.replace(/^(https?:\/\/)(?:\w+\.)/, '$1') == origin);
@@ -30,10 +44,9 @@
   var events = {};
   var queries = {};
 
-  function trigger(name) {
+  function trigger(name, args) {
     if (events.hasOwnProperty(name)) {
       var listeners = events[name];
-      var args = Array.prototype.slice.call(arguments, 1);
       for (var j = 0; j < listeners.length; ++j) {
         listeners[j].apply(null, args);
       }
@@ -49,6 +62,14 @@
         !data || 'object' != typeof data || !data.type) {
       return;
     }
+    if (data.type == 'update' && currentSessionUrl) {
+      currentSessionData = data.args[0];
+      localStorage.setItem('pcgs:' + currentSessionUrl,
+        JSON.stringify({
+          mtime: (new Date).getTime(),
+          data: currentSessionData
+        }));
+    }
     if (data.type == 'response') {
       state = data.state;
       if (data.id != null) {
@@ -58,7 +79,11 @@
           if (cb) { cb(state); }
         }
       } else {
-        trigger(data.type, state);
+        if (data.args && data.args.length) {
+          trigger(data.type, data.args);
+        } else {
+          trigger(data.type, [state]);
+        }
       }
     }
   });
@@ -71,6 +96,9 @@
     allow: function(url) {
       global.parent.postMessage({
         type: 'allow', url: absoluteUrl(url).url}, '*');
+    },
+    session: function(options) {
+      global.parent.postMessage({type: 'session', options: options}, '*');
     },
     login: function(options) {
       global.parent.postMessage({

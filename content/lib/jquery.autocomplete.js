@@ -1,13 +1,13 @@
 /**
-*  Ajax Autocomplete for jQuery, version 1.2.14
+*  Ajax Autocomplete for jQuery, version 1.2.15
 *  (c) 2014 Tomas Kirda
 *
 *  Ajax Autocomplete for jQuery is freely distributable under the terms of an MIT-style license.
 *  For details, see the web site: https://github.com/devbridge/jQuery-Autocomplete
 */
 
-/*jslint  browser: true, white: true, plusplus: true */
-/*global define, window, document, jQuery, exports */
+/*jslint  browser: true, white: true, plusplus: true, vars: true */
+/*global define, window, document, jQuery, exports, require */
 
 // Expose plugin as an AMD module if AMD loader is present:
 (function (factory) {
@@ -265,8 +265,9 @@
                 containerParent = $container.parent().get(0);
             // Fix position automatically when appended to body.
             // In other cases force parameter must be given.
-            if (containerParent !== document.body && !that.options.forceFixPosition)
+            if (containerParent !== document.body && !that.options.forceFixPosition) {
                 return;
+            }
 
             // Choose orientation
             var orientation = that.options.orientation,
@@ -275,15 +276,13 @@
                 offset = that.el.offset(),
                 styles = { 'top': offset.top, 'left': offset.left };
 
-            if (orientation == 'auto') {
+            if (orientation === 'auto') {
                 var viewPortHeight = $(window).height(),
                     scrollTop = $(window).scrollTop(),
                     topOverflow = -scrollTop + offset.top - containerHeight,
                     bottomOverflow = scrollTop + viewPortHeight - (offset.top + height + containerHeight);
 
-                orientation = (Math.max(topOverflow, bottomOverflow) === topOverflow)
-                                ? 'top'
-                                : 'bottom';
+                orientation = (Math.max(topOverflow, bottomOverflow) === topOverflow) ? 'top' : 'bottom';
             }
 
             if (orientation === 'top') {
@@ -388,16 +387,21 @@
                         that.selectHint();
                         return;
                     }
-                    // Fall through to RETURN
+                    if (that.selectedIndex === -1) {
+                        that.hide();
+                        return;
+                    }
+                    that.select(that.selectedIndex);
+                    if (that.options.tabDisabled === false) {
+                        return;
+                    }
+                    break;
                 case keys.RETURN:
                     if (that.selectedIndex === -1) {
                         that.hide();
                         return;
                     }
                     that.select(that.selectedIndex);
-                    if (e.which === keys.TAB && that.options.tabDisabled === false) {
-                        return;
-                    }
                     break;
                 case keys.UP:
                     that.moveUp();
@@ -537,6 +541,15 @@
                 return;
             }
 
+            if ($.isFunction(options.lookup)){
+                options.lookup(q, function (data) {
+                    that.suggestions = data.suggestions;
+                    that.suggest();
+                    options.onSearchComplete.call(that.element, q, data.suggestions);
+                });
+                return;
+            }
+
             if (that.isLocal) {
                 response = that.getSuggestionsLocal(q);
             } else {
@@ -607,7 +620,11 @@
 
         suggest: function () {
             if (this.suggestions.length === 0) {
-                this.options.showNoSuggestionNotice ? this.noSuggestions() : this.hide();               
+				if (this.options.showNoSuggestionNotice) {
+					this.noSuggestions();
+				} else {
+					this.hide();
+				}
                 return;
             }
 
@@ -658,21 +675,21 @@
             noSuggestionsContainer.detach();
             container.html(html);
 
-            // Select first value by default:
-            if (options.autoSelectFirst) {
-                that.selectedIndex = 0;
-                container.children().first().addClass(classSelected);
-            }
-
             if ($.isFunction(beforeRender)) {
                 beforeRender.call(that.element, container);
             }
 
             that.fixPosition();
-
             container.show();
-            that.visible = true;
 
+            // Select first value by default:
+            if (options.autoSelectFirst) {
+                that.selectedIndex = 0;
+                container.scrollTop(0);
+                container.children().first().addClass(classSelected);
+            }
+
+            that.visible = true;
             that.findBestHint();
         },
 
@@ -851,15 +868,16 @@
 
         adjustScroll: function (index) {
             var that = this,
-                activeItem = that.activate(index),
-                offsetTop,
-                upperBound,
-                lowerBound,
-                heightDelta = 25;
+                activeItem = that.activate(index);
 
             if (!activeItem) {
                 return;
             }
+
+            var offsetTop,
+                upperBound,
+                lowerBound,
+                heightDelta = $(activeItem).outerHeight();
 
             offsetTop = activeItem.offsetTop;
             upperBound = $(that.suggestionsContainer).scrollTop();

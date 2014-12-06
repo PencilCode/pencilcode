@@ -232,7 +232,9 @@ window.pencilcode.storage = {
       filename, data, force, key, backupOnly, callback) {
     // Always stick the data in the backup immediately, marked as unsaved.
     var msg = $.extend({}, data), now = +(new Date);
-    if (filetype.isDefaultMeta(msg.meta)) {
+    if (!/pencil/.test(filetype.mimeForFilename(filename)) ||
+        filetype.isDefaultMeta(msg.meta)) {
+      // Only 'pencil' type documents should save meta.
       msg.meta = null;
     }
     msg.unsaved = true;

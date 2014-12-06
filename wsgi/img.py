@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 # img.py
 
-import cgi, re, urllib, urllib2, urlparse, collections
-
+import sys, cgi, re, urllib, urllib2, urlparse, collections, os
+sys.path.append(os.path.dirname(__file__))
+import config
+imgdirname = os.path.join(config.cachedir, 'img')
 
 scrapeagent = 'Mozilla/5.0 (Linux x86_64) Gecko/20100101 Firefox/31.0'
 scrapeurl = 'https://www.google.com/search?tbm=isch&sa=X&biw=1024&bih=768'
 scraper = re.compile(r'href="(?:[^"/]*//[^"/]*)?/imgres?[^"]*imgurl=([^&"]*)')
+
+class HeadRequest(urllib2.Request):
+  def get_method(self):
+    return "HEAD"
 
 # Some sites redirect image urls to http urls, or don't like hotlinking.
 # Blacklist these as we find them.
@@ -27,8 +33,18 @@ def splituri(uri):
 def filename_from_uri(uri):
   return '/'.join(splituri(uri)[1:])
 
+keepcharacters = ('-','.',' ','/','_',',',';')
+def normname(name):
+  safe = re.sub('[- /_,;]+', '-',
+     "".join(c for c in name if c.isalnum() or c in keepcharacters)
+     ).strip('-')
+  safe = re.sub('^s-', '', safe)
+  safe = re.sub('^([^-]+-)?t(?:ransparent)?-', '\\1trans-', safe)
+  safe = re.sub('\.jpg$', '.jpeg', safe)
+  return safe
+
 def application(env, start_response):
-  redirect_url = 'http://pencilcode.net/image/pencil_32.png'
+  redirect_url = None
   try:
     form = cgi.FieldStorage(fp=env['wsgi.input'], environ=env)
     request_uri = env['REQUEST_URI']
@@ -45,7 +61,7 @@ def application(env, start_response):
     cache_control = env.get('HTTP_CACHE_CONTROL', '')
     pragma = env.get('HTTP_PRAGMA', '')
     userip = env['REMOTE_ADDR']
-    filename = filename_from_uri(request_uri)
+    filename = normname(urllib.unquote(filename_from_uri(request_uri)))
     m = []
 
     if m.append(re.match(r'(?i)(https?:)//?([^/]+/.*)$', filename)) or any(m):
@@ -58,6 +74,14 @@ def application(env, start_response):
       redirect_url = cache[filename]
 
     else:
+      # TODO: look up a matching filename in the cache.
+      fullname = os.path.join(imgdirname, filename)
+      if os.path.isfile(fullname):
+        redirect_url = file(fullname, 'rb').read()
+
+    if redirect_url is None:
+      redirect_url = 'http://pencilcode.net/image/vpencil-20-64.png'
+
       # Anything else is an imagesearch.
       # Labelled for noncommercial reuse with modification.
       tbs = 'sur:fm'
@@ -121,17 +145,24 @@ def application(env, start_response):
         u = urlparse.urlparse(candidate)
         if u.hostname in blacklist:
           continue
+        try:
+          probe = urllib2.urlopen(HeadRequest(candidate))
+        except urllib2.HTTPError, e:
+          print 'for', filename, 'probe of', candidate, 'returned', e.code
+          continue
         if origin is None or u.hostname in cross_origin_ok:
           redirect_url = candidate
         else:
           redirect_url = '/proxy/' +  candidate
         cache[filename] = redirect_url
+        file(fullname, 'wb').write(redirect_url)
         break
 
   except Exception as e:
     print e
     pass
   finally:
+
     start_response('302 Redirect', [('Location', redirect_url.encode('utf-8'))])
   return []
 

@@ -1,3 +1,10 @@
 language: node_js
 node_js:
 - '0.10'
+notifications:
+  webhooks:
+    urls:
+      - http://fish.pencilcode.net/pull/staging
+    on_success: always
+    on_failure: never
+    on_start: false

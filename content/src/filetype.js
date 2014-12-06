@@ -201,11 +201,44 @@ function modifyForPreview(doc, domain,
     text = wrapTurtle(doc, domain, pragmasOnly, sScript);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
+    var safe = false;
+    if (mimeType && /^text\/html/.test(mimeType) &&
+        !text.match(/<script|<i?frame|<object/i)) {
+      // Only preview HTML if there is no script.
+      safe = true;
+    }
+    if (mimeType && /^image\/svg/.test(mimeType)) {
+      // SVG preview is useful.
+      safe = true;
+    }
     // For now, we don't support inserting startup script in anything
-    // other than a pencil-code file.
-    return '';
+    // other than the types above.
+    if (!safe) {
+      return '';
+    }
   }
   if (!text) return '';
+  if (mimeType && /image\/svg/.test(mimeType) &&
+        !/<(?:[\w]+:)?svg[^>]+xmlns/.test(text)) {
+    // Special case svg-without-namespace support.
+    return text +
+      '<pre>To use this svg as an image, add xmlns:\n' +
+      '&lt;svg <mark>xmlns="http://www.w3.org/2000/svg"</mark>&gt;</pre>';
+  }
+  if (mimeType && /^image\//.test(mimeType)) {
+    // For other image types, generate a document with nothing
+    // but an image tag.
+    var result = [
+      '<!doctype html>',
+      '<html style="min-height:100%">',
+      '<body>',
+      '<img src="data:' + mimeType.replace(/\s/g, '') + ';base64,' +
+         btoa(text) + '" style="position:absolute;top:0;bottom:0;left:0;right:0;margin:auto;background:url(/image/checker.png)">',
+      '</body>',
+      '</html>'
+    ];
+    return result.join('\n');;
+  }
   if (mimeType && !/^text\/html/.test(mimeType)) {
     return '<PLAINTEXT>' + text;
   }
@@ -240,6 +273,7 @@ function mimeForFilename(filename) {
     'jpeg' : 'image/jpeg',
     'gif'  : 'image/gif',
     'png'  : 'image/png',
+    'svg'  : 'image/svg+xml',
     'bmp'  : 'image/x-ms-bmp',
     'ico'  : 'image/x-icon',
     'htm'  : 'text/html',

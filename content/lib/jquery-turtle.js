@@ -1915,6 +1915,8 @@ function applyPenStyle(ctx, ps, scale) {
       if (a === 'savePath' || a === 'eraseMode') { continue; }
       if (scale && a === 'lineWidth') {
         ctx[a] = scale * ps[a] + extraWidth;
+      } else if (a === 'lineDash') {
+        ctx.setLineDash(('' + ps[a]).split(/[,\s]/g));
       } else {
         ctx[a] = ps[a];
       }
@@ -2091,9 +2093,6 @@ function endAndFillPenPath(elem, style) {
     style = $.extend({}, state.style, style);
   }
   drawAndClearPath(getDrawOnCanvas(state), state.corners, style, ts.sx, 1);
-  if (state.style && state.style.savePath) {
-    $.style(elem, 'turtlePenStyle', 'none');
-  }
 }
 
 function clearField(arg) {
@@ -5556,7 +5555,7 @@ function sync() {
     // Unblock all animation queues.
     for (j = 0; j < cb.length; ++j) { cb[j](); }
   }
-  for (j = 0; j < elts.length; ++j) {
+  if (elts.length > 1) for (j = 0; j < elts.length; ++j) {
     queueWaitIfLoadingImg(elts[j]);
     $(elts[j]).queue(function(next) {
       if (ready) {
@@ -6792,15 +6791,26 @@ var turtlefn = {
       "<mark>A = new Sprite('100x100'); " +
       "drawon A; pen red; fd 50; done -> A.rt 360</mark>"],
   function drawon(cc, canvas) {
+    this.each(function() {
+      var state = getTurtleData(this);
+      if (state.drawOnCanvasSync) sync(this, state.drawOnCanvasSync);
+      state.drawOnCanvasSync = canvas;
+    });
+    sync(canvas, this);
     return this.plan(function(j, elem) {
       cc.appear(j);
       var state = getTurtleData(elem);
+      if (state.drawOnCanvas) {
+        sync(elem, state.drawOnCanvas);
+      }
       if (!canvas) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {
         state.drawOnCanvas = canvas.canvas();
       } else if (canvas.tagName && canvas.tagName == 'CANVAS') {
         state.drawOnCanvas = canvas;
+      } else if (canvas.nodeType == 1 || canvas.nodeType == 9) {
+        state.drawOnCanvas = $(canvas).canvas();
       }
       cc.resolve(j);
     });
@@ -7007,7 +7017,7 @@ var turtlefn = {
       "<mark>c = turtle.canvas().getContext('2d'); c.fillStyle = red; " +
       "c.fillRect(10, 10, 30, 30)</mark>"],
   function canvas() {
-    return this.filter('canvas').get(0);
+    return this.filter('canvas').get(0) || this.find('canvas').get(0);
   }),
   imagedata: wrapraw('imagedata',
   ["<u>imagedata()</u> Returns the image data for the turtle. " +
@@ -7690,12 +7700,12 @@ var dollar_turtle_methods = {
       "based on the user's choice: " +
       "<mark>menu {A: (-> write 'chose A'), B: (-> write 'chose B')}</mark>"],
   doOutput, prepareMenu),
-  button: wrapraw('button',
+  button: wrapglobalcommand('button',
   ["<u>button(text, fn)</u> Writes a button. Calls " +
       "fn whenever the button is clicked: " +
       "<mark>button 'GO', -> fd 100</mark>"],
   doOutput, prepareButton),
-  table: wrapraw('table',
+  table: wrapglobalcommand('table',
   ["<u>table(m, n)</u> Writes m rows and c columns. " +
       "Access cells using <u>cell</u>: " +
       "<mark>g = table 8, 8; g.cell(2,3).text 'hello'</mark>",
@@ -8088,6 +8098,8 @@ $.turtle = function turtle(id, options) {
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
     global_turtle = selector[0];
+    // Make sure the main turtle is visible over other normal sprites.
+    selector.css({zIndex: 1});
   }
   // Set up global objects by id.
   if (!('ids' in options) || options.ids) {
@@ -9052,7 +9064,7 @@ function prepareButton(name, callback) {
     name = null;
   }
   if (name === null || name === undefined) {
-    name = '\u25CE';
+    name = 'button';
   }
   var result = $('<button>' + escapeHtml(name) + '</button>');
   if (callback) {

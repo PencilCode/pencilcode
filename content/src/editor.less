@@ -64,7 +64,8 @@ body.modal #overlay {
 
 #overlay .dialog.leftopts {
   right: 50%;
-  top: 90px
+  top: 90px;
+  min-width: 215px;
 }
 
 #overlay .dialog label.tooltipstered:hover {
@@ -468,7 +469,7 @@ body.modal #middle {
 #run .reload {
   width: 36px;
   height: 36px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='36' height='36'><path d='M29,11.5 a13,13 0 1,0 0,13' fill='none' stroke='dodgerblue' stroke-width='9'/><path d='M18,18 l17,0 l0,-17 z' fill='dodgerblue'/></svg>");
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZlcnNpb249JzEuMScgd2lkdGg9JzM2JyBoZWlnaHQ9JzM2Jz48cGF0aCBkPSdNMjksMTEuNSBhMTMsMTMgMCAxLDAgMCwxMycgZmlsbD0nbm9uZScgc3Ryb2tlPSdkb2RnZXJibHVlJyBzdHJva2Utd2lkdGg9JzknLz48cGF0aCBkPSdNMTgsMTggbDE3LDAgbDAsLTE3IHonIGZpbGw9J2RvZGdlcmJsdWUnLz48L3N2Zz4=");
   background-position: center;
   opacity: 0.6;
 }
@@ -873,7 +874,7 @@ body#pencildoc #diigolet-csm {
   font-family: Lato, Verdana, Helvetica, sans-serif;
   font-size: 22px;
   line-height: 26px;
-  padding-left: 5px;
+  padding-left: 3px;
   color: #696969
 }
 
@@ -927,9 +928,26 @@ body#pencildoc #diigolet-csm {
 }
 
 .droplet-palette-group-header.violet {
-  border-left: 10px solid #f2a6e5
+  border-left: 10px solid #bfa6f2
 }
 
 .droplet-palette-group-header-selected.violet {
-  background-color: #f2a6e5
+  background-color: #bfa6f2
 }
+
+.droplet-palette-group-header.red {
+  border-left: 10px solid #f2a6a6
+}
+
+.droplet-palette-group-header-selected.red {
+  background-color: #f2a6a6
+}
+
+.droplet-palette-group-header.yellow {
+  border-left: 10px solid #ecec79
+}
+
+.droplet-palette-group-header-selected.yellow {
+  background-color: #ecec79
+}
+

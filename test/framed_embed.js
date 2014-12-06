@@ -132,7 +132,7 @@ describe('framed embed', function() {
     asyncTest(_page, extended_timeout, null, function() {
       // prepare long code, to exercise URL length
       var code = "speed 100\npen red\n";
-      for (var j = 0; j < 1000; ++j) {
+      for (var j = 0; j < 100; ++j) {
         code += "fd 50; rt " + j + ", 50\n";
       }
       window.test.code0 = code;
@@ -147,7 +147,7 @@ describe('framed embed', function() {
       return false;
     }, function(err, result){
       assert.ifError(err);
-      assert.ok(result.code0.length > 5000);
+      assert.ok(result.code0.length > 500);
       assert.equal(result.code0, result.code1);
       assert.equal(result.code0, result.code2);
       assert.equal(1, result.loaded);
