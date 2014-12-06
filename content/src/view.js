@@ -2601,6 +2601,16 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       return false;
     }
   });
+  $(elt).on('mouseup', function() {
+    if (!editor.isFocused() || !document.hasFocus()) {
+      // On IE, if you click outside the window and click back,
+      // you can be in a state where the editor can't focus itself.
+      // The solution is to focus a different element, then focus
+      // the editor after a short delay.
+      $('body').focus();
+      setTimeout(function() { editor.focus(); }, 0);
+    }
+  });
 
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
