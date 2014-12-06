@@ -112,7 +112,9 @@ window.pencilcode.view = {
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
-  setPaneTitle: function(pane, html) { $('#' + pane + 'title_text').html(html); },
+  setPaneTitle: function(pane, html) {
+    $('#' + pane + 'title_text').html(html);
+  },
   clearPane: clearPane,
   setPaneEditorData: setPaneEditorData,
   changePaneEditorText: function(pane, text) {
@@ -201,6 +203,10 @@ $(window).on('resize.editor', function() {
   var pane;
   $('.hpanel').trigger('panelsize');
 });
+
+function hasSubscribers() {
+  return state.subscribers.length > 0;
+}
 
 function publish(method, args, requestid){
   for (var j = 0; j < state.subscribers.length; ++j) {
@@ -2447,7 +2453,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     if (paneState.settingUp) return;
     paneState.lastChangeTime = +(new Date);
     fireEvent('dirty', [pane]);
-    publish('update', [dropletEditor.getValue()]);
+    if (hasSubscribers()) publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
     fireEvent('delta', [pane]);
@@ -2648,7 +2654,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       handleHtmlChange();
     }
     // Publish the update event for hosting frame.
-    publish('update', [session.getValue()]);
+    if (hasSubscribers()) publish('update', [session.getValue()]);
   });
   $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);

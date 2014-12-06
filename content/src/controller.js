@@ -1989,19 +1989,17 @@ $(window).on('message', function(e) {
 
 // posts message to the parent window, which may have embedded us
 function createParentPostMessageSink() {
-  var noneMessageSink = function(method, args){};
-
   // check we do have a parent window
   if (window.parent === window) {
-    return noneMessageSink;
+    return;
   }
 
   // validate presence of secret in hash
   if (!model.crossFrameContext.secret) {
-    return noneMessageSink;
+    return;
   }
 
-  return function(method, args, requestid){
+  view.subscribe(function(method, args, requestid) {
     var payload = {
         methodName: method,
         args: args};
@@ -2010,10 +2008,10 @@ function createParentPostMessageSink() {
     }
     window.parent.postMessage(
         JSON.stringify(payload), '*');
-  };
+  });
 }
 
-view.subscribe(createParentPostMessageSink());
+createParentPostMessageSink();
 
 function evalAndPostback(requestid, code) {
   var resultanderror = null;
