@@ -109,6 +109,7 @@ module.exports = function(grunt) {
             'content/src/editor.html',
             'content/src/framed.html',
             'content/src/worker.js',
+            'content/src/worker-stats.js',
             'content/src/worker-stats.html'
           ],
           dest: 'content'

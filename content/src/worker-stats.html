@@ -2,28 +2,36 @@
 <html>
   <head>
     <title>ServiceWorker stats for ${worker_scope}</title>
+    <style>
+.hit { color: green }
+.miss { color: red }
+.error { color: red }
+.updated { color: orange }
+.fallback { color: red }
+.skip { color: gray }
+    </style>
     <script>
-function killCache() {
-  var r = new XMLHttpRequest();
-  r.open("GET", "/stats/killcache");
-  r.addEventListener("readystatechange", function() {
-    if (r.readyState == 4) {
-      loadData();
-    }
-  });
-  r.send();
-}
 
 function loadData() {
   var r = new XMLHttpRequest();
   r.open("GET", "/stats/get");
   r.responseType = "json";
-  r.addEventListener("readystatechange", function() {
+  r.onreadystatechange = function() {
     if (r.readyState == 4) {
       onDataReady(r.response);
     }
-  });
+  };
   r.send();
+}
+
+function onDataReady(data) {
+  ["worker_scope", "cache_hits", "cache_misses", "cache_errors"].forEach(function(key) {
+    var el = document.getElementById(key);
+    el.textContent = data[key];
+  });
+  ["main_cache_keys", "user_cache_keys", "recent_requests"].forEach(function(key) {
+    constructListElement(document.getElementById(key), data[key]);
+  });
 }
 
 function constructListElement(parentNode, list) {
@@ -34,54 +42,42 @@ function constructListElement(parentNode, list) {
     return;
   }
 
-  var ul_el = document.createElement('UL');
+  var list_element = document.createElement('UL');
   list.sort().forEach(function(value) {
     var el = document.createElement('LI');
     if (Array.isArray(value)) {
-      var span = document.createElement('SPAN');
-      span.textContent = value[0];
-      el.appendChild(span);
-      value.shift();
+      var tag_text = {
+        hit: "HIT",
+        miss: "MISS",
+        error: "ERROR",
+        updated: "Updated",
+        fallback: "Network failed",
+        skip: "Skipped"
+      };
+      el.appendChild(document.createTextNode(value.shift()));
       value.forEach(function(tag) {
-        span = document.createElement('SPAN');
-        text = tag;
-        color = "black";
-        if (tag === 'hit') {
-          text = " HIT ";
-          color = "green";
-        } else if (tag === 'miss') {
-          text = " MISS ";
-          color = "red";
-        } else if (tag === 'updated') {
-          text = " Updated ";
-          color = "orange";
-        } else if (tag === 'fallback') {
-          text = " Network failed ";
-          color = "red";
-        } else if (tag === 'skip') {
-          text = " Skipped ";
-          color = "gray";
-        }
-        span.textContent = text;
-        span.style.color = color;
+        var span = document.createElement('SPAN');
+        span.appendChild(document.createTextNode(' ' + tag_text[tag]));
+        span.classList.add(tag);
         el.appendChild(span);
       });
     } else {
       el.textContent = value;
     }
-    ul_el.appendChild(el);
+    list_element.appendChild(el);
   });
-
-  parentNode.appendChild(ul_el);
+  parentNode.appendChild(list_element);
 }
-function onDataReady(data) {
-  ["worker_scope", "cache_hits", "cache_misses", "cache_errors"].forEach(function(key) {
-    var el = document.getElementById(key);
-    el.textContent = data[key];
+
+function killCache() {
+  var r = new XMLHttpRequest();
+  r.open("GET", "/stats/killcache");
+  r.addEventListener("readystatechange", function() {
+    if (r.readyState == 4) {
+      loadData();
+    }
   });
-  constructListElement(document.getElementById('main-cache-keys'), data.main_cache_keys);
-  constructListElement(document.getElementById('user-cache-keys'), data.user_cache_keys);
-  constructListElement(document.getElementById('recent'), data.recent_requests);
+  r.send();
 }
     </script>
   </head>
@@ -92,13 +88,13 @@ function onDataReady(data) {
     <p>Cache errors: <span id="cache_errors">Loading...</span></p>
     <p><input type="button" onclick="killCache()" value="Kill caches"></input></p>
     <h3>Recent activity</h3>
-    <div id="recent">
+    <div id="recent_requests">
     </div>
     <h3>Main cache keys</h3>
-    <div id="main-cache-keys">
+    <div id="main_cache_keys">
     </div>
     <h3>User cache keys</h3>
-    <div id="user-cache-keys">
+    <div id="user_cache_keys">
     </div>
   </body>
 </html>

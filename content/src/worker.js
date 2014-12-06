@@ -1,153 +1,30 @@
-var internal_cache_name = 'internal';
+importScripts('worker-stats.js');
+
+// TODO: Cache names should be versioned.
 var main_cache_name = 'main';
 var user_cache_name = 'user';
 
-// Some stats for this service worker session.
-var cache_hits = 0;
-var cache_misses = 0;
-var cache_errors = 0;
-var cache_activity = [];
-var max_cache_activity = 30;
-var CACHE_HIT = 'hit';
-var CACHE_MISS = 'miss';
-var CACHE_UPDATED = 'updated';
-var CACHE_FALLBACK = 'fallback';
-var CACHE_SKIPPED = 'skip';
-
-function statAddRequest(url) {
-  if (cache_activity.some(function(value) {
-      if (value[0] === url) {
-        return true;
-      }
-    })) {
-    return;
-  }
-  if (cache_activity > max_cache_activity) {
-    cache_activity.shift();
-  }
-
-  cache_activity.push([url]);
-}
-
-function statAddResult(url, result) {
-  cache_activity.some(function(value) {
-      if (value[0] === url) {
-        value.push(result);
-      }
-    });
-}
-
 function getCachedResponse(request) {
-  var my_cache = null;
   return self.caches.open(main_cache_name)
     .then(function(cache) {
-        my_cache = cache;
-        return cache.match(request);
-      })
-    .then(function(response) {
-        if (response === undefined) {
-          console.log('Cache miss for ' + request.url);
-          ++cache_misses;
-          return fetch(request)
-            .then(function(response) {
-                return my_cache.put(request, response)
-                  .then(function() {
+        return cache.match(request)
+          .then(function(response) {
+              if (response === undefined) {
+                stats.addResult(request.url, CACHE_MISS);
+                return fetch(request)
+                  .then(function(response) {
+                      cache.put(request, response.clone());
                       return response;
                     });
-              });
-        } else {
-          ++cache_hits;
-          statAddResult(request.url, CACHE_HIT);
-
-          // Return the cached response but update the cache with the online
-          // version in the background.
-          fetch(request).then(function(response) {
-              if (response)
-                my_cache.put(request, response);
+              } else {
+                stats.addResult(request.url, CACHE_HIT);
+                fetch(request)
+                  .then(function(response) {
+                      return response && cache.put(request, response);
+                    });
+                return response;
+              }
             });
-
-          return response;
-        }
-      })
-    .catch(function(e) {
-        ++cache_errors;
-        console.log('Caught ' + e + ' for ' + request.url);
-        throw e;
-      });
-}
-
-function preloadInternalPages() {
-  var internal_pages = ['worker-stats.html'];
-  return Promise.all(internal_pages.map(function(page) {
-      return fetch(page)
-        .then(function(response) {
-            return self.caches.open(internal_cache_name)
-              .then(function(cache) {
-                  return cache.put(page, response);
-                });
-          });
-    }));
-}
-
-function handleStatsRequest(url) {
-  if (url.pathname === '/stats/killcache') {
-    return killCache();
-  }
-  if (url.pathname === '/stats/get') {
-    return getStats();
-  }
-  return self.caches.open(internal_cache_name)
-    .then(function(cache) {
-        return cache.match('worker-stats.html');
-      });
-}
-
-function getStats() {
-  var main_cache_entries = null;
-  var user_cache_entries = null;
-
-  return self.caches.open(main_cache_name)
-    .then(function(cache) {
-        return cache.keys();
-      })
-    .then(function(keys) {
-        main_cache_entries = keys.map(function(request) {
-            return request.url;
-          });
-      })
-    .then(function() {
-        return self.caches.open(user_cache_name);
-      })
-    .then(function(cache) {
-        return cache.keys();
-      })
-    .then(function(keys) {
-        user_cache_entries = keys.map(function(request) {
-            return request.url;
-          });
-      })
-    .then(function() {
-        var data = {
-          worker_scope: self.scope,
-          cache_hits: cache_hits,
-          cache_misses: cache_misses,
-          cache_errors: cache_errors,
-          main_cache_keys: main_cache_entries,
-          user_cache_keys: user_cache_entries,
-          recent_requests: cache_activity
-        };
-        var blob = new Blob([JSON.stringify(data)], { type: 'text/javascript' });
-        return new Response(blob);
-      });
-}
-
-function killCache() {
-  return Promise.all([
-      self.caches.delete(main_cache_name),
-      self.caches.delete(user_cache_name)
-    ])
-    .then(function() {
-        return new Response('OK');
       });
 }
 
@@ -158,22 +35,22 @@ function appendPath(base, name) {
   return base + '/' + name;
 }
 
-function cachePath(filename) {
+function rawCacheEntryName(filename) {
   return '/raw/' + filename;
 }
 
-function fetchUserFiles(path, list) {
+function prefetchUserFiles(path, list) {
   var p = Promise.all(list.map(function(entry) {
       var entry_path = appendPath(path, entry.name);
       if (entry.mode === 'drwx') {
-        return fetchUserDirectory(entry_path);
+        return prefetchUserDirectory(entry_path);
       } else {
         return fetch('/load?file=' + entry_path)
           .then(function(response) {
               return self.caches.open(user_cache_name)
                 .then(function(cache) {
                     console.log("Adding user file: " + entry_path);
-                    return cache.put(cachePath(entry_path), response);
+                    return cache.put(rawCacheEntryName(entry_path), response);
                   });
             });
       }
@@ -181,7 +58,7 @@ function fetchUserFiles(path, list) {
   return p;
 }
 
-function fetchUserDirectory(path) {
+function prefetchUserDirectory(path) {
   path = path || '';
   // path must be a directory.
   var p = fetch('/load?file=' + path)
@@ -189,7 +66,7 @@ function fetchUserDirectory(path) {
         return self.caches.open(user_cache_name)
           .then(function(cache) {
               console.log("Adding user directory : " + path);
-              return cache.put(cachePath(path), response.clone());
+              return cache.put(rawCacheEntryName(path), response.clone());
             })
           .then(function() {
               // response should be json.
@@ -198,7 +75,7 @@ function fetchUserDirectory(path) {
       })
     .then(function(data) {
         var list = data.list;
-        return fetchUserFiles(path, list);
+        return prefetchUserFiles(path, list);
       });
   return p;
 }
@@ -229,9 +106,9 @@ function handleLoadRequest(request, pathname) {
         var response_clone = response.clone();
         return self.caches.open(user_cache_name)
           .then(function(cache) {
-              statAddResult(request.url, CACHE_UPDATED);
+              stats.addResult(request.url, CACHE_UPDATED);
               console.log('Updating cached entry: ' + filename);
-              return cache.put(cachePath(filename), response.clone());
+              return cache.put(rawCacheEntryName(filename), response.clone());
             })
           .then(function() {
               return response;
@@ -240,16 +117,16 @@ function handleLoadRequest(request, pathname) {
     .catch(function(e) {
         return self.caches.open(user_cache_name)
           .then(function(cache) {
-              statAddResult(request.url, CACHE_FALLBACK);
+              stats.addResult(request.url, CACHE_FALLBACK);
               console.log('Serving from cache: ' + request.url);
-              return cache.match(cachePath(filename));
+              return cache.match(rawCacheEntryName(filename));
             })
           .then(function(result) {
               if (result) {
-                statAddResult(request.url, CACHE_HIT);
+                stats.addResult(request.url, CACHE_HIT);
                 return result;
               } else {
-                statAddResult(request.url, CACHE_MISS);
+                stats.addResult(request.url, CACHE_MISS);
                 throw new NetworkError();
               }
             });
@@ -257,6 +134,7 @@ function handleLoadRequest(request, pathname) {
 }
 
 function handleSaveRequest(request, pathname) {
+  var url = new URL(request.url);
   var params = getSearchParams(url.search);
   var data = params.data;
   var meta = params.meta;
@@ -268,85 +146,84 @@ function handleSaveRequest(request, pathname) {
 
   console.log("Search params: " + params);
 
-  // TODO: We currently don't get here because SW doesn't handle POST requests.
   return fetch(request);
 }
 
 function serveEditPage(request, filename) {
-  var p = self.caches.open('main')
+  return self.caches.open(main_cache_name)
     .then(function(cache) {
-      return cache.match('/editor.html');
-    }).then(function(response) {
-      if (response) {
-        // Replace some of the text.
-        statAddResult(request.url, CACHE_HIT);
-        console.log('serving editor.html');
-        return response.text().then(function(text) {
-          var sub_text = text.replace('<!--#echo var="filepath"-->', filename);
-          var b = new Blob([sub_text], {'type': 'text/html'});
-          return new Response(b);
-        });
-      } else {
-        statAddResult(request.url, CACHE_MISS);
-        // Just go back to the origin server if possible.
-        return fetch(request);
-      }
-   });
-  return p;
+        return cache.match('/editor.html');
+      })
+    .then(function(response) {
+        if (response) {
+          // Replace some of the text.
+          stats.addResult(request.url, CACHE_HIT);
+          console.log('serving editor.html');
+          return response.text().then(function(text) {
+              var sub_text = text.replace('<!--#echo var="filepath"-->', filename);
+              var b = new Blob([sub_text], {'type': 'text/html'});
+              return new Response(b);
+            });
+        } else {
+          stats.addResult(request.url, CACHE_MISS);
+          // Just go back to the origin server if possible.
+          return fetch(request);
+        }
+      });
 }
 
 function onInstall(event) {
   console.log('onInstall');
+  // TODO: Should validate exisiting cache entries here.
   // Kick off an update, but don't wait for it.
-  fetchUserDirectory();
+  prefetchUserDirectory();
+  var p = Promise.all([
+      stats.prefetch(),
+      getCachedResponse(new Request('/editor.html'))
+    ]);
+  event.waitUntil(p);
   // TODO: Should also fetch on Sync.
-  // TODO: Should validate exisiting cache entries while we are here.
 }
 
 function onActivate(event) {
   console.log('onActivate');
-  var p = preloadInternalPages()
-    .then(function() {
-        console.log('Going to lookup request on cache.');
-        return getCachedResponse('/editor.html');
-      })
-    .catch(function() {});
-  event.waitUntil(p);
 }
 
 var blacklisted_prefixes = [
-    '/log', '/raw'
-    ];
+  '/log', '/raw'
+];
+
+var page_handlers = [
+    // Note that it's important to begin and end the prefix string with /.
+  { prefix: '/stats/', handler: stats.handlePageRequest },
+  { prefix: '/edit/', handler: serveEditPage },
+  { prefix: '/load/', handler: handleLoadRequest },
+  { prefix: '/save/', handler: handleSaveRequest }
+];
 
 function onFetch(event) {
-  statAddRequest(event.request.url);
   var url = new URL(event.request.url);
   var scopeurl = new URL(self.scope);
   if (url.host === url.host) {
-    if (url.pathname.indexOf('/stats') === 0) {
-      event.respondWith(handleStatsRequest(url));
-      return;
-    }
-    if (url.pathname.indexOf('/edit/') == 0) {
-      event.respondWith(serveEditPage(event.request, url.pathname.substr('/edit'.length)));
-      return;
-    }
-    if (url.pathname.indexOf('/load') === 0) {
-      event.respondWith(handleLoadRequest(event.request, url.pathname.substr('/load'.length)));
-      return;
-    }
-    if (url.pathname.indexOf('/save') === 0) {
-      event.respondWith(handleSaveRequest(event.request, url.pathname.substr('/save'.length)));
+    if (page_handlers.some(function(h) {
+        if (url.pathname.indexOf(h.prefix) === 0) {
+          var remaining_path = url.pathname.substr(h.prefix.length - 1);
+          event.respondWith(h.handler(event.request, remaining_path));
+          return true;
+        }
+        return false;
+      })) {
       return;
     }
     if (blacklisted_prefixes.some(function(prefix) {
         return url.pathname.indexOf(prefix) == 0;
       })) {
-      statAddResult(event.request.url, CACHE_SKIPPED);
+      stats.addResult(event.request.url, CACHE_SKIPPED);
       return;
     }
   }
   if (url.host === 'www.google-analytics.com') {
+    stats.addResult(event.request.url, CACHE_SKIPPED);
     return;
   }
   event.respondWith(getCachedResponse(event.request));
