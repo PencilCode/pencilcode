@@ -123,6 +123,7 @@ module.exports = function(grunt) {
             'content/lib/lodash.js',
             'content/lib/seedrandom.js',
             'content/lib/socket.io.js',
+            'content/lib/recolor.js',
             'content/src/showturtle.js'
           ]
         },
@@ -158,6 +159,7 @@ module.exports = function(grunt) {
           'content/lib/lodash.js',
           'content/lib/seedrandom.js',
           'content/lib/socket.io.js',
+          'content/lib/recolor.js',
           'content/src/showturtle.js'
         ],
         dest: 'content/turtlebits.js'
