@@ -2601,7 +2601,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       return false;
     }
   });
-  $(elt).on('mouseup', function() {
+  $(elt).find('.ace_editor').on('mouseup', function() {
     if (!editor.isFocused() || !document.hasFocus()) {
       // On IE, if you click outside the window and click back,
       // you can be in a state where the editor can't focus itself.
