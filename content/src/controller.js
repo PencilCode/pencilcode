@@ -165,7 +165,7 @@ function updateTopControls(addHistory) {
         { id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
           menu: [
             { id: 'save2', label: 'Save' },
-            { id: 'savecopy', label: 'Save a Copy as...' }
+            { id: 'saveas', label: 'Copy and Save As...' }
           ],
           disabled: !cansave,
         });
@@ -557,6 +557,7 @@ view.on('setpass', function() {
 
 view.on('save', function() { saveAction(false, null, null); });
 view.on('save2', function() { saveAction(false, null, null); });
+view.on('saveas', saveAs);
 
 view.on('overwrite', function() { saveAction(true, null, null); });
 view.on('guide', function() {
@@ -984,6 +985,64 @@ function signUpAndSave(options) {
       } else {
         step2();
       }
+    }
+  });
+}
+
+function saveAs() {
+  if (!model.username) {
+    signUpAndSave();
+    return;
+  }
+  var pp = paneatpos('left');
+  var doc = view.getPaneEditorData(pp);
+  var mp = modelatpos('left');
+  var oldFilename = mp.filename;
+  view.showLoginDialog({
+    prompt: 'Copy and Save As...',
+    username: model.ownername,
+    nopass: true,
+    rename: oldFilename,
+    switchuser: signUpAndSave,
+    validate: function(state) {
+      if (!state.rename) {
+        return {disable: true};
+      }
+      return {disable: false};
+    },
+    done: function(state) {
+      state.update({info: 'Saving....', disable: true});
+      var newFilename = state.rename;
+      storage.saveFile(
+          model.username, newFilename, doc, true,
+          model.passkey, false,
+      function(m) {
+        if (m.needauth) {
+          signUpAndSave();
+          return;
+        }
+        if (m.error) {
+          state.update({info: m.error, disable: true});
+          return;
+        }
+        if (oldFilename != newFilename) {
+          storage.deleteBackup(oldFilename);
+        }
+        state.update({cancel: true});
+        mp.filename = newFilename;
+        view.noteNewFilename(pp, newFilename);
+        view.notePaneEditorCleanData(pp, doc);
+        updateTopControls(false);
+        view.flashNotification('Saved as ' + newFilename);
+        view.setPrimaryFocus();
+        logEvent('save', newFilename, doc.data,
+            view.getPaneEditorBlockMode(pp),
+            view.getPaneEditorLanguage(pp));
+        var oldmtime = mp.data.mtime || 0;
+        if (m.mtime) {
+          mp.data.mtime = Math.max(m.mtime, oldmtime);
+        }
+      });
     }
   });
 }

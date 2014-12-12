@@ -582,7 +582,7 @@ $('#buttonbar,#middle').on('mousemove', 'button', function(e) {
   }
 });
 
-$('#buttonbar,#middle').on('click', 'button', function(e) {
+$('#buttonbar,#middle').on('click', 'button,.splitmenu li', function(e) {
   // First deal with rename if it's in progress.
   if ($('#filename').is(document.activeElement)) {
     $('#filename').blur();
@@ -622,7 +622,9 @@ function showButtons(buttonlist) {
         submenu = ' <div class="droparrow">&#x25be;<ul>';
         for (var k = 0; k < buttonlist[j].menu.length; ++k) {
           var item = buttonlist[j].menu[k];
-          submenu += '<li id="' + item.id + '">' + item.label + '</li>';
+          var title = item.title ? ' title="' + item.title + '"' : '';
+          submenu += '<li id="' + item.id + '"' + title +'>' +
+                     item.label + '</li>';
         }
         submenu += '</ul></div>';
       }
@@ -639,6 +641,13 @@ function showButtons(buttonlist) {
     var arrowwidth = $(this).outerWidth(),
         buttonwidth = $(this).parent().outerWidth();
     $(this).find('ul').css('left', arrowwidth - buttonwidth - 1);
+  });
+  bar.find('.droparrow').on('click', function(e) {
+    if (e.target == this) {
+      e.stopPropagation();
+      e.preventDefault();
+      return false;
+    }
   });
 
   // Enable tooltipster for any new buttons.
@@ -975,7 +984,7 @@ function showLoginDialog(opts) {
         'type="password" class="password"></div>' +
         '<div class="field">New password:<input ' +
         'type="password" class="newpass"></div>'
-      : '<div class="field">Password:<input ' +
+      : opts.nopass ? '' : '<div class="field">Password:<input ' +
         'type="password" class="password"></div>') +
       (opts.rename ?
         '<div class="field">Filename:<input class="rename" value="' +
@@ -1005,15 +1014,15 @@ function showLoginDialog(opts) {
     // This timeout is added so that in the #new case where
     // the dialog and ACE editor are competing for focus, the
     // dialog wins.
-    dialog.find('input:not([disabled])').eq(0).focus();
+    dialog.find('input:not([disabled])').eq(0).select().focus();
     setTimeout(function() {
-      dialog.find('input:not([disabled])').eq(0).focus();
+      dialog.find('input:not([disabled])').eq(0).select().focus();
     }, 0);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
       if (dialog.find('.username').is(':focus')) {
-        dialog.find('.password').focus();
+        dialog.find('.password,.rename').eq(0).focus();
       } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
         opts.done(state);
       }
