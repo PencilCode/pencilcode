@@ -6867,6 +6867,12 @@ var turtlefn = {
       // Place the label on the screen using the figured styles.
       var out = prepareOutput(html, 'label').result.css(applyStyles)
           .addClass('turtlelabel').appendTo(getTurtleField());
+      if (styles && 'id' in styles) {
+        out.attr('id', styles.id);
+      }
+      if (styles && 'class' in styles) {
+        out.addClass(styles.class);
+      }
       var rotated = /\brotated\b/.test(side),
           scaled = /\bscaled\b/.test(side);
       // Mimic the current position and rotation and scale of the turtle.
@@ -8649,6 +8655,14 @@ function hatchone(name, container, defaultshape) {
     result = $(name);
   } else {
     result = $('<div>' + escapeHtml(name) + '</div>');
+  }
+  if (name && 'object' == typeof(name)) {
+    if ('id' in name) {
+      result.attr('id', name.id);
+    }
+    if ('class' in name) {
+      result.addClass(name.class);
+    }
   }
   // Position the turtle inside the container.
   result.css({

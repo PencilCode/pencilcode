@@ -44,6 +44,7 @@ global.recolor = (urls, fn) ->
     label '...',
       zIndex: 3, color: white, font: '20px sans-serif',
       textShadow: '0px 0px 7px black', turtleSpeed: Infinity
+      id: 'recolorlabel'
   turtle.speed 'turtle'
   
   # A couple short timeouts.
@@ -79,9 +80,9 @@ global.recolor = (urls, fn) ->
     sprites.push s
     data.push d
     # Describe the image, its dimensions, and number of channels.
-    $('label').text url.split('/').pop() +
-      ": #{d.width}x#{d.height}x#{d.channels}"
-    $('label').moveto window
+    $('#recolorlabel').text url.split('/').pop() +
+        ": #{d.width}x#{d.height}x#{d.channels}"
+    $('#recolorlabel').moveto window
     await sec defer()
   
   # Get the maximum dimensions of all the sprites.
@@ -152,5 +153,5 @@ global.recolor = (urls, fn) ->
       await moment defer()
 
   # clean up the temporary objects
-  remove $('label'), sprites
+  remove $('#recolorlabel'), sprites
   speed 1

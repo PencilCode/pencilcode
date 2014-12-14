@@ -39,7 +39,8 @@ global.recolor = function(urls, fn) {
       color: white,
       font: '20px sans-serif',
       textShadow: '0px 0px 7px black',
-      turtleSpeed: Infinity
+      turtleSpeed: Infinity,
+      id: 'recolorlabel'
     });
   }
   turtle.speed('turtle');
@@ -113,8 +114,8 @@ global.recolor = function(urls, fn) {
             }
             sprites.push(s);
             data.push(d);
-            $('label').text(url.split('/').pop() + (": " + d.width + "x" + d.height + "x" + d.channels));
-            $('label').moveto(window);
+            $('#recolorlabel').text(url.split('/').pop() + (": " + d.width + "x" + d.height + "x" + d.channels));
+            $('#recolorlabel').moveto(window);
             (function(__iced_k) {
               __iced_deferrals = new iced.Deferrals(__iced_k, {
                 parent: ___iced_passed_deferral,
@@ -291,7 +292,7 @@ global.recolor = function(urls, fn) {
         };
         _while(__iced_k);
       })(function() {
-        remove($('label'), sprites);
+        remove($('#recolorlabel'), sprites);
         return speed(1);
       });
     };
