@@ -6,5 +6,6 @@
   "compactjson": true,
   "uid": "www-data",
   "gid": "www-data",
+  "umask": "002",
   "useHttps": false
 }

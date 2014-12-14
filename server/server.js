@@ -20,4 +20,5 @@ app.listen(process.env.PORT, function() {
   // Switch users.
   if (config.gid) { process.setgid(config.gid); }
   if (config.uid) { process.setuid(config.uid); }
+  if (config.umask) { process.umask(parseInt(config.umask, 8)); }
 });
