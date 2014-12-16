@@ -17,8 +17,9 @@ class HeadRequest(urllib2.Request):
 # Some sites redirect image urls to http urls, or don't like hotlinking.
 # Blacklist these as we find them.
 blacklist = set([
-   'www.public-domain-image.com',
-   'pixabay.com'
+   'atom.smasher.org',
+   'pixabay.com',
+   'www.public-domain-image.com'
 ])
 cross_origin_ok = set([
    'upload.wikimedia.org'
@@ -41,7 +42,7 @@ def normname(name):
   safe = re.sub('^s-', '', safe)
   safe = re.sub('^([^-]+-)?t(?:ransparent)?-', '\\1trans-', safe)
   safe = re.sub('\.jpg$', '.jpeg', safe)
-  return safe
+  return safe.lower()
 
 def application(env, start_response):
   redirect_url = None
