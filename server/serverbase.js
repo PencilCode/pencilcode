@@ -20,12 +20,16 @@ exports.initialize = function(app) {
   // Set up preprocessor to break url into site and user and filepath.
   if (config.host) {
     app.use(function(req, res, next) {
-      var index = req.hostname.lastIndexOf(app.locals.config.host);
+      var index = !req.hostname ? -1 :
+          req.hostname.lastIndexOf(app.locals.config.host);
       if (index == -1) {
         if (req.path.length > 1 &&
             !/\.(?:pac|appcache|js|png)$/.test(req.path)) {
           utils.errorExit('Host ' + req.hostname + ' not part of domain ' +
-              app.locals.config.host);
+              app.locals.config.host +
+              ' ip:' + req.connection.remoteAddress +
+              ' ua:' + req.get('User-Agent') +
+              ' url:' + req.url);
         }
       } else {
         // Remove the '.' separator.
