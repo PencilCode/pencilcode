@@ -5924,11 +5924,24 @@ function wrapwindowevent(name, helptext) {
             : null;
     if (forKey) { focusWindowIfFirst(); }
     if (fn == null && typeof(d) == 'function') { fn = d; d = null; }
-    $(window).on(name, null, d, !filter ? fn : function(e) {
+    $(window).on(name + '.turtleevent', null, d, !filter ? fn : function(e) {
+      if (interrupted) return;
       if ($(e.target).closest(filter).length) { return; }
       return fn.apply(this, arguments);
     });
   });
+}
+
+function windowhasturtleevent() {
+  var events = $._data(window, 'events');
+  if (!events) return false;
+  for (var type in events) {
+    var entries = events[type];
+    for (var j = 0; j < entries.length; ++j) {
+      if (entries[j].namespace == 'turtleevent') return true;
+    }
+  }
+  return false;
 }
 
 // Wrapraw sets up help text for a function (such as "sqrt") that does
@@ -7458,21 +7471,31 @@ var dollar_turtle_methods = {
       if (interrupted) return false;
       if (tickinterval) return true;
       if ($.timers.length) return true;
+      if (forever_timers.length) return true;
       if (async_pending) return true;
       if (global_turtle_animating()) return true;
       if ($(':animated').length) return true;
-      return ($('.turtle').filter(function() {
-        return $.queue(this).length > 0;
-      }).length > 0);
+      if ($('.turtle').filter(function() {
+        return $.queue(this).length > 0; }).length > 0) return true;
+      if ($('.turtleinput').filter(function() {
+        return !$(this).prop('disabled')}).length > 0) return true;
+      if (windowhasturtleevent()) return true;
+      return false;
     }
     // Stop all animations.
     $(':animated,.turtle').clearQueue().stop();
     // Stop our audio.
     resetAudio();
+    // Disable all input.
+    $('.turtleinput').prop('disabled', true);
+    // Detach all event handlers on the window.
+    $(window).off('.turtleevent');
     // Set a flag that will cause all commands to throw.
     interrupted = true;
     // Turn off the global tick interval timer.
     globaltick(null, null);
+    // Turn off timers for 'forever'
+    clearForever();
     // Run through any remaining timers, stopping each one.
     // This handles the case of animations (like "dot") that
     // are not attached to an HTML element.
@@ -7514,6 +7537,10 @@ var dollar_turtle_methods = {
   ["<u>sizexy()</u> Get the document pixel [width, height]. " +
       "<mark>[w, h] = sizexy(); canvas('2d').fillRect(0, 0, w, h)</mark>"],
   sizexy),
+  forever: wrapraw('forever',
+  ["<u>forever(fn)</u> Calls fn repeatedly, forever.",
+   "<u>forever(fps, fn)</u> Calls fn at a rate of fps times per second."],
+  forever),
   tick: wrapraw('tick',
   ["<u>tick(fps, fn)</u> Calls fn fps times per second until " +
       "<u>tick</u> is called again: " +
@@ -8744,7 +8771,47 @@ function random(arg, arg2) {
   return Math.random();
 }
 
-// Simplify setInterval(fn, 1000) to just tick(fn).
+var forever_timers = [];
+
+// As many as you like forever: this simplifies
+// setInterval(fn, 33) to just forever(fn).
+function forever(fps, fn) {
+  if (!fn && 'function' == typeof(fps)) {
+    fn = fps;
+    fps = 30;
+  }
+  var action = null;
+  var ms = Math.max(Math.floor(1000 / Math.max(1/(24*60*60), fps)), 0);
+  if (global_turtle_animating()) {
+    var sel = $(global_turtle);
+    sel.plan(function() {
+      action = fn;
+    });
+  } else {
+    action = fn;
+  }
+  var timer = setInterval(function() {
+    if (!action) return;
+    // Set default speed to Infinity within forever().
+    try {
+      insidetick++;
+      action();
+    } finally {
+      insidetick--;
+    }
+  }, ms);
+  forever_timers.push(timer);
+  return timer;
+}
+
+function clearForever() {
+  for (var j = 0; j < forever_timers.length; ++j) {
+    clearInterval(forever_timers[j]);
+  }
+  forever_timers = [];
+}
+
+// One-time tick: the old original one-per-program, one-per-second tick method.
 var tickinterval = null, insidetick = 0;
 function globaltick(rps, fn) {
   if (fn === undefined && $.isFunction(rps)) {
@@ -9009,7 +9076,7 @@ function prepareMenu(choices, fn) {
       text = (count + 1).toString();
     }
     var value = $.isFunction(outcome) || outcome == null ? text: outcome,
-        radio = $('<input type="radio" name="menu">')
+        radio = $('<input type="radio" name="menu" class="turtleinput">')
             .attr('value', value)
             .on('change click', triggerOnce(outcome)),
         label = $('<label style="display:table">')
@@ -9080,7 +9147,8 @@ function prepareButton(name, callback) {
   if (name === null || name === undefined) {
     name = 'button';
   }
-  var result = $('<button>' + escapeHtml(name) + '</button>');
+  var result = $('<button class="turtleinput">' +
+      escapeHtml(name) + '</button>');
   if (callback) {
     result.click(callback);
   }
@@ -9099,7 +9167,7 @@ function prepareInput(name, callback, numeric) {
     name = null;
   }
   name = $.isNumeric(name) || name ? name : '&rArr;';
-  var textbox = $('<input>').css({margin:0, padding:0}),
+  var textbox = $('<input class="turtleinput">').css({margin:0, padding:0}),
       label = $('<label style="display:table">' + name + '&nbsp;' +
         '</label>').append(textbox),
       debounce = null,
