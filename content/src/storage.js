@@ -25,6 +25,9 @@ function isOnline() {
 function loadBackup(filename, annotation) {
   try {
     var result = JSON.parse(window.localStorage['backup:' + filename]);
+    if (result) {
+      result.meta = filetype.effectiveMeta(result.meta);
+    }
     if (annotation) {
       $.extend(result, annotation);
     }
@@ -188,6 +191,8 @@ window.pencilcode.storage = {
         // and mark it as a backup.
         callback(loadBackup(filename, {backup:true,offline:false}));
       } else {
+        // Fill in meta if it is absent.
+        m.meta = filetype.effectiveMeta(m.meta);
         // Otherwise, return the network loaded file.  Note that we only
         // back up this loaded file if ignoreBackup is false.
         if (!ignoreBackup) {

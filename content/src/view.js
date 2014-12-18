@@ -2402,7 +2402,7 @@ function sizeHtmlCssPanels(pane) {
 // @param pane the id of a pane - alpha, bravo or charlie.
 // @param text the initial text to edit.
 // @param filename the filename to use.
-function setPaneEditorData(pane, doc, filename, useblocks) {
+function setPaneEditorData(pane, doc, filename) {
   clearPane(pane);
   var text = normalizeCarriageReturns(doc.data);
   var meta = copyJSON(doc.meta);
@@ -2414,6 +2414,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.dirtied = false;
   paneState.meta = meta;
   paneState.settingUp = true;
+  var useblocks = meta && !!meta.blocks;
+  console.log('useblocks', useblocks);
   var visibleMimeType = editorMimeType(paneState);
   if (!mimeTypeSupportsBlocks(visibleMimeType)) {
     useblocks = false;
@@ -2764,6 +2766,8 @@ function setPaneEditorBlockMode(pane, useblocks) {
   if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
   var togglingSucceeded = paneState.dropletEditor.toggleBlocks();
   if (!togglingSucceeded) return false;
+  paneState.meta = filetype.effectiveMeta(paneState.meta);
+  paneState.meta.blocks = useblocks;
   fireEvent('toggleblocks', [pane, paneState.dropletEditor.currentlyUsingBlocks]);
   return true;
 }

@@ -652,14 +652,19 @@ guide.on('session', function session(options) {
     if (!doc.file) { doc.file = 'setdoc'; }
     mpp.isdir = false;
     mpp.data = doc;
-    var mode = doc.hasOwnProperty('blocks') ?
-        !falsish(doc.blocks) : loadBlockMode();
+    doc.meta = filetype.effectiveMeta(doc.meta);
+    if (doc.hasOwnProperty('blocks')) {
+      doc.meta.blocks = !falsish(doc.blocks);
+    }
+    if (doc.meta.hasOwnProperty('blocks')) {
+      doc.meta.blocks = loadBlockMode();
+    }
     mpp.filename = filename;
     mpp.isdir = false;
     mpp.bydate = false;
     mpp.loading = nextLoadNumber();
     mpp.running = false;
-    view.setPaneEditorData(pane, doc, filename, mode);
+    view.setPaneEditorData(pane, doc, filename);
     updateTopControls();
   }
 });
@@ -695,6 +700,7 @@ view.on('toggleblocks', function(p, useblocks) {
 });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
+  console.log('saveAction started');
   if (nosaveowner()) {
     return;
   }
@@ -1080,6 +1086,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
 }
 
 function handleSaveStatus(status, filename, noteclean) {
+  console.log('SaveStatus', JSON.stringify(status));
   if (status.newer) {
     view.flashNotification('Newer copy on network. ' +
                            '<a href="#overwrite" id="overwrite">Overwrite</a>?');
@@ -1721,7 +1728,7 @@ function createNewFileIntoPosition(position, filename, text, meta) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
   if (!text) { text = ''; }
-  if (!meta) { meta = loadDefaultMeta(); }
+  if (!meta) { meta = filetype.effectiveMeta(loadDefaultMeta()); }
   view.clearPane(pane, false);
   mpp.loading = 0;
   mpp.filename = filename;
@@ -1732,9 +1739,12 @@ function createNewFileIntoPosition(position, filename, text, meta) {
     data: text,
     mtime: 0
   };
-  var mode = loadBlockMode();
-  view.setPaneEditorData(pane, {data: text, meta: meta}, filename, mode);
-  view.notePaneEditorCleanData(pane, {data: ''});
+  if (!meta.hasOwnProperty('blocks')) {
+    meta.blocks = loadBlockMode();
+  }
+  var mode = meta.blocks;
+  view.setPaneEditorData(pane, {data: text, meta: meta}, filename);
+  view.notePaneEditorCleanData(pane, {data: '', meta: meta});
   mpp.running = false;
   logEvent('new', filename, text, mode, view.getPaneEditorLanguage(pane));
 }
@@ -1794,12 +1804,14 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         if (!m.data) { m.data = ''; }
         mpp.isdir = false;
         mpp.data = m;
-        var mode = loadBlockMode();
-        view.setPaneEditorData(pane, m, filename, mode);
+        if (!m.hasOwnProperty('blocks')) {
+          m.blocks = loadBlockMode();
+        }
+        view.setPaneEditorData(pane, m, filename);
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
-        logEvent('load', filename, m.data, mode,
+        logEvent('load', filename, m.data, m.blocks,
             view.getPaneEditorLanguage(pane));
       }
     });
@@ -1998,9 +2010,15 @@ $(window).on('message', function(e) {
       if (!code || typeof(code) != 'object') {
         code = { data: code };
       }
+      code.meta = filetype.effectiveMeta(code.meta);
+      if (code.hasOwnProperty('blocks')) {
+        code.meta.blocks = !falsish(code.blocks);
+      }
+      if (code.meta.hasOwnProperty('blocks')) {
+        code.meta.blocks = loadBlockMode();
+      }
       view.setPaneEditorData(
-          paneatpos('left'), code, modelatpos('left').filename,
-          loadBlockMode());
+          paneatpos('left'), code, modelatpos('left').filename);
       break;
     case 'setupScript':
       model.setupScript = data.args[0];

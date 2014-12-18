@@ -502,7 +502,8 @@ describe('code editor', function() {
           loaded: ace_editor.getValue(),
           login: $('#login').is(':visible'),
           logout: $('#logout').is(':visible'),
-          cookie: document.cookie
+          cookie: document.cookie,
+          disabled: $('#save').prop('disabled')
         };
       }, function(err, result) {
         assert.ifError(err);
@@ -517,27 +518,55 @@ describe('code editor', function() {
         assert.equal(true, result.logout);
         // The login cookie should be present.
         assert.ok(/login=/.test(result.cookie));
+        // The save button should be disabled.
+        assert.ok(result.disabled);
         done();
       });
     });
   });
-  it('should delete when empty is saved', function(done) {
+  it('should enable the save button when doc is emptied', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Delete all the text in the editor!
-        var ace_editor = ace.edit($('.droplet-ace')[0]);
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
       ace_editor.getSession().setValue('');
-      // Then click the save button.
+    }, function() {
+      if ($('#save').prop('disabled')) return;
+      return { disabled: $('#save').prop('disabled') };
+    }, function(err, result) {
+      assert.ifError(err);
+      // The butterbar should report that the file is deleted.
+      assert.ok(!result.disabled);
+    });
+  });
+  it('should delete when empty is saved', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Now click the save button.
+      console.log('save button disabled? ', $('#save').prop('disabled'));
       $('#save').mousedown();
       $('#save').click();
     }, function() {
+      var lefttitle = $('.panetitle').filter(
+          function() { return $(this).position().left == 0; });
       // Wait for a notification message other than the loading animation.
-      if (!$('#notification').is(':visible')) return;
-      if ($('#notification').hasClass('loading')) return;
+      if (!$('#notification').is(':visible')) return {
+        len: lefttitle.length,
+        txt: lefttitle.text(),
+        step: 1,
+        poll: true
+      };
+      if ($('#notification').hasClass('loading')) return {
+        step: 2,
+        poll: true
+      };
       // Also wait for a title to slide into the left position.
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).position().left == 0; });
       // Wait for the title of the left pane to contain "dir".
-      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
+      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return {
+        len: lefttitle.length,
+        txt: lefttitle.text(),
+        poll: true
+      };
       return {
         notifytext: $('#notification').text(),
         login: $('#login').is(':visible'),
