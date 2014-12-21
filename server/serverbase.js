@@ -66,7 +66,10 @@ exports.initialize2 = function(app) {
     next();
   });
 
-  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(bodyParser.urlencoded({
+    extended: false,
+    limit: '10mb'
+  }));
 
   app.use('/load', function(req, res) {
     load.handleLoad(req, res, app, 'json');
