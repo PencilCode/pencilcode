@@ -2626,7 +2626,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
       return false;
     }
   });
-  $(elt).find('.ace_editor').on('mouseup', function() {
+  $(elt).find('.ace_editor').on('mouseup', function(e) {
     if ($(e.target).closest('.ace_search').length) {
       return;
     }
