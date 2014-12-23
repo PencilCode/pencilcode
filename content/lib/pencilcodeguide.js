@@ -8,7 +8,9 @@
 
   // Look at the current script to get the origin domain.
   var scripts = document.getElementsByTagName('script');
-  var srcobj = absoluteUrl(scripts.length && scripts[scripts.length - 1].src);
+  var scriptsrc = document.currentScript ? document.currentScript.src :
+                  scripts.length ? scripts[scripts.length - 1].src : null;
+  var srcobj = absoluteUrl(scriptsrc);
   var origin = srcobj.url.replace(/^(https?:\/\/[^\/]*)(?:\/.*)?$/, "$1");
 
   // Same as _.extend or $.extend; but without dependencies.
