@@ -10,7 +10,7 @@ return {
       color: 'blue',
       blocks: [
         {
-          block: 'pen violet',
+          block: 'pen green',
           title: 'Set the pen color'
         }, {
           block: 'fd 100',
