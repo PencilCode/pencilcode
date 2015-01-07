@@ -10,6 +10,7 @@ require.config({
     'view': 'src/view',
     'storage': 'src/storage',
     'debug': 'src/debug',
+    'palette': 'src/palette',
     'FontLoader': 'src/FontLoader',
     'filetype': 'src/filetype',
     'gadget': 'src/gadget',
