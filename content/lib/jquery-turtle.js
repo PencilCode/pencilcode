@@ -979,15 +979,6 @@ function getTurtleOrigin(elem, inverseParent, extra) {
   return result;
 }
 
-function unattached(elt) {
-  // Unattached if not part of a document.
-  while (elt) {
-    if (elt.nodeType === 9) return false;
-    elt = elt.parentNode;
-  }
-  return true;
-}
-
 function wh() {
   // Quirks-mode compatible window height.
   return window.innerHeight || $(window).height();
@@ -1065,18 +1056,6 @@ function polyMatchesGbcr(poly, gbcr) {
 
 function readPageGbcr() {
   var raw = this.getBoundingClientRect();
-  if (raw.width === 0 && raw.height === 0 &&
-     raw.top === 0 && raw.left === 0 && unattached(this)) {
-    // Prentend unattached images have a size.
-    return {
-      top: 0,
-      bottom: this.height || 0,
-      left: 0,
-      right: this.width || 0,
-      width: this.width || 0,
-      height: this.height || 0
-    }
-  }
   return {
     top: raw.top + window.pageYOffset,
     bottom: raw.bottom + window.pageYOffset,
@@ -7171,7 +7150,7 @@ var turtlefn = {
     if (!arg) return false;
     if (typeof arg === 'string') { arg = $(arg); }
     if (!arg.jquery && !$.isArray(arg)) { arg = [arg]; }
-    var anyok = false, k = 0, j, obj, elem, gbcr0, toucher;
+    var anyok = false, k = 0, j, obj, elem, gbcr0, toucher, gbcr1;
     for (;!anyok && k < this.length; ++k) {
       elem = this[k];
       gbcr0 = getPageGbcr(elem);
@@ -7179,7 +7158,10 @@ var turtlefn = {
       for (j = 0; !anyok && j < arg.length; ++j) {
         obj = arg[j];
         // Optimize the outside-bounding-box case.
-        if (isDisjointGbcr(gbcr0, getPageGbcr(obj))) {
+        gbcr1 = getPageGbcr(obj);
+        // Do not touch removed or hidden elements, or
+        // elements that are not in the document.
+        if (gbcr1.width === 0 || isDisjointGbcr(gbcr0, gbcr1)) {
           continue;
         }
         if (!toucher) {
@@ -7538,9 +7520,17 @@ var dollar_turtle_methods = {
       "<mark>[w, h] = sizexy(); canvas('2d').fillRect(0, 0, w, h)</mark>"],
   sizexy),
   forever: wrapraw('forever',
-  ["<u>forever(fn)</u> Calls fn repeatedly, forever.",
-   "<u>forever(fps, fn)</u> Calls fn at a rate of fps times per second."],
+  ["<u>forever(fn)</u> Calls fn repeatedly, forever." +
+      "<mark>forever -> fd 2; rt 2</mark>",
+   "<u>forever(fps, fn)</u> Calls fn repeating fps per second." +
+      "<mark>forever 2, -> fd 25; dot blue</mark>"],
   forever),
+  stop: wrapraw('stop',
+  ["<u>stop()</u> stops the current forever loop." +
+      "<mark>forever -> fd 10; if not inside window then stop()</mark>",
+   "<u>stop(fn)</u> stops the forever loop corresponding to fn.",
+   "Use <u>break</u> to stop a <u>for</u> or <u>while</u> loop."],
+  stop),
   tick: wrapraw('tick',
   ["<u>tick(fps, fn)</u> Calls fn fps times per second until " +
       "<u>tick</u> is called again: " +
@@ -8126,7 +8116,7 @@ $.turtle = function turtle(id, options) {
       (!('global' in options) || options.global)) {
     var extraturtlefn = {
       css:1, fadeIn:1, fadeOut:1, fadeTo:1, fadeToggle:1,
-      animate:1, stop:1, toggle:1, finish:1, promise:1, direct:1 };
+      animate:1, toggle:1, finish:1, promise:1, direct:1 };
     var globalfn = $.extend({}, turtlefn, extraturtlefn);
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
@@ -8772,9 +8762,12 @@ function random(arg, arg2) {
 }
 
 var forever_timers = [];
+var current_timers = [];
 
-// As many as you like forever: this simplifies
-// setInterval(fn, 33) to just forever(fn).
+// Sets up as many as you like timers: this simplifies
+// setInterval(fn, 33) to just forever(fn); it also delays
+// starting the interval until the global table reaches this
+// point in the animation queue.
 function forever(fps, fn) {
   if (!fn && 'function' == typeof(fps)) {
     fn = fps;
@@ -8790,25 +8783,45 @@ function forever(fps, fn) {
   } else {
     action = fn;
   }
-  var timer = setInterval(function() {
+  var record = {fn: fn, timer: setInterval(function() {
     if (!action) return;
     // Set default speed to Infinity within forever().
     try {
       insidetick++;
+      current_timers.push(record);
       action();
     } finally {
       insidetick--;
+      current_timers.pop(record);
     }
-  }, ms);
-  forever_timers.push(timer);
-  return timer;
+  }, ms)};
+  forever_timers.push(record);
+  return record.timer;
 }
 
-function clearForever() {
+// Clears forever timers matching "which", or if "which" is null,
+// clears all forever timers.
+function clearForever(which) {
+  var cleaned = [];
   for (var j = 0; j < forever_timers.length; ++j) {
-    clearInterval(forever_timers[j]);
+    var record = forever_timers[j];
+    if (which == null || which == record.timer || which == record.fn) {
+      clearInterval(forever_timers[j].timer);
+    } else {
+      cleaned.push(forever_timers[j]);
+    }
   }
-  forever_timers = [];
+  forever_timers = cleaned;
+}
+
+// Stops the forever timer matching "which".
+// If "which" is null, clears the currently-running timer, or if
+// outside all forever timers, clears all forever timers.
+function stop(which) {
+  if (which == null && current_timers.length) {
+    which = current_timers[current_timers.length - 1].timer;
+  }
+  clearForever(which);
 }
 
 // One-time tick: the old original one-per-program, one-per-second tick method.

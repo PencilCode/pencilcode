@@ -79,7 +79,7 @@ return {
           block: 'if `` is ``\n  ``\nelse\n  ``',
           title: 'Do something if a condition is true, otherwise something else'
         }, {
-          block: "tick 1, ->\n  write 'ticked'",
+          block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
           title: 'Repeat something forever at qually-spaced times'
         }, {
           block: "button \'Click\', ->\n  write 'clicked'",
