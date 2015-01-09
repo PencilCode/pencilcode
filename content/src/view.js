@@ -1482,6 +1482,14 @@ function paletteForMimeType(mimeType) {
   return [];
 }
 
+function dropletOptionsForMimeType(mimeType) {
+  return {
+    blockFunctions: palette.BLOCK_FUNCTIONS,
+    valueFunctions: palette.VALUE_FUNCTIONS,
+    eitherFunctions: palette.EITHER_FUNCTIONS
+  };
+}
+
 function uniqueId(name) {
   return name + '_' + ('' + Math.random()).substr(2);
 }
@@ -1990,7 +1998,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           document.getElementById(id),
           {
             mode: dropletMode,
-            palette: paletteForMimeType(visibleMimeType)
+            palette: paletteForMimeType(visibleMimeType),
+            modeOptions: dropletOptionsForMimeType(visibleMimeType)
           });
   // Set up fonts - once they are loaded.
   whenCodeFontLoaded(function () {
