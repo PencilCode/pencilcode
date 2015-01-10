@@ -133,6 +133,45 @@ exports.handleLoad = function(req, res, app, format) {
       res.send(data);
       return;
     }
+    else if (format == 'print') { // For printing the code
+      var mt = filetype.mimeForFilename(filename),
+          m = filemeta.parseMetaString(
+              fs.readFileSync(absfile)),
+          data = m.data,
+          meta = m.meta,
+          needline = false,
+          out = [];
+      if (mt.indexOf('text') !== 0) {
+        res.set('Content-Type', mt);
+        res.send(data);
+        return;
+      }
+      res.set('Cache-Control', 'must-revalidate');
+      res.set('Content-Type', 'text/html;charset=utf-8');
+      out.push('<!doctype html>', '<html>', '<body>', '<pre>');
+
+      if (/\S/.test(data)) {
+        out.push(addHTMLLineNumbers(data));
+        needline = true;
+      }
+      if (meta && meta.css && /\S/.test(meta.css)) {
+        out.push(addHTMLLineNumbers(data));
+        if (needline)
+           out.push('<br><hr style="border:none;height:1px;background:black">');
+        out.push(addHTMLLineNumbers(meta.css));
+        needline = true;
+      }
+      if (meta && meta.html && /\S/.test(meta.html)) {
+        if (needline)
+           out.push('<br><hr style="border:none;height:1px;background:black">');
+        out.push(addHTMLLineNumbers(meta.html));
+        needline = true;
+      }
+      out.push('</pre>');
+      out.push('</body>', '</html>');
+      res.send(out.join('\n'));
+      return;
+    }
     else if (format == 'run') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename),
@@ -259,6 +298,26 @@ exports.handleLoad = function(req, res, app, format) {
   }
 
 };
+
+function addHTMLLineNumbers(data) {
+  var out = [],
+      lines = data.replace(/\s*$/, '').split('\n'),
+      spaces = Math.min(3, ('' + lines.length).length),
+      j;
+  for (j = 0; j < lines.length; ++j) {
+    var line = '' + (j + 1);
+    while (line.length < spaces) {
+      line = ' ' + line;
+    }
+    line = line + '  ' + lines[j];
+    out.push(escapeHTML(line));
+  }
+  return out.join('\n');
+}
+
+function escapeHTML(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 function isValidNewFile(newAbsFileName, app) {
   var dir = path.dirname(newAbsFileName);

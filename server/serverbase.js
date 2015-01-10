@@ -87,28 +87,22 @@ exports.initialize2 = function(app) {
       req.url.replace(/^((?:[^\/]*\/\/[^\/]*)?\/)/, "$1" + user + "/");
     rawUserData(req, res, next);
   }
-  function expandedUserData(req, res, next) {
-    if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
-        test(req.url)) {
-      load.handleLoad(req, res, app, 'run');
-    }
-    else {
-      staticUserData(req, res, next);
-    }
-  }
-  function bareUserData(req, res, next) {
-    if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
-        test(req.url)) {
-      // This strips metadata off of the file.
-      load.handleLoad(req, res, app, 'code');
-    }
-    else {
-      staticUserData(req, res, next);
+  function userDataPrinter(style) {
+    return function (req, res, next) {
+      // if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
+      if (!/(?:\.(?:png|gif|jpg|jpeg|ico|bmp|pdf))$/.
+          test(req.url)) {
+        load.handleLoad(req, res, app, style);
+      }
+      else {
+        staticUserData(req, res, next);
+      }
     }
   }
-  app.use('/code', bareUserData);
-  app.use('/home', expandedUserData);
-  app.use('/run', expandedUserData);
+  app.use('/code', userDataPrinter('code'));
+  app.use('/home', userDataPrinter('run'));
+  app.use('/run', userDataPrinter('run'));
+  app.use('/print', userDataPrinter('print'));
 
   if (config.dirs.staticdir) {
     if (config.servesrc) {
