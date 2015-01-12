@@ -149,12 +149,17 @@ exports.handleLoad = function(req, res, app, format) {
       res.set('Cache-Control', 'must-revalidate');
       res.set('Content-Type', 'text/html;charset=utf-8');
       out.push('<!doctype html>', '<html>', '<head>');
-      // For scrible - add a title in the form username: file.
+      // Add a title in the form username: file.
       out.push('<title>' + filename.replace('/', ': ') + '</title>');
+      out.push('<style>');
       // For scrible - when the page is modified so that the pre is
       // the second element, insert some extra top-padding to make
       // space for scrible's overlay.
-      out.push('<style>pre:nth-child(2) { padding-top: 100px}</style>');
+      out.push('pre:nth-child(2) { padding-top: 100px; }');
+      // s for dotted-lines with columns
+      out.push('s { border-right: 1px dotted skyblue; margin-right: -1; '+
+               'text-decoration: none; }');
+      out.push('</style>');
       out.push('</head>', '<body>', '<pre>');
 
       if (/\S/.test(data)) {
@@ -306,18 +311,24 @@ exports.handleLoad = function(req, res, app, format) {
 
 };
 
+function addIndentGuides(line) {
+  var leading = /^(?:  )*/.exec(line)[0].length;
+  return line.substring(0, leading).replace(/  /g, '<s>  </s>') +
+         line.substring(leading);
+}
+
 function addHTMLLineNumbers(data) {
   var out = [],
       lines = data.replace(/\s*$/, '').split('\n'),
-      spaces = Math.min(3, ('' + lines.length).length),
+      spaces = Math.max(3, ('' + lines.length).length),
       j;
   for (j = 0; j < lines.length; ++j) {
     var line = '' + (j + 1);
     while (line.length < spaces) {
       line = ' ' + line;
     }
-    line = line + '  ' + lines[j];
-    out.push(escapeHTML(line));
+    line = line + '<s>  </s>' + addIndentGuides(escapeHTML(lines[j]));
+    out.push(line);
   }
   return out.join('\n');
 }
