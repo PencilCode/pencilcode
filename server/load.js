@@ -148,7 +148,14 @@ exports.handleLoad = function(req, res, app, format) {
       }
       res.set('Cache-Control', 'must-revalidate');
       res.set('Content-Type', 'text/html;charset=utf-8');
-      out.push('<!doctype html>', '<html>', '<body>', '<pre>');
+      out.push('<!doctype html>', '<html>', '<head>');
+      // For scrible - add a title in the form username: file.
+      out.push('<title>' + filename.replace('/', ': ') + '</title>');
+      // For scrible - when the page is modified so that the pre is
+      // the second element, insert some extra top-padding to make
+      // space for scrible's overlay.
+      out.push('<style>pre:nth-child(2) { padding-top: 100px}</style>');
+      out.push('</head>', '<body>', '<pre>');
 
       if (/\S/.test(data)) {
         out.push(addHTMLLineNumbers(data));
