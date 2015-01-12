@@ -301,7 +301,13 @@ exports.handleLoad = function(req, res, app, format) {
       }
       else {
         res.set('Content-Type', 'text/html');
-        res.send('<html><body><plaintext>' + e.message);
+        if (/ENOENT/.test(e.message)) {
+          res.status(404);
+          res.send('<html><body><plaintext>' +
+                   '404: ' + filename.replace('/', ': ') + ' not found.');
+        } else {
+          res.send('<html><body><plaintext>' + e.message);
+        }
       }
     }
     else {
