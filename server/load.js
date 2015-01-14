@@ -167,7 +167,6 @@ exports.handleLoad = function(req, res, app, format) {
         needline = true;
       }
       if (meta && meta.css && /\S/.test(meta.css)) {
-        out.push(addHTMLLineNumbers(data));
         if (needline)
            out.push('<br><hr style="border:none;height:1px;background:black">');
         out.push(addHTMLLineNumbers(meta.css));
