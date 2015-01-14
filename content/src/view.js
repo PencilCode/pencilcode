@@ -2270,6 +2270,17 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
     fireEvent('editfocus', [pane]);
   });
+  // Fix focus bug after focus is stolen by a peer frame.
+  // For example, activity.pencilcode.net/edit/frog/README.html:
+  // after running it, a subframe of the RHS grabs focus and then
+  // it becomes impossible to focus the ace editor by clicking on
+  // it, without blurring it first.
+  editor.on('click', function() {
+    if (!editor.isFocused() && !editor.getReadOnly()) {
+      editor.blur();
+      editor.focus();
+    }
+  });
   // Also special-case html change handling.
   var htmlChangeTimer = null;
   var htmlChangeRetryCounter = 10;
