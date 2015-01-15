@@ -7154,14 +7154,19 @@ var turtlefn = {
     for (;!anyok && k < this.length; ++k) {
       elem = this[k];
       gbcr0 = getPageGbcr(elem);
+      // hidden elements do not touch anything
+      if (gbcr0.width == 0) { continue; }
       toucher = null;
       for (j = 0; !anyok && j < arg.length; ++j) {
         obj = arg[j];
         // Optimize the outside-bounding-box case.
         gbcr1 = getPageGbcr(obj);
-        // Do not touch removed or hidden elements, or
-        // elements that are not in the document.
-        if (gbcr1.width === 0 || isDisjointGbcr(gbcr0, gbcr1)) {
+        if (isDisjointGbcr(gbcr0, gbcr1)) {
+          continue;
+        }
+        // Do not touch removed or hidden elements, or points without
+        // a pageX/pageY coordinate.
+        if (gbcr1.width == 0 && (obj.pageX == null || obj.pageY == null)) {
           continue;
         }
         if (!toucher) {
