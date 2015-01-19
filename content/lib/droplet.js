@@ -3594,7 +3594,7 @@ QUAD.init = function (args) {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
+    __modulo = function(a, b) { return (a % b + +b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
@@ -9957,10 +9957,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       Editor.prototype.resizeBlockMode = function() {
         this.resizeTextMode();
-        this.resizeGutter();
         this.dropletElement.style.left = "" + this.paletteElement.offsetWidth + "px";
         this.dropletElement.style.height = "" + this.wrapperElement.offsetHeight + "px";
         this.dropletElement.style.width = "" + (this.wrapperElement.offsetWidth - this.paletteWrapper.offsetWidth) + "px";
+        this.resizeGutter();
         this.mainCanvas.height = this.dropletElement.offsetHeight;
         this.mainCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
         this.mainCanvas.style.height = "" + this.mainCanvas.height + "px";
@@ -10236,7 +10236,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     hook('mousedown', 10, function() {
-      return this.dropletElement.focus();
+      var x, y;
+      x = document.body.scrollLeft;
+      y = document.body.scrollTop;
+      this.dropletElement.focus();
+      return window.scrollTo(x, y);
     });
     hook('populate', 0, function() {
       this.undoStack = [];
@@ -10568,7 +10572,6 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if (this.draggingBlock != null) {
         position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
         rect = this.wrapperElement.getBoundingClientRect();
-        console.log(position.x - this.wrapperElement.getBoundingClientRect().left, position.y - this.wrapperElement.getBoundingClientRect().top);
         this.dragCanvas.style.top = "" + (position.y - rect.top) + "px";
         this.dragCanvas.style.left = "" + (position.x - rect.left) + "px";
         mainPoint = this.trackerPointToMain(position);
@@ -12531,6 +12534,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.mainScrollerStuffing.className = 'droplet-main-scroller-stuffing';
       this.mainScroller.appendChild(this.mainScrollerStuffing);
       this.dropletElement.appendChild(this.mainScroller);
+      this.wrapperElement.addEventListener('scroll', (function(_this) {
+        return function() {
+          return _this.wrapperElement.scrollTop = _this.wrapperElement.scrollLeft = 0;
+        };
+      })(this));
       this.mainScroller.addEventListener('scroll', (function(_this) {
         return function() {
           _this.scrollOffsets.main.y = _this.mainScroller.scrollTop;
@@ -13247,10 +13255,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       })(this));
     });
     hook('keydown', 0, function(event, state) {
-      var _ref1;
+      var x, y, _ref1;
       if (_ref1 = event.which, __indexOf.call(command_modifiers, _ref1) >= 0) {
         if (this.textFocus == null) {
+          x = document.body.scrollLeft;
+          y = document.body.scrollTop;
           this.copyPasteInput.focus();
+          window.scrollTo(x, y);
           if (this.lassoSegment != null) {
             this.copyPasteInput.value = this.lassoSegment.stringify(this.mode.empty);
           }
