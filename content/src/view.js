@@ -2021,9 +2021,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   dropletEditor.setEditorState(useblocks);
   dropletEditor.setValue(text);
 
-  setTimeout(function() {
-    $('.droplet-hover-div').tooltipster();
-  }, 0);
   dropletEditor.on('changepalette', function() {
     $('.droplet-hover-div').tooltipster();
   });
