@@ -166,7 +166,7 @@ return {
           block: '`` > ``',
           title: 'Compare two values'
         }, {
-          block: 'random [1..100]',
+          block: 'random 1, 7',
           title: 'Get a random number in a range'
         }, {
           block: 'round ``',
