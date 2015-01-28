@@ -2022,7 +2022,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   dropletEditor.setValue(text);
 
   dropletEditor.on('changepalette', function() {
-    $('.droplet-hover-div').tooltipster();
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
 
   dropletEditor.on('linehover', function(ev) {
