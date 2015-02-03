@@ -9397,6 +9397,36 @@ var debug = {
 debug.init();
 
 //////////////////////////////////////////////////////////////////////////
+// X Y coordinate showing support
+//////////////////////////////////////////////////////////////////////////
+(function() {
+  if (!debug.ide) {
+    // Only show the X-Y tip if inside a debugging IDE.
+    return;
+  }
+  var location = $('<samp>').css({
+    position: 'fixed',
+    right: 0,
+    bottom: 0,
+    zIndex: 1e6,
+    fontFamily: 'sans-serif',
+    background: 'rgba(255,255,128,0.5)',
+    border: '1px solid dimgray',
+    padding: '0 1px',
+    fontSize: 12
+  }).appendTo('body');
+  $(window).on('mousemove mouseleave', function(e) {
+    if (e.type == 'mouseleave' || e.x == null) {
+      location.hide();
+    } else {
+      location.text(e.x + ', ' + e.y);
+      location.show();
+    }
+  });
+})();
+
+
+//////////////////////////////////////////////////////////////////////////
 // SEE LOGGING SUPPORT
 // A copy of see.js here.
 // TODO: figure out how to move this into the IDE.
