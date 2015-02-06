@@ -1765,7 +1765,7 @@ function getTurtleData(elem) {
   var state = $.data(elem, 'turtleData');
   if (!state) {
     state = $.data(elem, 'turtleData', {
-      styte: null,
+      style: null,
       corners: [[]],
       path: [[]],
       down: false,
@@ -6142,21 +6142,29 @@ function animatedDotCommand(fillShape) {
       diameter = t;
     }
     if (diameter == null) { diameter = 8.8; }
-    if (!style) { style = 'black'; }
-    var ps = parsePenStyle(style, 'fillStyle');
     this.plan(function(j, elem) {
+      var state = getTurtleData(elem),
+          penStyle = state.style;
+      if (!style) {
+        // If no color is specified, default to pen color, or black if no pen.
+        style = (penStyle && (penStyle.fillStyle || penStyle.strokeStyle)) ||
+            'black';
+      }
       cc.appear(j);
       var c = this.pagexy(),
           ts = readTurtleTransform(elem, true),
-          state = getTurtleData(elem),
+          ps = parsePenStyle(style, 'fillStyle'),
           drawOnCanvas = getDrawOnCanvas(state),
           // Scale by sx.  (TODO: consider parent transforms.)
           targetDiam = diameter * ts.sx,
           animDiam = Math.max(0, targetDiam - 2),
           finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
           hasAlpha = /rgba|hsla/.test(ps.fillStyle);
+      if (null == ps.lineWidth && penStyle && penStyle.lineWidth) {
+        ps.lineWidth = penStyle.lineWidth;
+      }
       if (canMoveInstantly(this)) {
-        fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+        fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps, true);
         cc.resolve(j);
       } else {
         this.queue(function(next) {
@@ -6164,11 +6172,11 @@ function animatedDotCommand(fillShape) {
             duration: animTime(elem, intick),
             step: function() {
               if (!hasAlpha) {
-                fillShape(drawOnCanvas, c, this.radius, ts.rot, ps);
+                fillShape(drawOnCanvas, c, this.radius, ts.rot, ps, false);
               }
             },
             complete: function() {
-              fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+              fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps, true);
               cc.resolve(j);
               next();
             }
@@ -6225,6 +6233,85 @@ function fillBox(drawOnCanvas, position, diameter, rot, style) {
     }
   }
   ctx.restore();
+}
+
+function fillArrow(drawOnCanvas, position, diameter, rot, style, drawhead) {
+  var ctx = drawOnCanvas.getContext('2d');
+  ctx.save();
+  applyPenStyle(ctx, style);
+  if (!style.strokeStyle && style.fillStyle) {
+    ctx.strokeStyle = style.fillStyle;
+  }
+  if (diameter !== Infinity) {
+    var c = Math.sin(rot / 180 * Math.PI),
+        s = -Math.cos(rot / 180 * Math.PI),
+        w = style.lineWidth || 1.62,
+        hx = position.pageX + diameter * c,
+        hy = position.pageY + diameter * s,
+        m = calcArrow(w, hx, hy, c, s),
+        ds = diameter - m.hs,
+        dx = ds * c,
+        dy = ds * s;
+    setCanvasPageTransform(ctx, drawOnCanvas);
+    if (ds > 0) {
+      ctx.beginPath();
+      ctx.moveTo(position.pageX, position.pageY);
+      ctx.lineTo(position.pageX + dx, position.pageY + dy);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    if (drawhead) {
+      drawArrowHead(ctx, m);
+    }
+  }
+  ctx.restore();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// ARROW GEOMETRY
+//////////////////////////////////////////////////////////////////////////
+function calcArrow(w, x1, y1, cc, ss) {
+  var hw = Math.max(w * 1.25, w + 2),
+      hh = hw * 2,
+      hs = hh - hw / 2;
+  return {
+      hs: hs,
+      x1: x1,
+      y1: y1,
+      xm: x1 - cc * hs,
+      ym: y1 - ss * hs,
+      x2: x1 - ss * hw - cc * hh,
+      y2: y1 + cc * hw - ss * hh,
+      x3: x1 + ss * hw - cc * hh,
+      y3: y1 - cc * hw - ss * hh
+  };
+}
+
+function drawArrowHead(c, m) {
+  c.beginPath();
+  c.moveTo(m.x2, m.y2);
+  c.lineTo(m.x1, m.y1);
+  c.lineTo(m.x3, m.y3);
+  c.quadraticCurveTo(m.xm, m.ym, m.x2, m.y2);
+  c.closePath();
+  c.fill();
+}
+
+function drawArrowLine(c, w, x0, y0, x1, y1) {
+  var dx = x1 - x0,
+      dy = y1 - y0,
+      dd = Math.sqrt(dx * dx + dy * dy),
+      cc = dx / dd,
+      ss = dy / dd;
+  var m = calcArrow(w, x1, y1, cc, ss);
+  if (dd > m.hs) {
+    c.beginPath();
+    c.moveTo(x0, y0);
+    c.lineTo(m.xm, m.ym);
+    c.lineWidth = w;
+    c.stroke();
+  }
+  drawArrowHead(c, m);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -6487,6 +6574,9 @@ var turtlefn = {
   ["<u>box(color, size)</u> Draws a box. " +
       "Color and size are optional: " +
       "<mark>dot blue</mark>"], animatedDotCommand(fillBox)),
+  arrow: wrapcommand('arrow', 0,
+  ["<u>arrow(color, size)</u> Draws an arrow. " +
+      "<mark>arrow red, 100</mark>"], animatedDotCommand(fillArrow)),
   mirror: wrapcommand('mirror', 1,
   ["<u>mirror(flipped)</u> Mirrors the turtle across its main axis, or " +
       "unmirrors if flipped if false. " +
@@ -9406,21 +9496,148 @@ debug.init();
   }
   var location = $('<samp>').css({
     position: 'fixed',
-    right: 0,
-    bottom: 0,
-    zIndex: 1e6,
+    zIndex: 1e6+1,
     fontFamily: 'sans-serif',
-    background: 'rgba(255,255,128,0.5)',
+    background: '#ff8',
     border: '1px solid dimgray',
-    padding: '0 1px',
+    padding: '1px',
+    cursor: 'move',
     fontSize: 12
   }).appendTo('body');
-  $(window).on('mousemove mouseleave', function(e) {
-    if (e.type == 'mouseleave' || e.x == null) {
-      location.hide();
+  function tr(n) {
+    return n.toFixed(1).replace(/\.0$/, '');
+  }
+  function cd(s) {
+    return '<code style="font-weight:bold;color:blue">' + s + '</code>';
+  }
+  function cont(loc, ev) {
+    return loc && (loc = loc.get(0)) && ev && ev.target &&
+           (loc == ev.target || $.contains(loc, ev.target));
+  }
+  var linestart = null, linecanvas = null, lineend = null,
+      xa = 0, ya = 0, xb = 0, yb = 0;
+  $(window).on('mousedown mouseup mousemove keydown', function(e) {
+    if (e.type == 'keydown') {
+      if (!linecanvas) return;
+      linecanvas.remove();
+      linecanvas = linestart = lineend = null;
+    }
+    if (e.type == 'mousedown') {
+      if (!linecanvas && cont(location, e)) {
+        // State 1: click on the tooltip to move it.
+        var w = sizexy();
+        lineend = linestart = null;
+        linecanvas = $('<canvas width="' + w[0] + '" height="' + w[1] + '">').
+           css({
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          cursor: 'crosshair',
+          zIndex: 1e6
+        }).appendTo('body');
+      } else if (lineend) {
+        // State 4: Click to remove everything.
+        if (linecanvas) { linecanvas.remove(); }
+        linecanvas = linestart = lineend = null;
+      } else if (linestart) {
+        // State 3: Click to pin the line to the end.
+        lineend = e;
+      } else {
+        // State 1: Click to plant the line start.
+        var touched = $('.turtle').within('touch', e);
+        linestart = touched.length ? touched.eq(0) : e;
+      }
+    }
+    if (linecanvas) {
+      var cnv = linecanvas.canvas(),
+          c = cnv.getContext('2d'),
+          relative = false,
+          p = lineend || e,
+          s, html, dx, dy, dd, dir, ang;
+      if (linestart && 'function' == typeof(linestart.pagexy)) {
+        var xy = linestart.getxy(), s = linestart.pagexy();
+        s.x = xy[0];
+        s.y = xy[1];
+        relative = true;
+        dir = linestart.direction();
+        html = [
+          'getxy = ' + tr(s.x) + ', ' + tr(s.y),
+          'direction = ' + tr(dir)
+        ];
+      } else {
+        s = linestart || p;
+        html = [
+          cd('moveto ' + tr(s.x) + ', ' + tr(s.y))
+        ];
+      }
+      html.unshift(lineend ?
+        '<span style="color:green">click to close</span>' :
+        linestart ?
+        '<span style="color:red">click to measure</span>' :
+        '<span style="color:red">click on point</span>'
+      );
+      dx = p.x - s.x,
+      dy = p.y - s.y,
+      dd = Math.sqrt(dx * dx + dy * dy),
+      ang = Math.atan2(dx, dy) / Math.PI * 180;
+      if (linestart) {
+        c.save();
+        c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
+        c.strokeStyle = 'red';
+        c.fillStyle = 'red';
+        // Draw a dot
+        c.beginPath();
+        c.arc(s.pageX, s.pageY, 4, 0, 2*Math.PI, false);
+        c.closePath();
+        c.fill();
+        xa = xb = s.pageX;
+        ya = yb = s.pageY;
+        if (dd > 0) {
+          if (relative) {
+            var delta = (360 + ang - dir) % 360;
+            if (delta <= 180) {
+              html.push(cd('rt ' + tr(delta)));
+            } else {
+              html.push(cd('lt ' + tr(360 - delta)));
+            }
+          } else {
+            html.push(cd('turnto ' + tr(ang)));
+          }
+          html.push(cd('fd ' + tr(dd)));
+          // Draw an arrow.
+          drawArrowLine(c, 2, s.pageX, s.pageY, p.pageX, p.pageY);
+          xa = Math.min(p.pageX, xa);
+          ya = Math.min(p.pageY, ya);
+          xb = Math.max(p.pageX, xb);
+          yb = Math.max(p.pageY, yb);
+          c.lineWidth = 2;
+          c.lineTo(p.pageX, p.pageY);
+          c.stroke();
+        }
+        c.restore();
+      }
+      location.css({left:0, top:0}).html(html.join('<br>')).show().css({
+        left: Math.min(p.pageX - $(window).scrollLeft() + 5,
+            $(document).width() - location.outerWidth() - 2),
+        top: Math.min(p.pageY - $(window).scrollTop() + 5,
+            $(document).height() - location.outerHeight() - 2),
+        right: '',
+        bottom: ''
+      });
     } else {
-      location.text(e.x + ', ' + e.y);
-      location.show();
+      html = [];
+      if (cont(location, e)) {
+        html.push('<span style="color:red">click to use</span>');
+      }
+      if (e.x != null) {
+        html.push(e.x + ', ' + e.y);
+      }
+      location.html(html.join('<br>')).css({
+        left: '',
+        top: '',
+        right: 0,
+        bottom: 0
+      }).show();
     }
   });
 })();
