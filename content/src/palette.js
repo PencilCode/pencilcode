@@ -100,14 +100,11 @@ return {
           block: 'speed Infinity',
           title: 'Use infinite speed'
         }, {
-          block: 'home()',
-          title: 'Jump to the origin, turned up'
+          block: 'ht()',
+          title: 'Hide the main turtle'
         }, {
-          block: 'turnto 270',
-          title: 'Turn to an absolute direction'
-        }, {
-          block: 'turnto lastclick',
-          title: 'Turn toward a located object'
+          block: 'st()',
+          title: 'Show the main turtle'
         }, {
           block: 'moveto 100, 50',
           title: 'Move to coordinates'
@@ -127,10 +124,16 @@ return {
           block: 'jump 10, 5',
           title: "Move sideways or diagonal without drawing"
         }, {
-          block: "tick 10, ->\n  turnto lastmouse\n  fd 2",
+          block: 'turnto 270',
+          title: 'Turn to an absolute direction'
+        }, {
+          block: 'turnto lastclick',
+          title: 'Turn toward a located object'
+        }, {
+          block: "forever ->\n  turnto lastmouse\n  fd 2",
           title: 'Turn and move at regularly-spaced times'
         }, {
-          block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
+          block: "forever ->\n  if pressed 'W'\n    fd 2",
           title: 'Poll a key and move while it is depressed'
         }, {
           block: "click (e) ->\n  moveto e",
@@ -199,6 +202,9 @@ return {
           block: 'label \'spot\'',
           title: 'Write text at the turtle'
         }, {
+          block: 'say \'Try this.\'',
+          title: 'Speak text aloud'
+        }, {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
@@ -223,7 +229,7 @@ return {
           block: 'd = write \'dice\'',
           title: 'Remember d as a text element'
         }, {
-          block: 'tick 1, ->\n  d.text random [1..6]',
+          block: 'forever 1, ->\n  d.text random [1..6]',
           title: 'Change d text content'
         }
       ]
@@ -249,12 +255,6 @@ return {
         }, {
           block: 't.bk 100',
           title: 'Move turtle t backward'
-        }, {
-          block: 'ht()',
-          title: 'Hide the main turtle'
-        }, {
-          block: 'st()',
-          title: 'Show the main turtle'
         }, {
           block: 's = new Sprite',
           title: 'Make a blank sprite'
@@ -484,6 +484,7 @@ return {
     'pd',
     'pe',
     'pf',
+    'say',
     'play',
     'tone',
     'silence',
