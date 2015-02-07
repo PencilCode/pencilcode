@@ -6734,14 +6734,29 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.queue(function(next) {
-        var continuation = function() { cc.resolve(j); next(); };
+        var finished = false,
+            pollTimer = null,
+            complete = function() {
+          if (finished) return;
+          clearInterval(pollTimer);
+          finished = true;
+          cc.resolve(j);
+          next();
+        };
         try {
           var msg = new SpeechSynthesisUtterance(words);
-          msg.addEventListener('end', continuation);
+          msg.addEventListener('end', complete);
+          msg.addEventListener('error', complete);
           speechSynthesis.speak(msg);
+          pollTimer = setInterval(function() {
+            // Chrome speech synthesis fails to deliver an 'end' event
+            // sometimes, so we also poll every 250ms.
+            if (speechSynthesis.pending || speechSynthesis.speaking) return;
+            complete();
+          }, 250);
         } catch (e) {
           console.log(e);
-          continuation();
+          complete();
         }
       });
     });
@@ -9519,6 +9534,7 @@ debug.init();
     position: 'fixed',
     zIndex: 1e6+1,
     fontFamily: 'sans-serif',
+    display: 'none',
     background: '#ff8',
     border: '1px solid dimgray',
     padding: '1px',
