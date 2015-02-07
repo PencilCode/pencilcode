@@ -6727,6 +6727,27 @@ var turtlefn = {
       cc.resolve(j);
     });
   }),
+  say: wrapcommand('say', 1,
+  ["<u>say(words)</u> Say something. Use English words." +
+      "<mark>say \"Let's go!\"</mark>"],
+  function say(cc, words) {
+    this.plan(function(j, elem) {
+      cc.appear(j);
+      this.queue(function(next) {
+        var continuation = function() { cc.resolve(j); next(); };
+        try {
+          var msg = new SpeechSynthesisUtterance(words);
+          msg.addEventListener('end', continuation);
+          speechSynthesis.speak(msg);
+        } catch (e) {
+          console.log(e);
+          continuation();
+        }
+      });
+    });
+    return this;
+
+  }),
   play: wrapcommand('play', 1,
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
       "<a href=\"http://abcnotation.com/\" target=\"_blank\">" +
