@@ -9518,8 +9518,8 @@ debug.init();
       xa = 0, ya = 0, xb = 0, yb = 0;
   $(window).on('mousedown mouseup mousemove keydown', function(e) {
     if (e.type == 'keydown') {
-      if (!linecanvas) return;
-      linecanvas.remove();
+      if (e.which < 27) return;
+      if (linecanvas) linecanvas.remove();
       linecanvas = linestart = lineend = null;
     }
     if (e.type == 'mousedown') {
@@ -9542,6 +9542,7 @@ debug.init();
       } else if (linestart) {
         // State 3: Click to pin the line to the end.
         lineend = e;
+        linecanvas.css({cursor: 'default'});
       } else {
         // State 1: Click to plant the line start.
         var touched = $('.turtle').within('touch', e);
@@ -9561,8 +9562,8 @@ debug.init();
         relative = true;
         dir = linestart.direction();
         html = [
-          'getxy = ' + tr(s.x) + ', ' + tr(s.y),
-          'direction = ' + tr(dir)
+          'getxy is ' + tr(s.x) + ', ' + tr(s.y),
+          'direction is ' + tr(dir)
         ];
       } else {
         s = linestart || p;
@@ -9604,6 +9605,7 @@ debug.init();
             html.push(cd('turnto ' + tr(ang)));
           }
           html.push(cd('fd ' + tr(dd)));
+          html.push('end at ' + tr(p.x) + ', ' + tr(p.y));
           // Draw an arrow.
           drawArrowLine(c, 2, s.pageX, s.pageY, p.pageX, p.pageY);
           xa = Math.min(p.pageX, xa);
