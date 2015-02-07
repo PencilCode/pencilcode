@@ -9544,28 +9544,31 @@ debug.init();
       linecanvas = linestart = lineend = null;
     }
     if (e.type == 'mousedown') {
-      if (!linecanvas && cont(location, e)) {
-        // State 1: click on the tooltip to move it.
-        var w = sizexy();
-        lineend = linestart = null;
-        linecanvas = $('<canvas width="' + w[0] + '" height="' + w[1] + '">').
-           css({
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          cursor: 'crosshair',
-          zIndex: 1e6
-        }).appendTo('body');
+      if (!linecanvas) {
+        if (cont(location, e)) {
+          // State 1: click on the tooltip to move it.
+          var w = sizexy();
+          lineend = linestart = null;
+          linecanvas = $('<canvas width="' + w[0] + '" height="' + w[1] + '">').
+             css({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            cursor: 'crosshair',
+            zIndex: 1e6
+          }).appendTo('body');
+        }
       } else if (lineend) {
         // State 4: Click to remove everything.
         if (linecanvas) { linecanvas.remove(); }
         linecanvas = linestart = lineend = null;
       } else if (linestart) {
         // State 3: Click to pin the line to the end.
-        lineend = e;
         linecanvas.css({cursor: 'default'});
+        lineend = e;
       } else {
         // State 1: Click to plant the line start.
+        $.turtle.interrupt('reset');
         var touched = $('.turtle').within('touch', e);
         linestart = touched.length ? touched.eq(0) : e;
       }
