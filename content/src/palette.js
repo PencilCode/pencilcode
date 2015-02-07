@@ -202,14 +202,14 @@ return {
           block: 'label \'spot\'',
           title: 'Write text at the turtle'
         }, {
-          block: 'say \'Try this.\'',
-          title: 'Speak text aloud'
-        }, {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
           block: 'write \'Hello.\'',
           title: 'Write text in the document'
+        }, {
+          block: 'say \'Try this.\'',
+          title: 'Speak text aloud'
         }, {
           block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
           title: 'Read input from the user'
