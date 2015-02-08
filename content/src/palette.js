@@ -1,5 +1,13 @@
 define(function() {
 
+function filtersay(a) {
+  // Show 'say' block only on browsers that support speech synthesis.
+  if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
+    return a.filter(function(b) { return !/^say\b/.test(b.block); });
+  }
+  return a;
+}
+
 return {
 
   // The following palette description
@@ -197,7 +205,7 @@ return {
     }, {
       name: 'Text',
       color: 'yellow',
-      blocks: [
+      blocks: filtersay([
         {
           block: 'label \'spot\'',
           title: 'Write text at the turtle'
@@ -232,7 +240,7 @@ return {
           block: 'forever 1, ->\n  d.text random [1..6]',
           title: 'Change d text content'
         }
-      ]
+      ])
     }, {
       name: 'Sprites',
       color: 'violet',
