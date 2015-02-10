@@ -8264,8 +8264,7 @@ $.turtle = function turtle(id, options) {
   }
   // Set up test console.
   if (!('panel' in options) || options.panel) {
-    var retval = null,
-        seeopt = {
+    var seeopt = {
       title: 'test panel (type help for help)',
       abbreviate: [undefined, helpok],
       consolehook: seehelphook
@@ -9710,7 +9709,7 @@ try {
   // and if the screen is big enough (i.e., omit mobile clients).
   panel = (window.self !== window.top &&
            screen.width >= 800 && screen.height >= 600 &&
-           parent && parent.ide);
+           parent && parent.ide && parent.ide.getOptions().panel);
 } catch(e) {}
 var see;  // defined below.
 var paneltitle = '';
