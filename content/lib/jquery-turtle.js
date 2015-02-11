@@ -6257,7 +6257,6 @@ function fillArrow(drawOnCanvas, position, diameter, rot, style, drawhead) {
       ctx.beginPath();
       ctx.moveTo(position.pageX, position.pageY);
       ctx.lineTo(position.pageX + dx, position.pageY + dy);
-      ctx.closePath();
       ctx.stroke();
     }
     if (drawhead) {
@@ -9551,7 +9550,7 @@ debug.init();
            (loc == ev.target || $.contains(loc, ev.target));
   }
   var linestart = null, linecanvas = null, lineend = null,
-      xa = 0, ya = 0, xb = 0, yb = 0;
+      xa = 0, ya = 0, xb = 0, yb = 0, xt, yt, dr, ar;
   $(window).on('mousedown mouseup mousemove keydown', function(e) {
     if (e.type == 'keydown') {
       if (e.which < 27) return;
@@ -9623,37 +9622,54 @@ debug.init();
       if (linestart) {
         c.save();
         c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
-        c.strokeStyle = 'red';
-        c.fillStyle = 'red';
+        xa = xb = s.pageX;
+        ya = yb = s.pageY;
         // Draw a dot
+        c.fillStyle = 'red';
         c.beginPath();
         c.arc(s.pageX, s.pageY, 4, 0, 2*Math.PI, false);
         c.closePath();
         c.fill();
-        xa = xb = s.pageX;
-        ya = yb = s.pageY;
         if (dd > 0) {
           if (relative) {
+            c.strokeStyle = 'black';
+            c.fillStyle = 'black';
+            dr = (dir - 90) / 180 * Math.PI;
+            ar = (ang - 90) / 180 * Math.PI;
+            xt = s.pageX + Math.cos(dr) * 100;
+            yt = s.pageY + Math.sin(dr) * 100;
+            drawArrowLine(c, 2, s.pageX, s.pageY, xt, yt);
+            xa = Math.min(xt, xa);
+            ya = Math.min(yt, ya);
+            xb = Math.max(xt, xb);
+            yb = Math.max(yt, yb);
             var delta = (360 + ang - dir) % 360;
+            c.beginPath();
             if (delta <= 180) {
               html.push(cd('rt ' + tr(delta)));
+              if (dd >= 20) c.arc(s.pageX, s.pageY, 20, dr, ar);
             } else {
               html.push(cd('lt ' + tr(360 - delta)));
+              if (dd >= 20) c.arc(s.pageX, s.pageY, 20, ar, dr);
             }
+            c.stroke();
+            xa = Math.min(s.pageX - 20, xa)
+            ya = Math.min(s.pageY - 20, ya)
+            xb = Math.max(s.pageX + 20, xb)
+            yb = Math.max(s.pageY + 20, yb)
           } else {
             html.push(cd('turnto ' + tr(ang)));
           }
           html.push(cd('fd ' + tr(dd)));
           html.push('end at ' + tr(p.x) + ', ' + tr(p.y));
           // Draw an arrow.
+          c.strokeStyle = 'red';
+          c.fillStyle = 'red';
           drawArrowLine(c, 2, s.pageX, s.pageY, p.pageX, p.pageY);
           xa = Math.min(p.pageX, xa);
           ya = Math.min(p.pageY, ya);
           xb = Math.max(p.pageX, xb);
           yb = Math.max(p.pageY, yb);
-          c.lineWidth = 2;
-          c.lineTo(p.pageX, p.pageY);
-          c.stroke();
         }
         c.restore();
       }
