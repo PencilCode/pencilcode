@@ -6,7 +6,7 @@ return {
   // is copied from compiled CoffeeScript.
   COFFEESCRIPT_PALETTE: [
     {
-      name: 'Draw',
+      name: 'Drawing',
       color: 'blue',
       blocks: [
         {
