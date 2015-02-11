@@ -69,9 +69,13 @@ var model = window.pencilcode.model = {
   crossFrameContext: getCrossFrameContext()
 };
 
+function logEvent(name, data) {
+  $.get('/log/' + name, data);
+}
+
 // Log events interesting for academic study: how often code is
 // run, which code it is, and which mode the editor is in.
-function logEvent(action, filename, code, mode, lang) {
+function logCodeEvent(action, filename, code, mode, lang) {
   var c = encodeURIComponent(code.substring(0, 1024)).
           replace(/%20/g, '+').replace(/%0A/g, '|').replace(/%2C/g, ','),
       m = mode ? 'b' : 't', l = lang ? lang : 'n';
@@ -251,6 +255,18 @@ function updateTopControls(addHistory) {
   view.setPaneEditorReadOnly(paneatpos('back'), true);
   view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
 }
+
+//
+// Set up some logging event handlers.
+//
+
+view.on('selectpalette', function(pane, palname) {
+  logEvent('selectpalette', { name: palname.replace(/\s/g, '').toLowerCase() });
+});
+
+view.on('pickblock', function(pane, blockid) {
+  logEvent('pickblock', { id: blockid });
+});
 
 //
 // Now setup event handlers.  Each event handler corresponds to
@@ -445,7 +461,7 @@ function runAction() {
   // Provide instant (momentary) feedback that the program is now running.
   debug.stopButton('flash');
   runCodeAtPosition('right', newdata, filename, false);
-  logEvent('run', filename, newdata.data,
+  logCodeEvent('run', filename, newdata.data,
       view.getPaneEditorBlockMode(paneatpos('left')),
       view.getPaneEditorLanguage(paneatpos('left')));
   if (!specialowner()) {
@@ -690,7 +706,7 @@ view.on('toggleblocks', function(p, useblocks) {
   var filename = model.pane[p].filename;
   var doc = view.getPaneEditorData(p),
       code = (doc && doc.data) || model.pane[p].data.data;
-  logEvent('toggle', filename, code, useblocks,
+  logCodeEvent('toggle', filename, code, useblocks,
       view.getPaneEditorLanguage(p));
 });
 
@@ -720,7 +736,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   function noteclean(mtime) {
     view.flashNotification('Saved.');
     view.notePaneEditorCleanData(paneatpos('left'), newdata);
-    logEvent('save', filename, newdata.data,
+    logCodeEvent('save', filename, newdata.data,
         view.getPaneEditorBlockMode(paneatpos('left')),
         view.getPaneEditorLanguage(paneatpos('left')));
     if (modelatpos('left').filename == filename) {
@@ -1035,7 +1051,7 @@ function saveAs() {
         updateTopControls(false);
         view.flashNotification('Saved as ' + newFilename);
         view.setPrimaryFocus();
-        logEvent('save', newFilename, doc.data,
+        logCodeEvent('save', newFilename, doc.data,
             view.getPaneEditorBlockMode(pp),
             view.getPaneEditorLanguage(pp));
         var oldmtime = mp.data.mtime || 0;
@@ -1736,7 +1752,7 @@ function createNewFileIntoPosition(position, filename, text, meta) {
   view.setPaneEditorData(pane, {data: text, meta: meta}, filename, mode);
   view.notePaneEditorCleanData(pane, {data: ''});
   mpp.running = false;
-  logEvent('new', filename, text, mode, view.getPaneEditorLanguage(pane));
+  logCodeEvent('new', filename, text, mode, view.getPaneEditorLanguage(pane));
 }
 
 
@@ -1799,7 +1815,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
-        logEvent('load', filename, m.data, mode,
+        logCodeEvent('load', filename, m.data, mode,
             view.getPaneEditorLanguage(pane));
       }
     });

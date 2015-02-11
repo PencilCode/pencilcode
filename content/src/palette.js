@@ -1,11 +1,16 @@
 define(function() {
 
-function filtersay(a) {
+function filterblocks(a) {
   // Show 'say' block only on browsers that support speech synthesis.
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
-    return a.filter(function(b) { return !/^say\b/.test(b.block); });
+    a = a.filter(function(b) { return !/^say\b/.test(b.block); });
   }
-  return a;
+  return a.map(function(e) {
+    if (!e.id) {
+      e.id = e.block.replace(/\W..*$/, '');
+    }
+    return e;
+  });
 }
 
 return {
@@ -16,7 +21,7 @@ return {
     {
       name: 'Draw',
       color: 'blue',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'pen purple',
           title: 'Set the pen color'
@@ -61,31 +66,37 @@ return {
           title: 'Scale turtle drawing'
         }, {
           block: 'pen purple, 10',
-          title: 'Set pen color and size'
+          title: 'Set pen color and size',
+          id: 'penthick'
         }, {
           block: 'rt 180, 100',
-          title: 'Make a wide right arc'
+          title: 'Make a wide right arc',
+          id: 'rtarc'
         }, {
           block: 'lt 180, 100',
-          title: 'Make a wide left arc'
+          title: 'Make a wide left arc',
+          id: 'ltarc'
         }
-      ]
+      ])
     }, {
       name: 'Control',
       color: 'orange',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
         }, {
           block: 'for x in [1..3]\n  ``',
-          title: 'Do something multiple times...?'
+          title: 'Do something multiple times...?',
+          id: 'forvar'
         }, {
           block: 'if `` is ``\n  ``',
           title: 'Do something only if a condition is true'
         }, {
           block: 'if `` is ``\n  ``\nelse\n  ``',
-          title: 'Do something if a condition is true, otherwise something else'
+          title:
+              'Do something if a condition is true, otherwise something else',
+          id: 'ifelse'
         }, {
           block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
           title: 'Repeat something forever at qually-spaced times'
@@ -96,17 +107,18 @@ return {
           block: "keydown \'X\', ->\n  write 'x pressed'",
           title: 'Do something when a keyboard key is pressed'
         }
-      ]
+      ])
     }, {
       name: 'Move',
       color: 'red',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'speed 10',
           title: 'Set the speed of the turtle'
         }, {
           block: 'speed Infinity',
-          title: 'Use infinite speed'
+          title: 'Use infinite speed',
+          id: 'speedinf'
         }, {
           block: 'ht()',
           title: 'Hide the main turtle'
@@ -136,46 +148,56 @@ return {
           title: 'Turn to an absolute direction'
         }, {
           block: 'turnto lastclick',
-          title: 'Turn toward a located object'
+          title: 'Turn toward a located object',
+          id: 'turntoobj'
         }, {
           block: "forever ->\n  turnto lastmouse\n  fd 2",
           title: 'Turn and move at regularly-spaced times'
         }, {
           block: "forever ->\n  if pressed 'W'\n    fd 2",
-          title: 'Poll a key and move while it is depressed'
+          title: 'Poll a key and move while it is depressed',
+          id: 'foreverif'
         }, {
           block: "click (e) ->\n  moveto e",
           title: 'Move to a location when document is clicked'
         }
-      ]
+      ])
     }, {
       name: 'Math',
       color: 'green',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'x = ``',
-          title: 'Set a variable'
+          title: 'Set a variable',
+          id: 'assign'
         }, {
           block: '`` + ``',
-          title: 'Add two numbers'
+          title: 'Add two numbers',
+          id: 'add'
         }, {
           block: '`` - ``',
-          title: 'Subtract two numbers'
+          title: 'Subtract two numbers',
+          id: 'subtract'
         }, {
           block: '`` * ``',
-          title: 'Multiply two numbers'
+          title: 'Multiply two numbers',
+          id: 'multiply'
         }, {
           block: '`` / ``',
-          title: 'Divide two numbers'
+          title: 'Divide two numbers',
+          id: 'divide'
         }, {
           block: '`` is ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'is'
         }, {
           block: '`` < ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'lessthan'
         }, {
           block: '`` > ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'greaterthan'
         }, {
           block: 'random 1, 7',
           title: 'Get a random number in a range'
@@ -193,19 +215,22 @@ return {
           title: 'Get the smaller on two numbers'
         }, {
           block: 'text.match /pattern/',
-          title: 'Test if pattern is found in text'
+          title: 'Test if pattern is found in text',
+          id: 'textmatch'
         }, {
           block: 'f = (param) ->\n  ``',
-          title: 'Define a new function'
+          title: 'Define a new function',
+          id: 'funcdef'
         }, {
           block: 'myfunc(arg)',
-          title: 'Use a custom function'
+          title: 'Use a custom function',
+          id: 'funccall'
         }
-      ]
+      ])
     }, {
       name: 'Text',
       color: 'yellow',
-      blocks: filtersay([
+      blocks: filterblocks([
         {
           block: 'label \'spot\'',
           title: 'Write text at the turtle'
@@ -235,40 +260,49 @@ return {
           title: 'Log an object to debug'
         }, {
           block: 'd = write \'dice\'',
-          title: 'Remember d as a text element'
+          title: 'Remember d as a text element',
+          id: 'writevar'
         }, {
           block: 'forever 1, ->\n  d.text random [1..6]',
-          title: 'Change d text content'
+          title: 'Change d text content',
+          id: 'forevertext'
         }
       ])
     }, {
       name: 'Sprites',
       color: 'violet',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'wear \'/img/apple\'',
           title: 'Use an image for the turtle'
         }, {
           block: 't = new Turtle red',
-          title: 'Make a new turtle'
+          title: 'Make a new turtle',
+          id: 'newturtle'
         }, {
           block: 't.fd 100',
-          title: 'Move turtle t forward'
+          title: 'Move turtle t forward',
+          id: 'objfd'
         }, {
           block: 't.rt 90',
-          title: 'Turn turtle t right'
+          title: 'Turn turtle t right',
+          id: 'objrt'
         }, {
           block: 't.lt 90',
-          title: 'Turn turtle t left'
+          title: 'Turn turtle t left',
+          id: 'objlt'
         }, {
           block: 't.bk 100',
-          title: 'Move turtle t backward'
+          title: 'Move turtle t backward',
+          id: 'objbk'
         }, {
           block: 's = new Sprite',
-          title: 'Make a blank sprite'
+          title: 'Make a blank sprite',
+          id: 'newsprite'
         }, {
           block: 's.wear \'/img/dragon\'',
-          title: 'Load an image in sprite s'
+          title: 'Load an image in sprite s',
+          id: 'objwear'
         }, {
           block: 'drawon s',
           title: 'Draw on sprite s'
@@ -277,30 +311,38 @@ return {
           title: 'Draw on the document'
         }, {
           block: 'p = new Piano',
-          title: 'Make a visible insturment'
+          title: 'Make a visible instrument',
+          id: 'newpiano'
         }, {
           block: 'p.play \'CDEDC\'',
-          title: 'Play and show music notes'
+          title: 'Play and show music notes',
+          id: 'objplay'
         }, {
           block: 'q = new Pencil',
-          title: 'Make an invisible and fast drawing sprite'
+          title: 'Make an invisible and fast drawing sprite',
+          id: 'newpencil'
         }, {
           block: 'q.pen black, 1',
-          title: 'Use a thin black pen'
+          title: 'Use a thin black pen',
+          id: 'objpen'
         }, {
           block: 'q.drawon s',
-          title: 'Use q to draw on sprite s'
+          title: 'Use q to draw on sprite s',
+          id: 'objdrawon'
         }, {
           block: 'q.rt 360, 100',
-          title: 'Trace a circle on the right'
+          title: 'Trace a circle on the right',
+          id: 'objrtarc'
         }, {
           block: 'q.lt 360, 100',
-          title: 'Trace a circle on the left'
+          title: 'Trace a circle on the left',
+          id: 'objltarc'
         }, {
           block: 'q.fill pink',
-          title: 'Fill the traced path'
+          title: 'Fill the traced path',
+          id: 'objfill'
         }
-      ]
+      ])
     }
   ],
 

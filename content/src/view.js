@@ -2025,6 +2025,13 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
 
+  dropletEditor.on('selectpalette', function(p) {
+    fireEvent('selectpalette', [pane, p]);
+  });
+  dropletEditor.on('pickblock', function(p) {
+    fireEvent('pickblock', [pane, p]);
+  });
+
   dropletEditor.on('linehover', function(ev) {
     fireEvent('icehover', [pane, ev]);
   });
