@@ -13,6 +13,24 @@ return {
           block: 'speed 10',
           title: 'Set the speed of the turtle'
         }, {
+          block: 'fd 100',
+          title: 'Move forward'
+        }, {
+          block: 'rt 90',
+          title: 'Turn right'
+        }, {
+          block: 'lt 90',
+          title: 'Turn left'
+        }, {
+          block: 'bk 100',
+          title: 'Move backward'
+        }, {
+          block: 'rt 180, 100',
+          title: 'Make a wide right arc'
+        }, {
+          block: 'lt 180, 100',
+          title: 'Make a wide left arc'
+        }, {
           block: 'speed Infinity',
           title: 'Use infinite speed'
         }, {
@@ -88,18 +106,6 @@ return {
           block: 'pen pink',
           title: 'Set the pen color'
         }, {
-          block: 'fd 100',
-          title: 'Move forward'
-        }, {
-          block: 'rt 90',
-          title: 'Turn right'
-        }, {
-          block: 'lt 90',
-          title: 'Turn left'
-        }, {
-          block: 'bk 100',
-          title: 'Move backward'
-        }, {
           block: 'fill blue',
           title: 'Fill traced shape'
         }, {
@@ -129,12 +135,6 @@ return {
         }, {
           block: 'pen purple, 10',
           title: 'Set pen color and size'
-        }, {
-          block: 'rt 180, 100',
-          title: 'Make a wide right arc'
-        }, {
-          block: 'lt 180, 100',
-          title: 'Make a wide left arc'
         }
       ]
     }, {
