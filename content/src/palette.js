@@ -103,8 +103,8 @@ return {
       color: 'blue',
       blocks: [
         {
-          block: 'pen pink',
-          title: 'Set the pen color'
+          block: 'pen purple, 10',
+          title: 'Set pen color and size'
         }, {
           block: 'fill blue',
           title: 'Fill traced shape'
@@ -132,9 +132,6 @@ return {
         }, {
           block: 'scale 3',
           title: 'Scale turtle drawing'
-        }, {
-          block: 'pen purple, 10',
-          title: 'Set pen color and size'
         }
       ]
     }, {
