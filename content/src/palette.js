@@ -193,14 +193,14 @@ return {
       color: 'yellow',
       blocks: [
         {
-          block: 'label \'spot\'',
-          title: 'Write text at the turtle'
+          block: 'write \'Hello.\'',
+          title: 'Write text in the document'
         }, {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
-          block: 'write \'Hello.\'',
-          title: 'Write text in the document'
+          block: 'label \'spot\'',
+          title: 'Write text at the turtle'
         }, {
           block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
           title: 'Read input from the user'
