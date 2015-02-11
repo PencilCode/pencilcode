@@ -9530,7 +9530,7 @@ debug.init();
   }
   var location = $('<samp>').css({
     position: 'fixed',
-    zIndex: 1e6+1,
+    zIndex: 1e6-1,
     fontFamily: 'sans-serif',
     display: 'none',
     background: '#ff8',
@@ -9673,14 +9673,24 @@ debug.init();
         }
         c.restore();
       }
-      location.css({left:0, top:0}).html(html.join('<br>')).show().css({
-        left: Math.min(p.pageX - $(window).scrollLeft() + 5,
-            $(document).width() - location.outerWidth() - 2),
-        top: Math.min(p.pageY - $(window).scrollTop() + 5,
-            $(document).height() - location.outerHeight() - 2),
-        right: '',
-        bottom: ''
-      });
+      location.css({left:0, top:0}).html(html.join('<br>')).show();
+      // Position the draggable tip to the side away from the start point.
+      var pos = { left: '', top: '', right: '', bottom: '' };
+      if (p.pageX + 5 < s.pageX) {
+        pos.left = Math.max(
+            p.pageX - $(window).scrollLeft() - location.outerWidth() - 5, 2);
+      } else {
+        pos.left = Math.min(p.pageX - $(window).scrollLeft() + 5,
+            $(document).width() - location.outerWidth() - 2);
+      }
+      if (p.pageY + 5 < s.pageY) {
+        pos.top = Math.max(
+            p.pageY - $(window).scrollTop() - location.outerHeight() - 5, 2);
+      } else {
+        pos.top = Math.min(p.pageY - $(window).scrollTop() + 5,
+            $(document).height() - location.outerHeight() - 2);
+      }
+      location.css(pos);
     } else {
       html = [];
       if (cont(location, e)) {
