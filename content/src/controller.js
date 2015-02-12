@@ -261,11 +261,11 @@ function updateTopControls(addHistory) {
 //
 
 view.on('selectpalette', function(pane, palname) {
-  logEvent('selectpalette', { name: palname.replace(/\s/g, '').toLowerCase() });
+  logEvent('~selectpalette', {name: palname.replace(/\s/g, '').toLowerCase()});
 });
 
 view.on('pickblock', function(pane, blockid) {
-  logEvent('pickblock', { id: blockid });
+  logEvent('~pickblock', { id: blockid });
 });
 
 //
