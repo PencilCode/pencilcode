@@ -199,9 +199,6 @@ return {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Read a number from the user'
         }, {
-          block: 'readstr \'Idea?\', (n) ->\n  write n.length',
-          title: 'Read a whole line of text'
-        }, {
           block: "table [\n  ['a','b','c']\n  [1,2,3]\n]",
           title: 'Write a table in the document'
         }, {
