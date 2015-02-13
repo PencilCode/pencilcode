@@ -196,7 +196,7 @@ return {
           block: 'read \'?\', (x) ->\n  write x',
           title: 'Read input from the user'
         }, {
-          block: 'readnum \'Side\', (n) ->\n  write \'A\' + n * n',
+          block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Read a number from the user'
         }, {
           block: 'readstr \'Idea?\', (n) ->\n  write n.length',
