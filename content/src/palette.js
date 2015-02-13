@@ -193,7 +193,7 @@ return {
           block: 'label \'spot\'',
           title: 'Write text at the turtle'
         }, {
-          block: 'read \'?\', (x) ->\x  write x',
+          block: 'read \'Name?\', (n) ->\n  write \'Hello\' + n',
           title: 'Read input from the user'
         }, {
           block: 'readnum \'Side\', (n) ->\n  write \'A\' + n * n',
