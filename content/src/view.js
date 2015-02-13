@@ -1238,6 +1238,17 @@ function labelStep(preview, step) {
       // JSON repr is no good for Infinity or NaN.
       onerepr = arg.toString();
     }
+    if (typeof(arg) == 'object') {
+      if (arg.hasOwnProperty('timeStamp') && arg.hasOwnProperty('type')) {
+        onerepr = arg.type ? arg.type + '-event' : 'event';
+      } else if (arg.jquery) {
+        if ('function' == typeof arg.hasClass && arg.hasClass('turtle')) {
+          onerepr = 'turtle-object';
+        } else {
+          onerepr = 'jquery-object';
+        }
+      }
+    }
     if (!onerepr) {
       // Try using JSON repr.
       try {
@@ -1248,8 +1259,8 @@ function labelStep(preview, step) {
       // Otherwise, use toString repr.
       onerepr = arg.toString();
     }
-    if (onerepr.length > 80) {
-      onerepr = onerepr.substr(0, 77) + '...'
+    if (onerepr.length > 50) {
+      onerepr = onerepr.substr(0, 47) + '...'
     }
     argrepr.push(onerepr);
   }
