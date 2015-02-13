@@ -9621,7 +9621,7 @@ debug.init();
       ang = Math.atan2(dx, dy) / Math.PI * 180;
       if (linestart) {
         c.save();
-        c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
+        c.clearRect(xa - 10, ya - 10, xb - xa + 20, yb - ya + 20);
         xa = xb = s.pageX;
         ya = yb = s.pageY;
         // Draw a dot
