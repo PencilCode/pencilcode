@@ -60,15 +60,6 @@ return {
         }, {
           block: 'jump 10, 5',
           title: "Move sideways or diagonal without drawing"
-        }, {
-          block: "tick 10, ->\n  turnto lastmouse\n  fd 2",
-          title: 'Turn and move at regularly-spaced times'
-        }, {
-          block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
-          title: 'Poll a key and move while it is depressed'
-        }, {
-          block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
         }
       ]
     }, {
@@ -96,6 +87,9 @@ return {
         }, {
           block: "keydown \'X\', ->\n  write 'x pressed'",
           title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click (e) ->\n  moveto e",
+          title: 'Move to a location when document is clicked'
         }
       ]
     }, {
