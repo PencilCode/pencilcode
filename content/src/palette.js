@@ -10,9 +10,6 @@ return {
       color: 'red',
       blocks: [
         {
-          block: 'speed 10',
-          title: 'Set the speed of the turtle'
-        }, {
           block: 'fd 100',
           title: 'Move forward'
         }, {
@@ -30,6 +27,9 @@ return {
         }, {
           block: 'lt 180, 100',
           title: 'Make a wide left arc'
+        }, {
+          block: 'speed 10',
+          title: 'Set the speed of the turtle'
         }, {
           block: 'speed Infinity',
           title: 'Use infinite speed'
