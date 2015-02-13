@@ -100,17 +100,14 @@ return {
           block: 'pen purple, 10',
           title: 'Set pen color and size'
         }, {
-          block: 'fill blue',
-          title: 'Fill traced shape'
-        }, {
           block: 'dot green, 50',
           title: 'Make a dot'
         }, {
           block: 'box yellow, 50',
           title: 'Make a square'
         }, {
-          block: 'home()',
-          title: 'Move the turtle back to start'
+          block: 'fill blue',
+          title: 'Fill traced shape'
         }, {
           block: 'cs()',
           title: 'Clear screen'
