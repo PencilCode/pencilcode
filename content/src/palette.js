@@ -166,8 +166,8 @@ return {
           block: 'min ``, ``',
           title: 'Get the smaller on two numbers'
         }, {
-          block: 'text.match /pattern/',
-          title: 'Test if pattern is found in text'
+          block: 'x.match /pattern/',
+          title: 'Test if a text pattern is found in x'
         }, {
           block: 'f = (param) ->\n  ``',
           title: 'Define a new function'
