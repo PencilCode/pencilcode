@@ -130,6 +130,15 @@ return {
           block: 'x = ``',
           title: 'Set a variable'
         }, {
+          block: '`` is ``',
+          title: 'Compare two values'
+        }, {
+          block: '`` < ``',
+          title: 'Compare two values'
+        }, {
+          block: '`` > ``',
+          title: 'Compare two values'
+        }, {
           block: '`` + ``',
           title: 'Add two numbers'
         }, {
@@ -141,15 +150,6 @@ return {
         }, {
           block: '`` / ``',
           title: 'Divide two numbers'
-        }, {
-          block: '`` is ``',
-          title: 'Compare two values'
-        }, {
-          block: '`` < ``',
-          title: 'Compare two values'
-        }, {
-          block: '`` > ``',
-          title: 'Compare two values'
         }, {
           block: 'random [1..100]',
           title: 'Get a random number in a range'
