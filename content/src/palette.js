@@ -169,10 +169,10 @@ return {
           block: 'x.match /pattern/',
           title: 'Test if a text pattern is found in x'
         }, {
-          block: 'f = (param) ->\n  ``',
+          block: 'f = (x) ->\n  ``',
           title: 'Define a new function'
         }, {
-          block: 'myfunc(arg)',
+          block: 'f(x)',
           title: 'Use a custom function'
         }
       ]
