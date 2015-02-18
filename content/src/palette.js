@@ -70,9 +70,6 @@ return {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
         }, {
-          block: 'for x in [1..3]\n  ``',
-          title: 'Do something multiple times...?'
-        }, {
           block: 'if `` is ``\n  ``',
           title: 'Do something only if a condition is true'
         }, {
