@@ -199,17 +199,8 @@ return {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Read a number from the user'
         }, {
-          block: "table [\n  ['a','b','c']\n  [1,2,3]\n]",
-          title: 'Write a table in the document'
-        }, {
           block: 'log [1..10]',
           title: 'Log an object to debug'
-        }, {
-          block: 'd = write \'dice\'',
-          title: 'Remember d as a text element'
-        }, {
-          block: 'tick 1, ->\n  d.text random [1..6]',
-          title: 'Change d text content'
         }
       ]
     }, {
