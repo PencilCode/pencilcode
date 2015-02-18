@@ -211,18 +211,6 @@ return {
           block: 't = new Turtle red',
           title: 'Make a new turtle'
         }, {
-          block: 't.fd 100',
-          title: 'Move turtle t forward'
-        }, {
-          block: 't.rt 90',
-          title: 'Turn turtle t right'
-        }, {
-          block: 't.lt 90',
-          title: 'Turn turtle t left'
-        }, {
-          block: 't.bk 100',
-          title: 'Move turtle t backward'
-        }, {
           block: 'ht()',
           title: 'Hide the main turtle'
         }, {
@@ -249,10 +237,7 @@ return {
         }, {
           block: 'q = new Pencil',
           title: 'Make an invisible and fast drawing sprite'
-        }, {
-          block: 'q.pen black, 1',
-          title: 'Use a thin black pen'
-        }, {
+        },  {
           block: 'q.drawon s',
           title: 'Use q to draw on sprite s'
         }, {
