@@ -126,7 +126,7 @@ return {
         }
       ]
     }, {
-      name: 'Math',
+      name: 'Operators',
       color: 'green',
       blocks: [
         {
