@@ -245,6 +245,15 @@ return {
           title: 'Play and show music notes'
         }
       ]
+    }, {
+      name: 'Snippets',
+      color: 'yellow',
+      blocks: [
+        {
+          block: 'p.play \'CDEDC\'',
+          title: 'Play and show music notes'
+        }
+      ]
     }
   ],
 
