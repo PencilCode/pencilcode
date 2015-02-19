@@ -90,10 +90,19 @@ return {
         }
       ]
     }, {
-      name: 'Draw',
+      name: 'Looks',
       color: 'blue',
       blocks: [
         {
+          block: 'wear \'/img/apple\'',
+          title: 'Use an image for the turtle'
+        }, {
+          block: 'ht()',
+          title: 'Hide the main turtle'
+        }, {
+          block: 'st()',
+          title: 'Show the main turtle'
+        }, {
           block: 'pen purple, 10',
           title: 'Set pen color and size'
         }, {
@@ -205,17 +214,8 @@ return {
       color: 'violet',
       blocks: [
         {
-          block: 'wear \'/img/apple\'',
-          title: 'Use an image for the turtle'
-        }, {
           block: 't = new Turtle red',
           title: 'Make a new turtle'
-        }, {
-          block: 'ht()',
-          title: 'Hide the main turtle'
-        }, {
-          block: 'st()',
-          title: 'Show the main turtle'
         }, {
           block: 's = new Sprite',
           title: 'Make a blank sprite'
