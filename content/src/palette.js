@@ -236,6 +236,15 @@ return {
           title: 'Make an invisible and fast drawing sprite'
         }
       ]
+    }, {
+      name: 'Sound',
+      color: 'gold',
+      blocks: [
+        {
+          block: 'p.play \'CDEDC\'',
+          title: 'Play and show music notes'
+        }
+      ]
     }
   ],
 
