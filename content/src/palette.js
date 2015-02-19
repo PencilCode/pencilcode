@@ -238,7 +238,7 @@ return {
       ]
     }, {
       name: 'Sound',
-      color: 'gold',
+      color: 'violet',
       blocks: [
         {
           block: 'p.play \'CDEDC\'',
