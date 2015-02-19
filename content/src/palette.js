@@ -93,16 +93,7 @@ return {
       name: 'Looks',
       color: 'blue',
       blocks: [
-        {
-          block: 'wear \'/img/apple\'',
-          title: 'Use an image for the turtle'
-        }, {
-          block: 'ht()',
-          title: 'Hide the main turtle'
-        }, {
-          block: 'st()',
-          title: 'Show the main turtle'
-        }, {
+         {
           block: 'pen purple, 10',
           title: 'Set pen color and size'
         }, {
@@ -115,6 +106,18 @@ return {
           block: 'fill blue',
           title: 'Fill traced shape'
         }, {
+          block: 'wear \'/img/apple\'',
+          title: 'Use an image for the turtle'
+        }, {
+          block: 'scale 3',
+          title: 'Scale turtle drawing'
+        }, {
+          block: 'ht()',
+          title: 'Hide the main turtle'
+        }, {
+          block: 'st()',
+          title: 'Show the main turtle'
+        }, {
           block: 'cs()',
           title: 'Clear screen'
         }, {
@@ -126,9 +129,6 @@ return {
         }, {
           block: 'pd()',
           title: 'Put the pen down'
-        }, {
-          block: 'scale 3',
-          title: 'Scale turtle drawing'
         }
       ]
     }, {
