@@ -250,8 +250,11 @@ return {
       color: 'yellow',
       blocks: [
         {
-          block: 'p.play \'CDEDC\'',
-          title: 'Play and show music notes'
+          block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
+          title: 'Poll a key and move while it is depressed'
+        }, {
+          block: "click (e) ->\n  moveto e",
+          title: 'Move to a location when document is clicked'
         }
       ]
     }
