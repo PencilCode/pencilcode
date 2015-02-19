@@ -129,6 +129,12 @@ return {
         }, {
           block: 'pd()',
           title: 'Put the pen down'
+        }, {
+          block: 'drawon s',
+          title: 'Draw on sprite s'
+        }, {
+          block: 'drawon document',
+          title: 'Draw on the document'
         }
       ]
     }, {
@@ -220,15 +226,6 @@ return {
           block: 's = new Sprite',
           title: 'Make a blank sprite'
         }, {
-          block: 's.wear \'/img/dragon\'',
-          title: 'Load an image in sprite s'
-        }, {
-          block: 'drawon s',
-          title: 'Draw on sprite s'
-        }, {
-          block: 'drawon document',
-          title: 'Draw on the document'
-        }, {
           block: 'p = new Piano',
           title: 'Make a visible insturment'
         }, {
@@ -237,18 +234,6 @@ return {
         }, {
           block: 'q = new Pencil',
           title: 'Make an invisible and fast drawing sprite'
-        },  {
-          block: 'q.drawon s',
-          title: 'Use q to draw on sprite s'
-        }, {
-          block: 'q.rt 360, 100',
-          title: 'Trace a circle on the right'
-        }, {
-          block: 'q.lt 360, 100',
-          title: 'Trace a circle on the left'
-        }, {
-          block: 'q.fill pink',
-          title: 'Fill the traced path'
         }
       ]
     }
