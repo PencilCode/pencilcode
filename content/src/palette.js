@@ -229,9 +229,6 @@ return {
           block: 'p = new Piano',
           title: 'Make a visible insturment'
         }, {
-          block: 'p.play \'CDEDC\'',
-          title: 'Play and show music notes'
-        }, {
           block: 'q = new Pencil',
           title: 'Make an invisible and fast drawing sprite'
         }
