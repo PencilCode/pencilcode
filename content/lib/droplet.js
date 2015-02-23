@@ -5932,8 +5932,72 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return null;
       };
 
+      CoffeeScriptParser.prototype.functionNameNodes = function(node) {
+        var nodes, prop, _i, _len, _ref, _ref1;
+        if (node.nodeType() !== 'Call') {
+          throw new Error;
+        }
+        if (node.variable != null) {
+          nodes = [];
+          if ((_ref = node.variable.base) != null ? _ref.value : void 0) {
+            nodes.push(node.variable.base);
+          } else {
+            nodes.push(null);
+          }
+          if (node.variable.properties != null) {
+            _ref1 = node.variable.properties;
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              prop = _ref1[_i];
+              nodes.push(prop.name);
+            }
+          }
+          return nodes;
+        }
+        return [];
+      };
+
+      CoffeeScriptParser.prototype.emptyLocation = function(loc) {
+        return loc.first_column === loc.last_column && loc.first_line === loc.last_line;
+      };
+
+      CoffeeScriptParser.prototype.implicitName = function(nn) {
+        var node, _ref;
+        if (nn.length === 0) {
+          return false;
+        }
+        node = nn[nn.length - 1];
+        return (node != null ? (_ref = node.value) != null ? _ref.length : void 0 : void 0) > 1 && this.emptyLocation(node.locationData);
+      };
+
+      CoffeeScriptParser.prototype.nameNodesMatch = function(nn, list) {
+        var full, last, _ref;
+        if (nn.length > 1) {
+          full = (nn.map(function(n) {
+            return (n != null ? n.value : void 0) || '*';
+          })).join('.');
+          if (__indexOf.call(list, full) >= 0) {
+            return 2;
+          }
+        }
+        last = nn[nn.length - 1];
+        if ((last != null) && (_ref = last.value, __indexOf.call(list, _ref) >= 0)) {
+          return 1;
+        }
+        return 0;
+      };
+
+      CoffeeScriptParser.prototype.addCode = function(node, depth, indentDepth) {
+        var param, _i, _len, _ref;
+        _ref = node.params;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          param = _ref[_i];
+          this.csSocketAndMark(param, depth, 0, indentDepth, FORBID_ALL);
+        }
+        return this.mark(node.body, depth, 0, null, indentDepth);
+      };
+
       CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, line, lines, methodname, namenode, object, param, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, unrecognized, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref21, _ref22, _ref23, _ref24, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s, _t;
+        var arg, bounds, childName, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, last, line, lines, namenodes, object, parts, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -6062,75 +6126,69 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return 0;
           case 'Call':
             if (node.variable != null) {
-              methodname = null;
-              unrecognized = false;
-              if (((_ref9 = node.variable.properties) != null ? _ref9.length : void 0) > 0) {
-                methodname = (_ref10 = node.variable.properties[node.variable.properties.length - 1].name) != null ? _ref10.value : void 0;
-                namenode = node.variable.properties[node.variable.properties.length - 1].name;
-              } else if ((_ref11 = node.variable.base) != null ? _ref11.value : void 0) {
-                methodname = node.variable.base.value;
-                namenode = node.variable.base;
-              }
-              if (__indexOf.call(this.opts.blockFunctions, methodname) >= 0) {
+              namenodes = this.functionNameNodes(node);
+              parts = this.nameNodesMatch(namenodes, this.opts.blockFunctions);
+              if (parts > 0) {
                 this.csBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
-              } else if (__indexOf.call(this.opts.valueFunctions, methodname) >= 0) {
-                this.csBlock(node, depth, 0, 'value', wrappingParen, MOSTLY_VALUE);
               } else {
-                this.csBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
-                unrecognized = !(__indexOf.call(this.opts.eitherFunctions, methodname) >= 0);
+                parts = this.nameNodesMatch(namenodes, this.opts.valueFunctions);
+                if (parts > 0) {
+                  this.csBlock(node, depth, 0, 'value', wrappingParen, MOSTLY_VALUE);
+                } else {
+                  parts = this.nameNodesMatch(namenodes, this.opts.eitherFunctions);
+                  this.csBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
+                }
               }
-              if (((_ref12 = node.variable.base) != null ? _ref12.nodeType() : void 0) !== 'Literal' || ((_ref13 = node.variable.properties) != null ? _ref13.length : void 0) > 1) {
-                unrecognized = true;
-              }
-              if ((methodname != null ? methodname.length : void 0) > 1 && (namenode != null ? namenode.locationData : void 0) && namenode.locationData.first_column === namenode.locationData.last_column && namenode.locationData.first_line === namenode.locationData.last_line) {
-                unrecognized = false;
-              }
-              if (unrecognized) {
+              if (this.implicitName(namenodes)) {
+
+              } else if (parts === 0) {
                 this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth);
-              } else if (((_ref14 = node.variable.properties) != null ? _ref14.length : void 0) > 0) {
+              } else if (parts === 1 && ((_ref9 = node.variable.properties) != null ? _ref9.length : void 0) > 0) {
                 this.csSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
               }
             } else {
               this.csBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
             }
             if (!node["do"]) {
-              _ref15 = node.args;
+              _ref10 = node.args;
               _results2 = [];
-              for (index = _m = 0, _len3 = _ref15.length; _m < _len3; index = ++_m) {
-                arg = _ref15[index];
-                precedence = 0;
-                if (index === node.args.length - 1) {
-                  precedence = -1;
+              for (index = _m = 0, _len3 = _ref10.length; _m < _len3; index = ++_m) {
+                arg = _ref10[index];
+                last = index === node.args.length - 1;
+                precedence = last ? -1 : 0;
+                if (last && arg.nodeType() === 'Code') {
+                  _results2.push(this.addCode(arg, depth + 1, indentDepth));
+                } else {
+                  _results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth));
                 }
-                _results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth));
               }
               return _results2;
             }
             break;
           case 'Code':
             this.csBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
-            _ref16 = node.params;
-            for (_n = 0, _len4 = _ref16.length; _n < _len4; _n++) {
-              param = _ref16[_n];
-              this.csSocketAndMark(param, depth + 1, 0, indentDepth, FORBID_ALL);
-            }
-            return this.mark(node.body, depth + 1, 0, null, indentDepth);
+            return this.addCode(node, depth + 1, indentDepth);
           case 'Assign':
             this.csBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
             this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, LVALUE);
-            return this.csSocketAndMark(node.value, depth + 1, 0, indentDepth);
+            if (node.value.nodeType() === 'Code') {
+              return this.addCode(node.value, depth + 1, indentDepth);
+            } else {
+              return this.csSocketAndMark(node.value, depth + 1, 0, indentDepth);
+            }
+            break;
           case 'For':
             this.csBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
-            _ref17 = ['source', 'from', 'guard', 'step'];
-            for (_o = 0, _len5 = _ref17.length; _o < _len5; _o++) {
-              childName = _ref17[_o];
+            _ref11 = ['source', 'from', 'guard', 'step'];
+            for (_n = 0, _len4 = _ref11.length; _n < _len4; _n++) {
+              childName = _ref11[_n];
               if (node[childName] != null) {
                 this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth);
               }
             }
-            _ref18 = ['index', 'name'];
-            for (_p = 0, _len6 = _ref18.length; _p < _len6; _p++) {
-              childName = _ref18[_p];
+            _ref12 = ['index', 'name'];
+            for (_o = 0, _len5 = _ref12.length; _o < _len5; _o++) {
+              childName = _ref12[_o];
               if (node[childName] != null) {
                 this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, FORBID_ALL);
               }
@@ -6164,11 +6222,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.objects.length > 0) {
               this.csIndentAndMark(indentDepth, node.objects, depth + 1);
             }
-            _ref19 = node.objects;
+            _ref13 = node.objects;
             _results3 = [];
-            for (_q = 0, _len7 = _ref19.length; _q < _len7; _q++) {
-              object = _ref19[_q];
-              if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref20 = (_ref21 = object.properties) != null ? _ref21.length : void 0) === 0 || _ref20 === (void 0))) {
+            for (_p = 0, _len6 = _ref13.length; _p < _len6; _p++) {
+              object = _ref13[_p];
+              if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref14 = (_ref15 = object.properties) != null ? _ref15.length : void 0) === 0 || _ref14 === (void 0))) {
                 _results3.push(this.csBlock(object, depth + 2, 100, 'return', null, VALUE_ONLY));
               } else {
                 _results3.push(void 0);
@@ -6194,13 +6252,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.subject != null) {
               this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
-            _ref22 = node.cases;
-            for (_r = 0, _len8 = _ref22.length; _r < _len8; _r++) {
-              switchCase = _ref22[_r];
+            _ref16 = node.cases;
+            for (_q = 0, _len7 = _ref16.length; _q < _len7; _q++) {
+              switchCase = _ref16[_q];
               if (switchCase[0].constructor === Array) {
-                _ref23 = switchCase[0];
-                for (_s = 0, _len9 = _ref23.length; _s < _len9; _s++) {
-                  condition = _ref23[_s];
+                _ref17 = switchCase[0];
+                for (_r = 0, _len8 = _ref17.length; _r < _len8; _r++) {
+                  condition = _ref17[_r];
                   this.csSocketAndMark(condition, depth + 1, 0, indentDepth);
                 }
               } else {
@@ -6226,10 +6284,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Obj':
             this.csBlock(node, depth, 0, 'violet', wrappingParen, VALUE_ONLY);
-            _ref24 = node.properties;
+            _ref18 = node.properties;
             _results4 = [];
-            for (_t = 0, _len10 = _ref24.length; _t < _len10; _t++) {
-              property = _ref24[_t];
+            for (_s = 0, _len9 = _ref18.length; _s < _len9; _s++) {
+              property = _ref18[_s];
               if (property.nodeType() === 'Assign') {
                 this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
                 _results4.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -9205,6 +9263,31 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return this.mark(0, tree, 0, null);
       };
 
+      JavaScriptParser.prototype.fullFunctionNameArray = function(node) {
+        var obj, props;
+        if (node.type !== 'CallExpression') {
+          throw new Error;
+        }
+        obj = node.callee;
+        props = [];
+        while (obj.type === 'MemberExpression') {
+          props.unshift(obj.property.name);
+          obj = obj.object;
+        }
+        if (obj.type === 'Identifier') {
+          props.unshift(obj.name);
+        } else {
+          props.unshift('*');
+        }
+        return props;
+      };
+
+      JavaScriptParser.prototype.functionMatchesList = function(node, list) {
+        var fname, _ref, _ref1;
+        fname = this.fullFunctionNameArray(node);
+        return (_ref = fname[fname.length - 1], __indexOf.call(list, _ref) >= 0) || (fname.length > 1 && (_ref1 = fname.join('.'), __indexOf.call(list, _ref1) >= 0));
+      };
+
       JavaScriptParser.prototype.getAcceptsRule = function(node) {
         return {
           "default": helper.NORMAL
@@ -9212,14 +9295,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.getClasses = function(node) {
-        var _ref, _ref1;
         if (node.type in CLASS_EXCEPTIONS) {
           return CLASS_EXCEPTIONS[node.type].concat([node.type]);
         } else {
           if (node.type === 'CallExpression') {
-            if (node.callee.type === 'Identifier' && (_ref = node.callee.name, __indexOf.call(this.opts.blockFunctions, _ref) >= 0)) {
+            if (this.functionMatchesList(node, this.opts.blockFunctions)) {
               return [node.type, 'mostly-block'];
-            } else if (_ref1 = node.callee.name, __indexOf.call(this.opts.valueFunctions, _ref1) >= 0) {
+            } else if (this.functionMatchesList(node, this.opts.valueFunctions)) {
               return [node.type, 'mostly-value'];
             } else {
               return [node.type, 'any-drop'];
@@ -9251,19 +9333,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.getColor = function(node) {
-        var _ref, _ref1;
         switch (node.type) {
           case 'ExpressionStatement':
             return this.getColor(node.expression);
           case 'CallExpression':
-            if (node.callee.type === 'Identifier') {
-              if (_ref = node.callee.name, __indexOf.call(this.opts.blockFunctions, _ref) >= 0) {
-                return 'command';
-              } else if (_ref1 = node.callee.name, __indexOf.call(this.opts.valueFunctions, _ref1) >= 0) {
-                return 'value';
-              } else {
-                return 'violet';
-              }
+            if (this.functionMatchesList(node, this.opts.blockFunctions)) {
+              return 'command';
+            } else if (this.functionMatchesList(node, this.opts.valueFunctions)) {
+              return 'value';
+            } else {
+              return 'violet';
             }
             break;
           default:
@@ -9354,7 +9433,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-        var argument, block, declaration, element, expression, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results10, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9, _s;
+        var argument, block, declaration, element, expression, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results10, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9, _s;
         switch (node.type) {
           case 'Program':
             _ref = node.body;
@@ -9485,13 +9564,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'CallExpression':
           case 'NewExpression':
             this.jsBlock(node, depth, bounds);
-            if (node.callee.type !== 'Identifier' || (_ref5 = node.callee.name, __indexOf.call(this.functionWhitelist, _ref5) < 0)) {
+            if (!this.functionMatchesList(node, this.functionWhitelist)) {
               this.jsSocketAndMark(indentDepth, node.callee, depth + 1, NEVER_PAREN);
             }
-            _ref6 = node["arguments"];
+            _ref5 = node["arguments"];
             _results5 = [];
-            for (_n = 0, _len5 = _ref6.length; _n < _len5; _n++) {
-              argument = _ref6[_n];
+            for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
+              argument = _ref5[_n];
               _results5.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN));
             }
             return _results5;
@@ -9505,10 +9584,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
           case 'VariableDeclaration':
             this.jsBlock(node, depth, bounds);
-            _ref7 = node.declarations;
+            _ref6 = node.declarations;
             _results6 = [];
-            for (_o = 0, _len6 = _ref7.length; _o < _len6; _o++) {
-              declaration = _ref7[_o];
+            for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
+              declaration = _ref6[_o];
               _results6.push(this.mark(indentDepth, declaration, depth + 1));
             }
             return _results6;
@@ -9530,10 +9609,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
           case 'ObjectExpression':
             this.jsBlock(node, depth, bounds);
-            _ref8 = node.properties;
+            _ref7 = node.properties;
             _results7 = [];
-            for (_p = 0, _len7 = _ref8.length; _p < _len7; _p++) {
-              property = _ref8[_p];
+            for (_p = 0, _len7 = _ref7.length; _p < _len7; _p++) {
+              property = _ref7[_p];
               this.jsSocketAndMark(indentDepth, property.key, depth + 1);
               _results7.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
             }
@@ -9542,10 +9621,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'SwitchStatement':
             this.jsBlock(node, depth, bounds);
             this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
-            _ref9 = node.cases;
+            _ref8 = node.cases;
             _results8 = [];
-            for (_q = 0, _len8 = _ref9.length; _q < _len8; _q++) {
-              switchCase = _ref9[_q];
+            for (_q = 0, _len8 = _ref8.length; _q < _len8; _q++) {
+              switchCase = _ref8[_q];
               _results8.push(this.mark(indentDepth, switchCase, depth + 1, null));
             }
             return _results8;
@@ -9563,10 +9642,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 depth: depth + 1,
                 prefix: prefix
               });
-              _ref10 = node.consequent;
+              _ref9 = node.consequent;
               _results9 = [];
-              for (_r = 0, _len9 = _ref10.length; _r < _len9; _r++) {
-                statement = _ref10[_r];
+              for (_r = 0, _len9 = _ref9.length; _r < _len9; _r++) {
+                statement = _ref9[_r];
                 _results9.push(this.mark(indentDepth, statement, depth + 2));
               }
               return _results9;
@@ -9590,10 +9669,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'ArrayExpression':
             this.jsBlock(node, depth, bounds);
-            _ref11 = node.elements;
+            _ref10 = node.elements;
             _results10 = [];
-            for (_s = 0, _len10 = _ref11.length; _s < _len10; _s++) {
-              element = _ref11[_s];
+            for (_s = 0, _len10 = _ref10.length; _s < _len10; _s++) {
+              element = _ref10[_s];
               if (element != null) {
                 _results10.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
               } else {
