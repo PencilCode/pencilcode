@@ -741,7 +741,11 @@ function pollForStop() {
       document.hidden) {
     return;
   }
-  var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  try {
+    var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  } catch (e) {
+    stoppable = false;
+  }
   if (stoppable) {
     if (!stopButtonShown) {
       stopButtonShown = 1;
