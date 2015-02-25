@@ -968,16 +968,21 @@ function signUpAndSave(options) {
             view.notePaneEditorCleanData(paneatpos('left'), doc);
             storage.deleteBackup(mp.filename);
             storage.deleteBackup(rename);
-            state.update({cancel: true});
             view.flashNotification('Saved.');
-            var newurl =
-                '//' + username + '.' + window.pencilcode.domain +
-                '/edit/' + rename +
-                '#login=' + username + ':' + (key ? key : '');
+            var hostpath = username + '.' + window.pencilcode.domain +
+                  '/edit/' + rename,
+                newurl = '//' + hostpath +
+                  '#login=' + username + ':' + (key ? key : '');
             if (model.guideUrl) {
               var guideurl = model.guideUrl;
               newurl += '&guide=' + (/[&#%]/.test(guideurl) ?
                 encodeURIComponent(guideurl) : encodeURI(guideurl));
+            }
+            if (location.host + location.pathname == hostpath) {
+              // If there is no change in URL, be careful to close the dialog.
+              // We don't do this always, because the 'new user' flow
+              // will do a 'history.back' when closing the dialog.
+              state.update({cancel: true});
             }
             if (options.nohistory) {
               window.location.replace(newurl);
