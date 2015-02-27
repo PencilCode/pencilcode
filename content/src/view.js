@@ -2332,7 +2332,9 @@ function setPaneEditorLanguageType(pane, type) {
   if (!paneState.dropletEditor) return false;
   var visibleMimeType = editorMimeType(paneState);
   if (type == visibleMimeType) return false;
-  paneState.dropletEditor.setMode(dropletModeForMimeType(type));
+  paneState.dropletEditor.setMode(
+      dropletModeForMimeType(type),
+      dropletOptionsForMimeType(type));
   paneState.dropletEditor.setPalette(paletteForMimeType(type));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
@@ -2653,7 +2655,9 @@ function noteNewFilename(pane, filename) {
     paneState.mimeType = filetype.mimeForFilename(filename);
     paneState.editor.getSession().clearAnnotations();
     var visibleMimeType = editorMimeType(paneState);
-    paneState.dropletEditor.setMode(dropletModeForMimeType(visibleMimeType));
+    paneState.dropletEditor.setMode(
+        dropletModeForMimeType(visibleMimeType),
+        dropletOptionsForMimeType(visibleMimeType));
     paneState.editor.getSession().setMode(modeForMimeType(visibleMimeType));
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);
