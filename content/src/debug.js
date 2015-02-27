@@ -104,6 +104,14 @@ var debug = window.ide = {
   },
   setEditorText: function(text) {
     view.changePaneEditorText(view.paneid('left'), text);
+  },
+  getOptions: function() {
+    // To reduce clutter, do not show 'Test panel' UI within the run
+    // frame when the whole IDE is framed.
+    var embedded = /^frame\./.test(location.hostname);
+    return {
+      panel: !embedded
+    };
   }
 };
 
@@ -733,7 +741,11 @@ function pollForStop() {
       document.hidden) {
     return;
   }
-  var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  try {
+    var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  } catch (e) {
+    stoppable = false;
+  }
   if (stoppable) {
     if (!stopButtonShown) {
       stopButtonShown = 1;

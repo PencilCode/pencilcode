@@ -429,7 +429,10 @@ function doSetKey(user, oldkey, newkey, res, app) {
     }
   }
   catch (e) {
-    utils.errorExit('Could not set key.');
+    if (e instanceof utils.ImmediateReturnError) {
+      throw e;
+    }
+    utils.errorExit('Could not set password.');
   }
 }
 

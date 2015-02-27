@@ -1238,6 +1238,17 @@ function labelStep(preview, step) {
       // JSON repr is no good for Infinity or NaN.
       onerepr = arg.toString();
     }
+    if (typeof(arg) == 'object') {
+      if (arg.hasOwnProperty('timeStamp') && arg.hasOwnProperty('type')) {
+        onerepr = arg.type ? arg.type + '-event' : 'event';
+      } else if (arg.jquery) {
+        if ('function' == typeof arg.hasClass && arg.hasClass('turtle')) {
+          onerepr = 'turtle-object';
+        } else {
+          onerepr = 'jquery-object';
+        }
+      }
+    }
     if (!onerepr) {
       // Try using JSON repr.
       try {
@@ -1248,8 +1259,8 @@ function labelStep(preview, step) {
       // Otherwise, use toString repr.
       onerepr = arg.toString();
     }
-    if (onerepr.length > 80) {
-      onerepr = onerepr.substr(0, 77) + '...'
+    if (onerepr.length > 50) {
+      onerepr = onerepr.substr(0, 47) + '...'
     }
     argrepr.push(onerepr);
   }
@@ -1480,6 +1491,12 @@ function paletteForMimeType(mimeType) {
   if (mimeType == 'text/javascript') return palette.JAVASCRIPT_PALETTE;
   if (mimeType == 'application/x-javascript') return palette.JAVASCRIPT_PALETTE;
   return [];
+}
+
+function dropletOptionsForMimeType(mimeType) {
+  return {
+    functions: palette.KNOWN_FUNCTIONS
+  };
 }
 
 function uniqueId(name) {
@@ -1990,7 +2007,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           document.getElementById(id),
           {
             mode: dropletMode,
-            palette: paletteForMimeType(visibleMimeType)
+            palette: paletteForMimeType(visibleMimeType),
+            modeOptions: dropletOptionsForMimeType(visibleMimeType)
           });
   // Set up fonts - once they are loaded.
   whenCodeFontLoaded(function () {
@@ -2012,11 +2030,15 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   dropletEditor.setEditorState(useblocks);
   dropletEditor.setValue(text);
 
-  setTimeout(function() {
-    $('.droplet-hover-div').tooltipster();
-  }, 0);
   dropletEditor.on('changepalette', function() {
-    $('.droplet-hover-div').tooltipster();
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+  });
+
+  dropletEditor.on('selectpalette', function(p) {
+    fireEvent('selectpalette', [pane, p]);
+  });
+  dropletEditor.on('pickblock', function(p) {
+    fireEvent('pickblock', [pane, p]);
   });
 
   dropletEditor.on('linehover', function(ev) {
@@ -2261,6 +2283,17 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
     fireEvent('editfocus', [pane]);
   });
+  // Fix focus bug after focus is stolen by a peer frame.
+  // For example, activity.pencilcode.net/edit/frog/README.html:
+  // after running it, a subframe of the RHS grabs focus and then
+  // it becomes impossible to focus the ace editor by clicking on
+  // it, without blurring it first.
+  editor.on('click', function() {
+    if (!editor.isFocused() && !editor.getReadOnly()) {
+      editor.blur();
+      editor.focus();
+    }
+  });
   // Also special-case html change handling.
   var htmlChangeTimer = null;
   var htmlChangeRetryCounter = 10;
@@ -2297,7 +2330,9 @@ function setPaneEditorLanguageType(pane, type) {
   if (!paneState.dropletEditor) return false;
   var visibleMimeType = editorMimeType(paneState);
   if (type == visibleMimeType) return false;
-  paneState.dropletEditor.setMode(dropletModeForMimeType(type));
+  paneState.dropletEditor.setMode(
+      dropletModeForMimeType(type),
+      dropletOptionsForMimeType(type));
   paneState.dropletEditor.setPalette(paletteForMimeType(type));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
@@ -2618,7 +2653,9 @@ function noteNewFilename(pane, filename) {
     paneState.mimeType = filetype.mimeForFilename(filename);
     paneState.editor.getSession().clearAnnotations();
     var visibleMimeType = editorMimeType(paneState);
-    paneState.dropletEditor.setMode(dropletModeForMimeType(visibleMimeType));
+    paneState.dropletEditor.setMode(
+        dropletModeForMimeType(visibleMimeType),
+        dropletOptionsForMimeType(visibleMimeType));
     paneState.editor.getSession().setMode(modeForMimeType(visibleMimeType));
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);

@@ -133,6 +133,56 @@ exports.handleLoad = function(req, res, app, format) {
       res.send(data);
       return;
     }
+    else if (format == 'print') { // For printing the code
+      var mt = filetype.mimeForFilename(filename),
+          m = filemeta.parseMetaString(
+              fs.readFileSync(absfile)),
+          data = m.data,
+          meta = m.meta,
+          needline = false,
+          out = [];
+      if (mt.indexOf('text') !== 0) {
+        res.set('Content-Type', mt);
+        res.send(data);
+        return;
+      }
+      res.set('Cache-Control', 'must-revalidate');
+      res.set('Content-Type', 'text/html;charset=utf-8');
+      out.push('<!doctype html>', '<html>', '<head>');
+      // Add a title in the form username: file.
+      out.push('<title>' + filename.replace('/', ': ') + '</title>');
+      out.push('<style>');
+      // For scrible - when the page is modified so that the pre is
+      // the second element, insert some extra top-padding to make
+      // space for scrible's overlay.
+      out.push('pre:nth-child(2) { padding-top: 100px; }');
+      // s for dotted-lines with columns
+      out.push('s { border-right: 1px dotted skyblue; margin-right: -1; '+
+               'text-decoration: none; }');
+      out.push('</style>');
+      out.push('</head>', '<body>', '<pre>');
+
+      if (/\S/.test(data)) {
+        out.push(addHTMLLineNumbers(data));
+        needline = true;
+      }
+      if (meta && meta.css && /\S/.test(meta.css)) {
+        if (needline)
+           out.push('<br><hr style="border:none;height:1px;background:black">');
+        out.push(addHTMLLineNumbers(meta.css));
+        needline = true;
+      }
+      if (meta && meta.html && /\S/.test(meta.html)) {
+        if (needline)
+           out.push('<br><hr style="border:none;height:1px;background:black">');
+        out.push(addHTMLLineNumbers(meta.html));
+        needline = true;
+      }
+      out.push('</pre>');
+      out.push('</body>', '</html>');
+      res.send(out.join('\n'));
+      return;
+    }
     else if (format == 'run') { // File loading outside the editor
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename),
@@ -250,7 +300,13 @@ exports.handleLoad = function(req, res, app, format) {
       }
       else {
         res.set('Content-Type', 'text/html');
-        res.send('<html><body><plaintext>' + e.message);
+        if (/ENOENT/.test(e.message)) {
+          res.status(404);
+          res.send('<html><body><plaintext>' +
+                   '404: ' + filename.replace('/', ': ') + ' not found.');
+        } else {
+          res.send('<html><body><plaintext>' + e.message);
+        }
       }
     }
     else {
@@ -259,6 +315,32 @@ exports.handleLoad = function(req, res, app, format) {
   }
 
 };
+
+function addIndentGuides(line) {
+  var leading = /^(?:  )*/.exec(line)[0].length;
+  return line.substring(0, leading).replace(/  /g, '<s>  </s>') +
+         line.substring(leading);
+}
+
+function addHTMLLineNumbers(data) {
+  var out = [],
+      lines = data.replace(/\s*$/, '').split('\n'),
+      spaces = Math.max(3, ('' + lines.length).length),
+      j;
+  for (j = 0; j < lines.length; ++j) {
+    var line = '' + (j + 1);
+    while (line.length < spaces) {
+      line = ' ' + line;
+    }
+    line = line + '<s>  </s>' + addIndentGuides(escapeHTML(lines[j]));
+    out.push(line);
+  }
+  return out.join('\n');
+}
+
+function escapeHTML(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 function isValidNewFile(newAbsFileName, app) {
   var dir = path.dirname(newAbsFileName);

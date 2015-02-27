@@ -58,7 +58,7 @@ function noAppcache(req, res, next) {
 function proxyRules(req, res, next) {
   var u = parseUrl(req);
   var exp = (req.app.locals.config.useProxy) ?
-    /^\/(?:code|home|load|save|proxy|img|link|socket\.io)(?=\/)/
+    /^\/(?:code|home|load|save|proxy|img|link|print|socket\.io)(?=\/)/
        : /^\/(?:proxy)(?=\/)/;
   if (exp.test(u.pathname) &&
       /\.dev$/.test(u.host)) {

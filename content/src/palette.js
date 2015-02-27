@@ -1,5 +1,18 @@
 define(function() {
 
+function filterblocks(a) {
+  // Show 'say' block only on browsers that support speech synthesis.
+  if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
+    a = a.filter(function(b) { return !/^say\b/.test(b.block); });
+  }
+  return a.map(function(e) {
+    if (!e.id) {
+      e.id = e.block.replace(/\W..*$/, '');
+    }
+    return e;
+  });
+}
+
 return {
 
   // The following palette description
@@ -8,7 +21,7 @@ return {
     {
       name: 'Move',
       color: 'red',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'fd 100',
           title: 'Move forward'
@@ -61,11 +74,11 @@ return {
           block: 'jump 10, 5',
           title: "Move sideways or diagonal without drawing"
         }
-      ]
+      ])
     }, {
       name: 'Control',
       color: 'orange',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
@@ -74,9 +87,11 @@ return {
           title: 'Do something only if a condition is true'
         }, {
           block: 'if `` is ``\n  ``\nelse\n  ``',
-          title: 'Do something if a condition is true, otherwise something else'
+          title:
+              'Do something if a condition is true, otherwise something else',
+          id: 'ifelse'
         }, {
-          block: "tick 1, ->\n  write 'ticked'",
+          block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
           title: 'Repeat something forever at qually-spaced times'
         }, {
           block: "button \'Click\', ->\n  write 'clicked'",
@@ -88,11 +103,11 @@ return {
           block: "click (e) ->\n  moveto e",
           title: 'Move to a location when document is clicked'
         }
-      ]
+      ])
     }, {
       name: 'Looks',
       color: 'blue',
-      blocks: [
+      blocks: filterblocks([
          {
           block: 'pen purple, 10',
           title: 'Set pen color and size'
@@ -136,14 +151,15 @@ return {
           block: 'drawon document',
           title: 'Draw on the document'
         }
-      ]
+      ])
     }, {
       name: 'Operators',
       color: 'green',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'x = ``',
-          title: 'Set a variable'
+          title: 'Set a variable',
+          id: 'assign'
         }, {
           block: '`` is ``',
           title: 'Compare two values'
@@ -155,19 +171,23 @@ return {
           title: 'Compare two values'
         }, {
           block: '`` + ``',
-          title: 'Add two numbers'
+          title: 'Add two numbers',
+          id: 'add'
         }, {
           block: '`` - ``',
-          title: 'Subtract two numbers'
+          title: 'Subtract two numbers',
+          id: 'subtract'
         }, {
           block: '`` * ``',
-          title: 'Multiply two numbers'
+          title: 'Multiply two numbers',
+          id: 'multiply'
         }, {
           block: '`` / ``',
-          title: 'Divide two numbers'
+          title: 'Divide two numbers',
+          id: 'divide'
         }, {
-          block: 'random [1..100]',
-          title: 'Get a random number in a range'
+          block: 'random 6',
+          title: 'Get a random number less than n'
         }, {
           block: 'round ``',
           title: 'Round to the nearest integer'
@@ -190,11 +210,11 @@ return {
           block: 'f(x)',
           title: 'Use a custom function'
         }
-      ]
+      ])
     }, {
       name: 'Text',
       color: 'yellow',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'write \'Hello.\'',
           title: 'Write text in the document'
@@ -214,38 +234,41 @@ return {
           block: 'log [1..10]',
           title: 'Log an object to debug'
         }
-      ]
+      ])
     }, {
       name: 'Sprites',
       color: 'violet',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 't = new Turtle red',
-          title: 'Make a new turtle'
+          title: 'Make a new turtle',
+          id: 'newturtle'
         }, {
           block: 's = new Sprite',
-          title: 'Make a blank sprite'
+          title: 'Make a blank sprite',
+          id: 'newsprite'
         }, {
           block: 'p = new Piano',
-          title: 'Make a visible insturment'
+          title: 'Make a visible instrument',
+          id: 'newpiano'
         }, {
           block: 'q = new Pencil',
           title: 'Make an invisible and fast drawing sprite'
         }
-      ]
+      ])
     }, {
       name: 'Sound',
       color: 'violet',
-      blocks: [
+      blocks: filterblocks([
         {
           block: 'p.play \'CDEDC\'',
           title: 'Play and show music notes'
         }
-      ]
+      ])
     }, {
       name: 'Snippets',
       color: 'yellow',
-      blocks: [
+      blocks: filterblocks([
         {
           block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
           title: 'Poll a key and move while it is depressed'
@@ -253,7 +276,7 @@ return {
           block: "click (e) ->\n  moveto e",
           title: 'Move to a location when document is clicked'
         }
-      ]
+      ])
     }
   ],
 
@@ -412,7 +435,127 @@ return {
         }
       ]
     }
-  ]
+  ],
+
+  KNOWN_FUNCTIONS: {
+    fd: {},
+    bk: {},
+    rt: {},
+    lt: {},
+    slide: {},
+    move: {color:'red'},
+    movexy: {color:'red'},
+    moveto: {color:'red'},
+    jump: {color:'red'},
+    jumpxy: {color:'red'},
+    jumpto: {color:'red'},
+    turnto: {color:'red'},
+    home: {},
+    pen: {},
+    fill: {},
+    dot: {},
+    box: {},
+    mirror: {},
+    twist: {},
+    scale: {},
+    pause: {},
+    st: {color:'red'},
+    ht: {color:'red'},
+    cs: {},
+    cg: {},
+    ct: {},
+    pu: {},
+    pd: {},
+    pe: {},
+    pf: {},
+    say: {color: 'yellow'},
+    play: {},
+    tone: {},
+    silence: {},
+    speed: {color:'red'},
+    wear: {},
+    drawon: {},
+    label: {color: 'yellow'},
+    reload: {},
+    see: {},
+    sync: {},
+    send: {},
+    recv: {},
+    click: {color: 'orange'},
+    mousemove: {color: 'orange'},
+    mouseup: {color: 'orange'},
+    mousedown: {color: 'orange'},
+    keyup: {color: 'orange'},
+    keydown: {color:'orange'},
+    keypress: {color:'orange'},
+    alert: {},
+    prompt: {},
+    done: {},
+    tick: {color:'orange'},
+    forever: {color:'orange'},
+    stop: {color:'orange'},
+    type: {color:'yellow'},
+    sort: {},
+    log: {color: 'yellow'},
+    abs: {value: true},
+    acos: {value: true},
+    asin: {value: true},
+    atan: {value: true},
+    atan2: {value: true},
+    cos: {value: true},
+    sin: {value: true},
+    tan: {value: true},
+    ceil: {value: true},
+    floor: {value: true},
+    round: {value: true},
+    exp: {value: true},
+    ln: {value: true},
+    log10: {value: true},
+    pow: {value: true},
+    sqrt: {value: true},
+    max: {value: true},
+    min: {value: true},
+    random: {value: true},
+    pagexy: {value: true},
+    getxy: {value: true},
+    direction: {value: true},
+    distance: {value: true},
+    shown: {value: true},
+    hidden: {value: true},
+    inside: {value: true},
+    touches: {value: true},
+    within: {value: true},
+    notwithin: {value: true},
+    nearest: {value: true},
+    pressed: {value: true},
+    canvas: {value: true},
+    hsl: {value: true},
+    hsla: {value: true},
+    rgb: {value: true},
+    rgba: {value: true},
+    cell: {value: true},
+    '$': {value: true},
+    match: {value: true},
+    toString: {value: true},
+    charCodeAt: {value: true},
+    fromCharCode: {value: true},
+    exec: {value: true},
+    test: {value: true},
+    split: {value: true},
+    join: {value: true},
+    button: {value: true, command: true, color: 'orange'},
+    read: {value: true, command: true, color: 'yellow'},
+    readstr: {value: true, command: true, color: 'yellow'},
+    readnum: {value: true, command: true, color: 'yellow'},
+    write: {value: true, command: true, color: 'yellow'},
+    table: {value: true, command: true, color: 'yellow'},
+    splice: {value: true, command: true},
+    append: {value: true, command: true},
+    finish: {value: true, command: true},
+    loadscript: {value: true, command: true},
+    text: {value: true, command: true},
+    html: {value: true, command: true}
+  }
 };
 
 });

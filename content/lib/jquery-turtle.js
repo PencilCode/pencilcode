@@ -979,15 +979,6 @@ function getTurtleOrigin(elem, inverseParent, extra) {
   return result;
 }
 
-function unattached(elt) {
-  // Unattached if not part of a document.
-  while (elt) {
-    if (elt.nodeType === 9) return false;
-    elt = elt.parentNode;
-  }
-  return true;
-}
-
 function wh() {
   // Quirks-mode compatible window height.
   return window.innerHeight || $(window).height();
@@ -1065,18 +1056,6 @@ function polyMatchesGbcr(poly, gbcr) {
 
 function readPageGbcr() {
   var raw = this.getBoundingClientRect();
-  if (raw.width === 0 && raw.height === 0 &&
-     raw.top === 0 && raw.left === 0 && unattached(this)) {
-    // Prentend unattached images have a size.
-    return {
-      top: 0,
-      bottom: this.height || 0,
-      left: 0,
-      right: this.width || 0,
-      width: this.width || 0,
-      height: this.height || 0
-    }
-  }
   return {
     top: raw.top + window.pageYOffset,
     bottom: raw.bottom + window.pageYOffset,
@@ -1786,7 +1765,7 @@ function getTurtleData(elem) {
   var state = $.data(elem, 'turtleData');
   if (!state) {
     state = $.data(elem, 'turtleData', {
-      styte: null,
+      style: null,
       corners: [[]],
       path: [[]],
       down: false,
@@ -6163,21 +6142,29 @@ function animatedDotCommand(fillShape) {
       diameter = t;
     }
     if (diameter == null) { diameter = 8.8; }
-    if (!style) { style = 'black'; }
-    var ps = parsePenStyle(style, 'fillStyle');
     this.plan(function(j, elem) {
+      var state = getTurtleData(elem),
+          penStyle = state.style;
+      if (!style) {
+        // If no color is specified, default to pen color, or black if no pen.
+        style = (penStyle && (penStyle.fillStyle || penStyle.strokeStyle)) ||
+            'black';
+      }
       cc.appear(j);
       var c = this.pagexy(),
           ts = readTurtleTransform(elem, true),
-          state = getTurtleData(elem),
+          ps = parsePenStyle(style, 'fillStyle'),
           drawOnCanvas = getDrawOnCanvas(state),
           // Scale by sx.  (TODO: consider parent transforms.)
           targetDiam = diameter * ts.sx,
           animDiam = Math.max(0, targetDiam - 2),
           finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
           hasAlpha = /rgba|hsla/.test(ps.fillStyle);
+      if (null == ps.lineWidth && penStyle && penStyle.lineWidth) {
+        ps.lineWidth = penStyle.lineWidth;
+      }
       if (canMoveInstantly(this)) {
-        fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+        fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps, true);
         cc.resolve(j);
       } else {
         this.queue(function(next) {
@@ -6185,11 +6172,11 @@ function animatedDotCommand(fillShape) {
             duration: animTime(elem, intick),
             step: function() {
               if (!hasAlpha) {
-                fillShape(drawOnCanvas, c, this.radius, ts.rot, ps);
+                fillShape(drawOnCanvas, c, this.radius, ts.rot, ps, false);
               }
             },
             complete: function() {
-              fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps);
+              fillShape(drawOnCanvas, c, finalDiam, ts.rot, ps, true);
               cc.resolve(j);
               next();
             }
@@ -6246,6 +6233,84 @@ function fillBox(drawOnCanvas, position, diameter, rot, style) {
     }
   }
   ctx.restore();
+}
+
+function fillArrow(drawOnCanvas, position, diameter, rot, style, drawhead) {
+  var ctx = drawOnCanvas.getContext('2d');
+  ctx.save();
+  applyPenStyle(ctx, style);
+  if (!style.strokeStyle && style.fillStyle) {
+    ctx.strokeStyle = style.fillStyle;
+  }
+  if (diameter !== Infinity) {
+    var c = Math.sin(rot / 180 * Math.PI),
+        s = -Math.cos(rot / 180 * Math.PI),
+        w = style.lineWidth || 1.62,
+        hx = position.pageX + diameter * c,
+        hy = position.pageY + diameter * s,
+        m = calcArrow(w, hx, hy, c, s),
+        ds = diameter - m.hs,
+        dx = ds * c,
+        dy = ds * s;
+    setCanvasPageTransform(ctx, drawOnCanvas);
+    if (ds > 0) {
+      ctx.beginPath();
+      ctx.moveTo(position.pageX, position.pageY);
+      ctx.lineTo(position.pageX + dx, position.pageY + dy);
+      ctx.stroke();
+    }
+    if (drawhead) {
+      drawArrowHead(ctx, m);
+    }
+  }
+  ctx.restore();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// ARROW GEOMETRY
+//////////////////////////////////////////////////////////////////////////
+function calcArrow(w, x1, y1, cc, ss) {
+  var hw = Math.max(w * 1.25, w + 2),
+      hh = hw * 2,
+      hs = hh - hw / 2;
+  return {
+      hs: hs,
+      x1: x1,
+      y1: y1,
+      xm: x1 - cc * hs,
+      ym: y1 - ss * hs,
+      x2: x1 - ss * hw - cc * hh,
+      y2: y1 + cc * hw - ss * hh,
+      x3: x1 + ss * hw - cc * hh,
+      y3: y1 - cc * hw - ss * hh
+  };
+}
+
+function drawArrowHead(c, m) {
+  c.beginPath();
+  c.moveTo(m.x2, m.y2);
+  c.lineTo(m.x1, m.y1);
+  c.lineTo(m.x3, m.y3);
+  c.quadraticCurveTo(m.xm, m.ym, m.x2, m.y2);
+  c.closePath();
+  c.fill();
+}
+
+function drawArrowLine(c, w, x0, y0, x1, y1) {
+  var dx = x1 - x0,
+      dy = y1 - y0,
+      dd = Math.sqrt(dx * dx + dy * dy),
+      cc = dx / dd,
+      ss = dy / dd;
+  var m = calcArrow(w, x1, y1, cc, ss);
+  if (dd > m.hs) {
+    c.beginPath();
+    c.moveTo(x0, y0);
+    c.lineTo(m.xm, m.ym);
+    c.lineWidth = w;
+    c.stroke();
+  }
+  drawArrowHead(c, m);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -6508,6 +6573,9 @@ var turtlefn = {
   ["<u>box(color, size)</u> Draws a box. " +
       "Color and size are optional: " +
       "<mark>dot blue</mark>"], animatedDotCommand(fillBox)),
+  arrow: wrapcommand('arrow', 0,
+  ["<u>arrow(color, size)</u> Draws an arrow. " +
+      "<mark>arrow red, 100</mark>"], animatedDotCommand(fillArrow)),
   mirror: wrapcommand('mirror', 1,
   ["<u>mirror(flipped)</u> Mirrors the turtle across its main axis, or " +
       "unmirrors if flipped if false. " +
@@ -6658,6 +6726,42 @@ var turtlefn = {
       cc.resolve(j);
     });
   }),
+  say: wrapcommand('say', 1,
+  ["<u>say(words)</u> Say something. Use English words." +
+      "<mark>say \"Let's go!\"</mark>"],
+  function say(cc, words) {
+    this.plan(function(j, elem) {
+      cc.appear(j);
+      this.queue(function(next) {
+        var finished = false,
+            pollTimer = null,
+            complete = function() {
+          if (finished) return;
+          clearInterval(pollTimer);
+          finished = true;
+          cc.resolve(j);
+          next();
+        };
+        try {
+          var msg = new SpeechSynthesisUtterance(words);
+          msg.addEventListener('end', complete);
+          msg.addEventListener('error', complete);
+          speechSynthesis.speak(msg);
+          pollTimer = setInterval(function() {
+            // Chrome speech synthesis fails to deliver an 'end' event
+            // sometimes, so we also poll every 250ms.
+            if (speechSynthesis.pending || speechSynthesis.speaking) return;
+            complete();
+          }, 250);
+        } catch (e) {
+          console.log(e);
+          complete();
+        }
+      });
+    });
+    return this;
+
+  }),
   play: wrapcommand('play', 1,
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
       "<a href=\"http://abcnotation.com/\" target=\"_blank\">" +
@@ -6766,7 +6870,7 @@ var turtlefn = {
     return this;
   }),
   saveimg: wrapcommand('saveimg', 1,
-  ["<u>saveimg(filename)</u> Saves the turtle's image as a file." +
+  ["<u>saveimg(filename)</u> Saves the turtle's image as a file. " +
       "<mark>t.saveimg 'mypicture.png'</mark>"],
   function saveimg(cc, filename) {
     return this.plan(function(j, elem) {
@@ -6816,7 +6920,7 @@ var turtlefn = {
       if (state.drawOnCanvas) {
         sync(elem, state.drawOnCanvas);
       }
-      if (!canvas) {
+      if (!canvas || canvas === window) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {
         state.drawOnCanvas = canvas.canvas();
@@ -7171,15 +7275,23 @@ var turtlefn = {
     if (!arg) return false;
     if (typeof arg === 'string') { arg = $(arg); }
     if (!arg.jquery && !$.isArray(arg)) { arg = [arg]; }
-    var anyok = false, k = 0, j, obj, elem, gbcr0, toucher;
+    var anyok = false, k = 0, j, obj, elem, gbcr0, toucher, gbcr1;
     for (;!anyok && k < this.length; ++k) {
       elem = this[k];
       gbcr0 = getPageGbcr(elem);
+      // hidden elements do not touch anything
+      if (gbcr0.width == 0) { continue; }
       toucher = null;
       for (j = 0; !anyok && j < arg.length; ++j) {
         obj = arg[j];
         // Optimize the outside-bounding-box case.
-        if (isDisjointGbcr(gbcr0, getPageGbcr(obj))) {
+        gbcr1 = getPageGbcr(obj);
+        if (isDisjointGbcr(gbcr0, gbcr1)) {
+          continue;
+        }
+        // Do not touch removed or hidden elements, or points without
+        // a pageX/pageY coordinate.
+        if (gbcr1.width == 0 && (obj.pageX == null || obj.pageY == null)) {
           continue;
         }
         if (!toucher) {
@@ -7346,7 +7458,7 @@ var warning_shown = {},
 // 100th turtle motion.  If it takes more than a few seconds to receive it,
 // our script is blocking message dispatch, and an interrupt is triggered.
 function checkForHungLoop(fname) {
-  if ($.turtle.hungtimeout == Infinity || loopCounter++ < 100) {
+  if ($.turtle.hangtime == Infinity || loopCounter++ < 100) {
     return;
   }
   loopCounter = 0;
@@ -7362,7 +7474,7 @@ function checkForHungLoop(fname) {
     return;
   }
   // Timeout after which we interrupt the program: 6 seconds.
-  if (now - hangStartTime > $.turtle.hungtimeout) {
+  if (now - hangStartTime > $.turtle.hangtime) {
     if (see.visible()) {
       see.html('<span style="color:red">Oops: program ' +
         'interrupted because it was hanging the browser. ' +
@@ -7538,9 +7650,17 @@ var dollar_turtle_methods = {
       "<mark>[w, h] = sizexy(); canvas('2d').fillRect(0, 0, w, h)</mark>"],
   sizexy),
   forever: wrapraw('forever',
-  ["<u>forever(fn)</u> Calls fn repeatedly, forever.",
-   "<u>forever(fps, fn)</u> Calls fn at a rate of fps times per second."],
+  ["<u>forever(fn)</u> Calls fn repeatedly, forever. " +
+      "<mark>forever -> fd 2; rt 2</mark>",
+   "<u>forever(fps, fn)</u> Calls fn repeating fps per second. " +
+      "<mark>forever 2, -> fd 25; dot blue</mark>"],
   forever),
+  stop: wrapraw('stop',
+  ["<u>stop()</u> stops the current forever loop. " +
+      "<mark>forever -> fd 10; if not inside window then stop()</mark>",
+   "<u>stop(fn)</u> stops the forever loop corresponding to fn.",
+   "Use <u>break</u> to stop a <u>for</u> or <u>while</u> loop."],
+  stop),
   tick: wrapraw('tick',
   ["<u>tick(fps, fn)</u> Calls fn fps times per second until " +
       "<u>tick</u> is called again: " +
@@ -7907,7 +8027,7 @@ var dollar_turtle_methods = {
       "<mark>see min 2, -5, 1</mark>"], Math.min),
   Pencil: wrapraw('Pencil',
   ["<u>new Pencil(canvas)</u> " +
-      "Make an invisble pencil for drawing on a canvas." +
+      "Make an invisble pencil for drawing on a canvas. " +
       "<mark>s = new Sprite; p = new Pencil(s); " +
       "p.pen red; p.fd 100; remove p</mark>"],
       Pencil),
@@ -8071,8 +8191,8 @@ $.turtle = function turtle(id, options) {
     globalDrawing.subpixel = parseInt(options.subpixel);
   }
   // Set up hung-browser timeout, default 10 seconds.
-  $.turtle.hungtimeout = ('hungtimeout' in options) ?
-      parseFloat(options.hungtimeout) : 10000;
+  $.turtle.hangtime = ('hangtime' in options) ?
+      parseFloat(options.hangtime) : 10000;
 
   // Set up global events.
   if (!('events' in options) || options.events) {
@@ -8126,7 +8246,7 @@ $.turtle = function turtle(id, options) {
       (!('global' in options) || options.global)) {
     var extraturtlefn = {
       css:1, fadeIn:1, fadeOut:1, fadeTo:1, fadeToggle:1,
-      animate:1, stop:1, toggle:1, finish:1, promise:1, direct:1 };
+      animate:1, toggle:1, finish:1, promise:1, direct:1 };
     var globalfn = $.extend({}, turtlefn, extraturtlefn);
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
@@ -8143,8 +8263,7 @@ $.turtle = function turtle(id, options) {
   }
   // Set up test console.
   if (!('panel' in options) || options.panel) {
-    var retval = null,
-        seeopt = {
+    var seeopt = {
       title: 'test panel (type help for help)',
       abbreviate: [undefined, helpok],
       consolehook: seehelphook
@@ -8772,9 +8891,12 @@ function random(arg, arg2) {
 }
 
 var forever_timers = [];
+var current_timers = [];
 
-// As many as you like forever: this simplifies
-// setInterval(fn, 33) to just forever(fn).
+// Sets up as many as you like timers: this simplifies
+// setInterval(fn, 33) to just forever(fn); it also delays
+// starting the interval until the global table reaches this
+// point in the animation queue.
 function forever(fps, fn) {
   if (!fn && 'function' == typeof(fps)) {
     fn = fps;
@@ -8790,25 +8912,45 @@ function forever(fps, fn) {
   } else {
     action = fn;
   }
-  var timer = setInterval(function() {
+  var record = {fn: fn, timer: setInterval(function() {
     if (!action) return;
     // Set default speed to Infinity within forever().
     try {
       insidetick++;
+      current_timers.push(record);
       action();
     } finally {
       insidetick--;
+      current_timers.pop(record);
     }
-  }, ms);
-  forever_timers.push(timer);
-  return timer;
+  }, ms)};
+  forever_timers.push(record);
+  return record.timer;
 }
 
-function clearForever() {
+// Clears forever timers matching "which", or if "which" is null,
+// clears all forever timers.
+function clearForever(which) {
+  var cleaned = [];
   for (var j = 0; j < forever_timers.length; ++j) {
-    clearInterval(forever_timers[j]);
+    var record = forever_timers[j];
+    if (which == null || which == record.timer || which == record.fn) {
+      clearInterval(forever_timers[j].timer);
+    } else {
+      cleaned.push(forever_timers[j]);
+    }
   }
-  forever_timers = [];
+  forever_timers = cleaned;
+}
+
+// Stops the forever timer matching "which".
+// If "which" is null, clears the currently-running timer, or if
+// outside all forever timers, clears all forever timers.
+function stop(which) {
+  if (which == null && current_timers.length) {
+    which = current_timers[current_timers.length - 1].timer;
+  }
+  clearForever(which);
 }
 
 // One-time tick: the old original one-per-program, one-per-second tick method.
@@ -9379,6 +9521,196 @@ var debug = {
 debug.init();
 
 //////////////////////////////////////////////////////////////////////////
+// X Y coordinate showing support
+//////////////////////////////////////////////////////////////////////////
+(function() {
+  if (!debug.ide || (debug.ide.getOptions && !debug.ide.getOptions().panel)) {
+    // Only show the X-Y tip if inside a debugging IDE.
+    return;
+  }
+  var location = $('<samp>').css({
+    position: 'fixed',
+    zIndex: 1e6-1,
+    fontFamily: 'sans-serif',
+    display: 'none',
+    background: '#ff8',
+    border: '1px solid dimgray',
+    padding: '1px',
+    cursor: 'move',
+    fontSize: 12
+  }).appendTo('body');
+  function tr(n) {
+    return n.toFixed(1).replace(/\.0$/, '');
+  }
+  function cd(s) {
+    return '<code style="font-weight:bold;color:blue">' + s + '</code>';
+  }
+  function cont(loc, ev) {
+    return loc && (loc = loc.get(0)) && ev && ev.target &&
+           (loc == ev.target || $.contains(loc, ev.target));
+  }
+  var linestart = null, linecanvas = null, lineend = null,
+      xa = 0, ya = 0, xb = 0, yb = 0, xt, yt, dr, ar;
+  $(window).on('mousedown mouseup mousemove keydown', function(e) {
+    if (e.type == 'keydown') {
+      if (e.which < 27) return;
+      if (linecanvas) linecanvas.remove();
+      linecanvas = linestart = lineend = null;
+    }
+    if (e.type == 'mousedown') {
+      if (!linecanvas) {
+        if (cont(location, e)) {
+          // State 1: click on the tooltip to move it.
+          var w = sizexy();
+          lineend = linestart = null;
+          linecanvas = $('<canvas width="' + w[0] + '" height="' + w[1] + '">').
+             css({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            cursor: 'crosshair',
+            zIndex: 1e6
+          }).appendTo('body');
+        }
+      } else if (lineend) {
+        // State 4: Click to remove everything.
+        if (linecanvas) { linecanvas.remove(); }
+        linecanvas = linestart = lineend = null;
+      } else if (linestart) {
+        // State 3: Click to pin the line to the end.
+        linecanvas.css({cursor: 'default'});
+        lineend = e;
+      } else {
+        // State 1: Click to plant the line start.
+        $.turtle.interrupt('reset');
+        var touched = $('.turtle').within('touch', e);
+        linestart = touched.length ? touched.eq(0) : e;
+      }
+    }
+    if (linecanvas) {
+      var cnv = linecanvas.canvas(),
+          c = cnv.getContext('2d'),
+          relative = false,
+          p = lineend || e,
+          s, html, dx, dy, dd, dir, ang;
+      if (linestart && 'function' == typeof(linestart.pagexy)) {
+        var xy = linestart.getxy(), s = linestart.pagexy();
+        s.x = xy[0];
+        s.y = xy[1];
+        relative = true;
+        dir = linestart.direction();
+        html = [
+          'getxy is ' + tr(s.x) + ', ' + tr(s.y),
+          'direction is ' + tr(dir)
+        ];
+      } else {
+        s = linestart || p;
+        html = [
+          cd('moveto ' + tr(s.x) + ', ' + tr(s.y))
+        ];
+      }
+      html.unshift(lineend ?
+        '<span style="color:green">click to close</span>' :
+        linestart ?
+        '<span style="color:red">click to measure</span>' :
+        '<span style="color:red">click on point</span>'
+      );
+      dx = p.x - s.x,
+      dy = p.y - s.y,
+      dd = Math.sqrt(dx * dx + dy * dy),
+      ang = Math.atan2(dx, dy) / Math.PI * 180;
+      if (linestart) {
+        c.save();
+        c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
+        xa = xb = s.pageX;
+        ya = yb = s.pageY;
+        // Draw a dot
+        c.fillStyle = 'red';
+        c.beginPath();
+        c.arc(s.pageX, s.pageY, 4, 0, 2*Math.PI, false);
+        c.closePath();
+        c.fill();
+        if (dd > 0) {
+          if (relative) {
+            c.strokeStyle = 'black';
+            c.fillStyle = 'black';
+            dr = (dir - 90) / 180 * Math.PI;
+            ar = (ang - 90) / 180 * Math.PI;
+            xt = s.pageX + Math.cos(dr) * 100;
+            yt = s.pageY + Math.sin(dr) * 100;
+            drawArrowLine(c, 2, s.pageX, s.pageY, xt, yt);
+            xa = Math.min(xt, xa);
+            ya = Math.min(yt, ya);
+            xb = Math.max(xt, xb);
+            yb = Math.max(yt, yb);
+            var delta = (360 + ang - dir) % 360;
+            c.beginPath();
+            if (delta <= 180) {
+              html.push(cd('rt ' + tr(delta)));
+              if (dd >= 20) c.arc(s.pageX, s.pageY, 20, dr, ar);
+            } else {
+              html.push(cd('lt ' + tr(360 - delta)));
+              if (dd >= 20) c.arc(s.pageX, s.pageY, 20, ar, dr);
+            }
+            c.stroke();
+            xa = Math.min(s.pageX - 20, xa)
+            ya = Math.min(s.pageY - 20, ya)
+            xb = Math.max(s.pageX + 20, xb)
+            yb = Math.max(s.pageY + 20, yb)
+          } else {
+            html.push(cd('turnto ' + tr(ang)));
+          }
+          html.push(cd('fd ' + tr(dd)));
+          html.push('end at ' + tr(p.x) + ', ' + tr(p.y));
+          // Draw an arrow.
+          c.strokeStyle = 'red';
+          c.fillStyle = 'red';
+          drawArrowLine(c, 2, s.pageX, s.pageY, p.pageX, p.pageY);
+          xa = Math.min(p.pageX, xa);
+          ya = Math.min(p.pageY, ya);
+          xb = Math.max(p.pageX, xb);
+          yb = Math.max(p.pageY, yb);
+        }
+        c.restore();
+      }
+      location.css({left:0, top:0}).html(html.join('<br>')).show();
+      // Position the draggable tip to the side away from the start point.
+      var pos = { left: '', top: '', right: '', bottom: '' };
+      if (p.pageX + 5 < s.pageX) {
+        pos.left = Math.max(
+            p.pageX - $(window).scrollLeft() - location.outerWidth() - 5, 2);
+      } else {
+        pos.left = Math.min(p.pageX - $(window).scrollLeft() + 5,
+            $(document).width() - location.outerWidth() - 2);
+      }
+      if (p.pageY + 5 < s.pageY) {
+        pos.top = Math.max(
+            p.pageY - $(window).scrollTop() - location.outerHeight() - 5, 2);
+      } else {
+        pos.top = Math.min(p.pageY - $(window).scrollTop() + 5,
+            $(document).height() - location.outerHeight() - 2);
+      }
+      location.css(pos);
+    } else {
+      html = [];
+      if (cont(location, e)) {
+        html.push('<span style="color:red">click to use</span>');
+      }
+      if (e.x != null) {
+        html.push(e.x + ', ' + e.y);
+      }
+      location.html(html.join('<br>')).css({
+        left: '',
+        top: '',
+        right: 0,
+        bottom: 0
+      }).show();
+    }
+  });
+})();
+
+
+//////////////////////////////////////////////////////////////////////////
 // SEE LOGGING SUPPORT
 // A copy of see.js here.
 // TODO: figure out how to move this into the IDE.
@@ -9399,11 +9731,11 @@ var autoscroll = false;
 var logelement = 'body';
 var panel = false;
 try {
-  // show panel by default if framed inside a top url with /edit/,
+  // show panel by default if framed inside a an ide,
   // and if the screen is big enough (i.e., omit mobile clients).
   panel = (window.self !== window.top &&
            screen.width >= 800 && screen.height >= 600 &&
-      /^\/edit\//.test(window.top.window.location.pathname));
+           parent && parent.ide && parent.ide.getOptions().panel);
 } catch(e) {}
 var see;  // defined below.
 var paneltitle = '';
