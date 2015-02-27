@@ -6,7 +6,7 @@
     "ace-builds": "ajaxorg/ace-builds#v1.1.7",
     "almond": "latest",
     "bootstrap": "latest",
-    "coffee-script": "latest",
+    "coffee-script": "dabbler0/coffeescript#astbin",
     "devbridge-autocomplete": "latest",
     "droplet": "Pencilcode/droplet#master",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",

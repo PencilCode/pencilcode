@@ -23,7 +23,7 @@ module.exports = function(grunt) {
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
           'lib/droplet.css': 'droplet/dist/droplet.min.css',
           'lib/iced-coffee-script.js':
-             'iced-coffee-script/extras/coffee-script.js',
+             'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
           'lib/jquery.autocomplete.js':
               'devbridge-autocomplete/dist/jquery.autocomplete.js',

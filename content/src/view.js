@@ -1495,9 +1495,7 @@ function paletteForMimeType(mimeType) {
 
 function dropletOptionsForMimeType(mimeType) {
   return {
-    blockFunctions: palette.BLOCK_FUNCTIONS,
-    valueFunctions: palette.VALUE_FUNCTIONS,
-    eitherFunctions: palette.EITHER_FUNCTIONS
+    functions: palette.KNOWN_FUNCTIONS
   };
 }
 
