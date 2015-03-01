@@ -28,7 +28,7 @@ The Ubuntu and Debian packages for node.js are pretty old, so don't
 just apt-get install the packages.  Get and build the latest `node` and
 `npm` and `grunt` binaries as follows:
 
-(For Linux:)
+(For Linux:)s
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
@@ -83,7 +83,7 @@ To start the https version of the
 dev server (by default it runs on localhost:8008):
 
 <pre>
-grunt sdevserver
+grunt devserver
 </pre>
 
 (Without the s it runs http instead of https.)
@@ -95,7 +95,7 @@ your .profile by running the following:
 <pre>
 cat &gt;&gt; ~/.profile &lt;&lt;EOF
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
-alias devchrome="chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors https://pencilcode.net.dev/"
+alias devchrome="chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/"
 EOF
 source ~/.profile
 </pre>
@@ -105,7 +105,7 @@ And then "devchrome" will launch an instance of Chrome with the right proxy.
 On Linux, add something like this to your .bashrc:
 
 <pre>
-alias devchrome="google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors https://pencilcode.net.dev/"
+alias devchrome="google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/"
 </pre>
 
 On Windows:
