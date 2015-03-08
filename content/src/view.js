@@ -2078,6 +2078,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   setPrimaryFocus();
 
   window.addEventListener("storage", function(e) {
+    /* block mode needs to be set to change editor value */
+    setPaneEditorBlockMode(pane, true);
     dropletEditor.setValue_raw(localStorage.getItem('dropletEditorValue'));
   }, false);
 
