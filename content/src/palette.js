@@ -429,8 +429,8 @@ return {
   ],
 
   KNOWN_FUNCTIONS: {
-    fd: {color: 'quantumlightblue'},
-    bk: {color: 'quantumlightblue'},
+    fd: {color: 'violet'},
+    bk: {color: 'violet'},
     rt: {color: 'quantumlightblue'},
     lt: {color: 'quantumlightblue'},
     slide: {color: 'quantumlightblue'},
