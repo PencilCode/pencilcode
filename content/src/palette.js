@@ -20,7 +20,7 @@ return {
   COFFEESCRIPT_PALETTE: [
     {
       name: 'Move',
-      color: 'red',
+      color: 'quantumlightblue',
       blocks: filterblocks([
         {
           block: 'fd 100',
