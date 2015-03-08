@@ -2077,6 +2077,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   var um = editor.getSession().getUndoManager();
   setPrimaryFocus();
 
+  window.addEventListener("storage", function(e) {
+    dropletEditor.setValue_raw(localStorage.getItem('dropletEditorValue'));
+  }, false);
+
   setupAceEditor(pane, mainContainer, editor,
     modeForMimeType(editorMimeType(paneState)), text);
   var session = editor.getSession();
@@ -2086,6 +2090,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     if (paneState.cleanLineCount != session.getLength()) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
+      localStorage.setItem('dropletEditorValue', dropletEditor.getValue());
     }
     fireEvent('delta', [pane]);
   });
