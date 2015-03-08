@@ -71,7 +71,7 @@ return {
       ])
     }, {
       name: 'Control',
-      color: 'orange',
+      color: 'quantumyellow',
       blocks: filterblocks([
         {
           block: 'for [1..3]\n  ``',
@@ -100,7 +100,7 @@ return {
       ])
     }, {
       name: 'Art',
-      color: 'blue',
+      color: 'quantumpurple',
       blocks: filterblocks([
          {
           block: 'pen purple, 10',
@@ -145,7 +145,7 @@ return {
       ])
     }, {
       name: 'Operators',
-      color: 'green',
+      color: 'quantumlightgreen',
       blocks: filterblocks([
         {
           block: 'x = ``',
@@ -204,7 +204,7 @@ return {
       ])
     }, {
       name: 'Text',
-      color: 'yellow',
+      color: 'quantumpink',
       blocks: filterblocks([
         {
           block: 'write \'Hello.\'',
@@ -228,7 +228,7 @@ return {
       ])
     }, {
       name: 'Sprites',
-      color: 'violet',
+      color: 'quantumteal',
       blocks: filterblocks([
         {
           block: 't = new Turtle red',
@@ -249,7 +249,7 @@ return {
       ])
     }, {
       name: 'Sound',
-      color: 'violet',
+      color: 'quantumdeeppurple',
       blocks: filterblocks([
         {
           block: 'p.play \'CDEDC\'',
@@ -258,7 +258,7 @@ return {
       ])
     }, {
       name: 'Snippets',
-      color: 'yellow',
+      color: 'quantumdeeporange',
       blocks: filterblocks([
         {
           block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
