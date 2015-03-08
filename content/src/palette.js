@@ -62,17 +62,11 @@ return {
           block: 'movexy 30, 20',
           title: 'Move by changing x and y'
         }, {
-          block: 'move 10, 5',
-          title: "Move sideways or diagonal from turtle's angle"
-        }, {
           block: 'jumpto 100, 50',
           title: 'Jump to coordinates without drawing'
         }, {
           block: 'jumpxy 30, 20',
           title: 'Jump changing x and y without drawing'
-        }, {
-          block: 'jump 10, 5',
-          title: "Move sideways or diagonal without drawing"
         }
       ])
     }, {
@@ -105,7 +99,7 @@ return {
         }
       ])
     }, {
-      name: 'Looks',
+      name: 'Art',
       color: 'blue',
       blocks: filterblocks([
          {
@@ -135,9 +129,6 @@ return {
         }, {
           block: 'cs()',
           title: 'Clear screen'
-        }, {
-          block: 'cg()',
-          title: 'Clear graphics'
         }, {
           block: 'pu()',
           title: 'Lift the pen up'
