@@ -2047,6 +2047,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   paneState.lastChangeTime = +(new Date);
 
+  var localStorageSemaphore = 1;
   dropletEditor.on('change', function() {
     if (paneState.settingUp) return;
     paneState.lastChangeTime = +(new Date);
@@ -2055,7 +2056,24 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
     fireEvent('delta', [pane]);
+    /* sync changes across tabs using localStorage */
+    if(localStorageSemaphore) {
+      setTimeout(function() {
+        localStorage.setItem('dropletEditorValue', dropletEditor.getValue());
+        localStorageSemaphore = 1;
+      }, 1500);
+      localStorageSemaphore = 0;
+    }
   });
+
+  window.addEventListener("storage", function(e) {
+    if(getPaneEditorBlockMode(pane)) {
+      dropletEditor.setValue(localStorage.getItem('dropletEditorValue'));
+    } else {
+      editor.setValue(localStorage.getItem('dropletEditorValue'));
+    }
+    fireEvent('dirty', [pane]);
+  }, false);
 
   dropletEditor.on('toggledone', function() {
     if (!$('.droplet-hover-div').hasClass('tooltipstered')) {
@@ -2077,12 +2095,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   var um = editor.getSession().getUndoManager();
   setPrimaryFocus();
 
-  window.addEventListener("storage", function(e) {
-    /* block mode needs to be set to change editor value */
-    setPaneEditorBlockMode(pane, true);
-    dropletEditor.setValue_raw(localStorage.getItem('dropletEditorValue'));
-  }, false);
-
   setupAceEditor(pane, mainContainer, editor,
     modeForMimeType(editorMimeType(paneState)), text);
   var session = editor.getSession();
@@ -2092,7 +2104,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     if (paneState.cleanLineCount != session.getLength()) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
-      localStorage.setItem('dropletEditorValue', dropletEditor.getValue());
     }
     fireEvent('delta', [pane]);
   });
