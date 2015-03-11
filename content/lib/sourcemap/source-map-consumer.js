@@ -201,11 +201,12 @@ define(function (require, exports, module) {
                                     binarySearch.LEAST_UPPER_BOUND);
       if (index >= 0) {
         var mapping = this._originalMappings[index];
+        var originalLine = mapping.originalLine;
 
         // Iterate until either we run out of mappings, or we run into
         // a mapping for a different line. Since mappings are sorted, this is
         // guaranteed to find all mappings for the line we are searching for.
-        while (mapping && mapping.originalLine === needle.originalLine) {
+        while (mapping && mapping.originalLine === originalLine) {
           mappings.push({
             line: util.getArg(mapping, 'generatedLine', null),
             column: util.getArg(mapping, 'generatedColumn', null),
@@ -352,7 +353,7 @@ define(function (require, exports, module) {
       var index = 0;
       var cachedValues = {};
       var temp = {};
-      var mapping, str, values, end;
+      var mapping, str, values, end, value;
 
       while (index < length) {
         if (aStr.charAt(index) === ';') {
@@ -641,11 +642,13 @@ define(function (require, exports, module) {
       if (index >= 0) {
         var mapping = this._originalMappings[index];
 
-        return {
-          line: util.getArg(mapping, 'generatedLine', null),
-          column: util.getArg(mapping, 'generatedColumn', null),
-          lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-        };
+        if (mapping.source === needle.source) {
+          return {
+            line: util.getArg(mapping, 'generatedLine', null),
+            column: util.getArg(mapping, 'generatedColumn', null),
+            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+          };
+        }
       }
 
       return {

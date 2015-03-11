@@ -5736,10 +5736,10 @@ function doNothing() {}
 // if the argument list is longer than argcount, or null otherwise.
 function continuationArg(args, argcount) {
   argcount = argcount || 0;
-  if (args.length <= argcount || typeof(args[args.length - 1]) != 'function') {
-    return null;
-  }
-  return args[args.length - 1];
+  if (args.length <= argcount) { return null; }
+  var lastarg = args[args.length - 1];
+  if (typeof(lastarg) === 'function' && !lastarg.helpname) { return lastarg; }
+  return null;
 }
 
 // This function helps implement the continuation-passing-style
@@ -7262,6 +7262,9 @@ var turtlefn = {
       "<mark>touches red</mark>"],
   function touches(arg, y) {
     if (!this.length || invisible(this[0])) { return false; }
+    if (typeof(arg) == "function" && isCSSColor(arg.helpname)) {
+      arg = arg.helpname;
+    }
     if (arg == 'color' || isCSSColor(arg)) {
       return touchesPixel(this[0], arg == 'color' ? null : arg);
     }

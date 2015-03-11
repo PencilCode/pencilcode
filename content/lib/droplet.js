@@ -3598,7 +3598,7 @@ QUAD.init = function (args) {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __modulo = function(a, b) { return (a % b + +b) % b; };
+    __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
@@ -3636,18 +3636,29 @@ QUAD.init = function (args) {
       ctx: document.createElement('canvas').getContext('2d'),
       colors: {
         error: '#ff0000',
-        "return": '#ecec79',
-        control: '#efcf8f',
-        value: '#8cec79',
-        command: '#8fbfef',
-        red: '#f2a6a6',
-        orange: '#efcf8f',
-        yellow: '#ecec79',
-        green: '#8cec79',
-        cyan: '#79ecd9',
-        blue: '#8fbfef',
-        violet: '#bfa6f2',
-        magenta: '#f2a6e5'
+        "return": '#fff59d',
+        control: '#ffcc80',
+        value: '#a5d6a7',
+        command: '#90caf9',
+        red: '#ef9a9a',
+        pink: '#f48fb1',
+        purple: '#ce93d8',
+        deeppurple: '#b39ddb',
+        indigo: '#9fa8da',
+        blue: '#90caf9',
+        lightblue: '#81d4fa',
+        cyan: '#80deea',
+        teal: '#80cbc4',
+        green: '#a5d6a7',
+        lightgreen: '#c5e1a5',
+        lime: '#e6ee9c',
+        yellow: '#fff59d',
+        amber: '#ffe082',
+        orange: '#ffcc80',
+        deeporange: '#ffab91',
+        brown: '#bcaaa4',
+        grey: '#eeeeee',
+        bluegrey: '#b0bec5'
       }
     };
     YES = function() {
@@ -3727,6 +3738,15 @@ QUAD.init = function (args) {
             return new SegmentViewNode(model, this);
           case 'cursor':
             return new CursorViewNode(model, this);
+        }
+      };
+
+      View.prototype.getColor = function(color) {
+        var _ref;
+        if (color && '#' === color.charAt(0)) {
+          return color;
+        } else {
+          return (_ref = this.opts.colors[color]) != null ? _ref : '#ffffff';
         }
       };
 
@@ -4837,9 +4857,8 @@ QUAD.init = function (args) {
         };
 
         BlockViewNode.prototype.computeOwnPath = function() {
-          var _ref;
           BlockViewNode.__super__.computeOwnPath.apply(this, arguments);
-          this.path.style.fillColor = (_ref = this.view.opts.colors[this.model.color]) != null ? _ref : '#ffffff';
+          this.path.style.fillColor = this.view.getColor(this.model.color);
           this.path.style.strokeColor = '#888';
           this.path.bevel = true;
           return this.path;
@@ -6307,7 +6326,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Arr':
-            this.csBlock(node, depth, 100, 'violet', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 100, 'purple', wrappingParen, VALUE_ONLY);
             if (node.objects.length > 0) {
               this.csIndentAndMark(indentDepth, node.objects, depth + 1);
             }
@@ -6372,7 +6391,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Obj':
-            this.csBlock(node, depth, 0, 'violet', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 0, 'purple', wrappingParen, VALUE_ONLY);
             _ref18 = node.properties;
             _results4 = [];
             for (_s = 0, _len9 = _ref18.length; _s < _len9; _s++) {
@@ -9325,7 +9344,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       'BinaryExpression': 'value',
       'UnaryExpression': 'value',
       'FunctionExpression': 'value',
-      'FunctionDeclaration': 'violet',
+      'FunctionDeclaration': 'purple',
       'AssignmentExpression': 'command',
       'CallExpression': 'command',
       'ReturnStatement': 'return',
@@ -9515,7 +9534,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'CallExpression':
             known = this.lookupFunctionName(node);
             if (!known) {
-              return 'violet';
+              return 'purple';
             } else if (known.fn.color) {
               return known.fn.color;
             } else if (known.fn.value && !known.fn.command) {
@@ -10752,9 +10771,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     Editor.prototype.resizeDragCanvas = function() {
       this.dragCanvas.width = 0;
       this.dragCanvas.height = 0;
-      this.highlightCanvas.width = this.dropletElement.offsetWidth;
+      this.highlightCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
       this.highlightCanvas.style.width = "" + this.highlightCanvas.width + "px";
-      this.highlightCanvas.height = this.dropletElement.offsetHeight;
+      this.highlightCanvas.height = this.dropletElement.offsetHeight - this.gutter.offsetWidth;
       this.highlightCanvas.style.height = "" + this.highlightCanvas.height + "px";
       return this.highlightCanvas.style.left = "" + this.mainCanvas.offsetLeft + "px";
     };
@@ -11803,9 +11822,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.lassoSelectCtx.clearRect(0, 0, this.lassoSelectCanvas.width, this.lassoSelectCanvas.height);
     };
     Editor.prototype.resizeLassoCanvas = function() {
-      this.lassoSelectCanvas.width = this.dropletElement.offsetWidth;
+      this.lassoSelectCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
       this.lassoSelectCanvas.style.width = "" + this.lassoSelectCanvas.width + "px";
-      this.lassoSelectCanvas.height = this.dropletElement.offsetHeight;
+      this.lassoSelectCanvas.height = this.dropletElement.offsetHeight - this.gutter.offsetWidth;
       this.lassoSelectCanvas.style.height = "" + this.lassoSelectCanvas.height + "px";
       return this.lassoSelectCanvas.style.left = "" + this.mainCanvas.offsetLeft + "px";
     };
@@ -13303,9 +13322,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       return this.dropletElement.appendChild(this.cursorCanvas);
     });
     Editor.prototype.resizeCursorCanvas = function() {
-      this.cursorCanvas.width = this.dropletElement.offsetWidth;
+      this.cursorCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
       this.cursorCanvas.style.width = "" + this.cursorCanvas.width + "px";
-      this.cursorCanvas.height = this.dropletElement.offsetHeight;
+      this.cursorCanvas.height = this.dropletElement.offsetHeight - this.gutter.offsetWidth;
       this.cursorCanvas.style.height = "" + this.cursorCanvas.height + "px";
       return this.cursorCanvas.style.left = "" + this.mainCanvas.offsetLeft + "px";
     };
