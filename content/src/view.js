@@ -9,6 +9,7 @@ define([
   'see',
   'droplet',
   'palette',
+  'codescan',
   'draw-protractor',
   'ZeroClipboard',
   'FontLoader'
@@ -20,6 +21,7 @@ function(
   see,
   droplet,
   palette,
+  codescan,
   drawProtractor,
   ZeroClipboard,
   FontLoader
@@ -1611,6 +1613,51 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   showPaneEditorLanguagesDialog(pane);
 });
 
+$('.pane').on('mousedown', '.blockmenu', function(e) {
+  // Do nothing if menu already showing.
+  if ($(this).find('.blockmenupopup').length) return;
+  var pane = $(this).closest('.pane').prop('id');
+  var data = getPaneEditorData(pane);
+  var overlay = $('<div style="position:fixed;top:0;right:0;left:0;bottom:0">');
+  overlay.appendTo(this);
+  var popup = $('<div class="blockmenupopup">');
+  var objs = codescan.scanObjects(getPaneEditorLanguage(pane), data.data);
+  for (var j = 0; j < objs.length; ++j) {
+    popup.append('<div class="blockmenuitem" data-item="' + j + '">' +
+        '<img src="/image/turtleicon.png"> ' + objs[j].label + '</div>');
+  }
+  popup.append('<div class="blockmenuitem" checked data-item="turtle">' +
+           'Use default blocks</div>');
+  popup.append('<div class="blockmenuitem" data-item="textcode">' +
+           'Show text code</div>');
+  popup.appendTo(this);
+
+  var moved = false;
+  var menu = this;
+  menu.setCapture && menu.setCapture(false);
+  $(window).on('mouseup mouseenter mouseleave', capturer);
+  function capturer(e) {
+    if (e.type == 'mouseleave') { moved = true; return; }
+    var item = $(e.target).closest('.blockmenuitem');
+    if (item.length) { moved = true; }
+    if (moved && e.type == 'mouseup') {
+      popup.remove();
+      overlay.remove();
+      $(window).off('mouseup mouseenter mouseleave', capturer);
+    }
+    moved = true;
+    if (item.length && e.type == 'mouseup') {
+      trigger(item.data('item'));
+    }
+  }
+  function trigger(item) {
+    console.log(item);
+    if (item == 'textcode') {
+      setPaneEditorBlockMode(pane, false);
+    }
+  }
+});
+
 $('.pane').on('click', '.closeblocks', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
@@ -2069,9 +2116,9 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   if (!/^frame\./.test(window.location.hostname)) {
-    $('<div class="closeblocks" title="Switch from blocks to code">' +
-      '&times</div>').appendTo(
-      dropletEditor.paletteWrapper).tooltipster();
+    $('<div class="blockmenu"">Blocks' +
+      '<span class="blockmenuarrow">&#9660;</span></div>').appendTo(
+        dropletEditor.paletteWrapper);
   }
 
   var mainContainer = $('#' + id);

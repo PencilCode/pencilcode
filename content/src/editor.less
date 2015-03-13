@@ -686,6 +686,52 @@ body#pencildoc #diigolet-csm {
   cursor: pointer
 }
 
+.blockmenu {
+  position: absolute;
+  top: -28px;
+  height: 28px;
+  right: 0;
+  width: 100%;
+  padding: 0 17px;
+  color: #eee;
+  background: #0D47A1;
+  z-index: 300;
+}
+
+.blockmenuarrow {
+  float: right;
+  font-size: 67%;
+}
+
+.blockmenupopup {
+  width: 100%;
+  position: absolute;
+  left: 0px;
+  top: 28px;
+  background: #fff;
+  color: #0d47a1;
+  border: 1px solid #0d47a1;
+  border-top: none;
+}
+
+.blockmenuitem[checked]:before {
+  position: absolute;
+  left: 2px;
+  font-size: 75%;
+  content: "\2713";
+}
+
+.blockmenuitem {
+  padding: 1px 17px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.blockmenuitem:hover {
+  color: white;
+  background: #0D47A1;
+}
+
 .droplet-palette-wrapper {
   cursor: default
 }
