@@ -1673,6 +1673,8 @@ QUAD.init = function (args) {
     exports.ENCOURAGE = 1;
     exports.DISCOURAGE = 0;
     exports.FORBID = -1;
+    exports.DROPDOWN_ARROW_WIDTH = 15;
+    exports.DROPDOWN_ARROW_PADDING = 3;
     if (typeof window !== "undefined" && window !== null) {
       window.String.prototype.trimLeft = function() {
         return this.replace(/^\s+/, '');
@@ -3310,27 +3312,32 @@ QUAD.init = function (args) {
     exports.Socket = Socket = (function(_super) {
       __extends(Socket, _super);
 
-      function Socket(precedence, handwritten, classes) {
+      function Socket(precedence, handwritten, classes, dropdown) {
         this.precedence = precedence != null ? precedence : 0;
         this.handwritten = handwritten != null ? handwritten : false;
         this.classes = classes != null ? classes : [];
+        this.dropdown = dropdown != null ? dropdown : null;
         this.start = new SocketStartToken(this);
         this.end = new SocketEndToken(this);
         this.type = 'socket';
         Socket.__super__.constructor.apply(this, arguments);
       }
 
+      Socket.prototype.hasDropdown = function() {
+        return (this.dropdown != null) && this.isDroppable();
+      };
+
       Socket.prototype.isDroppable = function() {
         return this.start.next === this.end || this.start.next.type === 'text';
       };
 
       Socket.prototype._cloneEmpty = function() {
-        return new Socket(this.precedence, this.handwritten, this.accepts);
+        return new Socket(this.precedence, this.handwritten, this.classes, this.dropdown);
       };
 
       Socket.prototype._serialize_header = function() {
-        var _ref, _ref1;
-        return "<socket precedence=\"" + this.precedence + "\" handwritten=\"" + this.handwritten + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : '') + "\">";
+        var _ref, _ref1, _ref2, _ref3;
+        return "<socket precedence=\"" + this.precedence + "\" handwritten=\"" + this.handwritten + "\" classes=\"" + ((_ref = (_ref1 = this.classes) != null ? typeof _ref1.join === "function" ? _ref1.join(' ') : void 0 : void 0) != null ? _ref : '') + "\"" + (this.dropdown != null ? " dropdown=\"" + ((_ref2 = (_ref3 = this.dropdown) != null ? typeof _ref3.join === "function" ? _ref3.join(' ') : void 0 : void 0) != null ? _ref2 : '') + "\"" : '') + ">";
       };
 
       Socket.prototype._serialize_footer = function() {
@@ -3601,7 +3608,7 @@ QUAD.init = function (args) {
     __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
-    var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
+    var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
     NO_MULTILINE = 0;
     MULTILINE_START = 1;
     MULTILINE_MIDDLE = 2;
@@ -3616,6 +3623,8 @@ QUAD.init = function (args) {
     CARRIAGE_ARROW_INDENT = 1;
     CARRIAGE_ARROW_NONE = 2;
     CARRIAGE_GROW_DOWN = 3;
+    DROPDOWN_ARROW_HEIGHT = 8;
+    DROP_TRIANGLE_COLOR = '#555';
     DEFAULT_OPTIONS = {
       padding: 5,
       indentWidth: 10,
@@ -4469,8 +4478,11 @@ QUAD.init = function (args) {
           return null;
         };
 
-        ContainerViewNode.prototype.computeBoundingBoxX = function(left, line) {
+        ContainerViewNode.prototype.computeBoundingBoxX = function(left, line, offset) {
           var childLeft, childLine, childMargins, childView, i, lineChild, _i, _len, _ref, _ref1, _ref2, _ref3;
+          if (offset == null) {
+            offset = 0;
+          }
           if (this.computedVersion === this.model.version && left === ((_ref = this.bounds[line]) != null ? _ref.x : void 0) && !this.changedBoundingBox) {
             return this.bounds[line];
           }
@@ -4483,7 +4495,7 @@ QUAD.init = function (args) {
             }
             this.changedBoundingBox = true;
           }
-          childLeft = left;
+          childLeft = left + offset;
           _ref3 = this.lineChildren[line];
           for (i = _i = 0, _len = _ref3.length; _i < _len; i = ++_i) {
             lineChild = _ref3[i];
@@ -4930,8 +4942,15 @@ QUAD.init = function (args) {
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             dimension = _ref[_i];
             dimension.width = Math.max(dimension.width, this.view.opts.minSocketWidth);
+            if (this.model.hasDropdown()) {
+              dimension.width += helper.DROPDOWN_ARROW_WIDTH;
+            }
           }
           return null;
+        };
+
+        SocketViewNode.prototype.computeBoundingBoxX = function(left, line) {
+          return SocketViewNode.__super__.computeBoundingBoxX.call(this, left, line, this.model.hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
         };
 
         SocketViewNode.prototype.computeGlue = function() {
@@ -4961,6 +4980,18 @@ QUAD.init = function (args) {
           this.path.style.fillColor = '#FFF';
           this.path.style.strokeColor = '#FFF';
           return this.path;
+        };
+
+        SocketViewNode.prototype.drawSelf = function(ctx) {
+          SocketViewNode.__super__.drawSelf.apply(this, arguments);
+          if (this.model.hasDropdown()) {
+            ctx.beginPath();
+            ctx.fillStyle = DROP_TRIANGLE_COLOR;
+            ctx.moveTo(this.bounds[0].x + helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2);
+            ctx.lineTo(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH - helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2);
+            ctx.lineTo(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH / 2, this.bounds[0].y + (this.bounds[0].height + DROPDOWN_ARROW_HEIGHT) / 2);
+            return ctx.fill();
+          }
         };
 
         SocketViewNode.prototype.computeOwnDropArea = function() {
@@ -5342,8 +5373,39 @@ QUAD.init = function (args) {
     })();
     exports.Parser = Parser = (function() {
       function Parser(text, opts) {
+        var convertFunction, index, key, options, val, _fn, _ref, _ref1;
         this.text = text;
         this.opts = opts != null ? opts : {};
+        convertFunction = function(x) {
+          if ((typeof x === 'string') || x instanceof String) {
+            return {
+              text: x,
+              display: x
+            };
+          } else {
+            return x;
+          }
+        };
+        _ref = this.opts.functions;
+        for (key in _ref) {
+          val = _ref[key];
+          _ref1 = val.dropdown;
+          _fn = (function(_this) {
+            return function(options) {
+              return _this.opts.functions[key].dropdown[index] = function() {
+                if (typeof options === 'function') {
+                  return options().map(convertFunction);
+                } else {
+                  return options.map(convertFunction);
+                }
+              };
+            };
+          })(this);
+          for (index in _ref1) {
+            options = _ref1[index];
+            _fn(options);
+          }
+        }
         this.originalText = this.text;
         this.markup = [];
       }
@@ -5389,7 +5451,7 @@ QUAD.init = function (args) {
 
       Parser.prototype.addSocket = function(opts) {
         var socket;
-        socket = new model.Socket(opts.precedence, false, opts.classes);
+        socket = new model.Socket(opts.precedence, false, opts.classes, opts.dropdown);
         return this.addMarkup(socket, opts.bounds, opts.depth);
       };
 
@@ -6103,7 +6165,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, classes, color, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, known, last, line, lines, namenodes, object, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s;
+        var arg, bounds, childName, classes, color, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, known, last, line, lines, namenodes, object, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -6267,7 +6329,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 if (last && arg.nodeType() === 'Code') {
                   _results2.push(this.addCode(arg, depth + 1, indentDepth));
                 } else {
-                  _results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth));
+                  _results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (_ref11 = known.fn) != null ? (_ref12 = _ref11.dropdown) != null ? _ref12[index] : void 0 : void 0 : void 0));
                 }
               }
               return _results2;
@@ -6287,16 +6349,16 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'For':
             this.csBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
-            _ref11 = ['source', 'from', 'guard', 'step'];
-            for (_n = 0, _len4 = _ref11.length; _n < _len4; _n++) {
-              childName = _ref11[_n];
+            _ref13 = ['source', 'from', 'guard', 'step'];
+            for (_n = 0, _len4 = _ref13.length; _n < _len4; _n++) {
+              childName = _ref13[_n];
               if (node[childName] != null) {
                 this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth);
               }
             }
-            _ref12 = ['index', 'name'];
-            for (_o = 0, _len5 = _ref12.length; _o < _len5; _o++) {
-              childName = _ref12[_o];
+            _ref14 = ['index', 'name'];
+            for (_o = 0, _len5 = _ref14.length; _o < _len5; _o++) {
+              childName = _ref14[_o];
               if (node[childName] != null) {
                 this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, FORBID_ALL);
               }
@@ -6330,11 +6392,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.objects.length > 0) {
               this.csIndentAndMark(indentDepth, node.objects, depth + 1);
             }
-            _ref13 = node.objects;
+            _ref15 = node.objects;
             _results3 = [];
-            for (_p = 0, _len6 = _ref13.length; _p < _len6; _p++) {
-              object = _ref13[_p];
-              if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref14 = (_ref15 = object.properties) != null ? _ref15.length : void 0) === 0 || _ref14 === (void 0))) {
+            for (_p = 0, _len6 = _ref15.length; _p < _len6; _p++) {
+              object = _ref15[_p];
+              if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref16 = (_ref17 = object.properties) != null ? _ref17.length : void 0) === 0 || _ref16 === (void 0))) {
                 _results3.push(this.csBlock(object, depth + 2, 100, 'return', null, VALUE_ONLY));
               } else {
                 _results3.push(void 0);
@@ -6360,13 +6422,13 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.subject != null) {
               this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
-            _ref16 = node.cases;
-            for (_q = 0, _len7 = _ref16.length; _q < _len7; _q++) {
-              switchCase = _ref16[_q];
+            _ref18 = node.cases;
+            for (_q = 0, _len7 = _ref18.length; _q < _len7; _q++) {
+              switchCase = _ref18[_q];
               if (switchCase[0].constructor === Array) {
-                _ref17 = switchCase[0];
-                for (_r = 0, _len8 = _ref17.length; _r < _len8; _r++) {
-                  condition = _ref17[_r];
+                _ref19 = switchCase[0];
+                for (_r = 0, _len8 = _ref19.length; _r < _len8; _r++) {
+                  condition = _ref19[_r];
                   this.csSocketAndMark(condition, depth + 1, 0, indentDepth);
                 }
               } else {
@@ -6392,10 +6454,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Obj':
             this.csBlock(node, depth, 0, 'purple', wrappingParen, VALUE_ONLY);
-            _ref18 = node.properties;
+            _ref20 = node.properties;
             _results4 = [];
-            for (_s = 0, _len9 = _ref18.length; _s < _len9; _s++) {
-              property = _ref18[_s];
+            for (_s = 0, _len9 = _ref20.length; _s < _len9; _s++) {
+              property = _ref20[_s];
               if (property.nodeType() === 'Assign') {
                 this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
                 _results4.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -6562,7 +6624,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return _results;
       };
 
-      CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes) {
+      CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes, dropdown) {
         if (classes == null) {
           classes = [];
         }
@@ -6570,13 +6632,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           bounds: this.getBounds(node),
           depth: depth,
           precedence: precedence,
+          dropdown: dropdown,
           classes: getClassesFor(node).concat(classes)
         });
       };
 
-      CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes) {
+      CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes, dropdown) {
         var socket;
-        socket = this.csSocket(node, depth, precedence, classes);
+        socket = this.csSocket(node, depth, precedence, classes, dropdown);
         this.mark(node, depth + 1, precedence, null, indentDepth);
         return socket;
       };
@@ -9631,7 +9694,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-        var argument, block, declaration, element, expression, known, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results10, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9, _s;
+        var argument, block, declaration, element, expression, i, known, param, prefix, property, statement, switchCase, _i, _j, _k, _l, _len, _len1, _len10, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results10, _results2, _results3, _results4, _results5, _results6, _results7, _results8, _results9, _s;
         switch (node.type) {
           case 'Program':
             _ref = node.body;
@@ -9771,9 +9834,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             _ref5 = node["arguments"];
             _results5 = [];
-            for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
-              argument = _ref5[_n];
-              _results5.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN));
+            for (i = _n = 0, _len5 = _ref5.length; _n < _len5; i = ++_n) {
+              argument = _ref5[i];
+              _results5.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, known != null ? (_ref6 = known.dropdown) != null ? _ref6[i] : void 0 : void 0));
             }
             return _results5;
             break;
@@ -9786,10 +9849,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
           case 'VariableDeclaration':
             this.jsBlock(node, depth, bounds);
-            _ref6 = node.declarations;
+            _ref7 = node.declarations;
             _results6 = [];
-            for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
-              declaration = _ref6[_o];
+            for (_o = 0, _len6 = _ref7.length; _o < _len6; _o++) {
+              declaration = _ref7[_o];
               _results6.push(this.mark(indentDepth, declaration, depth + 1));
             }
             return _results6;
@@ -9811,10 +9874,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
           case 'ObjectExpression':
             this.jsBlock(node, depth, bounds);
-            _ref7 = node.properties;
+            _ref8 = node.properties;
             _results7 = [];
-            for (_p = 0, _len7 = _ref7.length; _p < _len7; _p++) {
-              property = _ref7[_p];
+            for (_p = 0, _len7 = _ref8.length; _p < _len7; _p++) {
+              property = _ref8[_p];
               this.jsSocketAndMark(indentDepth, property.key, depth + 1);
               _results7.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
             }
@@ -9823,10 +9886,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           case 'SwitchStatement':
             this.jsBlock(node, depth, bounds);
             this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
-            _ref8 = node.cases;
+            _ref9 = node.cases;
             _results8 = [];
-            for (_q = 0, _len8 = _ref8.length; _q < _len8; _q++) {
-              switchCase = _ref8[_q];
+            for (_q = 0, _len8 = _ref9.length; _q < _len8; _q++) {
+              switchCase = _ref9[_q];
               _results8.push(this.mark(indentDepth, switchCase, depth + 1, null));
             }
             return _results8;
@@ -9844,10 +9907,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 depth: depth + 1,
                 prefix: prefix
               });
-              _ref9 = node.consequent;
+              _ref10 = node.consequent;
               _results9 = [];
-              for (_r = 0, _len9 = _ref9.length; _r < _len9; _r++) {
-                statement = _ref9[_r];
+              for (_r = 0, _len9 = _ref10.length; _r < _len9; _r++) {
+                statement = _ref10[_r];
                 _results9.push(this.mark(indentDepth, statement, depth + 2));
               }
               return _results9;
@@ -9871,10 +9934,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'ArrayExpression':
             this.jsBlock(node, depth, bounds);
-            _ref10 = node.elements;
+            _ref11 = node.elements;
             _results10 = [];
-            for (_s = 0, _len10 = _ref10.length; _s < _len10; _s++) {
-              element = _ref10[_s];
+            for (_s = 0, _len10 = _ref11.length; _s < _len10; _s++) {
+              element = _ref11[_s];
               if (element != null) {
                 _results10.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
               } else {
@@ -10192,13 +10255,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               handler.call(_this, trackPoint, event, state);
             }
             if (event.type === 'mousedown') {
-              if (typeof event.stopPropagation === "function") {
-                event.stopPropagation();
-              }
               if (typeof event.preventDefault === "function") {
                 event.preventDefault();
               }
-              event.cancelBubble = true;
               event.returnValue = false;
               return false;
             }
@@ -11008,6 +11067,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             this.setTextInputFocus(head.container);
           }
         }
+        this.fireEvent('block-click');
         return this.endDrag();
       }
     });
@@ -11516,8 +11576,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       startRow = this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
       endRow = this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
       lines = this.textFocus.stringify(this.mode.empty).split('\n');
-      startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionStart).split('\n'))).width;
-      endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionEnd).split('\n'))).width;
+      startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.textFocus.hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+      endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.textFocus.stringify(this.mode.empty).slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.textFocus.hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
       if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
         this.cursorCtx.lineWidth = 1;
         this.cursorCtx.strokeStyle = '#000';
@@ -11529,7 +11589,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         if (startRow === endRow) {
           this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
         } else {
-          this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
+          this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding + textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
           for (i = _i = _ref1 = startRow + 1; _ref1 <= endRow ? _i < endRow : _i > endRow; i = _ref1 <= endRow ? ++_i : --_i) {
             this.cursorCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
           }
@@ -11554,6 +11614,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       if ((focus != null ? focus.id : void 0) in this.extraMarks) {
         delete this.extraMarks[focus != null ? focus.id : void 0];
       }
+      this.hideDropdown();
       if ((this.textFocus != null) && this.textFocus !== focus) {
         this.addMicroUndoOperation('CAPTURE_POINT');
         this.addMicroUndoOperation(new TextChangeOperation(this.textFocus, this.oldFocusValue, this));
@@ -11663,7 +11724,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       row = Math.floor((point.y - textFocusView.bounds[0].y) / (this.fontSize + 2 * this.view.opts.padding));
       row = Math.max(row, 0);
       row = Math.min(row, textFocusView.lineLength - 1);
-      column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding) / this.mainCtx.measureText(' ').width));
+      column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding - (this.textFocus.hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0)) / this.mainCtx.measureText(' ').width));
       lines = this.textFocus.stringify(this.mode.empty).split('\n').slice(0, +row + 1 || 9e9);
       lines[lines.length - 1] = lines[lines.length - 1].slice(0, column);
       return lines.join('\n').length;
@@ -11701,8 +11762,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         if (hitTestResult !== this.textFocus) {
           this.setTextInputFocus(hitTestResult);
           this.redrawMain();
+          if (hitTestResult.hasDropdown() && mainPoint.x - this.view.getViewNodeFor(hitTestResult).bounds[0].x < helper.DROPDOWN_ARROW_WIDTH) {
+            this.showDropdown();
+          }
           this.textInputSelecting = false;
         } else {
+          if (this.textFocus.hasDropdown() && mainPoint.x - this.view.getViewNodeFor(hitTestResult).bounds[0].x < helper.DROPDOWN_ARROW_WIDTH) {
+            this.showDropdown();
+          }
           this.setTextInputAnchor(mainPoint);
           this.redrawTextInput();
           this.textInputSelecting = true;
@@ -11711,6 +11778,48 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return state.consumedHitTest = true;
       }
     });
+    hook('populate', 0, function() {
+      this.dropdownElement = document.createElement('div');
+      this.dropdownElement.className = 'droplet-dropdown';
+      return this.wrapperElement.appendChild(this.dropdownElement);
+    });
+    Editor.prototype.showDropdown = function() {
+      var el, i, location, textFocus, _fn, _i, _len, _ref1;
+      if (this.textFocus.hasDropdown()) {
+        this.dropdownElement.innerHTML = '';
+        this.dropdownElement.style.display = 'inline-block';
+        textFocus = this.textFocus;
+        _ref1 = this.textFocus.dropdown();
+        _fn = (function(_this) {
+          return function(el) {
+            var div;
+            div = document.createElement('div');
+            div.innerHTML = el.display;
+            div.className = 'droplet-dropdown-item';
+            div.style.fontFamily = _this.fontFamily;
+            div.style.fontSize = _this.fontSize;
+            div.style.paddingLeft = helper.DROPDOWN_ARROW_WIDTH;
+            div.addEventListener('mouseup', function() {
+              _this.populateSocket(_this.textFocus, el.text);
+              _this.hiddenInput.value = el.text;
+              _this.redrawMain();
+              return _this.hideDropdown();
+            });
+            return _this.dropdownElement.appendChild(div);
+          };
+        })(this);
+        for (i = _i = 0, _len = _ref1.length; _i < _len; i = ++_i) {
+          el = _ref1[i];
+          _fn(el);
+        }
+        location = this.view.getViewNodeFor(this.textFocus).bounds[0];
+        this.dropdownElement.style.top = location.y + this.fontSize - this.scrollOffsets.main.y;
+        return this.dropdownElement.style.left = location.x - this.scrollOffsets.main.x + this.dropletElement.offsetLeft + this.mainCanvas.offsetLeft;
+      }
+    };
+    Editor.prototype.hideDropdown = function() {
+      return this.dropdownElement.style.display = 'none';
+    };
     hook('dblclick', 0, function(point, event, state) {
       var hitTestResult, mainPoint;
       if (state.consumedHitTest) {
