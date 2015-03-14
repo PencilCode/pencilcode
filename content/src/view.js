@@ -141,6 +141,7 @@ window.pencilcode.view = {
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
+  setEditorTabSync: setEditorTabSync,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -1411,6 +1412,18 @@ function updatePaneLinks(pane) {
 // ACE EDITOR SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+
+function setEditorTabSync(pane, data) {
+  var paneState = state.pane[pane];
+
+  if(getPaneEditorBlockMode(pane)) {
+    paneState.dropletEditor.setValue(data.value);
+  } else {
+    paneState.editor.setValue(data.value);
+    paneState.editor.gotoLine(paneState.editor.getSession().getLength(), 0);
+  }
+}
+
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
   if (paneState.dropletEditor && paneState.dropletEditor.destroy) {
@@ -2056,10 +2069,12 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
     fireEvent('delta', [pane]);
-    /* sync changes across tabs using localStorage */
+
+    /* sync across tabs using localStorage */
     if(localStorageSemaphore) {
       setTimeout(function() {
-        localStorage.setItem('dropletEditorValue', dropletEditor.getValue());
+        var editorValue = dropletEditor.getValue();
+        fireEvent('setLocalStorage', [editorValue]);
         localStorageSemaphore = 1;
       }, 1500);
       localStorageSemaphore = 0;
@@ -2067,12 +2082,11 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   window.addEventListener("storage", function(e) {
-    if(getPaneEditorBlockMode(pane)) {
-      dropletEditor.setValue(localStorage.getItem('dropletEditorValue'));
-    } else {
-      editor.setValue(localStorage.getItem('dropletEditorValue'));
-    }
-    fireEvent('dirty', [pane]);
+    try {
+      var data = localStorage.getItem('editorValue');
+      fireEvent('getLocalStorage', [data]);
+      fireEvent('dirty', [pane]); 
+    } catch (e) { }
   }, false);
 
   dropletEditor.on('toggledone', function() {

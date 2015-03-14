@@ -710,6 +710,25 @@ view.on('toggleblocks', function(p, useblocks) {
       view.getPaneEditorLanguage(p));
 });
 
+view.on('setLocalStorage', function(data) {
+  try {
+    localStorage.setItem('editorValue', JSON.stringify({
+      user: model.username,
+      path: modelatpos('left').filename,
+      value: data
+    }));
+  } catch (e) { }
+});
+
+view.on('getLocalStorage', function(data) {
+  try {
+    data = JSON.parse(data);
+    if(data.user == model.username && data.path == modelatpos('left').filename) {
+      view.setEditorTabSync(paneatpos('left'), data);
+    }
+  } catch (e) { }
+});
+
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
     return;
