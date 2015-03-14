@@ -1734,7 +1734,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (paneState.meta) {
       toggleLibrary(
           paneState.meta,
-          {name: 'coffeescript', src: '//{site}/coffee-script.js'},
+          {name: 'coffeescript', src: '//{site}/lib/coffee-script.js'},
           wantCoffeeScript);
     }
     var box = $('#' + pane + ' .hpanelbox');
