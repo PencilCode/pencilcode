@@ -629,6 +629,11 @@ guide.on('session', function session(options) {
   }
   currentGuideSessionUrl = url;
   currentGuideSessionFilename = filename;
+  // Set up palette if requested.
+  if (options.palette || options.modeOptions) {
+    view.setPaneEditorBlockOptions(paneatpos('left'),
+         options.palette, options.modeOptions);
+  }
   // Look for session from localStorage
   var saved = localStorage.getItem('pcgs:' + url);
   if (saved) {
