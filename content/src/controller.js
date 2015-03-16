@@ -2048,6 +2048,10 @@ $(window).on('message', function(e) {
     case 'setBlockMode':
       view.setPaneEditorBlockMode(paneatpos('left'), data.args[0]);
       break;
+    case 'setBlockOptions':
+      view.setPaneEditorBlockOptions(
+          paneatpos('left'), data.args[0], data.args[1]);
+      break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
       break;

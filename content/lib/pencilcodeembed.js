@@ -323,6 +323,11 @@
       return this.invokeRemote('setBlockMode', [showBlocks]);
     };
 
+    // shows block mode
+    proto.setBlockOptions = function(palette, options) {
+      return this.invokeRemote('setBlockOptions', [palette, options]);
+    };
+
     proto.eval = function(code, callback) {
       return this.invokeRemote('eval', [code], callback);
     }
