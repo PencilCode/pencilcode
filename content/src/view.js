@@ -1448,6 +1448,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   paneState.lastChangeTime = 0;
   paneState.palette = null;
+  paneState.selfname = null;
   paneState.fullScreenLink = false;
   paneState.settingUp = null;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
@@ -1492,11 +1493,13 @@ function dropletModeForMimeType(mimeType) {
   return result;
 }
 
-function paletteForMimeType(mimeType) {
-  if (mimeType == 'text/x-pencilcode') return palette.COFFEESCRIPT_PALETTE;
-  if (mimeType == 'text/coffeescript') return palette.COFFEESCRIPT_PALETTE;
-  if (mimeType == 'text/javascript') return palette.JAVASCRIPT_PALETTE;
-  if (mimeType == 'application/x-javascript') return palette.JAVASCRIPT_PALETTE;
+function paletteForMimeType(mimeType, selfname) {
+  if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
+    return palette.expand(palette.COFFEESCRIPT_PALETTE, selfname);
+  }
+  if (mimeType == 'text/javascript' || mimeType == 'application/x-javascript') {
+    return palette.expand(palette.JAVASCRIPT_PALETTE, selfname);
+  }
   return [];
 }
 
@@ -1618,17 +1621,21 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
   // Do nothing if menu already showing.
   if ($(this).find('.blockmenupopup').length) return;
   var pane = $(this).closest('.pane').prop('id');
+  var paneState = state.pane[pane];
   var data = getPaneEditorData(pane);
   var overlay = $('<div style="position:fixed;top:0;right:0;left:0;bottom:0">');
   overlay.appendTo(this);
   var popup = $('<div class="blockmenupopup">');
   var objs = codescan.scanObjects(getPaneEditorLanguage(pane), data.data);
   for (var j = 0; j < objs.length; ++j) {
-    popup.append('<div class="blockmenuitem" data-item="' + j + '">' +
+    popup.append('<div class="blockmenuitem" ' +
+        (paneState.selfname == objs[j].name ? 'checked ' : '') +
+        'data-item="' + j + '">' +
         '<img src="/image/turtleicon.png"> ' + objs[j].label + '</div>');
   }
-  popup.append('<div class="blockmenuitem" checked data-item="turtle">' +
-           'Use default blocks</div>');
+  popup.append('<div class="blockmenuitem" ' +
+      (!paneState.selfname ? 'checked ' : '') + 'data-item="turtle">' +
+      'Use default blocks</div>');
   popup.append('<div class="blockmenuitem" data-item="textcode">' +
            'Show text code</div>');
   popup.appendTo(this);
@@ -1651,10 +1658,20 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
       trigger(item.data('item'));
     }
   }
+  // Switch palette.
   function trigger(item) {
-    console.log(item);
     if (item == 'textcode') {
       setPaneEditorBlockMode(pane, false);
+    } else {
+      selfname = '';
+      if (/^\d+$/.test(item)) {
+        selfname = objs[Number(item)].name;
+      }
+      if (!paneState.dropletEditor) return;
+      var visibleMimeType = editorMimeType(paneState);
+      paneState.dropletEditor.setPalette(
+          paletteForMimeType(visibleMimeType, selfname));
+      paneState.selfname = selfname;
     }
   }
 });
@@ -2059,7 +2076,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           document.getElementById(id),
           {
             mode: dropletMode,
-            palette: paletteForMimeType(visibleMimeType),
+            palette: paletteForMimeType(visibleMimeType, paneState.selfname),
             modeOptions: dropletOptionsForMimeType(visibleMimeType)
           });
   // Set up fonts - once they are loaded.
@@ -2385,7 +2402,8 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.dropletEditor.setMode(
       dropletModeForMimeType(type),
       dropletOptionsForMimeType(type));
-  paneState.dropletEditor.setPalette(paletteForMimeType(type));
+  paneState.dropletEditor.setPalette(
+      paletteForMimeType(type, paneState.selfname));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;

@@ -87,11 +87,7 @@ function jsObjects(code) {
   return result;
 }
 
-function turtlePaletteMaker(name) {
-}
-
 function scanObjects(language, code) {
-  console.log('lang/code', language, code);
   var objects;
   if (/coffee/.test(language)) {
     console.log('doing coffeeObjects');
@@ -101,7 +97,6 @@ function scanObjects(language, code) {
   } else {
     return [];
   }
-  console.log('objects', objects);
   var deduped = {};
   for (var j = 0; j < objects.length; ++j) {
     var obj = objects[j];
@@ -115,7 +110,7 @@ function scanObjects(language, code) {
     var obj = deduped[n];
     result.push({
       label: obj.class + ' ' + obj.name,
-      getPalette: turtlePaletteMaker(obj.name)
+      name: obj.name
     });
   }
   console.log('scanned', result);

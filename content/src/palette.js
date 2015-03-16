@@ -13,7 +13,43 @@ function filterblocks(a) {
   });
 }
 
+// Recursive copy of a plain javascript object, while mapping
+// specified fields.
+function fieldmap(obj, map) {
+  if (!obj || 'object' != typeof obj) {
+    return obj;
+  }
+  var result;
+  if (obj instanceof Array) {
+    result = [];
+    for (var j = 0; j < obj.length; ++j) {
+      result.push(fieldmap(obj[j], map));
+    }
+  } else {
+    result = {};
+    for (var k in obj) if (obj.hasOwnProperty(k)) {
+      if (map.hasOwnProperty(k)) {
+        result[k] = map[k](obj[k]);
+      } else {
+        result[k] = fieldmap(obj[k], map);
+      }
+    }
+  }
+  return result;
+}
+
+function expand(palette, thisname) {
+  var replacement = !thisname ? '' : (thisname + '.');
+  return fieldmap(palette, {
+    block: function(s) {
+      return s.replace(/^@/, replacement);
+    }
+  });
+}
+
 return {
+
+  expand: expand,
 
   // The following palette description
   // is copied from compiled CoffeeScript.
@@ -23,49 +59,49 @@ return {
       color: 'lightblue',
       blocks: filterblocks([
         {
-          block: 'fd 100',
+          block: '@fd 100',
           title: 'Move forward'
         }, {
-          block: 'rt 90',
+          block: '@rt 90',
           title: 'Turn right'
         }, {
-          block: 'lt 90',
+          block: '@lt 90',
           title: 'Turn left'
         }, {
-          block: 'bk 100',
+          block: '@bk 100',
           title: 'Move backward'
         }, {
-          block: 'rt 180, 100',
+          block: '@rt 180, 100',
           title: 'Make a wide right arc'
         }, {
-          block: 'lt 180, 100',
+          block: '@lt 180, 100',
           title: 'Make a wide left arc'
         }, {
-          block: 'speed 10',
+          block: '@speed 10',
           title: 'Set the speed of the turtle'
         }, {
-          block: 'speed Infinity',
+          block: '@speed Infinity',
           title: 'Use infinite speed'
         }, {
-          block: 'home()',
+          block: '@home()',
           title: 'Jump to the origin, turned up'
         }, {
-          block: 'turnto 270',
+          block: '@turnto 270',
           title: 'Turn to an absolute direction'
         }, {
-          block: 'turnto lastclick',
+          block: '@turnto lastclick',
           title: 'Turn toward a located object'
         }, {
-          block: 'moveto 100, 50',
+          block: '@moveto 100, 50',
           title: 'Move to coordinates'
         }, {
-          block: 'movexy 30, 20',
+          block: '@movexy 30, 20',
           title: 'Move by changing x and y'
         }, {
-          block: 'jumpto 100, 50',
+          block: '@jumpto 100, 50',
           title: 'Jump to coordinates without drawing'
         }, {
-          block: 'jumpxy 30, 20',
+          block: '@jumpxy 30, 20',
           title: 'Jump changing x and y without drawing'
         }
       ])
@@ -103,43 +139,43 @@ return {
       color: 'purple',
       blocks: filterblocks([
          {
-          block: 'pen purple, 10',
+          block: '@pen purple, 10',
           title: 'Set pen color and size'
         }, {
-          block: 'dot green, 50',
+          block: '@dot green, 50',
           title: 'Make a dot'
         }, {
-          block: 'box yellow, 50',
+          block: '@box yellow, 50',
           title: 'Make a square'
         }, {
-          block: 'fill blue',
+          block: '@fill blue',
           title: 'Fill traced shape'
         }, {
-          block: 'wear \'/img/apple\'',
+          block: '@wear \'/img/apple\'',
           title: 'Use an image for the turtle'
         }, {
-          block: 'scale 3',
+          block: '@scale 3',
           title: 'Scale turtle drawing'
         }, {
-          block: 'ht()',
+          block: '@ht()',
           title: 'Hide the main turtle'
         }, {
-          block: 'st()',
+          block: '@st()',
           title: 'Show the main turtle'
         }, {
           block: 'cs()',
           title: 'Clear screen'
         }, {
-          block: 'pu()',
+          block: '@pu()',
           title: 'Lift the pen up'
         }, {
-          block: 'pd()',
+          block: '@pd()',
           title: 'Put the pen down'
         }, {
-          block: 'drawon s',
+          block: '@drawon s',
           title: 'Draw on sprite s'
         }, {
-          block: 'drawon document',
+          block: '@drawon document',
           title: 'Draw on the document'
         }
       ])
@@ -213,7 +249,7 @@ return {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
-          block: 'label \'spot\'',
+          block: '@label \'spot\'',
           title: 'Write text at the turtle'
         }, {
           block: 'read \'?\', (x) ->\n  write x',
@@ -252,7 +288,7 @@ return {
       color: 'indigo',
       blocks: filterblocks([
         {
-          block: 'p.play \'CDEDC\'',
+          block: '@play \'CDEDC\'',
           title: 'Play and show music notes'
         }
       ])
