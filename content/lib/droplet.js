@@ -11279,6 +11279,9 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             paletteHeaderRow = document.createElement('div');
             paletteHeaderRow.className = 'droplet-palette-header-row';
             _this.paletteHeader.appendChild(paletteHeaderRow);
+            if (_this.paletteGroups.length === 1 && paletteGroup.name === '') {
+              paletteHeaderRow.style.height = 0;
+            }
           }
           paletteGroupHeader = document.createElement('div');
           paletteGroupHeader.className = 'droplet-palette-group-header';
@@ -11329,7 +11332,8 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         paletteGroup = _ref1[i];
         _fn(paletteGroup, i);
       }
-      return this.resizePalette();
+      this.resizePalette();
+      return this.resizePaletteHighlight();
     };
     hook('mousedown', 6, function(point, event, state) {
       var entry, hitTestResult, palettePoint, _i, _len, _ref1, _ref2, _ref3;

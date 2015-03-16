@@ -629,6 +629,11 @@ guide.on('session', function session(options) {
   }
   currentGuideSessionUrl = url;
   currentGuideSessionFilename = filename;
+  // Set up palette if requested.
+  if (options.palette || options.modeOptions) {
+    view.setPaneEditorBlockOptions(paneatpos('left'),
+         options.palette, options.modeOptions);
+  }
   // Look for session from localStorage
   var saved = localStorage.getItem('pcgs:' + url);
   if (saved) {
@@ -2042,6 +2047,10 @@ $(window).on('message', function(e) {
       break;
     case 'setBlockMode':
       view.setPaneEditorBlockMode(paneatpos('left'), data.args[0]);
+      break;
+    case 'setBlockOptions':
+      view.setPaneEditorBlockOptions(
+          paneatpos('left'), data.args[0], data.args[1]);
       break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
