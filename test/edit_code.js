@@ -96,7 +96,7 @@ describe('code editor', function() {
       $('#folder').click();
     }, function() {
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; }).find('.panetitle-text');
+          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text');
       if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
       // Wait for both the directory div and the create link to appear.
       if (!$('.directory').length) return {poll:true, step:1,
@@ -139,7 +139,7 @@ describe('code editor', function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; }).find('.panetitle-text');
+          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "blocks" in it.
       if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
@@ -229,12 +229,12 @@ describe('code editor', function() {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; })
+          function() { return $(this).parent().position().left == 0; })
           .find('a');
       leftlink.click();
     }, function() {
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; })
+          function() { return $(this).parent().position().left == 0; })
           .find('.panetitle-text');
       if (/blocks/.test(lefttitle.text())) return;
       return {
@@ -335,7 +335,7 @@ describe('code editor', function() {
         // Skip "Using" and skip empty notification bar.
         if (/Using|^$/.test($('#notification').text())) return;
         var lefttitle = $('.panetitle').filter(
-            function() { return $(this).position().left == 0; })
+            function() { return $(this).parent().position().left == 0; })
             .find('.panetitle-text');
         return {
           notification: $('#notification').text(),
@@ -535,7 +535,7 @@ describe('code editor', function() {
       if ($('#notification').hasClass('loading')) return;
       // Also wait for a title to slide into the left position.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; });
+          function() { return $(this).parent().position().left == 0; });
       // Wait for the title of the left pane to contain "dir".
       if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
       return {

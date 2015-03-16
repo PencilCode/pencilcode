@@ -53,24 +53,30 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 })();
 </script></nobr></td>
 <td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
-<div id="alphatitle" class="back panetitle">
+<div id="alphapanebox" class="back panebox">
+<div id="alphatitle" class="panetitle">
   <span id="alphatitle_text" class="panetitle-text"></span>
   <span id="alphatitle-extra" class="panetitle-extra"></span>
 </div>
-<div id="guidepane"><div class="guidetitle">guide</div><div class="guidepreview"><iframe></iframe></div></div>
-<div id="alpha" class="back pane"></div>
-<div id="bravotitle" class="left panetitle" style="width:100%">
+<div id="alpha" class="pane"></div>
+</div>
+<div id="bravopanebox" class="left panebox" style="width:100%">
+<div id="bravotitle" class="panetitle">
   <span id="bravotitle_text" class="panetitle-text"></span>
   <span id="bravotitle-extra" class="panetitle-extra"></span>
 </div>
-<div id="bravo" class="left pane" style="width:100%"
+<div id="bravo" class="pane"
 ><div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<div id="charlietitle" class="right panetitle" style="left:100%">
+</div>
+<div id="charliepanebox" class="right panebox" style="left:100%">
+<div id="charlietitle" class="panetitle">
   <span id="charlietitle_text" class="panetitle-text"></span>
   <span id="charlietitle-extra" class="panetitle-extra"></span>
 </div>
-<div id="charlie" class="right pane" style="left:100%"></div>
+<div id="charlie" class="pane"></div>
+</div>
+<div id="guidepane"><div class="guidetitle">guide</div><div class="guidepreview"><iframe></iframe></div></div>
 </div><!-- end clip -->
 <script src="/load<!--#echo var="filepath"-->?callback=preload"></script>
 <script src="/lib/ace/ace.js"></script>

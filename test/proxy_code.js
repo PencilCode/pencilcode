@@ -72,7 +72,7 @@ describe('proxy program', function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; }).find('.panetitle-text');
+          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text');
       // Wait for this title to say "blocks" in it.
       if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
@@ -114,12 +114,12 @@ describe('proxy program', function() {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; })
+          function() { return $(this).parent().position().left == 0; })
           .find('a');
       leftlink.click();
     }, function() {
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).position().left == 0; })
+          function() { return $(this).parent().position().left == 0; })
           .find('.panetitle-text');
       if (/blocks/.test(lefttitle.text())) return;
       return {

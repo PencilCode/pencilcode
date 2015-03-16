@@ -125,6 +125,7 @@ window.pencilcode.view = {
   getPaneEditorData: getPaneEditorData,
   setPaneEditorBlockMode: setPaneEditorBlockMode,
   getPaneEditorBlockMode: getPaneEditorBlockMode,
+  setPaneEditorBlockOptions: setPaneEditorBlockOptions,
   getPaneEditorLanguage: getPaneEditorLanguage,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
@@ -217,11 +218,11 @@ function publish(method, args, requestid){
 }
 
 function paneid(position) {
-  return $('.' + position).filter('.pane').attr('id');
+  return $('.' + position).find('.pane').attr('id');
 }
 
 function panepos(id) {
-  return $('#' + id).attr('class').replace(/\s|pane/g, '');
+  return $('#' + id).closest('.panebox').attr('class').replace(/\s|panebox/g, '');
 }
 
 function initialPaneState() {
@@ -1070,6 +1071,10 @@ function setPreviewMode(shown, instant) {
   state.previewMode = shown;
 }
 
+function panelParts(name) {
+  return '#' + name + 'panebox';
+}
+
 function rotateLeft() {
   var idb = paneid('back');
   var idl = paneid('left');
@@ -1078,9 +1083,9 @@ function rotateLeft() {
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
   $('.back').animate({left: '50%'});
-  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('right');
-  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('left');
-  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('back');
+  $(panelParts(idb)).removeClass('back').addClass('right');
+  $(panelParts(idr)).removeClass('right').addClass('left');
+  $(panelParts(idl)).removeClass('left').addClass('back');
   setPrimaryFocus();
 }
 
@@ -1092,9 +1097,9 @@ function rotateRight() {
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
   $('.back').animate({left: 0});
-  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('left');
-  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('back');
-  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('right');
+  $(panelParts(idb)).removeClass('back').addClass('left');
+  $(panelParts(idr)).removeClass('right').addClass('back');
+  $(panelParts(idl)).removeClass('left').addClass('right');
   setPrimaryFocus();
 }
 
@@ -1730,7 +1735,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (paneState.meta) {
       toggleLibrary(
           paneState.meta,
-          {name: 'coffeescript', src: '//{site}/coffee-script.js'},
+          {name: 'coffeescript', src: '//{site}/lib/coffee-script.js'},
           wantCoffeeScript);
     }
     var box = $('#' + pane + ' .hpanelbox');
@@ -2339,6 +2344,19 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.meta.type = type;
   updatePaneTitle(pane);
   return true;
+}
+
+function setPaneEditorBlockOptions(pane, palette, modeOptions) {
+  var paneState = state.pane[pane];
+  if (!paneState.dropletEditor) return;
+  if (palette) {
+    paneState.dropletEditor.setPalette(palette);
+  }
+  if (modeOptions) {
+    var visibleMimeType = editorMimeType(paneState);
+    paneState.dropletEditor.setMode(
+        dropletModeForMimeType(visibleMimeType), modeOptions);
+  }
 }
 
 function setPaneEditorBlockMode(pane, useblocks) {
