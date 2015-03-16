@@ -1493,12 +1493,20 @@ function dropletModeForMimeType(mimeType) {
   return result;
 }
 
-function paletteForMimeType(mimeType, selfname) {
-  if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
-    return palette.expand(palette.COFFEESCRIPT_PALETTE, selfname);
+function paletteForPane(paneState, selfname) {
+  var mimeType = editorMimeType(paneState),
+      basePalette = paneState.palette;
+  if (!basePalette) {
+    if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
+      basePalette = palette.COFFEESCRIPT_PALETTE;
+    }
+    if (mimeType == 'text/javascript' ||
+        mimeType == 'application/x-javascript') {
+      basePalette = palette.JAVASCRIPT_PALETTE;
+    }
   }
-  if (mimeType == 'text/javascript' || mimeType == 'application/x-javascript') {
-    return palette.expand(palette.JAVASCRIPT_PALETTE, selfname);
+  if (basePalette) {
+    return palette.expand(basePalette, paneState.selfname);
   }
   return [];
 }
@@ -1668,10 +1676,8 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
         selfname = objs[Number(item)].name;
       }
       if (!paneState.dropletEditor) return;
-      var visibleMimeType = editorMimeType(paneState);
-      paneState.dropletEditor.setPalette(
-          paletteForMimeType(visibleMimeType, selfname));
       paneState.selfname = selfname;
+      paneState.dropletEditor.setPalette(paletteForPane(paneState));
     }
   }
 });
@@ -2076,7 +2082,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           document.getElementById(id),
           {
             mode: dropletMode,
-            palette: paletteForMimeType(visibleMimeType, paneState.selfname),
+            palette: paletteForPane(paneState),
             modeOptions: dropletOptionsForMimeType(visibleMimeType)
           });
   // Set up fonts - once they are loaded.
@@ -2402,8 +2408,7 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.dropletEditor.setMode(
       dropletModeForMimeType(type),
       dropletOptionsForMimeType(type));
-  paneState.dropletEditor.setPalette(
-      paletteForMimeType(type, paneState.selfname));
+  paneState.dropletEditor.setPalette(paletteForPane(paneState));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;
@@ -2411,11 +2416,12 @@ function setPaneEditorLanguageType(pane, type) {
   return true;
 }
 
-function setPaneEditorBlockOptions(pane, palette, modeOptions) {
+function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return;
-  if (palette) {
-    paneState.dropletEditor.setPalette(palette);
+  if (pal) {
+    paneState.palette = pal;
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
   }
   if (modeOptions) {
     var visibleMimeType = editorMimeType(paneState);
