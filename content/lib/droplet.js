@@ -3605,7 +3605,7 @@ QUAD.init = function (args) {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __modulo = function(a, b) { return (a % b + +b) % b; };
+    __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
@@ -11279,7 +11279,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             paletteHeaderRow = document.createElement('div');
             paletteHeaderRow.className = 'droplet-palette-header-row';
             _this.paletteHeader.appendChild(paletteHeaderRow);
-            if (_this.paletteGroups.length === 1 && paletteGroup.name === '') {
+            if (_this.paletteGroups.length === 1 && !paletteGroup.name) {
               paletteHeaderRow.style.height = 0;
             }
           }

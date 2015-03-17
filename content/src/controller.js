@@ -261,6 +261,7 @@ function updateTopControls(addHistory) {
 //
 
 view.on('selectpalette', function(pane, palname) {
+  if (!palname) { palname = 'default'; }
   logEvent('~selectpalette', {name: palname.replace(/\s/g, '').toLowerCase()});
 });
 
