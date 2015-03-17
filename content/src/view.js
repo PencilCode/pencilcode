@@ -2408,10 +2408,10 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.dropletEditor.setMode(
       dropletModeForMimeType(type),
       dropletOptionsForMimeType(type));
-  paneState.dropletEditor.setPalette(paletteForPane(paneState));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;
+  paneState.dropletEditor.setPalette(paletteForPane(paneState));
   updatePaneTitle(pane);
   return true;
 }
