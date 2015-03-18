@@ -2419,14 +2419,14 @@ function setPaneEditorLanguageType(pane, type) {
 function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return;
-  if (pal) {
-    paneState.palette = pal;
-    paneState.dropletEditor.setPalette(paletteForPane(paneState));
-  }
   if (modeOptions) {
     var visibleMimeType = editorMimeType(paneState);
     paneState.dropletEditor.setMode(
         dropletModeForMimeType(visibleMimeType), modeOptions);
+  }
+  if (pal) {
+    paneState.palette = pal;
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
   }
 }
 
