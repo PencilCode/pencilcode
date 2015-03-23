@@ -107,7 +107,7 @@ return {
       ])
     }, {
       name: 'Control',
-      color: 'yellow',
+      color: 'googleyellow',
       blocks: filterblocks([
         {
           block: 'for [1..3]\n  ``',
