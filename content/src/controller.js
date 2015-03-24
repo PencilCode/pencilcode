@@ -780,12 +780,14 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
   });
-  // Save thumbnail
+  // Save thumbnail as data url so that it will be easy to upload to server.
   var thumbnailDataURL = generateThumbnailDataURL();
   console.log(thumbnailDataURL);
 }
 
 function generateThumbnailDataURL() {
+  var THUMBNAIL_SIZE = 128;
+
   // Get the canvas inside the iframe.
   var iframe = document.getElementsByTagName('iframe')[0];
   var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -829,7 +831,7 @@ function generateThumbnailDataURL() {
   var imageWidth = bottomRight.x - topLeft.x + 1;
   var imageHeight = bottomRight.y - topLeft.y + 1;
 
-  // Find the longer edge and make it square
+  // Find the longer edge and make it a square
   var longerEdge, diff;
   if (imageWidth > imageHeight) {
     longerEdge = imageWidth;
@@ -841,18 +843,16 @@ function generateThumbnailDataURL() {
     topLeft.x -= diff;
   }
 
-  // Get the relevant image data, clear and resize convas,
-  // put the image in, get the data url, then restore.
-  var relevantData = ctx.getImageData(topLeft.x, topLeft.y, longerEdge, longerEdge);
-  ctx.clearRect(0, 0, w, h);
-  canvas.width = longerEdge;
-  canvas.height = longerEdge;
-  ctx.putImageData(relevantData, 0, 0);
-  var imageDataURL = canvas.toDataURL();
-  canvas.width = w;
-  canvas.height = h;
-  ctx.putImageData(imageData, 0, 0);
-  return imageDataURL;
+  // Draw the cropped image in a temp canvas and scale it down.
+  var tempCanvas = document.createElement('canvas');
+  tempCanvas.width = THUMBNAIL_SIZE;
+  tempCanvas.height = THUMBNAIL_SIZE;
+  tempCanvas.getContext('2d').drawImage(canvas, // source canvas
+    topLeft.x, topLeft.y, longerEdge, longerEdge, // src coordinates and size
+    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE); // dest coordinates and size
+
+  // Convert the temp canvas to data url and return.
+  return tempCanvas.toDataURL();
 }
 
 function keyFromPassword(username, p) {
