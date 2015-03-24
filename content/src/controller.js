@@ -780,6 +780,79 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
   });
+  // Save thumbnail
+  var thumbnailDataURL = generateThumbnailDataURL();
+  console.log(thumbnailDataURL);
+}
+
+function generateThumbnailDataURL() {
+  // Get the canvas inside the iframe.
+  var iframe = document.getElementsByTagName('iframe')[0];
+  var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+  var canvas = innerDoc.getElementsByTagName('canvas')[0];
+  var w = canvas.width;
+  var h = canvas.height;
+
+  // Get the image data
+  var ctx = canvas.getContext('2d');
+  var imageData = ctx.getImageData(0, 0, w, h);
+
+  // Initialize the coordinates for the image region,
+  // topLeft is initialized to right bottom,
+  // and bottomRight is initialized to top left.
+  var topLeft = { x: h, y: w };
+  var bottomRight = { x: 0, y: 0 };
+
+  // Iterate through all the points to find the correct topLeft and bottomRight.
+  var x, y, index;
+  for (y = 0; y < h; y++) {
+    for (x = 0; x < w; x++) {
+      index = (y * w + x) * 4;
+      if (imageData.data[index + 3] > 0) {
+        if (x < topLeft.x) {
+          topLeft.x = x;
+        }
+        if (x > bottomRight.x) {
+          bottomRight.x = x;
+        }
+        if (y < topLeft.y) {
+          topLeft.y = y;
+        }
+        if (y > bottomRight.y) {
+          bottomRight.y = y;
+        }
+      }
+    }
+  }
+
+  // Calculate the actually image size.
+  var imageWidth = bottomRight.x - topLeft.x + 1;
+  var imageHeight = bottomRight.y - topLeft.y + 1;
+
+  // Find the longer edge and make it square
+  var longerEdge, diff;
+  if (imageWidth > imageHeight) {
+    longerEdge = imageWidth;
+    diff = (imageWidth - imageHeight) / 2;
+    topLeft.y -= diff;
+  } else {
+    longerEdge = imageHeight;
+    diff = (imageHeight - imageWidth) / 2;
+    topLeft.x -= diff;
+  }
+
+  // Get the relevant image data, clear and resize convas,
+  // put the image in, get the data url, then restore.
+  var relevantData = ctx.getImageData(topLeft.x, topLeft.y, longerEdge, longerEdge);
+  ctx.clearRect(0, 0, w, h);
+  canvas.width = longerEdge;
+  canvas.height = longerEdge;
+  ctx.putImageData(relevantData, 0, 0);
+  var imageDataURL = canvas.toDataURL();
+  canvas.width = w;
+  canvas.height = h;
+  ctx.putImageData(imageData, 0, 0);
+  return imageDataURL;
 }
 
 function keyFromPassword(username, p) {
