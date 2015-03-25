@@ -738,8 +738,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
   var newdata = $.extend({}, modelatpos('left').data, doc);
-  // Save thumbnail as data url so that it will be easy to upload to server.
-  var thumbnailDataURL = generateThumbnailDataURL();
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
@@ -754,6 +752,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
+    // Save thumbnail as data url so that it will be easy to upload to server.
+    var thumbnailDataURL = generateThumbnailDataURL();
     // Flash the thumbnail after the controls are updated.
     view.flashThumbnail(thumbnailDataURL);
   }
