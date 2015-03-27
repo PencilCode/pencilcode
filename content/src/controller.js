@@ -730,10 +730,14 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
+  var thumbnailDataURL = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
+  } else if (doc.data != '') { // If program is not empty
+    // Save thumbnail as data url so that it will be easy to upload to server.
+    thumbnailDataURL = generateThumbnailDataURL();
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
@@ -752,8 +756,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
-    // Save thumbnail as data url so that it will be easy to upload to server.
-    var thumbnailDataURL = generateThumbnailDataURL();
     // Flash the thumbnail after the controls are updated.
     view.flashThumbnail(thumbnailDataURL);
   }
@@ -796,7 +798,7 @@ function generateThumbnailDataURL() {
   var w = canvas.width;
   var h = canvas.height;
 
-  // Get the image data
+  // Get the image data.
   var ctx = canvas.getContext('2d');
   var imageData = ctx.getImageData(0, 0, w, h);
 
@@ -828,11 +830,11 @@ function generateThumbnailDataURL() {
     }
   }
 
-  // Calculate the actually image size.
+  // Calculate the actual image size.
   var imageWidth = bottomRight.x - topLeft.x + 1;
   var imageHeight = bottomRight.y - topLeft.y + 1;
 
-  // Find the longer edge and make it a square
+  // Find the longer edge and make it a square.
   var longerEdge, diff;
   if (imageWidth > imageHeight) {
     longerEdge = imageWidth;
@@ -848,9 +850,9 @@ function generateThumbnailDataURL() {
   var tempCanvas = document.createElement('canvas');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
-  tempCanvas.getContext('2d').drawImage(canvas, // source canvas
-    topLeft.x, topLeft.y, longerEdge, longerEdge, // src coordinates and size
-    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE); // dest coordinates and size
+  tempCanvas.getContext('2d').drawImage(canvas,    // source canvas
+    topLeft.x, topLeft.y, longerEdge, longerEdge,  // src coordinates and size
+    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);         // dest coordinates and size
 
   // Convert the temp canvas to data url and return.
   return tempCanvas.toDataURL();
