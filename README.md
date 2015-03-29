@@ -125,15 +125,15 @@ PencilCode Internals
 ====================
 
 The structure of pencilcode is really simple.
-* It is a single HTML file `site/top/editor.html` that does all the work
+* It is a single HTML file `content/src/editor.html` that does all the work
   All `pencilcode.net/edit/...` URLs resolve to this static file.
 * The javascript behind editor.html is in the `src/` directory (symlink
-  to `site/top/src`).  These javascript files are combined and minified
-  into site/top/editor.js by the build.
+  to `content/src`).  These javascript files are combined and minified
+  into content/src/editor.js by the build.
 * The editor javascript does JSON requests to `pencilcode.net/load/...`
   and `pencilcode.net/save/...` to read and write actual data.
 * There are a bunch of other static files that can be found in
-  `site/top`.
+  `content`.
 
 JSON save and load
 ------------------
@@ -144,7 +144,7 @@ http://guide.pencilcode.net/load/ to see the JSON response for
 a directory listing.  To see the details of how /load/ and /save/
 work, see the code in site/wsgi.
 
-The production site is an nginx server, configured in `site/nginx_site.conf`.
+The production site is an nginx server, configured in `nginx/nginx_site.conf`.
 
 The devserver is simpler: it is a node.js proxy server.  When using
 the devserver, the proxy.pac will direct the requests to your local
