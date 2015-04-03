@@ -40,6 +40,7 @@ echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.bashrc
 source ~/.bashrc
 npm install -g grunt-cli
 </pre>
+Zsh users should change `bashrc` to `zshrc` in the above code.
 
 (For Mac:)
 
