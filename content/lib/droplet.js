@@ -1683,6 +1683,18 @@ QUAD.init = function (args) {
         return this.replace(/\s+$/, '');
       };
     }
+    exports.extend = function(target) {
+      var sources;
+      sources = [].slice.call(arguments, 1);
+      sources.forEach(function(source) {
+        if (source) {
+          return Object.getOwnPropertyNames(source).forEach(function(prop) {
+            return Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop));
+          });
+        }
+      });
+      return target;
+    };
     exports.xmlPrettyPrint = function(str) {
       var result, xmlParser;
       result = '';
@@ -3605,7 +3617,7 @@ QUAD.init = function (args) {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
+    __modulo = function(a, b) { return (a % b + +b) % b; };
 
   define('droplet-view',['droplet-helper', 'droplet-draw', 'droplet-model'], function(helper, draw, model) {
     var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, defaultStyleObject, exports, toHex, toRGB, twoDigitHex, zeroPad;
@@ -5375,7 +5387,7 @@ QUAD.init = function (args) {
       function Parser(text, opts) {
         var convertFunction, index, key, options, val, _fn, _ref, _ref1;
         this.text = text;
-        this.opts = opts != null ? opts : {};
+        this.opts = helper.extend({}, opts);
         convertFunction = function(x) {
           if ((typeof x === 'string') || x instanceof String) {
             return {
@@ -5846,7 +5858,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-coffee',['droplet-helper', 'droplet-model', 'droplet-parser', 'coffee-script'], function(helper, model, parser, CoffeeScript) {
-    var ANY_DROP, BLOCK_ONLY, CoffeeScriptParser, FORBID_ALL, KNOWN_FUNCTIONS, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, annotateCsNodes, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
+    var ANY_DROP, BLOCK_ONLY, CATEGORIES, CoffeeScriptParser, FORBID_ALL, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, NODE_CATEGORY, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, annotateCsNodes, backTickLine, exports, findUnmatchedLine, fixCoffeeScriptError, getClassesFor, spacestring;
     exports = {};
     ANY_DROP = ['any-drop'];
     BLOCK_ONLY = ['block-only'];
@@ -5919,6 +5931,79 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       }
     };
     STATEMENT_KEYWORDS = ['break', 'continue'];
+    CATEGORIES = {
+      functions: {
+        color: 'purple'
+      },
+      returns: {
+        color: 'yellow'
+      },
+      comments: {
+        color: 'gray'
+      },
+      arithmetic: {
+        color: 'green'
+      },
+      logic: {
+        color: 'cyan'
+      },
+      containers: {
+        color: 'teal'
+      },
+      assignments: {
+        color: 'blue'
+      },
+      loops: {
+        color: 'orange'
+      },
+      conditionals: {
+        color: 'orange'
+      },
+      value: {
+        color: 'green'
+      },
+      command: {
+        color: 'blue'
+      },
+      errors: {
+        color: '#f00'
+      }
+    };
+    NODE_CATEGORY = {
+      Parens: 'command',
+      Op: 'value',
+      Existence: 'logic',
+      In: 'logic',
+      Value: 'value',
+      Literal: 'value',
+      Call: 'command',
+      Code: 'functions',
+      Class: 'functions',
+      Assign: 'command',
+      For: 'loops',
+      While: 'loops',
+      If: 'conditionals',
+      Switch: 'conditionals',
+      Range: 'containers',
+      Arr: 'containers',
+      Obj: 'containers',
+      Return: 'returns'
+    };
+    LOGICAL_OPERATORS = {
+      '==': true,
+      '!=': true,
+      '===': true,
+      '!==': true,
+      '<': true,
+      '<=': true,
+      '>': true,
+      '>=': true,
+      'in': true,
+      'instanceof': true,
+      '||': true,
+      '&&': true,
+      '!': true
+    };
 
     /*
     OPERATOR_PRECEDENCES =
@@ -6001,11 +6086,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       function CoffeeScriptParser(text, opts) {
         var i, line, _base, _i, _len, _ref;
         this.text = text;
-        this.opts = opts != null ? opts : {};
         CoffeeScriptParser.__super__.constructor.apply(this, arguments);
         if ((_base = this.opts).functions == null) {
           _base.functions = KNOWN_FUNCTIONS;
         }
+        this.opts.categories = helper.extend({}, CATEGORIES, this.opts.categories);
         this.lines = this.text.split('\n');
         this.hasLineBeenMarked = {};
         _ref = this.lines;
@@ -6165,7 +6250,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       };
 
       CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-        var arg, bounds, childName, classes, color, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, known, last, line, lines, namenodes, object, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s;
+        var arg, bounds, childName, classes, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, known, last, line, lines, namenodes, object, property, secondBounds, shouldBeOneLine, switchCase, textLine, trueIndentDepth, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref2, _ref20, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _results1, _results2, _results3, _results4, _s;
         switch (node.nodeType()) {
           case 'Block':
             if (node.expressions.length === 0) {
@@ -6209,7 +6294,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 return this.mark(node.body, depth + 1, 0, wrappingParen != null ? wrappingParen : node, indentDepth);
               } else {
                 if (node.body.unwrap() === node.body) {
-                  this.csBlock(node, depth, -2, 'command', null, MOSTLY_BLOCK);
+                  this.csBlock(node, depth, -2, null, MOSTLY_BLOCK);
                   _ref3 = node.body.expressions;
                   _results = [];
                   for (_k = 0, _len1 = _ref3.length; _k < _len1; _k++) {
@@ -6236,22 +6321,22 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             if (node.first && !node.second && ((_ref4 = node.operator) === '+' || _ref4 === '-') && ((_ref5 = node.first) != null ? (_ref6 = _ref5.base) != null ? typeof _ref6.nodeType === "function" ? _ref6.nodeType() : void 0 : void 0 : void 0) === 'Literal') {
               return;
             }
-            this.csBlock(node, depth, OPERATOR_PRECEDENCES[node.operator], 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, OPERATOR_PRECEDENCES[node.operator], wrappingParen, VALUE_ONLY);
             this.csSocketAndMark(node.first, depth + 1, OPERATOR_PRECEDENCES[node.operator], indentDepth);
             if (node.second != null) {
               return this.csSocketAndMark(node.second, depth + 1, OPERATOR_PRECEDENCES[node.operator], indentDepth);
             }
             break;
           case 'Existence':
-            this.csBlock(node, depth, 100, 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 100, wrappingParen, VALUE_ONLY);
             return this.csSocketAndMark(node.expression, depth + 1, 101, indentDepth);
           case 'In':
-            this.csBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 0, wrappingParen, VALUE_ONLY);
             this.csSocketAndMark(node.object, depth + 1, 0, indentDepth);
             return this.csSocketAndMark(node.array, depth + 1, 0, indentDepth);
           case 'Value':
             if ((node.properties != null) && node.properties.length > 0) {
-              this.csBlock(node, depth, 0, 'value', wrappingParen, MOSTLY_VALUE);
+              this.csBlock(node, depth, 0, wrappingParen, MOSTLY_VALUE);
               this.csSocketAndMark(node.base, depth + 1, 0, indentDepth);
               _ref7 = node.properties;
               _results1 = [];
@@ -6267,10 +6352,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               }
               return _results1;
             } else if (node.base.nodeType() === 'Literal' && node.base.value === '') {
-              fakeBlock = this.csBlock(node.base, depth, 0, 'value', wrappingParen, ANY_DROP);
+              fakeBlock = this.csBlock(node.base, depth, 0, wrappingParen, ANY_DROP);
               return fakeBlock.flagToRemove = true;
             } else if (node.base.nodeType() === 'Literal' && /^#/.test(node.base.value)) {
-              this.csBlock(node.base, depth, 0, 'blank', wrappingParen, ANY_DROP);
+              this.csBlock(node.base, depth, 0, wrappingParen, ANY_DROP);
               errorSocket = this.csSocket(node.base, depth + 1, -2);
               return errorSocket.flagToStrip = {
                 left: 2,
@@ -6282,7 +6367,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             break;
           case 'Literal':
             if (_ref8 = node.value, __indexOf.call(STATEMENT_KEYWORDS, _ref8) >= 0) {
-              return this.csBlock(node, depth, 0, 'return', wrappingParen, BLOCK_ONLY);
+              return this.csBlock(node, depth, 0, wrappingParen, BLOCK_ONLY);
             } else {
               return 0;
             }
@@ -6298,17 +6383,14 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
               known = this.lookupFunctionName(namenodes);
               if (known) {
                 if (known.fn.value) {
-                  color = known.fn.color || (known.fn.command ? 'command' : 'value');
                   classes = known.fn.command ? ANY_DROP : MOSTLY_VALUE;
                 } else {
-                  color = known.fn.color || 'command';
                   classes = MOSTLY_BLOCK;
                 }
               } else {
-                color = 'command';
                 classes = ANY_DROP;
               }
-              this.csBlock(node, depth, 0, color, wrappingParen, classes);
+              this.csBlock(node, depth, 0, wrappingParen, classes);
               if (this.implicitName(namenodes)) {
 
               } else if (!known) {
@@ -6317,7 +6399,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
                 this.csSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
               }
             } else {
-              this.csBlock(node, depth, 0, 'command', wrappingParen, ANY_DROP);
+              this.csBlock(node, depth, 0, wrappingParen, ANY_DROP);
             }
             if (!node["do"]) {
               _ref10 = node.args;
@@ -6336,10 +6418,10 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Code':
-            this.csBlock(node, depth, 0, 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 0, wrappingParen, VALUE_ONLY);
             return this.addCode(node, depth + 1, indentDepth);
           case 'Assign':
-            this.csBlock(node, depth, 0, 'command', wrappingParen, MOSTLY_BLOCK);
+            this.csBlock(node, depth, 0, wrappingParen, MOSTLY_BLOCK);
             this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, LVALUE);
             if (node.value.nodeType() === 'Code') {
               return this.addCode(node.value, depth + 1, indentDepth);
@@ -6348,7 +6430,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'For':
-            this.csBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.csBlock(node, depth, -3, wrappingParen, MOSTLY_BLOCK);
             _ref13 = ['source', 'from', 'guard', 'step'];
             for (_n = 0, _len4 = _ref13.length; _n < _len4; _n++) {
               childName = _ref13[_n];
@@ -6365,11 +6447,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
           case 'Range':
-            this.csBlock(node, depth, 100, 'value', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 100, wrappingParen, VALUE_ONLY);
             this.csSocketAndMark(node.from, depth, 0, indentDepth);
             return this.csSocketAndMark(node.to, depth, 0, indentDepth);
           case 'If':
-            this.csBlock(node, depth, 0, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.csBlock(node, depth, 0, wrappingParen, MOSTLY_BLOCK);
 
             /*
             bounds = @getBounds node
@@ -6388,7 +6470,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Arr':
-            this.csBlock(node, depth, 100, 'purple', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 100, wrappingParen, VALUE_ONLY);
             if (node.objects.length > 0) {
               this.csIndentAndMark(indentDepth, node.objects, depth + 1);
             }
@@ -6397,7 +6479,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             for (_p = 0, _len6 = _ref15.length; _p < _len6; _p++) {
               object = _ref15[_p];
               if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((_ref16 = (_ref17 = object.properties) != null ? _ref17.length : void 0) === 0 || _ref16 === (void 0))) {
-                _results3.push(this.csBlock(object, depth + 2, 100, 'return', null, VALUE_ONLY));
+                _results3.push(this.csBlock(object, depth + 2, 100, null, VALUE_ONLY));
               } else {
                 _results3.push(void 0);
               }
@@ -6405,20 +6487,20 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             return _results3;
             break;
           case 'Return':
-            this.csBlock(node, depth, 0, 'return', wrappingParen, BLOCK_ONLY);
+            this.csBlock(node, depth, 0, wrappingParen, BLOCK_ONLY);
             if (node.expression != null) {
               return this.csSocketAndMark(node.expression, depth + 1, 0, indentDepth);
             }
             break;
           case 'While':
-            this.csBlock(node, depth, -3, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.csBlock(node, depth, -3, wrappingParen, MOSTLY_BLOCK);
             this.csSocketAndMark(node.rawCondition, depth + 1, 0, indentDepth);
             if (node.guard != null) {
               this.csSocketAndMark(node.guard, depth + 1, 0, indentDepth);
             }
             return this.mark(node.body, depth + 1, 0, null, indentDepth);
           case 'Switch':
-            this.csBlock(node, depth, 0, 'control', wrappingParen, MOSTLY_BLOCK);
+            this.csBlock(node, depth, 0, wrappingParen, MOSTLY_BLOCK);
             if (node.subject != null) {
               this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
             }
@@ -6441,7 +6523,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Class':
-            this.csBlock(node, depth, 0, 'control', wrappingParen, ANY_DROP);
+            this.csBlock(node, depth, 0, wrappingParen, ANY_DROP);
             if (node.variable != null) {
               this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth, FORBID_ALL);
             }
@@ -6453,7 +6535,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
             }
             break;
           case 'Obj':
-            this.csBlock(node, depth, 0, 'purple', wrappingParen, VALUE_ONLY);
+            this.csBlock(node, depth, 0, wrappingParen, VALUE_ONLY);
             _ref20 = node.properties;
             _results4 = [];
             for (_s = 0, _len9 = _ref20.length; _s < _len9; _s++) {
@@ -6556,6 +6638,45 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return bounds;
       };
 
+      CoffeeScriptParser.prototype.getColor = function(node) {
+        var category, known, namenodes, _ref, _ref1;
+        category = NODE_CATEGORY[node.nodeType()] || 'command';
+        switch (node.nodeType()) {
+          case 'Op':
+            if (LOGICAL_OPERATORS[node.operator]) {
+              category = 'logic';
+            } else {
+              category = 'arithmetic';
+            }
+            break;
+          case 'Call':
+            if (node.variable != null) {
+              namenodes = this.functionNameNodes(node);
+              known = this.lookupFunctionName(namenodes);
+              if (known) {
+                if (known.fn.value) {
+                  category = known.fn.color || (known.fn.command ? 'command' : 'value');
+                } else {
+                  category = known.fn.color || 'command';
+                }
+              }
+            }
+            break;
+          case 'Assign':
+            if (node.value.nodeType() === 'Code') {
+              category = 'functions';
+            }
+            break;
+          case 'Literal':
+            if (/^#/.test(node.value)) {
+              category = 'error';
+            } else if (_ref = node.value, __indexOf.call(STATEMENT_KEYWORDS, _ref) >= 0) {
+              category = 'returns';
+            }
+        }
+        return ((_ref1 = this.opts.categories[category]) != null ? _ref1.color : void 0) || category;
+      };
+
       CoffeeScriptParser.prototype.flagLineAsMarked = function(line) {
         var _results;
         this.hasLineBeenMarked[line] = true;
@@ -6573,7 +6694,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         return container;
       };
 
-      CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, color, wrappingParen, classes) {
+      CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, wrappingParen, classes) {
         if (classes == null) {
           classes = [];
         }
@@ -6581,7 +6702,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           bounds: this.getBounds(wrappingParen != null ? wrappingParen : node),
           depth: depth,
           precedence: precedence,
-          color: color,
+          color: this.getColor(node),
           classes: getClassesFor(node).concat(classes),
           parenWrapped: wrappingParen != null
         });
@@ -6654,7 +6775,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
           bounds: surroundingBounds,
           depth: depth + 1,
           precedence: -2,
-          color: 'command',
+          color: this.opts.categories['command'].color,
           socketLevel: ANY_DROP,
           classes: ['semicolon']
         });
@@ -9337,7 +9458,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define('droplet-javascript',['droplet-helper', 'droplet-model', 'droplet-parser', 'acorn'], function(helper, model, parser, acorn) {
-    var CLASS_EXCEPTIONS, COLORS, DEFAULT_INDENT_DEPTH, JavaScriptParser, KNOWN_FUNCTIONS, NEVER_PAREN, OPERATOR_PRECEDENCES, STATEMENT_NODE_TYPES, exports;
+    var CATEGORIES, CLASS_EXCEPTIONS, DEFAULT_INDENT_DEPTH, JavaScriptParser, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, NEVER_PAREN, NODE_CATEGORIES, OPERATOR_PRECEDENCES, STATEMENT_NODE_TYPES, exports;
     exports = {};
     STATEMENT_NODE_TYPES = ['ExpressionStatement', 'ReturnStatement', 'BreakStatement', 'ThrowStatement'];
     NEVER_PAREN = 100;
@@ -9403,32 +9524,86 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         value: true
       }
     };
-    COLORS = {
-      'BinaryExpression': 'value',
-      'UnaryExpression': 'value',
-      'FunctionExpression': 'value',
-      'FunctionDeclaration': 'purple',
-      'AssignmentExpression': 'command',
+    CATEGORIES = {
+      functions: {
+        color: 'purple'
+      },
+      returns: {
+        color: 'yellow'
+      },
+      comments: {
+        color: 'gray'
+      },
+      arithmetic: {
+        color: 'green'
+      },
+      logic: {
+        color: 'cyan'
+      },
+      containers: {
+        color: 'teal'
+      },
+      assignments: {
+        color: 'blue'
+      },
+      loops: {
+        color: 'orange'
+      },
+      conditionals: {
+        color: 'orange'
+      },
+      value: {
+        color: 'green'
+      },
+      command: {
+        color: 'blue'
+      },
+      errors: {
+        color: '#f00'
+      }
+    };
+    LOGICAL_OPERATORS = {
+      '==': true,
+      '!=': true,
+      '===': true,
+      '!==': true,
+      '<': true,
+      '<=': true,
+      '>': true,
+      '>=': true,
+      'in': true,
+      'instanceof': true,
+      '||': true,
+      '&&': true,
+      '!': true
+    };
+    NODE_CATEGORIES = {
+      'BinaryExpression': 'arithmetic',
+      'UnaryExpression': 'arithmetic',
+      'ConditionalExpression': 'arithmetic',
+      'LogicalExpression': 'logic',
+      'FunctionExpression': 'functions',
+      'FunctionDeclaration': 'functions',
+      'AssignmentExpression': 'assignments',
+      'UpdateExpression': 'assignments',
+      'VariableDeclaration': 'assignments',
+      'ReturnStatement': 'returns',
+      'IfStatement': 'conditionals',
+      'SwitchStatement': 'conditionals',
+      'ForStatement': 'loops',
+      'ForInStatement': 'loops',
+      'WhileStatement': 'loops',
+      'DoWhileStatement': 'loops',
+      'NewExpression': 'containers',
+      'ObjectExpression': 'containers',
+      'ArrayExpression': 'containers',
+      'MemberExpression': 'containers',
+      'BreakStatement': 'returns',
+      'ThrowStatement': 'returns',
+      'TryStatement': 'returns',
       'CallExpression': 'command',
-      'ReturnStatement': 'return',
-      'MemberExpression': 'value',
-      'IfStatement': 'control',
-      'ForStatement': 'control',
-      'ForInStatement': 'control',
-      'UpdateExpression': 'command',
-      'VariableDeclaration': 'command',
-      'LogicalExpression': 'value',
-      'WhileStatement': 'control',
-      'DoWhileStatement': 'control',
-      'ObjectExpression': 'value',
-      'SwitchStatement': 'control',
-      'BreakStatement': 'return',
-      'NewExpression': 'command',
-      'ThrowStatement': 'return',
-      'TryStatement': 'control',
-      'ArrayExpression': 'value',
       'SequenceExpression': 'command',
-      'ConditionalExpression': 'value'
+      'Identifier': 'value'
     };
     OPERATOR_PRECEDENCES = {
       '*': 5,
@@ -9470,11 +9645,11 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       function JavaScriptParser(text, opts) {
         var _base;
         this.text = text;
-        this.opts = opts != null ? opts : {};
         JavaScriptParser.__super__.constructor.apply(this, arguments);
         if ((_base = this.opts).functions == null) {
           _base.functions = KNOWN_FUNCTIONS;
         }
+        this.opts.categories = helper.extend({}, CATEGORIES, this.opts.categories);
         this.lines = this.text.split('\n');
       }
 
@@ -9490,7 +9665,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
 
       JavaScriptParser.prototype.fullFunctionNameArray = function(node) {
         var obj, props;
-        if (node.type !== 'CallExpression') {
+        if (node.type !== 'CallExpression' && node.type !== 'NewExpression') {
           throw new Error;
         }
         obj = node.callee;
@@ -9589,25 +9764,43 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
         }
       };
 
+      JavaScriptParser.prototype.lookupCategory = function(node) {
+        var category;
+        switch (node.type) {
+          case 'BinaryExpression':
+          case 'UnaryExpression':
+            if (LOGICAL_OPERATORS.hasOwnProperty(node.operator)) {
+              category = 'logic';
+            } else {
+              category = 'arithmetic';
+            }
+            break;
+          default:
+            category = NODE_CATEGORIES[node.type];
+        }
+        return this.opts.categories[category];
+      };
+
       JavaScriptParser.prototype.getColor = function(node) {
-        var known;
+        var category, known;
         switch (node.type) {
           case 'ExpressionStatement':
             return this.getColor(node.expression);
           case 'CallExpression':
             known = this.lookupFunctionName(node);
             if (!known) {
-              return 'purple';
+              return this.opts.categories.command.color;
             } else if (known.fn.color) {
               return known.fn.color;
             } else if (known.fn.value && !known.fn.command) {
-              return 'value';
+              return this.opts.categories.value.color;
             } else {
-              return 'command';
+              return this.opts.categories.command.color;
             }
             break;
           default:
-            return COLORS[node.type];
+            category = this.lookupCategory(node);
+            return (category != null ? category.color : void 0) || 'command';
         }
       };
 
@@ -13238,6 +13431,7 @@ if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObj
       this.resizeTextMode();
       this.aceEditor.session.setScrollTop(oldScrollTop);
       if (this.currentlyUsingBlocks) {
+        this.setTextInputFocus(null);
         result = this.setValue_raw(value);
         if (result.success === false) {
           this.setEditorState(false);
