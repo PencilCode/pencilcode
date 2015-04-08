@@ -582,6 +582,21 @@ return {
     loadscript: {value: true, command: true},
     text: {value: true, command: true, color: 'pink'},
     html: {value: true, command: true}
+  },
+
+  CATEGORIES: {
+    functions: {color: 'purple'},
+    returns: {color: 'yellow'},
+    comments: {color: 'gray'},
+    arithmetic: {color: 'green'},
+    logic: {color: 'cyan'},
+    containers: {color: 'teal'},
+    assignments: {color: 'lime'},
+    loops: {color: 'orange'},
+    conditionals: {color: 'deeporange'},
+    value: {color: 'green'},
+    command: {color: 'blue'},
+    errors: {color: '#f00'}
   }
 };
 

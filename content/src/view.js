@@ -1513,7 +1513,8 @@ function paletteForPane(paneState, selfname) {
 
 function dropletOptionsForMimeType(mimeType) {
   return {
-    functions: palette.KNOWN_FUNCTIONS
+    functions: palette.KNOWN_FUNCTIONS,
+    categories: palette.CATEGORIES
   };
 }
 
