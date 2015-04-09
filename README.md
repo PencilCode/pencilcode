@@ -28,12 +28,12 @@ The Ubuntu and Debian packages for node.js are pretty old, so don't
 just apt-get install the packages.  Get and build the latest `node` and
 `npm` and `grunt` binaries as follows:
 
-(For Linux:)s
+(For Linux:)
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
 wget -N http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz
-tar xzvf node-*.tar.gz && cd `ls -rd node-v*`
+tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
 echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.bashrc
