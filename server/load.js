@@ -6,9 +6,9 @@ var filetype = require('../content/src/filetype');
 var filemeta = require('./filemeta');
 
 exports.handleLoad = function(req, res, app, format) {
-  var filename = req.param('file', utils.filenameFromUri(req));
-  var callback = req.param('callback', null);
-  var tail = req.param('tail', null);
+  var filename = utils.param(req, 'file', utils.filenameFromUri(req));
+  var callback = utils.param(req, 'callback');
+  var tail = utils.param(req, 'tail');
   var user = res.locals.owner;
   var origfilename = filename;
 
