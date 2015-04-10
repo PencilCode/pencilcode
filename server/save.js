@@ -6,17 +6,17 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
-  var data = req.param('data', null);
-  var meta = req.param('meta', null);
-  var sourcefile = req.param('source', null);
-  var mode = req.param('mode', null);
-  var conditional = req.param('conditional', null);
-  var key = req.param('key', null);
-  var sourcekey = req.param('sourcekey', key);
+  var data = utils.param(req, 'data');
+  var meta = utils.param(req, 'meta');
+  var sourcefile = utils.param(req, 'source');
+  var mode = utils.param(req, 'mode');
+  var conditional = utils.param(req, 'conditional');
+  var key = utils.param(req, 'key');
+  var sourcekey = utils.param(req, 'sourcekey', key);
 
   try {
     var user = res.locals.owner;
-    var filename = req.param("file", utils.filenameFromUri(req));
+    var filename = utils.param(req, "file", utils.filenameFromUri(req));
     var origfilename = filename;
 
     /*

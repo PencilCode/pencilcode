@@ -32,7 +32,7 @@ just apt-get install the packages.  Get and build the latest `node` and
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-wget -N http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz
+wget -N http://nodejs.org/dist/node-latest.tar.gz
 tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install

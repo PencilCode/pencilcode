@@ -6,6 +6,13 @@ function expandPath(pathname, res) {
   return urltemplate.parse(path.resolve(pathname)).expand(res.locals);
 }
 
+exports.param = function(req, name, def) {
+  var result = req.query[name];
+  if (result == null) result = req.body[name];
+  if (result == null) result = (def == null ? null : def);
+  return result;
+}
+
 exports.getRootCacheName = function(app, res) {
   return path.join(app.locals.config.dirs.cachedir, 'rootcache');
 };
