@@ -1528,6 +1528,7 @@ function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var label = '';
   var blockToggleTooltip = null;
+  var textonly = true;
   if (paneState.editor) {
     if (/^text\/plain/.test(paneState.mimeType)) {
       label = 'text';
@@ -1539,6 +1540,7 @@ function updatePaneTitle(pane) {
     } else {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
+        textonly = false;
         symbol = 'codeicon'
         alt = 'show blocks'
         blockToggleTooltip = 'Click to show blocks';
@@ -1605,6 +1607,8 @@ function updatePaneTitle(pane) {
       }, 5000);
     }
   }
+  var pane = $('#' + pane);
+  pane.toggleClass('textonly', textonly);
 }
 
 $('.panetitle').on('click', '.fullscreen', function(e) {
@@ -1683,10 +1687,16 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
   }
 });
 
-$('.pane').on('click', '.closeblocks', function(e) {
+$('.pane').on('click', '.texttoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
   setPaneEditorBlockMode(pane, false);
+});
+
+$('.pane').on('click', '.blocktoggle', function(e) {
+  var pane = $(this).closest('.pane').prop('id');
+  e.preventDefault();
+  setPaneEditorBlockMode(pane, true);
 });
 
 function showPaneEditorLanguagesDialog(pane) {
@@ -2141,10 +2151,15 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   if (!/^frame\./.test(window.location.hostname)) {
-    $('<div class="blockmenu"">Blocks' +
+    $('<div class="blockmenu">Blocks' +
       '<span class="blockmenuarrow">&#9660;</span></div>').appendTo(
         dropletEditor.paletteWrapper);
   }
+
+  $('<div class="texttoggle"></div>').appendTo(
+      dropletEditor.paletteWrapper);
+  $('<div class="blocktoggle"></div>').appendTo(
+      $(dropletEditor.wrapperElement).find('.ace_editor'));
 
   var mainContainer = $('#' + id);
 

@@ -996,13 +996,13 @@ body#pencildoc #diigolet-csm {
 
 #pencildoc .droplet-palette-header {
   border: 0;
-  background-color: #e8e8e8
+  background-color: #fffde7;
 }
 
 #pencildoc .droplet-palette-group-header {
   font-family: Lato, Verdana, Helvetica, sans-serif;
-  font-size: 22px;
-  line-height: 26px;
+  font-size: 16px;
+  line-height: 22px;
   padding-left: 3px;
   color: #696969
 }
@@ -1016,7 +1016,7 @@ body#pencildoc #diigolet-csm {
 }
 
 #pencildoc .droplet-palette-header-row {
-  height: 26px
+  height: 22px
 }
 
 #pencildoc .droplet-palette-group-header-selected:hover {
@@ -1028,8 +1028,84 @@ body#pencildoc #diigolet-csm {
   color: #000
 }
 
-#pencildoc .ace_gutter, #pencildoc .droplet-gutter, #pencildoc .droplet-palette-canvas {
-  background-color: #f5f5f5
+#pencildoc .ace_gutter, #pencildoc .droplet-gutter {
+  background-color: #f5f5f5;
+}
+
+.droplet-palette-scroller::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+}
+
+.droplet-palette-scroller::-webkit-scrollbar-thumb {
+  background-color: #fff59d;
+  border: 2px solid #fffde7;
+}
+
+.droplet-palette-scroller:hover::-webkit-scrollbar-thumb {
+  background-color: #fdd835;
+  border: 2px solid #fffde7;
+}
+
+.texttoggle, .blocktoggle {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color:#fffde7;
+  bottom: 30px;
+  padding: 0 8px;
+  border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: right 0.3s, width 0.3s;
+  font-size: 24px;
+  font-family: Lato,Verdana,Helvetica,sans-serif;
+  line-height:28px;
+  font-weight:400;
+  z-index: 5;
+}
+
+.texttoggle {
+  right: -30px;
+}
+
+.texttoggle:before {
+  content: 'T'
+}
+
+.texttoggle:hover {
+  width: 136px;
+  right: -136px;
+}
+
+.texttoggle:hover:before {
+  content: 'Text code \00ab'
+}
+
+.textonly .blocktoggle {
+  display: none;
+}
+
+.blocktoggle {
+  left: 0px;
+}
+
+.blocktoggle:before {
+  content: 'B'
+}
+
+.blocktoggle:hover {
+  width: 144px;
+  right: -144px;
+}
+
+.blocktoggle:hover:before {
+  content: 'Block code \00bb'
+}
+
+#pencildoc .droplet-palette-canvas {
+  background-color: #fffde7;
 }
 
 .droplet-palette-group-header.blue {
