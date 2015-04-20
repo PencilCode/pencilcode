@@ -1049,11 +1049,14 @@ body#pencildoc #diigolet-csm {
 
 .texttoggle, .blocktoggle {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   background-color:#fffde7;
-  bottom: 30px;
+  bottom: 32px;
   padding: 0 8px;
+  border-top: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
   border-bottom-right-radius: 5px;
   border-top-right-radius: 5px;
   white-space: nowrap;
@@ -1066,8 +1069,14 @@ body#pencildoc #diigolet-csm {
   z-index: 5;
 }
 
+.texttoggle:hover, .blocktoggle:hover {
+  border-top: 2px solid #fff59d;
+  border-right: 2px solid #fff59d;
+  border-bottom: 2px solid #fff59d;
+}
+
 .texttoggle {
-  right: -30px;
+  right: -32px;
 }
 
 .texttoggle:before {
