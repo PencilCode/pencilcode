@@ -3,7 +3,7 @@ define(function() {
 function filterblocks(a) {
   // Show 'say' block only on browsers that support speech synthesis.
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
-    a = a.filter(function(b) { return !/^say\b/.test(b.block); });
+    a = a.filter(function(b) { return !/^@?say\b/.test(b.block); });
   }
   return a.map(function(e) {
     if (!e.id) {
@@ -288,8 +288,23 @@ return {
       color: 'indigo',
       blocks: filterblocks([
         {
-          block: '@play \'CDEDC\'',
-          title: 'Play and show music notes'
+          block: '@play \'cG/G/AGzBc\'',
+          title: 'Play and music notes in sequence'
+        }, {
+          block: '@play \'[CEG]\'',
+          title: 'Play notes in a chord'
+        }, {
+          block: '@tone \'B\', 2',
+          title: 'Sound a note immediately'
+        }, {
+          block: '@tone 440, 2',
+          title: 'Sound a frequency immediately'
+        }, {
+          block: '@silence()',
+          title: 'Stop sounding notes'
+        }, {
+          block: '@say \'hello\'',
+          title: 'Speak a word'
         }
       ])
     }, {
@@ -585,17 +600,17 @@ return {
   },
 
   CATEGORIES: {
-    functions: {color: 'purple'},
+    functions: {color: 'lightgreen'},
     returns: {color: 'yellow'},
     comments: {color: 'gray'},
-    arithmetic: {color: 'green'},
-    logic: {color: 'cyan'},
+    arithmetic: {color: 'lightgreen'},
+    logic: {color: 'lightgreen'},
     containers: {color: 'teal'},
-    assignments: {color: 'lime'},
+    assignments: {color: 'lightgreen'},
     loops: {color: 'orange'},
-    conditionals: {color: 'deeporange'},
-    value: {color: 'green'},
-    command: {color: 'blue'},
+    conditionals: {color: 'orange'},
+    value: {color: 'ightgreen'},
+    command: {color: 'lightgreen'},
     errors: {color: '#f00'}
   }
 };
