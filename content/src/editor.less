@@ -742,7 +742,8 @@ body#pencildoc #diigolet-csm {
 }
 
 .droplet-palette-wrapper {
-  cursor: default
+  cursor: default;
+  box-shadow: 0 0 6px gray;
 }
 
 .droplet-palette-wrapper:hover .closeblocks {
@@ -1051,46 +1052,55 @@ body#pencildoc #diigolet-csm {
 .texttoggle, .blocktoggle {
   position: absolute;
   width: 32px;
-  height: 32px;
+  height: 42px;
   background-color:#fffde7;
-  bottom: 32px;
-  padding: 0 8px;
-  border-top: 2px solid transparent;
-  border-right: 2px solid transparent;
-  border-bottom: 2px solid transparent;
+  bottom: 64px;
   border-bottom-right-radius: 5px;
   border-top-right-radius: 5px;
-  white-space: nowrap;
   overflow: hidden;
+  white-space: nowrap;
   transition: right 0.3s, width 0.3s;
-  font-size: 24px;
+  font-size: 12px;
   font-family: Lato,Verdana,Helvetica,sans-serif;
-  line-height:28px;
   font-weight:400;
-  z-index: 5;
+  line-height: 100%;
+  box-shadow: 0 0 6px gray;
 }
 
-.texttoggle:hover, .blocktoggle:hover {
-  border-top: 2px solid #fff59d;
-  border-right: 2px solid #fff59d;
-  border-bottom: 2px solid #fff59d;
+.texttoggle .slide, .blocktoggle .slide {
+  display: inline-block;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  width: 75px;
+  text-align: right;
+}
+
+.texttoggle .info, .blocktoggle .info {
+  display: inline-block;
+  white-space: normal;
+  width: 50px;
+  text-align: center;
+  vertical-align: top;
+  padding: 3px;
 }
 
 .texttoggle {
   right: -32px;
 }
 
-.texttoggle:before {
-  content: 'T'
+.texttoggle .slide:after {
+  content: url(/image/textmode.png)
+}
+
+.texttoggle .info:before {
+  content: 'click for text'
 }
 
 .texttoggle:hover {
-  width: 136px;
-  right: -136px;
-}
-
-.texttoggle:hover:before {
-  content: 'Text code \00ab'
+  width: 80px;
+  right: -80px;
 }
 
 .textonly .blocktoggle {
@@ -1099,19 +1109,19 @@ body#pencildoc #diigolet-csm {
 
 .blocktoggle {
   left: 0px;
+  z-index: 5;
 }
 
-.blocktoggle:before {
-  content: 'B'
+.blocktoggle .slide:after {
+  content: url(/image/blockmode.png)
 }
 
 .blocktoggle:hover {
-  width: 144px;
-  right: -144px;
+  width: 80px;
 }
 
-.blocktoggle:hover:before {
-  content: 'Block code \00bb'
+.blocktoggle .info:before {
+  content: 'click for blocks'
 }
 
 #pencildoc .droplet-palette-canvas {

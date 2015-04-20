@@ -2156,9 +2156,11 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
         dropletEditor.paletteWrapper);
   }
 
-  $('<div class="texttoggle"></div>').appendTo(
+  $('<div class="texttoggle">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
       dropletEditor.paletteWrapper);
-  $('<div class="blocktoggle"></div>').appendTo(
+  $('<div class="blocktoggle">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
       $(dropletEditor.wrapperElement).find('.ace_editor'));
 
   var mainContainer = $('#' + id);
