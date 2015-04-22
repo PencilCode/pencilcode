@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "build": "grunt build"
   },
   "repository": {
     "type": "git",

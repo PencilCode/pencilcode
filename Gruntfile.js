@@ -318,9 +318,10 @@ module.exports = function(grunt) {
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
-  grunt.registerTask('build', ['requirejs', 'replace', 'builddate']);
+  grunt.registerTask('build',
+      ['requirejs', 'replace', 'uglify', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
-      ['requirejs', 'replace', 'uglify', 'less', 'builddate', 'test']);
+      ['build', 'test']);
 };
 
