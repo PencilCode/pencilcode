@@ -2651,6 +2651,13 @@ function apiUrl(url, topdir) {
   }
   return result;
 }
+// Creates an image url from a potentially short name.
+function imgUrl(url) {
+  if (/\//.test(url)) { return url; }
+  url = '/img/' + url;
+  if (isPencilHost(window.location.hostname)) { return url; }
+  return '//pencil.io' + url;
+}
 // Retrieves the pencil code login cookie, if there is one.
 function loginCookie() {
   if (!document.cookie) return null;
@@ -7605,6 +7612,9 @@ var dollar_turtle_methods = {
     $('.turtleinput').prop('disabled', true);
     // Detach all event handlers on the window.
     $(window).off('.turtleevent');
+    // Low-level detach all jQuery events
+    $('*').not('#_testpanel *').map(
+       function(i, e) { $._data(e, 'events', null) });
     // Set a flag that will cause all commands to throw.
     interrupted = true;
     // Turn off the global tick interval timer.
@@ -7869,6 +7879,12 @@ var dollar_turtle_methods = {
       "Each nested array is a row: " +
       "<mark>table [[1,2,3],[4,5,6]]</mark>"],
   doOutput, prepareTable),
+  img: wrapglobalcommand('img',
+  ["<u>img(url)</u> Writes an image with the given address. " +
+      "Any URL can be provided.  A name without slashes will be " +
+      "treated as '/img/name'." +
+      "<mark>t = img 'tree'</mark>"],
+  doOutput, prepareImage),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -9376,6 +9392,27 @@ function prepareInput(name, callback, numeric) {
       // Focus, but don't cause autoscroll to occur due to focus.
       undoScrollAfter(function() { textbox.focus(); });
     }
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////
+// IMAGE PRINTER
+//////////////////////////////////////////////////////////////////////////
+
+// Simplify creation of images.
+function prepareImage(url, options) {
+  if ($.isNumeric(options)) {
+    options = { height: options };
+  }
+  var result = $('<img>');
+  if (url) {
+    result.attr('src', imgUrl(url));
+  }
+  if (options) {
+    result.css(options);
+  }
+  return {
+    result: result
   };
 }
 
