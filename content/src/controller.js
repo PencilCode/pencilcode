@@ -220,6 +220,10 @@ function updateTopControls(addHistory) {
         buttons.push({
           id: 'login', label: 'Log in',
           title: 'Log in and save'});
+
+        buttons.push({
+          id: 'another', label: 'Try next',
+          title: 'Try another example.'});
       }
     }
     buttons.push(
@@ -286,6 +290,21 @@ view.on('help', function() {
 view.on('tour', function() {
   // view.flashNotification('Tour coming soon.');
   setTimeout(function() { view.flashNotification('Tour coming soon.');}, 0);
+});
+
+view.on('another', function() {
+  var userList = [];
+  storage.loadUserList(function(list) {
+    if (list) {
+        userList = list;
+        // Select Random file 
+        var item = userList[Math.floor(Math.random()*userList.length)]
+        while(item.mode[0] != 'r') {
+                item = userList[Math.floor(Math.random()*userList.length)]
+        }
+        window.location.href = '/edit/'+ item.name ;
+    }
+  });
 });
 
 view.on('new', function() {

@@ -117,7 +117,7 @@ window.pencilcode.storage = {
         var result = [];
         for (var j = 0; j < m.list.length; ++j) {
           var reserved = (m.list[j].mode.indexOf('d') < 0);
-          result.push({ name: m.list[j].name, reserved: reserved});
+          result.push({ name: m.list[j].name, reserved: reserved, mode: m.list[j].mode});
         }
         cb(result);
         return;
