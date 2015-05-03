@@ -15,7 +15,8 @@ if passfile is not None:
 
 class MyTaskSet(TaskSet):
     def qualify(self, url):
-      return '//' + random.choice(hosts) + url
+      result = 'http://' + random.choice(hosts) + url
+      return result
 
     def userdomain(self, user): 
       if user is not None and len(user) > 0:
@@ -27,61 +28,84 @@ class MyTaskSet(TaskSet):
         headers={"User-Agent":"locust", "Host": self.userdomain(None)})
 
     def myget(self, user, url):
+      slashpos = url.find('/', 1) + 1 or len(url)
+      name = 'user:' + url[:slashpos]
+      if slashpos < len(url):
+        name += '...'
+      
       return self.client.get(self.qualify(url),
-          headers={"User-Agent":"locust", "Host": self.userdomain(user)})
+        headers={"User-Agent":"locust", "Host": self.userdomain(user)},
+        name=name)
 
     def mypost(self, user, url, data):
-      return self.client.post(self.qualify(url), data,
-          headers={"User-Agent":"locust", "Host": self.userdomain(user)})
+      slashpos = url.find('/', 1) + 1 or len(url)
+      name = 'user:' + url[:slashpos]
+      if slashpos < len(url):
+        name += '...'
 
-    # @task(1)
+      return self.client.post(self.qualify(url), data,
+        headers={"User-Agent":"locust", "Host": self.userdomain(user)},
+        name=name)
+
+    @task(1)
     def index(self):
         for url in ['/', '/welcome.css', '/image/vpencil-20-64.png',
             '/image/art.png', '/image/music.png', '/image/adventure.png',
             '/lib/jquery.js', '/lib/jquery.autocomplete.min.js',
-            '/load/?callback=loadusers']:
-          self.topget(url)
-        for url in ['/home/promo1', '/home/goldwheel-code.png',
+            # '/load/?callback=loadusers',
             '/lib/seedrandom.js', '/turtlebits.js']:
+          self.topget(url)
+        for url in ['/home/promo1', '/home/goldwheel-code.png']:
           self.myget('promo', url)
 
-    # @task(1)
+    @task(1)
     def edit(self):
-        topdir = self.topget("/load/").json()
-        randuser = random.choice(topdir['list'])
-        randname = randuser['name']
-        if 'd' not in randuser['mode']:
-          return
-        for url in ['/edit/', '/editor.js', '/favicon.ico',
-            '/apple-touch-icon.png', '/load']:
-          mydir = self.myget(randname, url)
+        # try:
+        #   topdir = self.topget("/load/").json()
+        # except:
+        #   print 'error listing all users'
+        #   return
+        # randuser = random.choice(topdir['list'])
+        # randname = randuser['name']
+        # if 'd' not in randuser['mode']:
+        #   return
+        randname = random.choice(passwords.keys())
+        for url in ['/edit/', '/load/']:
+          self.myget(randname, url)
+        for url in ['/editor.js', '/favicon.ico',
+            '/apple-touch-icon.png']:
+          self.topget(url)
 
     @task(1)
     def browserandom(self):
         randname = random.choice(passwords.keys())
-        if 'd' in randuser['mode']:
-          try:
-            mydir = self.myget(randname, '/load/').json()
-          except:
-            print 'error listing', randuser
-            return
-          if mydir['list'].length == 0:
-            return
-          randfile = random.choice(mydir['list'])['name']
-          try:
-            self.myget(randname, '/load/' + randfile).json()
-          except:
-            print 'error reading', randuser, randfile
+        try:
+          mydir = self.myget(randname, '/load/').json()
+        except:
+          print 'error listing ' + randname
+          return
+        if len(mydir['list']) == 0:
+          return
+        randfile = random.choice(mydir['list'])['name']
+        try:
+          self.myget(randname, '/load/' + randfile).json()
+        except:
+          print 'error reading ' + randname + ' ' + randfile
 
     @task(1)
     def saverandom(self):
         randname = random.choice(passwords.keys())
-        myok = self.mypost(randname, '/save/loadtest', {
-          'data': 'pen red\nfor [1..4]\n  fd 100\n  rt 90',
-          'key': passwords[randname]
-        }).json()
+        try:
+          myok = self.mypost(randname, '/save/loadtest', {
+            'data': 'pen red\nfor [1..4]\n  fd 100\n  rt 90',
+            'key': passwords[randname]
+          }).json()
+        except:
+          print 'error saving ' + randname
+          return
+
 
 class MyLocust(HttpLocust):
     task_set = MyTaskSet
-    min_wait =  5000
-    max_wait = 15000
+    min_wait = 5000
+    max_wait = 20000
