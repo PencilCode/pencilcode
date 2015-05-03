@@ -2,22 +2,37 @@
 # launch using: locust -f simpleloadtest.py --host=http://pencilcode.net
 
 from locust import HttpLocust, TaskSet, task
-import simplejson, random
+import simplejson, random, os
+
+hosts = os.environ.get('SERVERS').split(',')
+passfile = os.environ.get('PASSFILE')
+passwords = {
+  'livetest': '123'
+}
+if passfile is not None:
+  passwords = simplejson.load(file(passfile))
+
 
 class MyTaskSet(TaskSet):
-    def userbase(self, user):
-      return self.client.base_url.replace('//', '//' + user + '.')
+    def qualify(self, url):
+      return '//' + random.choice(hosts) + url
+
+    def userdomain(self, user): 
+      if user is not None and len(user) > 0:
+        return user + '.pencilcode.net'
+      return 'pencilcode.net'
 
     def topget(self, url):
-      return self.client.get(url, headers={"User-Agent":"locust"})
+      return self.client.get(self.qualify(url),
+        headers={"User-Agent":"locust", "Host": self.userdomain(None)})
 
     def myget(self, user, url):
-      return self.client.get(self.userbase(user) + url,
-          headers={"User-Agent":"locust"})
+      return self.client.get(self.qualify(url),
+          headers={"User-Agent":"locust", "Host": self.userdomain(user)})
 
     def mypost(self, user, url, data):
-      return self.client.post(self.userbase(user) + url, data,
-          headers={"User-Agent":"locust"})
+      return self.client.post(self.qualify(url), data,
+          headers={"User-Agent":"locust", "Host": self.userdomain(user)})
 
     # @task(1)
     def index(self):
@@ -43,14 +58,14 @@ class MyTaskSet(TaskSet):
 
     @task(1)
     def browserandom(self):
-        topdir = self.topget("/load/").json()
-        randuser = random.choice(topdir['list'])
-        randname = randuser['name']
+        randname = random.choice(passwords.keys())
         if 'd' in randuser['mode']:
           try:
             mydir = self.myget(randname, '/load/').json()
           except:
             print 'error listing', randuser
+            return
+          if mydir['list'].length == 0:
             return
           randfile = random.choice(mydir['list'])['name']
           try:
@@ -59,10 +74,11 @@ class MyTaskSet(TaskSet):
             print 'error reading', randuser, randfile
 
     @task(1)
-    def livetestsave(self):
-        myok = self.mypost('livetest', '/save/loadtest', {
+    def saverandom(self):
+        randname = random.choice(passwords.keys())
+        myok = self.mypost(randname, '/save/loadtest', {
           'data': 'pen red\nfor [1..4]\n  fd 100\n  rt 90',
-          'key': '123'
+          'key': passwords[randname]
         }).json()
 
 class MyLocust(HttpLocust):
