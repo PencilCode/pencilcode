@@ -2,7 +2,10 @@
 # launch using: locust -f simpleloadtest.py --host=http://pencilcode.net
 
 from locust import HttpLocust, TaskSet, task
-import simplejson, random, os
+import simplejson, random, os, resource
+
+resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
+
 
 hosts = os.environ.get('SERVERS').split(',')
 passfile = os.environ.get('PASSFILE')
@@ -11,6 +14,8 @@ passwords = {
 }
 if passfile is not None:
   passwords = simplejson.load(file(passfile))
+
+listusers = False
 
 
 class MyTaskSet(TaskSet):
@@ -49,27 +54,31 @@ class MyTaskSet(TaskSet):
 
     @task(1)
     def index(self):
-        for url in ['/', '/welcome.css', '/image/vpencil-20-64.png',
+        urls = ['/', '/welcome.css', '/image/vpencil-20-64.png',
             '/image/art.png', '/image/music.png', '/image/adventure.png',
             '/lib/jquery.js', '/lib/jquery.autocomplete.min.js',
-            # '/load/?callback=loadusers',
-            '/lib/seedrandom.js', '/turtlebits.js']:
+            '/lib/seedrandom.js', '/turtlebits.js']
+        if listusers:
+          urls.append('/load/?callback=loadusers')
+        for url in urls:
           self.topget(url)
         for url in ['/home/promo1', '/home/goldwheel-code.png']:
           self.myget('promo', url)
 
     @task(1)
     def edit(self):
-        # try:
-        #   topdir = self.topget("/load/").json()
-        # except:
-        #   print 'error listing all users'
-        #   return
-        # randuser = random.choice(topdir['list'])
-        # randname = randuser['name']
-        # if 'd' not in randuser['mode']:
-        #   return
-        randname = random.choice(passwords.keys())
+        if listusers:
+          try:
+            topdir = self.topget("/load/").json()
+          except:
+            print 'error listing all users'
+            return
+          randuser = random.choice(topdir['list'])
+          randname = randuser['name']
+          if 'd' not in randuser['mode']:
+            return
+        else:
+          randname = random.choice(passwords.keys())
         for url in ['/edit/', '/load/']:
           self.myget(randname, url)
         for url in ['/editor.js', '/favicon.ico',
@@ -81,16 +90,17 @@ class MyTaskSet(TaskSet):
         randname = random.choice(passwords.keys())
         try:
           mydir = self.myget(randname, '/load/').json()
-        except:
-          print 'error listing ' + randname
-          return
+        except Exception as e:
+          print 'error listing ' + randname + ' ' + str(e)
+          raise
         if len(mydir['list']) == 0:
           return
         randfile = random.choice(mydir['list'])['name']
         try:
           self.myget(randname, '/load/' + randfile).json()
-        except:
-          print 'error reading ' + randname + ' ' + randfile
+        except Exception as e:
+          print 'error reading ' + randname + ' ' + randfile + ' ' + str(e)
+          raise
 
     @task(1)
     def saverandom(self):
@@ -100,9 +110,9 @@ class MyTaskSet(TaskSet):
             'data': 'pen red\nfor [1..4]\n  fd 100\n  rt 90',
             'key': passwords[randname]
           }).json()
-        except:
-          print 'error saving ' + randname
-          return
+        except Exception as e:
+          print 'error saving ' + randname + ' ' + str(e)
+          raise
 
 
 class MyLocust(HttpLocust):
