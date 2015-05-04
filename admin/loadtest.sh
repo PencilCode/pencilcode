@@ -13,10 +13,9 @@ PASSFILE=$(mktemp --suffix .json)
 
 SERVERS=web1,web2
 
-FLAGS="--slave --master-host=loadtest1"
 if [ `hostname -s` = 'loadtest1' ]; then
-  FLAGS="--master"
+  PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web --master &
 fi
 
-PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web $FLAGS
+PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web --slave --master-host=loadtest1
 
