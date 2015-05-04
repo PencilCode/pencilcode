@@ -1,3 +1,6 @@
+#!/bin/bash
+
+cd ${0%/*}
 PASSFILE=$(mktemp --suffix .json)
 
 { \
@@ -8,7 +11,12 @@ PASSFILE=$(mktemp --suffix .json)
   echo "}"; \
 } > $PASSFILE
 
-SERVERS=web1
+SERVERS=web1,web2
 
-PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web
+FLAGS="--slave --master-host=loadtest1"
+if [ `hostname -s` = 'loadtest1' ]; then
+  FLAGS="--master"
+fi
+
+PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web $FLAGS
 
