@@ -6450,6 +6450,53 @@ var turtlefn = {
     });
     return this;
   }),
+  copy: wrapcommand('copy', 0,
+  ["<u>copy()</u> makes a new turtle that is a copy of this turtle."],
+  function copy(cc) {
+    var t2 =  this.clone().insertAfter(this);
+    t2.hide();
+    // t2.plan doesn't work here.
+    this.plan(function(j, elem) {
+      cc.appear(j);
+
+      //copy over turtle data:
+      olddata = getTurtleData(this);
+      newdata = getTurtleData(t2);
+      for (k in olddata) { newdata[k] = olddata[k]; }
+
+      // copy over style attributes:
+      t2.attr('style', this.attr('style'));
+
+      // copy each thing listed in css hooks:
+      for(property in $.cssHooks) {
+        var value = this.css(property);
+        t2.css(property, value);
+      }
+
+      // copy attributes, just in case:
+      var attrs = this.prop("attributes");
+      //console.log(attrs)
+      for(i in attrs) {
+        t2.attr(attrs[i].name, attrs[i].value);
+      }
+
+      // copy the canvas:
+      var t2canvas = t2.canvas();
+      var tcanvas = this.canvas();
+      if(t2canvas && tcanvas) {
+        t2canvas.width = tcanvas.width;
+        t2canvas.height = tcanvas.height;
+        newCanvasContext = t2canvas.getContext('2d');
+        newCanvasContext.drawImage(tcanvas, 0, 0)
+      }
+
+      t2.show();
+
+      cc.resolve(j);
+    }); // pass in our current clone, otherwise things get applied to the wrong clone
+    sync(t2, this);
+    return t2;
+  }),
   pen: wrapcommand('pen', 1,
   ["<u>pen(color, size)</u> Selects a pen. " +
       "Chooses a color and/or size for the pen: " +
