@@ -180,7 +180,7 @@ exports.DirCache.prototype = {
 
     function notifyAll(ok) {
       if (notify && notify === self.rebuilding) {
-        self.rebuidling = null;
+        self.rebuilding = null;
         while (notify.length) {
           notify.pop().call(null, ok);
         }
@@ -245,7 +245,7 @@ exports.DirCache.prototype = {
     var index = lb(this.list, obj, byMtime);
     if (oldindex == -1) {
       // It's a new item: insert it.
-      this.list.splce(index, 0, obj);
+      this.list.splice(index, 0, obj);
     } else {
       // It's moving in the list: shift the old items over, then set it.
       if (index < oldindex) {

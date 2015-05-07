@@ -29,7 +29,6 @@ function getRootDirCache(dir) {
 exports.handleLoad = function(req, res, app, format) {
   var filename = utils.filenameFromUri(req);
   var callback = utils.param(req, 'callback');
-  var prefix = utils.param(req, 'prefix') || '';
   var user = res.locals.owner;
   var origfilename = filename;
 
@@ -42,6 +41,9 @@ exports.handleLoad = function(req, res, app, format) {
     // is handled differently from other requests.
     var isrootlisting = !user && filename == '' && format == 'json';
     if (isrootlisting) {
+      var prefix = utils.param(req, 'prefix') || '';
+      var count = Math.max(maxRootDirEntries,
+          utils.param(req, 'count') || maxRootDirEntries);
       // Grab the dir cache object for this root directory path.
       var dircache = getRootDirCache(app.locals.config.dirs.datadir);
       if (dircache.age() > maxDirCacheAge) {
@@ -66,7 +68,7 @@ exports.handleLoad = function(req, res, app, format) {
         } else {
           data = {
             directory: "/",
-            list: dircache.readPrefix(prefix, maxRootDirEntries),
+            list: dircache.readPrefix(prefix, count),
             auth: false
           };
         }
