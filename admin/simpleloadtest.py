@@ -2,7 +2,7 @@
 # launch using: locust -f simpleloadtest.py --host=http://pencilcode.net
 
 from locust import HttpLocust, TaskSet, task
-import simplejson, random, os, resource, string
+import simplejson, random, os, resource, string, re
 
 resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
 
@@ -28,8 +28,10 @@ class MyTaskSet(TaskSet):
       return 'pencilcode.net'
 
     def topget(self, url):
+      name = re.sub('=[^&=]+', '=...', url)
       return self.client.get(self.qualify(url),
-        headers={"User-Agent":"locust", "Host": self.userdomain(None)})
+        headers={"User-Agent":"locust", "Host": self.userdomain(None)},
+        name=name)
 
     def myget(self, user, url):
       slashpos = url.find('/', 1) + 1 or len(url)
@@ -59,7 +61,11 @@ class MyTaskSet(TaskSet):
             '/lib/seedrandom.js', '/turtlebits.js']
         if listusers:
           urls.append('/load/?callback=loadusers')
-          urls.append('/load/?prefix=' + random.choice(string.ascii_letters));
+          if random.randrange(2) > 0:
+            prefix = random.choice(string.ascii_letters).lower();
+          else:
+            prefix = random.choice(passwords.keys())
+          urls.append('/load/?prefix=' + prefix)
         for url in urls:
           self.topget(url)
         for url in ['/home/promo1', '/home/goldwheel-code.png']:

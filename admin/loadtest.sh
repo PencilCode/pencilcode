@@ -11,7 +11,7 @@ PASSFILE=$(mktemp --suffix .json)
   echo "}"; \
 } > $PASSFILE
 
-SERVERS=web1,web2
+SERVERS=web1
 
 if [ `hostname -s` = 'loadtest1' ]; then
   PASSFILE=$PASSFILE SERVERS=$SERVERS locust -f simpleloadtest.py --host=http://web --master &
