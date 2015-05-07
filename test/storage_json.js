@@ -174,7 +174,7 @@ describe('test of server json apis', function() {
       assert.ok(obj.list.length > 0);
       // Check for expected files
       var expected = { aaa: 'drwx', bbb: 'drwx', callie: 'drwx',
-        calvin: 'drwx', ccc: 'drwx', first: 'rw', intro: 'rw',
+        calvin: 'drwx', carl: 'drwx', ccc: 'drwx', first: 'rw', intro: 'rw',
         livetest: 'drwx', withpass: 'drwx', zzz: 'drwx' };
       var count = 0;
       for (var i = 0; i < obj.list.length; i++) {
@@ -184,13 +184,49 @@ describe('test of server json apis', function() {
           count += 1;
         }
       }
-      assert.equal(count, 10);
+      assert.equal(count, 11);
       done();
     });
   });
-  /*
+  it('loads the root with a short prefix', function(done) {
+    json(null, '/load/?prefix=c', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 4);
+      // Check for expected files
+      var count = 0;
+      var expected =
+          { callie: 'drwx', calvin: 'drwx', carl: 'drwx', ccc: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 4);
+      done();
+    });
+  });
   it('loads the root with a prefix', function(done) {
     json(null, '/load/?prefix=ca', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 3);
+      // Check for expected files
+      var count = 0;
+      var expected = { callie: 'drwx', calvin: 'drwx', carl: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 3);
+      done();
+    });
+  });
+  it('loads the root with a longer prefix', function(done) {
+    json(null, '/load/?prefix=cal', function(s, obj) {
       assert.equal(obj.directory, '/');
       assert.equal(obj.list.length, 2);
       // Check for expected files
@@ -207,7 +243,24 @@ describe('test of server json apis', function() {
       done();
     });
   });
-  */
+  it('loads the root with an exact match', function(done) {
+    json(null, '/load/?prefix=carl', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 1);
+      // Check for expected files
+      var count = 0;
+      var expected = { carl: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 1);
+      done();
+    });
+  });
   it('loads a file thats present', function(done) {
     json('zzz', '/load/newfile', function(s, obj) {
       assert.equal(obj.file, '/zzz/newfile');

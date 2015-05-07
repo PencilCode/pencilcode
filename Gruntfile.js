@@ -308,13 +308,13 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
-      ['proxymessage', 'express:dev', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:dev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('sdevserver',
-      ['proxymessage', 'express:sdev', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:sdev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:localtest', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:localtest', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
