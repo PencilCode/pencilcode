@@ -2,6 +2,8 @@ var path = require('path');
 var fs = require('fs-ext');
 var lb = require('binary-search-bounds').ge;
 
+// DirCache represents a cache of the directory listing at
+// a specific path.
 exports.DirCache = function DirCache(path) {
   this.path = path;
   // List is sorted by-modification-date (newest first).

@@ -7,9 +7,15 @@ var filemeta = require('./filemeta');
 var DirCache = require('./dircache').DirCache;
 
 var globalRootDirCache = {};
+
+// Do not serve cached content older than 5 minutes.
 var maxDirCacheAge = 5 * 60 * 1000;
-var autoRebuildCacheAge = 3 * 60 * 1000;
-var maxRootDirEntries = 128;
+
+// Rebuild cache in background after serving data older than 1 minute.
+var autoRebuildCacheAge = 1 * 60 * 1000;
+
+// Serve at most 180 usernames at a time from root directory.
+var maxRootDirEntries = 180;
 
 function getRootDirCache(dir) {
   var dircache = globalRootDirCache[dir]
