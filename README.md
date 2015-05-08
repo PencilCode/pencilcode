@@ -28,24 +28,25 @@ The Ubuntu and Debian packages for node.js are pretty old, so don't
 just apt-get install the packages.  Get and build the latest `node` and
 `npm` and `grunt` binaries as follows:
 
-(For Linux:)s
+(For Linux:)
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-wget -N http://nodejs.org/dist/v0.10.36/node-v0.10.36.tar.gz
-tar xzvf node-*.tar.gz && cd `ls -rd node-v*`
+wget -N http://nodejs.org/dist/node-latest.tar.gz
+tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
 echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.bashrc
 source ~/.bashrc
 npm install -g grunt-cli
 </pre>
+Zsh users should change `bashrc` to `zshrc` in the above code.
 
 (For Mac:)
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-curl http://nodejs.org/dist/v0.10.36/node-v0.10.36.tar.gz > node-latest.tar.gz
+curl http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz > node-latest.tar.gz
 tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
 ./configure --prefix=$HOME/local
 make install
@@ -125,15 +126,15 @@ PencilCode Internals
 ====================
 
 The structure of pencilcode is really simple.
-* It is a single HTML file `site/top/editor.html` that does all the work
+* It is a single HTML file `content/src/editor.html` that does all the work
   All `pencilcode.net/edit/...` URLs resolve to this static file.
 * The javascript behind editor.html is in the `src/` directory (symlink
-  to `site/top/src`).  These javascript files are combined and minified
-  into site/top/editor.js by the build.
+  to `content/src`).  These javascript files are combined and minified
+  into content/src/editor.js by the build.
 * The editor javascript does JSON requests to `pencilcode.net/load/...`
   and `pencilcode.net/save/...` to read and write actual data.
 * There are a bunch of other static files that can be found in
-  `site/top`.
+  `content`.
 
 JSON save and load
 ------------------
@@ -144,7 +145,7 @@ http://guide.pencilcode.net/load/ to see the JSON response for
 a directory listing.  To see the details of how /load/ and /save/
 work, see the code in site/wsgi.
 
-The production site is an nginx server, configured in `site/nginx_site.conf`.
+The production site is an nginx server, configured in `nginx/nginx_site.conf`.
 
 The devserver is simpler: it is a node.js proxy server.  When using
 the devserver, the proxy.pac will direct the requests to your local

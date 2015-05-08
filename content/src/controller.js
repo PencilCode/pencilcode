@@ -682,6 +682,10 @@ guide.on('session', function session(options) {
     mpp.loading = nextLoadNumber();
     mpp.running = false;
     view.setPaneEditorData(pane, doc, filename, mode);
+    if (options.palette || options.modeOptions) {
+      view.setPaneEditorBlockOptions(paneatpos('left'),
+           options.palette, options.modeOptions);
+    }
     updateTopControls();
   }
 });
