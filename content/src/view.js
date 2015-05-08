@@ -1525,7 +1525,6 @@ function uniqueId(name) {
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var label = '';
-  var blockToggleTooltip = null;
   var textonly = true;
   if (paneState.editor) {
     if (/^text\/plain/.test(paneState.mimeType)) {
@@ -1541,16 +1540,14 @@ function updatePaneTitle(pane) {
         textonly = false;
         symbol = 'codeicon'
         alt = 'show blocks'
-        blockToggleTooltip = 'Click to show blocks';
         if (paneState.dropletEditor.currentlyUsingBlocks) {
           label = 'blocks';
           alt = 'show code'
           symbol = 'blockicon';
-          blockToggleTooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
-            paneState.filename + '" title="' + blockToggleTooltip +
-            '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
+            paneState.filename + '"><span class="' + symbol +
+            '"></span> <span alt="' + alt + '">' +
             '<span>' + label + '</span></span></a>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
@@ -1582,10 +1579,8 @@ function updatePaneTitle(pane) {
       label = 'output';
     }
   }
-  var title = $('#' + pane + 'title_text').html(label).find('[title]').
-      tooltipster({ position: 'top-left' });
-  var pane = $('#' + pane);
-  pane.toggleClass('textonly', textonly);
+  $('#' + pane + 'title_text').html(label);
+  $('#' + pane).toggleClass('textonly', textonly);
 }
 
 $('.panetitle').on('click', '.fullscreen', function(e) {
