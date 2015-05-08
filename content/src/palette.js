@@ -42,7 +42,7 @@ function expand(palette, thisname) {
   var replacement = !thisname ? '' : (thisname + '.');
   return fieldmap(palette, {
     block: function(s) {
-      return s.replace(/^@/, replacement);
+      return s.replace(/@/, replacement);
     }
   });
 }
@@ -121,17 +121,17 @@ return {
               'Do something if a condition is true, otherwise something else',
           id: 'ifelse'
         }, {
-          block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
+          block: "forever 1, ->\n  ``",
           title: 'Repeat something forever at qually-spaced times'
         }, {
-          block: "button \'Click\', ->\n  write 'clicked'",
+          block: "button \'Click\', ->\n  ``",
           title: 'Make a button and do something when clicked'
         }, {
-          block: "keydown \'X\', ->\n  write 'x pressed'",
+          block: "keydown \'X\', ->\n  ``",
           title: 'Do something when a keyboard key is pressed'
         }, {
-          block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
+          block: "click (e) ->\n  ``",
+          title: 'Do something when the mouse is clicked'
         }
       ])
     }, {
@@ -281,6 +281,12 @@ return {
         }, {
           block: 'q = new Pencil()',
           title: 'Make an invisible and fast drawing sprite'
+        }, {
+          block: 'if @touches x\n  ``',
+          title: 'Do something only if touching the object x'
+        }, {
+          block: 'if @inside window\n  ``',
+          title: 'Do something only if inside the window'
         }
       ])
     }, {
@@ -288,20 +294,26 @@ return {
       color: 'indigo',
       blocks: filterblocks([
         {
-          block: '@play \'cG/G/AGzBc\'',
-          title: 'Play and music notes in sequence'
+          block: '@play \'c G/G/ AG z\'',
+          title: 'Play music notes in sequence'
         }, {
-          block: '@play \'[CEG]\'',
+          block: '@play \'[fA] [ecG]2\'',
           title: 'Play notes in a chord'
         }, {
-          block: '@tone \'B\', 2',
+          block: '@tone \'B\', 2, 1',
           title: 'Sound a note immediately'
         }, {
-          block: '@tone 440, 2',
+          block: '@tone \'B\', 0',
+          title: 'Silence a note immediately'
+        }, {
+          block: '@tone 440, 2, 1',
           title: 'Sound a frequency immediately'
         }, {
+          block: '@tone 440, 0',
+          title: 'Silence a frequency immediately'
+        }, {
           block: '@silence()',
-          title: 'Stop sounding notes'
+          title: 'Silence all notes'
         }, {
           block: '@say \'hello\'',
           title: 'Speak a word'
@@ -312,8 +324,23 @@ return {
       color: 'deeporange',
       blocks: filterblocks([
         {
-          block: "tick 10, ->\n  if pressed 'W'\n    fd 2",
+          block: "forever 10, ->\n  turnto lastmouse\n  fd 2",
+          title: 'Continually move towards the last mouse position'
+        }, {
+          block: "forever 10, ->\n  if pressed 'W'\n    fd 2",
           title: 'Poll a key and move while it is depressed'
+        }, {
+          block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
+          title: 'Move once per second until not inside window'
+        }, {
+          block: "click (e) ->\n  moveto e",
+          title: 'Move to a location when document is clicked'
+        }, {
+          block: "button \'Click\', ->\n  write 'clicked'",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown \'X\', ->\n  write 'x pressed'",
+          title: 'Do something when a keyboard key is pressed'
         }, {
           block: "click (e) ->\n  moveto e",
           title: 'Move to a location when document is clicked'
