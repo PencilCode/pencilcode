@@ -2651,6 +2651,13 @@ function apiUrl(url, topdir) {
   }
   return result;
 }
+// Creates an image url from a potentially short name.
+function imgUrl(url) {
+  if (/\//.test(url)) { return url; }
+  url = '/img/' + url;
+  if (isPencilHost(window.location.hostname)) { return url; }
+  return '//pencil.io' + url;
+}
 // Retrieves the pencil code login cookie, if there is one.
 function loginCookie() {
   if (!document.cookie) return null;
@@ -6443,6 +6450,53 @@ var turtlefn = {
     });
     return this;
   }),
+  copy: wrapcommand('copy', 0,
+  ["<u>copy()</u> makes a new turtle that is a copy of this turtle."],
+  function copy(cc) {
+    var t2 =  this.clone().insertAfter(this);
+    t2.hide();
+    // t2.plan doesn't work here.
+    this.plan(function(j, elem) {
+      cc.appear(j);
+
+      //copy over turtle data:
+      olddata = getTurtleData(this);
+      newdata = getTurtleData(t2);
+      for (k in olddata) { newdata[k] = olddata[k]; }
+
+      // copy over style attributes:
+      t2.attr('style', this.attr('style'));
+
+      // copy each thing listed in css hooks:
+      for(property in $.cssHooks) {
+        var value = this.css(property);
+        t2.css(property, value);
+      }
+
+      // copy attributes, just in case:
+      var attrs = this.prop("attributes");
+      //console.log(attrs)
+      for(i in attrs) {
+        t2.attr(attrs[i].name, attrs[i].value);
+      }
+
+      // copy the canvas:
+      var t2canvas = t2.canvas();
+      var tcanvas = this.canvas();
+      if(t2canvas && tcanvas) {
+        t2canvas.width = tcanvas.width;
+        t2canvas.height = tcanvas.height;
+        newCanvasContext = t2canvas.getContext('2d');
+        newCanvasContext.drawImage(tcanvas, 0, 0)
+      }
+
+      t2.show();
+
+      cc.resolve(j);
+    }); // pass in our current clone, otherwise things get applied to the wrong clone
+    sync(t2, this);
+    return t2;
+  }),
   pen: wrapcommand('pen', 1,
   ["<u>pen(color, size)</u> Selects a pen. " +
       "Chooses a color and/or size for the pen: " +
@@ -7605,6 +7659,9 @@ var dollar_turtle_methods = {
     $('.turtleinput').prop('disabled', true);
     // Detach all event handlers on the window.
     $(window).off('.turtleevent');
+    // Low-level detach all jQuery events
+    $('*').not('#_testpanel *').map(
+       function(i, e) { $._data(e, 'events', null) });
     // Set a flag that will cause all commands to throw.
     interrupted = true;
     // Turn off the global tick interval timer.
@@ -7869,6 +7926,12 @@ var dollar_turtle_methods = {
       "Each nested array is a row: " +
       "<mark>table [[1,2,3],[4,5,6]]</mark>"],
   doOutput, prepareTable),
+  img: wrapglobalcommand('img',
+  ["<u>img(url)</u> Writes an image with the given address. " +
+      "Any URL can be provided.  A name without slashes will be " +
+      "treated as '/img/name'." +
+      "<mark>t = img 'tree'</mark>"],
+  doOutput, prepareImage),
   random: wrapraw('random',
   ["<u>random(n)</u> Random non-negative integer less than n: " +
       "<mark>write random 10</mark>",
@@ -9376,6 +9439,27 @@ function prepareInput(name, callback, numeric) {
       // Focus, but don't cause autoscroll to occur due to focus.
       undoScrollAfter(function() { textbox.focus(); });
     }
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////
+// IMAGE PRINTER
+//////////////////////////////////////////////////////////////////////////
+
+// Simplify creation of images.
+function prepareImage(url, options) {
+  if ($.isNumeric(options)) {
+    options = { height: options };
+  }
+  var result = $('<img>');
+  if (url) {
+    result.attr('src', imgUrl(url));
+  }
+  if (options) {
+    result.css(options);
+  }
+  return {
+    result: result
   };
 }
 

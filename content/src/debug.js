@@ -23,7 +23,7 @@ var cachedParsedStack = {}; // parsed stack traces for currently-running code.
 var pollTimer = null;       // poll for stop button.
 var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
 var throwNeeded = !(new Error).stack;
-var lineNumberOffset = 0;
+var lineNumberOffset = 3;   // Lines of Coffee boilerplate above user code.
 
 Error.stackTraceLimit = 20;
 
@@ -40,7 +40,6 @@ function bindframe(w) {
   everyRecord = [];
   cachedSourceMaps = {};
   cachedParseStack = {};
-  lineNumberOffset = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   firstSessionId = nextDebugId;
@@ -309,8 +308,6 @@ function debugInit() {
   // Grab exception for first line.
   if (debugIdException.init) return;
   var id = debug.nextId();
-  var exception = debugIdException.init = debugIdException[id];
-  lineNumberOffset = editorLineNumberForError(exception) + 1;
 }
 
 
@@ -546,44 +543,26 @@ function editorLineNumberForError(error) {
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
-        return error.location.first_line - 2;
+        return error.location.first_line - lineNumberOffset;
       }
     }
     return null;
   }
 
   if (inline) {
-    return frame.line - 2 - lineNumberOffset;
+    return frame.line - lineNumberOffset;
   }
 
   var smc = sourceMapConsumerForFile(frame.file);
-  /* For debugging:
-  var lines = targetWindow.CoffeeScript.code[frame.file].js.split('\n');
-  for (var j = 0; j < lines.length; ++j) {
-    console.log(j + 2, lines[j]);
-  }
-  smc.eachMapping(function(m) {
-    console.log(JSON.stringify(m));
+  var mapped = smc.originalPositionFor({
+    line: frame.line + 1, // Coffeescript adds a line to our js.
+    column: frame.column - 1
   });
-  */
+  if (mapped.line == null) return null;
 
-  // The CoffeeScript source code mappings are empirically a bit inaccurate,
-  // but it seems if we scan forward to find a line number that isn't pinned
-  // to the starting boilerplate, we can get a line number that seems
-  // to be fairly accurate.
-  var line = null;
-  for (var col = Math.max(frame.column - 1, 0);
-       col < Math.max(frame.column + 80, 80); col++) {
-    var mapped = smc.originalPositionFor({line: frame.line, column: col});
-    if (mapped && mapped.line && (frame.line <= 2 || mapped.line >= 4)) {
-      line = mapped.line;
-      break;
-    }
-  }
-
-  if (line == null || (frame.line > 2 && line < 4)) return null;
   // Subtract a few lines of boilerplate from the top of the script.
-  return line - 2 - lineNumberOffset;
+  var result = mapped.line - lineNumberOffset;
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////

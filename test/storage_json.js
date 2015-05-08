@@ -168,6 +168,46 @@ describe('test of server json apis', function() {
       done();
     });
   });
+  it('loads the root directory', function(done) {
+    json(null, '/load/', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.ok(obj.list.length > 0);
+      // Check for expected files
+      var expected = { aaa: 'drwx', bbb: 'drwx', callie: 'drwx',
+        calvin: 'drwx', ccc: 'drwx', first: 'rw', intro: 'rw',
+        livetest: 'drwx', withpass: 'drwx', zzz: 'drwx' };
+      var count = 0;
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 10);
+      done();
+    });
+  });
+  /*
+  it('loads the root with a prefix', function(done) {
+    json(null, '/load/?prefix=ca', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 2);
+      // Check for expected files
+      var count = 0;
+      var expected = { callie: 'drwx', calvin: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 2);
+      done();
+    });
+  });
+  */
   it('loads a file thats present', function(done) {
     json('zzz', '/load/newfile', function(s, obj) {
       assert.equal(obj.file, '/zzz/newfile');
