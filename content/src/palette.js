@@ -271,15 +271,15 @@ return {
           title: 'Make a new turtle',
           id: 'newturtle'
         }, {
-          block: 's = new Sprite',
+          block: 's = new Sprite()',
           title: 'Make a blank sprite',
           id: 'newsprite'
         }, {
-          block: 'p = new Piano',
+          block: 'p = new Piano()',
           title: 'Make a visible instrument',
           id: 'newpiano'
         }, {
-          block: 'q = new Pencil',
+          block: 'q = new Pencil()',
           title: 'Make an invisible and fast drawing sprite'
         }
       ])
@@ -596,7 +596,10 @@ return {
     finish: {value: true, command: true},
     loadscript: {value: true, command: true},
     text: {value: true, command: true, color: 'pink'},
-    html: {value: true, command: true}
+    Turtle: {value: true, color: 'teal'},
+    Sprite: {value: true, color: 'teal'},
+    Piano: {value: true, color: 'teal'},
+    Pencil: {value: true, color: 'teal'}
   },
 
   CATEGORIES: {
