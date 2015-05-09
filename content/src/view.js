@@ -735,7 +735,7 @@ function flashThumbnail(imageDataUrl) {
     content: $('<img src=' + imageDataUrl + '>'),
     multiple: true,
     position: 'bottom',
-    theme: 'tooltipster-light',
+    theme: 'tooltipster-shadow',
     timer: 3000,
     trigger: 'custom'
   })[0];
