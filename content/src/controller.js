@@ -816,7 +816,9 @@ function generateThumbnailDataURL() {
   var x, y, index;
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x++) {
+      // Every pixel takes up 4 slots in the array, contains R, G, B, A
       index = (y * w + x) * 4;
+      // Thus `index + 3` is the index of Alpha.
       if (imageData.data[index + 3] > 0) {
         if (x < topLeft.x) {
           topLeft.x = x;
