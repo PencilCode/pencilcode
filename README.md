@@ -46,7 +46,7 @@ Zsh users should change `bashrc` to `zshrc` in the above code.
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-curl http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz > node-latest.tar.gz
+curl http://nodejs.org/dist/node-latest.tar.gz > node-latest.tar.gz
 tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
 ./configure --prefix=$HOME/local
 make install
