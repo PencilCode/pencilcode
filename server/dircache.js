@@ -253,6 +253,9 @@ exports.DirCache.prototype = {
           this.list[j] = this.list[j - 1];
         }
       } else if (index > oldindex) {
+        // If shifting right, our target index is off-by-one because
+        // we ourselves are to the left of our destination index.
+        index -= 1;
         for (var j = oldindex; j < index; ++j) {
           this.list[j] = this.list[j + 1];
         }
