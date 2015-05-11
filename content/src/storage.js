@@ -111,18 +111,27 @@ function networkErrorMessage(domain) {
 }
 
 window.pencilcode.storage = {
-  loadUserList: function(cb) {
-    $.getJSON('//' + window.pencilcode.domain + '/load/', function(m) {
+  updateUserSet: function(prefix, set, cb) {
+    prefix = prefix || '';
+    if (set.hasOwnProperty(prefix)) {
+      // If we already know about this username, do nothing.
+      cb(set);
+      return;
+    }
+    $.getJSON('//' + window.pencilcode.domain + '/load/',
+        { prefix: prefix, count: 12 }, function(m) {
       if (m && m.directory && m.list) {
-        var result = [];
         for (var j = 0; j < m.list.length; ++j) {
           var reserved = (m.list[j].mode.indexOf('d') < 0);
-          result.push({ name: m.list[j].name, reserved: reserved});
+          set[m.list[j].name] = reserved ? 'reserved' : 'user';
         }
-        cb(result);
+        if (!set.hasOwnProperty(prefix)) {
+          set[prefix] = 'nouser';
+        }
+        cb(set);
         return;
       }
-      cb(null);
+      cb(set);
     });
   },
   // Given a filename (no owner, leading, or trailing slash),
