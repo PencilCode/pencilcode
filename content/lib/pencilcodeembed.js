@@ -308,6 +308,16 @@
       return this.invokeRemote('showMiddleButton', []);
     };
 
+    // hides middle button
+    proto.hideToggleButton = function() {
+      return this.invokeRemote('hideToggleButton', []);
+    };
+
+    // shows middle button
+    proto.showToggleButton = function() {
+      return this.invokeRemote('showToggleButton', []);
+    };
+
     // show butter bar notification
     proto.showNotification = function(message) {
       return this.invokeRemote('showNotification', [message]);

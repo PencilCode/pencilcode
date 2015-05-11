@@ -2071,6 +2071,12 @@ $(window).on('message', function(e) {
       view.canShowMiddleButton = true;
       view.showMiddleButton('run');
       break;
+    case 'hideMiddleButton':
+      view.showToggleButton(false);
+      break;
+    case 'showMiddleButton':
+      view.showToggleButton(true);
+      break;
     case 'setEditable':
       view.setPaneEditorReadOnly(paneatpos('left'), false);
       break;
