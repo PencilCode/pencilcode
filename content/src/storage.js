@@ -103,7 +103,7 @@ function isBackupPreferred(filename, m, preferUnsaved) {
 // to the domain so that users can bring up firewall UI for an expln.
 function networkErrorMessage(domain) {
   if (domain != window.location.hostname) {
-    return 'Test your connection to <a href="//' + domain +
+    return 'Test your connection to <br><a href="//' + domain +
         '/" target="_blank">' + domain + '</a>.';
   } else {
     return 'Network error.';
@@ -130,6 +130,11 @@ window.pencilcode.storage = {
         }
         cb(set);
         return;
+      }
+      cb(set);
+    }).fail(function() {
+      if (!set.hasOwnProperty(prefix)) {
+        set[prefix] = 'error';
       }
       cb(set);
     });

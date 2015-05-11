@@ -832,7 +832,6 @@ function signUpAndSave(options) {
   var delayTimer = null;
   var queryTimer = null;
   function updateUserSet(prefix) {
-    console.log('called updateUserSet', prefix);
     // Repeated queries have no effect.
     if (lastquery == prefix) return;
     lastquery = prefix;
@@ -854,7 +853,9 @@ function signUpAndSave(options) {
           cancelled = true;
           clearTimeout(queryTimer);
           queryTimer = null;
-          console.log('completed', querying, 'lastquery is', lastquery);
+          if (!userSet.hasOwnProperty(querying)) {
+            userSet[querying] = 'error';
+          }
           // Hackish: trigger a keyup on the $('.username') field to force
           // a revalidate after we have a userlist.
           $('.username').trigger('keyup');
@@ -972,6 +973,18 @@ function signUpAndSave(options) {
           disable: true,
           info: 'Choose a file name.'
         }
+      }
+      if (status == 'error') {
+        // Return a generic message when we can't determine
+        // the status of the account.
+        return {
+          disable: false,
+          info: 'Will use ' + username +
+              '.' + window.pencilcode.domain + '.' +
+               '<br>When using a Pencil Code account,' +
+               '<br>I agree to <a target=_blank ' +
+               'href="/terms.html">the terms of service</a>.'
+        };
       }
       return {
         disable: false,
