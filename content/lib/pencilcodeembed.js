@@ -48,6 +48,7 @@
 //    console.log('load complete');
 //    pce.hideEditor();
 //    pce.hideMiddleButton();
+//    pce.hideToggleButton();
 //    pce.setReadOnly();
 //    pce.showNotification('Pay attention to the Turtle!');
 //    setTimeout(function(){
@@ -308,12 +309,12 @@
       return this.invokeRemote('showMiddleButton', []);
     };
 
-    // hides middle button
+    // hides toggle button
     proto.hideToggleButton = function() {
       return this.invokeRemote('hideToggleButton', []);
     };
 
-    // shows middle button
+    // shows toggle button
     proto.showToggleButton = function() {
       return this.invokeRemote('showToggleButton', []);
     };
