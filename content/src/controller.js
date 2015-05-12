@@ -682,6 +682,10 @@ guide.on('session', function session(options) {
     mpp.loading = nextLoadNumber();
     mpp.running = false;
     view.setPaneEditorData(pane, doc, filename, mode);
+    if (options.palette || options.modeOptions) {
+      view.setPaneEditorBlockOptions(paneatpos('left'),
+           options.palette, options.modeOptions);
+    }
     updateTopControls();
   }
 });
@@ -2128,6 +2132,12 @@ $(window).on('message', function(e) {
     case 'showMiddleButton':
       view.canShowMiddleButton = true;
       view.showMiddleButton('run');
+      break;
+    case 'hideToggleButton':
+      view.showToggleButton(false);
+      break;
+    case 'showToggleButton':
+      view.showToggleButton(true);
       break;
     case 'setEditable':
       view.setPaneEditorReadOnly(paneatpos('left'), false);

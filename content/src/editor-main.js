@@ -4,16 +4,17 @@
 require.config({
   baseUrl: '/',
   paths: {
-    'draw-protractor': 'src/draw-protractor',
     'droplet': 'lib/droplet',
     'controller': 'src/controller',
     'view': 'src/view',
     'storage': 'src/storage',
     'debug': 'src/debug',
+    'codescan': 'src/codescan',
     'palette': 'src/palette',
     'FontLoader': 'src/FontLoader',
     'filetype': 'src/filetype',
     'gadget': 'src/gadget',
+    'draw-protractor': 'src/draw-protractor',
     'guide': 'src/guide',
     'jquery': 'lib/jquery',
     'see': 'lib/see',

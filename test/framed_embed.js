@@ -206,6 +206,9 @@ describe('framed embed', function() {
       pco.hideMiddleButton();
       pco.showMiddleButton();
 
+      pco.hideToggleButton();
+      pco.showToggleButton();
+
       pco.setReadOnly();
       pco.setEditable();
 
