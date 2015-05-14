@@ -58,16 +58,20 @@ function encodeStat(name, statObj) {
 // Predicate to sort by modification-time.  If two entries have
 // the same mtime, they are sorted alphabetically.
 function byMtime(a, b) {
-  if (a.mtime < b.mtime) {
+  if (a.mtime > b.mtime) {
+    // later first.
     return -1
   }
-  if (a.mtime > b.mtime) {
+  if (a.mtime < b.mtime) {
+    // earlier last.
     return 1
   }
   if (a.name < b.name) {
+    // a first.
     return -1;
   }
   if (a.name > b.name) {
+    // z last.
     return 1;
   }
   return 0;
@@ -252,6 +256,8 @@ exports.DirCache.prototype = {
 
   // Reads an array of at most "count" items that include an exact
   // matched name (if any) and the most recent prefix matches.
+  // Items will be returned in modification order (most recent first),
+  // except that any exact match will be listed first.
   readPrefix: function(prefix, count) {
     var result = [];
     // ex is 1 if we need to reserve space for an exact match.
@@ -263,7 +269,7 @@ exports.DirCache.prototype = {
       if (name == prefix) {
         // If the exact match is included due to recency, set ex to zero.
         ex = 0;
-        result.push(obj);
+        result.unshift(obj);
       } else if (name.length > prefix.length &&
           name.substr(0, prefix.length) == prefix) {
         // Include prefix matches by recency.
@@ -272,7 +278,7 @@ exports.DirCache.prototype = {
     }
     if (ex) {
       // If an exact match wasn't included due to recency, include it now.
-      result.push(this.map[prefix]);
+      result.unshift(this.map[prefix]);
     }
     return result;
   }

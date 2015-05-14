@@ -14,8 +14,8 @@ var maxDirCacheAge = 5 * 60 * 1000;
 // Rebuild cache in background after serving data older than 1 minute.
 var autoRebuildCacheAge = 1 * 60 * 1000;
 
-// Serve at most 180 usernames at a time from root directory.
-var maxRootDirEntries = 180;
+// Serve at most 600 usernames at a time from root directory.
+var maxRootDirEntries = 600;
 
 function getRootDirCache(dir) {
   var dircache = globalRootDirCache[dir]
@@ -55,11 +55,6 @@ exports.handleLoad = function(req, res, app, format) {
       } else {
         // Fresh cache without prefix: just send the cached result.
         sendCachedResult(true);
-        // If the cache was sort-of-old, kick off an early rebuild.
-        if (dircache.age() > autoRebuildCacheAge) {
-          // No callback needed.
-          dircache.rebuild(null);
-        }
       }
       function sendCachedResult(ok) {
         var data;
@@ -71,6 +66,11 @@ exports.handleLoad = function(req, res, app, format) {
             list: dircache.readPrefix(prefix, count),
             auth: false
           };
+          // If the cache was sort-of-old, kick off an early rebuild.
+          if (dircache.age() > autoRebuildCacheAge) {
+            // No callback needed.
+            dircache.rebuild(null);
+          }
         }
         res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/javascript');

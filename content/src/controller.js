@@ -1900,7 +1900,20 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
 };
 
 function sortByDate(a, b) {
-  return b.mtime - a.mtime;
+  if (b.mtime != a.mtime) {
+    return b.mtime - a.mtime;
+  }
+  return sortByName(a, b);
+}
+
+function sortByName(a, b) {
+  if (a.name < b.name) {
+    return -1;
+  }
+  if (a.name > b.name) {
+    return 1;
+  }
+  return 0;
 }
 
 function renderDirectory(position) {
@@ -1912,20 +1925,25 @@ function renderDirectory(position) {
   // TODO: fix up visible URL to ensure slash.
   var links = [];
   for (var j = 0; j < m.list.length; ++j) {
-    var label = m.list[j].name;
+    var name = m.list[j].name;
     if (model.ownername === '' && filename === '') {
       if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = '//' + label + '.' + window.pencilcode.domain + '/edit/';
-      links.push({html:label, href:href, mtime:m.list[j].mtime});
+      var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
+      links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
     } else {
+      var label = name;
       if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
       var href = '/home/' + filenameslash + label;
-      links.push({html:label, link:label, href:href, mtime:m.list[j].mtime});
+      links.push({
+          html:label, name:name, link:label, href:href, mtime:m.list[j].mtime});
     }
   }
   if (mpp.bydate) {
     links.sort(sortByDate);
+  } else {
+    links.sort(sortByName);
   }
+
   if (model.ownername !== '') {
     links.push({html:''});
     links.push({html:'<nobr class="create">Create new file</nobr>',
