@@ -2,8 +2,19 @@ var path = require('path');
 var fs = require('fs-ext');
 var lb = require('binary-search-bounds').ge;
 
-// DirCache represents a cache of the directory listing at
-// a specific path.
+// A dircache represents a cached listing of a specific large directory.
+// In Pencil Code, we use it to cache the large directory of all users.
+// It supports a few actions:
+//   rebuild(callback) - reads the directory on disk (which may take
+//       a sequence of async operations), then update the cache atomically
+//       at the end, calling callback with "true" if successful, "false"
+//       if not.  Importantly, if rebuild is requested when a rebuild
+//       is already in progress, it just shares the work and notifies
+//       all callbacks when the single job is done.
+//   update(name, callback) - updates a single entry (with one single
+//       async call to "stat"), then updates that single directory
+//       entry (adding, removing, or reordering it).
+
 exports.DirCache = function DirCache(path) {
   this.path = path;
   // List is sorted by-modification-date (newest first).
@@ -63,31 +74,6 @@ function byMtime(a, b) {
 }
 
 exports.DirCache.prototype = {
-  // Synchronous initialization.  To be used once, at the beginning.
-  initSync: function() {
-    var names = fs.readdirSync(this.path);
-    var list = [];
-    var map = {};
-    for (var j = 0; j < names.length; ++j) {
-      // Skip over names starting with .
-      if (names[i][0] == '.') {
-        continue;
-      }
-      var itempath = path.join(this.path, names[i]);
-      try {
-        var obj = encodeStat(names[i], fs.statSync(itempath));
-        list.push(obj);
-        map[names[i]] = obj;
-      } catch (e) {
-        // Ignore races, where a file disappears between dir and stat.
-        continue;
-      }
-    }
-    list.sort(byMtime);
-    this.list = list;
-    this.map = map;
-  },
-
   // Async rebuild.  Does the work, then refreshes atomically at the
   // end, then calls the callback.
   rebuild: function(callback) {
