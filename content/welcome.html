@@ -179,7 +179,6 @@ $(function() {
     params: { count: 12 },
     transformResult: function(response) {
       response = JSON.parse(response);
-      console.log(response.list);
       return {
         suggestions: response.list.filter(function(item) {
           return item.mode.indexOf('d') >= 0;
