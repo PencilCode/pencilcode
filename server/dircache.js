@@ -138,6 +138,11 @@ exports.DirCache.prototype = {
 
       // An individual item of work is to stat a single file.
       function doWork(name, next) {
+        if (name[0] == '.') {
+          // Skip past any dirs starting with a '.'
+          next();
+          return;
+        }
         inprogress += 1;
         var itempath = path.join(self.path, name);
         fs.stat(itempath, function(err, statobj) {
