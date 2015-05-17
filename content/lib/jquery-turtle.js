@@ -9611,7 +9611,7 @@ debug.init();
 // X Y coordinate showing support
 //////////////////////////////////////////////////////////////////////////
 (function() {
-  if (!debug.ide || (debug.ide.getOptions && !debug.ide.getOptions().panel)) {
+  if (!debug.ide) {
     // Only show the X-Y tip if inside a debugging IDE.
     return;
   }

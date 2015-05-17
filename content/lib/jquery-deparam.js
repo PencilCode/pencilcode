@@ -11,7 +11,7 @@
         global.deparam = deparam(jQuery); // assume jQuery is in global namespace
     }
 })(function ($) {
-    return function( params, coerce ) {
+    var deparam = function( params, coerce ) {
         var obj = {},
         coerce_types = { 'true': !0, 'false': !1, 'null': null };
 
@@ -102,4 +102,6 @@
 
         return obj;
     };
+    $.fn.deparam = $.deparam = deparam;
+    return deparam;
 });
