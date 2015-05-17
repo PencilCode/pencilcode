@@ -1300,7 +1300,14 @@ function handleDirLink(pane, linkname) {
     rotateModelLeft(true);
     return;
   }
-  var openfile = base + linkname.replace(/\/$/, '');
+  var openfile;
+  if (linkname == '#reload') {
+    openfile = base;
+    loadFileIntoPosition('left', openfile, true, true, function() {});
+    return;
+  } else {
+    openfile = base + linkname.replace(/\/$/, '');
+  }
   var isdir = /\/$/.test(linkname);
   loadFileIntoPosition('right', openfile, isdir, isdir,
     function() { rotateModelLeft(true); });
@@ -1311,7 +1318,7 @@ view.on('linger', function(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
   if (base.length) { base += '/'; }
-  if (linkname == '#new') {
+  if (/^#/.test(linkname)) {
     return;
   }
   var openfile = base + linkname.replace(/\/$/, '');
@@ -1924,30 +1931,41 @@ function renderDirectory(position) {
   var filenameslash = filename.length ? filename + '/' : '';
   // TODO: fix up visible URL to ensure slash.
   var links = [];
-  for (var j = 0; j < m.list.length; ++j) {
-    var name = m.list[j].name;
-    if (model.ownername === '' && filename === '') {
-      if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
-      links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
-    } else {
-      var label = name;
-      if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-      var href = '/home/' + filenameslash + label;
-      links.push({
-          html:label, name:name, link:label, href:href, mtime:m.list[j].mtime});
-    }
-  }
-  if (mpp.bydate) {
-    links.sort(sortByDate);
+  if (!m.list) {
+    links.push({
+      html: m.error || 'Network error',
+      link: '#reload'
+    });
   } else {
-    links.sort(sortByName);
-  }
-
-  if (model.ownername !== '') {
-    links.push({html:''});
-    links.push({html:'<nobr class="create">Create new file</nobr>',
-        link:'#new'});
+    for (var j = 0; j < m.list.length; ++j) {
+      var name = m.list[j].name;
+      if (model.ownername === '' && filename === '') {
+        if (m.list[j].mode.indexOf('d') < 0) { continue; }
+        var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
+        links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
+      } else {
+        var label = name;
+        if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
+        var href = '/home/' + filenameslash + label;
+        links.push({
+            html: label,
+            name: name,
+            link: label,
+            href: href,
+            mtime: m.list[j].mtime
+        });
+      }
+    }
+    if (mpp.bydate) {
+      links.sort(sortByDate);
+    } else {
+      links.sort(sortByName);
+    }
+    if (model.ownername !== '') {
+      links.push({html:''});
+      links.push({html:'<nobr class="create">Create new file</nobr>',
+          link:'#new'});
+    }
   }
   view.setPaneLinkText(pane, links, filename);
   updateTopControls(false);
