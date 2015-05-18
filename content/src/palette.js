@@ -40,10 +40,13 @@ function fieldmap(obj, map) {
 
 function expand(palette, thisname) {
   var replacement = !thisname ? '' : (thisname + '.');
+  function replacer(s) {
+    if (!s) return s;
+    return s.replace(/@/, replacement);
+  }
   return fieldmap(palette, {
-    block: function(s) {
-      return s.replace(/@/, replacement);
-    }
+    block: replacer,
+    expansion: replacer
   });
 }
 
