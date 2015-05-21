@@ -188,9 +188,8 @@ Roadmap
 Improvements we'd like to make in PencilCode are in several basic
 directions:
 
-1. Better Debugging.  That means highlighting lines as they run,
-   ultimately giving kids the ability to stop and step programs,
-   and visualize their program state (their variables).
+1. Better Debugging.  That ultimately means giving kids the ability to stop
+   and step programs, and visualize their program state (their variables).
 2. A Block Language.  That means something like blockly, or maybe
    something new.  The goal is to make it easy to use on the tablet
    while also making it easy for beginners to quickly build
