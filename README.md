@@ -8,6 +8,7 @@ git clone https://github.com/PencilCode/pencilcode.git
 cd pencilcode
 npm install
 grunt
+grunt devserver
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
@@ -80,14 +81,14 @@ How To Experiment with PencilCode
 To experiment with PencilCode, you will want to run a local
 copy of the site's frontend.
 
-To start the https version of the
-dev server (by default it runs on localhost:8008):
+To build and start the dev server (by default it runs on localhost:8008):
 
 <pre>
+grunt
 grunt devserver
 </pre>
 
-(Without the s it runs http instead of https.)
+(Use grunt sdevserver to run https instead of http.)
 
 To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to
 localhost.  For example, with chrome on OSX, add a couple aliases to
