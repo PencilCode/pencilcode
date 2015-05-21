@@ -127,7 +127,7 @@ PencilCode Internals
 ====================
 
 The structure of pencilcode is really simple.
-* It is a single HTML file `content/src/editor.html` that does all the work
+* It is a single HTML file `content/src/editor.html` that does all the work.
   All `pencilcode.net/edit/...` URLs resolve to this static file.
 * The javascript behind editor.html is in the `src/` directory (symlink
   to `content/src`).  These javascript files are combined and minified
@@ -167,7 +167,7 @@ The PencilCode editor is broken into three main pieces:
   we adapt it to use Google Drive for storage, the major work
   will be in this file.
 * `editor-view.js` is the UI for the development environement.
-  It knows how ot show directory listings, source code editors,
+  It knows how to show directory listings, source code editors,
   and framed run sandboxes.  Other UI affordances: login dialog
   box UI, a butter bar notification, and whizzy horizontal
   animated transitions.  The idea is that the view doesn't
