@@ -109,7 +109,7 @@ var debug = window.ide = {
     // frame when the whole IDE is framed.
     var embedded = /^frame\./.test(location.hostname);
     return {
-      panel: !embedded
+      panel: embedded ? 'auto' : true
     };
   }
 };

@@ -160,35 +160,34 @@ and copy.
 </div>
 </div>
 </body>
-<script>
-// Preload support.
-function loadusers(data) {
-  loadusers.data = data;
-  loadusers.callback && loadusers.callback(data);
-}
-loadusers.then = function(callback) {
-  if (loadusers.data) { callback(loadusers.data); }
-  else { loadusers.callback = callback; }
-}
-</script>
-<script src="/load/?callback=loadusers"></script>
 <script src="/lib/jquery.js"></script>
 <script src="/lib/jquery.autocomplete.min.js"></script>
 <script src="/lib/seedrandom.js"></script>
 <script>
 $(function() {
-loadusers.then(function(data) {
-  if (!data || data.directory != '/' || !data.list) return;
-  var users = data.list.filter(function(x) {
-      return /d/.test(x.mode); });
-  users.sort(function(a, b) { return b.mtime - a.mtime; });
-  var usernames = users.map(function(u) { return u.name; });
+
+(function() {
+  var usernames = {};
   $('#showlogin').css('opacity', 1);
   $('#user').on('change', validateUser);
   $('#user').autocomplete({
     autoSelectFirst: true,
     triggerSelectOnValidInput: false,
-    lookup: usernames,
+    serviceUrl: '/load/',
+    paramName: 'prefix',
+    preventBadQueries: false, // To allow exact-match probing.
+    params: { count: 12 },
+    transformResult: function(response) {
+      response = JSON.parse(response);
+      return {
+        suggestions: response.list.filter(function(item) {
+          return item.mode.indexOf('d') >= 0;
+        }).map(function(item) {
+          usernames[item.name] = true;
+          return { value: item.name }
+        })
+      };
+    },
     forceFixPosition: true,
     onSelect: function() { validateUser(); setTimeout(function() {
       if (!document.activeElement ||
@@ -199,7 +198,7 @@ loadusers.then(function(data) {
   });
   function validateUser(e) {
     var user = $('#user').val().toLowerCase().trim();
-    var found = usernames.indexOf(user) >= 0;
+    var found = usernames.hasOwnProperty(user);
     $('#asuser').text(found ? ' as ' + user : '');
     $('#login').prop('disabled', !found);
     return true;
@@ -244,7 +243,8 @@ loadusers.then(function(data) {
       $('#msg').text('Network error.');
     });
   }
-});
+})();
+
 // Demo Animation
 var index = 0;
 var count = 3;

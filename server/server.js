@@ -1,3 +1,8 @@
+//
+// The production server for pencilcode.
+// Just exposes serverbase, and does a setuid after serving starts.
+//
+
 var express = require('express'),
     path = require('path'),
     save = require('./save.js'),

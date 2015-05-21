@@ -182,6 +182,9 @@ window.pencilcode.view = {
       $('#middle').hide();
     }
   },
+  showToggleButton: function(enable) {
+    $('body').toggleClass('notoggletab', !enable);
+  },
   // Sets editable name.
   setNameText: function(s) {
     state.nameText = s;

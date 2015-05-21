@@ -1,5 +1,5 @@
 {
-  "name": "pencilcode-site",
+  "name": "pencilcode",
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/PencilCode/pencilcode-site",
   "dependencies": {
+    "binary-search-bounds": "^1.0.0",
     "body-parser": "latest",
     "debug": "latest",
     "dynamic.io": "latest",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "chai": "latest",
     "grunt": "latest",
+    "mocha": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",

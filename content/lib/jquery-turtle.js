@@ -368,6 +368,7 @@ THE SOFTWARE.
 //////////////////////////////////////////////////////////////////////////
 
 var undefined = void 0,
+    _window = this,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
     interrupted = false,
@@ -752,8 +753,8 @@ function getElementTranslation(elem) {
 
 // Reads out the 2x3 transform matrix of the given element.
 function readTransformMatrix(elem) {
-  var ts = (window.getComputedStyle ?
-      window.getComputedStyle(elem)[transform] :
+  var ts = (_window.getComputedStyle ?
+      _window.getComputedStyle(elem)[transform] :
       $.css(elem, 'transform'));
   if (!ts || ts === 'none') {
     return null;
@@ -782,7 +783,7 @@ function readTransformOrigin(elem, wh) {
       elem.style[name] = swapout[name];
     }
   }
-  var gcs = (window.getComputedStyle ?  window.getComputedStyle(elem) : null),
+  var gcs = (_window.getComputedStyle ?  _window.getComputedStyle(elem) : null),
       origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
   if (hidden) {
     for (name in swapout) {
@@ -981,12 +982,12 @@ function getTurtleOrigin(elem, inverseParent, extra) {
 
 function wh() {
   // Quirks-mode compatible window height.
-  return window.innerHeight || $(window).height();
+  return _window.innerHeight || $(_window).height();
 }
 
 function ww() {
   // Quirks-mode compatible window width.
-  return window.innerWidth || $(window).width();
+  return _window.innerWidth || $(_window).width();
 }
 
 function dh() {
@@ -1013,7 +1014,7 @@ function getPageGbcr(elem) {
     return makeGbcrLTWH(elem.pageX, elem.pageY, 0, 0);
   } else if ($.isWindow(elem)) {
     return makeGbcrLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(_window).scrollLeft(), $(_window).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9) {
     return makeGbcrLTWH(0, 0, dw(), dh());
   } else if (!('getBoundingClientRect' in elem)) {
@@ -1057,10 +1058,10 @@ function polyMatchesGbcr(poly, gbcr) {
 function readPageGbcr() {
   var raw = this.getBoundingClientRect();
   return {
-    top: raw.top + window.pageYOffset,
-    bottom: raw.bottom + window.pageYOffset,
-    left: raw.left + window.pageXOffset,
-    right: raw.right + window.pageXOffset,
+    top: raw.top + _window.pageYOffset,
+    bottom: raw.bottom + _window.pageYOffset,
+    left: raw.left + _window.pageXOffset,
+    right: raw.right + _window.pageXOffset,
     width: raw.width,
     height: raw.height
   };
@@ -1145,7 +1146,7 @@ function convertLocalXyToPageCoordinates(elem, localxy) {
 function getCenterInPageCoordinates(elem) {
   if ($.isWindow(elem)) {
     return getRoundedCenterLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(_window).scrollLeft(), $(_window).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9 || elem == document.body) {
     return getRoundedCenterLTWH(0, 0, dw(), dh());
   }
@@ -1180,7 +1181,7 @@ function polyToVectorsOffset(poly, offset) {
 function getCornersInPageCoordinates(elem, untransformed) {
   if ($.isWindow(elem)) {
     return getStraightRectLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(_window).scrollLeft(), $(_window).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9) {
     return getStraightRectLTWH(0, 0, dw(), dh());
   }
@@ -1227,7 +1228,7 @@ function scrollWindowToDocumentPosition(pos, limit) {
       b = $('body'),
       dw = b.width(),
       dh = b.height(),
-      w = $(window);
+      w = $(_window);
   if (tx > dw - ww2) { tx = dw - ww2; }
   if (tx < ww2) { tx = ww2; }
   if (ty > dh - wh2) { ty = dh - wh2; }
@@ -1634,7 +1635,7 @@ function getTurtleDrawingCanvas() {
   surface.insertBefore(globalDrawing.canvas, surface.firstChild);
   resizecanvas();
   pollbodysize(resizecanvas);
-  $(window).resize(resizecanvas);
+  $(_window).resize(resizecanvas);
   return globalDrawing.canvas;
 }
 
@@ -1682,8 +1683,8 @@ function sizexy() {
   // Using innerHeight || $(window).height() deals with quirks-mode.
   var b = $('body');
   return [
-    Math.max(b.outerWidth(true), window.innerWidth || $(window).width()),
-    Math.max(b.outerHeight(true), window.innerHeight || $(window).height())
+    Math.max(b.outerWidth(true), _window.innerWidth || $(_window).width()),
+    Math.max(b.outerHeight(true), _window.innerHeight || $(_window).height())
   ];
 }
 
@@ -2031,7 +2032,6 @@ function flushPenState(elem, state, corner) {
     if (path[0].length) { path[0].length = 0; }
     if (corner) {
       if (!style) {
-        if (window.buggy) console.trace('clearing the retracing path');
         // pen null will clear the retracing path too.
         if (corners.length > 1) corners.length = 1;
         if (corners[0].length) corners[0].length = 0;
@@ -2183,7 +2183,7 @@ function touchesPixel(elem, color) {
   }
   octx.restore();
   // Now examine the results and look for alpha > 0%.
-  data = octx.getImageData(0, 0, w, h).data;
+  var data = octx.getImageData(0, 0, w, h).data;
   if (!rgba || rgba[3] == 0) {
     // Handle the "looking for any color" and "transparent" cases.
     var wantcolor = !rgba;
@@ -2645,7 +2645,7 @@ function apiUrl(url, topdir) {
       result = link.protocol + '//' + link.host + '/' + topdir + '/' +
         link.pathname.replace(/\/[^\/]*(?:\/|$)/, '') + link.search + link.hash;
     }
-  } else if (isPencilHost(window.location.hostname)) {
+  } else if (isPencilHost(_window.location.hostname)) {
     // Proxy offdomain requests to avoid CORS issues.
     result = '/proxy/' + result;
   }
@@ -2655,7 +2655,7 @@ function apiUrl(url, topdir) {
 function imgUrl(url) {
   if (/\//.test(url)) { return url; }
   url = '/img/' + url;
-  if (isPencilHost(window.location.hostname)) { return url; }
+  if (isPencilHost(_window.location.hostname)) { return url; }
   return '//pencil.io' + url;
 }
 // Retrieves the pencil code login cookie, if there is one.
@@ -3082,7 +3082,7 @@ var Webcam = (function(_super) {
             $(v).off('play.capture' + k);
             next();
           });
-          v.src = window.URL.createObjectURL(stream);
+          v.src = _window.URL.createObjectURL(stream);
         }
       }, function() {
         next();
@@ -3398,14 +3398,14 @@ function focusWindowIfFirst() {
   try {
     // If we are in a frame with access to a parent with an activeElement,
     // then try to blur it (as is common inside the pencilcode IDE).
-    window.parent.document.activeElement.blur();
+    _window.parent.document.activeElement.blur();
   } catch (e) {}
-  window.focus();
+  _window.focus();
 }
 
 // Construction of keyCode names.
 var keyCodeName = (function() {
-  var ua = typeof window !== 'undefined' ? window.navigator.userAgent : '',
+  var ua = typeof _window !== 'undefined' ? _window.navigator.userAgent : '',
       isOSX = /OS X/.test(ua),
       isOpera = /Opera/.test(ua),
       maybeFirefox = !/like Gecko/.test(ua) && !isOpera,
@@ -3585,9 +3585,9 @@ var pressedKey = (function() {
     resetPressedState();
     for (var name in eventMap) {
       if (turnon) {
-        window.addEventListener(name, eventMap[name], true);
+        _window.addEventListener(name, eventMap[name], true);
       } else {
-        window.removeEventListener(name, eventMap[name]);
+        _window.removeEventListener(name, eventMap[name]);
       }
     }
   }
@@ -3831,7 +3831,7 @@ function getGlobalInstrument() {
 
 // Tests for the presence of HTML5 Web Audio (or webkit's version).
 function isAudioPresent() {
-  return !!(window.AudioContext || window.webkitAudioContext);
+  return !!(_window.AudioContext || _window.webkitAudioContext);
 }
 
 // All our audio funnels through the same AudioContext with a
@@ -3842,7 +3842,7 @@ function getAudioTop() {
   if (!isAudioPresent()) {
     return null;
   }
-  var ac = new (window.AudioContext || window.webkitAudioContext);
+  var ac = new (_window.AudioContext || _window.webkitAudioContext);
   getAudioTop.audioTop = {
     ac: ac,
     wavetable: makeWavetable(ac),
@@ -5378,7 +5378,7 @@ var Instrument = (function() {
         o.type = wavename;
       }
     } catch(e) {
-      if (window.console) { window.console.log(e); }
+      if (_window.console) { _window.console.log(e); }
       // If unrecognized, just use square.
       // TODO: support "noise" or other wave shapes.
       o.type = 'square';
@@ -5661,7 +5661,7 @@ function globalhelp(obj) {
     helpwrite('This is an unassigned value.');
     return helpok;
   }
-  if (obj === window) {
+  if (obj === _window) {
     helpwrite('The global window object represents the browser window.');
     return helpok;
   }
@@ -5681,7 +5681,7 @@ function globalhelp(obj) {
   helplist = [];
   for (var name in helptable) {
     if (helptable[name].helptext && helptable[name].helptext.length &&
-        (!(name in window) || typeof(window[name]) == 'function')) {
+        (!(name in _window) || typeof(_window[name]) == 'function')) {
       helplist.push(name);
     }
   }
@@ -5910,7 +5910,7 @@ function wrapwindowevent(name, helptext) {
             : null;
     if (forKey) { focusWindowIfFirst(); }
     if (fn == null && typeof(d) == 'function') { fn = d; d = null; }
-    $(window).on(name + '.turtleevent', null, d, !filter ? fn : function(e) {
+    $(_window).on(name + '.turtleevent', null, d, !filter ? fn : function(e) {
       if (interrupted) return;
       if ($(e.target).closest(filter).length) { return; }
       return fn.apply(this, arguments);
@@ -5919,7 +5919,7 @@ function wrapwindowevent(name, helptext) {
 }
 
 function windowhasturtleevent() {
-  var events = $._data(window, 'events');
+  var events = $._data(_window, 'events');
   if (!events) return false;
   for (var type in events) {
     var entries = events[type];
@@ -6411,7 +6411,7 @@ var turtlefn = {
       if (!nlocalxy) {
         nlocalxy = computePositionAsLocalOffset(elem, targetpos);
       }
-      dir = radiansToDegrees(Math.atan2(-nlocalxy[0], -nlocalxy[1]));
+      var dir = radiansToDegrees(Math.atan2(-nlocalxy[0], -nlocalxy[1]));
       ts = readTurtleTransform(elem, true);
       if (!(limit === null)) {
         r = convertToRadians(ts.rot);
@@ -6460,40 +6460,39 @@ var turtlefn = {
       cc.appear(j);
 
       //copy over turtle data:
-      olddata = getTurtleData(this);
-      newdata = getTurtleData(t2);
-      for (k in olddata) { newdata[k] = olddata[k]; }
+      var olddata = getTurtleData(this);
+      var newdata = getTurtleData(t2);
+      for (var k in olddata) { newdata[k] = olddata[k]; }
 
       // copy over style attributes:
       t2.attr('style', this.attr('style'));
 
       // copy each thing listed in css hooks:
-      for(property in $.cssHooks) {
+      for (var property in $.cssHooks) {
         var value = this.css(property);
         t2.css(property, value);
       }
 
       // copy attributes, just in case:
       var attrs = this.prop("attributes");
-      //console.log(attrs)
-      for(i in attrs) {
+      for (var i in attrs) {
         t2.attr(attrs[i].name, attrs[i].value);
       }
 
       // copy the canvas:
       var t2canvas = t2.canvas();
       var tcanvas = this.canvas();
-      if(t2canvas && tcanvas) {
+      if (t2canvas && tcanvas) {
         t2canvas.width = tcanvas.width;
         t2canvas.height = tcanvas.height;
-        newCanvasContext = t2canvas.getContext('2d');
+        var newCanvasContext = t2canvas.getContext('2d');
         newCanvasContext.drawImage(tcanvas, 0, 0)
       }
 
       t2.show();
 
       cc.resolve(j);
-    }); // pass in our current clone, otherwise things get applied to the wrong clone
+    }); // pass in our current clone, otherwise things apply to the wrong clone
     sync(t2, this);
     return t2;
   }),
@@ -6808,7 +6807,7 @@ var turtlefn = {
             complete();
           }, 250);
         } catch (e) {
-          console.log(e);
+          if (_window.console) { _window.console.log(e); }
           complete();
         }
       });
@@ -6974,7 +6973,7 @@ var turtlefn = {
       if (state.drawOnCanvas) {
         sync(elem, state.drawOnCanvas);
       }
-      if (!canvas || canvas === window) {
+      if (!canvas || canvas === _window) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {
         state.drawOnCanvas = canvas.canvas();
@@ -7081,7 +7080,7 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       if ($.isWindow(elem) || elem.nodeType === 9) {
-        window.location.reload();
+        _window.location.reload();
         cc.resolve(j);
         return;
       }
@@ -7658,7 +7657,7 @@ var dollar_turtle_methods = {
     // Disable all input.
     $('.turtleinput').prop('disabled', true);
     // Detach all event handlers on the window.
-    $(window).off('.turtleevent');
+    $(_window).off('.turtleevent');
     // Low-level detach all jQuery events
     $('*').not('#_testpanel *').map(
        function(i, e) { $._data(e, 'events', null) });
@@ -8116,7 +8115,7 @@ var dollar_turtle_methods = {
   ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
        "the given URL, calling callback when done."],
   function loadscript(url, callback) {
-    if (window.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
+    if (_window.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
       CoffeeScript.load(url, callback);
     } else {
       $.getScript(url, callback);
@@ -8272,18 +8271,18 @@ $.turtle = function turtle(id, options) {
   if (!('see' in options) || options.see) {
     exportsee();
     exportedsee = true;
-    if (window.addEventListener) {
-      window.addEventListener('error', see);
+    if (_window.addEventListener) {
+      _window.addEventListener('error', see);
     } else {
-      window.onerror = see;
+      _window.onerror = see;
     }
     // Set up an alias.
-    window.log = see;
+    _window.log = see;
   }
   // Copy $.turtle.* functions into global namespace.
   if (!('functions' in options) || options.functions) {
-    window.printpage = window.print;
-    $.extend(window, dollar_turtle_methods);
+    _window.printpage = _window.print;
+    $.extend(_window, dollar_turtle_methods);
   }
   // Set default turtle speed
   globaldefaultspeed(('defaultspeed' in options) ?
@@ -8324,7 +8323,7 @@ $.turtle = function turtle(id, options) {
   if (!('ids' in options) || options.ids) {
     turtleids(options.idprefix);
     if (selector && id) {
-      window[id] = selector;
+      _window[id] = selector;
     }
   }
   // Set up test console.
@@ -8350,7 +8349,7 @@ $.turtle = function turtle(id, options) {
     }
     // Return an eval loop hook string if 'see' is exported.
     if (exportedsee) {
-      if (window.CoffeeScript) {
+      if (_window.CoffeeScript) {
         return "see.init(eval(see.cs))";
       } else {
         return see.here;
@@ -8393,9 +8392,9 @@ function copyhelp(method, fname, extrahelp, globalfn) {
 function globalizeMethods(thisobj, fnames) {
   var replaced = [];
   for (var fname in fnames) {
-    if (fnames.hasOwnProperty(fname) && !(fname in window)) {
+    if (fnames.hasOwnProperty(fname) && !(fname in _window)) {
       replaced.push(fname);
-      window[fname] = (function(fname) {
+      _window[fname] = (function(fname) {
         var method = thisobj[fname], target = thisobj;
         return copyhelp(method, fname, extrahelp,
             (function globalized() { /* Use parentheses to call a function */
@@ -8409,7 +8408,7 @@ function globalizeMethods(thisobj, fnames) {
 function clearGlobalTurtle() {
   global_turtle = null;
   for (var j = 0; j < global_turtle_methods.length; ++j) {
-    delete window[global_turtle_methods[j]];
+    delete _window[global_turtle_methods[j]];
   }
   global_turtle_methods.length = 0;
 }
@@ -8424,10 +8423,10 @@ $.cleanData = function(elems) {
       state.stream.stop();
     }
     // Undefine global variablelem.
-    if (elem.id && window[elem.id] && window[elem.id].jquery &&
-        window[elem.id].length === 1 &&
-        window[elem.id][0] === elem) {
-      delete window[elem.id];
+    if (elem.id && _window[elem.id] && _window[elem.id].jquery &&
+        _window[elem.id].length === 1 &&
+        _window[elem.id][0] === elem) {
+      delete _window[elem.id];
     }
     // Clear global turtlelem.
     if (elem === global_turtle) {
@@ -8822,9 +8821,9 @@ function nameToImg(name, defaultshape) {
     var hostname = absoluteUrlObject(name).hostname;
     // Use proxy to load image if the image is offdomain but the page is on
     // a pencil host (with a proxy).
-    if (!isPencilHost(hostname) && isPencilHost(window.location.hostname)) {
-      name = window.location.protocol + '//' +
-             window.location.host + '/proxy/' + absoluteUrl(name);
+    if (!isPencilHost(hostname) && isPencilHost(_window.location.hostname)) {
+      name = _window.location.protocol + '//' +
+             _window.location.host + '/proxy/' + absoluteUrl(name);
     }
     return {
       url: name,
@@ -8908,8 +8907,8 @@ function hatchone(name, container, defaultshape) {
   if (isID) {
     result.attr('id', name);
     // Update global variable unless there is a conflict.
-    if (attaching_ids && !window.hasOwnProperty(name)) {
-      window[name] = result;
+    if (attaching_ids && !_window.hasOwnProperty(name)) {
+      _window[name] = result;
     }
   }
   // Move it to the center of the document and export the name as a global.
@@ -9027,11 +9026,11 @@ function globaltick(rps, fn) {
     rps = 1;
   }
   if (tickinterval) {
-    window.clearInterval(tickinterval);
+    _window.clearInterval(tickinterval);
     tickinterval = null;
   }
   if (fn && rps) {
-    tickinterval = window.setInterval(
+    tickinterval = _window.setInterval(
       function() {
         // Set default speed to Infinity within tick().
         try {
@@ -9060,7 +9059,7 @@ function turtleids(prefix) {
     prefix = '';
   }
   $('[id]').each(function(j, item) {
-    window[prefix + item.id] = $('#' + item.id);
+    _window[prefix + item.id] = $('#' + item.id);
   });
   attaching_ids = true;
 }
@@ -9073,7 +9072,7 @@ function turtleevents(prefix) {
     prefix = 'last';
   }
   if (eventsaver) {
-    $(window).off($.map(eventfn, function(x,k) { return k; }).join(' '),
+    $(_window).off($.map(eventfn, function(x,k) { return k; }).join(' '),
         eventsaver);
   }
   if (prefix || prefix === '') {
@@ -9085,20 +9084,20 @@ function turtleevents(prefix) {
       }
       for (j = 0; j < names.length; ++j) {
         var name = names[j];
-        old = window[name], prop;
+        old = _window[name], prop;
         if (old && old.__proto__ === e.__proto__) {
           for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
           for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
         } else {
-          window[name] = e;
+          _window[name] = e;
         }
       }
     });
-    window[prefix + 'mouse'] = new $.Event();
+    _window[prefix + 'mouse'] = new $.Event();
     for (var k in eventfn) {
-      window[prefix + k] = new $.Event();
+      _window[prefix + k] = new $.Event();
     }
-    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
+    $(_window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
         eventsaver);
   }
 }
@@ -9110,15 +9109,15 @@ function turtleevents(prefix) {
 function autoScrollAfter(f) {
   var slop = 10,
       seen = autoScrollBottomSeen(),
-      stick = ($(window).height() + $(window).scrollTop() + slop >=
+      stick = ($(_window).height() + $(_window).scrollTop() + slop >=
           $('html').outerHeight(true));
   f();
   if (stick) {
-    var scrollPos = $(window).scrollTop(),
+    var scrollPos = $(_window).scrollTop(),
         advancedScrollPos = Math.min(seen,
-            $('html').outerHeight(true) - $(window).height());
+            $('html').outerHeight(true) - $(_window).height());
     if (advancedScrollPos > scrollPos) {
-      $(window).scrollTop(advancedScrollPos);
+      $(_window).scrollTop(advancedScrollPos);
     }
   }
 }
@@ -9137,7 +9136,7 @@ function autoScrollBottomSeen() {
     var offset = $('body').offset();
     var doctop = offset ? offset.top : 8;
     autoScrollState.bottomSeen = Math.min(
-        $(window).height() + $(window).scrollTop(),
+        $(_window).height() + $(_window).scrollTop(),
         $('body').height() + doctop);
   }
   return autoScrollState.bottomSeen;
@@ -9146,9 +9145,9 @@ function autoScrollBottomSeen() {
 // location after running the passed function.  (E.g., to allow focusing
 // a control without autoscrolling.)
 function undoScrollAfter(f) {
-  var scrollPos = $(window).scrollTop();
+  var scrollPos = $(_window).scrollTop();
   f();
-  $(window).scrollTop(scrollPos);
+  $(_window).scrollTop(scrollPos);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -9575,7 +9574,7 @@ var debug = {
     try {
       if (parent && parent.ide) {
         this.ide = parent.ide;
-        this.ide.bindframe(window);
+        this.ide.bindframe(_window);
         this.attached = true;
       }
     } catch(e) {
@@ -9583,8 +9582,8 @@ var debug = {
       this.attached = false;
     }
     if (this.attached) {
-      if (window.addEventListener) {
-        window.addEventListener('error', function(event) {
+      if (_window.addEventListener) {
+        _window.addEventListener('error', function(event) {
           // An error event will highlight the error line.
           debug.reportEvent('error', [event]);
         });
@@ -9611,7 +9610,7 @@ debug.init();
 // X Y coordinate showing support
 //////////////////////////////////////////////////////////////////////////
 (function() {
-  if (!debug.ide || (debug.ide.getOptions && !debug.ide.getOptions().panel)) {
+  if (!debug.ide) {
     // Only show the X-Y tip if inside a debugging IDE.
     return;
   }
@@ -9638,7 +9637,7 @@ debug.init();
   }
   var linestart = null, linecanvas = null, lineend = null,
       xa = 0, ya = 0, xb = 0, yb = 0, xt, yt, dr, ar;
-  $(window).on('mousedown mouseup mousemove keydown', function(e) {
+  $(_window).on('mousedown mouseup mousemove keydown', function(e) {
     if (e.type == 'keydown') {
       if (e.which < 27) return;
       if (linecanvas) linecanvas.remove();
@@ -9765,16 +9764,16 @@ debug.init();
       var pos = { left: '', top: '', right: '', bottom: '' };
       if (p.pageX + 5 < s.pageX) {
         pos.left = Math.max(
-            p.pageX - $(window).scrollLeft() - location.outerWidth() - 5, 2);
+            p.pageX - $(_window).scrollLeft() - location.outerWidth() - 5, 2);
       } else {
-        pos.left = Math.min(p.pageX - $(window).scrollLeft() + 5,
+        pos.left = Math.min(p.pageX - $(_window).scrollLeft() + 5,
             $(document).width() - location.outerWidth() - 2);
       }
       if (p.pageY + 5 < s.pageY) {
         pos.top = Math.max(
-            p.pageY - $(window).scrollTop() - location.outerHeight() - 5, 2);
+            p.pageY - $(_window).scrollTop() - location.outerHeight() - 5, 2);
       } else {
-        pos.top = Math.min(p.pageY - $(window).scrollTop() + 5,
+        pos.top = Math.min(p.pageY - $(_window).scrollTop() + 5,
             $(document).height() - location.outerHeight() - 2);
       }
       location.css(pos);
@@ -9816,14 +9815,15 @@ var linestyle = 'position:relative;display:block;font-family:monospace;' +
 var logdepth = 5;
 var autoscroll = false;
 var logelement = 'body';
-var panel = false;
+var panel = 'auto';
 try {
   // show panel by default if framed inside a an ide,
   // and if the screen is big enough (i.e., omit mobile clients).
-  panel = (window.self !== window.top &&
-           screen.width >= 800 && screen.height >= 600 &&
-           parent && parent.ide && parent.ide.getOptions().panel);
+  if (_window.self !== _window.top &&
+      screen.width >= 800 && screen.height >= 600 &&
+      parent && parent.ide) { panel = parent.ide.getOptions().panel; }
 } catch(e) {}
+var consolelog = panel;
 var see;  // defined below.
 var paneltitle = '';
 var logconsole = null;
@@ -9831,10 +9831,10 @@ var uselocalstorage = '_loghistory';
 var panelheight = 50;
 var currentscope = '';
 var scopes = {
-  '':  { e: window.eval, t: window },
-  top: { e: window.eval, t: window }
+  '':  { e: _window.eval, t: _window },
+  top: { e: _window.eval, t: _window }
 };
-var coffeescript = window.CoffeeScript;
+var coffeescript = _window.CoffeeScript;
 var seejs = '(function(){return eval(arguments[0]);})';
 
 function init(options) {
@@ -9862,13 +9862,17 @@ function init(options) {
   if ('coffee' in options) { coffeescript = options.coffee; }
   if ('abbreviate' in options) { abbreviate = options.abbreviate; }
   if ('consolehook' in options) { consolehook = options.consolehook; }
+  if ('consolelog' in options) { consolelog = options.consolelog; }
   if ('noconflict' in options) { noconflict(options.noconflict); }
   if (panel) {
     // panel overrides element and autoscroll.
     logelement = '#_testlog';
     autoscroll = '#_testscroll';
-    pulljQuery(tryinitpanel);
+    if (panel === true) {
+      startinitpanel();
+    }
   }
+  if (consolelog === true) { initconsolelog(); }
   return scope();
 }
 
@@ -9901,7 +9905,7 @@ var initialvardecl = new RegExp(
 
 function barecs(s) {
   // Compile coffeescript in bare mode.
-  var compiler = coffeescript || window.CoffeeScript;
+  var compiler = coffeescript || _window.CoffeeScript;
   var compiled = compiler.compile(s, {bare:1});
   if (compiled) {
     // Further strip top-level var decls out of the coffeescript so
@@ -9928,22 +9932,22 @@ function exportsee() {
   see.js = seejs;
   see.cs = '(function(){return eval(' + seepkg + '.barecs(arguments[0]));})';
   see.version = version;
-  window[seepkg] = see;
+  _window[seepkg] = see;
 }
 
 function noteoldvalue(name) {
   return {
     name: name,
-    has: window.hasOwnProperty(name),
-    value: window[name]
+    has: _window.hasOwnProperty(name),
+    value: _window[name]
   };
 }
 
 function restoreoldvalue(old) {
   if (!old.has) {
-    delete window[old.name];
+    delete _window[old.name];
   } else {
-    window[old.name] = old.value;
+    _window[old.name] = old.value;
   }
 }
 
@@ -10007,7 +10011,7 @@ var queue = [];
 
 see = function see() {
   if (logconsole && typeof(logconsole.log) == 'function') {
-    logconsole.log.apply(window.console, arguments);
+    logconsole.log.apply(_window.console, arguments);
   }
   var args = Array.prototype.slice.call(arguments);
   queue.push('<samp class="_log">');
@@ -10356,12 +10360,12 @@ function expand(prefix, obj, depth, output) {
   }
 }
 function initlogcss() {
-  if (!addedcss && !window.document.getElementById('_logcss')) {
-    var style = window.document.createElement('style');
+  if (!addedcss && !_window.document.getElementById('_logcss')) {
+    var style = _window.document.createElement('style');
     style.id = '_logcss';
     style.innerHTML = (linestyle ? 'samp._log{' +
         linestyle + '}' : '') + logcss;
-    window.document.head.appendChild(style);
+    _window.document.head.appendChild(style);
     addedcss = true;
   }
 }
@@ -10418,7 +10422,7 @@ function flushqueue() {
   var elt = aselement(logelement, null);
   if (elt && elt.appendChild && queue.length) {
     initlogcss();
-    var temp = window.document.createElement('samp');
+    var temp = _window.document.createElement('samp');
     temp.innerHTML = queue.join('');
     queue.length = 0;
     var complete = stickscroll();
@@ -10428,6 +10432,9 @@ function flushqueue() {
     complete();
   }
   if (!retrying && queue.length) {
+    if (panel == 'auto') {
+      startinitpanel();
+    }
     retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
   } else if (retrying && !queue.length) {
     clearTimeout(retrying);
@@ -10439,6 +10446,7 @@ function flushqueue() {
 // TEST PANEL SUPPORT
 // ---------------------------------------------------------------------
 var addedpanel = false;
+var initpanelstarted = false;
 var inittesttimer = null;
 var abbreviate = [{}.undefined];
 var consolehook = null;
@@ -10463,7 +10471,7 @@ function promptcaret(color) {
   return '<samp class="_logcaret" style="color:' + color + ';"></samp>';
 }
 function getSelectedText(){
-    if(window.getSelection) { return window.getSelection().toString(); }
+    if(_window.getSelection) { return _window.getSelection().toString(); }
     else if(document.getSelection) { return document.getSelection(); }
     else if(document.selection) {
         return document.selection.createRange().text; }
@@ -10479,7 +10487,7 @@ function readlocalstorage() {
   }
   var state = { height: panelheight, history: [] }, result;
   try {
-    result = window.JSON.parse(window.localStorage[uselocalstorage]);
+    result = _window.JSON.parse(_window.localStorage[uselocalstorage]);
   } catch(e) {
     result = noLocalStorage || {};
   }
@@ -10510,14 +10518,32 @@ function updatelocalstorage(state) {
   }
   if (changed) {
     try {
-      window.localStorage[uselocalstorage] = window.JSON.stringify(stored);
+      _window.localStorage[uselocalstorage] = _window.JSON.stringify(stored);
     } catch(e) {
       noLocalStorage = stored;
     }
   }
 }
 function wheight() {
-  return window.innerHeight || $(window).height();
+  return _window.innerHeight || $(_window).height();
+}
+function initconsolelog() {
+  try {
+    if (consolelog && _window.console && !_window.console._log &&
+        'function' == typeof _window.console.log) {
+      var _log = _window.console._log = _window.console.log;
+      _window_.console.log = function log() {
+        _log.apply(this, arguments);
+        see.apply(this, arguments);
+      }
+    }
+  } catch(e) { }
+}
+function startinitpanel() {
+  if (!initpanelstarted) {
+    initpanelstarted = true;
+    pulljQuery(tryinitpanel);
+  }
 }
 function tryinitpanel() {
   if (addedpanel) {
@@ -10530,7 +10556,8 @@ function tryinitpanel() {
     }
     $('#_testpanel').show();
   } else {
-    if (!window.document.getElementById('_testlog') && window.document.body) {
+    if (!_window.document.getElementById('_testlog') && _window.document.body) {
+      initconsolelog();
       initlogcss();
       var state = readlocalstorage();
       var titlehtml = (paneltitle ? formattitle(paneltitle) : '');
@@ -10660,7 +10687,7 @@ function tryinitpanel() {
           }
           if (e.type == 'mouseup' || e.type == 'blur' ||
               e.type == 'mousemove' && e.which != dragwhich) {
-            $(window).off('mousemove mouseup blur', dragfunc);
+            $(_window).off('mousemove mouseup blur', dragfunc);
             if (document.releaseCapture) { document.releaseCapture(); }
             if ($('#_testpanel').height() != state.height) {
               state.height = $('#_testpanel').height();
@@ -10668,7 +10695,7 @@ function tryinitpanel() {
             }
           }
         };
-        $(window).on('mousemove mouseup blur', dragfunc);
+        $(_window).on('mousemove mouseup blur', dragfunc);
         return false;
       });
       $('#_testpanel').on('mouseup', function(e) {
@@ -10695,14 +10722,14 @@ function transparentHull(image, threshold) {
   if (!threshold) threshold = 0;
   c.width = image.width;
   c.height = image.height;
-  ctx = c.getContext('2d');
+  var ctx = c.getContext('2d');
   ctx.drawImage(image, 0, 0);
   return transparentCanvasHull(c, threshold);
 }
 
 function transparentCanvasHull(canvas, threshold) {
   var ctx = canvas.getContext('2d');
-  data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
   var hull = [];
   var intthresh = 256 * threshold;
   var first, last, prevfirst = Infinity, prevlast = -1;
@@ -10734,7 +10761,7 @@ function transparentCanvasHull(canvas, threshold) {
 function eraseOutsideHull(canvas, hull) {
   var ctx = canvas.getContext('2d'),
       w = canvas.width,
-      h = canvas.height
+      h = canvas.height,
       j = 0;
   ctx.save();
   // Erase everything outside clipping region.
@@ -10763,4 +10790,4 @@ function scalePolygon(poly, sx, sy, tx, ty) {
   }
 }
 
-})(jQuery);
+}).call(this, this.jQuery);

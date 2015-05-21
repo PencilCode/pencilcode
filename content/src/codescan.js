@@ -51,13 +51,10 @@ function stripCSMultiline(code) {
 
 function coffeeObjects(code) {
   code = stripCSMultiline(code);
-  console.log('stripped', code);
   var lines = code.split('\n');
   var result = [];
   for (var j = 0; j < lines.length; ++j) {
-    console.log('matching', lines[j]);
     var match = /^\s*(\w+)\s*=\s*new\s+(\w+)(.*)$/.exec(lines[j]);
-    console.log('match', match);
     if (match) {
       result.push({
         name: match[1],
@@ -90,7 +87,6 @@ function jsObjects(code) {
 function scanObjects(language, code) {
   var objects;
   if (/coffee/.test(language)) {
-    console.log('doing coffeeObjects');
     objects = coffeeObjects(code);
   } else if (/js|javascript/.test(language)) {
     objects = jsObjects(code);
@@ -113,7 +109,6 @@ function scanObjects(language, code) {
       name: obj.name
     });
   }
-  console.log('scanned', result);
   return result;
 }
 

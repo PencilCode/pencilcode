@@ -46,22 +46,26 @@ describe('new user', function() {
     _ph.exit();
   });
   it('should serve static editor HTML', function(done) {
-    // The #new hash is the magic signup URL: it should
-    // show the "Create account" dialog.
-    _page.open('http://pencilcode.net.dev/edit/intro#new',
-        function(err, status) {
-      assert.ifError(err);
-      assert.equal(status, 'success');
-      _page.evaluate(function() {
-        // Inject a script that clears the login cookie for a clean start.
-        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        // And also clear localStorage for this site.
-        localStorage.clear();
-      }, function(err) {
+    // Give a few milliseconds before opening this page: it seems
+    // to help avoid crashing phantomjs.
+    setTimeout(function() {
+      // The #new hash is the magic signup URL: it should
+      // show the "Create account" dialog.
+      _page.open('http://pencilcode.net.dev/edit/intro#new',
+          function(err, status) {
         assert.ifError(err);
-        done();
+        assert.equal(status, 'success');
+        _page.evaluate(function() {
+          // Inject a script that clears the login cookie for a clean start.
+          document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+          // And also clear localStorage for this site.
+          localStorage.clear();
+        }, function(err) {
+          assert.ifError(err);
+          done();
+        });
       });
-    });
+    }, 100);
   });
   it('should load code', function(done) {
     asyncTest(_page, one_step_timeout, null, null, function() {
@@ -133,7 +137,7 @@ describe('new user', function() {
     }, function() {
       // Wait for the info prompt to show a message without "privacy.html"
       if (!$('.info').is(':visible')) return;
-      if ($('.info').text().match(/privacy.html/)) return;
+      if ($('.info').html().indexOf('privacy.html') >= 0) return;
       return {
         infotext: $('.info').text()
       };
@@ -153,6 +157,7 @@ describe('new user', function() {
       // Wait for the info prompt to show a message without "zkkg"
       if (!$('.info').is(':visible')) return;
       if ($('.info').text().match(/zkkg/)) return;
+      if ($('.info').html().indexOf('privacy.html') >= 0) return;
       return {
         infotext: $('.info').text()
       };
@@ -172,6 +177,7 @@ describe('new user', function() {
       // Wait for the info prompt to show a message without "too long"
       if (!$('.info').is(':visible')) return;
       if ($('.info').text().match(/too long/)) return;
+      if ($('.info').html().indexOf('privacy.html') >= 0) return;
       return {
         infotext: $('.info').text()
       };
@@ -190,7 +196,8 @@ describe('new user', function() {
     }, function() {
       // Wait for the info prompt to show a message without "zkkg"
       if (!$('.info').is(':visible')) return;
-      if ($('.info').text().match(/zkkg/)) return {poll:true, msg:$('.info').text()};
+      if ($('.info').text().match(/zkkg/)) return;
+      if ($('.info').html().indexOf('privacy.html') >= 0) return;
       return {
         infotext: $('.info').text()
       };

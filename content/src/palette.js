@@ -639,7 +639,7 @@ return {
     assignments: {color: 'lightgreen'},
     loops: {color: 'orange'},
     conditionals: {color: 'orange'},
-    value: {color: 'ightgreen'},
+    value: {color: 'lightgreen'},
     command: {color: 'lightgreen'},
     errors: {color: '#f00'}
   }

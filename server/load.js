@@ -4,38 +4,79 @@ var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
 var filemeta = require('./filemeta');
+var DirCache = require('./dircache').DirCache;
+
+var globalRootDirCache = {};
+
+// Do not serve cached content older than 5 minutes.
+var maxDirCacheAge = 5 * 60 * 1000;
+
+// Rebuild cache in background after serving data older than 1 minute.
+var autoRebuildCacheAge = 1 * 60 * 1000;
+
+// Serve at most 600 usernames at a time from root directory.
+var maxRootDirEntries = 600;
+
+function getRootDirCache(dir) {
+  var dircache = globalRootDirCache[dir]
+  if (!dircache) {
+    dircache = new DirCache(dir);
+    globalRootDirCache[dir] = dircache;
+  }
+  return dircache;
+}
 
 exports.handleLoad = function(req, res, app, format) {
-  var filename = utils.param(req, 'file', utils.filenameFromUri(req));
+  var filename = utils.filenameFromUri(req);
   var callback = utils.param(req, 'callback');
-  var tail = utils.param(req, 'tail');
   var user = res.locals.owner;
   var origfilename = filename;
-
-  tail = parseInt(tail);
-  if (Number.isNaN(tail)) {
-    tail = null;
-  }
 
   if (filename == null) {
     filename = '';
   }
 
   try {
+    // The root listing, which lists all users,
+    // is handled differently from other requests.
     var isrootlisting = !user && filename == '' && format == 'json';
-
     if (isrootlisting) {
-      try {
-        // Try the cache first if it exists
-        var data = fsExtra.readJsonSync(utils.getRootCacheName(app));
-
+      var prefix = utils.param(req, 'prefix') || '';
+      var count = Math.max(maxRootDirEntries,
+          utils.param(req, 'count') || maxRootDirEntries);
+      // Grab the dir cache object for this root directory path.
+      var dircache = getRootDirCache(app.locals.config.dirs.datadir);
+      if (dircache.age() > maxDirCacheAge) {
+        // A very-old or never-built cache must be rebuilt before serving.
+        dircache.rebuild(sendCachedResult);
+      } else if (prefix) {
+        // When a specific prefix is requested, probe for an exact match.
+        dircache.update(prefix, sendCachedResult);
+      } else {
+        // Fresh cache without prefix: just send the cached result.
+        sendCachedResult(true);
+      }
+      function sendCachedResult(ok) {
+        var data;
+        if (!ok) {
+          data = {error: "Could not read file /"};
+        } else {
+          data = {
+            directory: "/",
+            list: dircache.readPrefix(prefix, count),
+            auth: false
+          };
+          // If the cache was sort-of-old, kick off an early rebuild.
+          if (dircache.age() > autoRebuildCacheAge) {
+            // No callback needed.
+            dircache.rebuild(null);
+          }
+        }
         res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/javascript');
-
         res.jsonp(data);
-        return;
       }
-      catch (e) { }
+      return;
     }
 
     // Validate username
@@ -98,10 +139,6 @@ exports.handleLoad = function(req, res, app, format) {
         var jsonRet =
           {'directory': '/' + filename, 'list': list, 'auth': haskey};
 
-        // Write to cache if this is a top dir listing
-        if (isrootlisting) {
-          fsExtra.outputJsonSync(utils.getRootCacheName(app), jsonRet);
-        }
         res.set('Cache-Control', 'must-revalidate');
         res.jsonp(jsonRet);
         return;
