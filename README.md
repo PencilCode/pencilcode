@@ -8,6 +8,7 @@ git clone https://github.com/PencilCode/pencilcode.git
 cd pencilcode
 npm install
 grunt
+grunt devserver
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
@@ -80,14 +81,14 @@ How To Experiment with PencilCode
 To experiment with PencilCode, you will want to run a local
 copy of the site's frontend.
 
-To start the https version of the
-dev server (by default it runs on localhost:8008):
+To build and start the dev server (by default it runs on localhost:8008):
 
 <pre>
+grunt
 grunt devserver
 </pre>
 
-(Without the s it runs http instead of https.)
+(Use grunt sdevserver to run https instead of http.)
 
 To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to
 localhost.  For example, with chrome on OSX, add a couple aliases to
@@ -126,7 +127,7 @@ PencilCode Internals
 ====================
 
 The structure of pencilcode is really simple.
-* It is a single HTML file `content/src/editor.html` that does all the work
+* It is a single HTML file `content/src/editor.html` that does all the work.
   All `pencilcode.net/edit/...` URLs resolve to this static file.
 * The javascript behind editor.html is in the `src/` directory (symlink
   to `content/src`).  These javascript files are combined and minified
@@ -166,7 +167,7 @@ The PencilCode editor is broken into three main pieces:
   we adapt it to use Google Drive for storage, the major work
   will be in this file.
 * `editor-view.js` is the UI for the development environement.
-  It knows how ot show directory listings, source code editors,
+  It knows how to show directory listings, source code editors,
   and framed run sandboxes.  Other UI affordances: login dialog
   box UI, a butter bar notification, and whizzy horizontal
   animated transitions.  The idea is that the view doesn't
@@ -187,9 +188,8 @@ Roadmap
 Improvements we'd like to make in PencilCode are in several basic
 directions:
 
-1. Better Debugging.  That means highlighting lines as they run,
-   ultimately giving kids the ability to stop and step programs,
-   and visualize their program state (their variables).
+1. Better Debugging.  That ultimately means giving kids the ability to stop
+   and step programs, and visualize their program state (their variables).
 2. A Block Language.  That means something like blockly, or maybe
    something new.  The goal is to make it easy to use on the tablet
    while also making it easy for beginners to quickly build
