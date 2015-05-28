@@ -2022,11 +2022,14 @@ function renderDirectory(position) {
         var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
         links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
       } else {
+        var thumbnail = 'https://avatars1.githubusercontent.com/u/536000?v=3&s=128';
+        var markup = '<div class="file"><img class="thumbnail" src="' +
+            thumbnail + '"><br><span>' + name + '</span></div>';
         var label = name;
         if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
         var href = '/home/' + filenameslash + label;
         links.push({
-            html: label,
+            html: markup,
             name: name,
             link: label,
             href: href,
@@ -2040,8 +2043,9 @@ function renderDirectory(position) {
       links.sort(sortByName);
     }
     if (model.ownername !== '') {
-      links.push({html:''});
-      links.push({html:'<nobr class="create">Create new file</nobr>',
+      links.push({html:'<div class="file">\
+      <img class="thumbnail" src="https://avatars0.githubusercontent.com/u/9076615?v=3&s=128">\
+        <br><span class="create">Create new file</span></div>',
           link:'#new'});
     }
   }
