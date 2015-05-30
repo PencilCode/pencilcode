@@ -234,6 +234,11 @@ module.exports = function(grunt) {
           'server/*.json',
           'content/src/filetype.js' ],
         options: { spawn: false }
+      },
+      styles: {
+        files: ['content/src/*.less'],
+        tasks: ['less'],
+        options: { spawn: false }
       }
     },
     copy: {
