@@ -37,6 +37,7 @@
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-contrib-copy": "latest",
+    "grunt-contrib-imagemin": "latest",
     "grunt-contrib-less": "latest",
     "grunt-contrib-requirejs": "latest",
     "grunt-contrib-uglify": "latest",

@@ -141,6 +141,19 @@ module.exports = function(grunt) {
         }
       }
     },
+    imagemin: {
+      dynamic: {
+        options: {
+          optimizationLevel: 7
+        },
+        files: [{
+          expand: true,
+          cwd: 'content/',
+          src: ['**/*.{png, jpg, gif}'],
+          dest: 'content/'
+        }]
+      }
+    },
     less: {
       all: {
         options: { compress: true },
@@ -252,6 +265,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-imagemin');
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -319,7 +333,7 @@ module.exports = function(grunt) {
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
   grunt.registerTask('build',
-      ['requirejs', 'replace', 'uglify', 'less', 'builddate']);
+      ['requirejs', 'replace', 'uglify', 'imagemin', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
       ['build', 'test']);
