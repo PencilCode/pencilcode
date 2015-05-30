@@ -1340,7 +1340,7 @@ $(window).on('resize.listing', function() {
 
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
-      tightwidth, item, directory, tag, colsdone, list;
+      tightwidth, item, thumbnail, directory, tag, colsdone, list;
   function fwidth(elem) {
     // Get the width, including fractional width.
     if (elem.getBoundingClientRect) {
@@ -1356,10 +1356,27 @@ function updatePaneLinks(pane) {
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     tag = list[j].href ? 'a' : 'div';
-    item = $('<' + tag + ' class="item"'
-        + (list[j].href ? ' href="' + list[j].href + '" ' : '')
-        + '>' + list[j].html + '</' + tag + '>')
-        .appendTo(col);
+    switch (list[j].type) {
+      case 'user':
+        thumbnail = '/image/folder_32.png';
+        break;
+      case 'dir':
+        thumbnail = '/image/folder_32.png';
+        break;
+      case 'new':
+        thumbnail = '/image/dpencil-128.png';
+        break;
+      case 'file':
+        thumbnail = list[j].thumbnail ||
+            '/image/vpencil-128.png';
+        break;
+      default:
+        break;
+    }
+    item = $('<' + tag + ' class="item'
+        + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')
+        + '><div><img class="thumbnail" src="' + thumbnail + '"><br><span>'
+        + list[j].name + '</span></div></' + tag + '>').appendTo(col);
     if (list[j].link) {
       item.data('link', list[j].link);
     }

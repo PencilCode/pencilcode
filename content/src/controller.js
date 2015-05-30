@@ -2020,19 +2020,28 @@ function renderDirectory(position) {
       if (model.ownername === '' && filename === '') {
         if (m.list[j].mode.indexOf('d') < 0) { continue; }
         var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
-        links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
-      } else {
-        var thumbnail = 'https://avatars1.githubusercontent.com/u/536000?v=3&s=128';
-        var markup = '<div class="file"><img class="thumbnail" src="' +
-            thumbnail + '"><br><span>' + name + '</span></div>';
-        var label = name;
-        if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-        var href = '/home/' + filenameslash + label;
         links.push({
-            html: markup,
+          name: name,
+          href: href,
+          type: 'user',
+          mtime:m.list[j].mtime
+        });
+      } else {
+        var thumbnail = '';
+        var type = 'dir';
+        if (m.list[j].mode.indexOf('d') >= 0) {
+          name += '/';
+        } else {
+          type = 'file';
+          thumbnail = m.list[j].thumbnail;
+        }
+        var href = '/home/' + filenameslash + name;
+        links.push({
             name: name,
-            link: label,
+            link: name,
             href: href,
+            type: type,
+            thumbnail: thumbnail,
             mtime: m.list[j].mtime
         });
       }
@@ -2043,10 +2052,10 @@ function renderDirectory(position) {
       links.sort(sortByName);
     }
     if (model.ownername !== '') {
-      links.push({html:'<div class="file">\
-      <img class="thumbnail" src="https://avatars0.githubusercontent.com/u/9076615?v=3&s=128">\
-        <br><span class="create">Create new file</span></div>',
-          link:'#new'});
+      links.push({
+          name: 'Create new file',
+          type: 'new',
+          link: '#new'});
     }
   }
   view.setPaneLinkText(pane, links, filename);
