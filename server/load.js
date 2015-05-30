@@ -321,7 +321,7 @@ exports.handleLoad = function(req, res, app, format) {
         if (extIdx > 0) {
           var ext = filename.substring(extIdx + 1);
           if (ext == 'htm' || ext == 'html' || ext == 'js' || ext == 'css') {
-            text += '<a href="/edit/' + origfilename + '"> rel="nofollow">Create /home/' + origfilename + '</a>\n';
+            text += '<a href="/edit/' + origfilename + '" rel="nofollow">Create /home/' + origfilename + '</a>\n';
           }
         }
         text += '</pre>\n';

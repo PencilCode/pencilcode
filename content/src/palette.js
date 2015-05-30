@@ -40,10 +40,13 @@ function fieldmap(obj, map) {
 
 function expand(palette, thisname) {
   var replacement = !thisname ? '' : (thisname + '.');
+  function replacer(s) {
+    if (!s) return s;
+    return s.replace(/@/, replacement);
+  }
   return fieldmap(palette, {
-    block: function(s) {
-      return s.replace(/@/, replacement);
-    }
+    block: replacer,
+    expansion: replacer
   });
 }
 
@@ -252,11 +255,17 @@ return {
           block: '@label \'spot\'',
           title: 'Write text at the turtle'
         }, {
+          block: "await read '?', defer x",
+          title: "Pause for input from the user"
+        }, {
+          block: "await readnum '?', defer x",
+          title: "Pause for a number from the user"
+        }, {
           block: 'read \'?\', (x) ->\n  write x',
-          title: 'Read input from the user'
+          title: 'Send input from the user to a function'
         }, {
           block: 'readnum \'?\', (x) ->\n  write x',
-          title: 'Read a number from the user'
+          title: 'Send a number from the user to a function'
         }, {
           block: 'log [1..10]',
           title: 'Log an object to debug'
@@ -563,6 +572,8 @@ return {
     tick: {color: 'orange'},
     forever: {color: 'orange'},
     stop: {color: 'orange'},
+    await: {color: 'orange'},
+    defer: {color: 'orange'},
     type: {color: 'pink'},
     sort: {},
     log: {color: 'pink'},
