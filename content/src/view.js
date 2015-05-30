@@ -1367,8 +1367,7 @@ function updatePaneLinks(pane) {
         thumbnail = '/image/new-128.png';
         break;
       case 'file':
-        thumbnail = list[j].thumbnail ||
-            '/image/vpencil-128.png';
+        thumbnail = list[j].thumbnail || '/image/vpencil-128.png';
         break;
       default:
         break;
