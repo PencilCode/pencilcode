@@ -333,7 +333,7 @@ module.exports = function(grunt) {
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
   grunt.registerTask('build',
-      ['requirejs', 'replace', 'uglify', 'imagemin', 'less', 'builddate']);
+      ['requirejs', 'replace', 'uglify', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
       ['build', 'test']);
