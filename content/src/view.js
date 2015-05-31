@@ -1358,16 +1358,17 @@ function updatePaneLinks(pane) {
     tag = list[j].href ? 'a' : 'div';
     switch (list[j].type) {
       case 'user':
-        thumbnail = '/image/user-128.png';
+        thumbnail = '//' + pencilcode.domain + '/image/user-128.png';
         break;
       case 'dir':
-        thumbnail = '/image/dir-128.png';
+        thumbnail = '//' + pencilcode.domain + '/image/dir-128.png';
         break;
       case 'new':
-        thumbnail = '/image/new-128.png';
+        thumbnail = '//' + pencilcode.domain + '/image/new-128.png';
         break;
       case 'file':
-        thumbnail = list[j].thumbnail || '/image/vpencil-128.png';
+        thumbnail = list[j].thumbnail ||
+            '//' + pencilcode.domain + '/image/vpencil-128.png';
         break;
       default:
         break;
