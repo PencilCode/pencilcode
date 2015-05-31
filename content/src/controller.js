@@ -794,6 +794,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
 
 function generateThumbnailDataURL() {
   var THUMBNAIL_SIZE = 128;
+  // Use the same background as the default icons.
+  var BACKGROUND_COLOR = '#eeeeee';
 
   // Get the canvas inside the iframe.
   var iframe = document.getElementsByTagName('iframe')[0];
@@ -854,11 +856,14 @@ function generateThumbnailDataURL() {
 
   // Draw the cropped image in a temp canvas and scale it down.
   var tempCanvas = document.createElement('canvas');
+  var tempCanvasCtx = tempCanvas.getContext('2d');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
-  tempCanvas.getContext('2d').drawImage(canvas,    // source canvas
-    topLeft.x, topLeft.y, longerEdge, longerEdge,  // src coordinates and size
-    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);         // dest coordinates and size
+  tempCanvasCtx.fillStyle = BACKGROUND_COLOR;
+  tempCanvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+  tempCanvasCtx.drawImage(canvas,                 // source canvas
+    topLeft.x, topLeft.y, longerEdge, longerEdge, // src coordinates and size
+    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);        // dest coordinates and size
 
   // Convert the temp canvas to data url and return.
   return tempCanvas.toDataURL();
