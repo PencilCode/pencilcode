@@ -1368,7 +1368,7 @@ function updatePaneLinks(pane) {
         break;
       case 'file':
         thumbnail = list[j].thumbnail ||
-            '//' + pencilcode.domain + '/image/vpencil-128.png';
+            '//' + pencilcode.domain + '/image/file-128.png';
         break;
       default:
         break;
