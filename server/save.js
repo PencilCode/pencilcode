@@ -261,15 +261,11 @@ exports.handleSave = function(req, res, app) {
         //}
 
       if (fs.existsSync(absfile)) {
-        try {
-          fsExtra.removeSync(absfile);
-        } catch (e) {
-          utils.errorExit('Could not remove: ' + absfile);
-        }
+        tryToRemove(absfile);
+      }
 
-        try {
-          removeDirsSync(path.dirname(absfile));
-        } catch (e) { }
+      if (fs.existsSync(absthumb)) {
+        tryToRemove(absthumb);
       }
 
       if (userdir != absfile) {
@@ -292,34 +288,18 @@ exports.handleSave = function(req, res, app) {
     if (!fs.existsSync(path.dirname(absfile)) ||
         !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
-      try {
-        fsExtra.mkdirsSync(path.dirname(absfile));
-      } catch (e) {
-        utils.errorExit('Could not create dir: ' + path.dirname(filename));
-      }
+      tryToMkdirs(absfile);
       if (thumbnail) {
-        try {
-          fsExtra.mkdirsSync(path.dirname(absthumb));
-        } catch (e) {
-          utils.errorExit('Could not create dir: ' + path.dirname(thumbname));
-        }
+        tryToMkdirs(absthumb);
       }
     }
 
-    try {
-      var content = filemeta.printMetaString(data, meta);
-      fd = fs.writeFileSync(absfile, content);
-    } catch (e) {
-      utils.errorExit('Error writing file: ' + absfile);
-    }
+    var content = filemeta.printMetaString(data, meta);
+    fd = tryToWriteFile(absfile, content);
 
     if (thumbnail) {
-      try {
-        var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
-        fs.writeFileSync(absthumb, base64data, 'base64');
-      } catch (e) {
-        utils.errorExit('Error writing file: ' + absthumb);
-      }
+      var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
+      tryToWriteFile(absthumb, base64data, { encoding: 'base64' });
     }
 
     var statObj = fs.statSync(absfile);
@@ -339,6 +319,34 @@ exports.handleSave = function(req, res, app) {
     }
   }
 };
+
+function tryToWriteFile(absfilename, data, options) {
+  try {
+    return fs.writeFileSync(absfilename, data, options);
+  } catch (e) {
+    utils.errorExit('Error writing file: ' + absfilename);
+  }
+}
+
+function tryToMkdirs(absfilename) {
+  try {
+    fsExtra.mkdirsSync(path.dirname(absfilename));
+  } catch (e) {
+    utils.errorExit('Could not create dir: ' + path.dirname(absfilename));
+  }
+}
+
+function tryToRemove(absfilename) {
+  try {
+    fsExtra.removeSync(absfilename);
+  } catch (e) {
+    utils.errorExit('Could not remove: ' + absfilename);
+  }
+
+  try {
+    removeDirsSync(path.dirname(absfilename));
+  } catch (e) { }
+}
 
 function touchUserDir(userdir) {
   try {
