@@ -210,6 +210,7 @@ exports.handleSave = function(req, res, app) {
             }
 
             fsExtra.copySync(absSourceFile, absfile);
+
             // Remove .key if present, because we don't want to
             // propagate password data.
             if (utils.isPresent(path.join(absfile, '.key'))) {
@@ -218,6 +219,9 @@ exports.handleSave = function(req, res, app) {
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
+            if (sourceThumbExists) {
+              fsExtra.copySync(absSourceThumb, absthumb);
+            }
           }
         }
         catch (e) {
