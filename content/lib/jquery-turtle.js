@@ -5775,6 +5775,7 @@ function setupContinuation(thissel, name, args, argcount) {
       countdown = length + 1,
       sync = true,
       debugId = debug.nextId();
+
   function resolve(j, corner) {
     if (j != null) {
       var elem = thissel && thissel[j];

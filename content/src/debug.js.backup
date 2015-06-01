@@ -1,30 +1,30 @@
 //////////////////////////////////////////////////////////////////////////r
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
-var traceEvents = []; //list of event location objects created by tracing events      
-
 
 define([
   'jquery',
   'view',
-  'see'
- ],
-function($, view, see) {
+  'see',
+  'sourcemap/source-map-consumer'],
+function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
 var targetWindow = null;    // window object of the frame being debugged.
-var currentEventIndex = 0;
-var currentDebugId = 0;
-var currentEventIndex = 0;
-var debugRecordsDebugId = {};
-var debugRecordsLineNo = {};
-var pollTimer = null; 
-var stopButtonShown = 0;
-
+var currentDebugId = 1;        // a never-decreasing sequence of debug event ids.
+var firstSessionId = 1;     // the first id of the current running session.
+var debugIdRecord = {};     // map debug ids -> line execution records.
+var lineRecord = {};        // map line numbers -> line execution records.
+var everyRecord = [];       // a sequence of all records from the run.
+var cachedSourceMaps = {};  // parsed source maps for currently-running code.
+var cachedParsedStack = {}; // parsed stack traces for currently-running code.
+var pollTimer = null;       // poll for stop button.
+var stopButtonShown = 0;    // 0 = not shown; 1 = shown; 2 = stopped.
+var throwNeeded = !(new Error).stack;
+var lineNumberOffset = 3;   // Lines of Coffee boilerplate above user code.
 
 Error.stackTraceLimit = 20;
-
 
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
@@ -32,9 +32,15 @@ Error.stackTraceLimit = 20;
 // having to do with previous sessions are ignored.
 function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
-  targetWindow = w;  
+  targetWindow = w;
+  debugIdRecord = {};
+  lineRecord = {};
+  everyRecord = [];
+  cachedSourceMaps = {};
+  cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
+  firstSessionId = nextDebugId;
   startPollingWindow();
 }
 
@@ -46,8 +52,7 @@ var debug = window.ide = {
     // By avoiding using createError()'s thrown exception when we can get
     // a call stack with a simple Error() constructor, we nearly double
     // speed of a fractal program.
-  //return currentEventIndex;
-  return currentDebugId;
+	return currentDebugId;
   },
   bindframe: bindframe,
   interruptable: function() {
@@ -58,65 +63,12 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
-    console.log('reportEvent', name, data);
     if (!targetWindow) {
       return;
     }
-
-    console.log("reportEvent", name, data);
-
-    if(name === "appear"){
-      var debugId = data[1];
-      var recordD = debugRecordsDebugId[debugId];
-      var recordL = debugRecordsLineNo[recordD.line];
-      var eventMethod = data[0];
-      if(!recordD.method){
-        recordD.method = eventMethod;
-        recordL.method = eventMethod;
-        var eventArgs = data[5];
-        recordD.args = eventArgs; 
-        recordL.args = eventArgs; 
-        var index = recordD.eventIndex;
-        var location = traceEvents[index].location.first_line
-        var coordId = data[3];
-        var elem = data[4];
-        recordD.startCoords[coordId] = collectCoords(elem);
-        recordL.startCoords[coordId] = collectCoords(elem);
-        traceLine(location);
-      }else{
-        //console.log("console line?");
-        return;
-      }
-
-    }
-    if(name === "resolve"){
-      var debugId = data[1];
-      var recordD = debugRecordsDebugId[debugId];
-      var recordL = debugRecordsLineNo[recordD.line]; 
-      eventMethod = data[0]
-      recordD.method = eventMethod;
-      recordL.method = eventMethod;
-      var index = recordD.eventIndex;
-      var location = traceEvents[index].location.first_line
-      var coordId = data[3];
-      var elem = data[4];
-      recordD.endCoords[coordId] = collectCoords(elem);
-      recordL.endCoords[coordId] = collectCoords(elem);
-      untraceLine(location);
-
-    }
-
-  
-   // come back and update this reportEvent 
-   
-   console.log("currentdebugid:", currentDebugId)
-  }, 
-  
+   // come back and update this reportEvent	
+  },
   stopButton: stopButton,
-
-  /*function(){
-   // console.log("stopbutton");
-  },*/
   getEditorText: function() {
     var doc = view.getPaneEditorData(view.paneid('left'));
     if (doc) {
@@ -135,23 +87,60 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event,data) {
+  traceEvents: [],
+  trace: function(event) {
     // This receives events for the new debugger to use.
-  var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
-  console.log("trace");
-  console.log(traceEvents);
-  traceEvents.push(event);
-  currentEventIndex = traceEvents.length - 1;
-  currentDebugId = Math.floor(Math.random()*1000); 
-  record.eventIndex = currentEventIndex;
-  var lineno = traceEvents[currentEventIndex].location.first_line;
-  record.line = lineno;
-  debugRecordsDebugId[currentDebugId] = record;
-  debugRecordsLineNo[lineno] = record;
-  console.log(data)
+    window.ide.traceEvents.push(event);
+	currentDebugId++;
   }
 };
 
+//////////////////////////////////////////////////////////////////////
+// DEBUG RECORD LOGGING
+//////////////////////////////////////////////////////////////////////
+
+// The "enter" event is triggered inside the call to a turtle command.
+// There is exactly one enter event for each debugId, and each corresponds
+// to exactly one call of the turtle method (with method and args as passed).
+// Enter is the first event triggered, and it is always matched by one exit.
+// Appear and resolve will appear between enter and exit if the action is
+// synchronous.  The "length" parameter indicates the number of appear
+// (and matching resolve) events that will be issued for this debugId.
+
+
+// The exit event is triggered when the call to the turtle command is done.
+
+
+// The appear event is triggered when the visible animation for a turtle
+// command begins.  If the animation happens asynchronously, appear is
+// triggered after exit; but if the animation happens synchronously,
+// it can precede exit.  Arguments are the same as for start, except
+// the "index" and "element" arguments indicate the element which is
+// being animated, and its index in the list of animated elements.
+function debugAppear(method, debugId, length, index, elem, args) {
+  var record = getDebugRecord(method, debugId, length, args);
+  if (!record) { return; }
+  record.appearCount += 1;
+  record.startCoords[index] = collectCoords(elem);
+  updateLine(record);
+}
+
+// The resolve event is triggered when the visible animation for a turtle
+// command ends.  It always happens after the corresponding "appear"
+// event, but may occur before or after "exit".
+function debugResolve(method, debugId, length, index, elem) {
+  var record = debugIdRecord[debugId];
+  if (!record) { return; }
+  record.resolveCount += 1;
+  record.endCoords[index] = collectCoords(elem);
+  if (record.resolveCount > record.appearCount) {
+    console.trace('Error: more resolve than appear events');
+  }
+  if (record.resolveCount > record.totalCount) {
+    console.trace('Error: too many resolve events', record);
+  }
+  updateLine(record);
+}
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
@@ -283,58 +272,113 @@ function showDebugMessage(m) {
 }
 
 
-function collectCoords(elem) {
- try {
-   // TODO: when the element is not a turtle with the standard
-   // parent element positioning, we should do a slower operation to
-   // grab the absolute position and direction.
-   return {
-     transform: elem.style[targetWindow.jQuery.support.transform]
-   };
- } catch (e) {
-   return null;
- }
-};
+//////////////////////////////////////////////////////////////////////
+// LINE HIGHLIGHT HANDLING
+//////////////////////////////////////////////////////////////////////
 
-function displayProtractorForRecord(record) {
-  // TODO: generalize this for turtles that are not in the main field.
-  var origin = targetWindow.jQuery('#field').offset();
-  var step = {
-    startCoords: convertCoords(
-      origin, record.startCoords[record.startCoords.length - 1]),
-    endCoords: convertCoords(
-      origin, record.endCoords[record.endCoords.length - 1]),
-    command: record.method,
-    args: record.args
-  };
-  view.showProtractor(view.paneid('right'), step);
+function debugInit() {
+  // Grab exception for first line.
+  if (debugIdException.init) return;
+  var id = debug.nextId();
 }
 
-// The canonical 2D transforms written by this plugin have the form:
-// translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
-// (with each component optional).
-// This function quickly parses this form into a canonicalized object.
-function parseTurtleTransform(transform) {
-  if (transform === 'none') {
-    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+
+// Retrieves (or creates if necessary) the debug record corresponding
+// to the given debugId.  A debug record tracks everything needed for
+// rendering information about a snapshot in time in the debugger:
+// which function was called, the location of the elements being
+// affected, and so on.  This function only deals with the table
+// debugIdRecord.
+function getDebugRecord(method, debugId, length, args) {
+  if (debugId in debugIdRecord) {
+    return debugIdRecord[debugId];
   }
-  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
-  // and FF put them in there; so allow them.
-  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
-  if (!e) { return null; }
-  var tx = e[1] ? parseFloat(e[1]) : 0,
-      ty = e[2] ? parseFloat(e[2]) : 0,
-      rot = e[3] ? parseFloat(e[3]) : 0,
-      sx = e[4] ? parseFloat(e[4]) : 1,
-      sy = e[5] ? parseFloat(e[5]) : sx,
-      twi = e[6] ? parseFloat(e[6]) : 0;
-  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
+  if (debugId < firstSessionId) {
+    return null;
+  }
+  var record = debugIdRecord[debugId] = {
+    method: method,
+    traced: false,
+    exited: false,
+    line: null,
+    debugId: debugId,
+    totalCount: length,
+    appearCount: 0,
+    resolveCount: 0,
+    startCoords: [],
+    endCoords: [],
+    args: args
+  };
+  return record;
+}
+
+// After a debug record has been created or updated, updateLine
+// determines whether the corresponding line of source code should
+// be highlighted or unhighlighted, and if so, it does the highlighting.
+// This function maintains the record.traced bit and the lineRecord map.
+function updateLine(record) {
+  if (!record || record.debugId < firstSessionId) {
+    return;
+  }
+  // Optimization: only compute line number when there is a visible
+  // async animation, OR, if it's one of the first 100 debug events.
+  var index = record.debugId - firstSessionId;
+  var obj_loc = debug.traceEvents[index];
+  record.line = obj_loc.location.first_line;
+  
+  // TODO: schedule background computation of line numbers for debug
+  // events after the first 100.
+  if (record.line != null) {
+    var oldRecord = lineRecord[record.line];
+    if (record.appearCount > record.resolveCount) {
+      lineRecord[record.line] = record;
+      if (!oldRecord || !oldRecord.traced) {
+        traceLine(record.line);
+      }
+      record.traced = true;
+    } else {
+      if (!oldRecord || !oldRecord.appearCount || oldRecord === record) {
+        lineRecord[record.line] = record;
+        if (oldRecord && oldRecord.traced) {
+          untraceLine(record.line);
+        }
+      }
+      record.traced = false;
+    }
+  }
+  // Should we garbage-collect?  Here we do:
+  // The idea is this: we will only need to look up records by debugId
+  // in the future when there is a future event pending.  If all the
+  // expected "resolves" have occurred and all the expected "appears"
+  // have matching "resolves", and there has been an "exit" (matching
+  // the initial "enter", then there should be no further events for
+  // this debugId.
+  if (record.resolveCount >= record.totalCount &&
+      record.resolveCount >= record.appearCount &&
+      record.exited) {
+    delete debugIdRecord[record.debugId];
+  }
+}
+
+// Used while logging animations (during the 'appear' and 'resolve'
+// events) to grab information off an element that allows us to later
+// compute the coordinates.
+function collectCoords(elem) {
+  try {
+    // TODO: when the element is not a turtle with the standard
+    // parent element positioning, we should do a slower operation to
+    // grab the absolute position and direction.
+    return {
+      transform: elem.style[targetWindow.jQuery.support.transform]
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
-  console.log("traceLine output:", line)
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
@@ -346,7 +390,70 @@ function untraceLine(line) {
 }
 
 
+// parsestack converts an Error or ErrorEvent object into the following
+// JSON structure.  Starting from the deepest call, it returns an array
+// of tuples, each one representing a call in the call stack:
+// [
+//   {
+//     method: (methodname),
+//     file: (filename),
+//     line: (one-based-linenumber),
+//     column: (one-based-columnnumber)
+//   },...
+// ]
+// Fields that are unknown are present but with value undefined or null.
+function parsestack(err) {
+  var parsed = [], lines, j, line;
+  // This code currently only works on Chrome.
+  // TODO: add support for parsing other browsers' call stacks.
+  if (err.stack) {
+    var cached = cachedParseStack[err.stack];
+    if (cached) {
+      return cached;
+    }
+    lines = err.stack.split('\n');
+    for (j = 0; j < lines.length; ++j) {
+      line = lines[j];
+      // We are interested only in lines starting with "at "
+      if (!/^\s*at\s/.test(line)) continue;
+      line = line.replace(/^\s*at\s+/, '');
+      // Parse the call as printed by CallSiteToString(message.js) in Chrome.
+      // Example: "Type.method (filename.js:43:1)"
+      var methodname = null;
+      // First, strip off filename/line number if present in parens.
+      var parenpat = /\s+\((.*?)(?::(\d+)(?::(\d+))?)?\)$/;
+      var locationmatch = parenpat.exec(line);
+      if (locationmatch) {
+        methodname = line.replace(parenpat, '');
+      } else {
+        locationmatch = /\s*(.*?)(?::(\d+)(?::(\d+))?)?$/.exec(line);
+      }
+      parsed.push({
+        method: methodname,
+        file: locationmatch[1],
+        line: locationmatch[2] && parseInt(locationmatch[2]),
+        column: locationmatch[3] && parseInt(locationmatch[3])
+      });
+    }
+    cachedParseStack[err.stack] = parsed;
+  }
+  return parsed;
+}
 
+// Constructs a SourceMapConsumer object that can map from
+// Javascript (stack trace) line numbers to CoffeeScript (user code)
+// line numbers.  Since it takes some time to parse and construct
+// this mapping, the results are cached.
+function sourceMapConsumerForFile(file) {
+  var result = cachedSourceMaps[file];
+  if (!result) {
+    var map = targetWindow.CoffeeScript &&
+        targetWindow.CoffeeScript.code[file].map;
+    if (!map) return null;
+    result = cachedSourceMaps[file] = new sourcemap.SourceMapConsumer(map);
+  }
+  return result;
+}
 
 // Returns the (1-based) line number for an error object, if any;
 // or returns null if none can be figured out.
@@ -436,43 +543,22 @@ view.on('parseerror', function(pane, err) {
 });
 
 //////////////////////////////////////////////////////////////////////
-// PARSE ERROR HIGHLIGHTING
-//////////////////////////////////////////////////////////////////////
-
-view.on('parseerror', function(pane, err) {
-  if (err.loc) {
-    // The markPaneEditorLine function uses 1-based line numbering.
-    var line = err.loc.line + 1;
-    view.markPaneEditorLine(pane, line, 'debugerror');
-  }
-  if (err.message){
-    showDebugMessage(
-      "<p>Oops, the computer could not show blocks." +
-      "<p>It says:" + err.message.replace(/^.*Error:/i, ''));
-  }
-});
-
-
-//////////////////////////////////////////////////////////////////////
 // GUTTER HIGHLIGHTING SUPPORT
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsLineNo[lineno]);
-
-
+  displayProtractorForRecord(lineRecord[lineno]);
 });
 
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
-
 });
 
 view.on('icehover', function(pane, ev) {
-  console.log("ev thing: ", ev);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
 
@@ -481,9 +567,11 @@ view.on('icehover', function(pane, ev) {
   var lineno = ev.line + 1;
 
   if (pane != view.paneid('left')) return;
-  
+  if (!(lineno in lineRecord)) return;
+
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsLineNo[lineno]);
+
+  displayProtractorForRecord(lineRecord[lineno]);
 });
 
 function convertCoords(origin, astransform) {
@@ -499,10 +587,48 @@ function convertCoords(origin, astransform) {
   };
 }
 
+function displayProtractorForRecord(record) {
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = targetWindow.jQuery('#field').offset();
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  view.showProtractor(view.paneid('right'), step);
+}
 
+// The canonical 2D transforms written by this plugin have the form:
+// translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
+// (with each component optional).
+// This function quickly parses this form into a canonicalized object.
+function parseTurtleTransform(transform) {
+  if (transform === 'none') {
+    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+  }
+  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
+  // and FF put them in there; so allow them.
+  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
+  if (!e) { return null; }
+  var tx = e[1] ? parseFloat(e[1]) : 0,
+      ty = e[2] ? parseFloat(e[2]) : 0,
+      rot = e[3] ? parseFloat(e[3]) : 0,
+      sx = e[4] ? parseFloat(e[4]) : 1,
+      sy = e[5] ? parseFloat(e[5]) : sx,
+      twi = e[6] ? parseFloat(e[6]) : 0;
+  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
+}
+
+///////////////////////////////////////////////////////////////////////////
+// STOP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
+// Flashes the stop button for half a second.
 var lastRunTime = 0;
-function stopButton(command) { console.log("Stopbutton");
-  
+function stopButton(command) {
   if (command == 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
@@ -520,7 +646,7 @@ function stopButton(command) { console.log("Stopbutton");
         view.showMiddleButton('run');
         stopButtonShown = 0;
       }
-    }, 2000);
+    }, 1500);
   }
   return stopButtonShown;
 }
