@@ -109,7 +109,7 @@ And then "devchrome" will launch an instance of Chrome with the right proxy.
 On Linux, add something like this to your .bashrc:
 
 <pre>
-alias devchrome='google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/'
+alias devchrome='google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/'
 </pre>
 
 On Windows:
