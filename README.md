@@ -1,7 +1,7 @@
 How To Build and Test PencilCode
 ================================
 [![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)
-First install the prerequisites: git, nodejs, and grunt.  Then:
+First install the prerequisites: git, nodejs, and grunt. Next, be sure you're in your home directory. Then:
 
 <pre>
 git clone https://github.com/PencilCode/pencilcode.git
@@ -79,11 +79,13 @@ How To Experiment with PencilCode
 =================================
 
 To experiment with PencilCode, you will want to run a local
-copy of the site's frontend.
+copy of the site's frontend. Your webpage may appear in plain (rather ugly) text unless you run devchrome with your grunt devserver.
 
 To build and start the dev server (by default it runs on localhost:8008):
 
 <pre>
+devchrome
+bg %1
 grunt
 grunt devserver
 </pre>
