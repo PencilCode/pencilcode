@@ -75,6 +75,7 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
+      thumbname = path.join(user, thumbname);
       userdir = utils.getUserHomeDir(user, app);
     }
 
