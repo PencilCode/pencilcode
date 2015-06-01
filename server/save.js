@@ -8,6 +8,7 @@ var filetype = require('../content/src/filetype');
 exports.handleSave = function(req, res, app) {
   var data = utils.param(req, 'data');
   var meta = utils.param(req, 'meta');
+  var thumbnail = utils.param(req, 'thumbnail');
   var sourcefile = utils.param(req, 'source');
   var mode = utils.param(req, 'mode');
   var conditional = utils.param(req, 'conditional');
@@ -17,7 +18,7 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var origfilename = filename;
+    var thumbname = '.thumb/' + filename + '.png';
 
     /*
     console.log({
@@ -104,6 +105,7 @@ exports.handleSave = function(req, res, app) {
 
 
     var absfile = utils.makeAbsolute(filename, app);
+    var absthumb = utils.makeAbsolute(thumbname, app);
 
     //
     // Validate that users key matches the supplied key
@@ -292,30 +294,41 @@ exports.handleSave = function(req, res, app) {
       checkReservedUser(user, app);
       try {
         fsExtra.mkdirsSync(path.dirname(absfile));
-      }
-      catch (e) {
+      } catch (e) {
         utils.errorExit('Could not create dir: ' + path.dirname(filename));
+      }
+      if (thumbnail) {
+        try {
+          fsExtra.mkdirsSync(path.dirname(absthumb));
+        } catch (e) {
+          utils.errorExit('Could not create dir: ' + path.dirname(thumbname));
+        }
       }
     }
 
-    var statObj;
     try {
       var content = filemeta.printMetaString(data, meta);
       fd = fs.writeFileSync(absfile, content);
-      var statObj = fs.statSync(absfile);
-      touchUserDir(userdir);
-      res.json({
-        saved: '/' + filename,
-        mtime: statObj.mtime.getTime(),
-        size: statObj.size
-      });
-      return;
-    }
-    catch (e) {
+    } catch (e) {
       utils.errorExit('Error writing file: ' + absfile);
     }
 
-    return;
+    if (thumbnail) {
+      try {
+        var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
+        fs.writeFileSync(absthumb, base64data, 'base64');
+      } catch (e) {
+        utils.errorExit('Error writing file: ' + absthumb);
+      }
+    }
+
+    var statObj = fs.statSync(absfile);
+    touchUserDir(userdir);
+    res.json({
+      saved: '/' + filename,
+      mtime: statObj.mtime.getTime(),
+      size: statObj.size
+    });
   }
   catch (e) {
     if (e instanceof utils.ImmediateReturnError) {
@@ -325,7 +338,7 @@ exports.handleSave = function(req, res, app) {
       throw e;
     }
   }
-}
+};
 
 function touchUserDir(userdir) {
   try {

@@ -745,7 +745,9 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
-  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var newdata = $.extend({
+    thumbnail: thumbnailDataURL
+  }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
