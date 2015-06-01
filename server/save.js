@@ -18,7 +18,7 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var thumbname = '.thumb/' + filename + '.png';
+    var thumbname = '.thumbs/' + filename + '.png';
 
     /*
     console.log({
@@ -143,6 +143,8 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
+      var absSourceThumb = utils.makeAbsolute('.thumbs/' + sourcefile, app);
+      var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
       }
@@ -166,12 +168,10 @@ exports.handleSave = function(req, res, app) {
       if (!fs.existsSync(path.dirname(absfile)) ||
           !fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
-        try {
-          fs.mkdirSync(path.dirname(absfile));
-        }
-        catch (e) {
-          utils.errorExit('Could not create dir: ' + path.dirname(filename));
-        }
+        tryToMkdirs(absfile);
+      }
+      if (sourceThumbExists) {
+        tryToMkdirs(absthumb);
       }
 
       // move case
@@ -182,18 +182,12 @@ exports.handleSave = function(req, res, app) {
 
         try {
           fs.renameSync(absSourceFile, absfile);
-
-          // Cleanup directories if necessary
-          var dir = path.dirname(absSourceFile);
-          for (; dir ; dir = path.dirname(dir)) {
-            try {
-              fs.rmdirSync(dir);
-            }
-            catch (e) {
-              // Failed to remove dir, assume not empty
-              break;
-            }
+          if (sourceThumbExists) {
+            fs.renameSync(absSourceThumb, absthumb);
+            removeDirsSync(absSourceThumb);
           }
+
+          removeDirsSync(absSourceFile);
 
           // Remove .key if present, because we don't want to
           // propagate password data
@@ -289,9 +283,9 @@ exports.handleSave = function(req, res, app) {
         !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
       tryToMkdirs(absfile);
-      if (thumbnail) {
-        tryToMkdirs(absthumb);
-      }
+    }
+    if (thumbnail) {
+      tryToMkdirs(absthumb);
     }
 
     var content = filemeta.printMetaString(data, meta);
