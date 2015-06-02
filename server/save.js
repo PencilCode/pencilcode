@@ -6,6 +6,8 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
+  var THUMB_DIR = '.thumbs/';
+
   var data = utils.param(req, 'data');
   var meta = utils.param(req, 'meta');
   var thumbnail = utils.param(req, 'thumbnail');
@@ -18,7 +20,8 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var thumbname = '.thumbs/' + filename + '.png';
+    var thumbname = path.join(path.dirname(filename), THUMB_DIR,
+                    path.basename(filename) + '.png');
 
     /*
     console.log({
@@ -144,7 +147,9 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
-      var absSourceThumb = utils.makeAbsolute('.thumbs/' + sourcefile, app);
+      var sourcethumb = path.join(path.dirname(sourcefile), THUMB_DIR,
+                                  path.basename(sourcefile) + '.png');
+      var absSourceThumb = utils.makeAbsolute(sourcethumb, app);
       var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
@@ -169,10 +174,10 @@ exports.handleSave = function(req, res, app) {
       if (!fs.existsSync(path.dirname(absfile)) ||
           !fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
-        tryToMkdirs(absfile);
+        tryToMkdirsSync(absfile);
       }
       if (sourceThumbExists) {
-        tryToMkdirs(absthumb);
+        tryToMkdirsSync(absthumb);
       }
 
       // move case
@@ -185,10 +190,10 @@ exports.handleSave = function(req, res, app) {
           fs.renameSync(absSourceFile, absfile);
           if (sourceThumbExists) {
             fs.renameSync(absSourceThumb, absthumb);
-            removeDirsSync(absSourceThumb);
+            removeDirsSync(path.dirname(absSourceThumb));
           }
 
-          removeDirsSync(absSourceFile);
+          removeDirsSync(path.dirname(absSourceFile));
 
           // Remove .key if present, because we don't want to
           // propagate password data
@@ -259,12 +264,12 @@ exports.handleSave = function(req, res, app) {
         //utils.errorExit('Missing data= form field argument.');
         //}
 
-      if (fs.existsSync(absfile)) {
-        tryToRemove(absfile);
+      if (fs.existsSync(absthumb)) {
+        tryToRemoveSync(absthumb);
       }
 
-      if (fs.existsSync(absthumb)) {
-        tryToRemove(absthumb);
+      if (fs.existsSync(absfile)) {
+        tryToRemoveSync(absfile);
       }
 
       if (userdir != absfile) {
@@ -287,18 +292,18 @@ exports.handleSave = function(req, res, app) {
     if (!fs.existsSync(path.dirname(absfile)) ||
         !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
-      tryToMkdirs(absfile);
+      tryToMkdirsSync(absfile);
     }
     if (thumbnail) {
-      tryToMkdirs(absthumb);
+      tryToMkdirsSync(absthumb);
     }
 
     var content = filemeta.printMetaString(data, meta);
-    fd = tryToWriteFile(absfile, content);
+    fd = tryToWriteFileSync(absfile, content);
 
     if (thumbnail) {
       var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
-      tryToWriteFile(absthumb, base64data, { encoding: 'base64' });
+      tryToWriteFileSync(absthumb, base64data, { encoding: 'base64' });
     }
 
     var statObj = fs.statSync(absfile);
@@ -319,7 +324,7 @@ exports.handleSave = function(req, res, app) {
   }
 };
 
-function tryToWriteFile(absfilename, data, options) {
+function tryToWriteFileSync(absfilename, data, options) {
   try {
     return fs.writeFileSync(absfilename, data, options);
   } catch (e) {
@@ -327,7 +332,7 @@ function tryToWriteFile(absfilename, data, options) {
   }
 }
 
-function tryToMkdirs(absfilename) {
+function tryToMkdirsSync(absfilename) {
   try {
     fsExtra.mkdirsSync(path.dirname(absfilename));
   } catch (e) {
@@ -335,7 +340,7 @@ function tryToMkdirs(absfilename) {
   }
 }
 
-function tryToRemove(absfilename) {
+function tryToRemoveSync(absfilename) {
   try {
     fsExtra.removeSync(absfilename);
   } catch (e) {
@@ -363,12 +368,12 @@ function filenameuser(filename) {
 
 function removeDirsSync(dirStart) {
   for (var dir = dirStart; ; dir = path.dirname(dir)) {
-    if (fs.readdirSync(dir).length > 0) {
-      // Directory not empty, we're done.
-      return;
+    try {
+      fs.rmdirSync(dir);
+    } catch (e) {
+      // Failed to remove dir, assume not empty
+      break;
     }
-
-    fsExtra.remove(dir);
   }
 }
 
