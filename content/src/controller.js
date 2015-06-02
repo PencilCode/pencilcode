@@ -806,6 +806,10 @@ function generateThumbnailDataURL() {
   var w = canvas.width;
   var h = canvas.height;
 
+  if (canvas.id === 'turtle') {
+    return;
+  }
+
   // Get the image data.
   var ctx = canvas.getContext('2d');
   var imageData = ctx.getImageData(0, 0, w, h);

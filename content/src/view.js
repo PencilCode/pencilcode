@@ -734,6 +734,9 @@ function showMiddleButton(which) {
 
 // Show thumbnail after save
 function flashThumbnail(imageDataUrl) {
+  if (!imageDataUrl) {
+    return;
+  }
   var tooltip = $('#save').tooltipster({
     content: $('<img src=' + imageDataUrl + '>'),
     multiple: true,
