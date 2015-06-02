@@ -427,10 +427,19 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({name: contents[i],
-         mode: modestr,
-         size: statObj.size,
-         mtime: mtime});
+    var absthumb = path.join(absdir, '.thumbs', contents[i] + '.png');
+    var dataurl = '';
+    if (fs.existsSync(absthumb)) {
+      dataurl = 'data:image/png;base64,' + fs.readFileSync(absthumb, 'base64');
+    }
+
+    list.push({
+      name: contents[i],
+      thumbnail: dataurl,
+      mode: modestr,
+      size: statObj.size,
+      mtime: mtime
+    });
   }
 
   return list;
