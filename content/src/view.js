@@ -735,24 +735,20 @@ function showMiddleButton(which) {
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
 
-// TODO(katie): Add share to JS Fiddle option.
 function showShareDialog(opts) {
   if (!opts) {
     opts = { };
   }
 
-  /**
-   * Adds a protocol (http:) to a path if it does not yet have one.
-   * @param {string} path The path to add a protocol to.
-   * @return {string} The path with protocol added if necessary.
-   */
+  // Adds a protocol ('http:') to a string path if it does not yet have one.
   function addProtocol(path) {
     if (/^\w+:/.test(path)) { return path; }
     return 'http:' + path;
   }
 
   var newLines = '\r\n\r\n';
-  bodyText = 'Check out this program that I created on http://pencilcode.net!' + newLines;
+  bodyText = 'Check out this program that I created on ' + window.pencilcode.domain
+     + newLines;
   if (opts.shareStageURL) {
     bodyText += 'Posted program: ' + addProtocol(opts.shareStageURL) + newLines;
   }
