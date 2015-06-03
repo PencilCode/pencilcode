@@ -735,23 +735,33 @@ function showMiddleButton(which) {
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
 
+// TODO(katie): Add share to JS Fiddle option.
 function showShareDialog(opts) {
   if (!opts) {
     opts = { };
   }
 
+  /**
+   * Adds a protocol (http:) to a path if it does not yet have one.
+   * @param {string} path The path to add a protocol to.
+   * @return {string} The path with protocol added if necessary.
+   */
   function addProtocol(path) {
     if (/^\w+:/.test(path)) { return path; }
     return 'http:' + path;
   }
 
-  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
-  bodyText = bodyText + 'Posted program: ' +
-     addProtocol(opts.shareStageURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Latest program: ' +
-     addProtocol(opts.shareRunURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Program code: ' +
-     addProtocol(opts.shareEditURL) + '\r\n\r\n';
+  var newLines = '\r\n\r\n';
+  bodyText = 'Check out this program that I created on http://pencilcode.net!' + newLines;
+  if (opts.shareStageURL) {
+    bodyText += 'Posted program: ' + addProtocol(opts.shareStageURL) + newLines;
+  }
+  if (opts.shareRunURL) {
+    bodyText += 'Latest program: ' + addProtocol(opts.shareRunURL) + newLines;
+  }
+  if (opts.shareEditURL) {
+    bodyText += 'Program code: ' + addProtocol(opts.shareEditURL) + newLines;
+  }
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
@@ -764,6 +774,7 @@ function showShareDialog(opts) {
     embedText = '<iframe src="' + opts.shareRunURL + '" ' +
        'width="640" height="640" frameborder="0" allowfullScreen></iframe>';
   }
+
   opts.prompt = (opts.prompt) ? opts.prompt : 'Shared &#x2713;';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
@@ -2924,4 +2935,3 @@ window.fontloader = fontloader;
 return window.pencilcode.view;
 
 });
-
