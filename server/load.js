@@ -428,14 +428,10 @@ function buildDirList(absdir, contents) {
     }
 
     var absthumb = path.join(absdir, '.thumbs', contents[i] + '.png');
-    var dataurl = '';
-    if (fs.existsSync(absthumb)) {
-      dataurl = 'data:image/png;base64,' + fs.readFileSync(absthumb, 'base64');
-    }
 
     list.push({
       name: contents[i],
-      thumbnail: dataurl,
+      thumbnail: fs.existsSync(absthumb),   // whether there is a thumbnail
       mode: modestr,
       size: statObj.size,
       mtime: mtime

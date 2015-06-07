@@ -2039,12 +2039,15 @@ function renderDirectory(position) {
         });
       } else {
         var thumbnail = '';
+        if (m.list[j].thumbnail) {
+          thumbnail = '/thumb/' + filenameslash + name +
+                      '.png?' + m.list[j].mtime;
+        }
         var type = 'dir';
         if (m.list[j].mode.indexOf('d') >= 0) {
           name += '/';
         } else {
           type = 'file';
-          thumbnail = m.list[j].thumbnail;
         }
         var href = '/home/' + filenameslash + name;
         links.push({

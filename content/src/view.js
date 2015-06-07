@@ -1366,22 +1366,24 @@ function updatePaneLinks(pane) {
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     tag = list[j].href ? 'a' : 'div';
-    switch (list[j].type) {
-      case 'user':
-        thumbnail = '//' + pencilcode.domain + '/image/user-128.png';
-        break;
-      case 'dir':
-        thumbnail = '//' + pencilcode.domain + '/image/dir-128.png';
-        break;
-      case 'new':
-        thumbnail = '//' + pencilcode.domain + '/image/new-128.png';
-        break;
-      case 'file':
-        thumbnail = list[j].thumbnail ||
-            '//' + pencilcode.domain + '/image/file-128.png';
-        break;
-      default:
-        break;
+    thumbnail = list[j].thumbnail;
+    if (!thumbnail) {
+      switch (list[j].type) {
+        case 'user':
+          thumbnail = '//' + pencilcode.domain + '/image/user-128.png';
+          break;
+        case 'dir':
+          thumbnail = '//' + pencilcode.domain + '/image/dir-128.png';
+          break;
+        case 'new':
+          thumbnail = '//' + pencilcode.domain + '/image/new-128.png';
+          break;
+        case 'file':
+          thumbnail = '//' + pencilcode.domain + '/image/file-128.png';
+          break;
+        default:
+          break;
+      }
     }
     item = $('<' + tag + ' class="item'
         + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')

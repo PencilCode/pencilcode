@@ -104,10 +104,18 @@ exports.initialize2 = function(app) {
       }
     }
   }
+  function loadThumb() {
+    return function(req, res, next) {
+      req.url = path.dirname(req.url) + '/.thumbs/' +
+                path.basename(req.url);
+      staticUserData(req, res, next);
+    }
+  }
   app.use('/code', userDataPrinter('code'));
   app.use('/home', userDataPrinter('run'));
   app.use('/run', userDataPrinter('run'));
   app.use('/print', userDataPrinter('print'));
+  app.use('/thumb', loadThumb());
 
   // Anything not matching a special top-level directory name
   if (config.dirs.staticdir) {
