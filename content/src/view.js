@@ -738,7 +738,7 @@ function flashThumbnail(imageDataUrl) {
     return;
   }
   var tooltip = $('#save').tooltipster({
-    content: $('<img src=' + imageDataUrl + '>'),
+    content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
     multiple: true,
     position: 'bottom',
     theme: 'tooltipster-shadow',
