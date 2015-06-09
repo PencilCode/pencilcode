@@ -103,4 +103,13 @@ describe('browse users in edit mode', function() {
       done();
     });
   });
+  it('should show default thumbnail for user aaa', function(done) {
+    pollPage(_page, 5000, function() {
+      return $('img.thumbnail[alt="aaa"]').attr('src');
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result === '//pencilcode.net.dev/image/user-128.png');
+      done();
+    });
+  });
 });
