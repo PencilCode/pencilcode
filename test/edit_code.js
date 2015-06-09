@@ -128,6 +128,42 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should show correct thumbnail for program first', function(done) {
+    _page.evaluate(function() {
+      return $('img.thumbnail[alt="first"]').attr('src');
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.indexOf('/thumb/first.png') >= 0);
+      done();
+    });
+  });
+  it('should show default thumbnail for program hi', function(done) {
+    _page.evaluate(function() {
+      return $('img.thumbnail[alt="hi"]').attr('src');
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.indexOf('/image/file-128.png') >= 0);
+      done();
+    });
+  });
+  it('should show default thumbnail for folder shapes', function(done) {
+    _page.evaluate(function() {
+      return $('img.thumbnail[alt="shapes/"]').attr('src');
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.indexOf('/image/dir-128.png') >= 0);
+      done();
+    });
+  });
+  it('should show default thumbnail for create new file button', function(done) {
+    _page.evaluate(function() {
+      return $('img.thumbnail[alt="Create new file"]').attr('src');
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.indexOf('/image/new-128.png') >= 0);
+      done();
+    });
+  });
   it('should be able to start a new file', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the "Create new program" link.

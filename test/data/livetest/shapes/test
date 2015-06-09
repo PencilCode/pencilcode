@@ -1,0 +1,6 @@
+speed Infinity
+pen red
+for [1..360]
+  rt 1
+  fd 1
+  
