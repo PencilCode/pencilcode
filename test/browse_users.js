@@ -108,7 +108,7 @@ describe('browse users in edit mode', function() {
       return $('img.thumbnail[alt="aaa"]').attr('src');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(result === '//pencilcode.net.dev/image/user-128.png');
+      assert.ok(result.indexOf('/image/user-128.png') >= 0);
       done();
     });
   });
