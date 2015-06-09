@@ -1387,8 +1387,9 @@ function updatePaneLinks(pane) {
     }
     item = $('<' + tag + ' class="item'
         + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')
-        + '><div><img class="thumbnail" src="' + thumbnail + '"><br><span>'
-        + list[j].name + '</span></div></' + tag + '>').appendTo(col);
+        + '><div><img class="thumbnail" src="' + thumbnail + '" alt="'
+        + list[j].name + '"><br><span>' + list[j].name + '</span></div></'
+        + tag + '>').appendTo(col);
     if (list[j].link) {
       item.data('link', list[j].link);
     }
