@@ -394,6 +394,27 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should flash thumbnail after run and save', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Touch the text in the editor!
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
+      ace_editor.getSession().setValue("speed 10\npen blue\nrt 180, 100");
+      // Then click the save button.
+      $('#save').click();
+    }, function() {
+      // Wait for thumbnail to be flashed
+      if (!$('.tooltipster-shadow').is(':visible')) return;
+      if (!$('img[alt="thumbnail"]').is(':visible')) return;
+      return {
+        dataurl: $('img[alt="thumbnail"]').attr('src')
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // Thumbnail should not be empty.
+      assert.ok(result.dataurl.length > 0);
+      done();
+    });
+  });
   it('should log out when logout is pressed', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click the logout button.
@@ -560,7 +581,7 @@ describe('code editor', function() {
   it('should delete when empty is saved', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Delete all the text in the editor!
-        var ace_editor = ace.edit($('.droplet-ace')[0]);
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
       ace_editor.getSession().setValue('');
       // Then click the save button.
       $('#save').mousedown();
