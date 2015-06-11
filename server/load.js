@@ -427,10 +427,15 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({name: contents[i],
-         mode: modestr,
-         size: statObj.size,
-         mtime: mtime});
+    var absthumb = path.join(absdir, '.thumbs', contents[i] + '.png');
+
+    list.push({
+      name: contents[i],
+      thumbnail: fs.existsSync(absthumb),   // whether there is a thumbnail
+      mode: modestr,
+      size: statObj.size,
+      mtime: mtime
+    });
   }
 
   return list;
