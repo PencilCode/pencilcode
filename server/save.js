@@ -251,6 +251,10 @@ exports.handleSave = function(req, res, app) {
         //utils.errorExit('Missing data= form field argument.');
         //}
 
+      if (fs.existsSync(absthumb)) {
+        tryToRemoveSync(absthumb);
+      }
+
       if (fs.existsSync(absfile)) {
         tryToRemoveSync(absfile);
       }
