@@ -147,6 +147,10 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
+      var sourcethumb = path.join(path.dirname(sourcefile), THUMB_DIR,
+                                  path.basename(sourcefile) + '.png');
+      var absSourceThumb = utils.makeAbsolute(sourcethumb, app);
+      var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
       }
@@ -173,6 +177,11 @@ exports.handleSave = function(req, res, app) {
         tryToMkdirsSync(absfile);
       }
 
+      // If the source file has a thumb, create dir for the destination thumb.
+      if (sourceThumbExists) {
+        tryToMkdirsSync(absthumb);
+      }
+
       // move case
       if (mode == 'mv') {
         if (fs.existsSync(absfile)) {
@@ -181,6 +190,12 @@ exports.handleSave = function(req, res, app) {
 
         try {
           fs.renameSync(absSourceFile, absfile);
+
+          // Move the thumb along the way if it exists.
+          if (sourceThumbExists) {
+            fs.renameSync(absSourceThumb, absthumb);
+            removeDirsSync(path.dirname(absSourceThumb));
+          }
 
           // Cleanup directories if necessary
           removeDirsSync(path.dirname(absSourceFile));
@@ -215,6 +230,10 @@ exports.handleSave = function(req, res, app) {
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
+            // Copy the thumb if it exists.
+            if (sourceThumbExists) {
+              fsExtra.copySync(absSourceThumb, absthumb);
+            }
           }
         }
         catch (e) {
