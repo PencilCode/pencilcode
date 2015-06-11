@@ -6,8 +6,11 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
+  var THUMB_DIR = '.thumbs/';
+
   var data = utils.param(req, 'data');
   var meta = utils.param(req, 'meta');
+  var thumbnail = utils.param(req, 'thumbnail');
   var sourcefile = utils.param(req, 'source');
   var mode = utils.param(req, 'mode');
   var conditional = utils.param(req, 'conditional');
@@ -17,6 +20,8 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
+    var thumbname = path.join(path.dirname(filename), THUMB_DIR,
+                              path.basename(filename) + '.png');
 
     /*
     console.log({
@@ -73,6 +78,7 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
+      thumbname = path.join(user, thumbname);
       userdir = utils.getUserHomeDir(user, app);
     }
 
@@ -103,6 +109,7 @@ exports.handleSave = function(req, res, app) {
 
 
     var absfile = utils.makeAbsolute(filename, app);
+    var absthumb = utils.makeAbsolute(thumbname, app);
 
     //
     // Validate that users key matches the supplied key
@@ -271,9 +278,16 @@ exports.handleSave = function(req, res, app) {
       tryToMkdirsSync(absfile);
     }
 
-
     var content = filemeta.printMetaString(data, meta);
     fd = tryToWriteFileSync(absfile, content);
+
+    // If thumbnail exists and it is valid, remove the data url header.
+    // and then save as png.
+    if (thumbnail && /^data:image\/png;base64,/.test(thumbnail)) {
+      var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
+      tryToMkdirsSync(absthumb);
+      tryToWriteFileSync(absthumb, base64data, { encoding: 'base64' });
+    }
 
     var statObj = fs.statSync(absfile);
     touchUserDir(userdir);
