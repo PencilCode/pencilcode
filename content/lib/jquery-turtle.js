@@ -3970,6 +3970,7 @@ var Instrument = (function() {
     }
   }
 
+  Instrument.timeOffset = 0.0625;// Seconds to delay all audiable timing.
   Instrument.dequeueTime = 0.5;  // Seconds before an event to reexamine queue.
   Instrument.bufferSecs = 2;     // Seconds ahead to put notes in WebAudio.
   Instrument.toneLength = 1;     // Default duration of a tone.
@@ -4106,7 +4107,7 @@ var Instrument = (function() {
   // node graph for the tone generators and filters for the tone.
   Instrument.prototype._makeSound = function(record) {
     var timbre = record.timbre || this._timbre,
-        starttime = record.time,
+        starttime = record.time + Instrument.timeOffset,
         releasetime = starttime + record.duration,
         attacktime = Math.min(releasetime, starttime + timbre.attack),
         decaytime = timbre.decay *
@@ -4183,12 +4184,13 @@ var Instrument = (function() {
   // Truncates a sound previously scheduled by _makeSound by using
   // cancelScheduledValues and directly ramping down to zero.
   // Can only be used to shorten a sound.
-  Instrument.prototype._truncateSound = function(record, releasetime) {
-    if (releasetime < record.time + record.duration) {
-      record.duration = Math.max(0, releasetime - record.time);
+  Instrument.prototype._truncateSound = function(record, truncatetime) {
+    if (truncatetime < record.time + record.duration) {
+      record.duration = Math.max(0, truncatetime - record.time);
       if (record.gainNode) {
         var timbre = record.timbre || this._timbre,
-            starttime = record.time,
+            starttime = record.time + Instrument.timeOffset,
+            releasetime = truncatetime + Instrument.timeOffset,
             attacktime = Math.min(releasetime, starttime + timbre.attack),
             decaytime = timbre.decay *
                 Math.pow(440 / record.frequency, timbre.decayfollow),
