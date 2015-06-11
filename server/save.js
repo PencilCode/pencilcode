@@ -17,7 +17,6 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var origfilename = filename;
 
     /*
     console.log({
@@ -164,12 +163,7 @@ exports.handleSave = function(req, res, app) {
       if (!fs.existsSync(path.dirname(absfile)) ||
           !fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
-        try {
-          fs.mkdirSync(path.dirname(absfile));
-        }
-        catch (e) {
-          utils.errorExit('Could not create dir: ' + path.dirname(filename));
-        }
+        tryToMkdirsSync(absfile);
       }
 
       // move case
@@ -182,16 +176,7 @@ exports.handleSave = function(req, res, app) {
           fs.renameSync(absSourceFile, absfile);
 
           // Cleanup directories if necessary
-          var dir = path.dirname(absSourceFile);
-          for (; dir ; dir = path.dirname(dir)) {
-            try {
-              fs.rmdirSync(dir);
-            }
-            catch (e) {
-              // Failed to remove dir, assume not empty
-              break;
-            }
-          }
+          removeDirsSync(path.dirname(absSourceFile));
 
           // Remove .key if present, because we don't want to
           // propagate password data
@@ -214,6 +199,7 @@ exports.handleSave = function(req, res, app) {
             }
 
             fsExtra.copySync(absSourceFile, absfile);
+
             // Remove .key if present, because we don't want to
             // propagate password data.
             if (utils.isPresent(path.join(absfile, '.key'))) {
@@ -259,15 +245,7 @@ exports.handleSave = function(req, res, app) {
         //}
 
       if (fs.existsSync(absfile)) {
-        try {
-          fsExtra.removeSync(absfile);
-        } catch (e) {
-          utils.errorExit('Could not remove: ' + absfile);
-        }
-
-        try {
-          removeDirsSync(path.dirname(absfile));
-        } catch (e) { }
+        tryToRemoveSync(absfile);
       }
 
       if (userdir != absfile) {
@@ -290,32 +268,20 @@ exports.handleSave = function(req, res, app) {
     if (!fs.existsSync(path.dirname(absfile)) ||
         !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
-      try {
-        fsExtra.mkdirsSync(path.dirname(absfile));
-      }
-      catch (e) {
-        utils.errorExit('Could not create dir: ' + path.dirname(filename));
-      }
+      tryToMkdirsSync(absfile);
     }
 
-    var statObj;
-    try {
-      var content = filemeta.printMetaString(data, meta);
-      fd = fs.writeFileSync(absfile, content);
-      var statObj = fs.statSync(absfile);
-      touchUserDir(userdir);
-      res.json({
-        saved: '/' + filename,
-        mtime: statObj.mtime.getTime(),
-        size: statObj.size
-      });
-      return;
-    }
-    catch (e) {
-      utils.errorExit('Error writing file: ' + absfile);
-    }
 
-    return;
+    var content = filemeta.printMetaString(data, meta);
+    fd = tryToWriteFileSync(absfile, content);
+
+    var statObj = fs.statSync(absfile);
+    touchUserDir(userdir);
+    res.json({
+      saved: '/' + filename,
+      mtime: statObj.mtime.getTime(),
+      size: statObj.size
+    });
   }
   catch (e) {
     if (e instanceof utils.ImmediateReturnError) {
@@ -325,6 +291,34 @@ exports.handleSave = function(req, res, app) {
       throw e;
     }
   }
+}
+
+function tryToWriteFileSync(absfilename, data, options) {
+  try {
+    return fs.writeFileSync(absfilename, data, options);
+  } catch (e) {
+    utils.errorExit('Error writing file: '  absfilename);
+  }
+}
+
+function tryToMkdirsSync(absfilename) {
+  try {
+    fsExtra.mkdirsSync(path.dirname(absfilename));
+  } catch (e) {
+    utils.errorExit('Could not create dir: '  path.dirname(absfilename));
+  }
+}
+
+function tryToRemoveSync(absfilename) {
+  try {
+    fsExtra.removeSync(absfilename);
+  } catch (e) {
+    utils.errorExit('Could not remove: '  absfilename);
+  }
+
+  try {
+    removeDirsSync(path.dirname(absfilename));
+  } catch (e) { }
 }
 
 function touchUserDir(userdir) {
@@ -343,12 +337,12 @@ function filenameuser(filename) {
 
 function removeDirsSync(dirStart) {
   for (var dir = dirStart; ; dir = path.dirname(dir)) {
-    if (fs.readdirSync(dir).length > 0) {
-      // Directory not empty, we're done.
-      return;
+    try {
+      fs.rmdirSync(dir);
+    } catch (e) {
+      // Failed to remove dir, assume not empty.
+      break;
     }
-
-    fsExtra.remove(dir);
   }
 }
 
