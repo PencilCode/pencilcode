@@ -334,7 +334,7 @@ function tryToWriteFileSync(absfilename, data, options) {
   try {
     return fs.writeFileSync(absfilename, data, options);
   } catch (e) {
-    utils.errorExit('Error writing file: '  absfilename);
+    utils.errorExit('Error writing file: ' + absfilename);
   }
 }
 
@@ -342,7 +342,7 @@ function tryToMkdirsSync(absfilename) {
   try {
     fsExtra.mkdirsSync(path.dirname(absfilename));
   } catch (e) {
-    utils.errorExit('Could not create dir: '  path.dirname(absfilename));
+    utils.errorExit('Could not create dir: ' + path.dirname(absfilename));
   }
 }
 
@@ -350,7 +350,7 @@ function tryToRemoveSync(absfilename) {
   try {
     fsExtra.removeSync(absfilename);
   } catch (e) {
-    utils.errorExit('Could not remove: '  absfilename);
+    utils.errorExit('Could not remove: ' + absfilename);
   }
 
   try {
