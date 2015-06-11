@@ -6,8 +6,6 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
-  var THUMB_DIR = '.thumbs/';
-
   var data = utils.param(req, 'data');
   var meta = utils.param(req, 'meta');
   var thumbnail = utils.param(req, 'thumbnail');
@@ -20,8 +18,6 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var thumbname = path.join(path.dirname(filename), THUMB_DIR,
-                              path.basename(filename) + '.png');
 
     /*
     console.log({
@@ -78,7 +74,6 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
-      thumbname = path.join(user, thumbname);
       userdir = utils.getUserHomeDir(user, app);
     }
 
@@ -109,7 +104,7 @@ exports.handleSave = function(req, res, app) {
 
 
     var absfile = utils.makeAbsolute(filename, app);
-    var absthumb = utils.makeAbsolute(thumbname, app);
+    var absthumb = utils.getAbsThumbPath(filename, app);
 
     //
     // Validate that users key matches the supplied key
@@ -147,9 +142,7 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
-      var sourcethumb = path.join(path.dirname(sourcefile), THUMB_DIR,
-                                  path.basename(sourcefile) + '.png');
-      var absSourceThumb = utils.makeAbsolute(sourcethumb, app);
+      var absSourceThumb = utils.getAbsThumbPath(sourcefile, app);
       var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
