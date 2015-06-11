@@ -100,7 +100,9 @@ exports.isFileNameValid = function(filename, needone) {
   return true;
 };
 
-exports.makeAbsolute = function(filename, app) {
+exports.makeAbsolute = makeAbsolute;
+
+function makeAbsolute(filename, app) {
   var absfile = path.join(app.locals.config.dirs.datadir, filename);
   if (absfile.indexOf(app.locals.config.dirs.datadir) != 0) {
     errorExit('Illegal filename ' + filename);
@@ -114,6 +116,6 @@ exports.getAbsThumbPath = function(filename, app) {
   var thumbname = path.join(path.dirname(filename), THUMB_DIR,
                             path.basename(filename) + '.png');
 
-  return utils.makeAbsolute(thumbname, app);
+  return makeAbsolute(thumbname, app);
 }
 
