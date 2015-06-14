@@ -734,14 +734,19 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
+  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    thumbnailDataUrl = generateThumbnailDataUrl();
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
-  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var newdata = $.extend({
+    thumbnail: thumbnailDataUrl
+  }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
