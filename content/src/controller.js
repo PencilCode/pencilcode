@@ -761,6 +761,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
+    // Flash the thumbnail after the control are updated.
+    view.flashThumbnail(thumbnailDataUrl);
   }
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,

@@ -164,6 +164,7 @@ window.pencilcode.view = {
   enableButton: enableButton,
   // Notifications
   flashNotification: flashNotification,
+  flashThumbnail: flashThumbnail,
   dismissNotification: dismissNotification,
   flashButton: flashButton,
   // Show login (or create account) dialog.
@@ -729,6 +730,20 @@ function showMiddleButton(which) {
   }
   // Enable tooltipster on the middle button.
   $('#middle button').tooltipster();
+}
+
+// Show thumbnail under the save button.
+function flashThumbnail(imageDataUrl) {
+  if (!imageDataUrl) { return; }
+  var tooltip = $('#save').tooltipster({
+    content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
+    multiple: true,
+    position: 'bottom',
+    theme: 'tooltipster-shadow',
+    timer: 3000,
+    trigger: 'custom'
+  })[0];
+  tooltip.show();
 }
 
 ///////////////////////////////////////////////////////////////////////////
