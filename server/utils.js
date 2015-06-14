@@ -110,7 +110,7 @@ function makeAbsolute(filename, app) {
   return path.resolve(absfile);
 };
 
-var THUMB_DIR = '/.thumbs/';
+var THUMB_DIR = '.thumbs/';
 exports.THUMB_DIR = THUMB_DIR;
 
 // Either pass in a partial path with `app`,
