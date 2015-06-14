@@ -113,10 +113,16 @@ function makeAbsolute(filename, app) {
 var THUMB_DIR = '/.thumbs/';
 exports.THUMB_DIR = THUMB_DIR;
 
+// Either pass in a partial path with `app`,
+// or pass in an absolute path without `app`.
 exports.getAbsThumbPath = function(filename, app) {
   var thumbname = path.join(path.dirname(filename), THUMB_DIR,
                             path.basename(filename) + '.png');
 
-  return makeAbsolute(thumbname, app);
+  if (app) {  // Assume partial path.
+    return makeAbsolute(thumbname, app);
+  } else {  // Assume absolute path.
+    return thumbname;
+  }
 }
 

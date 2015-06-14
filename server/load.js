@@ -427,7 +427,7 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    var absthumb = path.join(absdir, '.thumbs', contents[i] + '.png');
+    var absthumb = utils.getAbsThumbPath(item);
 
     list.push({
       name: contents[i],
