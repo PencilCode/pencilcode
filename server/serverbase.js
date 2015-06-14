@@ -106,7 +106,7 @@ exports.initialize2 = function(app) {
   }
   function loadThumb() {
     return function(req, res, next) {
-      req.url = path.dirname(req.url) + '/.thumbs/' +
+      req.url = path.dirname(req.url) + utils.THUMB_DIR +
                 path.basename(req.url);
       staticUserData(req, res, next);
     }
