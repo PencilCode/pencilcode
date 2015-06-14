@@ -2030,16 +2030,31 @@ function renderDirectory(position) {
       if (model.ownername === '' && filename === '') {
         if (m.list[j].mode.indexOf('d') < 0) { continue; }
         var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
-        links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
-      } else {
-        var label = name;
-        if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-        var href = '/home/' + filenameslash + label;
         links.push({
-            html: label,
+          name: name,
+          href: href,
+          type: 'user',
+          mtime: m.list[j].mtime
+        });
+      } else {
+        var thumbnail = '';
+        if (m.list[j].thumbnail) {
+           thumbnail = '/thumb/' + filenameslash + name +
+                       '.png?' + m.list[j].mtime;
+        }
+        var type = 'dir';
+        if (m.list[j].mode.indexOf('d') >= 0) {
+          name += '/';
+        } else {
+           type = 'file';
+        }
+        var href = '/home/' + filenameslash + name;
+        links.push({
             name: name,
-            link: label,
+            link: name,
             href: href,
+            type: type,
+            thumbnail: thumbnail,
             mtime: m.list[j].mtime
         });
       }
@@ -2050,9 +2065,11 @@ function renderDirectory(position) {
       links.sort(sortByName);
     }
     if (model.ownername !== '') {
-      links.push({html:''});
-      links.push({html:'<nobr class="create">Create new file</nobr>',
-          link:'#new'});
+      links.push({
+          name: 'Create new file',
+          type: 'new',
+          link: '#new'
+      });
     }
   }
   view.setPaneLinkText(pane, links, filename);

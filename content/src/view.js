@@ -1347,8 +1347,14 @@ $(window).on('resize.listing', function() {
 });
 
 function updatePaneLinks(pane) {
+  var DEFAULT_THUMBS = {
+    user: '//' + pencilcode.domain + '/image/user-128.png',
+    dir: '//' + pencilcode.domain + '/image/dir-128.png',
+    file: '//' + pencilcode.domain + '/image/file-128.png',
+    new: '//' + pencilcode.domain + '/image/new-128.png'
+  };
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
-      tightwidth, item, directory, tag, colsdone, list;
+      tightwidth, item, thumbnail, directory, tag, colsdone, list;
   function fwidth(elem) {
     // Get the width, including fractional width.
     if (elem.getBoundingClientRect) {
@@ -1364,10 +1370,15 @@ function updatePaneLinks(pane) {
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     tag = list[j].href ? 'a' : 'div';
-    item = $('<' + tag + ' class="item"'
-        + (list[j].href ? ' href="' + list[j].href + '" ' : '')
-        + '>' + list[j].html + '</' + tag + '>')
-        .appendTo(col);
+    thumbnail = list[j].thumbnail;
+    if (!thumbnail) {
+       thumbnail = DEFAULT_THUMBS[list[j].type] || '';
+    }
+    item = $('<' + tag + ' class="item'
+        + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')
+        + '><div><img class="thumbnail" src="' + thumbnail + '" alt="'
+        + list[j].name + '"><br><span>' + list[j].name + '</span></div></'
+        + tag + '>').appendTo(col);
     if (list[j].link) {
       item.data('link', list[j].link);
     }
