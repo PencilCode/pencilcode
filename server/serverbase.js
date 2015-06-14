@@ -106,9 +106,11 @@ exports.initialize2 = function(app) {
   }
   function loadThumb() {
     return function(req, res, next) {
-      req.url = path.dirname(req.url) + utils.THUMB_DIR +
-                path.basename(req.url);
-      staticUserData(req, res, next);
+      var user = res.locals.owner;
+      var thumbPath = url.parse(req.url).pathname;
+      req.url = path.join(user, path.dirname(thumbPath),
+                          utils.THUMB_DIR, path.basename(thumbPath));
+      rawUserData(req, res, next);
     }
   }
   app.use('/code', userDataPrinter('code'));
