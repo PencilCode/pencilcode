@@ -152,6 +152,53 @@ describe('test of server json apis', function() {
       });
     });
   });
+  it('correctly creates the thumbnail when saving a file', function(done) {
+    // Create a new file
+    var thumb = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAC/0lEQVR4Xu2Zy4pCUQwEj///l6KCDxQR3+iVZD0O7ba7hMt1kU2nCifJzPb7/TT4xHZghgCx7Ds4AmTzR4Bw/giAAAyB0Q4wA0TjZwgMx48ACMAdINsBZoBs/qyB4fwRAAG4A0Q7wAwQjZ81MBw/AiAAd4BsB5gBsvmzBobzRwAE4A4Q7QAzQDR+1sBw/AiAANwBsh1gBsjmzxoYzh8BEIA7QLQDzADR+FkDw/EjAAJwB8h2gBkgmz9rYDh/BEAA7gDRDjADRONnDQzHjwAIwB0g2wFmgGz+rIHh/BEAAbgDRDvADBCNnzUwHD8CIAB3gGwHmAGy+bMGhvNHAATgDhDtADNANH7WwHD8CIAA3AGyHWAGMOQ/TdO43W7jfr+Px+PR728fBDAU4PV6jdPp1M/lcuk3AhiC/hbp+XyO7XY7drvdOB6P/UaAIAHqZ3+1WvVT8OuNAEEC1N/8+Xzez2az6TcCIMCfHWAINBSDXwBDqL9EQoBfumVYWwIsFouxXC57G6jvzACGoP9bA2v4W6/X43A49CCIAEEC1CGo9v96zudzvxEgSID3+90XwOv12qfg+o4AQQJU1JKgnvq/QL0RIEwANS53ALVTpnUIYApWjYUAaqdM6xDAFKwaCwHUTpnWIYApWDUWAqidMq1DAFOwaiwEUDtlWocApmDVWAigdsq0DgFMwaqxEEDtlGkdApiCVWMhgNop0zoEMAWrxkIAtVOmdQhgClaNhQBqp0zrEMAUrBoLAdROmdYhgClYNRYCqJ0yrUMAU7BqLARQO2VahwCmYNVYCKB2yrQOAUzBqrEQQO2UaR0CmIJVYyGA2inTOgQwBavGQgC1U6Z1CGAKVo2FAGqnTOsQwBSsGgsB1E6Z1iGAKVg1FgKonTKtQwBTsGosBFA7ZVqHAKZg1VgIoHbKtA4BTMGqsRBA7ZRpHQKYglVjIYDaKdM6BDAFq8ZCALVTpnUIYApWjYUAaqdM6xDAFKwaCwHUTpnWIYApWDUWAqidMq1DAFOwaqwPdS6Y4AFiDlkAAAAASUVORK5CYII=';
+    json('zzz', '/save/thumbtest?data=abcdefgh&thumbnail=' + thumb,
+         function(s, obj) {
+      assert.equal(obj.saved, '/zzz/thumbtest');
+      get('zzz', '/thumb/thumbtest.png', function(s) {
+        assert.equal(s, 200);  // Load thumbnail successfully
+        done();
+      });
+    });
+  });
+  it('correctly moves the thumbnail when moving a file', function(done) {
+    // Now move it
+    json('zzz', '/save/testthumb?source=zzz/thumbtest&mode=mv',
+         function(s, obj) {
+      get('zzz', '/thumb/testthumb.png', function(s) {
+        assert.equal(s, 200);  // Thumbnail gets renamed too.
+        done();
+      });
+    });
+  });
+  it('correctly copies the thumbnail when copying a file', function(done) {
+    // Now copy it
+    json('zzz', '/save/testthumb2?source=zzz/testthumb',
+         function(s, obj) {
+      get('zzz', '/thumb/testthumb2.png', function(s) {
+        assert.equal(s, 200);  // Thumbnail gets copied too.
+        done();
+      });
+    });
+  });
+  it('correctly deletes the thumbnail when deleting a file', function(done) {
+    json('zzz', '/save/testthumb?data=', function(s, obj) {
+      assert.equal(obj.deleted, 'zzz/testthumb');
+      get('zzz', '/thumb/testthumb.png', function(s) {
+        assert.equal(s, 404);  // Thumbnail gets deleted too.
+        json('zzz', '/save/testthumb2?data=', function(s, obj) {
+          assert.equal(obj.deleted, 'zzz/testthumb2');
+          get('zzz', '/thumb/testthumb2.png', function(s) {
+            assert.equal(s, 404);  // Another thumbnail gets deleted too.
+            done();
+          });
+        });
+      });
+    });
+  });
   it('correctly copies a file', function(done) {
     // Generate a new file name
     var filename = new Date().getTime();
