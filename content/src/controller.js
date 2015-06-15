@@ -2038,7 +2038,9 @@ function renderDirectory(position) {
         });
       } else {
         var thumbnail = '';
-        if (m.list[j].thumbnail) {
+        if (m.list[j].thumbnail) {  // If there is a thumbnail for the file.
+          // Construct the url to the thumbnail.
+          // Append mtime so that when program updates, thumb gets refetched.
           thumbnail = '/thumb/' + filenameslash + name +
                       '.png?' + m.list[j].mtime;
         }
