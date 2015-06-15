@@ -1,7 +1,7 @@
 var http = require('http'),
     assert = require('assert');
 
-function get(user, path, onResult) {
+function get(user, path, enc, onResult) {
   var options = {
     host: '127.0.0.1',
     headers: { Host: (user ? user + '.' : '') + 'pencilcode.net.dev' },
@@ -10,7 +10,7 @@ function get(user, path, onResult) {
   };
   var req = http.get(options, function(res) {
     var output = '';
-    res.setEncoding('utf8');
+    res.setEncoding(enc);
     res.on('data', function (chunk) {
       output += chunk;
     });
@@ -25,7 +25,7 @@ function get(user, path, onResult) {
 }
 
 function json(user, path, onResult) {
-  get(user, path, function(status, data) {
+  get(user, path, 'utf8', function(status, data) {
     if (status >= 200 && status < 300) {
       onResult(status, JSON.parse(data));
     } else {
@@ -152,14 +152,28 @@ describe('test of server json apis', function() {
       });
     });
   });
+  var thumbData =
+    'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACAUlEQVRYw+2WPUhb' +
+    'URTHH7SDY8AOVfM1OYiDFMGtX9KlZLCjnRw7uHQV2klNmqR5CdbaxVZiQ6vSTRFC' +
+    '0S4i+LH4UZPBWB4RBCt9tkHqR+7fc555URMbheZdEfzD4cGD3N/vnnvuI4piUWwq' +
+    'bHYVv6l8iuwY8DASDhVZZxigZ5t8eBgHDoZTSZMohDtNuAyJf8GlSDC8thdr96LA' +
+    'g8FiuKUSJvwhgbW/R/UoJknCbHt9H7IM1nFUF5Hg+q8rWnjm7fFjgfMkcgKCvxNl' +
+    'HbiLSOTgBwRP8jpln/ZSEpbDS0nw7ZACP0uCBe5HjaGTAz8pwfDmj0BtD35IhZtn' +
+    'Xv8O4tLgUs/8Gn714RVBuOjHm5cC51SH4HWqQFNwO1XZiT9S4Rx7CBOeD1tA6gue' +
+    '9GvJGy+QlgbnuMJi/218SbBAZmEo0xj4qUmDV4XQyItqS+NGB7iefZ6dUToQtxxu' +
+    'tF9FoK5nLw/n2l0Z2X0+ODXd4NdXb3mRsQyea//i09jGKQGzdpaHd1rep7/ffIl1' +
+    'S+Ac3tnQtzlxloBZd4O/NLsV8JrX8LCAdzRRBOWZ8I0lhGdgi9ovQDdls6xwDv09' +
+    'HnbT4izRTRKfJudFKx1H3Zs9451LFfu08681IXTxx0opd5yq0AkAd0Tkp9wdyS5Q' +
+    'q19V+3FHsTrUAd6lTs/+2xE8ViTnEOOz7/iDE5YXAAAAAElFTkSuQmCC';
+  var thumb = 'data:image/png;base64,' + thumbData;
   it('correctly creates the thumbnail when saving a file', function(done) {
     // Create a new file
-    var thumb = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAC/0lEQVR4Xu2Zy4pCUQwEj///l6KCDxQR3+iVZD0O7ba7hMt1kU2nCifJzPb7/TT4xHZghgCx7Ds4AmTzR4Bw/giAAAyB0Q4wA0TjZwgMx48ACMAdINsBZoBs/qyB4fwRAAG4A0Q7wAwQjZ81MBw/AiAAd4BsB5gBsvmzBobzRwAE4A4Q7QAzQDR+1sBw/AiAANwBsh1gBsjmzxoYzh8BEIA7QLQDzADR+FkDw/EjAAJwB8h2gBkgmz9rYDh/BEAA7gDRDjADRONnDQzHjwAIwB0g2wFmgGz+rIHh/BEAAbgDRDvADBCNnzUwHD8CIAB3gGwHmAGy+bMGhvNHAATgDhDtADNANH7WwHD8CIAA3AGyHWAGMOQ/TdO43W7jfr+Px+PR728fBDAU4PV6jdPp1M/lcuk3AhiC/hbp+XyO7XY7drvdOB6P/UaAIAHqZ3+1WvVT8OuNAEEC1N/8+Xzez2az6TcCIMCfHWAINBSDXwBDqL9EQoBfumVYWwIsFouxXC57G6jvzACGoP9bA2v4W6/X43A49CCIAEEC1CGo9v96zudzvxEgSID3+90XwOv12qfg+o4AQQJU1JKgnvq/QL0RIEwANS53ALVTpnUIYApWjYUAaqdM6xDAFKwaCwHUTpnWIYApWDUWAqidMq1DAFOwaiwEUDtlWocApmDVWAigdsq0DgFMwaqxEEDtlGkdApiCVWMhgNop0zoEMAWrxkIAtVOmdQhgClaNhQBqp0zrEMAUrBoLAdROmdYhgClYNRYCqJ0yrUMAU7BqLARQO2VahwCmYNVYCKB2yrQOAUzBqrEQQO2UaR0CmIJVYyGA2inTOgQwBavGQgC1U6Z1CGAKVo2FAGqnTOsQwBSsGgsB1E6Z1iGAKVg1FgKonTKtQwBTsGosBFA7ZVqHAKZg1VgIoHbKtA4BTMGqsRBA7ZRpHQKYglVjIYDaKdM6BDAFq8ZCALVTpnUIYApWjYUAaqdM6xDAFKwaCwHUTpnWIYApWDUWAqidMq1DAFOwaqwPdS6Y4AFiDlkAAAAASUVORK5CYII=';
-    json('zzz', '/save/thumbtest?data=abcdefgh&thumbnail=' + thumb,
-         function(s, obj) {
+    json('zzz', '/save/thumbtest?data=abcdefgh&thumbnail=' +
+        encodeURIComponent(thumb), function(s, obj) {
       assert.equal(obj.saved, '/zzz/thumbtest');
-      get('zzz', '/thumb/thumbtest.png', function(s) {
+      get('zzz', '/thumb/thumbtest.png', 'base64', function(s, out) {
         assert.equal(s, 200);  // Load thumbnail successfully
+        assert.equal(out, thumbData);
         done();
       });
     });
@@ -168,8 +182,9 @@ describe('test of server json apis', function() {
     // Now move it
     json('zzz', '/save/testthumb?source=zzz/thumbtest&mode=mv',
          function(s, obj) {
-      get('zzz', '/thumb/testthumb.png', function(s) {
+      get('zzz', '/thumb/testthumb.png', 'base64', function(s, out) {
         assert.equal(s, 200);  // Thumbnail gets renamed too.
+        assert.equal(out, thumbData);
         done();
       });
     });
@@ -178,8 +193,9 @@ describe('test of server json apis', function() {
     // Now copy it
     json('zzz', '/save/testthumb2?source=zzz/testthumb',
          function(s, obj) {
-      get('zzz', '/thumb/testthumb2.png', function(s) {
+      get('zzz', '/thumb/testthumb2.png', 'base64', function(s, out) {
         assert.equal(s, 200);  // Thumbnail gets copied too.
+        assert.equal(out, thumbData);
         done();
       });
     });
@@ -187,11 +203,11 @@ describe('test of server json apis', function() {
   it('correctly deletes the thumbnail when deleting a file', function(done) {
     json('zzz', '/save/testthumb?data=', function(s, obj) {
       assert.equal(obj.deleted, 'zzz/testthumb');
-      get('zzz', '/thumb/testthumb.png', function(s) {
+      get('zzz', '/thumb/testthumb.png', 'base64', function(s) {
         assert.equal(s, 404);  // Thumbnail gets deleted too.
         json('zzz', '/save/testthumb2?data=', function(s, obj) {
           assert.equal(obj.deleted, 'zzz/testthumb2');
-          get('zzz', '/thumb/testthumb2.png', function(s) {
+          get('zzz', '/thumb/testthumb2.png', 'base64', function(s) {
             assert.equal(s, 404);  // Another thumbnail gets deleted too.
             done();
           });
@@ -353,14 +369,14 @@ describe('test of server json apis', function() {
     });
   });
   it('loads a file from code', function(done) {
-    get('zzz', '/code/jsfile', function(s, data, res) {
+    get('zzz', '/code/jsfile', 'utf8', function(s, data, res) {
       assert.equal('alert("hello");', data);
       assert.equal(res.headers['content-type'], 'text/javascript; charset=utf-8');
       done();
     });
   });
   it('loads a file from home', function(done) {
-    get('zzz', '/home/jsfile', function(s, data) {
+    get('zzz', '/home/jsfile', 'utf8', function(s, data) {
       assert(/<script type="text\/javascript">[^<]*alert\("hello"\);[\s},0);]*<\/script>/.test(data), data);
       done();
     });
