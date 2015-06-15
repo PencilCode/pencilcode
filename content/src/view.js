@@ -1372,7 +1372,7 @@ function updatePaneLinks(pane) {
     tag = list[j].href ? 'a' : 'div';
     thumbnail = list[j].thumbnail;
     if (!thumbnail) {
-       thumbnail = DEFAULT_THUMBS[list[j].type] || '';
+      thumbnail = DEFAULT_THUMBS[list[j].type] || '';
     }
     item = $('<' + tag + ' class="item'
         + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')

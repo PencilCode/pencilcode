@@ -806,7 +806,7 @@ function generateThumbnailDataUrl() {
   var h = canvas.height;
 
   if (canvas.id === 'turtle') {
-     return;
+    return;
   }
 
   // Get the image data.
@@ -828,13 +828,13 @@ function generateThumbnailDataUrl() {
       // Thus `index + 3` is the index of the Alpha value.
       if (imageData.data[index + 3] > 0) {
         if (x < topLeft.x) {
-           topLeft.x = x;
+          topLeft.x = x;
         }
         if (x > bottomRight.x) {
           bottomRight.x = x;
         }
         if (y < topLeft.y) {
-           topLeft.y = y;
+          topLeft.y = y;
         }
         if (y > bottomRight.y) {
           bottomRight.y = y;
@@ -2039,14 +2039,14 @@ function renderDirectory(position) {
       } else {
         var thumbnail = '';
         if (m.list[j].thumbnail) {
-           thumbnail = '/thumb/' + filenameslash + name +
-                       '.png?' + m.list[j].mtime;
+          thumbnail = '/thumb/' + filenameslash + name +
+                      '.png?' + m.list[j].mtime;
         }
         var type = 'dir';
         if (m.list[j].mode.indexOf('d') >= 0) {
           name += '/';
         } else {
-           type = 'file';
+          type = 'file';
         }
         var href = '/home/' + filenameslash + name;
         links.push({
