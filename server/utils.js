@@ -110,7 +110,7 @@ function makeAbsolute(filename, app) {
   return path.resolve(absfile);
 };
 
-var THUMB_DIR = '.thumb/';
+var THUMB_DIR = '.thumbs/';
 
 exports.getAbsThumbPath = function(filename, app) {
   return makeAbsolute(makeThumbPath(filename), app);
