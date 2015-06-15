@@ -269,7 +269,7 @@ window.pencilcode.storage = {
     // Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
     var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
-    if (msg.thumbnail) {
+    if (msg.thumbnail) {  // Send thumbnail data to server if it exists.
       payload.thumbnail = msg.thumbnail;
     }
     if (msg.mtime && !force) {

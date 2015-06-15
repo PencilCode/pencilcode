@@ -734,19 +734,18 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
-  var thumbnailDataURL = '';
+  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
-  } else if (doc.data != '') { // If program is not empty
-    // Save thumbnail as data url so that it will be easy to upload to server.
-    thumbnailDataURL = generateThumbnailDataURL();
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    thumbnailDataUrl = generateThumbnailDataUrl();
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
   var newdata = $.extend({
-    thumbnail: thumbnailDataURL
+    thumbnail: thumbnailDataUrl
   }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
@@ -762,8 +761,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
-    // Flash the thumbnail after the controls are updated.
-    view.flashThumbnail(thumbnailDataURL);
+    // Flash the thumbnail after the control are updated.
+    view.flashThumbnail(thumbnailDataUrl);
   }
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
@@ -794,7 +793,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   });
 }
 
-function generateThumbnailDataURL() {
+function generateThumbnailDataUrl() {
   var THUMBNAIL_SIZE = 128;
   // Use the same background as the default icons.
   var BACKGROUND_COLOR = '#eeeeee';
@@ -815,18 +814,18 @@ function generateThumbnailDataURL() {
   var imageData = ctx.getImageData(0, 0, w, h);
 
   // Initialize the coordinates for the image region,
-  // topLeft is initialized to right bottom,
+  // topLeft is initialized to bottom right,
   // and bottomRight is initialized to top left.
   var topLeft = { x: h, y: w };
   var bottomRight = { x: 0, y: 0 };
 
-  // Iterate through all the points to find the correct topLeft and bottomRight.
+  // Iterate through all the points to find the "interesting" region.
   var x, y, index;
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x++) {
-      // Every pixel takes up 4 slots in the array, contains R, G, B, A
+      // Every pixel takes up 4 slots in the array, contains R, G, B, A.
       index = (y * w + x) * 4;
-      // Thus `index + 3` is the index of Alpha.
+      // Thus `index + 3` is the index of the Alpha value.
       if (imageData.data[index + 3] > 0) {
         if (x < topLeft.x) {
           topLeft.x = x;
@@ -849,15 +848,13 @@ function generateThumbnailDataURL() {
   var imageHeight = bottomRight.y - topLeft.y + 1;
 
   // Find the longer edge and make it a square.
-  var longerEdge, diff;
+  var longerEdge;
   if (imageWidth > imageHeight) {
     longerEdge = imageWidth;
-    diff = (imageWidth - imageHeight) / 2;
-    topLeft.y -= diff;
+    topLeft.y -= (imageWidth - imageHeight) / 2;
   } else {
     longerEdge = imageHeight;
-    diff = (imageHeight - imageWidth) / 2;
-    topLeft.x -= diff;
+    topLeft.x -= (imageHeight - imageWidth) / 2;
   }
 
   // Draw the cropped image in a temp canvas and scale it down.
@@ -867,9 +864,11 @@ function generateThumbnailDataURL() {
   tempCanvas.height = THUMBNAIL_SIZE;
   tempCanvasCtx.fillStyle = BACKGROUND_COLOR;
   tempCanvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-  tempCanvasCtx.drawImage(canvas,                 // source canvas
-    topLeft.x, topLeft.y, longerEdge, longerEdge, // src coordinates and size
-    0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);        // dest coordinates and size
+  tempCanvasCtx.drawImage(canvas,                           // Src canvas.
+                          topLeft.x, topLeft.y,             // Src coordinates.
+                          longerEdge, longerEdge,           // Src coordinates.
+                          0, 0,                             // Dest coordinates.
+                          THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
 
   // Convert the temp canvas to data url and return.
   return tempCanvas.toDataURL();
@@ -2035,11 +2034,13 @@ function renderDirectory(position) {
           name: name,
           href: href,
           type: 'user',
-          mtime:m.list[j].mtime
+          mtime: m.list[j].mtime
         });
       } else {
         var thumbnail = '';
-        if (m.list[j].thumbnail) {
+        if (m.list[j].thumbnail) {  // If there is a thumbnail for the file.
+          // Construct the url to the thumbnail.
+          // Append mtime so that when program updates, thumb gets refetched.
           thumbnail = '/thumb/' + filenameslash + name +
                       '.png?' + m.list[j].mtime;
         }
@@ -2069,7 +2070,8 @@ function renderDirectory(position) {
       links.push({
           name: 'Create new file',
           type: 'new',
-          link: '#new'});
+          link: '#new'
+      });
     }
   }
   view.setPaneLinkText(pane, links, filename);

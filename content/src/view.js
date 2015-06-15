@@ -732,11 +732,9 @@ function showMiddleButton(which) {
   $('#middle button').tooltipster();
 }
 
-// Show thumbnail after save
+// Show thumbnail under the save button.
 function flashThumbnail(imageDataUrl) {
-  if (!imageDataUrl) {
-    return;
-  }
+  if (!imageDataUrl) { return; }
   var tooltip = $('#save').tooltipster({
     content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
     multiple: true,
@@ -1349,6 +1347,12 @@ $(window).on('resize.listing', function() {
 });
 
 function updatePaneLinks(pane) {
+  var DEFAULT_THUMBS = {
+    user: '//' + pencilcode.domain + '/image/user-128.png',
+    dir: '//' + pencilcode.domain + '/image/dir-128.png',
+    file: '//' + pencilcode.domain + '/image/file-128.png',
+    new: '//' + pencilcode.domain + '/image/new-128.png'
+  };
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, thumbnail, directory, tag, colsdone, list;
   function fwidth(elem) {
@@ -1368,22 +1372,7 @@ function updatePaneLinks(pane) {
     tag = list[j].href ? 'a' : 'div';
     thumbnail = list[j].thumbnail;
     if (!thumbnail) {
-      switch (list[j].type) {
-        case 'user':
-          thumbnail = '//' + pencilcode.domain + '/image/user-128.png';
-          break;
-        case 'dir':
-          thumbnail = '//' + pencilcode.domain + '/image/dir-128.png';
-          break;
-        case 'new':
-          thumbnail = '//' + pencilcode.domain + '/image/new-128.png';
-          break;
-        case 'file':
-          thumbnail = '//' + pencilcode.domain + '/image/file-128.png';
-          break;
-        default:
-          break;
-      }
+      thumbnail = DEFAULT_THUMBS[list[j].type] || '';
     }
     item = $('<' + tag + ' class="item'
         + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')
