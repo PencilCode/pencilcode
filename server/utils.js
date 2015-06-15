@@ -100,7 +100,9 @@ exports.isFileNameValid = function(filename, needone) {
   return true;
 };
 
-exports.makeAbsolute = function(filename, app) {
+exports.makeAbsolute = makeAbsolute;
+
+function makeAbsolute(filename, app) {
   var absfile = path.join(app.locals.config.dirs.datadir, filename);
   if (absfile.indexOf(app.locals.config.dirs.datadir) != 0) {
     errorExit('Illegal filename ' + filename);
@@ -108,3 +110,15 @@ exports.makeAbsolute = function(filename, app) {
   return path.resolve(absfile);
 };
 
+var THUMB_DIR = '.thumb/';
+
+exports.getAbsThumbPath = function(filename, app) {
+  return makeAbsolute(makeThumbPath(filename), app);
+}
+
+exports.makeThumbPath = makeThumbPath;
+
+function makeThumbPath(filename) {
+  return path.join(path.dirname(filename), THUMB_DIR,
+                   path.basename(filename) + '.png');
+}
