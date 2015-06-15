@@ -107,9 +107,10 @@ exports.initialize2 = function(app) {
   function loadThumb() {
     return function(req, res, next) {
       var user = res.locals.owner;
-      var thumbPath = url.parse(req.url).pathname;
-      req.url = path.join(user, path.dirname(thumbPath),
-                          utils.THUMB_DIR, path.basename(thumbPath));
+      var pathname = url.parse(req.url).pathname;
+      if (user == null || !/\.png$/.test(pathname)) { next(); return; }
+      var thumbPath = utils.makeThumbPath(pathname.replace(/\.png$/, ''));
+      req.url = path.join(user, thumbPath);
       rawUserData(req, res, next);
     }
   }

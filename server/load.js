@@ -427,7 +427,7 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    var absthumb = utils.getAbsThumbPath(item);
+    var absthumb = utils.makeThumbPath(item);
 
     list.push({
       name: contents[i],

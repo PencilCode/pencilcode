@@ -110,19 +110,15 @@ function makeAbsolute(filename, app) {
   return path.resolve(absfile);
 };
 
-var THUMB_DIR = '.thumbs/';
-exports.THUMB_DIR = THUMB_DIR;
+var THUMB_DIR = '.thumb/';
 
-// Either pass in a partial path with `app`,
-// or pass in an absolute path without `app`.
 exports.getAbsThumbPath = function(filename, app) {
-  var thumbname = path.join(path.dirname(filename), THUMB_DIR,
-                            path.basename(filename) + '.png');
-
-  if (app) {  // Assume partial path.
-    return makeAbsolute(thumbname, app);
-  } else {  // Assume absolute path.
-    return thumbname;
-  }
+  return makeAbsolute(makeThumbPath(filename), app);
 }
 
+exports.makeThumbPath = makeThumbPath;
+
+function makeThumbPath(filename) {
+  return path.join(path.dirname(filename), THUMB_DIR,
+                   path.basename(filename) + '.png');
+}
