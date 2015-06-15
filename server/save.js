@@ -20,8 +20,6 @@ exports.handleSave = function(req, res, app) {
   try {
     var user = res.locals.owner;
     var filename = utils.param(req, "file", utils.filenameFromUri(req));
-    var thumbname = path.join(path.dirname(filename), THUMB_DIR,
-                    path.basename(filename) + '.png');
 
     /*
     console.log({
@@ -109,7 +107,7 @@ exports.handleSave = function(req, res, app) {
 
 
     var absfile = utils.makeAbsolute(filename, app);
-    var absthumb = utils.makeAbsolute(thumbname, app);
+    var absthumb = utils.getAbsThumbPath(filename, app);
 
     //
     // Validate that users key matches the supplied key
@@ -147,9 +145,7 @@ exports.handleSave = function(req, res, app) {
       sourceuser = filenameuser(sourcefile);
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
-      var sourcethumb = path.join(path.dirname(sourcefile), THUMB_DIR,
-                                  path.basename(sourcefile) + '.png');
-      var absSourceThumb = utils.makeAbsolute(sourcethumb, app);
+      var absSourceThumb = utils.getAbsThumbPath(sourcefile, app);
       var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
@@ -176,6 +172,8 @@ exports.handleSave = function(req, res, app) {
         checkReservedUser(user, app);
         tryToMkdirsSync(absfile);
       }
+
+      // If the source file has a thumb, create dir for the destination thumb.
       if (sourceThumbExists) {
         tryToMkdirsSync(absthumb);
       }
@@ -188,11 +186,14 @@ exports.handleSave = function(req, res, app) {
 
         try {
           fs.renameSync(absSourceFile, absfile);
+
+          // Move the thumb along the way if it exists.
           if (sourceThumbExists) {
             fs.renameSync(absSourceThumb, absthumb);
             removeDirsSync(path.dirname(absSourceThumb));
           }
 
+          // Cleanup directories if necessary
           removeDirsSync(path.dirname(absSourceFile));
 
           // Remove .key if present, because we don't want to
@@ -225,6 +226,8 @@ exports.handleSave = function(req, res, app) {
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
+
+            // Copy the thumb if it exists.
             if (sourceThumbExists) {
               fsExtra.copySync(absSourceThumb, absthumb);
             }
@@ -294,15 +297,15 @@ exports.handleSave = function(req, res, app) {
       checkReservedUser(user, app);
       tryToMkdirsSync(absfile);
     }
-    if (thumbnail) {
-      tryToMkdirsSync(absthumb);
-    }
 
     var content = filemeta.printMetaString(data, meta);
     fd = tryToWriteFileSync(absfile, content);
 
-    if (thumbnail) {
+    // If thumbnail exists and it is valid, remove the data url header.
+    // and then save as png.
+    if (thumbnail && /^data:image\/png;base64,/.test(thumbnail)) {
       var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
+      tryToMkdirsSync(absthumb);
       tryToWriteFileSync(absthumb, base64data, { encoding: 'base64' });
     }
 
@@ -352,6 +355,34 @@ function tryToRemoveSync(absfilename) {
   } catch (e) { }
 }
 
+function tryToWriteFileSync(absfilename, data, options) {
+  try {
+    return fs.writeFileSync(absfilename, data, options);
+  } catch (e) {
+    utils.errorExit('Error writing file: ' + absfilename);
+  }
+}
+
+function tryToMkdirsSync(absfilename) {
+  try {
+    fsExtra.mkdirsSync(path.dirname(absfilename));
+  } catch (e) {
+    utils.errorExit('Could not create dir: ' + path.dirname(absfilename));
+  }
+}
+
+function tryToRemoveSync(absfilename) {
+  try {
+    fsExtra.removeSync(absfilename);
+  } catch (e) {
+    utils.errorExit('Could not remove: ' + absfilename);
+  }
+
+  try {
+    removeDirsSync(path.dirname(absfilename));
+  } catch (e) { }
+}
+
 function touchUserDir(userdir) {
   try {
     var now = new Date;
@@ -371,7 +402,7 @@ function removeDirsSync(dirStart) {
     try {
       fs.rmdirSync(dir);
     } catch (e) {
-      // Failed to remove dir, assume not empty
+      // Failed to remove dir, assume not empty.
       break;
     }
   }
