@@ -67,17 +67,17 @@ var debug = window.ide = {
       return;
     }
 
-    if(name == "seeeval"){
+    if (name == "seeeval"){
       currentDebugId = Math.floor(Math.random()*1000);
       record = {seeeval: true};
       debugRecordsDebugId[currentDebugId] = record;
       return;
     }
 
-    if(name === "appear"){
+    if (name === "appear"){
       var debugId = data[1];
       var recordD = debugRecordsDebugId[debugId];
-      if(!recordD.seeeval){
+      if (!recordD.seeeval){
         var recordL = debugRecordsLineNo[recordD.line];
         var eventMethod = data[0];
         recordD.method = eventMethod;
@@ -96,10 +96,10 @@ var debug = window.ide = {
       }
 
     }
-    if(name === "resolve"){
+    if (name === "resolve"){
       var debugId = data[1];
       var recordD = debugRecordsDebugId[debugId];
-      if(!recordD.seeeval){
+      if (!recordD.seeeval){
         var recordL = debugRecordsLineNo[recordD.line]; 
         eventMethod = data[0]
         recordD.method = eventMethod;
@@ -114,7 +114,7 @@ var debug = window.ide = {
       }
     }
 
-    if(name === "error"){
+    if (name === "error"){
       debugError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
@@ -132,8 +132,6 @@ var debug = window.ide = {
 
   
    // come back and update this reportEvent 
-   
-   console.log("currentdebugid:", currentDebugId)
   }, 
   
   stopButton: stopButton,
