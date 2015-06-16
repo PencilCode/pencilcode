@@ -1779,9 +1779,12 @@ function instrumentCode(code, mimetype) {
   } else if (/coffeescript/.test(mimetype)) {
     options = {
       traceFunc: 'ide.trace',
+      sourceMap: true,
       bare: true
     };
-    code = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+    result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+    debug.setSourceMap(result.v3SourceMap);
+    code = result.js;
   }
   return code;
 }

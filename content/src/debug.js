@@ -7,9 +7,10 @@ var traceEvents = []; //list of event location objects created by tracing events
 define([
   'jquery',
   'view',
-  'see'
+  'see',
+  'sourcemap/source-map-consumer'
  ],
-function($, view, see) {
+function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
@@ -19,8 +20,10 @@ var currentDebugId = 0;
 var currentEventIndex = 0;
 var debugRecordsDebugId = {};
 var debugRecordsLineNo = {};
+var cachedParseStack = {}
 var pollTimer = null; 
 var stopButtonShown = 0;
+var currentSourceMap = null;
 
 
 Error.stackTraceLimit = 20;
@@ -33,6 +36,7 @@ Error.stackTraceLimit = 20;
 function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;  
+  cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   startPollingWindow();
@@ -106,6 +110,23 @@ var debug = window.ide = {
 
     }
 
+    if(name === "error"){
+      debugError.apply(null, data);
+
+      // data can't be marshalled fully due to circular references not
+      // being supported by JSON.stringify(); copy over the essential bits
+      var simpleData = {};
+      try{
+        if (toString.call(data) === "[object Array]" &&
+            data.length > 0 && data[0].message) {
+          simpleData.message = data[0].message;
+        }
+      } catch (error) {
+        simpleData.message = 'Unknown error.';
+      }
+      view.publish('error', [simpleData]);
+    }
+
   
    // come back and update this reportEvent 
    
@@ -149,6 +170,9 @@ var debug = window.ide = {
   debugRecordsDebugId[currentDebugId] = record;
   debugRecordsLineNo[lineno] = record;
   console.log(data)
+  },
+  setSourceMap: function (map) {
+    currentSourceMap = map;
   }
 };
 
@@ -346,7 +370,55 @@ function untraceLine(line) {
 }
 
 
-
+// parsestack converts an Error or ErrorEvent object into the following
+// JSON structure.  Starting from the deepest call, it returns an array
+// of tuples, each one representing a call in the call stack:
+// [
+//   {
+//     method: (methodname),
+//     file: (filename),
+//     line: (one-based-linenumber),
+//     column: (one-based-columnnumber)
+//   },...
+// ]
+// Fields that are unknown are present but with value undefined or null.
+function parsestack(err) {
+  var parsed = [], lines, j, line;
+  // This code currently only works on Chrome.
+  // TODO: add support for parsing other browsers' call stacks.
+  if (err.stack) {
+    var cached = cachedParseStack[err.stack];
+    if (cached) {
+      return cached;
+    }
+    lines = err.stack.split('\n');
+    for (j = 0; j < lines.length; ++j) {
+      line = lines[j];
+      // We are interested only in lines starting with "at "
+      if (!/^\s*at\s/.test(line)) continue;
+      line = line.replace(/^\s*at\s+/, '');
+      // Parse the call as printed by CallSiteToString(message.js) in Chrome.
+      // Example: "Type.method (filename.js:43:1)"
+      var methodname = null;
+      // First, strip off filename/line number if present in parens.
+      var parenpat = /\s+\((.*?)(?::(\d+)(?::(\d+))?)?\)$/;
+      var locationmatch = parenpat.exec(line);
+      if (locationmatch) {
+        methodname = line.replace(parenpat, '');
+      } else {
+        locationmatch = /\s*(.*?)(?::(\d+)(?::(\d+))?)?$/.exec(line);
+      }
+      parsed.push({
+        method: methodname,
+        file: locationmatch[1],
+        line: locationmatch[2] && parseInt(locationmatch[2]),
+        column: locationmatch[3] && parseInt(locationmatch[3])
+      });
+    }
+    cachedParseStack[err.stack] = parsed;
+  }
+  return parsed;
+}
 
 // Returns the (1-based) line number for an error object, if any;
 // or returns null if none can be figured out.
@@ -360,62 +432,38 @@ function editorLineNumberForError(error) {
     if (error.error) {
       error = error.error;
     }
-    // If we have a syntax error that doesn't get passed through the
-    // event object, then try to pull it from the CoffeeScript.
-    if (targetWindow.CoffeeScript && targetWindow.CoffeeScript.code) {
-      for (var anyfile in targetWindow.CoffeeScript.code) {
-        if (targetWindow.CoffeeScript.code[anyfile].syntaxError) {
-          error = targetWindow.CoffeeScript.code[anyfile].syntaxError;
-          break;
-        }
-      }
-    }
   }
   var parsed = parsestack(error);
   if (!parsed) return null;
-  if (!targetWindow || !targetWindow.CoffeeScript ||
-      !targetWindow.CoffeeScript.code) return null;
   // Find the innermost call that corresponds to compiled CoffeeScript
   // or inline Javascript.
   var ownurl = targetWindow.location.href;
-  var inline = false;
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
     if (parsed[j].file == ownurl) {
-      frame = parsed[j];
-      inline = true;
-      break;
-    }
-    if (parsed[j].file in targetWindow.CoffeeScript.code) {
       frame = parsed[j];
       break;
     }
   }
   // For debugging:
-  // console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
+  //console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
-        return error.location.first_line - lineNumberOffset;
+        return error.location.first_line;
       }
     }
     return null;
   }
 
-  if (inline) {
-    return frame.line - lineNumberOffset;
-  }
-
-  var smc = sourceMapConsumerForFile(frame.file);
+  if (!currentSourceMap) return null;
+  var smc = new sourcemap.SourceMapConsumer(currentSourceMap);
   var mapped = smc.originalPositionFor({
-    line: frame.line + 1, // Coffeescript adds a line to our js.
+    line: frame.line - 3,
     column: frame.column - 1
   });
-  if (mapped.line == null) return null;
 
-  // Subtract a few lines of boilerplate from the top of the script.
-  var result = mapped.line - lineNumberOffset;
-  return result;
+  return mapped.line;
 }
 
 //////////////////////////////////////////////////////////////////////
