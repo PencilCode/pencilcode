@@ -13,17 +13,16 @@ function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
-var targetWindow = null;    // window object of the frame being debugged.
-var currentEventIndex = 0;
-var currentDebugId = 0;
-var currentEventIndex = 0;
-var debugRecordsDebugId = {};
-var debugRecordsLineNo = {};
-var cachedParseStack = {}
-var pollTimer = null; 
-var stopButtonShown = 0;
-var currentSourceMap = null;
-var traceEvents = []; //list of event location objects created by tracing events
+var targetWindow = null;      // window object of the frame being debugged.
+var currentEventIndex = 0;    // current index into traceEvents.
+var currentDebugId = 0;       // id used to pair jquery-turtle events with trace events.
+var debugRecordsDebugId = {}; // map debug ids -> line execution records.
+var debugRecordsLineNo = {};  // map line numbers -> line execution records.
+var cachedParseStack = {};    // parsed stack traces for currently-running code.
+var pollTimer = null;         // poll for stop button.
+var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
+var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
+var traceEvents = [];         // list of event location objects created by tracing events
 
 
 Error.stackTraceLimit = 20;
@@ -35,7 +34,7 @@ Error.stackTraceLimit = 20;
 // having to do with previous sessions are ignored.
 function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
-  targetWindow = w;  
+  targetWindow = w;
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -46,11 +45,6 @@ function bindframe(w) {
 // as the top frame's "ide" global variable.
 var debug = window.ide = {
   nextId: function() {
-    // The following line of code is hot under profile and is optimized:
-    // By avoiding using createError()'s thrown exception when we can get
-    // a call stack with a simple Error() constructor, we nearly double
-    // speed of a fractal program.
-    //return currentEventIndex;
     return currentDebugId;
   },
   bindframe: bindframe,
@@ -62,7 +56,7 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
-   
+
     if (!targetWindow) {
       return;
     }
@@ -83,8 +77,8 @@ var debug = window.ide = {
         recordD.method = eventMethod;
         recordL.method = eventMethod;
         var eventArgs = data[5];
-        recordD.args = eventArgs; 
-        recordL.args = eventArgs; 
+        recordD.args = eventArgs;
+        recordL.args = eventArgs;
         var index = recordD.eventIndex;
         var location = traceEvents[index].location.first_line
         var coordId = data[3];
@@ -99,7 +93,7 @@ var debug = window.ide = {
       var debugId = data[1];
       var recordD = debugRecordsDebugId[debugId];
       if (!recordD.seeeval){
-        var recordL = debugRecordsLineNo[recordD.line]; 
+        var recordL = debugRecordsLineNo[recordD.line];
         eventMethod = data[0]
         recordD.method = eventMethod;
         recordL.method = eventMethod;
@@ -129,10 +123,10 @@ var debug = window.ide = {
       view.publish('error', [simpleData]);
     }
 
-  
-   // come back and update this reportEvent 
-  }, 
-  
+
+   // come back and update this reportEvent
+  },
+
   stopButton: stopButton,
 
   getEditorText: function() {
@@ -519,7 +513,7 @@ view.on('icehover', function(pane, ev) {
   var lineno = ev.line + 1;
 
   if (pane != view.paneid('left')) return;
-  
+
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   displayProtractorForRecord(debugRecordsLineNo[lineno]);
 });
@@ -539,7 +533,7 @@ function convertCoords(origin, astransform) {
 
 
 var lastRunTime = 0;
-function stopButton(command) { 
+function stopButton(command) {
   if (command == 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
