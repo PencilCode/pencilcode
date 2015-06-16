@@ -50,8 +50,8 @@ var debug = window.ide = {
     // By avoiding using createError()'s thrown exception when we can get
     // a call stack with a simple Error() constructor, we nearly double
     // speed of a fractal program.
-  //return currentEventIndex;
-  return currentDebugId;
+    //return currentEventIndex;
+    return currentDebugId;
   },
   bindframe: bindframe,
   interruptable: function() {
@@ -68,7 +68,7 @@ var debug = window.ide = {
     }
 
     if (name == "seeeval"){
-      currentDebugId = Math.floor(Math.random()*1000);
+      currentDebugId += 1;
       record = {seeeval: true};
       debugRecordsDebugId[currentDebugId] = record;
       return;
@@ -87,7 +87,6 @@ var debug = window.ide = {
         recordL.args = eventArgs; 
         var index = recordD.eventIndex;
         var location = traceEvents[index].location.first_line
-        console.log("line number: ", location);
         var coordId = data[3];
         var elem = data[4];
         recordD.startCoords[coordId] = collectCoords(elem);
@@ -156,10 +155,10 @@ var debug = window.ide = {
   },
   trace: function(event,data) {
     // This receives events for the new debugger to use.
+    currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
-    currentDebugId = Math.floor(Math.random()*1000); 
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
     record.line = lineno;
@@ -540,7 +539,7 @@ function convertCoords(origin, astransform) {
 
 
 var lastRunTime = 0;
-function stopButton(command) { console.log("Stopbutton");  
+function stopButton(command) { 
   if (command == 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
