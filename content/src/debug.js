@@ -33,7 +33,7 @@ Error.stackTraceLimit = 20;
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
 function bindframe(w) {
-  if (!targetWindow && !w || targetWindow === w) return;
+  if (!targetWindow && !w || targetWindow == w) return;
   targetWindow = w;
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -68,7 +68,7 @@ var debug = window.ide = {
       return;
     }
 
-    if (name === "appear"){
+    if (name == "appear"){
       var debugId = data[1];
       var recordD = debugRecordsByDebugId[debugId];
       if (!recordD.seeeval){
@@ -89,7 +89,7 @@ var debug = window.ide = {
       }
 
     }
-    if (name === "resolve"){
+    if (name == "resolve"){
       var debugId = data[1];
       var recordD = debugRecordsByDebugId[debugId];
       if (!recordD.seeeval){
@@ -107,13 +107,13 @@ var debug = window.ide = {
       }
     }
 
-    if (name === "error"){
+    if (name == "error"){
       debugError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
       try{
-        if (toString.call(data) === "[object Array]" &&
+        if (toString.call(data) == "[object Array]" &&
             data.length > 0 && data[0].message) {
           simpleData.message = data[0].message;
         }
@@ -260,7 +260,7 @@ function errorAdvice(msg, text) {
   } else if ((m = /unexpected (\S+)/.exec(msg))) {
     advice += "<p>Is something missing before " + m[1] + "?";
   } else if (/missing ["']/.test(msg) ||
-      (msg === "Cannot read property '0' of null")) {
+      (msg == "Cannot read property '0' of null")) {
     advice += "<p>Is there a string with an unmatched quote?";
     advice += "<p>It might be on an higher line.";
   } else if (/missing [\])}]/.test(msg)) {
@@ -327,7 +327,7 @@ function displayProtractorForRecord(record) {
 // (with each component optional).
 // This function quickly parses this form into a canonicalized object.
 function parseTurtleTransform(transform) {
-  if (transform === 'none') {
+  if (transform == 'none') {
     return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
   }
   // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
