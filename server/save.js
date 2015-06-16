@@ -321,7 +321,7 @@ exports.handleSave = function(req, res, app) {
       throw e;
     }
   }
-}
+};
 
 function tryToWriteFileSync(absfilename, data, options) {
   try {
