@@ -79,12 +79,12 @@ describe('code debugger', function() {
     }, function() {
       try {
         // Wait for the preview frame to show
-        if (!$('.preview iframe').length) return { poll: 'step 1' };
-        if (!$('.preview iframe')[0].contentWindow.see) return { poll: 'step 2' };
+        if (!$('.preview iframe').length) return;
+        if (!$('.preview iframe')[0].contentWindow.see) return;
         // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
         // And also wait for the turtle to start moving.
-        if (seval('getxy()')[1] < 10) return { poll: 'step 3' };
+        if (seval('getxy()')[1] < 10) return;
         return {
           direction: seval('direction()'),
           getxy: seval('getxy()'),
@@ -353,15 +353,13 @@ it('should be able to unhighlight lines when unhovered', function(done) {
 	}
     }, function() {
       try {
-		  var hovered = false;
-		  var unhovered = false;
 		  if (!$('.preview iframe').length) return;
 		  if (!$('.preview iframe')[0].contentWindow.see) return;
 		  if (!$('.ace_gutter-cell').length) return;
 		  window._simulate('mouseover', $(".ace_gutter-cell")[0]);
 		  window._simulate('mouseout', $(".ace_gutter-cell")[0]);
 		  
-	  if($(".debugfocus").length != 0){
+	      if($(".debugfocus").length != 0){
 			  return;
 		  }
 		  
@@ -387,20 +385,17 @@ it('should be able to unhighlight lines when unhovered', function(done) {
       // Click on the square stop button.
       $('#stop').mousedown();
       $('#stop').click();
-	 
-	  
+	 	  
     }, function() {
       try {
-		  
+		 
 		  if (!$('.preview iframe').length) return;
 		  if (!$('.preview iframe')[0].contentWindow.see) return;
-	/*  if($('.debugtrace').length != 0){
-			  return;
-		  }*/
+		  var curr_highlight = $('.debugtrace').css('top');
 		  var seval = $('.preview iframe')[0].contentWindow.see.eval;
 		  seval('fd 100');
 		  return {
-		  poll: "polling",
+		  originaldebugtracetop: curr_highlight, 
           debugtracecount: $('.debugtrace').length,
           debugtracetop: $('.debugtrace').css('top')
 	  };
@@ -411,9 +406,8 @@ it('should be able to unhighlight lines when unhovered', function(done) {
       }
     }, function(err, result) {
       assert.ifError(err);
-	//  assert.equal(0, parseInt(result.debugtracetop));
-	  
-		done();
+      assert.equal(parseInt(result.originaldebugtracetop), parseInt(result.debugtracetop));  
+      done();
   });
 
 });
