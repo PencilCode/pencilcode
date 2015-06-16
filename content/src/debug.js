@@ -16,8 +16,8 @@ eval(see.scope('debug'));
 var targetWindow = null;      // window object of the frame being debugged.
 var currentEventIndex = 0;    // current index into traceEvents.
 var currentDebugId = 0;       // id used to pair jquery-turtle events with trace events.
-var debugRecordsDebugId = {}; // map debug ids -> line execution records.
-var debugRecordsLineNo = {};  // map line numbers -> line execution records.
+var debugRecordsByDebugId = {}; // map debug ids -> line execution records.
+var debugRecordsByLineNo = {};  // map line numbers -> line execution records.
 var cachedParseStack = {};    // parsed stack traces for currently-running code.
 var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
@@ -64,15 +64,15 @@ var debug = window.ide = {
     if (name == "seeeval"){
       currentDebugId += 1;
       record = {seeeval: true};
-      debugRecordsDebugId[currentDebugId] = record;
+      debugRecordsByDebugId[currentDebugId] = record;
       return;
     }
 
     if (name === "appear"){
       var debugId = data[1];
-      var recordD = debugRecordsDebugId[debugId];
+      var recordD = debugRecordsByDebugId[debugId];
       if (!recordD.seeeval){
-        var recordL = debugRecordsLineNo[recordD.line];
+        var recordL = debugRecordsByLineNo[recordD.line];
         var eventMethod = data[0];
         recordD.method = eventMethod;
         recordL.method = eventMethod;
@@ -91,9 +91,9 @@ var debug = window.ide = {
     }
     if (name === "resolve"){
       var debugId = data[1];
-      var recordD = debugRecordsDebugId[debugId];
+      var recordD = debugRecordsByDebugId[debugId];
       if (!recordD.seeeval){
-        var recordL = debugRecordsLineNo[recordD.line];
+        var recordL = debugRecordsByLineNo[recordD.line];
         eventMethod = data[0]
         recordD.method = eventMethod;
         recordL.method = eventMethod;
@@ -156,8 +156,8 @@ var debug = window.ide = {
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
     record.line = lineno;
-    debugRecordsDebugId[currentDebugId] = record;
-    debugRecordsLineNo[lineno] = record;
+    debugRecordsByDebugId[currentDebugId] = record;
+    debugRecordsByLineNo[lineno] = record;
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -495,7 +495,7 @@ view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsLineNo[lineno]);
+  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
 });
 
 view.on('leavegutter', function(pane, lineno) {
@@ -515,7 +515,7 @@ view.on('icehover', function(pane, ev) {
   if (pane != view.paneid('left')) return;
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsLineNo[lineno]);
+  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
 });
 
 function convertCoords(origin, astransform) {
