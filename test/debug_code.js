@@ -204,8 +204,7 @@ describe('code debugger', function() {
         var evt;
         try {
           // Modern API supported by IE9+
-          evt = new MouseEvent(type, opts);
-        
+          evt = new MouseEvent(type, opts);       
         } 
         catch (e) {
             // Old API still required by PhantomJS.
@@ -223,13 +222,13 @@ describe('code debugger', function() {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         if (!$('.ace_gutter-cell').length) return;
         // Simulate hovering over a program line.
-        window._simulate('mouseover', $(".ace_gutter-cell")[0]);
+        window._simulate('mouseover', $('.ace_gutter-cell')[0]);
         // Wait until hovering occurs.
-        if ($(".debugfocus").length == 0) {
+        if ($('.debugfocus').length == 0) {
           return;
         }     
         return {
-          debugfocus : $(".debugfocus").length
+          debugfocus: $('.debugfocus').length
         };
       }
       catch(e) {
@@ -238,70 +237,71 @@ describe('code debugger', function() {
     }, function(err, result) {
       assert.ifError(err);
       // A line of code should be highlighted.
-     assert.equal(1, result.debugfocus);
-     done();
+      assert.equal(1, result.debugfocus);
+      done();
     });
   });
   it('should be able to unhighlight lines when unhovered', function(done) { 
-  asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the triangle run button.
-      $('#run').mousedown();
-      $('#run').click();
+    asyncTest(_page, one_step_timeout, null, function() {
+        // Click on the triangle run button.
+        $('#run').mousedown();
+        $('#run').click();
     }, function() {
-      try {
-        if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
-        if (!$('.ace_gutter-cell').length) return;
-        // Have the mouse hover over the program line.
-        window._simulate('mouseover', $(".ace_gutter-cell")[0]);
-        // Have the mouse move away from the program line.
-        window._simulate('mouseout', $(".ace_gutter-cell")[0]);
-        // Wait until mouse moves away from the program line.
-        if ($(".debugfocus").length != 0) {
-          return;
-        }      
-        return {
-          debugfocus : $(".debugfocus").length,  
-        };
-      }
-      catch(e) {
-        return {poll: true, error: e};
-      }
-    }, function(err, result) {
-      assert.ifError(err);
-      // A line of code should not be highlighted.
-      assert.equal(0, result.debugfocus);
-      done();
-    });
+        try {
+          if (!$('.preview iframe').length) return;
+          if (!$('.preview iframe')[0].contentWindow.see) return;
+          if (!$('.ace_gutter-cell').length) return;
+          // Have the mouse hover over the program line.
+          window._simulate('mouseover', $('.ace_gutter-cell')[0]);
+          // Have the mouse move away from the program line.
+          window._simulate('mouseout', $('.ace_gutter-cell')[0]);
+          // Wait until mouse moves away from the program line.
+          if ($('.debugfocus').length != 0) {
+            return;
+          }      
+          return {
+            debugfocus: $('.debugfocus').length,  
+          };
+        }
+         catch(e) {
+          return {poll: true, error: e};
+        }
+       }, function(err, result) {
+         assert.ifError(err);
+         // A line of code should not be highlighted.
+         assert.equal(0, result.debugfocus);
+         done();
+      });
   }); 
   it('should not trace commands in the test panel', function(done) {
-  asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the square stop button.
-      $('#stop').mousedown();
-      $('#stop').click();     
+    asyncTest(_page, one_step_timeout, null, function() {
+        // Click on the square stop button.
+        $('#stop').mousedown();
+        $('#stop').click();     
     }, function() {
-      try {
-        if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
-        // Keep track of the currently traced line.
-        var curr_trace = $('.debugtrace').css('top');
-        // Evaluate some expression in the coffeescript window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
-        seval('fd 100');
-        return {
-          originaltrace: curr_trace, 
-          debugtracecount: $('.debugtrace').length,
-          debugtracetop: $('.debugtrace').css('top')
-        };      
-      }
-      catch(e) {
-        return {poll: true, error: e};
-      }
-    }, function(err, result) {
-      assert.ifError(err);
-      // The same line should still be traced.
-      assert.equal(parseInt(result.originaltrace), parseInt(result.debugtracetop));  
-      done();
+        try {
+          if (!$('.preview iframe').length) return;
+          if (!$('.preview iframe')[0].contentWindow.see) return;
+          // Keep track of the currently traced line.
+          var curr_trace = $('.debugtrace').css('top');
+          // Evaluate some expression in the coffeescript window.
+          var seval = $('.preview iframe')[0].contentWindow.see.eval;
+          seval('interrupt("reset")');
+          seval('fd 100');
+          return {
+            originaltrace: curr_trace, 
+            debugtracecount: $('.debugtrace').length,
+            debugtracetop: $('.debugtrace').css('top')
+          };      
+        }
+        catch(e) {
+          return {poll: true, error: e};
+        }
+       }, function(err, result) {
+         assert.ifError(err);
+         // The same line should still be traced.
+         assert.equal(parseInt(result.originaltrace), parseInt(result.debugtracetop));  
+         done();
     });
   });
   it('is done', function(done) {
