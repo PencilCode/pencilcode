@@ -6,8 +6,6 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
-  var THUMB_DIR = '.thumbs/';
-
   var data = utils.param(req, 'data');
   var meta = utils.param(req, 'meta');
   var thumbnail = utils.param(req, 'thumbnail');
@@ -76,7 +74,6 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
-      thumbname = path.join(user, thumbname);
       userdir = utils.getUserHomeDir(user, app);
     }
 
@@ -226,7 +223,6 @@ exports.handleSave = function(req, res, app) {
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
-
             // Copy the thumb if it exists.
             if (sourceThumbExists) {
               fsExtra.copySync(absSourceThumb, absthumb);
@@ -326,34 +322,6 @@ exports.handleSave = function(req, res, app) {
     }
   }
 };
-
-function tryToWriteFileSync(absfilename, data, options) {
-  try {
-    return fs.writeFileSync(absfilename, data, options);
-  } catch (e) {
-    utils.errorExit('Error writing file: ' + absfilename);
-  }
-}
-
-function tryToMkdirsSync(absfilename) {
-  try {
-    fsExtra.mkdirsSync(path.dirname(absfilename));
-  } catch (e) {
-    utils.errorExit('Could not create dir: ' + path.dirname(absfilename));
-  }
-}
-
-function tryToRemoveSync(absfilename) {
-  try {
-    fsExtra.removeSync(absfilename);
-  } catch (e) {
-    utils.errorExit('Could not remove: ' + absfilename);
-  }
-
-  try {
-    removeDirsSync(path.dirname(absfilename));
-  } catch (e) { }
-}
 
 function tryToWriteFileSync(absfilename, data, options) {
   try {
