@@ -421,6 +421,8 @@ describe('code editor', function() {
       $('#logout').mousedown();
       $('#logout').click();
     }, function() {
+      // Wait for the logout button to vanish.
+      if ($('#logout').is(':visible')) return;
       // Wait for the butterbar to show.
       if (!$('#notification').is(':visible')) return;
       return {
