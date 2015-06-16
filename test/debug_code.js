@@ -148,9 +148,6 @@ describe('code debugger', function() {
       assert.equal(true, result.touchesblue);
       // The turtle should not be moving any more.
       assert.equal(0, result.queuelen);
-      /* TODO: investigate if PhantomJS stack traces can be parsed.
-       * For now, line tracing dosn't work on PhantomJS, so these tests
-       * are disabled.*/
       // A line of code should be traced.
       assert.equal(1, result.debugtracecount);
       // The traced code should be around line 4 or beyond.
@@ -158,12 +155,11 @@ describe('code debugger', function() {
       done();
     });
   });
-    it('should be able to trace program line', function(done) {
+  it('should be able to trace program line', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the square stop button.
       $('#stop').mousedown();
-      $('#stop').click();
-	  
+      $('#stop').click();	  
     }, function() {
       try {
 	    if (!$('.preview iframe').length) return;
@@ -188,19 +184,16 @@ describe('code debugger', function() {
       assert.ok(parseInt(result.debugtracetop) > 80);
       done();
     });
-});
-it('should be able to highlight lines when hovered', function(done) {
-	
- asyncTest(_page, one_step_timeout, null, function() {
+  });
+  it('should be able to highlight lines when hovered', function(done) {	
+    asyncTest(_page, one_step_timeout, null, function() {
       // Click on the square stop button.
       $('#run').mousedown();
       $('#run').click();
-	  /* $('#stop').mousedown();
-	   $('#stop').click();*/
-	 window._simulate = function simulate(type, target, options) {
+	  window._simulate = function simulate(type, target, options) {
     	if ('string' == typeof(target)) {
       	target = $(target).get(0);
-    }
+     }
     options = options || {};
     var pageX = pageY = clientX = clientY = dx = dy = 0;
     var location = options.location || target;
@@ -270,7 +263,6 @@ it('should be able to highlight lines when hovered', function(done) {
 		  }
 		  
 		  return{
-			//  poll:"polling",
 			  debugfocus : $(".debugfocus").length
 		  };
       }
