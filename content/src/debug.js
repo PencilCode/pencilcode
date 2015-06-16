@@ -68,7 +68,6 @@ var debug = window.ide = {
     }
 
     if(name == "seeeval"){
-      console.log("seeeval");
       currentDebugId = Math.floor(Math.random()*1000);
       record = {seeeval: true};
       debugRecordsDebugId[currentDebugId] = record;
@@ -117,7 +116,6 @@ var debug = window.ide = {
 
     if(name === "error"){
       debugError.apply(null, data);
-
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
@@ -140,9 +138,6 @@ var debug = window.ide = {
   
   stopButton: stopButton,
 
-  /*function(){
-   // console.log("stopbutton");
-  },*/
   getEditorText: function() {
     var doc = view.getPaneEditorData(view.paneid('left'));
     if (doc) {
@@ -164,8 +159,6 @@ var debug = window.ide = {
   trace: function(event,data) {
     // This receives events for the new debugger to use.
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
-    console.log("trace");
-    console.log(traceEvents);
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
     currentDebugId = Math.floor(Math.random()*1000); 
@@ -174,7 +167,6 @@ var debug = window.ide = {
     record.line = lineno;
     debugRecordsDebugId[currentDebugId] = record;
     debugRecordsLineNo[lineno] = record;
-    console.log(data)
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -363,7 +355,6 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
-  console.log("traceLine output:", line)
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
@@ -514,8 +505,6 @@ view.on('entergutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   displayProtractorForRecord(debugRecordsLineNo[lineno]);
-
-
 });
 
 view.on('leavegutter', function(pane, lineno) {
@@ -525,7 +514,6 @@ view.on('leavegutter', function(pane, lineno) {
 });
 
 view.on('icehover', function(pane, ev) {
-  console.log("ev thing: ", ev);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
 
@@ -554,8 +542,7 @@ function convertCoords(origin, astransform) {
 
 
 var lastRunTime = 0;
-function stopButton(command) { console.log("Stopbutton");
-  
+function stopButton(command) { console.log("Stopbutton");  
   if (command == 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
