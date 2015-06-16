@@ -1773,10 +1773,10 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
-function instrumentCode(code, mimetype) {
-  if (/javascript/.test(mimetype)) {
+function instrumentCode(code, language) {
+  if (language === 'javascript') {
     // TODO: support javascript
-  } else if (/coffeescript/.test(mimetype)) {
+  } else if (language === 'coffeescript') {
     options = {
       traceFunc: 'ide.trace',
       sourceMap: true,

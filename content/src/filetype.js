@@ -177,7 +177,8 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   }
   if (instrumenter) {
     // Instruments the code for debugging, always producing javascript.
-    text = instrumenter(text, maintype);
+    var language = /javascript/i.test(maintype) ? 'javascript' : 'coffeescript';
+    text = instrumenter(text, language);
     maintype = 'text/javascript';
   }
   var mainscript = '<script type="' + maintype + '">\n' + seeline;
