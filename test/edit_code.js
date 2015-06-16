@@ -197,13 +197,13 @@ describe('code editor', function() {
       // The filename chosen should start with the word "untitled"
       assert.ok(/^untitled/.test(result.filename), result.filename);
       // The title should say blocks
-      assert.equal('blocks', result.title);
+      assert.equal(result.title, 'blocks');
       // The program text should be empty.
-      assert.equal("", result.text);
+      assert.equal(result.text, '');
       // The element with active focus should be the editable filename.
-      assert.equal("filename", result.activeid);
+      assert.equal(result.activeid, 'filename');
       // There should be a visible preview div.
-      assert.equal(1, result.preview);
+      assert.equal(result.preview, 1);
       // There sould be a login button.
       assert.ok(result.login);
       // There sould be no logout button.
@@ -229,11 +229,11 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // Username should be disabled and show the current username.
-      assert.equal(true, result.udisabled);
-      assert.equal('livetest', result.uval);
+      assert.equal(result.udisabled, true);
+      assert.equal(result.uval, 'livetest');
       // Password should be enabled and start blank.
-      assert.equal(false, result.pdisabled);
-      assert.equal('', result.pval);
+      assert.equal(result.pdisabled, false);
+      assert.equal(result.pval, '');
       done();
     });
   });
@@ -253,9 +253,9 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The login should be accepted.
-      assert.equal('Logged in as livetest.', result.notifytext);
+      assert.equal(result.notifytext, 'Logged in as livetest.');
       // The save button should be disabled.
-      assert.equal(true, result.saved);
+      assert.equal(result.saved, true);
       // The login cookie should be present.
       assert.ok(/login=/.test, result.cookie);
       done();
@@ -283,9 +283,9 @@ describe('code editor', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal('code', result.title);
+      assert.equal(result.title, 'code');
       // The save button is still disabled, because the doc is unmodified.
-      assert.equal(true, result.saved);
+      assert.equal(result.saved, true);
       done();
     });
   });
@@ -309,11 +309,11 @@ describe('code editor', function() {
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal("speed 10\npen blue\nrt 180, 100\n", result.text);
+      assert.equal(result.text, "speed 10\npen blue\nrt 180, 100\n");
       // Preview is still shown.
-      assert.equal(1, result.preview);
+      assert.equal(result.preview, 1);
       // The save button is no longer disabled, because the doc is dirty.
-      assert.equal(false, result.saved);
+      assert.equal(result.saved, false);
       done();
     });
   });
@@ -346,16 +346,16 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The turtle should be pointing down at the end of the run.
-      assert.equal(180, result.direction);
+      assert.equal(result.direction, 180);
       // The turtle should be near the point (200, 0).
       assert.ok(Math.abs(result.getxy[0] - 200) < 1e-6);
       assert.ok(Math.abs(result.getxy[1] - 0) < 1e-6);
       // The turtle should not be touching any red pixels.
-      assert.equal(false, result.touchesred);
+      assert.equal(result.touchesred, false);
       // The turtle should be touching blue pixels that it drew.
-      assert.equal(true, result.touchesblue);
+      assert.equal(result.touchesblue, true);
       // There should be no further animations on the turtle queue.
-      assert.equal(0, result.queuelen);
+      assert.equal(result.queuelen, 0);
       done();
     });
   });
@@ -433,7 +433,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The butterbar should report the logout.
-      assert.equal("Logged out.", result.notifytext);
+      assert.equal(result.notifytext, 'Logged out.');
       // The login button should be showing.
       assert.ok(result.login);
       // The login cookie should be gone.
@@ -457,11 +457,11 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The username should be disabled and show the current username.
-      assert.equal(true, result.udisabled);
-      assert.equal('livetest', result.uval);
+      assert.equal(result.udisabled, true);
+      assert.equal(result.uval, 'livetest');
       // The password should not be disable and should start blank.
-      assert.equal(false, result.pdisabled);
-      assert.equal('', result.pval);
+      assert.equal(result.pdisabled, false);
+      assert.equal(result.pval, '');
       done();
     });
   });
@@ -480,7 +480,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The message should report that the password is wrong.
-      assert.equal('Wrong password.', result.infotext);
+      assert.equal(result.infotext, 'Wrong password.');
       done();
     });
   });
@@ -500,9 +500,9 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The dialog should have a blank username/pass
-      assert.equal('Choose an account name to save', result.prompttext);
-      assert.equal('', result.username);
-      assert.equal('', result.password);
+      assert.equal(result.prompttext, 'Choose an account name to save');
+      assert.equal(result.username, '');
+      assert.equal(result.password, '');
       done();
     });
   });
@@ -520,7 +520,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The dialog should have a blank username/pass
-      assert.equal('Will log in as "livetest" and save.', result.infotext);
+      assert.equal(result.infotext, 'Will log in as "livetest" and save.');
       done();
     });
   });
@@ -544,7 +544,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The butterbar should show that the document is saved.
-      assert.equal('Saved.', result.notifytext);
+      assert.equal(result.notifytext, 'Saved.');
       done();
     });
   });
@@ -569,11 +569,11 @@ describe('code editor', function() {
         assert.equal(result.url,
             'http://livetest.pencilcode.net.dev/edit/' + name);
         // The editor text should be the last saved program.
-        assert.equal("speed 10\npen blue\nrt 180, 100\n", result.loaded);
+        assert.equal(result.loaded, "speed 10\npen blue\nrt 180, 100\n");
         // The login button should not be shown.
-        assert.equal(false, result.login);
+        assert.equal(result.login, false);
         // The logout button should be shown.
-        assert.equal(true, result.logout);
+        assert.equal(result.logout, true);
         // The login cookie should be present.
         assert.ok(/login=/.test(result.cookie));
         done();
@@ -606,13 +606,13 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // The butterbar should report that the file is deleted.
-      assert.equal("Deleted " + name + ".", result.notifytext);
+      assert.equal(result.notifytext, 'Deleted ' + name + '.');
       // The login button should not be shown.
       assert.ok(!result.login);
       // The logout button should be shown.
       assert.ok(result.logout);
       // And the file should not be shown: instead the parent directory.
-      assert.equal("directory", result.title.trim());
+      assert.equal(result.title.trim(), 'directory');
       done();
     });
   });
@@ -632,7 +632,7 @@ describe('code editor', function() {
     }, function(err, result) {
       assert.ifError(err);
       // Verify that it reports the logout.
-      assert.equal("Logged out.", result.notifytext);
+      assert.equal(result.notifytext, 'Logged out.');
       // The login button should be shown.
       assert.ok(result.login);
       // The login cookie should be gone.
