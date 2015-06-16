@@ -62,48 +62,57 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
-    console.log('reportEvent', name, data);
+   
     if (!targetWindow) {
       return;
     }
 
-    console.log("reportEvent", name, data);
+    if(name == "seeeval"){
+      console.log("seeeval");
+      currentDebugId = Math.floor(Math.random()*1000);
+      record = {seeeval: true};
+      debugRecordsDebugId[currentDebugId] = record;
+      return;
+    }
 
     if(name === "appear"){
       var debugId = data[1];
       var recordD = debugRecordsDebugId[debugId];
-      var recordL = debugRecordsLineNo[recordD.line];
-      var eventMethod = data[0];
-      recordD.method = eventMethod;
-      recordL.method = eventMethod;
-      var eventArgs = data[5];
-      recordD.args = eventArgs; 
-      recordL.args = eventArgs; 
-      var index = recordD.eventIndex;
-      var location = traceEvents[index].location.first_line
-      console.log("line number: ", location);
-      var coordId = data[3];
-      var elem = data[4];
-      recordD.startCoords[coordId] = collectCoords(elem);
-      recordL.startCoords[coordId] = collectCoords(elem);
-      traceLine(location);
+      if(!recordD.seeeval){
+        var recordL = debugRecordsLineNo[recordD.line];
+        var eventMethod = data[0];
+        recordD.method = eventMethod;
+        recordL.method = eventMethod;
+        var eventArgs = data[5];
+        recordD.args = eventArgs; 
+        recordL.args = eventArgs; 
+        var index = recordD.eventIndex;
+        var location = traceEvents[index].location.first_line
+        console.log("line number: ", location);
+        var coordId = data[3];
+        var elem = data[4];
+        recordD.startCoords[coordId] = collectCoords(elem);
+        recordL.startCoords[coordId] = collectCoords(elem);
+        traceLine(location);
+      }
 
     }
     if(name === "resolve"){
       var debugId = data[1];
       var recordD = debugRecordsDebugId[debugId];
-      var recordL = debugRecordsLineNo[recordD.line]; 
-      eventMethod = data[0]
-      recordD.method = eventMethod;
-      recordL.method = eventMethod;
-      var index = recordD.eventIndex;
-      var location = traceEvents[index].location.first_line
-      var coordId = data[3];
-      var elem = data[4];
-      recordD.endCoords[coordId] = collectCoords(elem);
-      recordL.endCoords[coordId] = collectCoords(elem);
-      untraceLine(location);
-
+      if(!recordD.seeeval){
+        var recordL = debugRecordsLineNo[recordD.line]; 
+        eventMethod = data[0]
+        recordD.method = eventMethod;
+        recordL.method = eventMethod;
+        var index = recordD.eventIndex;
+        var location = traceEvents[index].location.first_line
+        var coordId = data[3];
+        var elem = data[4];
+        recordD.endCoords[coordId] = collectCoords(elem);
+        recordL.endCoords[coordId] = collectCoords(elem);
+        untraceLine(location);
+      }
     }
 
     if(name === "error"){
@@ -154,18 +163,18 @@ var debug = window.ide = {
   },
   trace: function(event,data) {
     // This receives events for the new debugger to use.
-  var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
-  console.log("trace");
-  console.log(traceEvents);
-  traceEvents.push(event);
-  currentEventIndex = traceEvents.length - 1;
-  currentDebugId = Math.floor(Math.random()*1000); 
-  record.eventIndex = currentEventIndex;
-  var lineno = traceEvents[currentEventIndex].location.first_line;
-  record.line = lineno;
-  debugRecordsDebugId[currentDebugId] = record;
-  debugRecordsLineNo[lineno] = record;
-  console.log(data)
+    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
+    console.log("trace");
+    console.log(traceEvents);
+    traceEvents.push(event);
+    currentEventIndex = traceEvents.length - 1;
+    currentDebugId = Math.floor(Math.random()*1000); 
+    record.eventIndex = currentEventIndex;
+    var lineno = traceEvents[currentEventIndex].location.first_line;
+    record.line = lineno;
+    debugRecordsDebugId[currentDebugId] = record;
+    debugRecordsLineNo[lineno] = record;
+    console.log(data)
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
