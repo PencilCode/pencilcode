@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////r
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
-var traceEvents = []; //list of event location objects created by tracing events      
 
 
 define([
@@ -24,6 +23,7 @@ var cachedParseStack = {}
 var pollTimer = null; 
 var stopButtonShown = 0;
 var currentSourceMap = null;
+var traceEvents = []; //list of event location objects created by tracing events
 
 
 Error.stackTraceLimit = 20;
@@ -74,23 +74,19 @@ var debug = window.ide = {
       var recordD = debugRecordsDebugId[debugId];
       var recordL = debugRecordsLineNo[recordD.line];
       var eventMethod = data[0];
-      if(!recordD.method){
-        recordD.method = eventMethod;
-        recordL.method = eventMethod;
-        var eventArgs = data[5];
-        recordD.args = eventArgs; 
-        recordL.args = eventArgs; 
-        var index = recordD.eventIndex;
-        var location = traceEvents[index].location.first_line
-        var coordId = data[3];
-        var elem = data[4];
-        recordD.startCoords[coordId] = collectCoords(elem);
-        recordL.startCoords[coordId] = collectCoords(elem);
-        traceLine(location);
-      }else{
-        //console.log("console line?");
-        return;
-      }
+      recordD.method = eventMethod;
+      recordL.method = eventMethod;
+      var eventArgs = data[5];
+      recordD.args = eventArgs; 
+      recordL.args = eventArgs; 
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line
+      console.log("line number: ", location);
+      var coordId = data[3];
+      var elem = data[4];
+      recordD.startCoords[coordId] = collectCoords(elem);
+      recordL.startCoords[coordId] = collectCoords(elem);
+      traceLine(location);
 
     }
     if(name === "resolve"){
