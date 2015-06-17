@@ -808,6 +808,8 @@ body#pencildoc #diigolet-csm {
 
 .directory {
   height: 100%;
+  padding: 10px;
+  overflow: auto;
 }
 
 .directory .column {
@@ -824,12 +826,15 @@ body#pencildoc #diigolet-csm {
   text-decoration: none;
   color: #222;
   cursor: pointer;
-  div {
+  figure {
+    margin: 0px;
     width: 154px;
     height: 154px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    figcaption {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
   .thumbnail {
     background-color: #eeeeee;
