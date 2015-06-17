@@ -795,8 +795,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
 
 function generateThumbnailDataUrl() {
   var THUMBNAIL_SIZE = 128;
-  // Use the same background as the default icons.
-  var BACKGROUND_COLOR = '#eeeeee';
 
   // Get the canvas inside the iframe.
   var iframe = document.getElementsByTagName('iframe')[0];
@@ -862,8 +860,6 @@ function generateThumbnailDataUrl() {
   var tempCanvasCtx = tempCanvas.getContext('2d');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
-  tempCanvasCtx.fillStyle = BACKGROUND_COLOR;
-  tempCanvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
   tempCanvasCtx.drawImage(canvas,                           // Src canvas.
                           topLeft.x, topLeft.y,             // Src coordinates.
                           longerEdge, longerEdge,           // Src coordinates.
