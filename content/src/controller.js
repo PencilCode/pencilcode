@@ -6,6 +6,7 @@ define([
   'jquery',
   'view',
   'storage',
+  'thumbnail',
   'debug',
   'filetype',
   'guide',
@@ -16,6 +17,7 @@ function(
   $,
   view,
   storage,
+  thumbnail,
   debug,
   filetype,
   guide,
@@ -740,7 +742,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     console.log("Nothing to save.");
     return;
   } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-    thumbnailDataUrl = generateThumbnailDataUrl();
+    var iframe = document.getElementById('output-frame');
+    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
@@ -791,83 +794,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
   });
-}
-
-function generateThumbnailDataUrl() {
-  var THUMBNAIL_SIZE = 128;
-
-  // Get the canvas inside the iframe.
-  var iframe = document.getElementsByTagName('iframe')[0];
-  var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-  var canvas = innerDoc.getElementsByTagName('canvas')[0];
-  var w = canvas.width;
-  var h = canvas.height;
-
-  if (canvas.id === 'turtle') {
-    return;
-  }
-
-  // Get the image data.
-  var ctx = canvas.getContext('2d');
-  var imageData = ctx.getImageData(0, 0, w, h);
-
-  // Initialize the coordinates for the image region,
-  // topLeft is initialized to bottom right,
-  // and bottomRight is initialized to top left.
-  var topLeft = { x: h, y: w };
-  var bottomRight = { x: 0, y: 0 };
-
-  // Iterate through all the points to find the "interesting" region.
-  var x, y, index;
-  for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++) {
-      // Every pixel takes up 4 slots in the array, contains R, G, B, A.
-      index = (y * w + x) * 4;
-      // Thus `index + 3` is the index of the Alpha value.
-      if (imageData.data[index + 3] > 0) {
-        if (x < topLeft.x) {
-          topLeft.x = x;
-        }
-        if (x > bottomRight.x) {
-          bottomRight.x = x;
-        }
-        if (y < topLeft.y) {
-          topLeft.y = y;
-        }
-        if (y > bottomRight.y) {
-          bottomRight.y = y;
-        }
-      }
-    }
-  }
-
-  // Calculate the actual image size.
-  var imageWidth = bottomRight.x - topLeft.x + 1;
-  var imageHeight = bottomRight.y - topLeft.y + 1;
-
-  // Find the longer edge and make it a square.
-  var longerEdge;
-  if (imageWidth > imageHeight) {
-    longerEdge = imageWidth;
-    topLeft.y -= (imageWidth - imageHeight) / 2;
-  } else {
-    longerEdge = imageHeight;
-    topLeft.x -= (imageHeight - imageWidth) / 2;
-  }
-
-  // Draw the cropped image in a temp canvas and scale it down.
-  var tempCanvas = document.createElement('canvas');
-  var tempCanvasCtx = tempCanvas.getContext('2d');
-  tempCanvas.width = THUMBNAIL_SIZE;
-  tempCanvas.height = THUMBNAIL_SIZE;
-  tempCanvasCtx.drawImage(canvas,                           // Src canvas.
-                          topLeft.x, topLeft.y,             // Src coordinates.
-                          longerEdge, longerEdge,           // Src coordinates.
-                          0, 0,                             // Dest coordinates.
-                          THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
-
-  // Convert the temp canvas to data url and return.
-  return tempCanvas.toDataURL();
 }
 
 function keyFromPassword(username, p) {
