@@ -33,7 +33,7 @@ Error.stackTraceLimit = 20;
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
 function bindframe(w) {
-  if (!targetWindow && !w || targetWindow == w) return;
+  if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -50,7 +50,7 @@ var debug = window.ide = {
   bindframe: bindframe,
   interruptable: function() {
     if (targetWindow && targetWindow.jQuery && targetWindow.jQuery.turtle &&
-        typeof(targetWindow.jQuery.turtle.interrupt) == 'function') {
+        typeof(targetWindow.jQuery.turtle.interrupt) === 'function') {
       return targetWindow.jQuery.turtle.interrupt('test');
     }
     return false;
@@ -61,19 +61,19 @@ var debug = window.ide = {
       return;
     }
 
-    if (name == "seeeval"){ reportSeeeval.apply(null, data); } 
+    if (name === "seeeval"){ reportSeeeval.apply(null, data); }
 
-    if (name == "appear"){ reportAppear.apply(null, data); }
+    if (name === "appear"){ reportAppear.apply(null, data); }
 
-    if (name == "resolve"){ reportResolve.apply(null, data); }
+    if (name === "resolve"){ reportResolve.apply(null, data); }
 
-    if (name == "error"){
+    if (name === "error"){
       reportError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
       try{
-        if (toString.call(data) == "[object Array]" &&
+        if (toString.call(data) === "[object Array]" &&
             data.length > 0 && data[0].message) {
           simpleData.message = data[0].message;
         }
@@ -82,8 +82,6 @@ var debug = window.ide = {
       }
       view.publish('error', [simpleData]);
     }
-
-
    // come back and update this reportEvent
   },
 
@@ -123,7 +121,6 @@ var debug = window.ide = {
     currentSourceMap = map;
   }
 };
-
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
@@ -167,7 +164,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     recordD.args = args;
     recordL.args = args;
     var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line
+    var location = traceEvents[index].location.first_line;
     recordD.startCoords[coordId] = collectCoords(elem);
     recordL.startCoords[coordId] = collectCoords(elem);
     traceLine(location);
@@ -193,7 +190,7 @@ function errorAdvice(msg, text) {
   advice = '<p>Oops, the computer got confused.';
   if (msg) {
     msg = msg.replace(/^Uncaught [a-z]*Error: /i, '');
-    if (msg !== "Cannot read property '0' of null") {
+    if (msg !=== "Cannot read property '0' of null") {
       advice += '<p>It says: "' + msg + '"';
     }
   }
@@ -212,7 +209,7 @@ function errorAdvice(msg, text) {
         'return':1})) {
       advice += ("<p>Did you mean '<b>" + (m[1].toLowerCase()) + "</b>' ") +
                 ("instead of '<b>" + m[1] + "</b>'?");
-    } else if (m[1].toLowerCase().substring(0, 3) == "inf") {
+    } else if (m[1].toLowerCase().substring(0, 3) === "inf") {
       advice += "<p><b>Infinity</b> is spelled like this with a capital I.";
     } else {
       if (m[1].length > 3) {
@@ -256,7 +253,7 @@ function errorAdvice(msg, text) {
   } else if ((m = /unexpected (\S+)/.exec(msg))) {
     advice += "<p>Is something missing before " + m[1] + "?";
   } else if (/missing ["']/.test(msg) ||
-      (msg == "Cannot read property '0' of null")) {
+      (msg === "Cannot read property '0' of null")) {
     advice += "<p>Is there a string with an unmatched quote?";
     advice += "<p>It might be on an higher line.";
   } else if (/missing [\])}]/.test(msg)) {
@@ -323,7 +320,7 @@ function displayProtractorForRecord(record) {
 // (with each component optional).
 // This function quickly parses this form into a canonicalized object.
 function parseTurtleTransform(transform) {
-  if (transform == 'none') {
+  if (transform === 'none') {
     return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
   }
   // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
@@ -339,7 +336,6 @@ function parseTurtleTransform(transform) {
   return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
 }
 
-
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
   view.markPaneEditorLine(
@@ -351,7 +347,6 @@ function traceLine(line) {
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
-
 
 // parsestack converts an Error or ErrorEvent object into the following
 // JSON structure.  Starting from the deepest call, it returns an array
@@ -423,7 +418,7 @@ function editorLineNumberForError(error) {
   var ownurl = targetWindow.location.href;
   var frame = null;
   for (var j = 0; j < parsed.length; ++j) {
-    if (parsed[j].file == ownurl) {
+    if (parsed[j].file === ownurl) {
       frame = parsed[j];
       break;
     }
@@ -497,14 +492,13 @@ view.on('entergutter', function(pane, lineno) {
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
-
 });
 
 view.on('icehover', function(pane, ev) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
 
-  if (ev.line == null) return;
+  if (ev.line === null) return;
 
   var lineno = ev.line + 1;
 
@@ -527,10 +521,9 @@ function convertCoords(origin, astransform) {
   };
 }
 
-
 var lastRunTime = 0;
 function stopButton(command) {
-  if (command == 'flash') {
+  if (command === 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
     if (!stopButtonShown) {
@@ -551,7 +544,6 @@ function stopButton(command) {
   }
   return stopButtonShown;
 }
-
 
 function startPollingWindow() {
   if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
@@ -595,7 +587,6 @@ function pollForStop() {
     if (stopButtonShown) {
       stopButtonShown = 0;
       view.showMiddleButton('run');
-
       view.publish('execute');
     }
   }
