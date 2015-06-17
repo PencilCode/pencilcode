@@ -60,7 +60,7 @@ function noAppcache(req, res, next) {
 
 function proxyRules(req, res, next) {
   var exp = (req.app.locals.config.useProxy) ?
-    /^\/(?:code|home|load|save|proxy|img|link|print|socket\.io)(?=\/)/
+    /^\/(?:code|home|load|save|proxy|img|link|print|thumb|socket\.io)(?=\/)/
        : /^\/(?:proxy)(?=\/)/;
   if (exp.test(req.path) && /\.dev$/.test(req.hostname)) {
     var host = req.headers['host'] = req.hostname.replace(/\.dev$/, '');

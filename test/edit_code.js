@@ -157,7 +157,7 @@ describe('code editor', function() {
   });
   it('should show default thumbnail for create new file button', function(done) {
     _page.evaluate(function() {
-      return $('img.thumbnail[alt="Create new file"]').attr('src');
+      return $('img.thumbnail[alt="New file"]').attr('src');
     }, function(err, result) {
       assert.ifError(err);
       assert.ok(result.indexOf('/image/new-128.png') >= 0);
