@@ -808,7 +808,6 @@ body#pencildoc #diigolet-csm {
 
 .directory {
   height: 100%;
-  overflow: auto
 }
 
 .directory .column {
@@ -826,37 +825,37 @@ body#pencildoc #diigolet-csm {
   color: #222;
   cursor: pointer;
   div {
-    width: 200px;
-    height: 200px;
+    width: 154px;
+    height: 154px;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .thumbnail {
     background-color: #eeeeee;
-    width: 128px;
-    height: 128px;
+    width: 100px;
+    height: 100px;
     margin-top: 16px;
-    border: 1px #1679FF solid;
+    border: 1px #ccc solid;
     border-radius: 4px;
+    padding: 2px;
+  }
+  &:hover {
+    text-decoration: underline;
+    color: blue;
+    .thumbnail {
+      padding: 0px;
+      border-width: 2px;
+      border-color: #1679FF;
+    }
   }
 }
 
 .directory .create {
   color: #1e90ff;
-  white-space: nowrap;
   .thumbnail {
     border-style: dashed;
   }
-}
-
-.directory .create:hover {
-  text-decoration: underline;
-  color: blue
-}
-
-.directory .item:hover {
-  text-decoration: underline;
-  color: blue
 }
 
 .loading, #notification.loading {

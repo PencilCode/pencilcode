@@ -1374,7 +1374,7 @@ function updatePaneLinks(pane) {
     if (!thumbnail) {
       thumbnail = DEFAULT_THUMBS[list[j].type] || '';
     }
-    item = $('<' + tag + ' class="item'
+    item = $('<' + tag + ' title="' + list[j].name + '" class="item'
         + (list[j].href ? '" href="' + list[j].href + '" ' : ' create"')
         + '><div><img class="thumbnail" src="' + thumbnail + '" alt="'
         + list[j].name + '"><br><span>' + list[j].name + '</span></div></'

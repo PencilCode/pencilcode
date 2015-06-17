@@ -2064,7 +2064,7 @@ function renderDirectory(position) {
     }
     if (model.ownername !== '') {
       links.push({
-          name: 'Create new file',
+          name: 'New file',
           type: 'new',
           link: '#new'
       });
