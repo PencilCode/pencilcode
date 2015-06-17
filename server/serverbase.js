@@ -110,7 +110,7 @@ exports.initialize2 = function(app) {
       var pathname = url.parse(req.url).pathname;
       if (user == null || !/\.png$/.test(pathname)) { next(); return; }
       var thumbPath = utils.makeThumbPath(pathname.replace(/\.png$/, ''));
-      req.url = path.join(user, thumbPath);
+      req.url = path.join('/', user, thumbPath);
       rawUserData(req, res, next);
     }
   }
