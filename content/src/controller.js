@@ -336,7 +336,17 @@ view.on('share', function() {
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, doc);
+    if (!doc) {
+      // There is no editor on the left (or it is misbehaving) - do nothing.
+      console.log("Nothing to share.");
+      return;
+    } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+      var iframe = document.getElementById('output-frame');
+      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+    }
+    var data = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
