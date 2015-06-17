@@ -61,54 +61,14 @@ var debug = window.ide = {
       return;
     }
 
-    if (name == "seeeval"){
-      currentDebugId += 1;
-      record = {seeeval: true};
-      debugRecordsByDebugId[currentDebugId] = record;
-      return;
-    }
+    if (name == "seeeval"){ reportSeeeval.apply(null, data); } 
 
-    if (name == "appear"){
-      var debugId = data[1];
-      var recordD = debugRecordsByDebugId[debugId];
-      if (!recordD.seeeval){
-        var recordL = debugRecordsByLineNo[recordD.line];
-        var eventMethod = data[0];
-        recordD.method = eventMethod;
-        recordL.method = eventMethod;
-        var eventArgs = data[5];
-        recordD.args = eventArgs;
-        recordL.args = eventArgs;
-        var index = recordD.eventIndex;
-        var location = traceEvents[index].location.first_line
-        var coordId = data[3];
-        var elem = data[4];
-        recordD.startCoords[coordId] = collectCoords(elem);
-        recordL.startCoords[coordId] = collectCoords(elem);
-        traceLine(location);
-      }
+    if (name == "appear"){ reportAppear.apply(null, data); }
 
-    }
-    if (name == "resolve"){
-      var debugId = data[1];
-      var recordD = debugRecordsByDebugId[debugId];
-      if (!recordD.seeeval){
-        var recordL = debugRecordsByLineNo[recordD.line];
-        eventMethod = data[0]
-        recordD.method = eventMethod;
-        recordL.method = eventMethod;
-        var index = recordD.eventIndex;
-        var location = traceEvents[index].location.first_line
-        var coordId = data[3];
-        var elem = data[4];
-        recordD.endCoords[coordId] = collectCoords(elem);
-        recordL.endCoords[coordId] = collectCoords(elem);
-        untraceLine(location);
-      }
-    }
+    if (name == "resolve"){ reportResolve.apply(null, data); }
 
     if (name == "error"){
-      debugError.apply(null, data);
+      reportError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
@@ -190,6 +150,42 @@ var showPopupErrorMessage = function (msg) {
   center.style.borderRadius = '8px';
   center.style.boxShadow = '0 0 5px dimgray';
   center.innerHTML = msg;
+}
+
+function reportSeeeval(method, debugId, length, coordId, elem, args){
+  currentDebugId += 1;
+  record = {seeeval: true};
+  debugRecordsByDebugId[currentDebugId] = record;
+}
+
+function reportAppear(method, debugId, length, coordId, elem, args){
+  var recordD = debugRecordsByDebugId[debugId];
+  if (!recordD.seeeval){
+    var recordL = debugRecordsByLineNo[recordD.line];
+    recordD.method = method;
+    recordL.method = method;
+    recordD.args = args;
+    recordL.args = args;
+    var index = recordD.eventIndex;
+    var location = traceEvents[index].location.first_line
+    recordD.startCoords[coordId] = collectCoords(elem);
+    recordL.startCoords[coordId] = collectCoords(elem);
+    traceLine(location);
+  }
+}
+
+function reportResolve(method, debugId, length, coordId, elem, args){
+  var recordD = debugRecordsByDebugId[debugId];
+  if (!recordD.seeeval){
+    var recordL = debugRecordsByLineNo[recordD.line];
+    recordD.method = method;
+    recordL.method = method;
+    var index = recordD.eventIndex;
+    var location = traceEvents[index].location.first_line
+    recordD.endCoords[coordId] = collectCoords(elem);
+    recordL.endCoords[coordId] = collectCoords(elem);
+    untraceLine(location);
+  }
 }
 
 function errorAdvice(msg, text) {
@@ -279,7 +275,7 @@ function errorAdvice(msg, text) {
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
-function debugError(err) {
+function reportError(err) {
   var line = editorLineNumberForError(err);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
   var m = view.getPaneEditorData(view.paneid('left'));
