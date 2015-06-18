@@ -36,6 +36,8 @@ function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
+  debugRecordsByDebugId = {}; 
+  debugRecordsByLineNo = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   startPollingWindow();
