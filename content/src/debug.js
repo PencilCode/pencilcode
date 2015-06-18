@@ -192,7 +192,7 @@ function errorAdvice(msg, text) {
   advice = '<p>Oops, the computer got confused.';
   if (msg) {
     msg = msg.replace(/^Uncaught [a-z]*Error: /i, '');
-    if (msg !=== "Cannot read property '0' of null") {
+    if (msg !== "Cannot read property '0' of null") {
       advice += '<p>It says: "' + msg + '"';
     }
   }
