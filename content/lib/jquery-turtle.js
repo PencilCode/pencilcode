@@ -9920,6 +9920,7 @@ function seeeval(scope, code) {
     if (scopes[scope].e) { ef = scopes[scope].e; }
     if (scopes[scope].t) { et = scopes[scope].t; }
   }
+  debug.reportEvent("seeeval", [scope, code]);
   return ef.call(et, code);
 }
 
