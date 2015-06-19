@@ -1478,6 +1478,7 @@ function dropletModeForMimeType(mimeType) {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
+    'text/html': 'html',
   }[mimeType];
   if (!result) {
     result = 'coffee';
@@ -1490,6 +1491,7 @@ function paletteForMimeType(mimeType) {
   if (mimeType == 'text/coffeescript') return palette.COFFEESCRIPT_PALETTE;
   if (mimeType == 'text/javascript') return palette.JAVASCRIPT_PALETTE;
   if (mimeType == 'application/x-javascript') return palette.JAVASCRIPT_PALETTE;
+  if (mimeType.replace(/;.*$/, '') == 'text/html') return palette.HTML_PALETTE;
   return [];
 }
 
@@ -1517,6 +1519,19 @@ function updatePaneTitle(pane) {
       label = 'data';
     } else if (/^text\/html/.test(paneState.mimeType)) {
       label = 'html';
+      symbol = 'codeicon'
+      alt = 'show blocks'
+      blockToggleTooltip = 'Click to show blocks';
+      if (paneState.dropletEditor.currentlyUsingBlocks) {
+        label = 'blocks';
+        alt = 'show code'
+        symbol = 'blockicon';
+        blockToggleTooltip = 'Click to show code';
+      }
+      label = '<a target="_blank" class="toggleblocks" href="/code/' +
+          paneState.filename + '" title="' + blockToggleTooltip +
+          '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
+          '<span>' + label + '</span></span></a>';
     } else {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
@@ -2322,7 +2337,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {
