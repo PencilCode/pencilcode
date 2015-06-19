@@ -231,7 +231,7 @@ var create_some_run = false;
 function create_some(){
   var div = document.createElement('div');
   div.className = 'scrubber';
-  div.innerHTML = "<h6>Scrubbers are awesome</h6> <button type='button' class ='test'>Click Me!</button><input type = range>";
+  div.innerHTML = "<h6>Scrubbers are awesome</h6> <a href = '/material/dummy.html'> <button type='button' class ='test'>Click Me!</button></a><input type = range>";
   div.style.top = "500px";
  // div.style.visibility = 'visible';
   div.style.position = 'absolute';
