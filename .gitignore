@@ -4,6 +4,7 @@ bower_components
 wsgi/config.pyc
 local/data
 local/cache
+content/lib/font-awesome.css
 content/builddate.txt
 content/editor.css
 content/editor.html

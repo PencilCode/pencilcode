@@ -1327,12 +1327,12 @@ var getScrollbarWidth = function() {
   return width;
 };
 
-function setPaneLinkText(pane, links, filename) {
+function setPaneLinkText(pane, links, filename, showThumb) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.links = links;
   paneState.filename = filename;
-  updatePaneLinks(pane);
+  updatePaneLinks(pane, showThumb);
   updatePaneTitle(pane);
 }
 
@@ -1347,7 +1347,7 @@ $(window).on('resize.listing', function() {
   }
 });
 
-function updatePaneLinks(pane) {
+function updatePaneLinks(pane, showThumb) {
   var DEFAULT_THUMBS = {
     // user: '//' + pencilcode.domain + '/image/user-128.png',
     dir: '//' + pencilcode.domain + '/image/dir-128.png',
@@ -1375,21 +1375,17 @@ function updatePaneLinks(pane) {
       href: list[j].href,
       title: list[j].name
     }).appendTo(col);
-    figure = $('<figure/>');
+    figure = $('<figure/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // If type is in DEFAULT_THUMBS list, render a figure view.
-    if (DEFAULT_THUMBS[list[j].type]) {
+    if (DEFAULT_THUMBS[list[j].type] && showThumb) {
       $('<img/>', {
         class: 'thumbnail',
         src: thumbnail || DEFAULT_THUMBS[list[j].type],
         alt: list[j].name
       }).appendTo(figure);
-      $('<figcaption/>', { text: list[j].name }).appendTo(figure);
-      figure.appendTo(item);
-    // Otherwise just render text.
-    } else {
-      item.text(list[j].name);
     }
+    $('<figcaption/>', { text: list[j].name }).appendTo(figure);
     if (list[j].link) {
       item.data('link', list[j].link);
     }

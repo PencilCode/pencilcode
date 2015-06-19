@@ -159,7 +159,8 @@ module.exports = function(grunt) {
         options: { compress: true },
         files: {
           "content/welcome.css": "content/src/welcome.less",
-          "content/editor.css": "content/src/editor.less"
+          "content/editor.css": "content/src/editor.less",
+          "content/lib/font-awesome.css": "content/lib/font-awesome/font-awesome.less"
         }
       }
     },

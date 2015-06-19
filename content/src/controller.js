@@ -188,6 +188,14 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
+      // Add a button to toggle thumbnails
+      buttons.push({
+        id: 'toggle-thumb',
+        title: 'Toggle thumbnails',
+        label: defaultShowThumbnail() ? '<i class="fa fa-th-large"></i>'
+                                      : '<i class="fa fa-align-left"></i>'
+      });
+
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
@@ -491,6 +499,15 @@ $(window).on('beforeunload', function() {
   }
 });
 
+view.on('toggle-thumb', function() {
+  setDefaultShowThumbnail(!defaultShowThumbnail());
+  if (modelatpos('left').isdir) {
+    renderDirectory('left');
+  }
+  if (modelatpos('right').isdir) {
+    renderDirectory('right');
+  }
+});
 
 view.on('logout', function() {
   model.username = null;
@@ -1837,6 +1854,15 @@ function setDefaultDirSortingByDate(f) {
   }
 }
 
+function defaultShowThumbnail() {
+  if (specialowner()) return false;
+  return window.localStorage.showThumb !== 'false' || false;
+}
+
+function setDefaultShowThumbnail(bool) {
+  window.localStorage.showThumb = bool;
+}
+
 function createNewFileIntoPosition(position, filename, text, meta) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -2006,7 +2032,7 @@ function renderDirectory(position) {
       });
     }
   }
-  view.setPaneLinkText(pane, links, filename);
+  view.setPaneLinkText(pane, links, filename, defaultShowThumbnail());
   updateTopControls(false);
 }
 
