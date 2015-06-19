@@ -143,6 +143,7 @@ window.pencilcode.view = {
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
+  create_some: create_some,
   setPrimaryFocus: setPrimaryFocus,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
@@ -224,6 +225,29 @@ function publish(method, args, requestid){
 
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
+}
+//note: need to move. 
+var create_some_run = false;
+function create_some(){
+  var div = document.createElement('div');
+  div.className = 'scrubber';
+  div.innerHTML = "<h6>Scrubbers are awesome</h6> <button type='button' class ='test'>Click Me!</button><input type = range>";
+  div.style.top = "500px";
+ // div.style.visibility = 'visible';
+  div.style.position = 'absolute';
+  div.style.left = "100px";
+  div.style.top = "300px"
+  if (!create_some_run && $(".ace_gutter-cell").length >= 2){
+    console.log("view is working");
+    $(".hpanel").css({ height: "500px" })
+    $("#bravo").append(div);
+    create_some_run = true;
+  }
+  if ($(".ace_gutter-cell").length <= 2 && create_some_run){
+    $(".scrubber").remove();
+    create_some_run = false;
+  }
+
 }
 
 function panepos(id) {
@@ -697,7 +721,7 @@ function showMiddleButton(which) {
              'title="Restart program (Ctrl+Enter)">' +
              '<div class="reload"></div></button>';
     } else {
-      html = '<button id="run" title="Run program (Ctrl+Enter)">' +
+      html = '<button id="run" title="Run program(Ctrl+Enter)">' +
              '<div class="triangle"></div></button>';
     }
     $('#middle').find('div').eq(0).html(html);

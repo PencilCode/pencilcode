@@ -102,6 +102,7 @@ function logCodeEvent(action, filename, code, mode, lang) {
 //
 function modelatpos(pos) {
   return model.pane[paneatpos(pos)];
+
 }
 
 //
@@ -435,6 +436,8 @@ view.on('changehtmlcss', function(pane) {
 
 view.on('run', runAction);
 
+var times_run = 0;
+
 function runAction() {
   var doc = view.getPaneEditorData(paneatpos('left'));
   if (!doc) {
@@ -469,6 +472,11 @@ function runAction() {
   logCodeEvent('run', filename, newdata.data,
       view.getPaneEditorBlockMode(paneatpos('left')),
       view.getPaneEditorLanguage(paneatpos('left')));
+  times_run++;
+  console.log("How many times it is running:", times_run);
+  if (times_run >= 1) {
+    view.create_some();
+  }
   if (!specialowner()) {
     // Remember the most recently run program.
     cookie('recent', window.location.href,
@@ -494,6 +502,7 @@ view.on('logout', function() {
   updateTopControls(false);
   view.flashNotification('Logged out.');
 });
+
 
 view.on('login', function() {
   if (specialowner()) {

@@ -118,6 +118,7 @@ var debug = window.ide = {
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
+    console.log(traceEvents.length);
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
