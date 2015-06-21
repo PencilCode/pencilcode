@@ -9,7 +9,7 @@ define([], function() {
       // TODO: Add support for multiple turtle.
       var canvas = innerDoc.getElementsByTagName('canvas')[0];
 
-      if (canvas.id === 'turtle') { return; }
+      if (!canvas || canvas.id === 'turtle') { return; }
 
       // Get the image data.
       var imageInfo = getImageInfo(canvas);
