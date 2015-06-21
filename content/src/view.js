@@ -1354,12 +1354,6 @@ $(window).on('resize.listing', function() {
 });
 
 function updatePaneLinks(pane) {
-  var DEFAULT_THUMBS = {
-    // user: '//' + pencilcode.domain + '/image/user-128.png',
-    dir: '//' + pencilcode.domain + '/image/dir-128.png',
-    file: '//' + pencilcode.domain + '/image/file-128.png',
-    new: '//' + pencilcode.domain + '/image/new-128.png'
-  };
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, figure, thumbnail, directory, colsdone, list;
   function fwidth(elem) {
@@ -1384,10 +1378,10 @@ function updatePaneLinks(pane) {
     figure = $('<figure/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
-    if (DEFAULT_THUMBS[list[j].type] && state.showThumb) {
+    if (state.showThumb) {
       $('<img/>', {
         class: 'thumbnail',
-        src: thumbnail || DEFAULT_THUMBS[list[j].type],
+        src: thumbnail || getDefaultThumbnail(list[j].type),
         alt: list[j].name
       }).appendTo(figure);
     }
@@ -1461,6 +1455,29 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
+}
+
+function getDefaultThumbnail(type) {
+  var baseUrl = '//' + pencilcode.domain + '/image/';
+  var mimeToFilename = {
+    'dir'               : 'dir-128.png',
+    'new'               : 'new-128.png',
+    'image/jpeg'        : 'file-image.png',
+    'image/gif'         : 'file-image.png',
+    'image/png'         : 'file-image.png',
+    'image/svg+xml'     : 'file-image.png',
+    'image/x-ms-bmp'    : 'file-image.png',
+    'image/x-icon'      : 'file-image.png',
+    'text/html'         : 'file-html.png',
+    'text/plain'        : 'file-txt.png',
+    'text/css'          : 'file-css.png',
+    'text/coffeescript' : 'file-coffee.png',
+    'text/javascript'   : 'file-js.png',
+    'text/xml'          : 'file-xml.png',
+    'text/json'         : 'file-json.png',
+    'text/x-pencilcode' : 'file-pencil.png'
+  }
+  return baseUrl + (mimeToFilename[type] || 'file-generic.png');
 }
 
 ///////////////////////////////////////////////////////////////////////////

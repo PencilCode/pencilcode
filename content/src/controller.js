@@ -2008,7 +2008,7 @@ function renderDirectory(position) {
         if (m.list[j].mode.indexOf('d') >= 0) {
           name += '/';
         } else {
-          type = 'file';
+          type = filetype.mimeForFilename(name).replace(/;.*$/, '');
         }
         var href = '/home/' + filenameslash + name;
         links.push({
@@ -2035,7 +2035,8 @@ function renderDirectory(position) {
     }
   }
   // Set the showThumb state of view before calling the rendering method.
-  view.setShowThumb(defaultShowThumbnail());
+  // !specialowner() to disallow thumbnails on user listing.
+  view.setShowThumb(defaultShowThumbnail() && !specialowner());
   view.setPaneLinkText(pane, links, filename);
   updateTopControls(false);
 }
