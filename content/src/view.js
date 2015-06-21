@@ -80,6 +80,7 @@ var state = {
     bravo: initialPaneState(),
     charlie: initialPaneState()
   },
+  showThumb: true  // show thumbnails by default.
 }
 
 var dropletMarkClassColors = {
@@ -138,6 +139,7 @@ window.pencilcode.view = {
   setPaneEditorReadOnly: setPaneEditorReadOnly,
   isPaneEditorEmpty: isPaneEditorEmpty,
   isPaneEditorDirty: isPaneEditorDirty,
+  setShowThumb: setShowThumb,
   setPaneLinkText: setPaneLinkText,
   setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
@@ -1327,12 +1329,16 @@ var getScrollbarWidth = function() {
   return width;
 };
 
-function setPaneLinkText(pane, links, filename, showThumb) {
+function setShowThumb(showThumb) {
+  state.showThumb = showThumb;
+}
+
+function setPaneLinkText(pane, links, filename) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.links = links;
   paneState.filename = filename;
-  updatePaneLinks(pane, showThumb);
+  updatePaneLinks(pane);
   updatePaneTitle(pane);
 }
 
@@ -1347,7 +1353,7 @@ $(window).on('resize.listing', function() {
   }
 });
 
-function updatePaneLinks(pane, showThumb) {
+function updatePaneLinks(pane) {
   var DEFAULT_THUMBS = {
     // user: '//' + pencilcode.domain + '/image/user-128.png',
     dir: '//' + pencilcode.domain + '/image/dir-128.png',
@@ -1377,8 +1383,8 @@ function updatePaneLinks(pane, showThumb) {
     }).appendTo(col);
     figure = $('<figure/>').appendTo(item);
     thumbnail = list[j].thumbnail;
-    // If type is in DEFAULT_THUMBS list, render a figure view.
-    if (DEFAULT_THUMBS[list[j].type] && showThumb) {
+    // Only show thumbs if it is a supported type, and showThumb is enabled.
+    if (DEFAULT_THUMBS[list[j].type] && state.showThumb) {
       $('<img/>', {
         class: 'thumbnail',
         src: thumbnail || DEFAULT_THUMBS[list[j].type],

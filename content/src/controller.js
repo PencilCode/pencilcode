@@ -2034,7 +2034,9 @@ function renderDirectory(position) {
       });
     }
   }
-  view.setPaneLinkText(pane, links, filename, defaultShowThumbnail());
+  // Set the showThumb state of view before calling the rendering method.
+  view.setShowThumb(defaultShowThumbnail());
+  view.setPaneLinkText(pane, links, filename);
   updateTopControls(false);
 }
 
