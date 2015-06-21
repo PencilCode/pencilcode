@@ -283,7 +283,8 @@ function mimeForFilename(filename) {
     'css'  : 'text/css',
     'coffee' : 'text/coffeescript',
     'js'   : 'text/javascript',
-    'xml'  : 'text/xml'
+    'xml'  : 'text/xml',
+    'json' : 'text/json'
   }[filename.replace(/^.*\./, '')]
   if (!result) {
     result = 'text/x-pencilcode';

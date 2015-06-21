@@ -142,7 +142,7 @@ describe('code editor', function() {
       return $('img.thumbnail[alt="hi"]').attr('src');
     }, function(err, result) {
       assert.ifError(err);
-      assert.ok(result.indexOf('/image/file-128.png') >= 0);
+      assert.ok(result.indexOf('/image/file-pencil.png') >= 0);
       done();
     });
   });
