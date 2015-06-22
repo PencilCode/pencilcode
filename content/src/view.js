@@ -242,9 +242,19 @@ function create_some(tracenum){
   div.style.top = "300px";
   div.style.width = "300px";
 
+
+  var new_div = document.createElement('div');
+  new_div.style.position = 'absolute';
+  new_div.className = 'sliderinfo';
+  new_div.style.left = "70px";
+  new_div.style.top = "200px";
+  new_div.style.width = "300 px";
+  new_div.innerHTML = "<label for = 'sliderinfo'>Line Number:</label><input type = 'text' id = 'sliderinfo' readonly style='border:0; font-weight:bold;''>";
+
   if (!create_some_run && tracenum >= 2){
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
+    $("#bravo").append(new_div);
 	
 	$(function() {
     $(".scrubber").slider({
@@ -252,10 +262,18 @@ function create_some(tracenum){
       max: tracenum - 1,
       step: 1,
       range: "min",
-      smooth: false
+      smooth: false,
+      slide: function(event, ui){
+        $("#sliderinfo").val(ui.value + 1);
+      }
       });
     var max =	$( ".scrubber" ).slider("option", "max");
 	});
+        $("#sliderinfo").change(function(){
+          var value = this.value.substring(1);
+          $(".scrubber").slider("value", parseInt(value));
+
+        })
     create_some_run = true;
   }
   else if(create_some_run && tracenum >= 2){
