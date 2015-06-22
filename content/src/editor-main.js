@@ -17,6 +17,7 @@ require.config({
     'draw-protractor': 'src/draw-protractor',
     'guide': 'src/guide',
     'jquery': 'lib/jquery',
+    'jquery-ui': 'lib/jquery-ui',
     'iced-coffee-script': 'lib/iced-coffee-script',
     'pencil-tracer': 'lib/pencil-tracer',
     'see': 'lib/see',

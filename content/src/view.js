@@ -3,7 +3,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 define([
+
   'jquery',
+  'jquery-ui',
   'filetype',
   'tooltipster',
   'see',
@@ -16,6 +18,7 @@ define([
 ],
 function(
   $,
+  jqueryui,
   filetype,
   tooltipster,
   see,
@@ -236,11 +239,16 @@ function create_some(){
  // div.style.visibility = 'visible';
   div.style.position = 'absolute';
   div.style.left = "100px";
-  div.style.top = "300px"
+  div.style.top = "300px";
+
   if (!create_some_run && $(".ace_gutter-cell").length >= 2){
     console.log("view is working");
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
+	
+	$(function() {
+    	$( ".scrubber" ).slider();
+	});
     create_some_run = true;
   }
   if ($(".ace_gutter-cell").length <= 2 && create_some_run){
