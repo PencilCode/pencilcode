@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>jQuery UI Slider - Colorpicker</title>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <style>
+  #red {
+ /*   float: left;
+    clear: left;*/
+    width: 300px;
+    margin: 15px;
+  }
+ /* #red .ui-slider-range { background: #ef2929; }*/
+ /* #red .ui-slider-handle { border-color: #ef2929; }*/
+  </style>
+  <script>
+  $(function() {
+    $( "#red" ).slider({
+    /*  orientation: "horizontal",*/
+    //  range: "min",
+      max: 255,
+      value: 127,
+    });
+   // $( "#red" ).slider( "value", 255 );
+  });
+  </script>
+</head>
+<body class="ui-widget-content" style="border:0;">
+ 
+
+<div id="red"></div>
+
+ 
+
+ 
+ 
+</body>
+</html>

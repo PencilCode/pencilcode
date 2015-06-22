@@ -231,31 +231,41 @@ function paneid(position) {
 }
 //note: need to move. 
 var create_some_run = false;
-function create_some(){
+function create_some(tracenum){
+
   var div = document.createElement('div');
   div.className = 'scrubber';
-  div.innerHTML = "<h6>Scrubbers are awesome</h6> <a href = '/material/dummy.html'> <button type='button' class ='test'>Click Me!</button></a><input type = range>";
-  div.style.top = "500px";
+ // div.style.top = "500px";
  // div.style.visibility = 'visible';
   div.style.position = 'absolute';
-  div.style.left = "100px";
+  div.style.left = "70px";
   div.style.top = "300px";
+  div.style.width = "300px";
 
-  if (!create_some_run && $(".ace_gutter-cell").length >= 2){
-    console.log("view is working");
+  if (!create_some_run && tracenum >= 2){
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
 	
 	$(function() {
-    	$( ".scrubber" ).slider();
+    $(".scrubber").slider({
+      min: 0,
+      max: tracenum - 1,
+      step: 1,
+      range: "min",
+      smooth: false
+      });
+    var max =	$( ".scrubber" ).slider("option", "max");
 	});
     create_some_run = true;
   }
-  if ($(".ace_gutter-cell").length <= 2 && create_some_run){
+  else if(create_some_run && tracenum >= 2){
+    $(".scrubber").slider("option", "max", tracenum)
+  }
+
+  else{
     $(".scrubber").remove();
     create_some_run = false;
   }
-
 }
 
 function panepos(id) {
