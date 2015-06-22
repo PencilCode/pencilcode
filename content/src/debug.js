@@ -340,6 +340,7 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
+  view.arrow(true);
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
@@ -347,6 +348,7 @@ function traceLine(line) {
 
 // Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
+  view.arrow(false);
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 

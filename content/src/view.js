@@ -144,6 +144,7 @@ window.pencilcode.view = {
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
+  arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -2916,6 +2917,45 @@ function setupHpanelBox(box) {
       }
     });
   });
+}
+function arrow(show){
+  
+  if (show){
+    var text = "<svg width='500' height='500' xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
+    <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
+     <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
+    </marker> \
+    <marker id='triangle' \
+      viewBox='0 0 10 10' refX='0' refY='5' \
+      markerUnits='strokeWidth' \
+      markerWidth='4' markerHeight='3' \
+      orient='auto'> \
+      <path d='M 0 0 L 10 5 L 0 10 z' /> \
+    </marker> \
+    <path d='M50,50 \
+             A30,20 0 0,1 80,80' marker-start='url(#arrowhead)' \
+          style='stroke:black; fill:none;'/> \
+    </svg> \
+    ";  
+  }
+  else{
+    var text = "";
+    $(".arrow").remove();
+  }
+
+  var div = document.createElement('div');
+  div.className =  "arrow";
+  div.innerHTML = text;
+  div.style.left = "50px";
+  div.style.top = "500px";
+  // div.style.visibility = 'visible';
+  div.style.position = 'absolute';
+  div.style.left = "100px";
+  div.style.top = "300px";
+  $(".hpanel").css({ height: "500px" })
+  $("#bravo").append(div);
+  create_some_run = true;
+
 }
 
 window.FontLoader = FontLoader;
