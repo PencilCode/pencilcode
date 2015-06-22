@@ -23,7 +23,11 @@ var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
-
+var prevLoc = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
+                              // the location goes backwards.
+var isLoop = false;           // keeps track of whether or not program is in a loop
+var loopStart = -1;           // line number for loop starting point
+var loopEnd = -1;             // line number for loop ending point
 
 Error.stackTraceLimit = 20;
 
@@ -167,6 +171,16 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     recordL.args = args;
     var index = recordD.eventIndex;
     var location = traceEvents[index].location.first_line;
+    if ((method === "for" || method === "while") && !isLoop){
+      isLoop = true;
+      loopStart = location;
+    }
+    if (location < prevLoc && isLoop){
+        loopEnd = location;
+        view.arrow(true, loopStart, loopEnd);  
+        isLoop = false;
+    }
+    prevLoc = location;
     recordD.startCoords[coordId] = collectCoords(elem);
     recordL.startCoords[coordId] = collectCoords(elem);
     traceLine(location);
@@ -185,6 +199,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     recordL.endCoords[coordId] = collectCoords(elem);
     untraceLine(location);
   }
+  view.arrow(false, -1, 1);
 }
 
 function errorAdvice(msg, text) {
@@ -340,7 +355,6 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
-  view.arrow(true);
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
@@ -348,7 +362,6 @@ function traceLine(line) {
 
 // Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
-  view.arrow(false);
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 
