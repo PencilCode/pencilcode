@@ -231,12 +231,11 @@ function paneid(position) {
 }
 //note: need to move. 
 var create_some_run = false;
-function create_some(tracenum){
-
+  var present_line = 0;
+  var current_value = 0;
+function create_some(traceevents){
   var div = document.createElement('div');
   div.className = 'scrubber';
- // div.style.top = "500px";
- // div.style.visibility = 'visible';
   div.style.position = 'absolute';
   div.style.left = "70px";
   div.style.top = "300px";
@@ -251,7 +250,7 @@ function create_some(tracenum){
   new_div.style.width = "300 px";
   new_div.innerHTML = "<label for = 'sliderinfo'>Line Number:</label><input type = 'text' id = 'sliderinfo' readonly style='border:0; font-weight:bold;''>";
 
-  if (!create_some_run && tracenum >= 2){
+  if (!create_some_run && traceevents.length >= 2){
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
     $("#bravo").append(new_div);
@@ -259,12 +258,21 @@ function create_some(tracenum){
 	$(function() {
     $(".scrubber").slider({
       min: 0,
-      max: tracenum - 1,
+      max: traceevents.length - 1,
       step: 1,
       range: "min",
       smooth: false,
       slide: function(event, ui){
-        $("#sliderinfo").val(ui.value + 1);
+        $("#sliderinfo").val(ui.value);
+        var prevno = traceevents[present_line].location.first_line;
+        clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+        current_value = ui.value;
+        present_line = ui.value;
+        var lineno = traceevents[current_value].location.first_line;
+        console.log(lineno);
+        markPaneEditorLine(
+            paneid('left'), lineno, 'guttermouseable', true);
+            markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
       }
       });
     var max =	$( ".scrubber" ).slider("option", "max");
@@ -276,8 +284,8 @@ function create_some(tracenum){
         })
     create_some_run = true;
   }
-  else if(create_some_run && tracenum >= 2){
-    $(".scrubber").slider("option", "max", tracenum)
+  else if(create_some_run && traceevents.length >= 2){
+    $(".scrubber").slider("option", "max", traceevents.length - 1)
   }
 
   else{
