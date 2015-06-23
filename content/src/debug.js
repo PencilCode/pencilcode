@@ -25,9 +25,7 @@ var currentSourceMap = null;  // v3 source map for currently-running instrumente
 var traceEvents = [];         // list of event location objects created by tracing events
 var prevLoc = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
                               // the location goes backwards.
-var isLoop = false;           // keeps track of whether or not program is in a loop
-var loopStart = -1;           // line number for loop starting point
-var loopEnd = -1;             // line number for loop ending point
+var eventQueue = [];          //list of events in order to maintain proper tracing 
 
 Error.stackTraceLimit = 20;
 
@@ -122,6 +120,7 @@ var debug = window.ide = {
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
+    eventQueue.push(lineno);
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -161,7 +160,9 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
   debugRecordsByDebugId[currentDebugId] = record;
 }
 
+
 function reportAppear(method, debugId, length, coordId, elem, args){
+  var currentLine = eventQueue.shift();
   var recordD = debugRecordsByDebugId[debugId];
   if (!recordD.seeeval){
     var recordL = debugRecordsByLineNo[recordD.line];
@@ -171,19 +172,38 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     recordL.args = args;
     var index = recordD.eventIndex;
     var location = traceEvents[index].location.first_line;
-    if ((method === "for" || method === "while") && !isLoop){
-      isLoop = true;
-      loopStart = location;
+    var tracedLoc = -1; 
+    //trace lines that are not animation.
+    while (location != currentLine){
+      if (tracedLoc != -1){
+        var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(tracedLoc);
+        setTimeout(untracer, 200);
+        //untraceLine(tracedLoc);
+        tracedLoc = -1;
+      }
+      traceLine(currentLine);
+      console.log("tracing: ", currentLine);
+      
+      tracedLoc = currentLine;
+      currentLine = eventQueue.shift();
     }
-    if (location < prevLoc && isLoop){
-        loopEnd = location;
-        view.arrow(true, loopStart, loopEnd);  
-        isLoop = false;
+    if (tracedLoc != -1){
+      var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(tracedLoc);
+      setTimeout(untracer, 200);
+      tracedLoc = -1
+    }
+    var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(currentLine);
+    setTimeout(untracer, 200);
+    if (location < prevLoc){
+        //view.arrow(true, prevLoc, location); 
+        console.log("arrow");
     }
     prevLoc = location;
     recordD.startCoords[coordId] = collectCoords(elem);
     recordL.startCoords[coordId] = collectCoords(elem);
-    traceLine(location);
+    var tracer =  (function(line) { return function() { traceLine(line); console.log("tracing: ", line)} })(location);
+    setTimeout(tracer, 200);
+    //traceLine(location);
   }
 }
 
@@ -199,7 +219,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     recordL.endCoords[coordId] = collectCoords(elem);
     untraceLine(location);
   }
-  view.arrow(false, -1, 1);
+  //view.arrow(false, -1, 1);
 }
 
 function errorAdvice(msg, text) {

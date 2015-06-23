@@ -2918,24 +2918,24 @@ function setupHpanelBox(box) {
     });
   });
 }
-function arrow(show, loopStart, loopEnd){
+function arrow(show, prevLoc, currLoc){
   
   
   if (show){
     var lines = $(".ace_line");
-    var startLine = lines[loopStart];
-    var endLine = lines[loopEnd];
+    var startLine = lines[currLoc];
+    var endLine = lines[prevLoc];
     var start_rect = startLine.getBoundingClientRect();
     var end_rect = endLine.getBoundingClientRect();
     var arrow_height = start_rect.top - end_rect.bottom;
     console.log("top of previous: ",prev_rect.top);
     console.log("bottom of current: ", curr_rect.bottom );
-    console.log("prev line: ", prevline);
-    console.log("curr line: ", currline);
+    console.log("prev line: ", prevLoc);
+    console.log("curr line: ", currLoc);
     //console.log("")
 
 
-    var text = "<svg width=" + arrow_height + " height=" + arrow_height + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
+    var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
