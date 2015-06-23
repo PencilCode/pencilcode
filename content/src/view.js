@@ -79,8 +79,7 @@ var state = {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
     charlie: initialPaneState()
-  },
-  showThumb: true  // show thumbnails by default.
+  }
 }
 
 var dropletMarkClassColors = {
@@ -139,7 +138,6 @@ window.pencilcode.view = {
   setPaneEditorReadOnly: setPaneEditorReadOnly,
   isPaneEditorEmpty: isPaneEditorEmpty,
   isPaneEditorDirty: isPaneEditorDirty,
-  setShowThumb: setShowThumb,
   setPaneLinkText: setPaneLinkText,
   setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
@@ -1329,13 +1327,10 @@ var getScrollbarWidth = function() {
   return width;
 };
 
-function setShowThumb(showThumb) {
-  state.showThumb = showThumb;
-}
-
-function setPaneLinkText(pane, links, filename) {
+function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
+  paneState.path = ownername + '/' + filename;
   paneState.links = links;
   paneState.filename = filename;
   updatePaneLinks(pane);
@@ -1356,6 +1351,7 @@ $(window).on('resize.listing', function() {
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, figure, thumbnail, directory, colsdone, list;
+  var paneState = state.pane[pane];
   function fwidth(elem) {
     // Get the width, including fractional width.
     if (elem.getBoundingClientRect) {
@@ -1363,7 +1359,7 @@ function updatePaneLinks(pane) {
     }
     return $(elem).outerWidth();
   }
-  list = state.pane[pane].links;
+  list = paneState.links;
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
@@ -1378,7 +1374,7 @@ function updatePaneLinks(pane) {
     figure = $('<figure/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
-    if (state.showThumb) {
+    if (shouldShowThumb(paneState.path)) {
       $('<img/>', {
         class: 'thumbnail',
         src: thumbnail || getDefaultThumbnail(list[j].type),
@@ -1628,7 +1624,13 @@ function updatePaneTitle(pane) {
       }
     }
   } else if (paneState.links) {
-    label = 'directory';
+    var icon = shouldShowThumb(paneState.path)?
+              '<i class="fa fa-th-large"></i>' :
+              '<i class="fa fa-align-center"></i>';
+    if (paneState.path === '/') {
+      icon = '';
+    }
+    label = '<div class="thumb-toggle pull-right">' + icon + '</div>directory';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
@@ -1649,6 +1651,78 @@ function updatePaneTitle(pane) {
   $('#' + pane).toggleClass('textonly', textonly);
 }
 
+function shouldShowThumb(path) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Disable on user listing.
+    return false;
+  } else {
+    try {
+      // `JSON.parse` might throw SyntaxError if undefined or malformed.
+      var showThumb = JSON.parse(window.localStorage.showThumb);
+      // Prevent error when `window.localStorage.showThumb` is malformed.
+      if (typeof showThumb !== 'object') {
+        throw 'Malformed data.'
+      }
+    } catch (e) {
+      // When encounters error just return true;
+      return true;
+    }
+
+    var show = true;
+    layers.forEach(function(layer) {
+      // If no setting just show thumbnails by default.
+      // This loop will set show to the closest parent's setting.
+      if (showThumb[layer] === undefined) {
+        return show;
+      } else if (showThumb[layer]['.show']) {
+        show = true;
+      } else {
+        show = false;
+      }
+      // cd into the subfolder and continue the loop.
+      showThumb = showThumb[layer];
+    });
+    return show;
+  }
+}
+
+function setShouldShowThumb(path, shouldShow) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Do not allow setting on user listing.
+    return;
+  } else {
+    var showThumb;
+    try {
+      // `JSON.parse` might throw SyntaxError if undefined or malformed.
+      showThumb = JSON.parse(window.localStorage.showThumb);
+      // Prevent error when `window.localStorage.showThumb` is malformed.
+      if (typeof showThumb !== 'object') {
+        throw 'Malformed data.';
+      }
+    } catch (e) {
+      // When encounters errors just initialize `showThumb` to empty object.
+      showThumb = {};
+    }
+
+    var current = showThumb;
+    for (var i = 0; i < layers.length; i++) {
+      if (current[layers[i]] === undefined) {
+        current[layers[i]] = {};
+        // Use a '.show' attribute to indicate the setting for the current
+        // directory because it is an illegal filename, so it will not
+        // conflict with the name of the any subfolders if there exist.
+        current[layers[i]]['.show'] = true;
+      }
+      // cd into the subfolders and continue the loop.
+      current = current[layers[i]];
+    }
+    // Finally, set the setting for current directory.
+    current['.show'] = shouldShow;
+    // Write `showThumb` back into localStorage, not `current`.
+    window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
+  }
+}
+
 $('.panetitle').on('click', '.fullscreen', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
@@ -1666,6 +1740,16 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
   showPaneEditorLanguagesDialog(pane);
+});
+
+$('.panetitle').on('click', '.thumb-toggle', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  var path = state.pane[pane].path;
+  var showThumb = shouldShowThumb(path);
+  e.preventDefault();
+  setShouldShowThumb(path, !showThumb);
+  updatePaneLinks(pane);
+  updatePaneTitle(pane);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {

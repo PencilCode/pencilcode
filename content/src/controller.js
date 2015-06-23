@@ -188,16 +188,6 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
-      if (m.isdir) {
-        // Add a button to toggle thumbnails
-        buttons.push({
-          id: 'toggle-thumb',
-          title: 'Toggle thumbnails',
-          label: defaultShowThumbnail() ? '<i class="fa fa-th-large"></i>'
-                                        : '<i class="fa fa-align-left"></i>'
-        });
-      }
-
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
@@ -498,16 +488,6 @@ $(window).on('beforeunload', function() {
   if (view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
     view.flashButton('save');
     return "There are unsaved changes."
-  }
-});
-
-view.on('toggle-thumb', function() {
-  setDefaultShowThumbnail(!defaultShowThumbnail());
-  if (modelatpos('left').isdir) {
-    renderDirectory('left');
-  }
-  if (modelatpos('right').isdir) {
-    renderDirectory('right');
   }
 });
 
@@ -1856,15 +1836,6 @@ function setDefaultDirSortingByDate(f) {
   }
 }
 
-function defaultShowThumbnail() {
-  if (specialowner()) return false;
-  return window.localStorage.showThumb !== 'false' || false;
-}
-
-function setDefaultShowThumbnail(bool) {
-  window.localStorage.showThumb = bool;
-}
-
 function createNewFileIntoPosition(position, filename, text, meta) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -2034,10 +2005,7 @@ function renderDirectory(position) {
       });
     }
   }
-  // Set the showThumb state of view before calling the rendering method.
-  // !specialowner() to disallow thumbnails on user listing.
-  view.setShowThumb(defaultShowThumbnail() && !specialowner());
-  view.setPaneLinkText(pane, links, filename);
+  view.setPaneLinkText(pane, links, filename, model.ownername);
   updateTopControls(false);
 }
 
