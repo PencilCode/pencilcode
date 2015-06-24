@@ -21,7 +21,7 @@ var delimiter = [
   }
 ];
 
-function parseMetaString(buf) {
+function parseMetaString(buf, assumeBinary) {
   var j, d, limit, start, end, meta, enc, str = buf.toString('binary');
   for (j = 0; j < delimiter.length; ++j) {
     d = delimiter[j];
@@ -39,10 +39,22 @@ function parseMetaString(buf) {
       if (meta && meta.encoding && Buffer.isEncoding(meta.encoding)) {
         enc = meta.encoding;
       } else {
-        enc = 'binary';
+        enc = assumeBinary ? 'binary' : 'utf8';
+      }
+      var decoded = buf.toString(enc, 0, limit);
+      // Deal with legacy data that might have been encoded as binary
+      // when the new default for text files is utf8.
+      if (enc == 'utf8' && decoded.indexOf('\ufffd') != -1) {
+        var recoded = new Buffer(decoded, enc);
+        // The utf8 is malformed if reencoding it results in different bytes.
+        if (recoded.length != limit || !recoded.equals(buf.slice(0, limit))) {
+          // In this case, treat the encoding as binary instead.
+          enc = 'binary';
+          decoded = buf.toString(enc, 0, limit);
+        }
       }
       return {
-        data: buf.toString(enc, 0, limit),
+        data: decoded,
         meta: meta
       }
     } catch (e) { }
@@ -50,7 +62,7 @@ function parseMetaString(buf) {
   return { data: str, meta: null };
 }
 
-function printMetaString(data, meta) {
+function printMetaString(data, meta, assumeBinary) {
   if (meta == null &&
       (data.lastIndexOf('META@') == -1 || data.lastIndexOf('@META') == -1) &&
       /^[\0-\xff]*$/.test(data)) {
@@ -62,7 +74,7 @@ function printMetaString(data, meta) {
       if (delimiter[j].type.test(meta.type)) { d = delimiter[j]; break; }
     }
   }
-  var enc = 'binary';
+  var enc = assumeBinary ? 'binary' : 'utf8';
   if (meta && meta.encoding && Buffer.isEncoding(meta.encoding)) {
     enc = meta.encoding;
   } else if (!/^[\0-\xff]*$/.test(data)) {

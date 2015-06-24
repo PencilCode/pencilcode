@@ -96,6 +96,7 @@ exports.handleLoad = function(req, res, app, format) {
         utils.errorExit('Bad filename: ' + filename);
       }
     }
+    var assumeBinary = filetype.binaryTypeFilename(filename);
 
     var absfile = utils.makeAbsolute(filename, app);
 
@@ -105,7 +106,7 @@ exports.handleLoad = function(req, res, app, format) {
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
         var m = filemeta.parseMetaString(
-            fs.readFileSync(absfile)),
+                fs.readFileSync(absfile), assumeBinary),
             data = m.data,
             meta = m.meta;
 
@@ -161,7 +162,7 @@ exports.handleLoad = function(req, res, app, format) {
     else if (format == 'code') { // For loading the code only
       var mt = filetype.mimeForFilename(filename),
           m = filemeta.parseMetaString(
-              fs.readFileSync(absfile)),
+              fs.readFileSync(absfile), assumeBinary),
           data = m.data,
           meta = m.meta;
       res.set('Cache-Control', 'must-revalidate');
@@ -173,7 +174,7 @@ exports.handleLoad = function(req, res, app, format) {
     else if (format == 'print') { // For printing the code
       var mt = filetype.mimeForFilename(filename),
           m = filemeta.parseMetaString(
-              fs.readFileSync(absfile)),
+              fs.readFileSync(absfile), assumeBinary),
           data = m.data,
           meta = m.meta,
           needline = false,
@@ -224,7 +225,7 @@ exports.handleLoad = function(req, res, app, format) {
       if (utils.isPresent(absfile, 'file')) {
         var mt = filetype.mimeForFilename(filename),
             m = filemeta.parseMetaString(
-                fs.readFileSync(absfile));
+                fs.readFileSync(absfile), assumeBinary);
 
         // For turtle bits, assume it's coffeescript
         if (mt.indexOf('text/x-pencilcode') == 0) {

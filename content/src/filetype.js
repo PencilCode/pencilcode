@@ -9,6 +9,11 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
+function binaryTypeFilename(filename) {
+  var mime = mimeForFilename(filename);
+  return !(/^text\//.test(mime));
+}
+
 // Scans for HTML HEAD content at the top, remembering the positions
 // after any start-tags seen and before any legal end-tags.
 // Returns {
@@ -319,6 +324,7 @@ function isDefaultMeta(meta) {
 
 var impl = {
   mimeForFilename: mimeForFilename,
+  binaryTypeFilename: binaryTypeFilename,
   modifyForPreview: modifyForPreview,
   effectiveMeta: effectiveMeta,
   isDefaultMeta: isDefaultMeta,

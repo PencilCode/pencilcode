@@ -300,7 +300,8 @@ exports.handleSave = function(req, res, app) {
 
     var statObj;
     try {
-      var content = filemeta.printMetaString(data, meta);
+      var assumeBinary = filetype.binaryTypeFilename(filename);
+      var content = filemeta.printMetaString(data, meta, assumeBinary);
       fd = fs.writeFileSync(absfile, content);
       var statObj = fs.statSync(absfile);
       touchUserDir(userdir);
