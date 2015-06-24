@@ -164,6 +164,75 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should hide thumbnails when thumbnail toggle is clicked', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      $('.thumb-toggle').click();
+    }, function() {
+      if ($('.thumbnail').is(':visible')) return;
+      return {
+        showThumb: window.localStorage.showThumb,
+        changedIcon: $('.thumb-toggle').find('.fa').hasClass('fa-align-center')
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal(result.showThumb, '{"livetest":{".show":false}}');
+      assert.ok(result.changedIcon);
+      done();
+    });
+  });
+  it('should inherit thumbnail setting from parent folder', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      $('a[href="/home/shapes/"]').click();
+    }, function() {
+      if (!$('a[href="/home/shapes/test"]').is(':visible')) return;
+      return {
+        showThumb: window.localStorage.showThumb,
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal(result.showThumb, '{"livetest":{".show":false}}');
+      done();
+    });
+  });
+  it('should be able to have individual setting for subfolder', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the thumbnail toggle.
+      $('.thumb-toggle:eq(1)').click();
+    }, function() {
+      if (!$('.thumbnail[alt="test"]').is(':visible')) return;
+      return {
+        showThumb: window.localStorage.showThumb,
+        changedIcon: $('.thumb-toggle:eq(1)').find('.fa').hasClass('fa-th-large')
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal(result.showThumb, '{"livetest":{".show":false,"shapes":{".show":true}}}');
+      assert.ok(result.changedIcon);
+      done();
+    });
+  });
+  it('should behave differently for different folders', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the folder icon.
+      $('#folder').click();
+    }, function() {
+      return {
+        showThumb: window.localStorage.showThumb,
+        leftIconCorrent: $('.thumb-toggle:eq(0)').find('.fa').hasClass('fa-align-center'),
+        rightIconCorrect: $('.thumb-toggle:eq(1)').find('.fa').hasClass('fa-th-large'),
+        showThumbForTest: $('.thumbnail[alt="test"]').is(':visible'),
+        noThumbForFirst: $('.thumbnail[alt="first"]').is(':visible')
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal(result.showThumb, '{"livetest":{".show":false,"shapes":{".show":true}}}');
+      assert.ok(result.leftIconCorrent);
+      assert.ok(result.rightIconCorrect);
+      assert.ok(result.showThumbForTest);
+      assert.ok(!result.noThumbForFirst);
+      done();
+    });
+  });
   it('should be able to start a new file', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the "Create new program" link.
