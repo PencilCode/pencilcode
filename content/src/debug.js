@@ -121,6 +121,8 @@ var debug = window.ide = {
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
     eventQueue.push(lineno);
+    //console.log("events: ", eventQueue);
+
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -176,34 +178,29 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     //trace lines that are not animation.
     while (location != currentLine){
       if (tracedLoc != -1){
-        var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(tracedLoc);
-        setTimeout(untracer, 200);
-        //untraceLine(tracedLoc);
+        untraceLine(tracedLoc);
         tracedLoc = -1;
       }
+      if(currentLine < prevLoc){
+        view.arrow(true, prevLoc, currentLine); 
+      }
       traceLine(currentLine);
-      console.log("tracing: ", currentLine);
-      
+      console.log("Event Tracing: ", currentLine);
       tracedLoc = currentLine;
+      prevLoc = currentLine;
       currentLine = eventQueue.shift();
     }
     if (tracedLoc != -1){
-      var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(tracedLoc);
-      setTimeout(untracer, 200);
-      tracedLoc = -1
+      untraceLine(tracedLoc);
+      tracedLoc = -1;
     }
-    var untracer = (function(line) { return function() { untraceLine(line); console.log("untracing: ", line)} })(currentLine);
-    setTimeout(untracer, 200);
     if (location < prevLoc){
-        //view.arrow(true, prevLoc, location); 
-        console.log("arrow");
+        view.arrow(true, prevLoc, location); 
     }
     prevLoc = location;
     recordD.startCoords[coordId] = collectCoords(elem);
     recordL.startCoords[coordId] = collectCoords(elem);
-    var tracer =  (function(line) { return function() { traceLine(line); console.log("tracing: ", line)} })(location);
-    setTimeout(tracer, 200);
-    //traceLine(location);
+    traceLine(location);
   }
 }
 
@@ -219,7 +216,38 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     recordL.endCoords[coordId] = collectCoords(elem);
     untraceLine(location);
   }
-  //view.arrow(false, -1, 1);
+  view.arrow(false, -1, 1);
+}
+
+function end_program(){
+  //goes back and traces unanimated lines at the end of programs.
+  console.log("End Event Queue: ", eventQueue);
+  var currentLine = -1; 
+  var tracedLoc = -1; 
+  while (eventQueue.length > 0){
+    currentLine = eventQueue.shift();
+    console.log("end tracing: ", currentLine);
+    if (tracedLoc != -1){
+        untraceLine(tracedLoc);
+        tracedLoc = -1;
+    }
+    if(currentLine < prevLoc){
+      console.log("ARROW");
+      console.log("Drawing Arrow:", "From: " + prevLoc, "To: " + currentLine);
+      view.arrow(true, prevLoc, currentLine);
+
+    }
+    traceLine(currentLine);
+    tracedLoc = currentLine;
+    prevLoc = currentLine;
+  }
+  if (tracedLoc != -1){
+        untraceLine(tracedLoc);
+        tracedLoc = -1;
+  }
+  console.log("END PROGRAM");
+  //eventQueue = [];
+  //traceEvents = [];
 }
 
 function errorAdvice(msg, text) {
@@ -621,6 +649,7 @@ function pollForStop() {
       view.showMiddleButton('stop');
     }
   } else {
+    end_program();
     if (stopButtonShown) {
       stopButtonShown = 0;
       view.showMiddleButton('run');

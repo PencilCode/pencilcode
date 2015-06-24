@@ -2923,25 +2923,23 @@ function arrow(show, prevLoc, currLoc){
   
   if (show){
     var lines = $(".ace_line");
-    var startLine = lines[currLoc];
-    var endLine = lines[prevLoc];
+    var startLine = lines[prevLoc];
+    var endLine = lines[currLoc];
     var start_rect = startLine.getBoundingClientRect();
     var end_rect = endLine.getBoundingClientRect();
     var arrow_height = start_rect.top - end_rect.bottom;
-    console.log("top of previous: ",prev_rect.top);
-    console.log("bottom of current: ", curr_rect.bottom );
     console.log("prev line: ", prevLoc);
     console.log("curr line: ", currLoc);
     //console.log("")
 
 
-    var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
+    var text = "<svg width=" + arrow_height*29 + " height=" + arrow_height*29 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <path d='M50,"+ 50 + " \
-             A30,20 0 0,1 80,80' marker-start='url(#arrowhead)' \
-          style='stroke:black; fill:none;'/> \
+    <path d='M50,"+ arrow_height + " \
+             A35,20 0 0,1 80,80' marker-start='url(#arrowhead)' \
+          style='stroke:black; fill:none; left=100px; top=7px'/> \
     </svg> \
     "; 
     console.log("arrow height: ", arrow_height);  
@@ -2952,8 +2950,10 @@ function arrow(show, prevLoc, currLoc){
     // div.style.visibility = 'visible';
     div.style.position = "absolute";
     div.style.zIndex = "1";
-    div.style.left = "100px" ;
-    div.style.top = prev_rect.top;
+    div.style.left = "120px" ;
+    div.style.top = "-100px";
+    div.style.bottom = "2px";
+    //start_rect.bottom;
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
     create_some_run = true;
