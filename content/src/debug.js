@@ -43,6 +43,7 @@ function bindframe(w) {
   debugRecordsByDebugId = {}; 
   debugRecordsByLineNo = {};
   traceEvents = [];
+  prevLoc = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -118,10 +119,13 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
+    console.log(isLoop);
     view.create_some(traceEvents, isLoop);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
+    console.log("Lineno:", lineno);
+    console.log("PrevLoc:", prevLoc);
     if(lineno < prevLoc){
       isLoop = true;
     }
