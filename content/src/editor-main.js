@@ -18,6 +18,7 @@ require.config({
     'guide': 'src/guide',
     'jquery': 'lib/jquery',
     'jquery-ui': 'lib/jquery-ui',
+    'jquery-ui-slider-pips': 'lib/jquery-ui-slider-pips',
     'iced-coffee-script': 'lib/iced-coffee-script',
     'pencil-tracer': 'lib/pencil-tracer',
     'see': 'lib/see',

@@ -6,6 +6,7 @@ define([
 
   'jquery',
   'jquery-ui',
+  'jquery-ui-slider-pips',
   'filetype',
   'tooltipster',
   'see',
@@ -18,7 +19,9 @@ define([
 ],
 function(
   $,
-  jqueryui,
+
+ jqueryui,
+  sliderpips,
   filetype,
   tooltipster,
   see,
@@ -231,9 +234,10 @@ function paneid(position) {
 }
 //note: need to move. 
 var create_some_run = false;
+var pictures = [];
+function create_some(traceevents){
   var present_line = 0;
   var current_value = 0;
-function create_some(traceevents){
   var div = document.createElement('div');
   div.className = 'scrubber';
   div.style.position = 'absolute';
@@ -274,8 +278,13 @@ function create_some(traceevents){
             paneid('left'), lineno, 'guttermouseable', true);
             markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
       }
+      })
+      .slider("pips", {
+        rest: "label"
+
       });
     var max =	$( ".scrubber" ).slider("option", "max");
+
 	});
         $("#sliderinfo").change(function(){
           var value = this.value.substring(1);
@@ -286,6 +295,7 @@ function create_some(traceevents){
   }
   else if(create_some_run && traceevents.length >= 2){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
+    var max = $( ".scrubber" ).slider("option", "max");
   }
 
   else{

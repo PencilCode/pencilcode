@@ -719,6 +719,15 @@ button.ui-button::-moz-focus-inner {
 .ui-slider-vertical .ui-slider-range-max {
 	top: 0;
 }
+
+.ui-slider-tick-mark{
+    display:inline-block;
+    width:2px;
+    background:black;
+    height:16px;
+    position:absolute;
+    top:-4px;
+}
 .ui-spinner {
 	position: relative;
 	display: inline-block;
