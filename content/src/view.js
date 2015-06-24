@@ -287,7 +287,7 @@ function create_some(traceevents){
     $(".scrubber").slider("pips",{ 
       first: "label",
       last: "label",
-      labels: ["Start", "End"]
+      labels: { "first": "Start", "last": "End"}
     })
     var max = $( ".scrubber" ).slider("option", "max");
   }
