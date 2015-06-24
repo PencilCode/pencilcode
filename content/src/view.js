@@ -235,7 +235,7 @@ function paneid(position) {
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents){
+function create_some(traceevents, loop){
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -245,7 +245,7 @@ function create_some(traceevents){
   div.style.top = "300px";
   div.style.width = "300px";
 
-  if (!create_some_run && traceevents.length >= 2){
+  if (!create_some_run && traceevents.length >= 2 && loop){
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
 	var labels = ["Start", "End"];
@@ -282,7 +282,7 @@ function create_some(traceevents){
 	});
     create_some_run = true;
   }
-  else if(create_some_run && traceevents.length >= 2){
+  else if(create_some_run && traceevents.length >= 2 && loop){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       first: "label",

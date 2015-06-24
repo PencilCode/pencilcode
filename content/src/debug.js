@@ -118,7 +118,7 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
-    view.create_some(traceEvents);
+    view.create_some(traceEvents, isLoop);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
