@@ -1617,7 +1617,7 @@ function updatePaneTitle(pane) {
         // Show the Javascript watermark if the language is JS.
         var showjs = (/javascript/.test(visibleMimeType));
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
-        label = '<div style="float:right" class="langmenu" title="Languages">' +
+        label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
                 '&nbsp;</div></div>'
               + label;
@@ -1630,7 +1630,8 @@ function updatePaneTitle(pane) {
     if (paneState.path === '/') {
       icon = '';
     }
-    label = '<div class="thumb-toggle pull-right">' + icon + '</div>directory';
+    label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">' +
+            icon + '</div>directory';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
