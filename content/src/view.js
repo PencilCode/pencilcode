@@ -1651,37 +1651,51 @@ function updatePaneTitle(pane) {
   $('#' + pane).toggleClass('textonly', textonly);
 }
 
+function getShowThumb() {
+  var showThumb;
+  try {
+    // `JSON.parse` might throw SyntaxError if undefined or malformed.
+    showThumb = JSON.parse(window.localStorage.showThumb);
+    // Prevent error when `window.localStorage.showThumb` is malformed.
+    if (typeof showThumb !== 'object') {
+      throw 'Malformed data.';
+    }
+  } catch (e) {
+    // When encounters errors just initialize `showThumb` to empty object.
+    showThumb = {};
+  }
+  return showThumb;
+}
+
+function setShowThumb(showThumb) {
+  try {
+    window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
+  } catch (e) {
+    console.log('Set showThumb failed. Error: ' + e);
+  }
+}
+
 function shouldShowThumb(path) {
   var layers = path.match(/[^\/]+/g);
   if (!layers) { // Disable on user listing.
     return false;
   } else {
-    try {
-      // `JSON.parse` might throw SyntaxError if undefined or malformed.
-      var showThumb = JSON.parse(window.localStorage.showThumb);
-      // Prevent error when `window.localStorage.showThumb` is malformed.
-      if (typeof showThumb !== 'object') {
-        throw 'Malformed data.'
-      }
-    } catch (e) {
-      // When encounters error just return true;
-      return true;
-    }
+    var showThumb = getShowThumb();
 
     var show = true;
-    layers.forEach(function(layer) {
+    for (var i = 0; i < layers.length; i++) {
       // If no setting just show thumbnails by default.
       // This loop will set show to the closest parent's setting.
-      if (showThumb[layer] === undefined) {
+      if (showThumb[layers[i]] === undefined) {
         return show;
-      } else if (showThumb[layer]['.show']) {
+      } else if (showThumb[layers[i]]['.show']) {
         show = true;
       } else {
         show = false;
       }
       // cd into the subfolder and continue the loop.
-      showThumb = showThumb[layer];
-    });
+      showThumb = showThumb[layers[i]];
+    };
     return show;
   }
 }
@@ -1691,18 +1705,7 @@ function setShouldShowThumb(path, shouldShow) {
   if (!layers) { // Do not allow setting on user listing.
     return;
   } else {
-    var showThumb;
-    try {
-      // `JSON.parse` might throw SyntaxError if undefined or malformed.
-      showThumb = JSON.parse(window.localStorage.showThumb);
-      // Prevent error when `window.localStorage.showThumb` is malformed.
-      if (typeof showThumb !== 'object') {
-        throw 'Malformed data.';
-      }
-    } catch (e) {
-      // When encounters errors just initialize `showThumb` to empty object.
-      showThumb = {};
-    }
+    var showThumb = getShowThumb();
 
     var current = showThumb;
     for (var i = 0; i < layers.length; i++) {
@@ -1719,7 +1722,7 @@ function setShouldShowThumb(path, shouldShow) {
     // Finally, set the setting for current directory.
     current['.show'] = shouldShow;
     // Write `showThumb` back into localStorage, not `current`.
-    window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
+    setShowThumb(showThumb);
   }
 }
 
