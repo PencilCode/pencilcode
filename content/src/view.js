@@ -2310,13 +2310,13 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   editor.getSession().setUndoManager(um);
 
   var gutter = mainContainer.find('.ace_gutter');
-  gutter.on('mouseenter', '.guttermouseable', function() {
+  gutter.on('mouseenter', '.guttermouseable', function(event) {
     fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('mouseleave', '.guttermouseable', function() {
+  gutter.on('mouseleave', '.guttermouseable', function(event) {
     fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('click', '.guttermouseable', function() {
+  gutter.on('click', '.guttermouseable', function(event) {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
 

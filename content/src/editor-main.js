@@ -18,6 +18,8 @@ require.config({
     'draw-protractor': 'src/draw-protractor',
     'guide': 'src/guide',
     'jquery': 'lib/jquery',
+    'iced-coffee-script': 'lib/iced-coffee-script',
+    'pencil-tracer': 'lib/pencil-tracer',
     'see': 'lib/see',
     'seedrandom': 'lib/seedrandom',
     'sourcemap': 'lib/sourcemap',

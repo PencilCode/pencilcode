@@ -143,7 +143,7 @@ exports.handleSave = function(req, res, app) {
 
       var absSourceFile = utils.makeAbsolute(sourcefile, app);
       var absSourceThumb = utils.getAbsThumbPath(sourcefile, app);
-      var sourceThumbExists = fs.existsSync(path.dirname(absSourceThumb));
+      var sourceThumbExists = fs.existsSync(absSourceThumb);
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
       }
