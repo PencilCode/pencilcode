@@ -171,7 +171,7 @@ describe('code editor', function() {
       if ($('.thumbnail').is(':visible')) return;
       return {
         showThumb: window.localStorage.showThumb,
-        changedIcon: $('.thumb-toggle').find('.fa').hasClass('fa-align-center')
+        changedIcon: $('.thumb-toggle').find('.fa').hasClass('fa-align-left')
       }
     }, function(err, result) {
       assert.ifError(err);
@@ -218,7 +218,7 @@ describe('code editor', function() {
     }, function() {
       return {
         showThumb: window.localStorage.showThumb,
-        leftIconCorrent: $('.thumb-toggle:eq(0)').find('.fa').hasClass('fa-align-center'),
+        leftIconCorrent: $('.thumb-toggle:eq(0)').find('.fa').hasClass('fa-align-left'),
         rightIconCorrect: $('.thumb-toggle:eq(1)').find('.fa').hasClass('fa-th-large'),
         showThumbForTest: $('.thumbnail[alt="test"]').is(':visible'),
         noThumbForFirst: $('.thumbnail[alt="first"]').is(':visible')
