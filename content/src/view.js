@@ -2933,12 +2933,12 @@ function arrow(show, prevLoc, currLoc){
     //console.log("")
 
 
-    var text = "<svg width=" + arrow_height*29 + " height=" + arrow_height*29 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
+    var text = "<svg width=" + arrow_height*20 + " height=" + arrow_height*20 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
     <path d='M50,"+ arrow_height + " \
-             A35,20 0 0,1 80,80' marker-start='url(#arrowhead)' \
+             A35,30 6 0,1 60,60' marker-start='url(#arrowhead)' \
           style='stroke:black; fill:none; left=100px; top=7px'/> \
     </svg> \
     "; 
@@ -2950,9 +2950,8 @@ function arrow(show, prevLoc, currLoc){
     // div.style.visibility = 'visible';
     div.style.position = "absolute";
     div.style.zIndex = "1";
-    div.style.left = "120px" ;
-    div.style.top = "-100px";
-    div.style.bottom = "2px";
+    div.style.left = "140px" ;
+    div.style.top = "-30px";
     //start_rect.bottom;
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
