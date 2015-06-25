@@ -87,10 +87,10 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'lib/almond',
           out: 'content/editor.js',
+          useStrict: true,
           // optimize: 'none',
           mainConfigFile: 'content/src/editor-main.js',
-          preserveLicenseComments: false,
-          useStrict: true
+          preserveLicenseComments: false
         }
       }
     },
@@ -340,4 +340,3 @@ module.exports = function(grunt) {
   grunt.registerTask('default',
       ['build', 'test']);
 };
-
