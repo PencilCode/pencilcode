@@ -12,6 +12,8 @@ define([
   'guide',
   'seedrandom',
   'see',
+  'pencil-tracer',
+  'iced-coffee-script',
   'draw-protractor'],
 function(
   $,
@@ -23,6 +25,8 @@ function(
   guide,
   seedrandom,
   see,
+  pencilTracer,
+  icedCoffeeScript,
   drawProtractor) {
 
 eval(see.scope('controller'));
@@ -1788,6 +1792,22 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
+function instrumentCode(code, language) {
+  if (language === 'javascript') {
+    // TODO: support javascript
+  } else if (language === 'coffeescript') {
+    options = {
+      traceFunc: 'ide.trace',
+      sourceMap: true,
+      bare: true
+    };
+    result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+    debug.setSourceMap(result.v3SourceMap);
+    code = result.js;
+  }
+  return code;
+}
+
 function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
@@ -1802,7 +1822,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
-      emptyOnly, model.setupScript)
+      emptyOnly, model.setupScript, instrumentCode);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
