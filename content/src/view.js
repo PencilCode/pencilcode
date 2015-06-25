@@ -273,7 +273,7 @@ function create_some(traceevents, loop){
         first: "label",
         rest: "pip",
         last: "label",
-        labels: labels
+        labels: {"first": "Start", "last": "End"}
       })
       .slider("float")
     var max =	$( ".scrubber" ).slider("option", "max");
@@ -286,6 +286,7 @@ function create_some(traceevents, loop){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       first: "label",
+      rest: "pip",
       last: "label",
       labels: { "first": "Start", "last": "End"}
     })
