@@ -26,6 +26,7 @@ var traceEvents = [];         // list of event location objects created by traci
 var prevLoc = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
                               // the location goes backwards.
 var eventQueue = [];          //list of events in order to maintain proper tracing 
+var isLoop = false;
 
 Error.stackTraceLimit = 20;
 
@@ -40,6 +41,9 @@ function bindframe(w) {
   cachedParseStack = {};
   debugRecordsByDebugId = {}; 
   debugRecordsByLineNo = {};
+  traceEvents = [];
+  prevLoc = -1;
+  isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   startPollingWindow();
@@ -114,9 +118,18 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
+
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
+    console.log("Lineno:", lineno);
+    console.log("PrevLoc:", prevLoc);
+    if(lineno <= prevLoc){
+      isLoop = true;
+    }
+    console.log(isLoop);
+    view.create_some(traceEvents, isLoop);
+    prevLoc = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;

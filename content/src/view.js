@@ -3,7 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////
 
 define([
+
   'jquery',
+  'jquery-ui',
+  'jquery-ui-slider-pips',
   'filetype',
   'tooltipster',
   'see',
@@ -16,6 +19,9 @@ define([
 ],
 function(
   $,
+
+ jqueryui,
+  sliderpips,
   filetype,
   tooltipster,
   see,
@@ -143,6 +149,7 @@ window.pencilcode.view = {
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
+  create_some: create_some,
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,
@@ -225,6 +232,72 @@ function publish(method, args, requestid){
 
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
+}
+//note: need to move. 
+var create_some_run = false;
+var pictures = [];
+function create_some(traceevents, loop){
+  var present_line = 0;
+  var current_value = 0;
+  var div = document.createElement('div');
+  div.className = 'scrubber';
+  div.style.position = 'absolute';
+  div.style.left = "175px";
+  div.style.top = "300px";
+  div.style.width = "300px";
+
+  if (!create_some_run && traceevents.length >= 2 && loop){
+    $(".hpanel").css({ height: "500px" })
+    $("#bravo").append(div);
+	var labels = ["Start", "End"];
+	$(function() {
+   $(".scrubber").slider({
+      min: 0,
+      max: traceevents.length - 1,
+      step: 1,
+      range: "min",
+      smooth: false,
+      slide: function(event, ui){
+        $("#sliderinfo").val(ui.value);
+        var prevno = traceevents[present_line].location.first_line;
+        clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+        current_value = ui.value;
+        present_line = ui.value;
+        var lineno = traceevents[current_value].location.first_line;
+        console.log(lineno);
+        markPaneEditorLine(
+            paneid('left'), lineno, 'guttermouseable', true);
+            markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+      }
+      })
+      .slider("pips", {
+        first: "label",
+        rest: "pip",
+        last: "label",
+        labels: {"first": "Start", "last": "End"}
+      })
+      .slider("float")
+    var max =	$( ".scrubber" ).slider("option", "max");
+    var pips = $(".scrubber").slider("option", "pips");
+   // $(".scrubber").css("background-color", "red");
+	});
+    create_some_run = true;
+  }
+  else if(create_some_run && traceevents.length >= 2 && loop){
+    $(".scrubber").slider("option", "max", traceevents.length - 1)
+    $(".scrubber").slider("pips",{ 
+      first: "label",
+      rest: "pip",
+      last: "label",
+      labels: { "first": "Start", "last": "End"}
+    })
+    var max = $( ".scrubber" ).slider("option", "max");
+  }
+
+  else{
+    $(".scrubber").remove();
+    create_some_run = false;
+  }
 }
 
 function panepos(id) {
@@ -698,7 +771,7 @@ function showMiddleButton(which) {
              'title="Restart program (Ctrl+Enter)">' +
              '<div class="reload"></div></button>';
     } else {
-      html = '<button id="run" title="Run program (Ctrl+Enter)">' +
+      html = '<button id="run" title="Run program(Ctrl+Enter)">' +
              '<div class="triangle"></div></button>';
     }
     $('#middle').find('div').eq(0).html(html);

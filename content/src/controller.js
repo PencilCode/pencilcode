@@ -102,6 +102,7 @@ function logCodeEvent(action, filename, code, mode, lang) {
 //
 function modelatpos(pos) {
   return model.pane[paneatpos(pos)];
+
 }
 
 //
@@ -494,6 +495,7 @@ view.on('logout', function() {
   updateTopControls(false);
   view.flashNotification('Logged out.');
 });
+
 
 view.on('login', function() {
   if (specialowner()) {
