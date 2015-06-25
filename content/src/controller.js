@@ -1789,7 +1789,7 @@ function instrumentCode(code, language) {
     } catch (err) {
       // If there was an error while instrumenting, just return non-instrumented
       // JavaScript.
-      console.warn("Error during instrumentation! Debugger will be disabled for this run.");
+      console.warn("Error during instrumentation! Debugger will be disabled for this run. Error was:\n" + err);
       code = icedCoffeeScript.compile(code, { bare: true });
     }
   }
