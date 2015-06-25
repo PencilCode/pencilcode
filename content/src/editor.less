@@ -823,36 +823,42 @@ body#pencildoc #diigolet-csm {
 }
 
 .directory .item {
-  text-align: center;
   display: inline-block;
   float: left;
   clear: left;
   text-decoration: none;
   color: #222;
   cursor: pointer;
-  figure {
+  width: 154px;
+  div {
     margin: 0px;
-    width: 154px;
     max-height: 154px;
-    figcaption {
+    padding-right: 5px;
+    padding-bottom: 5px;
+    span {
+      display: block;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-  }
-  .thumbnail {
-    background-color: #eeeeee;
-    width: 100px;
-    height: 100px;
-    margin-top: 16px;
-    border: 1px #ccc solid;
-    border-radius: 4px;
-    padding: 2px;
+    .caption {
+      text-align: center;
+    }
+    .thumbnail {
+      background-color: #eeeeee;
+      width: 100px;
+      height: 100px;
+      margin-top: 16px;
+      margin-left: 27px;
+      border: 1px #ccc solid;
+      border-radius: 4px;
+      padding: 2px;
+    }
   }
   &:hover {
     text-decoration: underline;
     color: blue;
-    .thumbnail {
+    div .thumbnail {
       padding: 0px;
       border-width: 2px;
       border-color: #1679FF;
@@ -862,7 +868,7 @@ body#pencildoc #diigolet-csm {
 
 .directory .create {
   color: #1e90ff;
-  .thumbnail {
+  div .thumbnail {
     border-style: dashed;
   }
 }

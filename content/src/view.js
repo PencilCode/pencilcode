@@ -1371,7 +1371,7 @@ function updatePaneLinks(pane) {
       href: list[j].href,
       title: list[j].name
     }).appendTo(col);
-    figure = $('<figure/>').appendTo(item);
+    figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
     if (shouldShowThumb(paneState.path)) {
@@ -1380,8 +1380,10 @@ function updatePaneLinks(pane) {
         src: thumbnail || getDefaultThumbnail(list[j].type),
         alt: list[j].name
       }).appendTo(figure);
+      $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
+    } else {
+      $('<span/>', { text: list[j].name }).appendTo(figure);
     }
-    $('<figcaption/>', { text: list[j].name }).appendTo(figure);
     if (list[j].link) {
       item.data('link', list[j].link);
     }
@@ -1624,14 +1626,15 @@ function updatePaneTitle(pane) {
       }
     }
   } else if (paneState.links) {
-    var icon = shouldShowThumb(paneState.path)?
-              '<i class="fa fa-th-large"></i>' :
-              '<i class="fa fa-align-center"></i>';
     if (paneState.path === '/') {
-      icon = '';
+      label = 'directory';
+    } else {
+      var icon = shouldShowThumb(paneState.path)?
+              '<i class="fa fa-th-large"></i>' :
+              '<i class="fa fa-align-left"></i>';
+      label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">'
+            + icon + '</div>directory';
     }
-    label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">' +
-            icon + '</div>directory';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
