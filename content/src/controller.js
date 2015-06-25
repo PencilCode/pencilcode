@@ -6,6 +6,7 @@ define([
   'jquery',
   'view',
   'storage',
+  'thumbnail',
   'debug',
   'filetype',
   'guide',
@@ -18,6 +19,7 @@ function(
   $,
   view,
   storage,
+  thumbnail,
   debug,
   filetype,
   guide,
@@ -338,7 +340,17 @@ view.on('share', function() {
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, doc);
+    if (!doc) {
+      // There is no editor on the left (or it is misbehaving) - do nothing.
+      console.log("Nothing to share.");
+      return;
+    } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+      var iframe = document.getElementById('output-frame');
+      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+    }
+    var data = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
@@ -482,7 +494,6 @@ $(window).on('beforeunload', function() {
     return "There are unsaved changes."
   }
 });
-
 
 view.on('logout', function() {
   model.username = null;
@@ -738,14 +749,20 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
+  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    var iframe = document.getElementById('output-frame');
+    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
-  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var newdata = $.extend({
+    thumbnail: thumbnailDataUrl
+  }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
@@ -760,6 +777,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
+    // Flash the thumbnail after the control are updated.
+    view.flashThumbnail(thumbnailDataUrl);
   }
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
@@ -1969,16 +1988,33 @@ function renderDirectory(position) {
       if (model.ownername === '' && filename === '') {
         if (m.list[j].mode.indexOf('d') < 0) { continue; }
         var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
-        links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
-      } else {
-        var label = name;
-        if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-        var href = '/home/' + filenameslash + label;
         links.push({
-            html: label,
+          name: name,
+          href: href,
+          type: 'user',
+          mtime: m.list[j].mtime
+        });
+      } else {
+        var thumbnail = '';
+        if (m.list[j].thumbnail) {  // If there is a thumbnail for the file.
+          // Construct the url to the thumbnail.
+          // Append mtime so that when program updates, thumb gets refetched.
+          thumbnail = '/thumb/' + filenameslash + name +
+                      '.png?' + m.list[j].mtime;
+        }
+        var type = 'dir';
+        if (m.list[j].mode.indexOf('d') >= 0) {
+          name += '/';
+        } else {
+          type = filetype.mimeForFilename(name).replace(/;.*$/, '');
+        }
+        var href = '/home/' + filenameslash + name;
+        links.push({
             name: name,
-            link: label,
+            link: name,
             href: href,
+            type: type,
+            thumbnail: thumbnail,
             mtime: m.list[j].mtime
         });
       }
@@ -1989,12 +2025,14 @@ function renderDirectory(position) {
       links.sort(sortByName);
     }
     if (model.ownername !== '') {
-      links.push({html:''});
-      links.push({html:'<nobr class="create">Create new file</nobr>',
-          link:'#new'});
+      links.push({
+          name: 'New file',
+          type: 'new',
+          link: '#new'
+      });
     }
   }
-  view.setPaneLinkText(pane, links, filename);
+  view.setPaneLinkText(pane, links, filename, model.ownername);
   updateTopControls(false);
 }
 

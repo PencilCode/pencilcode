@@ -6,6 +6,18 @@
   box-sizing: content-box
 }
 
+.tooltipster-shadow {
+  border-radius: 5px;
+  background-color: #eeeeee;
+  box-shadow: 0px 0px 14px rgba(0,0,0,0.3);
+  color: #2c2c2c;
+  .tooltipster-content {
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    line-height: 16px;
+  }
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -778,6 +790,11 @@ body#pencildoc #diigolet-csm {
   opacity: 1
 }
 
+.thumb-toggle:hover, .thumb-toggle:hover .fa {
+  color: #fff;
+  opacity: 1
+}
+
 .preview {
   height: 100%;
   overflow: hidden;
@@ -795,7 +812,8 @@ body#pencildoc #diigolet-csm {
 
 .directory {
   height: 100%;
-  overflow: auto
+  padding: 10px;
+  overflow: auto;
 }
 
 .directory .column {
@@ -809,25 +827,50 @@ body#pencildoc #diigolet-csm {
   float: left;
   clear: left;
   text-decoration: none;
-  padding: 0 28px 0 12px;
-  min-height: 28px;
   color: #222;
-  cursor: pointer
+  cursor: pointer;
+  width: 154px;
+  div {
+    margin: 0px;
+    max-height: 154px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+    span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .caption {
+      text-align: center;
+    }
+    .thumbnail {
+      background-color: #eeeeee;
+      width: 100px;
+      height: 100px;
+      margin-top: 16px;
+      margin-left: 27px;
+      border: 1px #ccc solid;
+      border-radius: 4px;
+      padding: 2px;
+    }
+  }
+  &:hover {
+    text-decoration: underline;
+    color: blue;
+    div .thumbnail {
+      padding: 0px;
+      border-width: 2px;
+      border-color: #1679FF;
+    }
+  }
 }
 
 .directory .create {
   color: #1e90ff;
-  white-space: nowrap;
-}
-
-.directory .create:hover {
-  text-decoration: underline;
-  color: blue
-}
-
-.directory .item:hover {
-  text-decoration: underline;
-  color: blue
+  div .thumbnail {
+    border-style: dashed;
+  }
 }
 
 .loading, #notification.loading {

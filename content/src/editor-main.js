@@ -8,6 +8,7 @@ require.config({
     'controller': 'src/controller',
     'view': 'src/view',
     'storage': 'src/storage',
+    'thumbnail': 'src/thumbnail',
     'debug': 'src/debug',
     'codescan': 'src/codescan',
     'palette': 'src/palette',
