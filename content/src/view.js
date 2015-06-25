@@ -241,7 +241,7 @@ function create_some(traceevents, loop){
   var div = document.createElement('div');
   div.className = 'scrubber';
   div.style.position = 'absolute';
-  div.style.left = "70px";
+  div.style.left = "175px";
   div.style.top = "300px";
   div.style.width = "300px";
 
@@ -278,7 +278,7 @@ function create_some(traceevents, loop){
       .slider("float")
     var max =	$( ".scrubber" ).slider("option", "max");
     var pips = $(".scrubber").slider("option", "pips");
-
+   // $(".scrubber").css("background-color", "red");
 	});
     create_some_run = true;
   }
