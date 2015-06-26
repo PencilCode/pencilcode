@@ -35,6 +35,12 @@ require.config({
     'see': {
        deps: ['jquery'],
        exports: 'see'
+    },
+    'jquery-ui':{
+       deps: ['jquery']
+    },
+    'jquery-ui-slider-pips':{
+      deps: ['jquery-ui']
     }
   }
 });
