@@ -241,7 +241,7 @@ function create_some(traceevents, loop){
   var current_value = 0;
   var div = document.createElement('div');
   div.className = 'scrubber';
-  div.style.position = 'absolute';
+  div.style.position = 'relative';
   div.style.left = "150px";
 /*  div.style.top = "300px"; */
   div.style.width = "300px";
