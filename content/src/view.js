@@ -232,6 +232,7 @@ function publish(method, args, requestid){
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
+
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
@@ -241,13 +242,14 @@ function create_some(traceevents, loop){
   var div = document.createElement('div');
   div.className = 'scrubber';
   div.style.position = 'absolute';
-  div.style.left = "175px";
-  div.style.top = "300px";
+  div.style.left = "150px";
+/*  div.style.top = "300px"; */
   div.style.width = "300px";
 
   if (!create_some_run && traceevents.length >= 2 && loop){
-    $(".hpanel").css({ height: "500px" })
-    $("#bravo").append(div);
+  //  $(".hpanel").css({ height: "500px" })
+  //  $("#bravo").append(div);
+  $(".scrubbermark").append(div);
 	var labels = ["Start", "End"];
 	$(function() {
    $(".scrubber").slider({
@@ -2125,6 +2127,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanelbox">',
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
+    '</div>',
+    '<div class="hpanel scrubbermark" share="10">',
     '</div>',
     '<div class="hpanel cssmark" style="display:none" share="25">',
     '</div>',

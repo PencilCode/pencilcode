@@ -101,7 +101,7 @@ body.modal #overlay {
   top: 28px;
   height: auto;
   width: auto;
-  background: whitesmoke;
+  background: red;
 }
 
 #guidepane .guidepreview iframe {
@@ -598,7 +598,7 @@ body, .panetitle, #owner {
   overflow: visible;
 }
 
-.htmlmark:before, .cssmark:before, .jsmark:before {
+.htmlmark:before, .cssmark:before, .jsmark:before, .scrubbermark:before {
   color: #8bf;
   font-size: 60px;
   font-family: Arial, sans-serif;
@@ -632,6 +632,9 @@ body, .panetitle, #owner {
   content: 'CSS'
 }
 
+.scrubbermark {
+  content: 'Debugger'
+}
 #pencildoc .ace_editor {
   font-family: "Source Code Pro", Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   font-weight: 500;
