@@ -256,7 +256,7 @@ function create_some(traceevents, loop){
       min: 0,
       max: traceevents.length - 1,
       step: 1,
-      range: "min",
+   //   range: "min",
       smooth: false,
       slide: function(event, ui){
         $("#sliderinfo").val(ui.value);
