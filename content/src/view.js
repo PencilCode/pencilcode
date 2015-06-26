@@ -241,10 +241,10 @@ function create_some(traceevents, loop){
   var current_value = 0;
   var div = document.createElement('div');
   div.className = 'scrubber';
-  div.style.position = 'relative';
+/*  div.style.position = 'relative';
   div.style.left = "150px";
 /*  div.style.top = "300px"; */
-  div.style.width = "300px";
+ // div.style.width = "300px"; 
 
   if (!create_some_run && traceevents.length >= 2 && loop){
   //  $(".hpanel").css({ height: "500px" })
