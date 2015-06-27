@@ -35,7 +35,8 @@ module.exports = function(grunt) {
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/require.js': 'requirejs/require.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
-          'lib/socket.io.js': 'socket.io-client/socket.io.js'
+          'lib/socket.io.js': 'socket.io-client/socket.io.js',
+          'lib/html2canvas.js': 'html2canvas/build/html2canvas.js'
         }
       },
       zeroclipboard: {
@@ -346,4 +347,3 @@ module.exports = function(grunt) {
   grunt.registerTask('default',
       ['build', 'test']);
 };
-

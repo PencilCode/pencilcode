@@ -9,6 +9,7 @@
     "coffee-script": "dabbler0/coffeescript#astbin",
     "devbridge-autocomplete": "latest",
     "droplet": "Pencilcode/droplet#master",
+    "html2canvas": "latest",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
     "jquery": "latest",
     "jquery-deparam": "latest",

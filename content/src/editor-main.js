@@ -24,7 +24,8 @@ require.config({
     'seedrandom': 'lib/seedrandom',
     'sourcemap': 'lib/sourcemap',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
+    'html2canvas': 'lib/html2canvas'
   },
   shim: {
     'tooltipster': {
@@ -46,4 +47,3 @@ require([
   'controller'
 ],
 function(controller) { });
-
