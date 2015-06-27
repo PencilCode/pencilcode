@@ -833,8 +833,7 @@ body#pencildoc #diigolet-csm {
   div {
     margin: 0px;
     max-height: 154px;
-    padding-right: 5px;
-    padding-bottom: 5px;
+    padding: 2px 0;
     span {
       display: block;
       overflow: hidden;
@@ -862,6 +861,13 @@ body#pencildoc #diigolet-csm {
       padding: 0px;
       border-width: 2px;
       border-color: #1679FF;
+    }
+    span:not(.caption) {
+      display: table;
+      text-decoration: underline;
+      position: relative;
+      background-color: #f5f5f5;
+      padding-right: 6px;
     }
   }
 }

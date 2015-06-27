@@ -1796,14 +1796,21 @@ function instrumentCode(code, language) {
   if (language === 'javascript') {
     // TODO: support javascript
   } else if (language === 'coffeescript') {
-    options = {
-      traceFunc: 'ide.trace',
-      sourceMap: true,
-      bare: true
-    };
-    result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
-    debug.setSourceMap(result.v3SourceMap);
-    code = result.js;
+    try {
+      options = {
+        traceFunc: 'ide.trace',
+        sourceMap: true,
+        bare: true
+      };
+      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+      debug.setSourceMap(result.v3SourceMap);
+      code = result.js;
+    } catch (err) {
+      // If there was an error while instrumenting, just return non-instrumented
+      // JavaScript.
+      console.warn("Error during instrumentation! Debugger will be disabled for this run. Error was:\n" + err);
+      code = icedCoffeeScript.compile(code, { bare: true });
+    }
   }
   return code;
 }
