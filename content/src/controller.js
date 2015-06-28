@@ -600,10 +600,12 @@ view.on('saveas', saveAs);
 
 view.on('screenshot',function() {
   var iframe = document.getElementById('output-frame');
-  var thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
-  modelatpos('right').thumbnail = thumbnailDataUrl;
-  updateTopControls();
-  view.flashThumbnail(thumbnailDataUrl);
+  // `thumbnail.generateThumbnailDataUrl` returns a promise.
+  thumbnail.generateThumbnailDataUrl(iframe).then(function(thumbnailDataUrl) {
+    modelatpos('right').thumbnail = thumbnailDataUrl;
+    updateTopControls();
+    view.flashThumbnail(thumbnailDataUrl);
+  });
 })
 
 view.on('overwrite', function() { saveAction(true, null, null); });
@@ -764,7 +766,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
-  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
@@ -772,63 +773,68 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   } else if (doc.data !== '') { // If program is not empty, generate thumbnail
     // Check if there is a pre-saved thumbnail, if so, use it.
     if (modelatpos('right').thumbnail) {
-      thumbnailDataUrl = modelatpos('right').thumbnail;
+      postThumbnailGeneration(modelatpos('right').thumbnail);
     } else {  // Otherwise generate one.
       var iframe = document.getElementById('output-frame');
-      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+      // `thumbnail.generateThumbnailDataUrl` returns a promise.
+      thumbnail.generateThumbnailDataUrl(iframe).then(postThumbnailGeneration);
+    }
+  } else {  // Empty content, file delete, no need for thumbnail.
+    postThumbnailGeneration('');
+  }
+  function postThumbnailGeneration(thumbnailDataUrl) {
+    // Remember meta in a cookie.
+    saveDefaultMeta(doc.meta);
+    var newdata = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
+    if (newdata.auth && model.ownername != model.username) {
+      // If we know auth is required and the user isn't logged in,
+      // prompt for a login.
+      logInAndSave(filename, newdata, forceOverwrite,
+                   noteclean, loginPrompt, doneCallback);
+      return;
+    }
+    // Attempt to save.
+    view.flashNotification('', true);
+    storage.saveFile(
+        model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
+    function(status) {
+      if (status.needauth) {
+        logInAndSave(filename, newdata, forceOverwrite, noteclean,
+                     loginPrompt, doneCallback);
+      } else {
+        if (!model.username) {
+          // If not yet logged in but we have saved (e.g., no password needed),
+          // then log us in.
+          model.username = model.ownername;
+        }
+        handleSaveStatus(status, filename, noteclean);
+        if (doneCallback) {
+          doneCallback();
+        }
+      }
+    });
+    // After a successful save, mark the file as clean and update mtime.
+    function noteclean(mtime) {
+      view.flashNotification('Saved.');
+      view.notePaneEditorCleanData(paneatpos('left'), newdata);
+      logCodeEvent('save', filename, newdata.data,
+          view.getPaneEditorBlockMode(paneatpos('left')),
+          view.getPaneEditorLanguage(paneatpos('left')));
+      if (modelatpos('left').filename == filename) {
+        var oldmtime = modelatpos('left').data.mtime || 0;
+        if (mtime) {
+          modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
+        }
+      }
+      // Delete the pre-saved thumbnail from the model.
+      delete modelatpos('right').thumbnail;
+      updateTopControls();
+      // Flash the thumbnail after the control are updated.
+      view.flashThumbnail(thumbnailDataUrl);
     }
   }
-  // Remember meta in a cookie.
-  saveDefaultMeta(doc.meta);
-  var newdata = $.extend({
-    thumbnail: thumbnailDataUrl
-  }, modelatpos('left').data, doc);
-  // After a successful save, mark the file as clean and update mtime.
-  function noteclean(mtime) {
-    view.flashNotification('Saved.');
-    view.notePaneEditorCleanData(paneatpos('left'), newdata);
-    logCodeEvent('save', filename, newdata.data,
-        view.getPaneEditorBlockMode(paneatpos('left')),
-        view.getPaneEditorLanguage(paneatpos('left')));
-    if (modelatpos('left').filename == filename) {
-      var oldmtime = modelatpos('left').data.mtime || 0;
-      if (mtime) {
-        modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
-      }
-    }
-    // Delete the pre-saved thumbnail from the model.
-    delete modelatpos('right').thumbnail;
-    updateTopControls();
-    // Flash the thumbnail after the control are updated.
-    view.flashThumbnail(thumbnailDataUrl);
-  }
-  if (newdata.auth && model.ownername != model.username) {
-    // If we know auth is required and the user isn't logged in,
-    // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite,
-                 noteclean, loginPrompt, doneCallback);
-    return;
-  }
-  // Attempt to save.
-  view.flashNotification('', true);
-  storage.saveFile(
-      model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
-  function(status) {
-    if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean,
-                   loginPrompt, doneCallback);
-    } else {
-      if (!model.username) {
-        // If not yet logged in but we have saved (e.g., no password needed),
-        // then log us in.
-        model.username = model.ownername;
-      }
-      handleSaveStatus(status, filename, noteclean);
-      if (doneCallback) {
-        doneCallback();
-      }
-    }
-  });
 }
 
 function keyFromPassword(username, p) {

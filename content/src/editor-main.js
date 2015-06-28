@@ -29,12 +29,16 @@ require.config({
   },
   shim: {
     'tooltipster': {
-       deps: ['jquery'],
-       exports: 'jQuery.fn.tooltipster'
+      deps: ['jquery'],
+      exports: 'jQuery.fn.tooltipster'
     },
     'see': {
-       deps: ['jquery'],
-       exports: 'see'
+      deps: ['jquery'],
+      exports: 'see'
+    },
+    'html2canvas': {
+      deps: [],
+      exports: 'html2canvas'
     }
   }
 });
