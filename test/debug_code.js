@@ -304,6 +304,33 @@ describe('code debugger', function() {
          done();
     });
   });
+ it('should show debugger when running code that loops', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            var slider = $(".scrubber").length
+            if (slider === 0) {
+              return;
+            }
+            return {
+              slider: slider
+            };
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           // The same line should still be traced.
+           assert.equal(1, result.slider);
+           done();
+      });
+  });
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Final cleanup: delete local storage and the cookie.

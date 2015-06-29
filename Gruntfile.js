@@ -87,7 +87,12 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'lib/almond',
           out: 'content/editor.js',
+          // logLevel: 0,
           // optimize: 'none',
+          // This wraps shimmed libraries, particularly jquery-ui-slider-pips,
+          // in a requirejs 'define' function so that it loads in dependency
+          // order in the optimized code.
+          wrapShim: true,
           mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
         }

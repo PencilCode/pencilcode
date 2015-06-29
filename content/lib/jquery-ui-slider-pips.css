@@ -31,7 +31,7 @@
         color: #999;
         overflow: visible;
         text-align: center;
-        top: 20px;
+        top: 2.5px;
         left: 20px;
         margin-left: -1em;
         cursor: pointer;
@@ -48,6 +48,7 @@
     }
 
     /* little pip/line position & size */
+    
     .ui-slider-pips .ui-slider-line {
         background: #999;
         width: 1px;
@@ -58,19 +59,19 @@
 
     /* the text label postion & size */
     /* it overflows so no need for width to be accurate */
-    .ui-slider-pips .ui-slider-label {
+   .ui-slider-pips .ui-slider-label {
         position: absolute;
         top: 5px;
         left: 50%;
         margin-left: -1em;
         width: 2em;
-    }
+    } 
 
     /* make it easy to see when we hover a label */
     .ui-slider-pips:not(.ui-slider-disabled) .ui-slider-pip:hover .ui-slider-label {
         color: black;
         font-weight: bold;
-    }
+    } 
 
 
 
