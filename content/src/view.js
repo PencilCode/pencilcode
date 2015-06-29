@@ -2922,41 +2922,41 @@ function arrow(show, prevLoc, currLoc){
   
   
   if (show){
-    var lines = $(".ace_line");
-    var startLine = lines[prevLoc];
-    var endLine = lines[currLoc];
-    var start_rect = startLine.getBoundingClientRect();
-    var end_rect = endLine.getBoundingClientRect();
-    var arrow_height = start_rect.top - end_rect.bottom;
-    console.log("prev line: ", prevLoc);
-    console.log("curr line: ", currLoc);
-    //console.log("")
 
+    console.log("Previous Location: ", prevLoc);
+    console.log("current Location: ", currLoc);
+    var arrow_height = prevLoc.first_line - currLoc.last_line;
+    var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((prevLoc.first_line - 1), prevLoc.last_column);
+    var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((currLoc.first_line -1), currLoc.last_column);
+    console.log("startcoords: ", startcoords);
+    console.log("endCoords: ", endcoords);
 
-    var text = "<svg width=" + arrow_height*20 + " height=" + arrow_height*20 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 40 400 200'> \
+    var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <path d='M50,"+ arrow_height + " \
-             A35,30 6 0,1 60,60' marker-start='url(#arrowhead)' \
-          style='stroke:black; fill:none; left=100px; top=7px'/> \
+    <rect x='"+ (startcoords.pageX - 1) +"' y='"+ (startcoords.pageY - 84)  +"' width='25' height='25' \
+    style='fill:green;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9' /> \
+    <rect x='"+ (endcoords.pageX - 1) +"' y='"+ (endcoords.pageY - 84)  +"' width='25' height='25' \
+    style='fill:red;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9' /> \
+    "
+    
+    /*
+    <path d='M" + startcoords.pageX +","+ startcoords.pageY + " \
+              A30,20 0 0,1 "+ endcoords.pageX + "," + endcoords.pageY + "' marker-start='url(#arrowhead)' \
+           style='stroke:black; fill:none;'/> \
     </svg> \
-    "; 
-    console.log("arrow height: ", arrow_height);  
-
+    "; */
     var div = document.createElement('div');
     div.className =  "arrow";
     div.innerHTML = text;
     // div.style.visibility = 'visible';
     div.style.position = "absolute";
     div.style.zIndex = "1";
-    div.style.left = "140px" ;
-    div.style.top = "-30px";
-    //start_rect.bottom;
+    div.style.left = "0px";
+    div.style.top = "0px";
     $(".hpanel").css({ height: "500px" })
     $("#bravo").append(div);
-    create_some_run = true;
-    console.log("Printing getBoundingClientRect: ", div.getBoundingClientRect());
   }
   else{
     var text = "";

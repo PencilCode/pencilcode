@@ -23,8 +23,9 @@ var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
-var prevLoc = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
+var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
                               // the location goes backwards.
+var prevLoc = null;                         
 var eventQueue = [];          //list of events in order to maintain proper tracing 
 
 Error.stackTraceLimit = 20;
@@ -165,6 +166,12 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 function reportAppear(method, debugId, length, coordId, elem, args){
   var currentLine = eventQueue.shift();
+  var currentIndex = -1;
+  var currentLocation = null;
+  if(currentLine != null){
+    currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+    currentLocation = traceEvents[currentIndex].location;
+  }
   var recordD = debugRecordsByDebugId[debugId];
   if (!recordD.seeeval){
     var recordL = debugRecordsByLineNo[recordD.line];
@@ -173,34 +180,43 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     recordD.args = args;
     recordL.args = args;
     var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line;
-    var tracedLoc = -1; 
+    var line = traceEvents[index].location.first_line;
+    var location = traceEvents[index].location;
+    var tracedLine = -1; 
     //trace lines that are not animation.
-    while (location != currentLine){
-      if (tracedLoc != -1){
-        untraceLine(tracedLoc);
-        tracedLoc = -1;
+    while (line != currentLine){
+      if (tracedLine != -1){
+        untraceLine(tracedLine);
+        tracedLine = -1;
       }
-      if(currentLine < prevLoc){
-        view.arrow(true, prevLoc, currentLine); 
+      if(currentLine < prevLine){
+        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+        var prevLoc = traceEvents[prevIndex].location;
+        view.arrow(true, prevLoc,currentLocation); 
       }
       traceLine(currentLine);
       console.log("Event Tracing: ", currentLine);
-      tracedLoc = currentLine;
-      prevLoc = currentLine;
+      tracedLine = currentLine;
+      prevLine = currentLine;
       currentLine = eventQueue.shift();
+      if(currentLine != null){
+        currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        currentLocation = traceEvents[currentIndex].location;
+      }
     }
-    if (tracedLoc != -1){
-      untraceLine(tracedLoc);
-      tracedLoc = -1;
+    if (tracedLine != -1){
+      untraceLine(tracedLine);
+      tracedLine = -1;
     }
-    if (location < prevLoc){
-        view.arrow(true, prevLoc, location); 
+    if (line < prevLine){
+      var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+      var prevLoc = traceEvents[prevIndex].location;
+      view.arrow(true, prevLoc, location); 
     }
-    prevLoc = location;
+    prevLine = line;
     recordD.startCoords[coordId] = collectCoords(elem);
     recordL.startCoords[coordId] = collectCoords(elem);
-    traceLine(location);
+    traceLine(line);
   }
 }
 
@@ -216,38 +232,36 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     recordL.endCoords[coordId] = collectCoords(elem);
     untraceLine(location);
   }
-  view.arrow(false, -1, 1);
+  view.arrow(false, null, null);
 }
 
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
-  console.log("End Event Queue: ", eventQueue);
   var currentLine = -1; 
-  var tracedLoc = -1; 
+  var tracedLine = -1; 
   while (eventQueue.length > 0){
     currentLine = eventQueue.shift();
+    //There is a bug  in the following line of code!!!
+    var currentLoc = traceEvents[debugRecordsByLineNo[currentLine].eventIndex].location;
     console.log("end tracing: ", currentLine);
-    if (tracedLoc != -1){
+    if (tracedLine != -1){
         untraceLine(tracedLoc);
-        tracedLoc = -1;
+        tracedLine = -1;
     }
-    if(currentLine < prevLoc){
+    if(currentLine < prevLine){
       console.log("ARROW");
       console.log("Drawing Arrow:", "From: " + prevLoc, "To: " + currentLine);
-      view.arrow(true, prevLoc, currentLine);
+      view.arrow(true, prevLoc, currentLoc);
 
     }
     traceLine(currentLine);
-    tracedLoc = currentLine;
-    prevLoc = currentLine;
+    tracedLine = currentLine;
+    prevLine = currentLine;
   }
-  if (tracedLoc != -1){
-        untraceLine(tracedLoc);
-        tracedLoc = -1;
+  if (tracedLine != -1){
+        untraceLine(tracedLine);
+        tracedLine = -1;
   }
-  console.log("END PROGRAM");
-  //eventQueue = [];
-  //traceEvents = [];
 }
 
 function errorAdvice(msg, text) {
