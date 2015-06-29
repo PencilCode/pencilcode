@@ -36,11 +36,9 @@ require.config({
        deps: ['jquery'],
        exports: 'see'
     },
-    'jquery-ui':{
-       deps: ['jquery']
-    },
-    'jquery-ui-slider-pips':{
-      deps: ['jquery-ui']
+    'jquery-ui-slider-pips': {
+       deps: ['jquery-ui'],
+       exports: 'jQuery.ui.slider.pips'
     }
   }
 });
