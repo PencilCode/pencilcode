@@ -2926,8 +2926,8 @@ function arrow(show, prevLoc, currLoc){
     console.log("Previous Location: ", prevLoc);
     console.log("current Location: ", currLoc);
     var arrow_height = prevLoc.first_line - currLoc.last_line;
-    var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((prevLoc.first_line - 1), prevLoc.last_column);
-    var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((currLoc.first_line -1), currLoc.last_column);
+    var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((prevLoc.first_line - 1), (prevLoc.last_column + 5));
+    var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((currLoc.first_line -1), (currLoc.last_column + 5));
     console.log("startcoords: ", startcoords);
     console.log("endCoords: ", endcoords);
 
@@ -2935,18 +2935,11 @@ function arrow(show, prevLoc, currLoc){
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <rect x='"+ (startcoords.pageX - 1) +"' y='"+ (startcoords.pageY - 84)  +"' width='25' height='25' \
-    style='fill:green;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9' /> \
-    <rect x='"+ (endcoords.pageX - 1) +"' y='"+ (endcoords.pageY - 84)  +"' width='25' height='25' \
-    style='fill:red;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9' /> \
-    "
-    
-    /*
-    <path d='M" + startcoords.pageX +","+ startcoords.pageY + " \
-              A30,20 0 0,1 "+ endcoords.pageX + "," + endcoords.pageY + "' marker-start='url(#arrowhead)' \
+    <path d='M" + (endcoords.pageX ) +","+ (endcoords.pageY - 64) + " \
+              A30,20 0 0,1 "+ (startcoords.pageX ) + "," + (startcoords.pageY - 64) + "' marker-start='url(#arrowhead)' \
            style='stroke:black; fill:none;'/> \
     </svg> \
-    "; */
+    "; 
     var div = document.createElement('div');
     div.className =  "arrow";
     div.innerHTML = text;
