@@ -103,8 +103,8 @@ window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
 
-  // start code execution
-  run: function(){ fireEvent('run', []); },
+  // Simulate firing of an event
+  fireEvent: function(event, args) { fireEvent(event, args); },
 
   // publish/subscribe for global events; all global events are broadcast
   // to the parent frames using postMessage() if we are iframed
