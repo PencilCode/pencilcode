@@ -7,6 +7,7 @@ require.config({
     'droplet': 'lib/droplet',
     'controller': 'src/controller',
     'view': 'src/view',
+    'thumbnail': 'src/thumbnail',
     'storage': 'src/storage',
     'debug': 'src/debug',
     'codescan': 'src/codescan',
@@ -19,6 +20,7 @@ require.config({
     'jquery': 'lib/jquery',
     'jquery-ui': 'lib/jquery-ui',
     'jquery-ui-slider-pips': 'lib/jquery-ui-slider-pips',
+    'html2canvas': 'lib/html2canvas',
     'iced-coffee-script': 'lib/iced-coffee-script',
     'pencil-tracer': 'lib/pencil-tracer',
     'see': 'lib/see',
@@ -39,7 +41,8 @@ require.config({
     'jquery-ui-slider-pips': {
        deps: ['jquery-ui'],
        exports: 'jQuery.ui.slider.pips'
-    }
+    },
+    
   }
 });
 

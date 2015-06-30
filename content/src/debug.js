@@ -7,9 +7,10 @@ define([
   'jquery',
   'view',
   'see',
-  'sourcemap/source-map-consumer'
+  'sourcemap/source-map-consumer',
+  'thumbnail'
  ],
-function($, view, see, sourcemap) {
+function($, view, see, sourcemap, thumbnail) {
 
 eval(see.scope('debug'));
 
@@ -25,8 +26,9 @@ var currentSourceMap = null;  // v3 source map for currently-running instrumente
 var traceEvents = [];         // list of event location objects created by tracing events
 var prevLoc = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
                               // the location goes backwards.
-var eventQueue = [];          //list of events in order to maintain proper tracing 
+var eventQueue = [];          // list of events in order to maintain proper tracing 
 var isLoop = false;
+var screenshots = [];
 
 
 Error.stackTraceLimit = 20;
@@ -43,6 +45,7 @@ function bindframe(w) {
   debugRecordsByDebugId = {}; 
   debugRecordsByLineNo = {};
   traceEvents = [];
+  screenshots = [];
   prevLoc = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -123,13 +126,14 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    console.log("Lineno:", lineno);
-    console.log("PrevLoc:", prevLoc);
     if(lineno <= prevLoc){
       isLoop = true;
     }
-    console.log(isLoop);
-    view.create_some(traceEvents, isLoop);
+
+    //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
+    screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+    view.create_some(traceEvents, isLoop, screenshots);
+   // console.log(screenshots);
     prevLoc = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;

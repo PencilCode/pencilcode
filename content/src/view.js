@@ -236,7 +236,7 @@ function paneid(position) {
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents, loop){
+function create_some(traceevents, loop, screenshots){
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -245,6 +245,7 @@ function create_some(traceevents, loop){
   div.style.left = "150px";
 /*  div.style.top = "300px"; */
  // div.style.width = "300px"; 
+
 
   if (!create_some_run && traceevents.length >= 2 && loop){
   //  $(".hpanel").css({ height: "500px" })
@@ -259,7 +260,7 @@ function create_some(traceevents, loop){
    //   range: "min",
       smooth: false,
       slide: function(event, ui){
-        $("#sliderinfo").val(ui.value);
+        console.log(screenshots[ui.value].data);
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
