@@ -237,6 +237,8 @@ function paneid(position) {
 var create_some_run = false;
 var pictures = [];
 function create_some(traceevents, loop, screenshots){
+  console.log(screenshots);
+
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -260,6 +262,8 @@ function create_some(traceevents, loop, screenshots){
    //   range: "min",
       smooth: false,
       slide: function(event, ui){
+        console.log(screenshots.length)
+          console.log(ui.value)
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
