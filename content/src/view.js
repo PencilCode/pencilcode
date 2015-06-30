@@ -260,7 +260,9 @@ function create_some(traceevents, loop, screenshots){
    //   range: "min",
       smooth: false,
       slide: function(event, ui){
-        console.log(screenshots[ui.value].data);
+        var canvas = $(".preview iframe")[0].contentWindow.canvas()
+        var drawCtx = canvas.getContext('2d');
+        drawCtx.putImageData(screenshots[6], 0, 0);
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;

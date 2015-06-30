@@ -75,7 +75,11 @@ var debug = window.ide = {
 
     if (name === "seeeval"){ reportSeeeval.apply(null, data); }
 
-    if (name === "appear"){ reportAppear.apply(null, data); }
+    if (name === "appear"){     var canvas = $(".preview iframe")[0].contentWindow.canvas()
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    screenshots.push(imageData)
+    reportAppear.apply(null, data); }
 
     if (name === "resolve"){ reportResolve.apply(null, data); }
 
@@ -131,7 +135,8 @@ var debug = window.ide = {
     }
 
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
-    screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+   // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+
     view.create_some(traceEvents, isLoop, screenshots);
    // console.log(screenshots);
     prevLoc = lineno;
