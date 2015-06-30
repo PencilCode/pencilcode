@@ -1041,13 +1041,15 @@ function showLoginDialog(opts) {
         dialog.find('.rename').val(fixed);
       }
     });
-    // This timeout is added so that in the #new case where
-    // the dialog and ACE editor are competing for focus, the
-    // dialog wins.
-    dialog.find('input:not([disabled])').eq(0).select().focus();
-    setTimeout(function() {
+    function focusDialog() {
       dialog.find('input:not([disabled])').eq(0).select().focus();
-    }, 0);
+    }
+    focusDialog();
+    // This focusout handler is added so that in the #new case where the
+    // dialog and ACE editor are competing for focus, the dialog wins.
+    dialog.on('focusout', focusDialog);
+    // Stop doing this after 0.5 seconds.
+    setTimeout(function() { dialog.off('focusout'); }, 500);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
