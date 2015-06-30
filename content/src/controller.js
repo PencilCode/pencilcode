@@ -2208,7 +2208,10 @@ $(window).on('message', function(e) {
       evalAndPostback(data.requestid, data.args[0]);
       break;
     case 'beginRun':
-      view.run();
+      view.fireEvent('run', []);
+      break;
+    case 'stopRun':
+      view.fireEvent('stop', []);
       break;
     case 'save':
       signUpAndSave({filename:data.args[0]});

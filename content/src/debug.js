@@ -600,7 +600,8 @@ document.addEventListener('visibilityChange', function() {
 });
 
 view.on('stop', function() {
-  if ((new Date) - lastRunTime < 1000) {
+  // Avoid stop for the first 0.5 s after a user just clicked run.
+  if ((new Date) - lastRunTime < 500) {
     return;
   }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
