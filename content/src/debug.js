@@ -181,10 +181,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var currentLine = eventQueue.shift();
   var currentIndex = -1;
   var currentLocation = null;
-  if(currentLine != null){
-    currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-    currentLocation = traceEvents[currentIndex].location;
-  }
+  console.log("Current Line: ", currentLine);
+  console.log("debugRecordsByLineNo of currentLine: ", debugRecordsByLineNo[currentLine])
+  currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+  currentLocation = traceEvents[currentIndex].location;
   var recordD = debugRecordsByDebugId[debugId];
   if (!recordD.seeeval){
     var recordL = debugRecordsByLineNo[recordD.line];
@@ -212,10 +212,8 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       tracedLine = currentLine;
       prevLine = currentLine;
       currentLine = eventQueue.shift();
-      if(currentLine != null){
-        currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-        currentLocation = traceEvents[currentIndex].location;
-      }
+      currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+      currentLocation = traceEvents[currentIndex].location;
     }
     if (tracedLine != -1){
       untraceLine(tracedLine);
@@ -621,6 +619,11 @@ function stopButton(command) {
   if (command === 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    if (eventQueue.length > 0) { 
+      eventQueue = []; 
+      prevLoc = null;
+      prevLine = -1;
+    }
     if (!stopButtonShown) {
       view.showMiddleButton('stop');
       stopButtonShown = 1;

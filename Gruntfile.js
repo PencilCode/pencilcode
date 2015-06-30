@@ -89,6 +89,7 @@ module.exports = function(grunt) {
           out: 'content/editor.js',
           useStrict: true,
           // optimize: 'none',
+          wrapShim: true,
           mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
         }
