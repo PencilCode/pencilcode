@@ -242,7 +242,10 @@ function end_program(){
   while (eventQueue.length > 0){
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
-    var currentLoc = traceEvents[debugRecordsByLineNo[currentLine].eventIndex].location;
+    var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
+    if (currentIndex != undefined){
+      var currentLoc = traceEvents[currentIndex].location;
+    }
     console.log("end tracing: ", currentLine);
     if (tracedLine != -1){
         untraceLine(tracedLoc);
