@@ -1365,13 +1365,13 @@ function updatePaneLinks(pane) {
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-  width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
+  // width is full directory width minus padding minus scrollbar width.
+  width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
-      href: list[j].href,
-      title: list[j].name
+      href: list[j].href
     }).appendTo(col);
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
