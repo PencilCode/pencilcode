@@ -159,31 +159,35 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 function reportAppear(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    recordD.args = args;
-    recordL.args = args;
-    var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line;
-    recordD.startCoords[coordId] = collectCoords(elem);
-    recordL.startCoords[coordId] = collectCoords(elem);
-    traceLine(location);
+  if (recordD) {
+    if (!recordD.seeeval) {
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      recordD.args = args;
+      recordL.args = args;
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line;
+      recordD.startCoords[coordId] = collectCoords(elem);
+      recordL.startCoords[coordId] = collectCoords(elem);
+      traceLine(location);
+    }
   }
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line
-    recordD.endCoords[coordId] = collectCoords(elem);
-    recordL.endCoords[coordId] = collectCoords(elem);
-    untraceLine(location);
+  if (recordD) {
+    if (!recordD.seeeval) {
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line
+      recordD.endCoords[coordId] = collectCoords(elem);
+      recordL.endCoords[coordId] = collectCoords(elem);
+      untraceLine(location);
+    }
   }
 }
 
@@ -507,7 +511,9 @@ view.on('icehover', function(pane, ev) {
   if (pane != view.paneid('left')) return;
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  if (debugRecordsByLineNo[lineno]) {
+    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  }
 });
 
 function convertCoords(origin, astransform) {
