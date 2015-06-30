@@ -2991,14 +2991,13 @@ function setupHpanelBox(box) {
     });
   });
 }
-function arrow(show, prevLoc, currLoc){
+function arrow(pane, show, prevLoc, currLoc){
   
   
   if (show){
 
     console.log("Previous Location: ", prevLoc);
     console.log("current Location: ", currLoc);
-    var arrow_height = prevLoc.first_line - currLoc.last_line;
     var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((prevLoc.first_line - 1), (prevLoc.last_column + 5));
     var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((currLoc.first_line -1), (currLoc.last_column + 5));
     console.log("startcoords: ", startcoords);
@@ -3022,7 +3021,7 @@ function arrow(show, prevLoc, currLoc){
     div.style.left = "0px";
     div.style.top = "0px";
     $(".hpanel").css({ height: "500px" })
-    $("#bravo").append(div);
+    $("#" + pane).append(div);
   }
   else{
     var text = "";

@@ -205,7 +205,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       if(currentLine < prevLine){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         var prevLoc = traceEvents[prevIndex].location;
-        view.arrow(true, prevLoc,currentLocation); 
+        view.arrow(view.paneid('left'), true, prevLoc,currentLocation); 
       }
       traceLine(currentLine);
       console.log("Event Tracing: ", currentLine);
@@ -222,7 +222,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
     if (line < prevLine){
       var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
       var prevLoc = traceEvents[prevIndex].location;
-      view.arrow(true, prevLoc, location); 
+      view.arrow(view.paneid('left'), true, prevLoc, location); 
     }
     prevLine = line;
     recordD.startCoords[coordId] = collectCoords(elem);
@@ -243,7 +243,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     recordL.endCoords[coordId] = collectCoords(elem);
     untraceLine(location);
   }
-  view.arrow(false, null, null);
+  view.arrow(view.paneid('left'), false, null, null);
 }
 
 function end_program(){
