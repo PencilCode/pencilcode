@@ -75,7 +75,9 @@ var debug = window.ide = {
 
     if (name === "seeeval"){ reportSeeeval.apply(null, data); }
 
-    if (name === "appear"){     var canvas = $(".preview iframe")[0].contentWindow.canvas()
+    if (name === "appear"){ 
+    console.log("This is data for", screenshots.length, data)   
+    var canvas = $(".preview iframe")[0].contentWindow.canvas()
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     screenshots.push(imageData)

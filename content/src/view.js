@@ -263,7 +263,7 @@ function create_some(traceevents, loop, screenshots){
       smooth: false,
       slide: function(event, ui){
         console.log(screenshots.length)
-          console.log(ui.value)
+        console.log(ui.value)
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
