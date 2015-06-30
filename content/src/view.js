@@ -262,13 +262,12 @@ function create_some(traceevents, loop, screenshots){
       slide: function(event, ui){
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[6], 0, 0);
+        drawCtx.putImageData(screenshots[ui.value], 0, 0);
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
         present_line = ui.value;
         var lineno = traceevents[current_value].location.first_line;
-        console.log(lineno);
         markPaneEditorLine(
             paneid('left'), lineno, 'guttermouseable', true);
             markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
