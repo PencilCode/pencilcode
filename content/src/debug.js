@@ -7,8 +7,7 @@ define([
   'jquery',
   'view',
   'see',
-  'sourcemap/source-map-consumer',
-  'thumbnail'
+  'sourcemap/source-map-consumer'
  ],
 function($, view, see, sourcemap, thumbnail) {
 

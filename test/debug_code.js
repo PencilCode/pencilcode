@@ -326,8 +326,33 @@ describe('code debugger', function() {
           }
          }, function(err, result) {
            assert.ifError(err);
-           // The same line should still be traced.
            assert.equal(1, result.slider);
+           done();
+      });
+  });
+  it('should show trace when interacting with debugger', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            $(".scrubber").mousedown(function(){
+              $(".scrubber").mousemove();
+
+            })
+            return {
+              debugtracecount: $(".debugtrace").length
+            };
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           assert.equal(1, result.debugtracecount);
            done();
       });
   });
