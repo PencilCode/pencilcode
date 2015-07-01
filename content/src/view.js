@@ -233,38 +233,46 @@ function publish(method, args, requestid){
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
+
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents, loop){
+function create_some(traceevents, loop, screenshots){
+  console.log(screenshots);
+
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
   div.className = 'scrubber';
-  div.style.position = 'absolute';
-  div.style.left = "175px";
-  div.style.top = "300px";
-  div.style.width = "300px";
+/*  div.style.position = 'relative';
+  div.style.left = "150px";
+/*  div.style.top = "300px"; */
+ // div.style.width = "300px"; 
+
 
   if (!create_some_run && traceevents.length >= 2 && loop){
-    $(".hpanel").css({ height: "500px" })
-    $("#bravo").append(div);
+  //  $(".hpanel").css({ height: "500px" })
+  //  $("#bravo").append(div);
+  $(".scrubbermark").append(div);
 	var labels = ["Start", "End"];
 	$(function() {
    $(".scrubber").slider({
       min: 0,
       max: traceevents.length - 1,
       step: 1,
-      range: "min",
+   //   range: "min",
       smooth: false,
       slide: function(event, ui){
-        $("#sliderinfo").val(ui.value);
+        console.log(screenshots.length)
+        console.log(ui.value)
+        var canvas = $(".preview iframe")[0].contentWindow.canvas()
+        var drawCtx = canvas.getContext('2d');
+        drawCtx.putImageData(screenshots[ui.value], 0, 0);
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
         present_line = ui.value;
         var lineno = traceevents[current_value].location.first_line;
-        console.log(lineno);
         markPaneEditorLine(
             paneid('left'), lineno, 'guttermouseable', true);
             markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
@@ -291,6 +299,7 @@ function create_some(traceevents, loop){
       last: "label",
       labels: { "first": "Start", "last": "End"}
     })
+    .slider("float")
     var max = $( ".scrubber" ).slider("option", "max");
   }
 
@@ -2126,6 +2135,8 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanelbox">',
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
+    '</div>',
+    '<div class="hpanel scrubbermark" share="10">',
     '</div>',
     '<div class="hpanel cssmark" style="display:none" share="25">',
     '</div>',

@@ -40,8 +40,9 @@ require.config({
        deps: ['jquery']
     },
     'jquery-ui-slider-pips': {
-       deps: ['jquery-ui']
-    }
+       deps: ['jquery-ui'],
+       exports: 'jQuery.ui.slider.pips'
+    },
   }
 });
 

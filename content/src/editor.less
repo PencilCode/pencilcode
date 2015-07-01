@@ -598,7 +598,7 @@ body, .panetitle, #owner {
   overflow: visible;
 }
 
-.htmlmark:before, .cssmark:before, .jsmark:before {
+.htmlmark:before, .cssmark:before, .jsmark:before, .scrubbermark:before {
   color: #8bf;
   font-size: 60px;
   font-family: Arial, sans-serif;
@@ -978,8 +978,9 @@ body#pencildoc #diigolet-csm {
   left: 0;
   height: 100%;
   width: 100%;
-  border-top: 7px solid #cdf;
-  cursor: row-resize
+  border-top: 7px solid #F0F0F0;
+  cursor: row-resize;
+  background-color: rgba(255,255,255,0);
 }
 
 .hpanel:nth-of-type(1) {
@@ -1048,6 +1049,67 @@ body#pencildoc #diigolet-csm {
   background-color: #fdd835;
   border: 2px solid #fffde7;
 }
+
+.scrubber {
+  position: relative;
+  left: 100px;
+  width: 300px;
+}
+
+.scrubber.ui-slider {
+  border-radius: 20px;
+  background: #434d5a;
+  border: none;
+  height: 10px;
+  margin: 1em 4em 4em; }
+                    
+ .scrubber .ui-slider-handle {
+  border-radius: 2px;
+  height: 20px;
+  width: 12px;
+  top: -26px;
+  border: none; }
+  
+                    
+.scrubber .ui-slider-pip {
+  top: 3px; }
+                    
+.scrubber .ui-slider-pip .ui-slider-line {
+    width: 4px;
+    height: 4px;
+    border-radius: 4px;
+    margin-left: -2px;
+    background: #fffaf7; }
+                    
+.scrubber .ui-slider-pip.ui-slider-pip-last,
+.scrubber .ui-slider-pip.ui-slider-pip-first {
+    top: -7px; }
+                    
+.scrubber .ui-slider-pip.ui-slider-pip-last .ui-slider-line,
+.scrubber .ui-slider-pip.ui-slider-pip-first .ui-slider-line {
+      display: none; }
+                    
+.scrubber .ui-slider-pip.ui-slider-pip-last .ui-slider-label,
+.scrubber .ui-slider-pip.ui-slider-pip-first .ui-slider-label {
+      margin: 0; }
+                    
+  .scrubber .ui-slider-pip.ui-slider-pip-first .ui-slider-label {
+    left: -2em;
+    text-align: right; }
+                    
+  .scrubber .ui-slider-pip.ui-slider-pip-last .ui-slider-label {
+    left: 2em;
+    text-align: left; }
+                    
+  .scrubber .ui-slider-pip.ui-slider-pip-selected-initial {
+    font-weight: normal; }
+                    
+  .scrubber .ui-slider-pip.ui-slider-pip-selected {
+    font-weight: bold; }
+                    
+  .scrubber .ui-slider-pip.ui-slider-pip-selected,
+  .scrubber .ui-slider-pip.ui-slider-pip-selected-initial {
+    color: #434d5a; } 
 
 .texttoggle, .blocktoggle {
   position: absolute;

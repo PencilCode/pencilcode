@@ -9,7 +9,7 @@ define([
   'see',
   'sourcemap/source-map-consumer'
  ],
-function($, view, see, sourcemap) {
+function($, view, see, sourcemap, thumbnail) {
 
 eval(see.scope('debug'));
 
@@ -28,6 +28,7 @@ var prevLine = -1;             // keeps track of the current location being trac
 var prevLoc = null;                         
 var eventQueue = [];          //list of events in order to maintain proper tracing 
 var isLoop = false;
+var screenshots = [];
 
 Error.stackTraceLimit = 20;
 
@@ -43,6 +44,7 @@ function bindframe(w) {
   debugRecordsByDebugId = {}; 
   debugRecordsByLineNo = {};
   traceEvents = [];
+  screenshots = [];
   prevLoc = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -123,13 +125,15 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    console.log("Lineno:", lineno);
-    console.log("PrevLoc:", prevLoc);
     if(lineno <= prevLoc){
       isLoop = true;
     }
-    console.log(isLoop);
-    view.create_some(traceEvents, isLoop);
+
+    //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
+   // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+
+    view.create_some(traceEvents, isLoop, screenshots);
+   // console.log(screenshots);
     prevLoc = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -187,6 +191,12 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   currentLocation = traceEvents[currentIndex].location;
   var recordD = debugRecordsByDebugId[debugId];
   if (!recordD.seeeval){
+    //console.log("This is data for", screenshots.length, data)   
+    var canvas = $(".preview iframe")[0].contentWindow.canvas()
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    screenshots.push(imageData)
+    console.log(screenshots);
     var recordL = debugRecordsByLineNo[recordD.line];
     recordD.method = method;
     recordL.method = method;
@@ -207,6 +217,11 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var prevLoc = traceEvents[prevIndex].location;
         view.arrow(view.paneid('left'), true, prevLoc,currentLocation); 
       }
+      var canvas = $(".preview iframe")[0].contentWindow.canvas()
+      var ctx = canvas.getContext('2d');
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      screenshots.push(imageData)
+      console.log(screenshots);
       traceLine(currentLine);
       console.log("Event Tracing: ", currentLine);
       tracedLine = currentLine;
@@ -251,6 +266,11 @@ function end_program(){
   var currentLine = -1; 
   var tracedLine = -1; 
   while (eventQueue.length > 0){
+    var canvas = $(".preview iframe")[0].contentWindow.canvas()
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    screenshots.push(imageData)
+    console.log(screenshots);
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex

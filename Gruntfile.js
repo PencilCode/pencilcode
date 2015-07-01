@@ -89,6 +89,11 @@ module.exports = function(grunt) {
           out: 'content/editor.js',
           useStrict: true,
           // optimize: 'none',
+          // logLevel: 0,
+          // optimize: 'none',
+          // This wraps shimmed libraries, particularly jquery-ui-slider-pips,
+          // in a requirejs 'define' function so that it loads in dependency
+          // order in the optimized code.
           wrapShim: true,
           mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
