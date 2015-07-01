@@ -1806,10 +1806,12 @@ function instrumentCode(code, language) {
       debug.setSourceMap(result.v3SourceMap);
       code = result.js;
     } catch (err) {
-      // If there was an error while instrumenting, just return non-instrumented
-      // JavaScript.
-      console.warn("Error during instrumentation! Debugger will be disabled for this run. Error was:\n" + err);
-      code = icedCoffeeScript.compile(code, { bare: true });
+      // An error here means that either the user's code has a syntax error, or
+      // pencil-tracer has a bug. Returning false here means the user's code
+      // will run directly, without the debugger, and then if there's a syntax
+      // error it will be displayed to them, and if it's a pencil-tracer bug,
+      // their code will still run but with the debugger disabled.
+      return false;
     }
   }
   return code;
