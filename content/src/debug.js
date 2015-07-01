@@ -434,7 +434,7 @@ function editorLineNumberForError(error) {
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
-        return error.location.first_line;
+        return error.location.first_line - 2;
       }
     }
     return null;
