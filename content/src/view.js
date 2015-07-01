@@ -2136,9 +2136,9 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" share="10">',
+    '<div class="hpanel scrubbermark" share="10" >',
     '</div>',
-    '<div class="hpanel cssmark" style="display:none" share="25">',
+    '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
     '<div class="hpanel htmlmark" style="display:none" share="25">',
     '</div>'
@@ -3028,7 +3028,7 @@ function arrow(pane, show, prevLoc, currLoc){
     div.innerHTML = text;
     // div.style.visibility = 'visible';
     div.style.position = "absolute";
-    div.style.zIndex = "1";
+    div.style.zIndex = "2";
     div.style.left = "0px";
     div.style.top = "0px";
     $(".hpanel").css({ height: "500px" })

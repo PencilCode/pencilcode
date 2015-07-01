@@ -286,7 +286,6 @@ function end_program(){
       console.log("ARROW");
       console.log("Drawing Arrow:", "From: " + prevLoc, "To: " + currentLine);
       view.arrow(true, prevLoc, currentLoc);
-
     }
     traceLine(currentLine);
     tracedLine = currentLine;
@@ -296,6 +295,8 @@ function end_program(){
         untraceLine(tracedLine);
         tracedLine = -1;
   }
+  eventQueue = [];
+  prevLine = -1;
 }
 
 function errorAdvice(msg, text) {
