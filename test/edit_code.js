@@ -339,6 +339,7 @@ describe('code editor', function() {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         // Evaluate some expression in the javascript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        seval('interrupt("reset")');
         // And also wait for the turtle to start turning, then stop moving.
         if (!seval('direction()')) return;
         if (seval('turtle.queue().length')) return;
