@@ -323,6 +323,54 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should be able to run the program in javascript mode', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle run button.
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+        // Toggle javascript mode
+        $(".gear").click();
+        $("input[value='text/javascript']").click()
+        $(".ok").click()
+        // Wait for the preview frame to show
+        if (!$('.preview iframe').length) return;
+        if (!$('.preview iframe')[0].contentWindow.see) return;
+        // Evaluate some expression in the javascript evaluation window.
+        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        // And also wait for the turtle to start turning, then stop moving.
+        if (!seval('direction()')) return;
+        if (seval('turtle.queue().length')) return;
+        return {
+          direction: seval('direction()'),
+          getxy: seval('getxy()'),
+          touchesred: seval('touches red'),
+          touchesblue: seval('touches blue'),
+          queuelen: seval('turtle.queue().length'),
+          modal: $(".modal").length
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+        // The turtle should be pointing down at the end of the run.
+      assert.equal(180, result.direction);
+      // The turtle should be near the point (200, 0).
+      assert.ok(Math.abs(result.getxy[0] - 200) < 1e-6);
+      assert.ok(Math.abs(result.getxy[1] - 0) < 1e-6);
+      // The turtle should not be touching any red pixels.
+      assert.equal(false, result.touchesred);
+      // The turtle should be touching blue pixels that it drew.
+      assert.equal(true, result.touchesblue);
+      // There should be no further animations on the turtle queue.
+      assert.equal(0, result.queuelen);
+      done();
+    });
+  });
+
   var name = 'test' + ('' + Math.random()).substring(2);
   it('should be able to set the name of the file', function(done) {
     asyncTest(_page, one_step_timeout, [name], function(name) {
