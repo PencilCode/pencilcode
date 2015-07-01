@@ -3014,12 +3014,19 @@ function arrow(pane, show, prevLoc, currLoc){
     console.log("startcoords: ", startcoords);
     console.log("endCoords: ", endcoords);
 
+    var x_val = 0;
+    if(startcoords.pageX > endcoords.pageX){
+      x_val = startcoords.pageX;
+    } else{
+      x_val = endcoords.pageX;
+    }
+
     var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <path d='M" + (endcoords.pageX ) +","+ (endcoords.pageY - 64) + " \
-              A30,20 0 0,1 "+ (startcoords.pageX ) + "," + (startcoords.pageY - 64) + "' marker-start='url(#arrowhead)' \
+    <path d='M" + (x_val ) +","+ (endcoords.pageY - 64) + " \
+              A20,20 0 0,1 "+ (x_val ) + "," + (startcoords.pageY - 64) + "' marker-start='url(#arrowhead)' \
            style='stroke:black; fill:none;'/> \
     </svg> \
     "; 
@@ -3031,7 +3038,6 @@ function arrow(pane, show, prevLoc, currLoc){
     div.style.zIndex = "2";
     div.style.left = "0px";
     div.style.top = "0px";
-    $(".hpanel").css({ height: "500px" })
     $("#" + pane).append(div);
   }
   else{
