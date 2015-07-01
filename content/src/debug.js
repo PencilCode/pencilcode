@@ -190,75 +190,79 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
   currentLocation = traceEvents[currentIndex].location;
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    //console.log("This is data for", screenshots.length, data)   
-    var canvas = $(".preview iframe")[0].contentWindow.canvas()
-    var ctx = canvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    screenshots.push(imageData)
-    console.log(screenshots);
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    recordD.args = args;
-    recordL.args = args;
-    var index = recordD.eventIndex;
-    var line = traceEvents[index].location.first_line;
-    var location = traceEvents[index].location;
-    var tracedLine = -1; 
-    //trace lines that are not animation.
-    while (line != currentLine){
-      if (tracedLine != -1){
-        untraceLine(tracedLine);
-        tracedLine = -1;
-      }
-      if(currentLine < prevLine){
-        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-        var prevLoc = traceEvents[prevIndex].location;
-        view.arrow(view.paneid('left'), true, prevLoc,currentLocation); 
-      }
+  if (recordD) { 
+    if (!recordD.seeeval){ 
+      //console.log("This is data for", screenshots.length, data)   
       var canvas = $(".preview iframe")[0].contentWindow.canvas()
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
       console.log(screenshots);
-      traceLine(currentLine);
-      console.log("Event Tracing: ", currentLine);
-      tracedLine = currentLine;
-      prevLine = currentLine;
-      currentLine = eventQueue.shift();
-      currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-      currentLocation = traceEvents[currentIndex].location;
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      recordD.args = args;
+      recordL.args = args;
+      var index = recordD.eventIndex;
+      var line = traceEvents[index].location.first_line;
+      var location = traceEvents[index].location;
+      var tracedLine = -1; 
+      //trace lines that are not animation.
+      while (line != currentLine){
+        if (tracedLine != -1){
+          untraceLine(tracedLine);
+          tracedLine = -1;
+        }
+        if(currentLine < prevLine){
+          var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+          var prevLoc = traceEvents[prevIndex].location;
+          view.arrow(view.paneid('left'), true, prevLoc,currentLocation); 
+        }
+        var canvas = $(".preview iframe")[0].contentWindow.canvas()
+        var ctx = canvas.getContext('2d');
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        screenshots.push(imageData)
+        console.log(screenshots);
+        traceLine(currentLine);
+        console.log("Event Tracing: ", currentLine);
+        tracedLine = currentLine;
+        prevLine = currentLine;
+        currentLine = eventQueue.shift();
+        currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        currentLocation = traceEvents[currentIndex].location;
+      }
+      if (tracedLine != -1){
+        untraceLine(tracedLine);
+        tracedLine = -1;
+      }
+      if (line < prevLine){
+        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+        var prevLoc = traceEvents[prevIndex].location;
+        view.arrow(view.paneid('left'), true, prevLoc, location); 
+      }
+      prevLine = line;
+      recordD.startCoords[coordId] = collectCoords(elem);
+      recordL.startCoords[coordId] = collectCoords(elem);
+      traceLine(line);
     }
-    if (tracedLine != -1){
-      untraceLine(tracedLine);
-      tracedLine = -1;
-    }
-    if (line < prevLine){
-      var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-      var prevLoc = traceEvents[prevIndex].location;
-      view.arrow(view.paneid('left'), true, prevLoc, location); 
-    }
-    prevLine = line;
-    recordD.startCoords[coordId] = collectCoords(elem);
-    recordL.startCoords[coordId] = collectCoords(elem);
-    traceLine(line);
   }
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line
-    recordD.endCoords[coordId] = collectCoords(elem);
-    recordL.endCoords[coordId] = collectCoords(elem);
-    untraceLine(location);
+  if (recordD) {
+    if (!recordD.seeeval){
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line
+      recordD.endCoords[coordId] = collectCoords(elem);
+      recordL.endCoords[coordId] = collectCoords(elem);
+      untraceLine(location);
+    }
+    view.arrow(view.paneid('left'), false, null, null);
   }
-  view.arrow(view.paneid('left'), false, null, null);
 }
 
 function end_program(){
@@ -619,7 +623,9 @@ view.on('icehover', function(pane, ev) {
   if (pane != view.paneid('left')) return;
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  if (debugRecordsByLineNo[lineno]) {
+    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  }
 });
 
 function convertCoords(origin, astransform) {
