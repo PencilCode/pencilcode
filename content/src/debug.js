@@ -197,7 +197,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
-      console.log(screenshots);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -222,13 +221,16 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData)
-        console.log(screenshots);
         traceLine(currentLine);
         console.log("Event Tracing: ", currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
         currentLine = eventQueue.shift();
+        console.log("current line: ", currentLine);
+        console.log("debugRecordsByLineNo: ", debugRecordsByLineNo);
         currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        console.log("Current Index: ", currentIndex);
+        console.log("Current Trace Event: ", traceEvents[currentIndex])
         currentLocation = traceEvents[currentIndex].location;
       }
       if (tracedLine != -1){
@@ -270,6 +272,7 @@ function end_program(){
   var currentLine = -1; 
   var tracedLine = -1; 
   while (eventQueue.length > 0){
+    console.log("ending program with: ", traceEvents);
     var canvas = $(".preview iframe")[0].contentWindow.canvas()
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

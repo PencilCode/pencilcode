@@ -3021,12 +3021,15 @@ function arrow(pane, show, prevLoc, currLoc){
       x_val = endcoords.pageX;
     }
 
-    var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'> \
+    var offset_top = $(".editor").offset().top;
+    var offset_left = $(".editor").offset().left;
+
+    var text = "<svg width=" + $(".editor").width() + " height=" + $(".editor").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $(".editor").height() + $(".editor").width()+"'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <path d='M" + (x_val ) +","+ (endcoords.pageY - 64) + " \
-              A20,20 0 0,1 "+ (x_val ) + "," + (startcoords.pageY - 64) + "' marker-start='url(#arrowhead)' \
+    <path d='M" + (x_val - offset_left + 3) +","+ (endcoords.pageY - (offset_top - 25)) + " \
+              A20,20 0 0,1 "+ (x_val - offset_left + 3) + "," + (startcoords.pageY - (offset_top - 25)) + "' marker-start='url(#arrowhead)' \
            style='stroke:black; fill:none;'/> \
     </svg> \
     "; 
@@ -3038,7 +3041,7 @@ function arrow(pane, show, prevLoc, currLoc){
     div.style.zIndex = "2";
     div.style.left = "0px";
     div.style.top = "0px";
-    $("#" + pane).append(div);
+    $(".editor").append(div);
   }
   else{
     var text = "";
