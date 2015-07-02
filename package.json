@@ -33,6 +33,8 @@
     "chai": "latest",
     "grunt": "latest",
     "mocha": "latest",
+    "browserify": "latest",
+    "grunt-browserify": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",

@@ -271,6 +271,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
   // Load slow imagemin tasks only when "imagemin" is explicitly specified.
