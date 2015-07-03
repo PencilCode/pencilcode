@@ -23,6 +23,8 @@ var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
+var stuckTime = null;         // timestmp to detect stuck programs
+var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 
 
 Error.stackTraceLimit = 20;
@@ -63,18 +65,20 @@ var debug = window.ide = {
       return;
     }
 
-    if (name === "seeeval"){ reportSeeeval.apply(null, data); }
+    if (name === "pulse") { stuckTime = null; }
 
-    if (name === "appear"){ reportAppear.apply(null, data); }
+    if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "resolve"){ reportResolve.apply(null, data); }
+    if (name === "appear") { reportAppear.apply(null, data); }
 
-    if (name === "error"){
+    if (name === "resolve") { reportResolve.apply(null, data); }
+
+    if (name === "error") {
       reportError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
-      try{
+      try {
         if (toString.call(data) === "[object Array]" &&
             data.length > 0 && data[0].message) {
           simpleData.message = data[0].message;
@@ -84,7 +88,6 @@ var debug = window.ide = {
       }
       view.publish('error', [simpleData]);
     }
-   // come back and update this reportEvent
   },
 
   stopButton: stopButton,
@@ -107,7 +110,8 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event,data) {
+  trace: function(event, data) {
+    detectStuckProgram();
     // This receives events for the new debugger to use.
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
@@ -123,6 +127,25 @@ var debug = window.ide = {
     currentSourceMap = map;
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+// STUCK PROGRAM SUPPORT
+//////////////////////////////////////////////////////////////////////
+function detectStuckProgram() {
+  var currentTime = +(new Date);
+  if (!stuckTime) {
+    stuckTime = currentTime;
+    targetWindow.eval(
+      'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
+    );
+  }
+  if (currentTime - stuckTime > stuckTimeLimit) {
+    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+      targetWindow.$.turtle.interrupt('hung');
+    }
+    targetWindow.eval('throw new Exception("Stuck program interrupted")');
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
