@@ -80,6 +80,23 @@ module.exports = function(grunt) {
         }
       }
     },
+    browserify: {
+      dist: {
+        files: {
+          'content/editor.js': 'content/src/editor-main.js'
+        },
+        options: {
+          browserifyOptions: {
+            debug: true,
+            noParse: [ // It is kind of buggy, only accepts absolute paths.
+              require.resolve('./content/lib/pencil-tracer.js'),
+              require.resolve('./content/lib/droplet.js')
+            ]
+          },
+          watch: true
+        }
+      }
+    },
     requirejs: {
       compile: {
         options: {
@@ -345,7 +362,7 @@ module.exports = function(grunt) {
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
   grunt.registerTask('build',
-      ['requirejs', 'replace', 'uglify', 'less', 'builddate']);
+      ['browserify', 'replace', 'uglify', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
       ['build', 'test']);

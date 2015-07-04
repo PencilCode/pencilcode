@@ -2,8 +2,10 @@
 // STORAGE AND CACHE SERVICE
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'see', 'filetype'],
-function($, see, filetype) {
+var $        = require('jquery'),
+    see      = require('see'),
+    filetype = require('filetype');
+
 
 eval(see.scope('storage'));
 function hasBackup(filename) {
@@ -378,7 +380,5 @@ window.pencilcode.storage = {
   }
 };
 
-return window.pencilcode.storage;
-
-});
+module.exports = window.pencilcode.storage;
 

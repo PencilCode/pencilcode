@@ -2,30 +2,17 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define([
-  'jquery',
-  'filetype',
-  'tooltipster',
-  'see',
-  'droplet',
-  'palette',
-  'codescan',
-  'draw-protractor',
-  'ZeroClipboard',
-  'FontLoader'
-],
-function(
-  $,
-  filetype,
-  tooltipster,
-  see,
-  droplet,
-  palette,
-  codescan,
-  drawProtractor,
-  ZeroClipboard,
-  FontLoader
-) {
+var $ = require('jquery'),
+    filetype = require('filetype'),
+    tooltipster = require('tooltipster'),
+    see = require('see'),
+    droplet = require('droplet'),
+    palette = require('palette'),
+    codescan = require('codescan'),
+    drawProtractor = require('draw-protractor'),
+    ZeroClipboard = require('ZeroClipboard'),
+    FontLoader = require('FontLoader');
+
 
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
@@ -3077,6 +3064,4 @@ function setupHpanelBox(box) {
 window.FontLoader = FontLoader;
 window.fontloader = fontloader;
 
-return window.pencilcode.view;
-
-});
+module.exports = window.pencilcode.view;

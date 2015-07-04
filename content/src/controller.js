@@ -2,32 +2,19 @@
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define([
-  'jquery',
-  'view',
-  'storage',
-  'thumbnail',
-  'debug',
-  'filetype',
-  'guide',
-  'seedrandom',
-  'see',
-  'pencil-tracer',
-  'iced-coffee-script',
-  'draw-protractor'],
-function(
-  $,
-  view,
-  storage,
-  thumbnail,
-  debug,
-  filetype,
-  guide,
-  seedrandom,
-  see,
-  pencilTracer,
-  icedCoffeeScript,
-  drawProtractor) {
+var $                = require('jquery'),
+    view             = require('view'),
+    storage          = require('storage'),
+    thumbnail        = require('thumbnail'),
+    debug            = require('debug'),
+    filetype         = require('filetype'),
+    guide            = require('guide'),
+    seedrandom       = require('seedrandom'),
+    see              = require('see'),
+    pencilTracer     = require('pencil-tracer'),
+    icedCoffeeScript = require('iced-coffee-script'),
+    drawProtractor   = require('draw-protractor');
+
 
 eval(see.scope('controller'));
 
@@ -2326,6 +2313,4 @@ view.publish('load');
 
 readNewUrl();
 
-return model;
-
-});
+module.exports = model;

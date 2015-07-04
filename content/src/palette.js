@@ -1,5 +1,3 @@
-define(function() {
-
 function filterblocks(a) {
   // Show 'say' block only on browsers that support speech synthesis.
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
@@ -58,7 +56,7 @@ var distances = ['25', '50', '100', '200'],
     scales = ['0.5', '2.0', '3.0'],
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'black'];
 
-return {
+module.exports = {
 
   expand: expand,
 
@@ -686,5 +684,3 @@ return {
     errors: {color: '#f00'}
   }
 };
-
-});

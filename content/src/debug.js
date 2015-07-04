@@ -2,14 +2,11 @@
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+var $         = require('jquery'),
+    view      = require('view'),
+    see       = require('see'),
+    sourcemap = require('sourcemap');
 
-define([
-  'jquery',
-  'view',
-  'see',
-  'sourcemap/source-map-consumer'
- ],
-function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
@@ -36,7 +33,7 @@ function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
-  debugRecordsByDebugId = {}; 
+  debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -625,6 +622,4 @@ view.on('stop', function() {
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////
 
-return debug;
-
-});
+module.exports = debug;
