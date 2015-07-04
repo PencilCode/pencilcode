@@ -2,16 +2,16 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-var $ = require('jquery'),
-    filetype = require('filetype'),
-    tooltipster = require('tooltipster'),
-    see = require('see'),
-    droplet = require('droplet'),
-    palette = require('palette'),
-    codescan = require('codescan'),
+var $              = require('jquery'),
+    filetype       = require('filetype'),
+    tooltipster    = require('tooltipster'),
+    see            = require('see'),
+    droplet        = require('droplet'),
+    palette        = require('palette'),
+    codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
-    ZeroClipboard = require('ZeroClipboard'),
-    FontLoader = require('FontLoader');
+    ZeroClipboard  = require('ZeroClipboard'),
+    FontLoader     = require('FontLoader');
 
 
 function htmlEscape(s) {
