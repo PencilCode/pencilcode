@@ -30,12 +30,12 @@
     "tamper": "latest"
   },
   "devDependencies": {
-    "chai": "latest",
-    "grunt": "latest",
-    "mocha": "latest",
     "amdefine": "latest",
     "browserify": "latest",
     "browserify-shim": "latest",
+    "chai": "latest",
+    "grunt": "latest",
+    "mocha": "latest",
     "grunt-browserify": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",
@@ -43,16 +43,15 @@
     "grunt-contrib-copy": "latest",
     "grunt-contrib-imagemin": "latest",
     "grunt-contrib-less": "latest",
-    "grunt-contrib-requirejs": "latest",
     "grunt-contrib-uglify": "latest",
     "grunt-contrib-watch": "latest",
     "grunt-express-server": "latest",
     "grunt-mocha-test": "latest",
     "grunt-node-inspector": "latest",
-    "grunt-replace": "latest",
     "grunt-sed": "latest",
     "node-phantom-simple": "latest",
-    "phantomjs": "latest"
+    "phantomjs": "latest",
+    "watchify": "latest"
   },
   "browser": {
     "codescan": "./content/src/codescan.js",

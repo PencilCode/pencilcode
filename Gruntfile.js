@@ -25,15 +25,12 @@ module.exports = function(grunt) {
           'lib/iced-coffee-script.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
-          'lib/jquery.autocomplete.js':
-              'devbridge-autocomplete/dist/jquery.autocomplete.js',
           'lib/jquery.autocomplete.min.js':
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lib/lodash.js': 'lodash/dist/lodash.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
-          'lib/require.js': 'requirejs/require.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
           'lib/socket.io.js': 'socket.io-client/socket.io.js'
         }
@@ -93,43 +90,25 @@ module.exports = function(grunt) {
               require.resolve('./content/lib/droplet.js')
             ]
           },
-          watch: true
+          watch: false,
+          keepalive: false
         }
-      }
-    },
-    requirejs: {
-      compile: {
-        options: {
-          baseUrl: 'content',
-          deps: ['src/editor-main'],
-          name: 'lib/almond',
-          out: 'content/editor.js',
-          useStrict: true,
-          // optimize: 'none',
-          mainConfigFile: 'content/src/editor-main.js',
-          preserveLicenseComments: false
-        }
-      }
-    },
-    replace: {
-      dist: {
-        options: {
-          patterns: [ {
-            match:
-              /<script data-main=".*\/([^\/"-]*)-main" src=".*require.js">/,
-            replacement:
-              "<script src=\"//<!--#echo var=\"site\"-->/$1.js\"></script>"
-          } ]
+      },
+      server: {
+        files: {
+          'content/editor.js': 'content/src/editor-main.js'
         },
-        files: [ {
-          expand: true,
-          flatten: true,
-          src: [
-            'content/src/editor.html',
-            'content/src/framed.html'
-          ],
-          dest: 'content'
-        } ]
+        options: {
+          browserifyOptions: {
+            debug: true,
+            noParse: [ // It is kind of buggy, only accepts absolute paths.
+              require.resolve('./content/lib/pencil-tracer.js'),
+              require.resolve('./content/lib/droplet.js')
+            ]
+          },
+          watch: true,
+          keepalive: true
+        }
       }
     },
     uglify: {
@@ -251,8 +230,8 @@ module.exports = function(grunt) {
       sources: {
         files: [
           'server/*.js',
-          'server/*.json',
-          'content/src/filetype.js' ],
+          'server/**/*.json'
+        ],
         options: { spawn: false }
       },
       styles: {
@@ -296,13 +275,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-imagemin');
   }
   grunt.loadNpmTasks('grunt-contrib-less');
-  grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-node-inspector');
-  grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-sed');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
@@ -351,18 +328,18 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
-      ['proxymessage', 'express:dev', 'watch']);
+      ['proxymessage', 'express:dev', 'browserify:server', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('sdevserver',
-      ['proxymessage', 'express:sdev', 'watch']);
+      ['proxymessage', 'express:sdev', 'browserify:server', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:localtest', 'watch']);
+      ['proxymessage', 'express:localtest', 'browserify:server', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
   grunt.registerTask('build',
-      ['browserify', 'replace', 'uglify', 'less', 'builddate']);
+      ['browserify:dist', 'uglify', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
       ['build', 'test']);
