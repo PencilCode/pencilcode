@@ -169,7 +169,6 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
     maintype = doc.meta.type;
   }
   var seeline = '\n\n';
-  var trailing = '\n';
   if (/javascript/.test(maintype)) {
     seeline = 'eval(this._start_ide_js_);\n\n';
   } else if (/coffeescript/.test(maintype)) {
@@ -184,11 +183,20 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       maintype = 'text/javascript';
     }
   }
-  var mainscript = '<script type="' + maintype + '">\n' + seeline;
+  var mainscript = '<script type="' + maintype + '">\n';
+  if (/javascript/.test(maintype)) {
+    // Wrap javascript in a closure (coffeescript does this automatically).
+    mainscript += '(function(){\n';
+  }
+  mainscript += seeline; // seeline must execute inside the closure.
   if (!pragmasOnly) {
     mainscript += text;
   }
-  mainscript += trailing + '<\057script>';
+  if (/javascript/.test(maintype)) {
+    // Close the wrapped closure.
+    mainscript += '\n})();'
+  }
+  mainscript += '\n<\057script>';
   var result = (
     prefix.join('\n') +
     html +
