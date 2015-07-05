@@ -356,4 +356,44 @@ describe('framed embed', function() {
       done();
     });
   });
+  it('should be able to interrupt a script with stopRun', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      pco.setCode('speed 1\nfor [1..100]\n  rt 360\n', function(){});
+      pco.beginRun();
+    }, function() {
+      pco.eval('interrupt("test")', function(v, e) {
+        window.test.response = { value: v, error: e };
+      });
+      // wait until run starts.
+      if (window.test.response && window.test.response.value) {
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      assert.ok(!result.response.error);
+      assert.equal(result.response.value, true);
+      next();
+    });
+    function next() { asyncTest(_page, one_step_timeout, null, function() {
+      window.resetTest();
+      pco.stopRun();
+    }, function() {
+      pco.stopRun();
+      pco.eval('interrupt("test")', function(v, e) {
+        window.test.response = { value: v, error: e };
+      });
+      // wait until run stops.
+      if (window.test.response && !window.test.response.value) {
+        return window.test;
+      }
+      return false;
+    }, function(err, result){
+      assert.ifError(err);
+      assert.ok(!result.response.error);
+      assert.equal(result.response.value, false);
+      done();
+    }); }
+  });
 });

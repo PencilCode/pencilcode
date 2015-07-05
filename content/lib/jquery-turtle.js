@@ -6986,9 +6986,6 @@ var turtlefn = {
     return this.plan(function(j, elem) {
       cc.appear(j);
       var state = getTurtleData(elem);
-      if (state.drawOnCanvas) {
-        sync(elem, state.drawOnCanvas);
-      }
       if (!canvas || canvas === global) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {

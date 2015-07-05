@@ -30,24 +30,70 @@
     "tamper": "latest"
   },
   "devDependencies": {
+    "amdefine": "latest",
+    "browserify": "latest",
+    "browserify-shim": "latest",
     "chai": "latest",
     "grunt": "latest",
     "mocha": "latest",
+    "grunt-browserify": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-contrib-copy": "latest",
     "grunt-contrib-imagemin": "latest",
     "grunt-contrib-less": "latest",
-    "grunt-contrib-requirejs": "latest",
     "grunt-contrib-uglify": "latest",
     "grunt-contrib-watch": "latest",
     "grunt-express-server": "latest",
     "grunt-mocha-test": "latest",
     "grunt-node-inspector": "latest",
-    "grunt-replace": "latest",
     "grunt-sed": "latest",
     "node-phantom-simple": "latest",
-    "phantomjs": "latest"
+    "phantomjs": "latest",
+    "watchify": "latest"
+  },
+  "browser": {
+    "codescan": "./content/src/codescan.js",
+    "controller": "./content/src/controller.js",
+    "debug": "./content/src/debug.js",
+    "draw-protractor": "./content/src/draw-protractor.js",
+    "droplet": "./content/lib/droplet.js",
+    "FontLoader": "./content/src/FontLoader.js",
+    "filetype": "./content/src/filetype.js",
+    "gadget": "./content/src/gadget.js",
+    "guide": "./content/src/guide.js",
+    "html2canvas": "./content/lib/html2canvas.js",
+    "iced-coffee-script": "./content/lib/iced-coffee-script.js",
+    "jquery": "./content/lib/jquery.js",
+    "palette": "./content/src/palette.js",
+    "pencil-tracer": "./content/lib/pencil-tracer.js",
+    "see": "./content/lib/see.js",
+    "seedrandom": "./content/lib/seedrandom.js",
+    "sourcemap": "./content/lib/sourcemap/source-map-consumer.js",
+    "storage": "./content/src/storage.js",
+    "thumbnail": "./content/src/thumbnail.js",
+    "tooltipster": "./content/lib/tooltipster/js/jquery.tooltipster.js",
+    "view": "./content/src/view.js",
+    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
+  },
+  "browserify": {
+    "transform": [ "browserify-shim" ]
+  },
+  "browserify-shim": {
+    "html2canvas": {
+      "exports": "html2canvas"
+    },
+    "jquery": {
+      "exports": "$"
+    },
+    "see": {
+      "exports": "see",
+      "depends": ["jquery:jQuery"]
+    },
+    "tooltipster": {
+      "exports": "jQuery.fn.tooltipster",
+      "depends": ["jquery:jQuery"]
+    }
   }
 }

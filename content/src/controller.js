@@ -2,32 +2,19 @@
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define([
-  'jquery',
-  'view',
-  'storage',
-  'thumbnail',
-  'debug',
-  'filetype',
-  'guide',
-  'seedrandom',
-  'see',
-  'pencil-tracer',
-  'iced-coffee-script',
-  'draw-protractor'],
-function(
-  $,
-  view,
-  storage,
-  thumbnail,
-  debug,
-  filetype,
-  guide,
-  seedrandom,
-  see,
-  pencilTracer,
-  icedCoffeeScript,
-  drawProtractor) {
+var $                = require('jquery'),
+    view             = require('view'),
+    storage          = require('storage'),
+    thumbnail        = require('thumbnail'),
+    debug            = require('debug'),
+    filetype         = require('filetype'),
+    guide            = require('guide'),
+    seedrandom       = require('seedrandom'),
+    see              = require('see'),
+    pencilTracer     = require('pencil-tracer'),
+    icedCoffeeScript = require('iced-coffee-script'),
+    drawProtractor   = require('draw-protractor');
+
 
 eval(see.scope('controller'));
 
@@ -601,7 +588,7 @@ view.on('saveas', saveAs);
 view.on('screenshot',function() {
   var iframe = document.getElementById('output-frame');
   // `thumbnail.generateThumbnailDataUrl` returns a promise.
-  thumbnail.generateThumbnailDataUrl(iframe).then(function(thumbnailDataUrl) {
+  thumbnail.generateThumbnailDataUrl(iframe, function(thumbnailDataUrl) {
     modelatpos('right').thumbnail = thumbnailDataUrl;
     updateTopControls();
     view.flashThumbnail(thumbnailDataUrl);
@@ -777,7 +764,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     } else {  // Otherwise generate one.
       var iframe = document.getElementById('output-frame');
       // `thumbnail.generateThumbnailDataUrl` returns a promise.
-      thumbnail.generateThumbnailDataUrl(iframe).then(postThumbnailGeneration);
+      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
     }
   } else {  // Empty content, file delete, no need for thumbnail.
     postThumbnailGeneration('');
@@ -1834,10 +1821,12 @@ function instrumentCode(code, language) {
       debug.setSourceMap(result.v3SourceMap);
       code = result.js;
     } catch (err) {
-      // If there was an error while instrumenting, just return non-instrumented
-      // JavaScript.
-      console.warn("Error during instrumentation! Debugger will be disabled for this run. Error was:\n" + err);
-      code = icedCoffeeScript.compile(code, { bare: true });
+      // An error here means that either the user's code has a syntax error, or
+      // pencil-tracer has a bug. Returning false here means the user's code
+      // will run directly, without the debugger, and then if there's a syntax
+      // error it will be displayed to them, and if it's a pencil-tracer bug,
+      // their code will still run but with the debugger disabled.
+      return false;
     }
   }
   return code;
@@ -2236,7 +2225,10 @@ $(window).on('message', function(e) {
       evalAndPostback(data.requestid, data.args[0]);
       break;
     case 'beginRun':
-      view.run();
+      view.fireEvent('run', []);
+      break;
+    case 'stopRun':
+      view.fireEvent('stop', []);
       break;
     case 'save':
       signUpAndSave({filename:data.args[0]});
@@ -2349,6 +2341,4 @@ view.publish('load');
 
 readNewUrl();
 
-return model;
-
-});
+module.exports = model;

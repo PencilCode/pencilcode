@@ -2,14 +2,11 @@
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+var $         = require('jquery'),
+    view      = require('view'),
+    see       = require('see'),
+    sourcemap = require('sourcemap');
 
-define([
-  'jquery',
-  'view',
-  'see',
-  'sourcemap/source-map-consumer'
- ],
-function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
@@ -23,6 +20,8 @@ var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
+var stuckTime = null;         // timestmp to detect stuck programs
+var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 
 
 Error.stackTraceLimit = 20;
@@ -36,7 +35,7 @@ function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
-  debugRecordsByDebugId = {}; 
+  debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -63,18 +62,20 @@ var debug = window.ide = {
       return;
     }
 
-    if (name === "seeeval"){ reportSeeeval.apply(null, data); }
+    if (name === "pulse") { stuckTime = null; }
 
-    if (name === "appear"){ reportAppear.apply(null, data); }
+    if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "resolve"){ reportResolve.apply(null, data); }
+    if (name === "appear") { reportAppear.apply(null, data); }
 
-    if (name === "error"){
+    if (name === "resolve") { reportResolve.apply(null, data); }
+
+    if (name === "error") {
       reportError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
-      try{
+      try {
         if (toString.call(data) === "[object Array]" &&
             data.length > 0 && data[0].message) {
           simpleData.message = data[0].message;
@@ -84,7 +85,6 @@ var debug = window.ide = {
       }
       view.publish('error', [simpleData]);
     }
-   // come back and update this reportEvent
   },
 
   stopButton: stopButton,
@@ -107,7 +107,8 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event,data) {
+  trace: function(event, data) {
+    detectStuckProgram();
     // This receives events for the new debugger to use.
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
@@ -123,6 +124,25 @@ var debug = window.ide = {
     currentSourceMap = map;
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+// STUCK PROGRAM SUPPORT
+//////////////////////////////////////////////////////////////////////
+function detectStuckProgram() {
+  var currentTime = +(new Date);
+  if (!stuckTime) {
+    stuckTime = currentTime;
+    targetWindow.eval(
+      'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
+    );
+  }
+  if (currentTime - stuckTime > stuckTimeLimit) {
+    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+      targetWindow.$.turtle.interrupt('hung');
+    }
+    targetWindow.eval('throw new Exception("Stuck program interrupted")');
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
@@ -159,31 +179,35 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 function reportAppear(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    recordD.args = args;
-    recordL.args = args;
-    var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line;
-    recordD.startCoords[coordId] = collectCoords(elem);
-    recordL.startCoords[coordId] = collectCoords(elem);
-    traceLine(location);
+  if (recordD) {
+    if (!recordD.seeeval) {
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      recordD.args = args;
+      recordL.args = args;
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line;
+      recordD.startCoords[coordId] = collectCoords(elem);
+      recordL.startCoords[coordId] = collectCoords(elem);
+      traceLine(location);
+    }
   }
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
-  if (!recordD.seeeval){
-    var recordL = debugRecordsByLineNo[recordD.line];
-    recordD.method = method;
-    recordL.method = method;
-    var index = recordD.eventIndex;
-    var location = traceEvents[index].location.first_line
-    recordD.endCoords[coordId] = collectCoords(elem);
-    recordL.endCoords[coordId] = collectCoords(elem);
-    untraceLine(location);
+  if (recordD) {
+    if (!recordD.seeeval) {
+      var recordL = debugRecordsByLineNo[recordD.line];
+      recordD.method = method;
+      recordL.method = method;
+      var index = recordD.eventIndex;
+      var location = traceEvents[index].location.first_line
+      recordD.endCoords[coordId] = collectCoords(elem);
+      recordL.endCoords[coordId] = collectCoords(elem);
+      untraceLine(location);
+    }
   }
 }
 
@@ -430,7 +454,7 @@ function editorLineNumberForError(error) {
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
-        return error.location.first_line;
+        return error.location.first_line - 2;
       }
     }
     return null;
@@ -507,7 +531,9 @@ view.on('icehover', function(pane, ev) {
   if (pane != view.paneid('left')) return;
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  if (debugRecordsByLineNo[lineno]) {
+    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  }
 });
 
 function convertCoords(origin, astransform) {
@@ -600,7 +626,8 @@ document.addEventListener('visibilityChange', function() {
 });
 
 view.on('stop', function() {
-  if ((new Date) - lastRunTime < 1000) {
+  // Avoid stop for the first 0.5 s after a user just clicked run.
+  if ((new Date) - lastRunTime < 500) {
     return;
   }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
@@ -618,6 +645,4 @@ view.on('stop', function() {
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////
 
-return debug;
-
-});
+module.exports = debug;

@@ -274,6 +274,11 @@
       return this.invokeRemote('beginRun', []);
     };
 
+    // interrupts a run in progress
+    proto.stopRun = function() {
+      return this.invokeRemote('stopRun', []);
+    };
+
     // brings up save UI
     proto.save = function(filename) {
       return this.invokeRemote('save', [filename]);

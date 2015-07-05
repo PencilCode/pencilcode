@@ -2,30 +2,17 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define([
-  'jquery',
-  'filetype',
-  'tooltipster',
-  'see',
-  'droplet',
-  'palette',
-  'codescan',
-  'draw-protractor',
-  'ZeroClipboard',
-  'FontLoader'
-],
-function(
-  $,
-  filetype,
-  tooltipster,
-  see,
-  droplet,
-  palette,
-  codescan,
-  drawProtractor,
-  ZeroClipboard,
-  FontLoader
-) {
+var $              = require('jquery'),
+    filetype       = require('filetype'),
+    tooltipster    = require('tooltipster'),
+    see            = require('see'),
+    droplet        = require('droplet'),
+    palette        = require('palette'),
+    codescan       = require('codescan'),
+    drawProtractor = require('draw-protractor'),
+    ZeroClipboard  = require('ZeroClipboard'),
+    FontLoader     = require('FontLoader');
+
 
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
@@ -103,8 +90,8 @@ window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
 
-  // start code execution
-  run: function(){ fireEvent('run', []); },
+  // Simulate firing of an event
+  fireEvent: function(event, args) { fireEvent(event, args); },
 
   // publish/subscribe for global events; all global events are broadcast
   // to the parent frames using postMessage() if we are iframed
@@ -1045,13 +1032,15 @@ function showLoginDialog(opts) {
         dialog.find('.rename').val(fixed);
       }
     });
-    // This timeout is added so that in the #new case where
-    // the dialog and ACE editor are competing for focus, the
-    // dialog wins.
-    dialog.find('input:not([disabled])').eq(0).select().focus();
-    setTimeout(function() {
+    function focusDialog() {
       dialog.find('input:not([disabled])').eq(0).select().focus();
-    }, 0);
+    }
+    focusDialog();
+    // This focusout handler is added so that in the #new case where the
+    // dialog and ACE editor are competing for focus, the dialog wins.
+    dialog.on('focusout', focusDialog);
+    // Stop doing this after 0.5 seconds.
+    setTimeout(function() { dialog.off('focusout'); }, 500);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
@@ -1367,13 +1356,13 @@ function updatePaneLinks(pane) {
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-  width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
+  // width is full directory width minus padding minus scrollbar width.
+  width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
-      href: list[j].href,
-      title: list[j].name
+      href: list[j].href
     }).appendTo(col);
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
@@ -3079,6 +3068,4 @@ function setupHpanelBox(box) {
 window.FontLoader = FontLoader;
 window.fontloader = fontloader;
 
-return window.pencilcode.view;
-
-});
+module.exports = window.pencilcode.view;

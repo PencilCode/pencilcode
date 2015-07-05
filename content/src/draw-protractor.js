@@ -2,9 +2,9 @@
 // Author: James Synge
 // See: http://jsfiddle.net/jamessynge/QQ43x/
 
-define([
-  'jquery', 'see'],
-function($, see) {
+var $   = require('jquery'),
+    see = require('see');
+
 
 eval(see.scope('drawProtractor'));
 
@@ -261,9 +261,7 @@ function drawProtractor(ctx, radius, zeroAngle) {
     ctx.restore();
 }
 
-return { renderProtractor: renderProtractor };
-
-});
+module.exports = { renderProtractor: renderProtractor };
 
 
 

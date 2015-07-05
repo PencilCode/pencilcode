@@ -4,9 +4,6 @@
 // looking for object names and
 ///////////////////////////////////////////////////////////////////////////
 
-define([],
-function() {
-
 function stripCSMultiline(code) {
   // Really simple heuristic for coffeescript:
   // Just scan the multiline quote and comment delimeters, and
@@ -116,7 +113,5 @@ window.pencilcode.codescan = {
   scanObjects: scanObjects
 };
 
-return window.pencilcode.codescan;
-
-});
+module.exports = window.pencilcode.codescan;
 
