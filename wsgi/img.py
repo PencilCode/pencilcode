@@ -22,7 +22,8 @@ blacklist = set([
    'www.public-domain-image.com'
 ])
 cross_origin_ok = set([
-   'upload.wikimedia.org'
+#   Wikimedia no longer allows cross-origin!
+#   'upload.wikimedia.org'
 ])
 
 def uri_without_query(uri):
