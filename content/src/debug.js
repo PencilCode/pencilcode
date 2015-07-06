@@ -29,6 +29,8 @@ var prevLoc = null;
 var eventQueue = [];          //list of events in order to maintain proper tracing 
 var isLoop = false;
 var screenshots = [];
+var stuckTime = null;         // timestmp to detect stuck programs
+var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 
 Error.stackTraceLimit = 20;
 
@@ -72,18 +74,20 @@ var debug = window.ide = {
       return;
     }
 
-    if (name === "seeeval"){ reportSeeeval.apply(null, data); }
+    if (name === "pulse") { stuckTime = null; }
 
-    if (name === "appear"){ reportAppear.apply(null, data); }
+    if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "resolve"){ reportResolve.apply(null, data); }
+    if (name === "appear") { reportAppear.apply(null, data); }
 
-    if (name === "error"){
+    if (name === "resolve") { reportResolve.apply(null, data); }
+
+    if (name === "error") {
       reportError.apply(null, data);
       // data can't be marshalled fully due to circular references not
       // being supported by JSON.stringify(); copy over the essential bits
       var simpleData = {};
-      try{
+      try {
         if (toString.call(data) === "[object Array]" &&
             data.length > 0 && data[0].message) {
           simpleData.message = data[0].message;
@@ -93,7 +97,6 @@ var debug = window.ide = {
       }
       view.publish('error', [simpleData]);
     }
-   // come back and update this reportEvent
   },
 
   stopButton: stopButton,
@@ -116,7 +119,8 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event,data) {
+  trace: function(event, data) {
+    detectStuckProgram();
     // This receives events for the new debugger to use.
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
@@ -146,6 +150,25 @@ var debug = window.ide = {
     currentSourceMap = map;
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+// STUCK PROGRAM SUPPORT
+//////////////////////////////////////////////////////////////////////
+function detectStuckProgram() {
+  var currentTime = +(new Date);
+  if (!stuckTime) {
+    stuckTime = currentTime;
+    targetWindow.eval(
+      'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
+    );
+  }
+  if (currentTime - stuckTime > stuckTimeLimit) {
+    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+      targetWindow.$.turtle.interrupt('hung');
+    }
+    targetWindow.eval('throw new Exception("Stuck program interrupted")');
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
@@ -246,6 +269,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
+      var location = traceEvents[index].location.first_line;
+      recordD.startCoords[coordId] = collectCoords(elem);
+      recordL.startCoords[coordId] = collectCoords(elem);
+      traceLine(location);
     }
   }
 }
@@ -549,7 +576,7 @@ function editorLineNumberForError(error) {
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
-        return error.location.first_line;
+        return error.location.first_line - 2;
       }
     }
     return null;
@@ -727,7 +754,8 @@ document.addEventListener('visibilityChange', function() {
 });
 
 view.on('stop', function() {
-  if ((new Date) - lastRunTime < 1000) {
+  // Avoid stop for the first 0.5 s after a user just clicked run.
+  if ((new Date) - lastRunTime < 500) {
     return;
   }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||

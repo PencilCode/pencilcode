@@ -86,7 +86,7 @@ var state = {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
     charlie: initialPaneState()
-  },
+  }
 }
 
 var dropletMarkClassColors = {
@@ -110,8 +110,8 @@ window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
 
-  // start code execution
-  run: function(){ fireEvent('run', []); },
+  // Simulate firing of an event
+  fireEvent: function(event, args) { fireEvent(event, args); },
 
   // publish/subscribe for global events; all global events are broadcast
   // to the parent frames using postMessage() if we are iframed
@@ -173,6 +173,7 @@ window.pencilcode.view = {
   enableButton: enableButton,
   // Notifications
   flashNotification: flashNotification,
+  flashThumbnail: flashThumbnail,
   dismissNotification: dismissNotification,
   flashButton: flashButton,
   // Show login (or create account) dialog.
@@ -815,6 +816,20 @@ function showMiddleButton(which) {
   $('#middle button').tooltipster();
 }
 
+// Show thumbnail under the save button.
+function flashThumbnail(imageDataUrl) {
+  if (!imageDataUrl) { return; }
+  var tooltip = $('#save').tooltipster({
+    content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
+    multiple: true,
+    position: 'bottom',
+    theme: 'tooltipster-shadow',
+    timer: 3000,
+    trigger: 'custom'
+  })[0];
+  tooltip.show();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
@@ -824,18 +839,24 @@ function showShareDialog(opts) {
     opts = { };
   }
 
+  // Adds a protocol ('http:') to a string path if it does not yet have one.
   function addProtocol(path) {
     if (/^\w+:/.test(path)) { return path; }
     return 'http:' + path;
   }
 
-  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
-  bodyText = bodyText + 'Posted program: ' +
-     addProtocol(opts.shareStageURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Latest program: ' +
-     addProtocol(opts.shareRunURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Program code: ' +
-     addProtocol(opts.shareEditURL) + '\r\n\r\n';
+  var newLines = '\r\n\r\n';
+  bodyText = 'Check out this program that I created on ' + window.pencilcode.domain
+     + newLines;
+  if (opts.shareStageURL) {
+    bodyText += 'Posted program: ' + addProtocol(opts.shareStageURL) + newLines;
+  }
+  if (opts.shareRunURL) {
+    bodyText += 'Latest program: ' + addProtocol(opts.shareRunURL) + newLines;
+  }
+  if (opts.shareEditURL) {
+    bodyText += 'Program code: ' + addProtocol(opts.shareEditURL) + newLines;
+  }
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
@@ -848,6 +869,7 @@ function showShareDialog(opts) {
     embedText = '<iframe src="' + opts.shareRunURL + '" ' +
        'width="640" height="640" frameborder="0" allowfullScreen></iframe>';
   }
+
   opts.prompt = (opts.prompt) ? opts.prompt : 'Shared &#x2713;';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
@@ -1103,13 +1125,15 @@ function showLoginDialog(opts) {
         dialog.find('.rename').val(fixed);
       }
     });
-    // This timeout is added so that in the #new case where
-    // the dialog and ACE editor are competing for focus, the
-    // dialog wins.
-    dialog.find('input:not([disabled])').eq(0).select().focus();
-    setTimeout(function() {
+    function focusDialog() {
       dialog.find('input:not([disabled])').eq(0).select().focus();
-    }, 0);
+    }
+    focusDialog();
+    // This focusout handler is added so that in the #new case where the
+    // dialog and ACE editor are competing for focus, the dialog wins.
+    dialog.on('focusout', focusDialog);
+    // Stop doing this after 0.5 seconds.
+    setTimeout(function() { dialog.off('focusout'); }, 500);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
@@ -1218,6 +1242,7 @@ function setPaneRunHtml(
       var iframe = $('<iframe></iframe>').appendTo(p);
       // Destroy and create new iframe.
       iframe.attr('src', 'about:blank');
+      iframe.attr('id', 'output-frame');
       var framewin = iframe[0].contentWindow;
       var framedoc = framewin.document;
       framedoc.open();
@@ -1388,9 +1413,10 @@ var getScrollbarWidth = function() {
   return width;
 };
 
-function setPaneLinkText(pane, links, filename) {
+function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
+  paneState.path = ownername + '/' + filename;
   paneState.links = links;
   paneState.filename = filename;
   updatePaneLinks(pane);
@@ -1410,7 +1436,8 @@ $(window).on('resize.listing', function() {
 
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
-      tightwidth, item, directory, tag, colsdone, list;
+      tightwidth, item, figure, thumbnail, directory, colsdone, list;
+  var paneState = state.pane[pane];
   function fwidth(elem) {
     // Get the width, including fractional width.
     if (elem.getBoundingClientRect) {
@@ -1418,18 +1445,31 @@ function updatePaneLinks(pane) {
     }
     return $(elem).outerWidth();
   }
-  list = state.pane[pane].links;
+  list = paneState.links;
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-  width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
+  // width is full directory width minus padding minus scrollbar width.
+  width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
-    tag = list[j].href ? 'a' : 'div';
-    item = $('<' + tag + ' class="item"'
-        + (list[j].href ? ' href="' + list[j].href + '" ' : '')
-        + '>' + list[j].html + '</' + tag + '>')
-        .appendTo(col);
+    item = $('<a/>', {
+      class: 'item' + (list[j].href ? '' : ' create'),
+      href: list[j].href
+    }).appendTo(col);
+    figure = $('<div/>').appendTo(item);
+    thumbnail = list[j].thumbnail;
+    // Only show thumbs if it is a supported type, and showThumb is enabled.
+    if (shouldShowThumb(paneState.path)) {
+      $('<img/>', {
+        class: 'thumbnail',
+        src: thumbnail || getDefaultThumbnail(list[j].type),
+        alt: list[j].name
+      }).appendTo(figure);
+      $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
+    } else {
+      $('<span/>', { text: list[j].name }).appendTo(figure);
+    }
     if (list[j].link) {
       item.data('link', list[j].link);
     }
@@ -1499,6 +1539,29 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
+}
+
+function getDefaultThumbnail(type) {
+  var baseUrl = '//' + pencilcode.domain + '/image/';
+  var mimeToFilename = {
+    'dir'               : 'dir-128.png',
+    'new'               : 'new-128.png',
+    'image/jpeg'        : 'file-image.png',
+    'image/gif'         : 'file-image.png',
+    'image/png'         : 'file-image.png',
+    'image/svg+xml'     : 'file-image.png',
+    'image/x-ms-bmp'    : 'file-image.png',
+    'image/x-icon'      : 'file-image.png',
+    'text/html'         : 'file-html.png',
+    'text/plain'        : 'file-txt.png',
+    'text/css'          : 'file-css.png',
+    'text/coffeescript' : 'file-coffee.png',
+    'text/javascript'   : 'file-js.png',
+    'text/xml'          : 'file-xml.png',
+    'text/json'         : 'file-json.png',
+    'text/x-pencilcode' : 'file-pencil.png'
+  }
+  return baseUrl + (mimeToFilename[type] || 'file-generic.png');
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1642,14 +1705,22 @@ function updatePaneTitle(pane) {
         // Show the Javascript watermark if the language is JS.
         var showjs = (/javascript/.test(visibleMimeType));
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
-        label = '<div style="float:right" class="langmenu" title="Languages">' +
+        label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
                 '&nbsp;</div></div>'
               + label;
       }
     }
   } else if (paneState.links) {
-    label = 'directory';
+    if (paneState.path === '/') {
+      label = 'directory';
+    } else {
+      var icon = shouldShowThumb(paneState.path)?
+              '<i class="fa fa-th-large"></i>' :
+              '<i class="fa fa-align-left"></i>';
+      label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">'
+            + icon + '</div>directory';
+    }
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
@@ -1670,6 +1741,81 @@ function updatePaneTitle(pane) {
   $('#' + pane).toggleClass('textonly', textonly);
 }
 
+function getShowThumb() {
+  var showThumb;
+  try {
+    // `JSON.parse` might throw SyntaxError if undefined or malformed.
+    showThumb = JSON.parse(window.localStorage.showThumb);
+    // Prevent error when `window.localStorage.showThumb` is malformed.
+    if (typeof showThumb !== 'object') {
+      throw 'Malformed data.';
+    }
+  } catch (e) {
+    // When encounters errors just initialize `showThumb` to empty object.
+    showThumb = {};
+  }
+  return showThumb;
+}
+
+function setShowThumb(showThumb) {
+  try {
+    window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
+  } catch (e) {
+    console.log('Set showThumb failed. Error: ' + e);
+  }
+}
+
+function shouldShowThumb(path) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Disable on user listing.
+    return false;
+  } else {
+    var showThumb = getShowThumb();
+
+    var show = true;
+    for (var i = 0; i < layers.length; i++) {
+      // If no setting just show thumbnails by default.
+      // This loop will set show to the closest parent's setting.
+      if (showThumb[layers[i]] === undefined) {
+        return show;
+      } else if (showThumb[layers[i]]['.show']) {
+        show = true;
+      } else {
+        show = false;
+      }
+      // cd into the subfolder and continue the loop.
+      showThumb = showThumb[layers[i]];
+    };
+    return show;
+  }
+}
+
+function setShouldShowThumb(path, shouldShow) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Do not allow setting on user listing.
+    return;
+  } else {
+    var showThumb = getShowThumb();
+
+    var current = showThumb;
+    for (var i = 0; i < layers.length; i++) {
+      if (current[layers[i]] === undefined) {
+        current[layers[i]] = {};
+        // Use a '.show' attribute to indicate the setting for the current
+        // directory because it is an illegal filename, so it will not
+        // conflict with the name of the any subfolders if there exist.
+        current[layers[i]]['.show'] = true;
+      }
+      // cd into the subfolders and continue the loop.
+      current = current[layers[i]];
+    }
+    // Finally, set the setting for current directory.
+    current['.show'] = shouldShow;
+    // Write `showThumb` back into localStorage, not `current`.
+    setShowThumb(showThumb);
+  }
+}
+
 $('.panetitle').on('click', '.fullscreen', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
@@ -1687,6 +1833,16 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
   showPaneEditorLanguagesDialog(pane);
+});
+
+$('.panetitle').on('click', '.thumb-toggle', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  var path = state.pane[pane].path;
+  var showThumb = shouldShowThumb(path);
+  e.preventDefault();
+  setShouldShowThumb(path, !showThumb);
+  updatePaneLinks(pane);
+  updatePaneTitle(pane);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {
@@ -3064,4 +3220,3 @@ window.fontloader = fontloader;
 return window.pencilcode.view;
 
 });
-

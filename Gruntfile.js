@@ -167,7 +167,8 @@ module.exports = function(grunt) {
         options: { compress: true },
         files: {
           "content/welcome.css": "content/src/welcome.less",
-          "content/editor.css": "content/src/editor.less"
+          "content/editor.css": "content/src/editor.less",
+          "content/lib/font-awesome.css": "content/lib/font-awesome/font-awesome.less"
         }
       }
     },
@@ -278,7 +279,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-imagemin');
+  // Load slow imagemin tasks only when "imagemin" is explicitly specified.
+  if (process.argv.indexOf('imagemin') >= 0) {
+    grunt.loadNpmTasks('grunt-contrib-imagemin');
+  }
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-uglify');
