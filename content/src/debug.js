@@ -31,7 +31,7 @@ var isLoop = false;
 var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
-var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
+var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck.c
 
 Error.stackTraceLimit = 20;
 
@@ -136,9 +136,8 @@ var debug = window.ide = {
 
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
    // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
-
     view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
-   // console.log(screenshots);
+   console.log("NOTICE TURTLE", turtle_screenshots);
     prevLoc = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -221,9 +220,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
-      var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle[0];
+      var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
       var turtle_ctx = turtle_canvas.getContext('2d')
-      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
+      var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
       turtle_screenshots.push(turtle_data);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
@@ -249,9 +248,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData)
-         var turtle_ctx = turtle_canvas.getContext('2d')
-      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
-      turtle_screenshots.push(turtle_data);
+        var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
+        var turtle_ctx = turtle_canvas.getContext('2d')
+        var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
+        turtle_screenshots.push(turtle_data);
         traceLine(currentLine);
         console.log("Event Tracing: ", currentLine);
         tracedLine = currentLine;
@@ -312,10 +312,10 @@ function end_program(){
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     screenshots.push(imageData)
-     var turtle_ctx = turtle_canvas.getContext('2d')
-      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
-      turtle_screenshots.push(turtle_data);
-    console.log(screenshots);
+    var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
+    var turtle_ctx = turtle_canvas.getContext('2d')
+    var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
+    turtle_screenshots.push(turtle_data);
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex

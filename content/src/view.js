@@ -270,7 +270,7 @@ function create_some(traceevents, loop, screenshots, turtle_screenshots){
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
-        var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle[0];
+        var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
         turtledrawCtx = turtle_canvas.getContext('2d');
         turtledrawCtx.putImageData(turtle_screenshots[ui.value], 0, 0);
         var prevno = traceevents[present_line].location.first_line;
