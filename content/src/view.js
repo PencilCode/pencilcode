@@ -81,6 +81,7 @@ var state = {
   subscribers: [],
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
+  showing_arrow: false,
   pane: {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
@@ -2136,9 +2137,9 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" share="10">',
+    '<div class="hpanel scrubbermark" share="10" >',
     '</div>',
-    '<div class="hpanel cssmark" style="display:none" share="25">',
+    '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
     '<div class="hpanel htmlmark" style="display:none" share="25">',
     '</div>'
@@ -3002,6 +3003,12 @@ function setupHpanelBox(box) {
     });
   });
 }
+
+$('.arrow').on('click', function() {
+  arrow(null, false, null, null);
+  console.log("CLICKING");
+});
+
 function arrow(pane, show, prevLoc, currLoc){
   
   
@@ -3014,12 +3021,22 @@ function arrow(pane, show, prevLoc, currLoc){
     console.log("startcoords: ", startcoords);
     console.log("endCoords: ", endcoords);
 
-    var text = "<svg width=" + 500 + " height=" + 500 + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'> \
+    var x_val = 0;
+    if(startcoords.pageX > endcoords.pageX){
+      x_val = startcoords.pageX;
+    } else{
+      x_val = endcoords.pageX;
+    }
+
+    var offset_top = $(".editor").offset().top;
+    var offset_left = $(".editor").offset().left;
+
+    var text = "<svg width=" + $(".editor").width() + " height=" + $(".editor").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $(".editor").height() + $(".editor").width()+"'> \
     <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
      <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
     </marker> \
-    <path d='M" + (endcoords.pageX ) +","+ (endcoords.pageY - 64) + " \
-              A30,20 0 0,1 "+ (startcoords.pageX ) + "," + (startcoords.pageY - 64) + "' marker-start='url(#arrowhead)' \
+    <path d='M" + (x_val - offset_left + 3) +","+ (endcoords.pageY - (offset_top - 25)) + " \
+              A20,20 0 0,1 "+ (x_val - offset_left + 3) + "," + (startcoords.pageY - (offset_top - 25)) + "' marker-start='url(#arrowhead)' \
            style='stroke:black; fill:none;'/> \
     </svg> \
     "; 
@@ -3028,15 +3045,16 @@ function arrow(pane, show, prevLoc, currLoc){
     div.innerHTML = text;
     // div.style.visibility = 'visible';
     div.style.position = "absolute";
-    div.style.zIndex = "1";
+    div.style.zIndex = "2";
     div.style.left = "0px";
     div.style.top = "0px";
-    $(".hpanel").css({ height: "500px" })
-    $("#" + pane).append(div);
+    $(".editor").append(div);
+    showing_arrow = true;
   }
   else{
     var text = "";
     $(".arrow").remove();
+    showing_arrow = false;
   }
 }
 
