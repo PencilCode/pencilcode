@@ -134,8 +134,8 @@ it('should be able to run the program in javascript mode', function(done) {
       assert.ok(result.getxy[1] >= 100);
       assert.ok(result.touchesred);
       done();
-    });
   });
+});
 
 it('is done', function(done) {
   asyncTest(_page, one_step_timeout, null, function() {
