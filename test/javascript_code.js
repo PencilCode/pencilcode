@@ -50,27 +50,27 @@ describe('javascript editor', function() {
     _ph.exit();
   });
 
-it('should serve static editor HTML', function(done) {
-  // Visit the website of the user "livetest."
-  _page.open('http://aaa.pencilcode.net.dev/edit',
-      function(err, status) {
-    assert.ifError(err);
-    assert.equal(status, 'success');
-    _page.evaluate(function() {
-      // Inject a script that clears the login cookie for a clean start.
-      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-      // And also clear localStorage for this site.
-      localStorage.clear();
-    }, function(err) {
+  it('should serve static editor HTML', function(done) {
+    // Visit the website of the user "livetest."
+    _page.open('http://aaa.pencilcode.net.dev/edit',
+        function(err, status) {
       assert.ifError(err);
-      done();
+      assert.equal(status, 'success');
+      _page.evaluate(function() {
+        // Inject a script that clears the login cookie for a clean start.
+        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        // And also clear localStorage for this site.
+        localStorage.clear();
+      }, function(err) {
+        assert.ifError(err);
+        done();
+      });
     });
   });
-});
 
-it('should load code', function(done) {
-  // Navigate to see the editor for the program named "first".
-  _page.open('http://aaa.pencilcode.net.dev/edit/first',
+  it('should load code', function(done) {
+    // Navigate to see the editor for the program named "first".
+    _page.open('http://aaa.pencilcode.net.dev/edit/first',
       function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
@@ -93,7 +93,7 @@ it('should load code', function(done) {
     });
   });
 
-it('should be able to run the program in javascript mode', function(done) {
+  it('should be able to run the program in javascript mode', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle run button.
       $('#run').mousedown();
@@ -134,22 +134,22 @@ it('should be able to run the program in javascript mode', function(done) {
       assert.ok(result.getxy[1] >= 100);
       assert.ok(result.touchesred);
       done();
+    });
   });
-});
 
-it('is done', function(done) {
-  asyncTest(_page, one_step_timeout, null, function() {
-    // Final cleanup: delete local storage and the cookie.
-    localStorage.clear();
-    document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-  }, function() {
-    return {
-      cookie: document.cookie
-    };
-  }, function(err, result) {
-    assert.ifError(err);
-    assert.ok(!/login=/.test(result.cookie));
-    done();
+  it('is done', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Final cleanup: delete local storage and the cookie.
+      localStorage.clear();
+      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    }, function() {
+      return {
+        cookie: document.cookie
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(!/login=/.test(result.cookie));
+      done();
+    });
   });
-});
 });
