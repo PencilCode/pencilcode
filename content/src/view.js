@@ -81,6 +81,7 @@ var state = {
   subscribers: [],
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
+  showing_arrow: false,
   pane: {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
@@ -3002,6 +3003,12 @@ function setupHpanelBox(box) {
     });
   });
 }
+
+$('.arrow').on('click', function() {
+  arrow(null, false, null, null);
+  console.log("CLICKING");
+});
+
 function arrow(pane, show, prevLoc, currLoc){
   
   
@@ -3042,10 +3049,12 @@ function arrow(pane, show, prevLoc, currLoc){
     div.style.left = "0px";
     div.style.top = "0px";
     $(".editor").append(div);
+    showing_arrow = true;
   }
   else{
     var text = "";
     $(".arrow").remove();
+    showing_arrow = false;
   }
 }
 
