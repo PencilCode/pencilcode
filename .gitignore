@@ -1,4 +1,5 @@
 .svn
+.DS_Store
 node_modules
 bower_components
 wsgi/config.pyc
