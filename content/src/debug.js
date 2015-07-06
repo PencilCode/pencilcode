@@ -29,6 +29,7 @@ var prevLoc = null;
 var eventQueue = [];          //list of events in order to maintain proper tracing 
 var isLoop = false;
 var screenshots = [];
+var turtle_screenshots = [];
 
 Error.stackTraceLimit = 20;
 
@@ -132,7 +133,7 @@ var debug = window.ide = {
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
    // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
 
-    view.create_some(traceEvents, isLoop, screenshots);
+    view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
    // console.log(screenshots);
     prevLoc = lineno;
     record.line = lineno;
@@ -197,6 +198,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
+      var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle[0];
+      var turtle_ctx = turtle_canvas.getContext('2d')
+      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
+      turtle_screenshots.push(turtle_data);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -221,6 +226,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData)
+         var turtle_ctx = turtle_canvas.getContext('2d')
+      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
+      turtle_screenshots.push(turtle_data);
         traceLine(currentLine);
         console.log("Event Tracing: ", currentLine);
         tracedLine = currentLine;
@@ -277,6 +285,9 @@ function end_program(){
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     screenshots.push(imageData)
+     var turtle_ctx = turtle_canvas.getContext('2d')
+      var turtle_data = ctx.getImageData(0,0,canvas.width, canvas.height);
+      turtle_screenshots.push(turtle_data);
     console.log(screenshots);
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!

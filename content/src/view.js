@@ -238,7 +238,7 @@ function paneid(position) {
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents, loop, screenshots){
+function create_some(traceevents, loop, screenshots, turtle_screenshots){
   console.log(screenshots);
 
   var present_line = 0;
@@ -269,6 +269,9 @@ function create_some(traceevents, loop, screenshots){
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
+        var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle[0];
+        turtledrawCtx = turtle_canvas.getContext('2d');
+        turtledrawCtx.putImageData(turtle_screenshots[ui.value], 0, 0);
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
