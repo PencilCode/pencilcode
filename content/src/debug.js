@@ -38,10 +38,11 @@ function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
-  debugRecordsByDebugId = {}; 
+  debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
+  stuckTime = null;
   startPollingWindow();
 }
 
