@@ -67,7 +67,7 @@ function scanHtmlTop(html) {
 
 // The job of this function is to take: HTML, CSS, and script content,
 // and merge them into one HTML file.
-function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
+function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Construct the HTML for running a program.
   var meta = effectiveMeta(doc.meta);
   var html = meta.html || '';
@@ -169,17 +169,36 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
     maintype = doc.meta.type;
   }
   var seeline = '\n\n';
-  var trailing = '\n';
-  if (/javascript/.test(maintype)) {
+  var originalLanguage = null;
+  if (/javascript/i.test(maintype)) {
     seeline = 'eval(this._start_ide_js_);\n\n';
+    originalLanguage = 'javascript';
   } else if (/coffeescript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_cs_)\n\n';
+    seeline = 'eval(this._start_ide_cs_);\n\n';
+    originalLanguage = 'coffeescript';
   }
-  var mainscript = '<script type="' + maintype + '">\n' + seeline;
+  var instrumented = false;
+  if (instrumenter) {
+    // Instruments the code for debugging, always producing javascript.
+    var newText = instrumenter(text, originalLanguage);
+    if (newText !== false) {
+      text = newText;
+      maintype = 'text/javascript';
+      instrumented = true;
+    }
+  }
+  var mainscript = seeline;
   if (!pragmasOnly) {
     mainscript += text;
   }
-  mainscript += trailing + '<\057script>';
+  if (instrumented && originalLanguage === 'coffeescript') {
+    // Wrap instrumented + compiled coffeescript in a closure, since that's how
+    // coffeescript programs are normally compiled. (We didn't compile it to be
+    // in a closure because the seeline needs to be in the same scope as the
+    // user's program.)
+    mainscript = '(function(){\n' + mainscript + '\n})();';
+  }
+  mainscript = '<script type="' + maintype + '">\n' + mainscript + '\n<\057script>';
   var result = (
     prefix.join('\n') +
     html +
@@ -195,10 +214,10 @@ function escapeHtml(s) {
 }
 
 function modifyForPreview(doc, domain,
-       filename, targetUrl, pragmasOnly, sScript) {
+       filename, targetUrl, pragmasOnly, sScript, instrumenter) {
   var mimeType = mimeForFilename(filename), text = doc.data;
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(doc, domain, pragmasOnly, sScript);
+    text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
     var safe = false;
@@ -283,7 +302,8 @@ function mimeForFilename(filename) {
     'css'  : 'text/css',
     'coffee' : 'text/coffeescript',
     'js'   : 'text/javascript',
-    'xml'  : 'text/xml'
+    'xml'  : 'text/xml',
+    'json' : 'text/json'
   }[filename.replace(/^.*\./, '')]
   if (!result) {
     result = 'text/x-pencilcode';

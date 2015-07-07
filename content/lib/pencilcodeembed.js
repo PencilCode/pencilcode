@@ -48,6 +48,7 @@
 //    console.log('load complete');
 //    pce.hideEditor();
 //    pce.hideMiddleButton();
+//    pce.hideToggleButton();
 //    pce.setReadOnly();
 //    pce.showNotification('Pay attention to the Turtle!');
 //    setTimeout(function(){
@@ -273,6 +274,11 @@
       return this.invokeRemote('beginRun', []);
     };
 
+    // interrupts a run in progress
+    proto.stopRun = function() {
+      return this.invokeRemote('stopRun', []);
+    };
+
     // brings up save UI
     proto.save = function(filename) {
       return this.invokeRemote('save', [filename]);
@@ -308,6 +314,16 @@
       return this.invokeRemote('showMiddleButton', []);
     };
 
+    // hides toggle button
+    proto.hideToggleButton = function() {
+      return this.invokeRemote('hideToggleButton', []);
+    };
+
+    // shows toggle button
+    proto.showToggleButton = function() {
+      return this.invokeRemote('showToggleButton', []);
+    };
+
     // show butter bar notification
     proto.showNotification = function(message) {
       return this.invokeRemote('showNotification', [message]);
@@ -321,6 +337,11 @@
     // shows block mode
     proto.setBlockMode = function(showBlocks) {
       return this.invokeRemote('setBlockMode', [showBlocks]);
+    };
+
+    // shows block mode
+    proto.setBlockOptions = function(palette, options) {
+      return this.invokeRemote('setBlockOptions', [palette, options]);
     };
 
     proto.eval = function(code, callback) {

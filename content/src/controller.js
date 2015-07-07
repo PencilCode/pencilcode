@@ -6,21 +6,27 @@ define([
   'jquery',
   'view',
   'storage',
+  'thumbnail',
   'debug',
   'filetype',
   'guide',
   'seedrandom',
   'see',
+  'pencil-tracer',
+  'iced-coffee-script',
   'draw-protractor'],
 function(
   $,
   view,
   storage,
+  thumbnail,
   debug,
   filetype,
   guide,
   seedrandom,
   see,
+  pencilTracer,
+  icedCoffeeScript,
   drawProtractor) {
 
 eval(see.scope('controller'));
@@ -261,6 +267,7 @@ function updateTopControls(addHistory) {
 //
 
 view.on('selectpalette', function(pane, palname) {
+  if (!palname) { palname = 'default'; }
   logEvent('~selectpalette', {name: palname.replace(/\s/g, '').toLowerCase()});
 });
 
@@ -333,7 +340,17 @@ view.on('share', function() {
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, doc);
+    if (!doc) {
+      // There is no editor on the left (or it is misbehaving) - do nothing.
+      console.log("Nothing to share.");
+      return;
+    } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+      var iframe = document.getElementById('output-frame');
+      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+    }
+    var data = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
@@ -477,7 +494,6 @@ $(window).on('beforeunload', function() {
     return "There are unsaved changes."
   }
 });
-
 
 view.on('logout', function() {
   model.username = null;
@@ -629,6 +645,11 @@ guide.on('session', function session(options) {
   }
   currentGuideSessionUrl = url;
   currentGuideSessionFilename = filename;
+  // Set up palette if requested.
+  if (options.palette || options.modeOptions) {
+    view.setPaneEditorBlockOptions(paneatpos('left'),
+         options.palette, options.modeOptions);
+  }
   // Look for session from localStorage
   var saved = localStorage.getItem('pcgs:' + url);
   if (saved) {
@@ -676,6 +697,10 @@ guide.on('session', function session(options) {
     mpp.loading = nextLoadNumber();
     mpp.running = false;
     view.setPaneEditorData(pane, doc, filename, mode);
+    if (options.palette || options.modeOptions) {
+      view.setPaneEditorBlockOptions(paneatpos('left'),
+           options.palette, options.modeOptions);
+    }
     updateTopControls();
   }
 });
@@ -724,14 +749,20 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
+  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    var iframe = document.getElementById('output-frame');
+    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
-  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var newdata = $.extend({
+    thumbnail: thumbnailDataUrl
+  }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
@@ -746,6 +777,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
+    // Flash the thumbnail after the control are updated.
+    view.flashThumbnail(thumbnailDataUrl);
   }
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
@@ -812,15 +845,57 @@ function signUpAndSave(options) {
     console.log("Nothing to save here.");
     return;
   }
-  var userList = [];
-  storage.loadUserList(function(list) {
-    if (list) {
-      userList = list;
-      // Hackish: trigger a keyup on the $('.username') field to force
-      // a revalidate after we have a userlist.
-      $('.username').trigger('keyup');
-    }
-  });
+
+  // updateUserSet will look up only one username at once.  It will:
+  // (1) wait until a query has been sitting for 500ms without being
+  //     superceded by a newer query; then it will kick off a server
+  //     request if the answer to the query isn't already known.
+  // (2) avoid kicking off another server request while one is in
+  //     progress and a hasn't returned yet, for up to 10 seconds.
+  // (3) it will restart the process after the server is done
+  //     if a new different query has come in the meantime.
+  var userSet = {};
+  var lastquery = null;
+  var delayTimer = null;
+  var queryTimer = null;
+  function updateUserSet(prefix) {
+    // Repeated queries have no effect.
+    if (lastquery == prefix) return;
+    lastquery = prefix;
+    // A new query will reset the delay timer.
+    clearTimeout(delayTimer);
+    delayTimer = null;
+    // There is no work if the answer is cached.
+    if (userSet.hasOwnProperty(lastquery)) { return; }
+    // Block if a server query is in progress.
+    if (queryTimer) { return; }
+    // Server work starts after a 500ms delay.
+    delayTimer = setTimeout(function() {
+      delayTimer = null;
+      var querying = lastquery;
+      var cancelled = false;
+      // When completed, unblock any newer query once.
+      var complete = function() {
+        if (!cancelled) {
+          cancelled = true;
+          clearTimeout(queryTimer);
+          queryTimer = null;
+          if (!userSet.hasOwnProperty(querying)) {
+            userSet[querying] = 'error';
+          }
+          // Hackish: trigger a keyup on the $('.username') field to force
+          // a revalidate after we have a userlist.
+          $('.username').trigger('keyup');
+          if (lastquery != querying) { updateUserSet(lastquery); }
+        }
+      };
+      // Block other requests for 10 seconds or until the server returns.
+      queryTimer = setTimeout(complete, 10000);
+      // Update the userSet by querying the server.
+      storage.updateUserSet(querying, userSet, complete);
+    }, 500);
+  };
+
   view.showLoginDialog({
     prompt: options.prompt || 'Choose an account name to save.',
     rename: options.nofilename ? '' : (options.filename || mp.filename),
@@ -830,32 +905,25 @@ function signUpAndSave(options) {
     validate: function(state) {
       var username = state.username.toLowerCase();
       shouldCreateAccount = true;
-      for (var j = 0; j < userList.length; ++j) {
-        if (userList[j].name.toLowerCase() == username) {
-          if (userList[j].reserved) {
-            return {
-              disable: true,
-              info: 'Name "' + username + '" reserved.'
-            };
-          } else if (options.newonly) {
-            return {
-              disable: true,
-              info: 'Name "' + username + '" already used.'
-            };
-          } else {
-            shouldCreateAccount = false;
-            return {
-              disable: false,
-              info: 'Will log in as "' + username + '" and save.'
-            };
-          }
-        }
-      }
+      var instructions = {
+        disable: true,
+        info: 'Real names are <a target=_blank ' +
+           'href="//' + pencilcode.domain + '/privacy.html">' +
+           'not allowed</a>.' +
+           '<br>When using a Pencil Code account,' +
+           '<br><label>' +
+           'I agree to <a target=_blank ' +
+           'href="//' + pencilcode.domain + '/terms.html">' +
+           'the terms of service<label></a>.'
+      };
       if (username && !/^[a-z]/.test(username)) {
         return {
           disable: true,
           info: 'Username must start with a letter.'
         };
+      }
+      if (username.length < 3) {
+        return instructions;
       }
       if (username && username.length > 20) {
         return {
@@ -868,6 +936,40 @@ function signUpAndSave(options) {
           disable: true,
           info: 'Invalid username.'
         };
+      }
+      var status = 'unknown';
+      if (userSet.hasOwnProperty(username)) {
+        status = userSet[username];
+      }
+      if (status == 'reserved') {
+        return {
+          disable: true,
+          info: 'Name "' + username + '" reserved.'
+        };
+      } else if (status == 'user' && options.newonly) {
+        return {
+          disable: true,
+          info: 'Name "' + username + '" already used.'
+        };
+      } else if (status == 'user') {
+        shouldCreateAccount = false;
+        return {
+          disable: false,
+          info: 'Will log in as "' + username + '" and save.'
+        };
+      }
+      if (status == 'nouser' && options.oldonly) {
+        return {
+          disable: true,
+          info: 'Use an existing account.'
+        };
+      }
+      if (status == 'unknown') {
+        updateUserSet(username);
+        return instructions;
+      }
+      if (username.length < 4) {
+        return instructions;
       }
       if (username && letterComplexity(username) <= 1) {
         // Discourage users from choosing a username "aaaaaa".
@@ -893,30 +995,23 @@ function signUpAndSave(options) {
           info: 'Name should not start with pencil.'
         };
       }
-      if (options.oldonly) {
-        return {
-          disable: true,
-          info: 'Use an existing account.'
-        };
-      }
-      if (state.username.length < 4) {
-        return {
-          disable: true,
-          info: 'Real names are <a target=_blank ' +
-             'href="//' + pencilcode.domain + '/privacy.html">' +
-             'not allowed</a>.' +
-             '<br>When using a Pencil Code account,' +
-             '<br><label>' +
-             'I agree to <a target=_blank ' +
-             'href="//' + pencilcode.domain + '/terms.html">' +
-             'the terms of service<label></a>.'
-        };
-      }
       if (!options.nofilename && !state.rename) {
         return {
           disable: true,
           info: 'Choose a file name.'
         }
+      }
+      if (status == 'error') {
+        // Return a generic message when we can't determine
+        // the status of the account.
+        return {
+          disable: false,
+          info: 'Will use ' + username +
+              '.' + window.pencilcode.domain + '.' +
+               '<br>When using a Pencil Code account,' +
+               '<br>I agree to <a target=_blank ' +
+               'href="/terms.html">the terms of service</a>.'
+        };
       }
       return {
         disable: false,
@@ -1228,7 +1323,14 @@ function handleDirLink(pane, linkname) {
     rotateModelLeft(true);
     return;
   }
-  var openfile = base + linkname.replace(/\/$/, '');
+  var openfile;
+  if (linkname == '#reload') {
+    openfile = base;
+    loadFileIntoPosition('left', openfile, true, true, function() {});
+    return;
+  } else {
+    openfile = base + linkname.replace(/\/$/, '');
+  }
   var isdir = /\/$/.test(linkname);
   loadFileIntoPosition('right', openfile, isdir, isdir,
     function() { rotateModelLeft(true); });
@@ -1239,7 +1341,7 @@ view.on('linger', function(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
   if (base.length) { base += '/'; }
-  if (linkname == '#new') {
+  if (/^#/.test(linkname)) {
     return;
   }
   var openfile = base + linkname.replace(/\/$/, '');
@@ -1690,6 +1792,31 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
+function instrumentCode(code, language) {
+  if (language === 'javascript') {
+    // TODO: support javascript
+  } else if (language === 'coffeescript') {
+    try {
+      options = {
+        traceFunc: 'ide.trace',
+        sourceMap: true,
+        bare: true
+      };
+      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+      debug.setSourceMap(result.v3SourceMap);
+      code = result.js;
+    } catch (err) {
+      // An error here means that either the user's code has a syntax error, or
+      // pencil-tracer has a bug. Returning false here means the user's code
+      // will run directly, without the debugger, and then if there's a syntax
+      // error it will be displayed to them, and if it's a pencil-tracer bug,
+      // their code will still run but with the debugger disabled.
+      return false;
+    }
+  }
+  return code;
+}
+
 function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
@@ -1704,7 +1831,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
-      emptyOnly, model.setupScript)
+      emptyOnly, model.setupScript, instrumentCode);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1828,7 +1955,20 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
 };
 
 function sortByDate(a, b) {
-  return b.mtime - a.mtime;
+  if (b.mtime != a.mtime) {
+    return b.mtime - a.mtime;
+  }
+  return sortByName(a, b);
+}
+
+function sortByName(a, b) {
+  if (a.name < b.name) {
+    return -1;
+  }
+  if (a.name > b.name) {
+    return 1;
+  }
+  return 0;
 }
 
 function renderDirectory(position) {
@@ -1839,27 +1979,62 @@ function renderDirectory(position) {
   var filenameslash = filename.length ? filename + '/' : '';
   // TODO: fix up visible URL to ensure slash.
   var links = [];
-  for (var j = 0; j < m.list.length; ++j) {
-    var label = m.list[j].name;
-    if (model.ownername === '' && filename === '') {
-      if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = '//' + label + '.' + window.pencilcode.domain + '/edit/';
-      links.push({html:label, href:href, mtime:m.list[j].mtime});
+  if (!m.list) {
+    links.push({
+      html: m.error || 'Network error',
+      link: '#reload'
+    });
+  } else {
+    for (var j = 0; j < m.list.length; ++j) {
+      var name = m.list[j].name;
+      if (model.ownername === '' && filename === '') {
+        if (m.list[j].mode.indexOf('d') < 0) { continue; }
+        var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
+        links.push({
+          name: name,
+          href: href,
+          type: 'user',
+          mtime: m.list[j].mtime
+        });
+      } else {
+        var thumbnail = '';
+        if (m.list[j].thumbnail) {  // If there is a thumbnail for the file.
+          // Construct the url to the thumbnail.
+          // Append mtime so that when program updates, thumb gets refetched.
+          thumbnail = '/thumb/' + filenameslash + name +
+                      '.png?' + m.list[j].mtime;
+        }
+        var type = 'dir';
+        if (m.list[j].mode.indexOf('d') >= 0) {
+          name += '/';
+        } else {
+          type = filetype.mimeForFilename(name).replace(/;.*$/, '');
+        }
+        var href = '/home/' + filenameslash + name;
+        links.push({
+            name: name,
+            link: name,
+            href: href,
+            type: type,
+            thumbnail: thumbnail,
+            mtime: m.list[j].mtime
+        });
+      }
+    }
+    if (mpp.bydate) {
+      links.sort(sortByDate);
     } else {
-      if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-      var href = '/home/' + filenameslash + label;
-      links.push({html:label, link:label, href:href, mtime:m.list[j].mtime});
+      links.sort(sortByName);
+    }
+    if (model.ownername !== '') {
+      links.push({
+          name: 'New file',
+          type: 'new',
+          link: '#new'
+      });
     }
   }
-  if (mpp.bydate) {
-    links.sort(sortByDate);
-  }
-  if (model.ownername !== '') {
-    links.push({html:''});
-    links.push({html:'<nobr class="create">Create new file</nobr>',
-        link:'#new'});
-  }
-  view.setPaneLinkText(pane, links, filename);
+  view.setPaneLinkText(pane, links, filename, model.ownername);
   updateTopControls(false);
 }
 
@@ -2035,13 +2210,20 @@ $(window).on('message', function(e) {
       evalAndPostback(data.requestid, data.args[0]);
       break;
     case 'beginRun':
-      view.run();
+      view.fireEvent('run', []);
+      break;
+    case 'stopRun':
+      view.fireEvent('stop', []);
       break;
     case 'save':
       signUpAndSave({filename:data.args[0]});
       break;
     case 'setBlockMode':
       view.setPaneEditorBlockMode(paneatpos('left'), data.args[0]);
+      break;
+    case 'setBlockOptions':
+      view.setPaneEditorBlockOptions(
+          paneatpos('left'), data.args[0], data.args[1]);
       break;
     case 'hideEditor':
       view.hideEditor(paneatpos('left'));
@@ -2056,6 +2238,12 @@ $(window).on('message', function(e) {
     case 'showMiddleButton':
       view.canShowMiddleButton = true;
       view.showMiddleButton('run');
+      break;
+    case 'hideToggleButton':
+      view.showToggleButton(false);
+      break;
+    case 'showToggleButton':
+      view.showToggleButton(true);
       break;
     case 'setEditable':
       view.setPaneEditorReadOnly(paneatpos('left'), false);

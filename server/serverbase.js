@@ -9,6 +9,7 @@ var express = require('express'),
     utils = require('./utils.js');
 
 exports.initialize = function(app) {
+  // Remove the express header.
   app.disable('x-powered-by');
 
   // Remap any relative directories in the config to base off __dirname
@@ -60,17 +61,20 @@ exports.initialize = function(app) {
 };
 
 exports.initialize2 = function(app) {
+  // Always provide open CORS headers.
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('X-XSS-Protection', '0');
     next();
   });
 
+  // Consume urlencoded input.
   app.use(bodyParser.urlencoded({
     extended: false,
     limit: '10mb'
   }));
 
+  // Delegate /load and /save
   app.use('/load', function(req, res) {
     load.handleLoad(req, res, app, 'json');
   });
@@ -89,21 +93,34 @@ exports.initialize2 = function(app) {
   }
   function userDataPrinter(style) {
     return function (req, res, next) {
-      // if (!/(?:\.(?:js|css|html|txt|xml|json|png|gif|jpg|jpeg|ico|bmp|pdf))$/.
       if (!/(?:\.(?:png|gif|jpg|jpeg|ico|bmp|pdf))$/.
           test(req.url)) {
+        // Text-like files can be printed nicely.
         load.handleLoad(req, res, app, style);
       }
       else {
+        // Non-text files are just treated as static.
         staticUserData(req, res, next);
       }
+    }
+  }
+  function loadThumb() {
+    return function(req, res, next) {
+      var user = res.locals.owner;
+      var pathname = url.parse(req.url).pathname;
+      if (user == null || !/\.png$/.test(pathname)) { next(); return; }
+      var thumbPath = utils.makeThumbPath(pathname.replace(/\.png$/, ''));
+      req.url = path.join('/', user, thumbPath);
+      rawUserData(req, res, next);
     }
   }
   app.use('/code', userDataPrinter('code'));
   app.use('/home', userDataPrinter('run'));
   app.use('/run', userDataPrinter('run'));
   app.use('/print', userDataPrinter('print'));
+  app.use('/thumb', loadThumb());
 
+  // Anything not matching a special top-level directory name
   if (config.dirs.staticdir) {
     if (config.servesrc) {
       app.use(express.static(path.join(config.dirs.staticdir, 'src')));
@@ -112,7 +129,7 @@ exports.initialize2 = function(app) {
   }
 
   app.get('*', function(req, res) {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('404 - ' + req.url);
   });
 

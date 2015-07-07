@@ -5,9 +5,10 @@
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
 <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:400|Source+Code+Pro:400,700">
-<link rel="stylesheet" type="text/css" href="welcome.css">
-<link rel="icon" sizes="192x192" href="/apple-touch-icon.png">
-<link rel="shortcut icon" sizes="16x16" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/welcome.css">
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/font-awesome.css">
+<link rel="icon" sizes="192x192" href="//<!--#echo var="site"-->/apple-touch-icon.png">
+<link rel="shortcut icon" sizes="16x16" href="//<!--#echo var="site"-->/favicon.ico" />
 <style>
 </style>
 <body>
@@ -72,7 +73,7 @@ Contribute to the development of Pencil Code at
 </div>
 <div class="loginblock">
 <label class="toggler">
-<span id=msg></span>&nbsp; <span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul></label>
+<span id=msg></span>&nbsp; <i class="fa fa-sign-in loginicon"></i> Login</ul></label>
 <label>Name: <input id=user></label>
 <label>Password: <input type=password id=pass></label>
 <label><button id=login disabled>Login <span id=asuser></span></button></label>
@@ -89,7 +90,7 @@ Contribute to the development of Pencil Code at
 </div>
 <div class="col-xs-6 vpadding">
 <!-- login bar -->
-<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><span class="glyphicon glyphicon-star newicon"></span> New Account<li class="btn btn-clear" style="opacity:0" id="showlogin"><span class="glyphicon glyphicon-log-in loginicon"></span> Login</ul>
+<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><i class="fa fa-star newicon"></i> New Account<li class="btn btn-clear" style="opacity:0" id="showlogin"><i class="fa fa-sign-in loginicon"></i> Login</ul>
 </div>
 </div>
 <!--# include file="promoline.html" -->
@@ -147,7 +148,7 @@ anything, <a href="/edit/myprogram">start on a blank page</a>.
 <ul class="list-inline spaced">
 <li><a href="//activity.pencilcode.net/">Printable Activities</a>
 <li><a href="//blog.pencilcode.net/">Pencil Code Blog</a>
-<li><a href="//dev.pencilcode.net/">Contributors</a>
+<li><a href="http://dev.pencilcode.net/">Contributors</a>
 </ul>
 </div>
 </div>
@@ -160,35 +161,34 @@ and copy.
 </div>
 </div>
 </body>
-<script>
-// Preload support.
-function loadusers(data) {
-  loadusers.data = data;
-  loadusers.callback && loadusers.callback(data);
-}
-loadusers.then = function(callback) {
-  if (loadusers.data) { callback(loadusers.data); }
-  else { loadusers.callback = callback; }
-}
-</script>
-<script src="/load/?callback=loadusers"></script>
 <script src="/lib/jquery.js"></script>
 <script src="/lib/jquery.autocomplete.min.js"></script>
 <script src="/lib/seedrandom.js"></script>
 <script>
 $(function() {
-loadusers.then(function(data) {
-  if (!data || data.directory != '/' || !data.list) return;
-  var users = data.list.filter(function(x) {
-      return /d/.test(x.mode); });
-  users.sort(function(a, b) { return b.mtime - a.mtime; });
-  var usernames = users.map(function(u) { return u.name; });
+
+(function() {
+  var usernames = {};
   $('#showlogin').css('opacity', 1);
   $('#user').on('change', validateUser);
   $('#user').autocomplete({
     autoSelectFirst: true,
     triggerSelectOnValidInput: false,
-    lookup: usernames,
+    serviceUrl: '/load/',
+    paramName: 'prefix',
+    preventBadQueries: false, // To allow exact-match probing.
+    params: { count: 12 },
+    transformResult: function(response) {
+      response = JSON.parse(response);
+      return {
+        suggestions: response.list.filter(function(item) {
+          return item.mode.indexOf('d') >= 0;
+        }).map(function(item) {
+          usernames[item.name] = true;
+          return { value: item.name }
+        })
+      };
+    },
     forceFixPosition: true,
     onSelect: function() { validateUser(); setTimeout(function() {
       if (!document.activeElement ||
@@ -199,7 +199,7 @@ loadusers.then(function(data) {
   });
   function validateUser(e) {
     var user = $('#user').val().toLowerCase().trim();
-    var found = usernames.indexOf(user) >= 0;
+    var found = usernames.hasOwnProperty(user);
     $('#asuser').text(found ? ' as ' + user : '');
     $('#login').prop('disabled', !found);
     return true;
@@ -244,7 +244,8 @@ loadusers.then(function(data) {
       $('#msg').text('Network error.');
     });
   }
-});
+})();
+
 // Demo Animation
 var index = 0;
 var count = 3;

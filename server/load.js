@@ -4,38 +4,79 @@ var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
 var filemeta = require('./filemeta');
+var DirCache = require('./dircache').DirCache;
+
+var globalRootDirCache = {};
+
+// Do not serve cached content older than 5 minutes.
+var maxDirCacheAge = 5 * 60 * 1000;
+
+// Rebuild cache in background after serving data older than 1 minute.
+var autoRebuildCacheAge = 1 * 60 * 1000;
+
+// Serve at most 600 usernames at a time from root directory.
+var maxRootDirEntries = 600;
+
+function getRootDirCache(dir) {
+  var dircache = globalRootDirCache[dir]
+  if (!dircache) {
+    dircache = new DirCache(dir);
+    globalRootDirCache[dir] = dircache;
+  }
+  return dircache;
+}
 
 exports.handleLoad = function(req, res, app, format) {
-  var filename = req.param('file', utils.filenameFromUri(req));
-  var callback = req.param('callback', null);
-  var tail = req.param('tail', null);
+  var filename = utils.filenameFromUri(req);
+  var callback = utils.param(req, 'callback');
   var user = res.locals.owner;
   var origfilename = filename;
-
-  tail = parseInt(tail);
-  if (Number.isNaN(tail)) {
-    tail = null;
-  }
 
   if (filename == null) {
     filename = '';
   }
 
   try {
+    // The root listing, which lists all users,
+    // is handled differently from other requests.
     var isrootlisting = !user && filename == '' && format == 'json';
-
     if (isrootlisting) {
-      try {
-        // Try the cache first if it exists
-        var data = fsExtra.readJsonSync(utils.getRootCacheName(app, res));
-
+      var prefix = utils.param(req, 'prefix') || '';
+      var count = Math.max(maxRootDirEntries,
+          utils.param(req, 'count') || maxRootDirEntries);
+      // Grab the dir cache object for this root directory path.
+      var dircache = getRootDirCache(app.locals.config.dirs.datadir);
+      if (dircache.age() > maxDirCacheAge) {
+        // A very-old or never-built cache must be rebuilt before serving.
+        dircache.rebuild(sendCachedResult);
+      } else if (prefix) {
+        // When a specific prefix is requested, probe for an exact match.
+        dircache.update(prefix, sendCachedResult);
+      } else {
+        // Fresh cache without prefix: just send the cached result.
+        sendCachedResult(true);
+      }
+      function sendCachedResult(ok) {
+        var data;
+        if (!ok) {
+          data = {error: "Could not read file /"};
+        } else {
+          data = {
+            directory: "/",
+            list: dircache.readPrefix(prefix, count),
+            auth: false
+          };
+          // If the cache was sort-of-old, kick off an early rebuild.
+          if (dircache.age() > autoRebuildCacheAge) {
+            // No callback needed.
+            dircache.rebuild(null);
+          }
+        }
         res.set('Cache-Control', 'must-revalidate');
         res.set('Content-Type', 'text/javascript');
-
         res.jsonp(data);
-        return;
       }
-      catch (e) { }
+      return;
     }
 
     // Validate username
@@ -56,10 +97,10 @@ exports.handleLoad = function(req, res, app, format) {
       }
     }
 
-    var absfile = utils.makeAbsolute(filename, app, res);
+    var absfile = utils.makeAbsolute(filename, app);
 
     if (format == 'json') {
-      var haskey = userhaskey(user, app, res);
+      var haskey = userhaskey(user, app);
 
       // Handle the case of a file that's present
       if (utils.isPresent(absfile, 'file')) {
@@ -98,10 +139,6 @@ exports.handleLoad = function(req, res, app, format) {
         var jsonRet =
           {'directory': '/' + filename, 'list': list, 'auth': haskey};
 
-        // Write to cache if this is a top dir listing
-        if (isrootlisting) {
-          fsExtra.outputJsonSync(utils.getRootCacheName(app, res), jsonRet);
-        }
         res.set('Cache-Control', 'must-revalidate');
         res.jsonp(jsonRet);
         return;
@@ -284,7 +321,7 @@ exports.handleLoad = function(req, res, app, format) {
         if (extIdx > 0) {
           var ext = filename.substring(extIdx + 1);
           if (ext == 'htm' || ext == 'html' || ext == 'js' || ext == 'css') {
-            text += '<a href="/edit/' + origfilename + '"> rel="nofollow">Create /home/' + origfilename + '</a>\n';
+            text += '<a href="/edit/' + origfilename + '" rel="nofollow">Create /home/' + origfilename + '</a>\n';
           }
         }
         text += '</pre>\n';
@@ -390,21 +427,26 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({name: contents[i],
-         mode: modestr,
-         size: statObj.size,
-         mtime: mtime});
+    var absthumb = utils.makeThumbPath(item);
+
+    list.push({
+      name: contents[i],
+      thumbnail: fs.existsSync(absthumb),   // whether there is a thumbnail
+      mode: modestr,
+      size: statObj.size,
+      mtime: mtime
+    });
   }
 
   return list;
 }
 
-function userhaskey(user, app, res) {
+function userhaskey(user, app) {
   if (!user) {
     return false;
   }
 
-  var keydir = utils.getKeyDir(user, app, res);
+  var keydir = utils.getKeyDir(user, app);
 
   if (!utils.isPresent(keydir, 'dir')) {
     return false;

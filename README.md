@@ -1,13 +1,14 @@
 How To Build and Test PencilCode
 ================================
 [![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)
-First install the prerequisites: git, nodejs, and grunt.  Then:
+First install the prerequisites: git, nodejs, and grunt. Next, be sure you're in your home directory. Then:
 
 <pre>
 git clone https://github.com/PencilCode/pencilcode.git
 cd pencilcode
 npm install
 grunt
+grunt devserver
 </pre>
 
 Development can be done on Linux, Mac, or Windows.
@@ -28,24 +29,25 @@ The Ubuntu and Debian packages for node.js are pretty old, so don't
 just apt-get install the packages.  Get and build the latest `node` and
 `npm` and `grunt` binaries as follows:
 
-(For Linux:)s
+(For Linux:)
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-wget -N http://nodejs.org/dist/v0.10.36/node-v0.10.36.tar.gz
-tar xzvf node-*.tar.gz && cd `ls -rd node-v*`
+wget -N http://nodejs.org/dist/node-latest.tar.gz
+tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
 echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.bashrc
 source ~/.bashrc
 npm install -g grunt-cli
 </pre>
+Zsh users should change `bashrc` to `zshrc` in the above code.
 
 (For Mac:)
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-curl http://nodejs.org/dist/v0.10.36/node-v0.10.36.tar.gz > node-latest.tar.gz
+curl http://nodejs.org/dist/node-latest.tar.gz > node-latest.tar.gz
 tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
 ./configure --prefix=$HOME/local
 make install
@@ -77,16 +79,18 @@ How To Experiment with PencilCode
 =================================
 
 To experiment with PencilCode, you will want to run a local
-copy of the site's frontend.
+copy of the site's frontend. Your webpage may appear in plain (rather ugly) text unless you run devchrome with your grunt devserver.
 
-To start the https version of the
-dev server (by default it runs on localhost:8008):
+To build and start the dev server (by default it runs on localhost:8008):
 
 <pre>
+devchrome
+bg %1
+grunt
 grunt devserver
 </pre>
 
-(Without the s it runs http instead of https.)
+(Use grunt sdevserver to run https instead of http.)
 
 To use the devserver, modify DNS resolution so *.pencilcode.net.dev points to
 localhost.  For example, with chrome on OSX, add a couple aliases to
@@ -95,7 +99,7 @@ your .profile by running the following:
 <pre>
 cat &gt;&gt; ~/.profile &lt;&lt;EOF
 alias chrome="/Applications/Google\\ \\Chrome.app/Contents/MacOS/Google\\ \\Chrome"
-alias devchrome="chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/"
+alias devchrome='chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/'
 EOF
 source ~/.profile
 </pre>
@@ -105,7 +109,7 @@ And then "devchrome" will launch an instance of Chrome with the right proxy.
 On Linux, add something like this to your .bashrc:
 
 <pre>
-alias devchrome="google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome --ignore-certificate-errors http://pencilcode.net.dev/"
+alias devchrome='google-chrome --host-resolver-rules="MAP *pencilcode.net.dev localhost:8008" --user-data-dir=$HOME/devchrome http://pencilcode.net.dev/'
 </pre>
 
 On Windows:
@@ -125,15 +129,15 @@ PencilCode Internals
 ====================
 
 The structure of pencilcode is really simple.
-* It is a single HTML file `site/top/editor.html` that does all the work
+* It is a single HTML file `content/src/editor.html` that does all the work.
   All `pencilcode.net/edit/...` URLs resolve to this static file.
 * The javascript behind editor.html is in the `src/` directory (symlink
-  to `site/top/src`).  These javascript files are combined and minified
-  into site/top/editor.js by the build.
+  to `content/src`).  These javascript files are combined and minified
+  into content/src/editor.js by the build.
 * The editor javascript does JSON requests to `pencilcode.net/load/...`
   and `pencilcode.net/save/...` to read and write actual data.
 * There are a bunch of other static files that can be found in
-  `site/top`.
+  `content`.
 
 JSON save and load
 ------------------
@@ -144,7 +148,7 @@ http://guide.pencilcode.net/load/ to see the JSON response for
 a directory listing.  To see the details of how /load/ and /save/
 work, see the code in site/wsgi.
 
-The production site is an nginx server, configured in `site/nginx_site.conf`.
+The production site is an nginx server, configured in `nginx/nginx_site.conf`.
 
 The devserver is simpler: it is a node.js proxy server.  When using
 the devserver, the proxy.pac will direct the requests to your local
@@ -165,7 +169,7 @@ The PencilCode editor is broken into three main pieces:
   we adapt it to use Google Drive for storage, the major work
   will be in this file.
 * `editor-view.js` is the UI for the development environement.
-  It knows how ot show directory listings, source code editors,
+  It knows how to show directory listings, source code editors,
   and framed run sandboxes.  Other UI affordances: login dialog
   box UI, a butter bar notification, and whizzy horizontal
   animated transitions.  The idea is that the view doesn't
@@ -186,9 +190,8 @@ Roadmap
 Improvements we'd like to make in PencilCode are in several basic
 directions:
 
-1. Better Debugging.  That means highlighting lines as they run,
-   ultimately giving kids the ability to stop and step programs,
-   and visualize their program state (their variables).
+1. Better Debugging.  That ultimately means giving kids the ability to stop
+   and step programs, and visualize their program state (their variables).
 2. A Block Language.  That means something like blockly, or maybe
    something new.  The goal is to make it easy to use on the tablet
    while also making it easy for beginners to quickly build

@@ -1,9 +1,10 @@
 {
-  "name": "pencilcode-site",
+  "name": "pencilcode",
   "version": "0.0.1",
   "description": "Website code and config for pencilcode.net.",
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "build": "grunt build"
   },
   "repository": {
     "type": "git",
@@ -16,25 +17,27 @@
   },
   "homepage": "https://github.com/PencilCode/pencilcode-site",
   "dependencies": {
+    "binary-search-bounds": "^1.0.0",
     "body-parser": "latest",
     "debug": "latest",
     "dynamic.io": "latest",
     "express": "latest",
-    "fs-ext": "latest",
+    "fs-ext": "^0.4.4",
     "fs-extra": "latest",
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
-    "tamper": "latest",
-    "url-template": "latest"
+    "tamper": "latest"
   },
   "devDependencies": {
     "chai": "latest",
     "grunt": "latest",
+    "mocha": "latest",
     "grunt-bowercopy": "latest",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-contrib-copy": "latest",
+    "grunt-contrib-imagemin": "latest",
     "grunt-contrib-less": "latest",
     "grunt-contrib-requirejs": "latest",
     "grunt-contrib-uglify": "latest",

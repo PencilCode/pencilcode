@@ -32,6 +32,7 @@ module.exports = function(grunt) {
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lib/lodash.js': 'lodash/dist/lodash.js',
+          'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/require.js': 'requirejs/require.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
           'lib/socket.io.js': 'socket.io-client/socket.io.js'
@@ -86,6 +87,7 @@ module.exports = function(grunt) {
           deps: ['src/editor-main'],
           name: 'lib/almond',
           out: 'content/editor.js',
+          useStrict: true,
           // optimize: 'none',
           mainConfigFile: 'content/src/editor-main.js',
           preserveLicenseComments: false
@@ -141,12 +143,26 @@ module.exports = function(grunt) {
         }
       }
     },
+    imagemin: {
+      dynamic: {
+        options: {
+          optimizationLevel: 7
+        },
+        files: [{
+          expand: true,
+          cwd: 'content/',
+          src: ['**/*.{png, jpg, gif}'],
+          dest: 'content/'
+        }]
+      }
+    },
     less: {
       all: {
         options: { compress: true },
         files: {
           "content/welcome.css": "content/src/welcome.less",
-          "content/editor.css": "content/src/editor.less"
+          "content/editor.css": "content/src/editor.less",
+          "content/lib/font-awesome.css": "content/lib/font-awesome/font-awesome.less"
         }
       }
     },
@@ -221,6 +237,11 @@ module.exports = function(grunt) {
           'server/*.json',
           'content/src/filetype.js' ],
         options: { spawn: false }
+      },
+      styles: {
+        files: ['content/src/*.less'],
+        tasks: ['less'],
+        options: { spawn: false }
       }
     },
     copy: {
@@ -252,6 +273,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-bowercopy');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  // Load slow imagemin tasks only when "imagemin" is explicitly specified.
+  if (process.argv.indexOf('imagemin') >= 0) {
+    grunt.loadNpmTasks('grunt-contrib-imagemin');
+  }
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -308,19 +333,20 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['bowercopy', 'sed']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
-      ['proxymessage', 'express:dev', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:dev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('sdevserver',
-      ['proxymessage', 'express:sdev', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:sdev', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:localtest', 'node-inspector:dev', 'watch']);
+      ['proxymessage', 'express:localtest', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
-  grunt.registerTask('build', ['requirejs', 'replace', 'builddate']);
+  grunt.registerTask('build',
+      ['requirejs', 'replace', 'uglify', 'less', 'builddate']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default',
-      ['requirejs', 'replace', 'uglify', 'less', 'builddate', 'test']);
+      ['build', 'test']);
 };
 

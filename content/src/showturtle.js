@@ -38,6 +38,6 @@
     delete ww._start_ide_cs_;
     delete ww._start_ide_js_;
   }
-  ww._start_ide_cs_ = 'window._start_ide_(eval(window.see.cs))';
-  ww._start_ide_js_ = 'window._start_ide_(eval(window.see.js))';
+  ww._start_ide_cs_ = 'this._start_ide_(eval(this.see.cs))';
+  ww._start_ide_js_ = 'this._start_ide_(eval(this.see.js))';
 })(window);

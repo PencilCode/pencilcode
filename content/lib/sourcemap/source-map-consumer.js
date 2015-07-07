@@ -163,12 +163,18 @@ define(function (require, exports, module) {
     };
 
   /**
-   * Returns all generated line and column information for the original source
-   * and line provided. The only argument is an object with the following
-   * properties:
+   * Returns all generated line and column information for the original source,
+   * line, and column provided. If no column is provided, returns all mappings
+   * corresponding to a either the line we are searching for or the next
+   * closest line that has any mappings. Otherwise, returns all mappings
+   * corresponding to the given line and either the column we are searching for
+   * or the next closest column that has any offsets.
+   *
+   * The only argument is an object with the following properties:
    *
    *   - source: The filename of the original source.
    *   - line: The line number in the original source.
+   *   - column: Optional. the column number in the original source.
    *
    * and an array of objects is returned, each with the following properties:
    *
@@ -177,14 +183,16 @@ define(function (require, exports, module) {
    */
   SourceMapConsumer.prototype.allGeneratedPositionsFor =
     function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
+      var line = util.getArg(aArgs, 'line');
+
       // When there is no exact match, BasicSourceMapConsumer.prototype._findMapping
       // returns the index of the closest mapping less than the needle. By
-      // setting needle.originalColumn to Infinity, we thus find the last
-      // mapping for the given line, provided such a mapping exists.
+      // setting needle.originalColumn to 0, we thus find the last mapping for
+      // the given line, provided such a mapping exists.
       var needle = {
         source: util.getArg(aArgs, 'source'),
-        originalLine: util.getArg(aArgs, 'line'),
-        originalColumn: 0
+        originalLine: line,
+        originalColumn: util.getArg(aArgs, 'column', 0)
       };
 
       if (this.sourceRoot != null) {
@@ -202,17 +210,40 @@ define(function (require, exports, module) {
       if (index >= 0) {
         var mapping = this._originalMappings[index];
 
-        // Iterate until either we run out of mappings, or we run into
-        // a mapping for a different line. Since mappings are sorted, this is
-        // guaranteed to find all mappings for the line we are searching for.
-        while (mapping && mapping.originalLine === needle.originalLine) {
-          mappings.push({
-            line: util.getArg(mapping, 'generatedLine', null),
-            column: util.getArg(mapping, 'generatedColumn', null),
-            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-          });
+        if (aArgs.column === undefined) {
+          var originalLine = mapping.originalLine;
 
-          mapping = this._originalMappings[++index];
+          // Iterate until either we run out of mappings, or we run into
+          // a mapping for a different line than the one we found. Since
+          // mappings are sorted, this is guaranteed to find all mappings for
+          // the line we found.
+          while (mapping && mapping.originalLine === originalLine) {
+            mappings.push({
+              line: util.getArg(mapping, 'generatedLine', null),
+              column: util.getArg(mapping, 'generatedColumn', null),
+              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+            });
+
+            mapping = this._originalMappings[++index];
+          }
+        } else {
+          var originalColumn = mapping.originalColumn;
+
+          // Iterate until either we run out of mappings, or we run into
+          // a mapping for a different line than the one we were searching for.
+          // Since mappings are sorted, this is guaranteed to find all mappings for
+          // the line we are searching for.
+          while (mapping &&
+                 mapping.originalLine === line &&
+                 mapping.originalColumn == originalColumn) {
+            mappings.push({
+              line: util.getArg(mapping, 'generatedLine', null),
+              column: util.getArg(mapping, 'generatedColumn', null),
+              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+            });
+
+            mapping = this._originalMappings[++index];
+          }
         }
       }
 
@@ -352,7 +383,7 @@ define(function (require, exports, module) {
       var index = 0;
       var cachedValues = {};
       var temp = {};
-      var mapping, str, values, end;
+      var mapping, str, values, end, value;
 
       while (index < length) {
         if (aStr.charAt(index) === ';') {
@@ -641,11 +672,13 @@ define(function (require, exports, module) {
       if (index >= 0) {
         var mapping = this._originalMappings[index];
 
-        return {
-          line: util.getArg(mapping, 'generatedLine', null),
-          column: util.getArg(mapping, 'generatedColumn', null),
-          lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-        };
+        if (mapping.source === needle.source) {
+          return {
+            line: util.getArg(mapping, 'generatedLine', null),
+            column: util.getArg(mapping, 'generatedColumn', null),
+            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+          };
+        }
       }
 
       return {

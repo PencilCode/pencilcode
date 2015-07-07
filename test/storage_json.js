@@ -1,7 +1,7 @@
 var http = require('http'),
     assert = require('assert');
 
-function get(user, path, onResult) {
+function get(user, path, enc, onResult) {
   var options = {
     host: '127.0.0.1',
     headers: { Host: (user ? user + '.' : '') + 'pencilcode.net.dev' },
@@ -10,7 +10,7 @@ function get(user, path, onResult) {
   };
   var req = http.get(options, function(res) {
     var output = '';
-    res.setEncoding('utf8');
+    res.setEncoding(enc);
     res.on('data', function (chunk) {
       output += chunk;
     });
@@ -25,7 +25,7 @@ function get(user, path, onResult) {
 }
 
 function json(user, path, onResult) {
-  get(user, path, function(status, data) {
+  get(user, path, 'utf8', function(status, data) {
     if (status >= 200 && status < 300) {
       onResult(status, JSON.parse(data));
     } else {
@@ -152,6 +152,69 @@ describe('test of server json apis', function() {
       });
     });
   });
+  var thumbData =
+    'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACAUlEQVRYw+2WPUhb' +
+    'URTHH7SDY8AOVfM1OYiDFMGtX9KlZLCjnRw7uHQV2klNmqR5CdbaxVZiQ6vSTRFC' +
+    '0S4i+LH4UZPBWB4RBCt9tkHqR+7fc555URMbheZdEfzD4cGD3N/vnnvuI4piUWwq' +
+    'bHYVv6l8iuwY8DASDhVZZxigZ5t8eBgHDoZTSZMohDtNuAyJf8GlSDC8thdr96LA' +
+    'g8FiuKUSJvwhgbW/R/UoJknCbHt9H7IM1nFUF5Hg+q8rWnjm7fFjgfMkcgKCvxNl' +
+    'HbiLSOTgBwRP8jpln/ZSEpbDS0nw7ZACP0uCBe5HjaGTAz8pwfDmj0BtD35IhZtn' +
+    'Xv8O4tLgUs/8Gn714RVBuOjHm5cC51SH4HWqQFNwO1XZiT9S4Rx7CBOeD1tA6gue' +
+    '9GvJGy+QlgbnuMJi/218SbBAZmEo0xj4qUmDV4XQyItqS+NGB7iefZ6dUToQtxxu' +
+    'tF9FoK5nLw/n2l0Z2X0+ODXd4NdXb3mRsQyea//i09jGKQGzdpaHd1rep7/ffIl1' +
+    'S+Ac3tnQtzlxloBZd4O/NLsV8JrX8LCAdzRRBOWZ8I0lhGdgi9ovQDdls6xwDv09' +
+    'HnbT4izRTRKfJudFKx1H3Zs9451LFfu08681IXTxx0opd5yq0AkAd0Tkp9wdyS5Q' +
+    'q19V+3FHsTrUAd6lTs/+2xE8ViTnEOOz7/iDE5YXAAAAAElFTkSuQmCC';
+  var thumb = 'data:image/png;base64,' + thumbData;
+  it('correctly creates the thumbnail when saving a file', function(done) {
+    // Create a new file
+    json('zzz', '/save/thumbtest?data=abcdefgh&thumbnail=' +
+        encodeURIComponent(thumb), function(s, obj) {
+      assert.equal(obj.saved, '/zzz/thumbtest');
+      get('zzz', '/thumb/thumbtest.png', 'base64', function(s, out) {
+        assert.equal(s, 200);  // Load thumbnail successfully
+        assert.equal(out, thumbData);
+        done();
+      });
+    });
+  });
+  it('correctly moves the thumbnail when moving a file', function(done) {
+    // Now move it
+    json('zzz', '/save/testthumb?source=zzz/thumbtest&mode=mv',
+         function(s, obj) {
+      get('zzz', '/thumb/testthumb.png', 'base64', function(s, out) {
+        assert.equal(s, 200);  // Thumbnail gets renamed too.
+        assert.equal(out, thumbData);
+        done();
+      });
+    });
+  });
+  it('correctly copies the thumbnail when copying a file', function(done) {
+    // Now copy it
+    json('zzz', '/save/testthumb2?source=zzz/testthumb',
+         function(s, obj) {
+      get('zzz', '/thumb/testthumb2.png', 'base64', function(s, out) {
+        assert.equal(s, 200);  // Thumbnail gets copied too.
+        assert.equal(out, thumbData);
+        done();
+      });
+    });
+  });
+  it('correctly deletes the thumbnail when deleting a file', function(done) {
+    json('zzz', '/save/testthumb?data=', function(s, obj) {
+      assert.equal(obj.deleted, 'zzz/testthumb');
+      get('zzz', '/thumb/testthumb.png', 'base64', function(s) {
+        assert.equal(s, 404);  // Thumbnail gets deleted too.
+        json('zzz', '/save/testthumb2?data=', function(s, obj) {
+          assert.equal(obj.deleted, 'zzz/testthumb2');
+          get('zzz', '/thumb/testthumb2.png', 'base64', function(s) {
+            assert.equal(s, 404);  // Another thumbnail gets deleted too.
+            done();
+          });
+        });
+      });
+    });
+  });
   it('correctly copies a file', function(done) {
     // Generate a new file name
     var filename = new Date().getTime();
@@ -165,6 +228,99 @@ describe('test of server json apis', function() {
     json('zzz', '/load/randomfile', function(s, obj) {
       assert.equal(obj.error, 'could not read file zzz/randomfile');
       assert.ok(obj.newfile);
+      done();
+    });
+  });
+  it('loads the root directory', function(done) {
+    json(null, '/load/', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.ok(obj.list.length > 0);
+      // Check for expected files
+      var expected = { aaa: 'drwx', bbb: 'drwx', callie: 'drwx',
+        calvin: 'drwx', carl: 'drwx', ccc: 'drwx', first: 'rw', intro: 'rw',
+        livetest: 'drwx', withpass: 'drwx', zzz: 'drwx' };
+      var count = 0;
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 11);
+      done();
+    });
+  });
+  it('loads the root with a short prefix', function(done) {
+    json(null, '/load/?prefix=c', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 4);
+      // Check for expected files
+      var count = 0;
+      var expected =
+          { callie: 'drwx', calvin: 'drwx', carl: 'drwx', ccc: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 4);
+      done();
+    });
+  });
+  it('loads the root with a prefix', function(done) {
+    json(null, '/load/?prefix=ca', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 3);
+      // Check for expected files
+      var count = 0;
+      var expected = { callie: 'drwx', calvin: 'drwx', carl: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 3);
+      done();
+    });
+  });
+  it('loads the root with a longer prefix', function(done) {
+    json(null, '/load/?prefix=cal', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 2);
+      // Check for expected files
+      var count = 0;
+      var expected = { callie: 'drwx', calvin: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 2);
+      done();
+    });
+  });
+  it('loads the root with an exact match', function(done) {
+    json(null, '/load/?prefix=carl', function(s, obj) {
+      assert.equal(obj.directory, '/');
+      assert.equal(obj.list.length, 1);
+      // Check for expected files
+      var count = 0;
+      var expected = { carl: 'drwx' };
+      for (var i = 0; i < obj.list.length; i++) {
+        if (expected.hasOwnProperty(obj.list[i].name)) {
+          assert.equal(obj.list[i].mode, expected[obj.list[i].name]);
+          assert.ok(obj.list[i].mtime > 0);
+          count += 1;
+        }
+      }
+      assert.equal(count, 1);
       done();
     });
   });
@@ -213,15 +369,15 @@ describe('test of server json apis', function() {
     });
   });
   it('loads a file from code', function(done) {
-    get('zzz', '/code/jsfile', function(s, data, res) {
+    get('zzz', '/code/jsfile', 'utf8', function(s, data, res) {
       assert.equal('alert("hello");', data);
       assert.equal(res.headers['content-type'], 'text/javascript; charset=utf-8');
       done();
     });
   });
   it('loads a file from home', function(done) {
-    get('zzz', '/home/jsfile', function(s, data) {
-      assert(/<script type="text\/javascript">[^<]*alert\("hello"\);[\s},0);]*<\/script>/.test(data), data);
+    get('zzz', '/home/jsfile', 'utf8', function(s, data) {
+      assert(/<script type="text\/javascript">[^<]*alert\("hello"\);[\s},0();]*<\/script>/.test(data), data);
       done();
     });
   });

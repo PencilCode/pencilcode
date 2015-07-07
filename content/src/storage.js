@@ -103,7 +103,7 @@ function isBackupPreferred(filename, m, preferUnsaved) {
 // to the domain so that users can bring up firewall UI for an expln.
 function networkErrorMessage(domain) {
   if (domain != window.location.hostname) {
-    return 'Test your connection to <a href="//' + domain +
+    return 'Test your connection to <br><a href="//' + domain +
         '/" target="_blank">' + domain + '</a>.';
   } else {
     return 'Network error.';
@@ -111,18 +111,32 @@ function networkErrorMessage(domain) {
 }
 
 window.pencilcode.storage = {
-  loadUserList: function(cb) {
-    $.getJSON('//' + window.pencilcode.domain + '/load/', function(m) {
+  updateUserSet: function(prefix, set, cb) {
+    prefix = prefix || '';
+    if (set.hasOwnProperty(prefix)) {
+      // If we already know about this username, do nothing.
+      cb(set);
+      return;
+    }
+    $.getJSON('//' + window.pencilcode.domain + '/load/',
+        { prefix: prefix, count: 12 }, function(m) {
       if (m && m.directory && m.list) {
-        var result = [];
         for (var j = 0; j < m.list.length; ++j) {
           var reserved = (m.list[j].mode.indexOf('d') < 0);
-          result.push({ name: m.list[j].name, reserved: reserved});
+          set[m.list[j].name] = reserved ? 'reserved' : 'user';
         }
-        cb(result);
+        if (!set.hasOwnProperty(prefix)) {
+          set[prefix] = 'nouser';
+        }
+        cb(set);
         return;
       }
-      cb(null);
+      cb(set);
+    }).fail(function() {
+      if (!set.hasOwnProperty(prefix)) {
+        set[prefix] = 'error';
+      }
+      cb(set);
     });
   },
   // Given a filename (no owner, leading, or trailing slash),
@@ -255,6 +269,9 @@ window.pencilcode.storage = {
     // Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
     var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
+    if (msg.thumbnail) {  // Send thumbnail data to server if it exists.
+      payload.thumbnail = msg.thumbnail;
+    }
     if (msg.mtime && !force) {
       payload.conditional = msg.mtime;
     }

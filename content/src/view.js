@@ -9,6 +9,7 @@ define([
   'see',
   'droplet',
   'palette',
+  'codescan',
   'draw-protractor',
   'ZeroClipboard',
   'FontLoader'
@@ -20,6 +21,7 @@ function(
   see,
   droplet,
   palette,
+  codescan,
   drawProtractor,
   ZeroClipboard,
   FontLoader
@@ -77,7 +79,7 @@ var state = {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
     charlie: initialPaneState()
-  },
+  }
 }
 
 var dropletMarkClassColors = {
@@ -101,8 +103,8 @@ window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { state.callbacks[tag] = cb; },
 
-  // start code execution
-  run: function(){ fireEvent('run', []); },
+  // Simulate firing of an event
+  fireEvent: function(event, args) { fireEvent(event, args); },
 
   // publish/subscribe for global events; all global events are broadcast
   // to the parent frames using postMessage() if we are iframed
@@ -125,6 +127,7 @@ window.pencilcode.view = {
   getPaneEditorData: getPaneEditorData,
   setPaneEditorBlockMode: setPaneEditorBlockMode,
   getPaneEditorBlockMode: getPaneEditorBlockMode,
+  setPaneEditorBlockOptions: setPaneEditorBlockOptions,
   getPaneEditorLanguage: getPaneEditorLanguage,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
@@ -161,6 +164,7 @@ window.pencilcode.view = {
   enableButton: enableButton,
   // Notifications
   flashNotification: flashNotification,
+  flashThumbnail: flashThumbnail,
   dismissNotification: dismissNotification,
   flashButton: flashButton,
   // Show login (or create account) dialog.
@@ -177,6 +181,9 @@ window.pencilcode.view = {
     } else {
       $('#middle').hide();
     }
+  },
+  showToggleButton: function(enable) {
+    $('body').toggleClass('notoggletab', !enable);
   },
   // Sets editable name.
   setNameText: function(s) {
@@ -217,11 +224,11 @@ function publish(method, args, requestid){
 }
 
 function paneid(position) {
-  return $('.' + position).filter('.pane').attr('id');
+  return $('.' + position).find('.pane').attr('id');
 }
 
 function panepos(id) {
-  return $('#' + id).attr('class').replace(/\s|pane/g, '');
+  return $('#' + id).closest('.panebox').attr('class').replace(/\s|panebox/g, '');
 }
 
 function initialPaneState() {
@@ -725,6 +732,20 @@ function showMiddleButton(which) {
   $('#middle button').tooltipster();
 }
 
+// Show thumbnail under the save button.
+function flashThumbnail(imageDataUrl) {
+  if (!imageDataUrl) { return; }
+  var tooltip = $('#save').tooltipster({
+    content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
+    multiple: true,
+    position: 'bottom',
+    theme: 'tooltipster-shadow',
+    timer: 3000,
+    trigger: 'custom'
+  })[0];
+  tooltip.show();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
@@ -734,18 +755,24 @@ function showShareDialog(opts) {
     opts = { };
   }
 
+  // Adds a protocol ('http:') to a string path if it does not yet have one.
   function addProtocol(path) {
     if (/^\w+:/.test(path)) { return path; }
     return 'http:' + path;
   }
 
-  bodyText = 'Check out this program that I created on http://pencilcode.net!\r\n\r\n';
-  bodyText = bodyText + 'Posted program: ' +
-     addProtocol(opts.shareStageURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Latest program: ' +
-     addProtocol(opts.shareRunURL) + '\r\n\r\n';
-  bodyText = bodyText + 'Program code: ' +
-     addProtocol(opts.shareEditURL) + '\r\n\r\n';
+  var newLines = '\r\n\r\n';
+  bodyText = 'Check out this program that I created on ' + window.pencilcode.domain
+     + newLines;
+  if (opts.shareStageURL) {
+    bodyText += 'Posted program: ' + addProtocol(opts.shareStageURL) + newLines;
+  }
+  if (opts.shareRunURL) {
+    bodyText += 'Latest program: ' + addProtocol(opts.shareRunURL) + newLines;
+  }
+  if (opts.shareEditURL) {
+    bodyText += 'Program code: ' + addProtocol(opts.shareEditURL) + newLines;
+  }
 
   subjectText = 'Pencilcode program: ' + opts.title;
 
@@ -758,6 +785,7 @@ function showShareDialog(opts) {
     embedText = '<iframe src="' + opts.shareRunURL + '" ' +
        'width="640" height="640" frameborder="0" allowfullScreen></iframe>';
   }
+
   opts.prompt = (opts.prompt) ? opts.prompt : 'Shared &#x2713;';
   opts.content = (opts.content) ? opts.content :
       '<div class="content">' +
@@ -1013,13 +1041,15 @@ function showLoginDialog(opts) {
         dialog.find('.rename').val(fixed);
       }
     });
-    // This timeout is added so that in the #new case where
-    // the dialog and ACE editor are competing for focus, the
-    // dialog wins.
-    dialog.find('input:not([disabled])').eq(0).select().focus();
-    setTimeout(function() {
+    function focusDialog() {
       dialog.find('input:not([disabled])').eq(0).select().focus();
-    }, 0);
+    }
+    focusDialog();
+    // This focusout handler is added so that in the #new case where the
+    // dialog and ACE editor are competing for focus, the dialog wins.
+    dialog.on('focusout', focusDialog);
+    // Stop doing this after 0.5 seconds.
+    setTimeout(function() { dialog.off('focusout'); }, 500);
   }
   opts.onkeydown = function(e, dialog, state) {
     if (e.which == 13) {
@@ -1070,6 +1100,10 @@ function setPreviewMode(shown, instant) {
   state.previewMode = shown;
 }
 
+function panelParts(name) {
+  return '#' + name + 'panebox';
+}
+
 function rotateLeft() {
   var idb = paneid('back');
   var idl = paneid('left');
@@ -1078,9 +1112,9 @@ function rotateLeft() {
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
   $('.back').animate({left: '50%'});
-  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('right');
-  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('left');
-  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('back');
+  $(panelParts(idb)).removeClass('back').addClass('right');
+  $(panelParts(idr)).removeClass('right').addClass('left');
+  $(panelParts(idl)).removeClass('left').addClass('back');
   setPrimaryFocus();
 }
 
@@ -1092,9 +1126,9 @@ function rotateRight() {
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
   $('.back').animate({left: 0});
-  $('#' + idb +',#' + idb + 'title').removeClass('back').addClass('left');
-  $('#' + idr +',#' + idr + 'title').removeClass('right').addClass('back');
-  $('#' + idl +',#' + idl + 'title').removeClass('left').addClass('right');
+  $(panelParts(idb)).removeClass('back').addClass('left');
+  $(panelParts(idr)).removeClass('right').addClass('back');
+  $(panelParts(idl)).removeClass('left').addClass('right');
   setPrimaryFocus();
 }
 
@@ -1124,6 +1158,7 @@ function setPaneRunHtml(
       var iframe = $('<iframe></iframe>').appendTo(p);
       // Destroy and create new iframe.
       iframe.attr('src', 'about:blank');
+      iframe.attr('id', 'output-frame');
       var framewin = iframe[0].contentWindow;
       var framedoc = framewin.document;
       framedoc.open();
@@ -1294,9 +1329,10 @@ var getScrollbarWidth = function() {
   return width;
 };
 
-function setPaneLinkText(pane, links, filename) {
+function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
+  paneState.path = ownername + '/' + filename;
   paneState.links = links;
   paneState.filename = filename;
   updatePaneLinks(pane);
@@ -1316,7 +1352,8 @@ $(window).on('resize.listing', function() {
 
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
-      tightwidth, item, directory, tag, colsdone, list;
+      tightwidth, item, figure, thumbnail, directory, colsdone, list;
+  var paneState = state.pane[pane];
   function fwidth(elem) {
     // Get the width, including fractional width.
     if (elem.getBoundingClientRect) {
@@ -1324,18 +1361,31 @@ function updatePaneLinks(pane) {
     }
     return $(elem).outerWidth();
   }
-  list = state.pane[pane].links;
+  list = paneState.links;
   if (!list) { return; }
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-  width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
+  // width is full directory width minus padding minus scrollbar width.
+  width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
-    tag = list[j].href ? 'a' : 'div';
-    item = $('<' + tag + ' class="item"'
-        + (list[j].href ? ' href="' + list[j].href + '" ' : '')
-        + '>' + list[j].html + '</' + tag + '>')
-        .appendTo(col);
+    item = $('<a/>', {
+      class: 'item' + (list[j].href ? '' : ' create'),
+      href: list[j].href
+    }).appendTo(col);
+    figure = $('<div/>').appendTo(item);
+    thumbnail = list[j].thumbnail;
+    // Only show thumbs if it is a supported type, and showThumb is enabled.
+    if (shouldShowThumb(paneState.path)) {
+      $('<img/>', {
+        class: 'thumbnail',
+        src: thumbnail || getDefaultThumbnail(list[j].type),
+        alt: list[j].name
+      }).appendTo(figure);
+      $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
+    } else {
+      $('<span/>', { text: list[j].name }).appendTo(figure);
+    }
     if (list[j].link) {
       item.data('link', list[j].link);
     }
@@ -1407,6 +1457,29 @@ function updatePaneLinks(pane) {
   });
 }
 
+function getDefaultThumbnail(type) {
+  var baseUrl = '//' + pencilcode.domain + '/image/';
+  var mimeToFilename = {
+    'dir'               : 'dir-128.png',
+    'new'               : 'new-128.png',
+    'image/jpeg'        : 'file-image.png',
+    'image/gif'         : 'file-image.png',
+    'image/png'         : 'file-image.png',
+    'image/svg+xml'     : 'file-image.png',
+    'image/x-ms-bmp'    : 'file-image.png',
+    'image/x-icon'      : 'file-image.png',
+    'text/html'         : 'file-html.png',
+    'text/plain'        : 'file-txt.png',
+    'text/css'          : 'file-css.png',
+    'text/coffeescript' : 'file-coffee.png',
+    'text/javascript'   : 'file-js.png',
+    'text/xml'          : 'file-xml.png',
+    'text/json'         : 'file-json.png',
+    'text/x-pencilcode' : 'file-pencil.png'
+  }
+  return baseUrl + (mimeToFilename[type] || 'file-generic.png');
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // ACE EDITOR SUPPORT
 ///////////////////////////////////////////////////////////////////////////
@@ -1441,6 +1514,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   paneState.lastChangeTime = 0;
   paneState.palette = null;
+  paneState.selfname = null;
   paneState.fullScreenLink = false;
   paneState.settingUp = null;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
@@ -1486,18 +1560,31 @@ function dropletModeForMimeType(mimeType) {
   return result;
 }
 
-function paletteForMimeType(mimeType) {
-  if (mimeType == 'text/x-pencilcode') return palette.COFFEESCRIPT_PALETTE;
-  if (mimeType == 'text/coffeescript') return palette.COFFEESCRIPT_PALETTE;
-  if (mimeType == 'text/javascript') return palette.JAVASCRIPT_PALETTE;
-  if (mimeType == 'application/x-javascript') return palette.JAVASCRIPT_PALETTE;
-  if (mimeType.replace(/;.*$/, '') == 'text/html') return palette.HTML_PALETTE;
+function paletteForPane(paneState, selfname) {
+  var mimeType = editorMimeType(paneState),
+      basePalette = paneState.palette;
+  if (!basePalette) {
+    if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
+      basePalette = palette.COFFEESCRIPT_PALETTE;
+    }
+    if (mimeType == 'text/javascript' ||
+        mimeType == 'application/x-javascript') {
+      basePalette = palette.JAVASCRIPT_PALETTE;
+    }
+    if (mimeType.replace(/;.*$/, '') == 'text/html') {
+      basePalette = palette.HTML_PALETTE;
+    }
+  }
+  if (basePalette) {
+    return palette.expand(basePalette, paneState.selfname);
+  }
   return [];
 }
 
 function dropletOptionsForMimeType(mimeType) {
   return {
-    functions: palette.KNOWN_FUNCTIONS
+    functions: palette.KNOWN_FUNCTIONS,
+    categories: palette.CATEGORIES
   };
 }
 
@@ -1505,12 +1592,10 @@ function uniqueId(name) {
   return name + '_' + ('' + Math.random()).substr(2);
 }
 
-var seenBlockToggle = false;
-
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var label = '';
-  var blockToggleTooltip = null;
+  var textonly = true;
   if (paneState.editor) {
     if (/^text\/plain/.test(paneState.mimeType)) {
       label = 'text';
@@ -1535,18 +1620,17 @@ function updatePaneTitle(pane) {
     } else {
       label = 'code';
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
+        textonly = false;
         symbol = 'codeicon'
         alt = 'show blocks'
-        blockToggleTooltip = 'Click to show blocks';
         if (paneState.dropletEditor.currentlyUsingBlocks) {
           label = 'blocks';
           alt = 'show code'
           symbol = 'blockicon';
-          blockToggleTooltip = 'Click to show code';
         }
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
-            paneState.filename + '" title="' + blockToggleTooltip +
-            '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
+            paneState.filename + '"><span class="' + symbol +
+            '"></span> <span alt="' + alt + '">' +
             '<span>' + label + '</span></span></a>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
@@ -1554,14 +1638,22 @@ function updatePaneTitle(pane) {
         // Show the Javascript watermark if the language is JS.
         var showjs = (/javascript/.test(visibleMimeType));
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
-        label = '<div style="float:right" class="langmenu" title="Languages">' +
+        label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
                 '&nbsp;</div></div>'
               + label;
       }
     }
   } else if (paneState.links) {
-    label = 'directory';
+    if (paneState.path === '/') {
+      label = 'directory';
+    } else {
+      var icon = shouldShowThumb(paneState.path)?
+              '<i class="fa fa-th-large"></i>' :
+              '<i class="fa fa-align-left"></i>';
+      label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">'
+            + icon + '</div>directory';
+    }
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
@@ -1578,28 +1670,82 @@ function updatePaneTitle(pane) {
       label = 'output';
     }
   }
-  var title = $('#' + pane + 'title_text').html(label).find('[title]').
-      tooltipster({ position: 'top-left' });
-  if (blockToggleTooltip && !seenBlockToggle) {
-    var toggler = title.filter('.toggleblocks');
-    if (toggler.length) {
-      toggler.find('.blockicon,.codeicon').css('opacity', 1);
-      var timer;
-      var canceler = function() {
-        seenBlockToggle = true;
-        toggler.find('.blockicon,.codeicon').css('opacity', '');
-        clearTimeout(timer);
-        timer = null;
-      }
-      toggler.tooltipster('option', 'functionAfter', canceler);
-      var timer = setTimeout(function() {
-        if (!$.contains(document.documentElement, toggler[0])) return;
-        toggler.tooltipster('show');
-        timer = setTimeout(function() {
-          toggler.tooltipster('hide');
-        }, 5000);
-      }, 5000);
+  $('#' + pane + 'title_text').html(label);
+  $('#' + pane).toggleClass('textonly', textonly);
+}
+
+function getShowThumb() {
+  var showThumb;
+  try {
+    // `JSON.parse` might throw SyntaxError if undefined or malformed.
+    showThumb = JSON.parse(window.localStorage.showThumb);
+    // Prevent error when `window.localStorage.showThumb` is malformed.
+    if (typeof showThumb !== 'object') {
+      throw 'Malformed data.';
     }
+  } catch (e) {
+    // When encounters errors just initialize `showThumb` to empty object.
+    showThumb = {};
+  }
+  return showThumb;
+}
+
+function setShowThumb(showThumb) {
+  try {
+    window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
+  } catch (e) {
+    console.log('Set showThumb failed. Error: ' + e);
+  }
+}
+
+function shouldShowThumb(path) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Disable on user listing.
+    return false;
+  } else {
+    var showThumb = getShowThumb();
+
+    var show = true;
+    for (var i = 0; i < layers.length; i++) {
+      // If no setting just show thumbnails by default.
+      // This loop will set show to the closest parent's setting.
+      if (showThumb[layers[i]] === undefined) {
+        return show;
+      } else if (showThumb[layers[i]]['.show']) {
+        show = true;
+      } else {
+        show = false;
+      }
+      // cd into the subfolder and continue the loop.
+      showThumb = showThumb[layers[i]];
+    };
+    return show;
+  }
+}
+
+function setShouldShowThumb(path, shouldShow) {
+  var layers = path.match(/[^\/]+/g);
+  if (!layers) { // Do not allow setting on user listing.
+    return;
+  } else {
+    var showThumb = getShowThumb();
+
+    var current = showThumb;
+    for (var i = 0; i < layers.length; i++) {
+      if (current[layers[i]] === undefined) {
+        current[layers[i]] = {};
+        // Use a '.show' attribute to indicate the setting for the current
+        // directory because it is an illegal filename, so it will not
+        // conflict with the name of the any subfolders if there exist.
+        current[layers[i]]['.show'] = true;
+      }
+      // cd into the subfolders and continue the loop.
+      current = current[layers[i]];
+    }
+    // Finally, set the setting for current directory.
+    current['.show'] = shouldShow;
+    // Write `showThumb` back into localStorage, not `current`.
+    setShowThumb(showThumb);
   }
 }
 
@@ -1622,10 +1768,83 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   showPaneEditorLanguagesDialog(pane);
 });
 
-$('.pane').on('click', '.closeblocks', function(e) {
+$('.panetitle').on('click', '.thumb-toggle', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  var path = state.pane[pane].path;
+  var showThumb = shouldShowThumb(path);
+  e.preventDefault();
+  setShouldShowThumb(path, !showThumb);
+  updatePaneLinks(pane);
+  updatePaneTitle(pane);
+});
+
+$('.pane').on('mousedown', '.blockmenu', function(e) {
+  // Do nothing if menu already showing.
+  if ($(this).find('.blockmenupopup').length) return;
+  var pane = $(this).closest('.pane').prop('id');
+  var paneState = state.pane[pane];
+  var data = getPaneEditorData(pane);
+  var overlay = $('<div style="position:fixed;top:0;right:0;left:0;bottom:0">');
+  overlay.appendTo(this);
+  var popup = $('<div class="blockmenupopup">');
+  var objs = codescan.scanObjects(getPaneEditorLanguage(pane), data.data);
+  for (var j = 0; j < objs.length; ++j) {
+    popup.append('<div class="blockmenuitem" ' +
+        (paneState.selfname == objs[j].name ? 'checked ' : '') +
+        'data-item="' + j + '">' +
+        '<img src="/image/turtleicon.png"> ' + objs[j].label + '</div>');
+  }
+  popup.append('<div class="blockmenuitem" ' +
+      (!paneState.selfname ? 'checked ' : '') + 'data-item="turtle">' +
+      'Use default blocks</div>');
+  popup.append('<div class="blockmenuitem" data-item="textcode">' +
+           'Show text code</div>');
+  popup.appendTo(this);
+
+  var moved = false;
+  var menu = this;
+  menu.setCapture && menu.setCapture(false);
+  $(window).on('mouseup mouseenter mouseleave', capturer);
+  function capturer(e) {
+    if (e.type == 'mouseleave') { moved = true; return; }
+    var item = $(e.target).closest('.blockmenuitem');
+    if (item.length) { moved = true; }
+    if (moved && e.type == 'mouseup') {
+      popup.remove();
+      overlay.remove();
+      $(window).off('mouseup mouseenter mouseleave', capturer);
+    }
+    moved = true;
+    if (item.length && e.type == 'mouseup') {
+      trigger(item.data('item'));
+    }
+  }
+  // Switch palette.
+  function trigger(item) {
+    if (item == 'textcode') {
+      setPaneEditorBlockMode(pane, false);
+    } else {
+      selfname = '';
+      if (/^\d+$/.test(item)) {
+        selfname = objs[Number(item)].name;
+      }
+      if (!paneState.dropletEditor) return;
+      paneState.selfname = selfname;
+      paneState.dropletEditor.setPalette(paletteForPane(paneState));
+    }
+  }
+});
+
+$('.pane').on('click', '.texttoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
   setPaneEditorBlockMode(pane, false);
+});
+
+$('.pane').on('click', '.blocktoggle', function(e) {
+  var pane = $(this).closest('.pane').prop('id');
+  e.preventDefault();
+  setPaneEditorBlockMode(pane, true);
 });
 
 function showPaneEditorLanguagesDialog(pane) {
@@ -1745,7 +1964,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (paneState.meta) {
       toggleLibrary(
           paneState.meta,
-          {name: 'coffeescript', src: '//{site}/coffee-script.js'},
+          {name: 'coffeescript', src: '//{site}/lib/coffee-script.js'},
           wantCoffeeScript);
     }
     var box = $('#' + pane + ' .hpanelbox');
@@ -2022,7 +2241,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           document.getElementById(id),
           {
             mode: dropletMode,
-            palette: paletteForMimeType(visibleMimeType),
+            palette: paletteForPane(paneState),
             modeOptions: dropletOptionsForMimeType(visibleMimeType)
           });
   // Set up fonts - once they are loaded.
@@ -2080,10 +2299,17 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   if (!/^frame\./.test(window.location.hostname)) {
-    $('<div class="closeblocks" title="Switch from blocks to code">' +
-      '&times</div>').appendTo(
-      dropletEditor.paletteWrapper).tooltipster();
+    $('<div class="blockmenu">Blocks' +
+      '<span class="blockmenuarrow">&#9660;</span></div>').appendTo(
+        dropletEditor.paletteWrapper);
   }
+
+  $('<div class="texttoggle">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      dropletEditor.paletteWrapper);
+  $('<div class="blocktoggle">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      $(dropletEditor.wrapperElement).find('.ace_editor'));
 
   var mainContainer = $('#' + id);
 
@@ -2110,13 +2336,13 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   editor.getSession().setUndoManager(um);
 
   var gutter = mainContainer.find('.ace_gutter');
-  gutter.on('mouseenter', '.guttermouseable', function() {
+  gutter.on('mouseenter', '.guttermouseable', function(event) {
     fireEvent('entergutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('mouseleave', '.guttermouseable', function() {
+  gutter.on('mouseleave', '.guttermouseable', function(event) {
     fireEvent('leavegutter', [pane, parseInt($(event.target).text())]);
   });
-  gutter.on('click', '.guttermouseable', function() {
+  gutter.on('click', '.guttermouseable', function(event) {
     fireEvent('clickgutter', [pane, parseInt($(event.target).text())]);
   });
 
@@ -2228,6 +2454,8 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     }
   });
 
+  var lineArr = text.split('\n');
+  var lines = lineArr.length;
   var dimensions = getTextRowsAndColumns(text);
   // A big font char is 14 pixels wide and 29 pixels high.
   var big = { width: 14, height: 29 };
@@ -2284,6 +2512,26 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   });
   $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);
+  // Fold any blocks with a line that ends with "# fold" or "// fold"
+  function autoFold() {
+    editor.getSession().off('tokenizerUpdate', autoFold);
+    var foldMarker = /(?:#|\/\/)\s*fold$/;
+    for (var i = 0, line; (line = lineArr[i]) !== undefined; i++) {
+      var match = foldMarker.exec(line);
+      if (match) {
+        var data = editor.getSession().getParentFoldRangeData(i + 1);
+        if (data && data.range && data.range.start && data.range.end) {
+          editor.getSession().foldAll(data.range.start.row, data.range.end.row);
+        } else if (match.index == 0) {
+          // If the # fold is not in a block and is at the 0th column,
+          // then use it as an indicator to fold all the blocks in the file.
+          editor.getSession().foldAll(0, lineArr.length);
+          return;
+        }
+      }
+    }
+  }
+  editor.getSession().on('tokenizerUpdate', autoFold);
   if (long) {
     editor.gotoLine(0);
   } else {
@@ -2348,12 +2596,26 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.dropletEditor.setMode(
       dropletModeForMimeType(type),
       dropletOptionsForMimeType(type));
-  paneState.dropletEditor.setPalette(paletteForMimeType(type));
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;
+  paneState.dropletEditor.setPalette(paletteForPane(paneState));
   updatePaneTitle(pane);
   return true;
+}
+
+function setPaneEditorBlockOptions(pane, pal, modeOptions) {
+  var paneState = state.pane[pane];
+  if (!paneState.dropletEditor) return;
+  if (modeOptions) {
+    var visibleMimeType = editorMimeType(paneState);
+    paneState.dropletEditor.setMode(
+        dropletModeForMimeType(visibleMimeType), modeOptions);
+  }
+  if (pal) {
+    paneState.palette = pal;
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
+  }
 }
 
 function setPaneEditorBlockMode(pane, useblocks) {
@@ -2835,4 +3097,3 @@ window.fontloader = fontloader;
 return window.pencilcode.view;
 
 });
-

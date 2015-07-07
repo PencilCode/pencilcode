@@ -6,18 +6,18 @@ var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
 
 exports.handleSave = function(req, res, app) {
-  var data = req.param('data', null);
-  var meta = req.param('meta', null);
-  var sourcefile = req.param('source', null);
-  var mode = req.param('mode', null);
-  var conditional = req.param('conditional', null);
-  var key = req.param('key', null);
-  var sourcekey = req.param('sourcekey', key);
+  var data = utils.param(req, 'data');
+  var meta = utils.param(req, 'meta');
+  var thumbnail = utils.param(req, 'thumbnail');
+  var sourcefile = utils.param(req, 'source');
+  var mode = utils.param(req, 'mode');
+  var conditional = utils.param(req, 'conditional');
+  var key = utils.param(req, 'key');
+  var sourcekey = utils.param(req, 'sourcekey', key);
 
   try {
     var user = res.locals.owner;
-    var filename = req.param("file", utils.filenameFromUri(req));
-    var origfilename = filename;
+    var filename = utils.param(req, "file", utils.filenameFromUri(req));
 
     /*
     console.log({
@@ -31,7 +31,7 @@ exports.handleSave = function(req, res, app) {
     */
 
     try {
-      fsExtra.removeSync(utils.getRootCacheName(app, res));
+      fsExtra.removeSync(utils.getRootCacheName(app));
     }
     catch (e) { }
 
@@ -74,7 +74,7 @@ exports.handleSave = function(req, res, app) {
     if (user) {
       utils.validateUserName(user);
       filename = path.join(user, filename);
-      userdir = utils.getUserHomeDir(user, app, res);
+      userdir = utils.getUserHomeDir(user, app);
     }
 
     var topdir = false;
@@ -103,13 +103,14 @@ exports.handleSave = function(req, res, app) {
     }
 
 
-    var absfile = utils.makeAbsolute(filename, app, res);
+    var absfile = utils.makeAbsolute(filename, app);
+    var absthumb = utils.getAbsThumbPath(filename, app);
 
     //
     // Validate that users key matches the supplied key
     //
 
-    if (!isValidKey(user, key, app, res)) {
+    if (!isValidKey(user, key, app)) {
       var msg = (key) ? 'Incorrect password.' : 'Password protected.';
       res.json({error: msg, 'needauth': 'key'});
       return;
@@ -140,7 +141,9 @@ exports.handleSave = function(req, res, app) {
 
       sourceuser = filenameuser(sourcefile);
 
-      var absSourceFile = utils.makeAbsolute(sourcefile, app, res);
+      var absSourceFile = utils.makeAbsolute(sourcefile, app);
+      var absSourceThumb = utils.getAbsThumbPath(sourcefile, app);
+      var sourceThumbExists = fs.existsSync(absSourceThumb);
       if (!fs.existsSync(absSourceFile)) {
         utils.errorExit('Source file does not exist. ' + sourcefile);
       }
@@ -152,7 +155,7 @@ exports.handleSave = function(req, res, app) {
 
       // mv requires authz on the source dir
       if (mode == 'mv') {
-        if (!isValidKey(sourceuser, sourcekey, app, res)) {
+        if (!isValidKey(sourceuser, sourcekey, app)) {
           var msg = (!key) ?
               'Source password protected.' : 'Incorrect source password.';
           res.json({error: msg, 'auth': 'key'});
@@ -164,12 +167,12 @@ exports.handleSave = function(req, res, app) {
       if (!fs.existsSync(path.dirname(absfile)) ||
           !fs.statSync(path.dirname(absfile)).isDirectory()) {
         checkReservedUser(user, app);
-        try {
-          fs.mkdirSync(path.dirname(absfile));
-        }
-        catch (e) {
-          utils.errorExit('Could not create dir: ' + path.dirname(filename));
-        }
+        tryToMkdirsSync(absfile);
+      }
+
+      // If the source file has a thumb, create dir for the destination thumb.
+      if (sourceThumbExists) {
+        tryToMkdirsSync(absthumb);
       }
 
       // move case
@@ -181,17 +184,14 @@ exports.handleSave = function(req, res, app) {
         try {
           fs.renameSync(absSourceFile, absfile);
 
-          // Cleanup directories if necessary
-          var dir = path.dirname(absSourceFile);
-          for (; dir ; dir = path.dirname(dir)) {
-            try {
-              fs.rmdirSync(dir);
-            }
-            catch (e) {
-              // Failed to remove dir, assume not empty
-              break;
-            }
+          // Move the thumb along the way if it exists.
+          if (sourceThumbExists) {
+            fs.renameSync(absSourceThumb, absthumb);
+            removeDirsSync(path.dirname(absSourceThumb));
           }
+
+          // Cleanup directories if necessary
+          removeDirsSync(path.dirname(absSourceFile));
 
           // Remove .key if present, because we don't want to
           // propagate password data
@@ -214,6 +214,7 @@ exports.handleSave = function(req, res, app) {
             }
 
             fsExtra.copySync(absSourceFile, absfile);
+
             // Remove .key if present, because we don't want to
             // propagate password data.
             if (utils.isPresent(path.join(absfile, '.key'))) {
@@ -222,6 +223,10 @@ exports.handleSave = function(req, res, app) {
           }
           else {
             fsExtra.copySync(absSourceFile, absfile);
+            // Copy the thumb if it exists.
+            if (sourceThumbExists) {
+              fsExtra.copySync(absSourceThumb, absthumb);
+            }
           }
         }
         catch (e) {
@@ -258,16 +263,12 @@ exports.handleSave = function(req, res, app) {
         //utils.errorExit('Missing data= form field argument.');
         //}
 
-      if (fs.existsSync(absfile)) {
-        try {
-          fsExtra.removeSync(absfile);
-        } catch (e) {
-          utils.errorExit('Could not remove: ' + absfile);
-        }
+      if (fs.existsSync(absthumb)) {
+        tryToRemoveSync(absthumb);
+      }
 
-        try {
-          removeDirsSync(path.dirname(absfile));
-        } catch (e) { }
+      if (fs.existsSync(absfile)) {
+        tryToRemoveSync(absfile);
       }
 
       if (userdir != absfile) {
@@ -290,32 +291,27 @@ exports.handleSave = function(req, res, app) {
     if (!fs.existsSync(path.dirname(absfile)) ||
         !fs.statSync(path.dirname(absfile)).isDirectory()) {
       checkReservedUser(user, app);
-      try {
-        fsExtra.mkdirsSync(path.dirname(absfile));
-      }
-      catch (e) {
-        utils.errorExit('Could not create dir: ' + path.dirname(filename));
-      }
+      tryToMkdirsSync(absfile);
     }
 
-    var statObj;
-    try {
-      var content = filemeta.printMetaString(data, meta);
-      fd = fs.writeFileSync(absfile, content);
-      var statObj = fs.statSync(absfile);
-      touchUserDir(userdir);
-      res.json({
-        saved: '/' + filename,
-        mtime: statObj.mtime.getTime(),
-        size: statObj.size
-      });
-      return;
-    }
-    catch (e) {
-      utils.errorExit('Error writing file: ' + absfile);
+    var content = filemeta.printMetaString(data, meta);
+    fd = tryToWriteFileSync(absfile, content);
+
+    // If thumbnail exists and it is valid, remove the data url header.
+    // and then save as png.
+    if (thumbnail && /^data:image\/png;base64,/.test(thumbnail)) {
+      var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
+      tryToMkdirsSync(absthumb);
+      tryToWriteFileSync(absthumb, base64data, { encoding: 'base64' });
     }
 
-    return;
+    var statObj = fs.statSync(absfile);
+    touchUserDir(userdir);
+    res.json({
+      saved: '/' + filename,
+      mtime: statObj.mtime.getTime(),
+      size: statObj.size
+    });
   }
   catch (e) {
     if (e instanceof utils.ImmediateReturnError) {
@@ -325,6 +321,34 @@ exports.handleSave = function(req, res, app) {
       throw e;
     }
   }
+};
+
+function tryToWriteFileSync(absfilename, data, options) {
+  try {
+    return fs.writeFileSync(absfilename, data, options);
+  } catch (e) {
+    utils.errorExit('Error writing file: ' + absfilename);
+  }
+}
+
+function tryToMkdirsSync(absfilename) {
+  try {
+    fsExtra.mkdirsSync(path.dirname(absfilename));
+  } catch (e) {
+    utils.errorExit('Could not create dir: ' + path.dirname(absfilename));
+  }
+}
+
+function tryToRemoveSync(absfilename) {
+  try {
+    fsExtra.removeSync(absfilename);
+  } catch (e) {
+    utils.errorExit('Could not remove: ' + absfilename);
+  }
+
+  try {
+    removeDirsSync(path.dirname(absfilename));
+  } catch (e) { }
 }
 
 function touchUserDir(userdir) {
@@ -343,16 +367,16 @@ function filenameuser(filename) {
 
 function removeDirsSync(dirStart) {
   for (var dir = dirStart; ; dir = path.dirname(dir)) {
-    if (fs.readdirSync(dir).length > 0) {
-      // Directory not empty, we're done.
-      return;
+    try {
+      fs.rmdirSync(dir);
+    } catch (e) {
+      // Failed to remove dir, assume not empty.
+      break;
     }
-
-    fsExtra.remove(dir);
   }
 }
 
-function isValidKey(user, key, app, res) {
+function isValidKey(user, key, app) {
   //
   // keydir is the directory containing the hashed user password.
   // It's a subdir off the user home directory called '.key'.
@@ -360,7 +384,7 @@ function isValidKey(user, key, app, res) {
   // with the hashed user password
   //
 
-  var keydir = utils.getKeyDir(user, app, res);
+  var keydir = utils.getKeyDir(user, app);
   var statObj = null;
 
   if (!utils.isPresent(keydir, 'dir')) {
@@ -399,7 +423,7 @@ function doSetKey(user, oldkey, newkey, res, app) {
     return;
   }
 
-  var keydir = utils.getKeyDir(user, app, res);
+  var keydir = utils.getKeyDir(user, app);
 
   try {
     // Create directory if not present

@@ -16,16 +16,20 @@ proxy.on('error', function() {
 
 function rewriteRules(req, res, next) {
   var u = parseUrl(req);
-  if (u.pathname == '/') { u.pathname = '/welcome.html'; }
-  else if (/^\/edit\//.test(u.pathname)) {
-    if (/^frame\./.test(req.headers['host'])) {
+  if (req.path == '/') {
+    u.pathname = '/welcome.html';
+  } else if (/^\/edit\//.test(req.path)) {
+    if (/^frame\./.test(req.headers.host)) {
       u.pathname = '/framed.html';
     } else {
       u.pathname = '/editor.html';
     }
+  } else if (/^\/home(?=\/).*\/$/.test(req.path)) {
+    u.pathname = '/dir.html';
+  } else {
+    next();
+    return;
   }
-  else if (/^\/home(?=\/).*\/$/.test(u.pathname)) { u.pathname = '/dir.html'; }
-  else { next(); return; }
   req.url = url.format(u);
   next();
 }
@@ -47,8 +51,7 @@ var expandSiteInclude = tamper(function(req, res) {
 });
 
 function noAppcache(req, res, next) {
-  var u = parseUrl(req);
-  if (/\.appcache$/.test(u.pathname)) {
+  if (/\.appcache$/.test(req.path)) {
     res.status(404).send()
   } else {
     next();
@@ -56,14 +59,12 @@ function noAppcache(req, res, next) {
 }
 
 function proxyRules(req, res, next) {
-  var u = parseUrl(req);
   var exp = (req.app.locals.config.useProxy) ?
-    /^\/(?:code|home|load|save|proxy|img|link|print|socket\.io)(?=\/)/
+    /^\/(?:code|home|load|save|proxy|img|link|print|thumb|socket\.io)(?=\/)/
        : /^\/(?:proxy)(?=\/)/;
-  if (exp.test(u.pathname) &&
-      /\.dev$/.test(u.host)) {
-    var host = req.headers['host'] = u.host.replace(/\.dev$/, '');
-    req.headers['url'] = u.path;
+  if (exp.test(req.path) && /\.dev$/.test(req.hostname)) {
+    var host = req.headers['host'] = req.hostname.replace(/\.dev$/, '');
+    req.headers['url'] = req.path;
     proxy.web(req, res, {
       target: { host: host, port: 80 },
       xfwd: true
@@ -74,8 +75,7 @@ function proxyRules(req, res, next) {
 }
 
 function proxyPacGenerator(req, res, next) {
-  var u = parseUrl(req);
-  if (u.pathname == '/proxy.pac') {
+  if (req.path == '/proxy.pac') {
     var hostHeader = req.get('host'),
         hostMatch = /^([^:]+)(?::(\d*))?$/.exec(hostHeader || ''),
         hostDomain = (hostMatch && hostMatch[1]) || 'localhost',
