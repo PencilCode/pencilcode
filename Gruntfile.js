@@ -84,7 +84,7 @@ module.exports = function(grunt) {
         },
         options: {
           browserifyOptions: {
-            debug: true,
+            debug: false,
             noParse: [ // It is kind of buggy, only accepts absolute paths.
               require.resolve('./content/lib/pencil-tracer.js'),
               require.resolve('./content/lib/droplet.js')
@@ -130,14 +130,13 @@ module.exports = function(grunt) {
         },
         options: {
           preserveComments: false,
+          screwIE8: true,
           report: 'min',
           compress: {
-            unsafe: true,
-            "screw_ie8": true,
-            "pure_getters": true
+            unsafe: true
           },
           beautify: {
-            semicolons: false
+            beautify: false
           }
         }
       }
