@@ -123,6 +123,9 @@ module.exports = function(grunt) {
             'content/lib/socket.io.js',
             'content/lib/recolor.js',
             'content/src/showturtle.js'
+          ],
+          'content/editor.js': [
+            'content/editor.js'
           ]
         },
         options: {
@@ -334,7 +337,7 @@ module.exports = function(grunt) {
       ['proxymessage', 'express:sdev', 'browserify:server', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:localtest', 'browserify:server', 'watch']);
+      ['proxymessage', 'express:localtest', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.
