@@ -1602,23 +1602,11 @@ function updatePaneTitle(pane) {
     } else if (/^text\/xml/.test(paneState.mimeType) ||
         /^application\/json/.test(paneState.mimeType)) {
       label = 'data';
-    } else if (/^text\/html/.test(paneState.mimeType)) {
-      label = 'html';
-      symbol = 'codeicon'
-      alt = 'show blocks'
-      blockToggleTooltip = 'Click to show blocks';
-      if (paneState.dropletEditor.currentlyUsingBlocks) {
-        label = 'blocks';
-        alt = 'show code'
-        symbol = 'blockicon';
-        blockToggleTooltip = 'Click to show code';
-      }
-      label = '<a target="_blank" class="toggleblocks" href="/code/' +
-          paneState.filename + '" title="' + blockToggleTooltip +
-          '"><span class="' + symbol + '"></span> <span alt="' + alt + '">' +
-          '<span>' + label + '</span></span></a>';
     } else {
       label = 'code';
+      if (/^text\/html/.test(paneState.mimeType)) {
+        label = 'html'
+      }
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         textonly = false;
         symbol = 'codeicon'
