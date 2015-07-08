@@ -363,6 +363,15 @@ view.on('share', function() {
             modelatpos('left').filename;
       }
       opts.shareEditURL = window.location.href;
+      // Add data for sharing to a JS Fiddle.
+      if (meta.html || meta.text) {
+        opts.srcCode = {
+          'html': meta.html,
+          'css': meta.css,
+          'text': meta.text,
+          'lang': meta.lang
+        };
+      }
       // Now bring up share dialog
       view.showShareDialog(opts);
     });

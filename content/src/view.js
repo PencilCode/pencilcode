@@ -833,8 +833,13 @@ function showShareDialog(opts) {
           '"><img src="/image/copy.png" title="Copy"></button>' +
         '</div>' : '') +
       '</div><br>' +
-    '<button class="cancel">OK</button>' +
+    '<button class="cancel">Done</button>' +
     '<button class="ok" title="Share by email">Email</button>';
+  if (opts.srcCode) {
+    opts.content += '<button class="ok"' +
+        'title="Export to JS Fiddle">JS Fiddle</button>';
+  }
+  window.console.log(opts);
 
   opts.init = function(dialog) {
     dialog.find('a.quiet').tooltipster();
@@ -871,8 +876,18 @@ function showShareDialog(opts) {
     dialog.find('button.cancel').focus();
   }
 
-  opts.done = function(state) {
-    window.open('mailto:?body='+bodyText+'&subject='+subjectText);
+  // Called when an 'ok' button is clicked.
+  // The args are the state of the dialog and the innerHTML
+  // of the 'ok' button, which can be used to differentiate
+  // between multiple 'ok' buttons.
+  opts.done = function(state, innerHTML) {
+    if (innerHTML == 'Email') {
+      window.open('mailto:?body='+bodyText+'&subject='+subjectText);
+    } else if (innerHTML == 'JS Fiddle') {
+      alert('JS fiddle clicked!!');
+    } else {
+      window.console.log('Error: unknown button clicked.');
+    }
   }
 
   showDialog(opts);
@@ -935,6 +950,8 @@ function showDialog(opts) {
       }
     }
   }
+
+  // Gets the current state of the dialog.
   function state() {
     var retVal;
 
@@ -962,7 +979,7 @@ function showDialog(opts) {
     validate();
     if (!dialog.find('button.ok').is(':disabled') &&
         opts.done) {
-      opts.done(state());
+      opts.done(state(), this.innerHTML);
     }
   });
   overlay.on('click', function(e) {
@@ -1929,7 +1946,11 @@ function showPaneEditorLanguagesDialog(pane) {
     }
   }
 
-  opts.done = function(state) {
+  // Called when an 'ok' button is clicked.
+  // The args are the state of the dialog and the innerHTML
+  // of the 'ok' button, which can be used to differentiate
+  // between multiple 'ok' buttons.
+  opts.done = function(state, innerHTML) {
     state.update({cancel:true});
     var change = false;
     if (state.lang && state.lang != visibleMimeType) {
