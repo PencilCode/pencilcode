@@ -1552,6 +1552,7 @@ function dropletModeForMimeType(mimeType) {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
+    'text/html': 'html',
   }[mimeType];
   if (!result) {
     result = 'coffee';
@@ -1569,6 +1570,9 @@ function paletteForPane(paneState, selfname) {
     if (mimeType == 'text/javascript' ||
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
+    }
+    if (mimeType.replace(/;.*$/, '') == 'text/html') {
+      basePalette = palette.HTML_PALETTE;
     }
   }
   if (basePalette) {
@@ -1598,10 +1602,11 @@ function updatePaneTitle(pane) {
     } else if (/^text\/xml/.test(paneState.mimeType) ||
         /^application\/json/.test(paneState.mimeType)) {
       label = 'data';
-    } else if (/^text\/html/.test(paneState.mimeType)) {
-      label = 'html';
     } else {
       label = 'code';
+      if (/^text\/html/.test(paneState.mimeType)) {
+        label = 'html'
+      }
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         textonly = false;
         symbol = 'codeicon'
@@ -2568,7 +2573,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {
