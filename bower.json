@@ -16,9 +16,7 @@
     "lodash": "latest",
     "pencil-tracer": "yjerem/pencil-tracer#master",
     "requirejs": "latest",
-    "seedrandom": "latest",
     "socket.io-client": "latest",
-    "source-map": "mozilla/source-map#master",
     "tooltipster": "latest",
     "zeroclipboard": "latest"
   },

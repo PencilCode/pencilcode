@@ -5,7 +5,7 @@
 var $         = require('jquery'),
     view      = require('view'),
     see       = require('see'),
-    sourcemap = require('sourcemap');
+    sourcemap = require('source-map');
 
 
 eval(see.scope('debug'));

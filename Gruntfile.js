@@ -3,6 +3,11 @@ var os=require('os');
 module.exports = function(grunt) {
   'use strict';
 
+  var NO_PARSE = [ // It is kind of buggy, only accepts absolute paths.
+    require.resolve('./content/lib/pencil-tracer.js'),
+    require.resolve('./content/lib/droplet.js')
+  ]
+
   grunt.option.init({
     port: 8008
   });
@@ -85,10 +90,7 @@ module.exports = function(grunt) {
         options: {
           browserifyOptions: {
             debug: false,
-            noParse: [ // It is kind of buggy, only accepts absolute paths.
-              require.resolve('./content/lib/pencil-tracer.js'),
-              require.resolve('./content/lib/droplet.js')
-            ]
+            noParse: NO_PARSE
           },
           watch: false,
           keepalive: false
@@ -101,10 +103,7 @@ module.exports = function(grunt) {
         options: {
           browserifyOptions: {
             debug: true,
-            noParse: [ // It is kind of buggy, only accepts absolute paths.
-              require.resolve('./content/lib/pencil-tracer.js'),
-              require.resolve('./content/lib/droplet.js')
-            ]
+            noParse: NO_PARSE
           },
           watch: true,
           keepalive: true
