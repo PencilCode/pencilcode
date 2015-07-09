@@ -731,6 +731,63 @@ function showMiddleButton(which) {
   $('#middle button').tooltipster();
 }
 
+// Adds a protocol ('http:') to a string path if it does not yet have one.
+function addProtocol(path) {
+  if (/^\w+:/.test(path)) { return path; }
+  return 'http:' + path;
+}
+
+// Creates the email params for sharing a program based on the options.
+function getShareEmailParams(opts) {  
+  var emailParams = {};
+  var newLines = '\r\n\r\n';
+  emailParams.bodyText = 'Check out this program that I created on ' +
+     window.pencilcode.domain + newLines;
+  if (opts.shareStageURL) {
+    emailParams.bodyText += 'Posted program: ' +
+        addProtocol(opts.shareStageURL) + newLines;
+  }
+  if (opts.shareRunURL) {
+    emailParams.bodyText += 'Latest program: ' + addProtocol(opts.shareRunURL) + 
+        newLines;
+  }
+  if (opts.shareEditURL) {
+    emailParams.bodyText += 'Program code: ' + addProtocol(opts.shareEditURL) + 
+        newLines;
+  }
+
+  emailParams.subjectText = 'Pencilcode program: ' + opts.title;
+
+  // Need to escape the text since it will go into a url link
+  emailParams.bodyText = escape(emailParams.bodyText);
+  emailParams.subjectText = escape(emailParams.subjectText);
+  
+  return emailParams;
+}
+
+// Creates the JS Fiddle params for sharing a program over JS Fiddle.
+function getShareFiddleParams(opts) {
+  var fiddleParams = {};
+  fiddleParams.title = opts.title;
+  fiddleParams.description = 'Created with PencilCode at ' +
+      addProtocol(opts.shareStageURL) + '.';
+  if (opts.srcCode) {
+  	if (opts.srcCode.html) {
+  	  fiddleParams.panel_html = 0;
+  	  fiddleParams.html = opts.srcCode.html;
+  	}
+  	if (opts.srcCode.css) {
+  	  fiddleParams.panel_css = 0;
+  	  fiddleParams.css = opts.srcCode.css;
+  	}
+  	if (opts.srcCode.text) {
+  	  fiddleParams.panel_js = opts.srcCode.lang == 'javascript' ? 0 : 1;
+  	  fiddleParams.js = opts.srcCode.text;
+  	}
+  }
+  return fiddleParams;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
@@ -740,30 +797,8 @@ function showShareDialog(opts) {
     opts = { };
   }
 
-  // Adds a protocol ('http:') to a string path if it does not yet have one.
-  function addProtocol(path) {
-    if (/^\w+:/.test(path)) { return path; }
-    return 'http:' + path;
-  }
-
-  var newLines = '\r\n\r\n';
-  bodyText = 'Check out this program that I created on ' + window.pencilcode.domain
-     + newLines;
-  if (opts.shareStageURL) {
-    bodyText += 'Posted program: ' + addProtocol(opts.shareStageURL) + newLines;
-  }
-  if (opts.shareRunURL) {
-    bodyText += 'Latest program: ' + addProtocol(opts.shareRunURL) + newLines;
-  }
-  if (opts.shareEditURL) {
-    bodyText += 'Program code: ' + addProtocol(opts.shareEditURL) + newLines;
-  }
-
-  subjectText = 'Pencilcode program: ' + opts.title;
-
-  // Need to escape the text since it will go into a url link
-  bodyText = escape(bodyText);
-  subjectText = escape(subjectText);
+  var emailParams = getShareEmailParams(opts);
+  var fiddleParams = getShareFiddleParams(opts);
 
   var embedText = null;
   if (opts.shareRunURL && !/[>"]/.test(opts.shareRunURL)) {
@@ -824,7 +859,6 @@ function showShareDialog(opts) {
     opts.content += '<button class="ok"' +
         'title="Export to JS Fiddle">JS Fiddle</button>';
   }
-  window.console.log(opts);
 
   opts.init = function(dialog) {
     dialog.find('a.quiet').tooltipster();
@@ -867,9 +901,12 @@ function showShareDialog(opts) {
   // between multiple 'ok' buttons.
   opts.done = function(state, innerHTML) {
     if (innerHTML == 'Email') {
-      window.open('mailto:?body='+bodyText+'&subject='+subjectText);
+      window.open('mailto:?body=' + emailParams.bodyText + '&subject=' +
+          emailParams.subjectText);
     } else if (innerHTML == 'JS Fiddle') {
-      alert('JS fiddle clicked!!');
+      window.console.log(fiddleParams);
+      // POST to http://jsfiddle.net/api/post/library/pure/ with fiddleParams as the
+      // POST params.
     } else {
       window.console.log('Error: unknown button clicked.');
     }

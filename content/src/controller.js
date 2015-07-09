@@ -348,12 +348,12 @@ view.on('share', function() {
       }
       opts.shareEditURL = window.location.href;
       // Add data for sharing to a JS Fiddle.
-      if (meta.html || meta.text) {
+      if (doc.meta.html || doc.data) {
         opts.srcCode = {
-          'html': meta.html,
-          'css': meta.css,
-          'text': meta.text,
-          'lang': meta.lang
+          'html': doc.meta.html,
+          'css': doc.meta.css,
+          'text': doc.data,
+          'lang': doc.meta.type
         };
       }
       // Now bring up share dialog
