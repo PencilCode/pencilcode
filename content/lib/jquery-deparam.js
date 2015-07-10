@@ -7,7 +7,12 @@
             return deparam(jquery);
         });
     } else {
-        var global = (false || eval)('this');
+        var global
+        try {
+          global = (false || eval)('this'); // best cross-browser way to determine global for < ES5
+        } catch (e) {
+          global = window; // fails only if browser (https://developer.mozilla.org/en-US/docs/Web/Security/CSP/CSP_policy_directives)
+        }
         global.deparam = deparam(jQuery); // assume jQuery is in global namespace
     }
 })(function ($) {
@@ -50,16 +55,16 @@
 
                 // Coerce values.
                 if ( coerce ) {
-                    val = val && !isNaN(val)            ? +val              // number
-                    : val === 'undefined'             ? undefined         // undefined
-                    : coerce_types[val] !== undefined ? coerce_types[val] // true, false, null
-                    : val;                                                // string
+                    val = val && !isNaN(val) && ((+val + '') === val) ? +val        // number
+                    : val === 'undefined'                       ? undefined         // undefined
+                    : coerce_types[val] !== undefined           ? coerce_types[val] // true, false, null
+                    : val;                                                          // string
                 }
 
                 if ( keys_last ) {
                     // Complex key, build deep object structure based on a few rules:
                     // * The 'cur' pointer starts at the object top-level.
-                    // * [] = array push (n is set to array length), [n] = array if n is 
+                    // * [] = array push (n is set to array length), [n] = array if n is
                     //   numeric, otherwise object.
                     // * If at the last keys part, set the value.
                     // * For each keys part, if the current level is undefined create an
@@ -81,7 +86,7 @@
                         // val is already an array, so push on the next value.
                         obj[key].push( val );
 
-                    } else if ( obj[key] !== undefined ) {
+                    } else if ( {}.hasOwnProperty.call(obj, key) ) {
                         // val isn't an array, but since a second value has been specified,
                         // convert val into an array.
                         obj[key] = [ obj[key], val ];

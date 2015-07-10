@@ -8739,7 +8739,9 @@ function createRectangleShape(width, height, subpixels) {
     subpixels = 1;
   }
   return (function(color) {
-    var c = getOffscreenCanvas(width, height);
+    var c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
     var ctx = c.getContext('2d');
     if (!color) {
       color = "rgba(128,128,128,0.125)";
@@ -8761,7 +8763,7 @@ function createRectangleShape(width, height, subpixels) {
       css.imageRendering = 'pixelated';
     }
     return {
-      url: c.toDataURL(),
+      img: c,
       css: css
     };
   });

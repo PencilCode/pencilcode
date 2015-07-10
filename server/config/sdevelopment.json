@@ -5,7 +5,6 @@
     "cachedir": "../local/cache"
   },
   "host": "pencilcode.net.dev",
-  "servesrc": true,
   "useProxy": 1,
   "useHttps": true
 }

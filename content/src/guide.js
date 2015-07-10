@@ -1,10 +1,6 @@
-define([
-  'jquery',
-  'view'
-], function(
-  $,
-  view
-){
+var $    = require('jquery'),
+    view = require('view');
+
 
 var guideShown = false;
 var guideFrame = $('#guidepane iframe');
@@ -99,11 +95,9 @@ $(window).on('message', function(event) {
   }
 });
 
-return {
+module.exports = {
   show: showGuide,
   isVisible: isGuideVisible,
   setUrl: setGuideUrl,
   on: setCallback
 };
-
-});

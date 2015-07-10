@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ///////////////////////////////////////////////////////////////////////////
 // REQUIRE JS path config
 ///////////////////////////////////////////////////////////////////////////
@@ -55,4 +56,9 @@ require([
   'controller'
 ],
 function(controller) { });
+=======
+'use strict';
+>>>>>>> upstream/master
 
+// Start the app...
+require('controller');

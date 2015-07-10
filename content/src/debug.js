@@ -2,7 +2,12 @@
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+var $         = require('jquery'),
+    view      = require('view'),
+    see       = require('see'),
+    sourcemap = require('source-map');
 
+<<<<<<< HEAD
 define([
   'jquery',
   'view',
@@ -10,6 +15,8 @@ define([
   'sourcemap/source-map-consumer'
  ],
 function($, view, see, sourcemap, thumbnail) {
+=======
+>>>>>>> upstream/master
 
 eval(see.scope('debug'));
 
@@ -45,7 +52,7 @@ function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
   cachedParseStack = {};
-  debugRecordsByDebugId = {}; 
+  debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
   traceEvents = [];
   screenshots = [];
@@ -53,6 +60,7 @@ function bindframe(w) {
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
+  stuckTime = null;
   startPollingWindow();
 }
 
@@ -803,6 +811,4 @@ view.on('stop', function() {
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////
 
-return debug;
-
-});
+module.exports = debug;

@@ -49,9 +49,16 @@ describe('javascript editor', function() {
     // we can leave orphan processes.
     _ph.exit();
   });
+<<<<<<< HEAD
   it('should serve static editor HTML', function(done) {
     // Visit the website of the user "livetest."
     _page.open('http://amanda.pencilcode.net.dev/edit',
+=======
+
+  it('should serve static editor HTML', function(done) {
+    // Visit the website of the user "livetest."
+    _page.open('http://aaa.pencilcode.net.dev/edit',
+>>>>>>> upstream/master
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
@@ -67,11 +74,18 @@ describe('javascript editor', function() {
     });
   });
 
+<<<<<<< HEAD
 
     it('should load code', function(done) {
     // Navigate to see the editor for the program named "first".
     _page.open('http://amanda.pencilcode.net.dev/edit/first',
         function(err, status) {
+=======
+  it('should load code', function(done) {
+    // Navigate to see the editor for the program named "first".
+    _page.open('http://aaa.pencilcode.net.dev/edit/first',
+      function(err, status) {
+>>>>>>> upstream/master
       assert.ifError(err);
       assert.equal(status, 'success');
       asyncTest(_page, one_step_timeout, null, function() {
@@ -87,14 +101,22 @@ describe('javascript editor', function() {
       }, function(err, result) {
         assert.ifError(err);
         // The editor text should contain this line of code.
+<<<<<<< HEAD
         assert.ok(/x = 3/.test(result.text));
+=======
+        assert.ok(/\(function\(\) \{ dot\(red\); \}\)\(\)/.test(result.text));
+>>>>>>> upstream/master
         done();
       });
     });
   });
 
+<<<<<<< HEAD
 
 it('should be able to run the program in javascript mode', function(done) {
+=======
+  it('should be able to run the program in javascript mode', function(done) {
+>>>>>>> upstream/master
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle run button.
       $('#run').mousedown();
@@ -102,7 +124,11 @@ it('should be able to run the program in javascript mode', function(done) {
     }, function() {
       try {
         // Toggle javascript mode
+<<<<<<< HEAD
          $(".gear").mousedown();
+=======
+        $(".gear").mousedown();
+>>>>>>> upstream/master
         $(".gear").click();
         $("input[value='text/javascript']").mousedown()
         $("input[value='text/javascript']").click()
@@ -113,18 +139,30 @@ it('should be able to run the program in javascript mode', function(done) {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         // Evaluate some expression in the javascript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
         seval('interrupt("reset")');
         // Wait for the turtle to start turning, then stop moving.
         if (seval('turtle.queue().length')) return;
         seval('jump(0,0)');
         seval('fd(100)');
+<<<<<<< HEAD
         if(seval('getxy()')[1] == 0){
           return;
        }
      //   return {poll: seval('getxy()') };
         return {
           getxy: seval('getxy()')
+=======
+        if(seval('getxy()')[1] < 99){
+          return;
+        }
+        return {
+          getxy: seval('getxy()'),
+          touchesred: seval('touches(red)')
+>>>>>>> upstream/master
         };
       }
       catch(e) {
@@ -134,11 +172,18 @@ it('should be able to run the program in javascript mode', function(done) {
       assert.ifError(err);
       assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
       assert.ok(result.getxy[1] >= 100);
+<<<<<<< HEAD
+=======
+      assert.ok(result.touchesred);
+>>>>>>> upstream/master
       done();
     });
   });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Final cleanup: delete local storage and the cookie.
@@ -154,4 +199,8 @@ it('should be able to run the program in javascript mode', function(done) {
       done();
     });
   });
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> upstream/master

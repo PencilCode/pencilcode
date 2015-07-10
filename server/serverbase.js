@@ -122,9 +122,6 @@ exports.initialize2 = function(app) {
 
   // Anything not matching a special top-level directory name
   if (config.dirs.staticdir) {
-    if (config.servesrc) {
-      app.use(express.static(path.join(config.dirs.staticdir, 'src')));
-    }
     app.use(express.static(config.dirs.staticdir));
   }
 
