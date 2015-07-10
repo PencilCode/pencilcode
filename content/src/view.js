@@ -2908,6 +2908,7 @@ function noteNewFilename(pane, filename) {
     paneState.dropletEditor.setMode(
         dropletModeForMimeType(visibleMimeType),
         dropletOptionsForMimeType(visibleMimeType));
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
     paneState.editor.getSession().setMode(modeForMimeType(visibleMimeType));
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);
