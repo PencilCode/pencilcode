@@ -78,7 +78,7 @@
       locationObj += " first_column: " + (locationData.first_column + 1) + ",";
       locationObj += " last_line: " + (locationData.last_line + 1) + ",";
       locationObj += " last_column: " + (locationData.last_column + 1) + " }";
-      eventObj = this.options.trackVariables ? (varsObj = targetNode.pencilTracerScope.toCode(), "{ location: " + locationObj + ", type: '" + eventType + "', vars: " + varsObj + " }") : "{ location: " + locationObj + ", type: '" + eventType + "' }";
+      eventObj = this.options.trackVariables ? (varsObj = targetNode.pencilTracerScope.toCode(this.findVariables(targetNode)), "{ location: " + locationObj + ", type: '" + eventType + "', vars: " + varsObj + " }") : "{ location: " + locationObj + ", type: '" + eventType + "' }";
       instrumentedNode = this.coffee.nodes(this.options.traceFunc + "(" + eventObj + ")").expressions[0];
       instrumentedNode.pencilTracerInstrumented = true;
       return instrumentedNode;
@@ -154,7 +154,50 @@
       }
     };
 
-    CoffeeScriptInstrumenter.prototype.findVariables = function(node, scopes, depth) {
+    CoffeeScriptInstrumenter.prototype.findVariables = function(node, parent, vars) {
+      var skip;
+      if (parent == null) {
+        parent = null;
+      }
+      if (vars == null) {
+        vars = [];
+      }
+      if (node instanceof this.nodeTypes.Value && node.base instanceof this.nodeTypes.Literal && node.base.isAssignable()) {
+        skip = parent instanceof this.nodeTypes.Assign && parent.context === "object" && parent.variable === node;
+        if (!skip) {
+          if (vars.indexOf(node.base.value) === -1) {
+            vars.push(node.base.value);
+          }
+        }
+      }
+      node.eachChild((function(_this) {
+        return function(child) {
+          return _this.findVariables(child, node, vars);
+        };
+      })(this));
+      return vars;
+    };
+
+    CoffeeScriptInstrumenter.prototype.findArguments = function(paramNode) {
+      var name;
+      if (!(paramNode instanceof this.nodeTypes.Param)) {
+        throw new Error("findArguments() expects a Param node");
+      }
+      name = paramNode.name;
+      if (name instanceof this.nodeTypes.Literal) {
+        return [name.value];
+      } else if (name instanceof this.nodeTypes.Value) {
+        return [];
+      } else {
+        return this.findVariables(name);
+      }
+    };
+
+    CoffeeScriptInstrumenter.prototype.findScopes = function(node, parent, scopes, depth) {
+      var arg, i, j, len, len1, param, ref, ref1;
+      if (parent == null) {
+        parent = null;
+      }
       if (scopes == null) {
         scopes = [];
       }
@@ -164,20 +207,31 @@
       if (node instanceof this.nodeTypes.Block) {
         depth += 1;
         scopes[depth] = new Scope(scopes[depth - 1]);
+        if (parent instanceof this.nodeTypes.Code) {
+          ref = parent.params;
+          for (i = 0, len = ref.length; i < len; i++) {
+            param = ref[i];
+            ref1 = this.findArguments(param);
+            for (j = 0, len1 = ref1.length; j < len1; j++) {
+              arg = ref1[j];
+              scopes[depth].add(arg, "argument");
+            }
+          }
+        }
       }
       node.pencilTracerScope = scopes[depth];
       if (node instanceof this.nodeTypes.Assign && node.context !== "object") {
         if (node.variable.base instanceof this.nodeTypes.Literal) {
-          scopes[depth].add(node.variable.base.value);
+          scopes[depth].add(node.variable.base.value, "variable");
         }
       }
       node.eachChild((function(_this) {
         return function(child) {
-          return _this.findVariables(child, scopes, depth);
+          return _this.findScopes(child, node, scopes, depth);
         };
       })(this));
       if (node.icedContinuationBlock != null) {
-        return this.findVariables(node.icedContinuationBlock, scopes, depth);
+        return this.findScopes(node.icedContinuationBlock, node, scopes, depth);
       }
     };
 
@@ -214,11 +268,17 @@
           };
         })(this));
       } else if (node instanceof this.nodeTypes.Switch) {
-        node.subject = this.createInstrumentedExpr(node, "code", node.subject);
+        if (node.subject) {
+          node.subject = this.createInstrumentedExpr(node, "code", node.subject);
+        }
         ref = node.cases;
         for (i = 0, len = ref.length; i < len; i++) {
           caseClause = ref[i];
-          caseClause[0] = this.createInstrumentedExpr(caseClause[0], "code", caseClause[0]);
+          if (caseClause[0] instanceof Array) {
+            caseClause[0][0] = this.createInstrumentedExpr(caseClause[0][0], "code", caseClause[0][0]);
+          } else {
+            caseClause[0] = this.createInstrumentedExpr(caseClause[0], "code", caseClause[0]);
+          }
         }
         return node.eachChild((function(_this) {
           return function(child) {
@@ -253,27 +313,35 @@
     };
 
     CoffeeScriptInstrumenter.prototype.instrument = function(filename, code) {
-      var ast, compileOptions, err, result;
-      ast = this.coffee.nodes(code);
+      var ast, csOptions, result, token;
+      csOptions = {
+        runtime: "inline",
+        bare: this.options.bare,
+        header: this.options.header,
+        sourceMap: this.options.sourceMap,
+        literate: this.options.literate
+      };
+      csOptions.referencedVars = (function() {
+        var i, len, ref, results;
+        ref = this.coffee.tokens(code, csOptions);
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          token = ref[i];
+          if (token.variable) {
+            results.push(token[1]);
+          }
+        }
+        return results;
+      }).call(this);
+      ast = this.coffee.nodes(code, csOptions);
       if (this.options.trackVariables) {
-        this.findVariables(ast);
+        this.findScopes(ast);
       }
       this.instrumentTree(ast);
       if (this.options.ast) {
         return ast;
       }
-      try {
-        compileOptions = {
-          runtime: "inline",
-          bare: this.options.bare,
-          header: this.options.header,
-          sourceMap: this.options.sourceMap
-        };
-        result = this.compileAst(ast, code, compileOptions);
-      } catch (_error) {
-        err = _error;
-        throw new Error("Could not compile " + filename + " after instrumenting: " + err.stack);
-      }
+      result = this.compileAst(ast, code, csOptions);
       return result;
     };
 
@@ -453,21 +521,25 @@
       this.vars = [];
     }
 
-    Scope.prototype.add = function(variable) {
+    Scope.prototype.add = function(variable, type) {
       if (this.vars.indexOf(variable) === -1) {
-        return this.vars.push(variable);
+        return this.vars.push({
+          name: variable,
+          type: type
+        });
       }
     };
 
-    Scope.prototype.toCode = function() {
-      var code, curScope, i, ident, len, ref;
+    Scope.prototype.toCode = function(activeVars) {
+      var code, curScope, i, isActive, len, ref, variable;
       curScope = this;
-      code = "{ ";
+      code = "{";
       while (curScope) {
         ref = curScope.vars;
         for (i = 0, len = ref.length; i < len; i++) {
-          ident = ref[i];
-          code += ident + ": " + ident + ", ";
+          variable = ref[i];
+          isActive = activeVars.indexOf(variable.name) !== -1;
+          code += "'" + variable.name + "': { name: '" + variable.name + "', value: " + variable.name + ", type: '" + variable.type + "', active: " + isActive + " }, ";
         }
         curScope = curScope.parent;
       }
