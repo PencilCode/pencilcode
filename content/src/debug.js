@@ -7,16 +7,6 @@ var $         = require('jquery'),
     see       = require('see'),
     sourcemap = require('source-map');
 
-<<<<<<< HEAD
-define([
-  'jquery',
-  'view',
-  'see',
-  'sourcemap/source-map-consumer'
- ],
-function($, view, see, sourcemap, thumbnail) {
-=======
->>>>>>> upstream/master
 
 eval(see.scope('debug'));
 

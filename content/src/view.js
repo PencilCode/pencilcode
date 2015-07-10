@@ -2,39 +2,9 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
-define([
-
-  'jquery',
-  'jquery-ui',
-  'jquery-ui-slider-pips',
-  'filetype',
-  'tooltipster',
-  'see',
-  'droplet',
-  'palette',
-  'codescan',
-  'draw-protractor',
-  'ZeroClipboard',
-  'FontLoader'
-],
-function(
-  $,
-
- jqueryui,
-  sliderpips,
-  filetype,
-  tooltipster,
-  see,
-  droplet,
-  palette,
-  codescan,
-  drawProtractor,
-  ZeroClipboard,
-  FontLoader
-) {
-=======
 var $              = require('jquery'),
+    jqueryui       = require('jquery-ui'),
+    jqueryuisliderpips = require('jquery-ui-slider-pips'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
@@ -44,9 +14,6 @@ var $              = require('jquery'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
     FontLoader     = require('FontLoader');
-
->>>>>>> upstream/master
-
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
     return c=='<'?'&lt;':c=='>'?'&gt;':c=='&'?'&amp;':'&quot;';});

@@ -75,7 +75,7 @@ module.exports = function(grunt) {
         },
         options: {
           browserifyOptions: {
-            debug: false,
+            debug: true,
             noParse: NO_PARSE
           },
           watch: false,
