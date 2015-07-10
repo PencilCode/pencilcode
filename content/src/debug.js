@@ -31,6 +31,7 @@ var isLoop = false;
 var screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
+var arrows = {"black" : [], "gray" : []};
 
 Error.stackTraceLimit = 20;
 
@@ -227,7 +228,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       recordL.args = args;
       var index = recordD.eventIndex;
       var line = traceEvents[index].location.first_line;
-      var location = traceEvents[index].location;
+      var appear_location = traceEvents[index].location;
       var tracedLine = -1; 
       //trace lines that are not animation.
       while (line != currentLine){
@@ -236,9 +237,17 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           tracedLine = -1;
         }
         if(currentLine < prevLine){
+          console.log("HI ABOUT TO DRAW AN ARROW")
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
           var prevLoc = traceEvents[prevIndex].location;
-          view.arrow(view.paneid('left'), true, prevLoc,currentLocation); 
+          var grayList = arrows["gray"];
+          grayList.push(arrows["black"]);
+          arrows["gray"] = grayList;
+          console.log("prevLoc: ", prevLoc);
+          console.log("currentLocation: ", currentLocation);
+          arrows["black"] = [{first: prevLoc, second: currentLocation}];
+          console.log("Arrows: ", arrows);
+          view.arrow(view.paneid('left'), arrows); 
         }
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
@@ -263,16 +272,16 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       if (line < prevLine){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         var prevLoc = traceEvents[prevIndex].location;
-        view.arrow(view.paneid('left'), true, prevLoc, location); 
+        var grayList = arrows["gray"];
+        grayList.push(arrows["black"]);
+        arrows["gray"] = grayList;
+        arrows['black'] = [{first: prevLoc, second: appear_location}];
+        view.arrow(view.paneid('left'), arrows); 
       }
       prevLine = line;
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
-      var location = traceEvents[index].location.first_line;
-      recordD.startCoords[coordId] = collectCoords(elem);
-      recordL.startCoords[coordId] = collectCoords(elem);
-      traceLine(location);
     }
   }
 }
@@ -289,8 +298,14 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
       untraceLine(location);
+    }          
+    var grayList = arrows["gray"];
+    if (arrows["black"].length > 0){
+      grayList.push(arrows["black"]);
+      arrows["gray"] = grayList;
+      arrows["black"] = [];
     }
-    view.arrow(view.paneid('left'), false, null, null);
+    view.arrow(view.paneid('left'), arrows);
   }
 }
 
@@ -319,7 +334,11 @@ function end_program(){
     if(currentLine < prevLine){
       console.log("ARROW");
       console.log("Drawing Arrow:", "From: " + prevLoc, "To: " + currentLine);
-      view.arrow(true, prevLoc, currentLoc);
+      var grayList = arrows["gray"];
+      grayList.push(arrows["black"]);
+      arrows["gray"] = grayList;
+      arrows["black"] = [{first: prevLoc, second: currentLoc}];
+      view.arrow(view.paneid('left'), arrows);
     }
     traceLine(currentLine);
     tracedLine = currentLine;

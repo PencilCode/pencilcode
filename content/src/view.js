@@ -3160,59 +3160,64 @@ function setupHpanelBox(box) {
   });
 }
 
-$('.arrow').on('click', function() {
-  arrow(null, false, null, null);
-  console.log("CLICKING");
-});
+function arrow(pane, arrow_lines){
+  /* note: we expect arrow_lines to be an array of key value pairs where 
+  each key is a color for the arrow, and each value is a list of location pairs
+  to draw an arrow on.   */
+  $(".arrow").remove();
+  console.log("arrows: ", arrow_lines);
+  console.log("Arrow time!");
 
-function arrow(pane, show, prevLoc, currLoc){
-  
-  
-  if (show){
+  for (color in arrow_lines) {
+    if (color == "black"){
+      var i = 0;
+      var black_arrows = arrow_lines[color];
+      while (i < black_arrows.length) {
+        var loc = black_arrows[i];
+        var firstLoc = loc["first"];
+        var secondLoc = loc['second'];
+        console.log("firstLoc: ", firstLoc);
+        console.log("secondLoc: ", secondLoc);
+        
+        var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((firstLoc.first_line - 1), (firstLoc.last_column + 5));
+        var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((secondLoc.first_line -1), (secondLoc.last_column + 5));
+        console.log("startcoords: ", startcoords);
+        console.log("endCoords: ", endcoords);
 
-    console.log("Previous Location: ", prevLoc);
-    console.log("current Location: ", currLoc);
-    var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((prevLoc.first_line - 1), (prevLoc.last_column + 5));
-    var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((currLoc.first_line -1), (currLoc.last_column + 5));
-    console.log("startcoords: ", startcoords);
-    console.log("endCoords: ", endcoords);
+        var x_val = 0;
+        if(startcoords.pageX > endcoords.pageX){
+          x_val = startcoords.pageX;
+        } else{
+          x_val = endcoords.pageX;
+        }
 
-    var x_val = 0;
-    if(startcoords.pageX > endcoords.pageX){
-      x_val = startcoords.pageX;
-    } else{
-      x_val = endcoords.pageX;
+        var offset_top = $(".editor").offset().top;
+        var offset_left = $(".editor").offset().left;
+        console.log("offset: ", offset_top, offset_left);
+
+        var text = "<svg width=" + $(".editor").width() + " height=" + $(".editor").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $(".editor").height() +" " + $(".editor").width()+"'> \
+        <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
+         <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
+        </marker> \
+        <path d='M" + (x_val - offset_left + 3) +","+ (endcoords.pageY - (offset_top - 25)) + " \
+                  A20,20 0 0,1 "+ (x_val - offset_left + 3) + "," + (startcoords.pageY - (offset_top - 25)) + "' marker-start='url(#arrowhead)' \
+               style='stroke:black; fill:none;'/> \
+        </svg> \
+        "; 
+        var div = document.createElement('div');
+        div.className =  "arrow";
+        div.innerHTML = text;
+        // div.style.visibility = 'visible';
+        div.style.position = "absolute";
+        div.style.zIndex = "2";
+        div.style.left = "0px";
+        div.style.top = "0px";
+        $(".editor").append(div);
+        i += 1; 
+      }
     }
-
-    var offset_top = $(".editor").offset().top;
-    var offset_left = $(".editor").offset().left;
-
-    var text = "<svg width=" + $(".editor").width() + " height=" + $(".editor").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $(".editor").height() + $(".editor").width()+"'> \
-    <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
-     <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
-    </marker> \
-    <path d='M" + (x_val - offset_left + 3) +","+ (endcoords.pageY - (offset_top - 25)) + " \
-              A20,20 0 0,1 "+ (x_val - offset_left + 3) + "," + (startcoords.pageY - (offset_top - 25)) + "' marker-start='url(#arrowhead)' \
-           style='stroke:black; fill:none;'/> \
-    </svg> \
-    "; 
-    var div = document.createElement('div');
-    div.className =  "arrow";
-    div.innerHTML = text;
-    // div.style.visibility = 'visible';
-    div.style.position = "absolute";
-    div.style.zIndex = "2";
-    div.style.left = "0px";
-    div.style.top = "0px";
-    $(".editor").append(div);
-    showing_arrow = true;
   }
-  else{
-    var text = "";
-    $(".arrow").remove();
-    showing_arrow = false;
-  }
-}
+};
 
 window.FontLoader = FontLoader;
 window.fontloader = fontloader;
