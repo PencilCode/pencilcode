@@ -60707,7 +60707,7 @@ exports.createANTLRParser = function(name, config, root) {
 
 
 },{"../antlr/CLexer":1,"../antlr/CParser":3,"../antlr/JavaLexer":4,"../antlr/JavaParser":6,"../antlr/jvmBasicLexer":7,"../antlr/jvmBasicParser":9,"./helper.coffee":102,"./model.coffee":110,"./parser.coffee":112,"./treewalk.coffee":113,"antlr4":50}],100:[function(require,module,exports){
-var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, ENTER_KEY, Editor, EditorState, FLOATING_BLOCK_ALPHA, FloatingBlockRecord, FloatingOperation, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
+var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, CapturePoint, CrossDocumentLocation, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, ENTER_KEY, Editor, EditorState, FloatingBlockRecord, FloatingOperation, GRAY_BLOCK_BORDER, GRAY_BLOCK_COLOR, GRAY_BLOCK_HANDLE_HEIGHT, GRAY_BLOCK_HANDLE_WIDTH, GRAY_BLOCK_MARGIN, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, RememberedSocketRecord, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 helper = require('./helper.coffee');
@@ -60770,7 +60770,15 @@ META_KEYS = [91, 92, 93, 223, 224];
 
 CONTROL_KEYS = [17, 162, 163];
 
-FLOATING_BLOCK_ALPHA = 0.75;
+GRAY_BLOCK_MARGIN = 5;
+
+GRAY_BLOCK_HANDLE_WIDTH = 15;
+
+GRAY_BLOCK_HANDLE_HEIGHT = 30;
+
+GRAY_BLOCK_COLOR = '#FFF';
+
+GRAY_BLOCK_BORDER = '#AAA';
 
 userAgent = '';
 
@@ -60815,10 +60823,10 @@ hook = function(event, priority, fn) {
 };
 
 exports.Editor = Editor = (function() {
-  function Editor(wrapperElement, options) {
+  function Editor(wrapperElement, options1) {
     var binding, boundListeners, dispatchKeyEvent, dispatchMouseEvent, elements, eventName, fn1, j, len, ref1, ref2, ref3, ref4, ref5, useBlockMode;
     this.wrapperElement = wrapperElement;
-    this.options = options;
+    this.options = options1;
     this.readOnly = false;
     this.paletteGroups = this.options.palette;
     this.showPaletteInTextMode = (ref1 = this.options.showPaletteInTextMode) != null ? ref1 : false;
@@ -61095,8 +61103,76 @@ Editor.prototype.resizeNubby = function() {
   return this.setTopNubbyStyle(this.nubbyHeight, this.nubbyColor);
 };
 
+Editor.prototype.drawFloatingBlock = function(record, startWidth, endWidth, rect, opts) {
+  var blockView, bottomTextPosition, oldBounds, path, rectangle, ref1, ref2, startHeight;
+  blockView = this.view.getViewNodeFor(record.block);
+  blockView.layout(record.position.x, record.position.y);
+  rectangle = new this.view.draw.Rectangle();
+  rectangle.copy(blockView.totalBounds);
+  rectangle.x -= GRAY_BLOCK_MARGIN;
+  rectangle.y -= GRAY_BLOCK_MARGIN;
+  rectangle.width += 2 * GRAY_BLOCK_MARGIN;
+  rectangle.height += 2 * GRAY_BLOCK_MARGIN;
+  bottomTextPosition = blockView.totalBounds.bottom() - blockView.distanceToBase[blockView.lineLength - 1].below - this.fontSize;
+  if ((blockView.totalBounds.width - blockView.bounds[blockView.bounds.length - 1].width) < endWidth) {
+    if (blockView.lineLength > 1) {
+      rectangle.height += this.fontSize;
+      bottomTextPosition = rectangle.bottom() - this.fontSize - 5;
+    } else {
+      rectangle.width += endWidth;
+    }
+  }
+  if (!rectangle.equals(record.grayBox)) {
+    record.grayBox = rectangle;
+    oldBounds = (ref1 = (ref2 = record.grayBoxPath) != null ? typeof ref2.bounds === "function" ? ref2.bounds() : void 0 : void 0) != null ? ref1 : new this.view.draw.NoRectangle();
+    startHeight = blockView.bounds[0].height + 10;
+    record.grayBoxPath = path = new this.view.draw.Path();
+    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.y));
+    path.push(new this.view.draw.Point(rectangle.right(), rectangle.y + 5));
+    path.push(new this.view.draw.Point(rectangle.right(), rectangle.bottom() - 5));
+    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.bottom()));
+    if (blockView.lineLength > 1) {
+      path.push(new this.view.draw.Point(rectangle.x + 5, rectangle.bottom()));
+      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom() - 5));
+    } else {
+      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom()));
+    }
+    path.push(new this.view.draw.Point(rectangle.x, rectangle.y + startHeight));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y + startHeight));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + startHeight - 5));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + 5));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y));
+    path.push(new this.view.draw.Point(rectangle.x, rectangle.y));
+    path.bevel = false;
+    path.noclip = true;
+    path.dotted = true;
+    path.style = {
+      fillColor: GRAY_BLOCK_COLOR,
+      strokeColor: GRAY_BLOCK_BORDER,
+      lineWidth: 4
+    };
+    if (opts.boundingRectangle != null) {
+      opts.boundingRectangle.unite(path.bounds());
+      opts.boundingRectangle.unite(oldBounds);
+      this.mainCtx.restore();
+      return this.redrawMain(opts);
+    }
+  }
+  this.mainCtx.globalAlpha *= 0.8;
+  record.grayBoxPath.draw(this.mainCtx);
+  this.mainCtx.fillStyle = '#000';
+  this.mainCtx.fillText(this.mode.startComment, blockView.totalBounds.x - startWidth, blockView.totalBounds.y + blockView.distanceToBase[0].above - this.fontSize);
+  this.mainCtx.fillText(this.mode.endComment, record.grayBox.right() - endWidth - 5, bottomTextPosition);
+  this.mainCtx.globalAlpha /= 0.8;
+  return blockView.draw(this.mainCtx, rect, {
+    grayscale: false,
+    selected: false,
+    noText: false
+  });
+};
+
 Editor.prototype.redrawMain = function(opts) {
-  var binding, j, layoutResult, len, oldScroll, ref1, ref2, ref3;
+  var binding, endWidth, j, k, layoutResult, len, len1, oldScroll, options, record, rect, ref1, ref2, ref3, ref4, startWidth;
   if (opts == null) {
     opts = {};
   }
@@ -61109,22 +61185,30 @@ Editor.prototype.redrawMain = function(opts) {
       this.mainCtx.save();
       opts.boundingRectangle.clip(this.mainCtx);
     }
-    layoutResult = this.view.getViewNodeFor(this.tree).layout(0, this.nubbyHeight);
-    this.view.getViewNodeFor(this.tree).draw(this.mainCtx, (ref1 = opts.boundingRectangle) != null ? ref1 : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
+    rect = (ref1 = opts.boundingRectangle) != null ? ref1 : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+    options = {
       grayscale: false,
       selected: false,
       noText: (ref2 = opts.noText) != null ? ref2 : false
-    });
-    this.redrawCursors();
-    this.redrawHighlights();
+    };
+    layoutResult = this.view.getViewNodeFor(this.tree).layout(0, this.nubbyHeight);
+    this.view.getViewNodeFor(this.tree).draw(this.mainCtx, rect, options);
+    startWidth = this.mainCtx.measureText(this.mode.startComment).width;
+    endWidth = this.mainCtx.measureText(this.mode.endComment).width;
+    ref3 = this.floatingBlocks;
+    for (j = 0, len = ref3.length; j < len; j++) {
+      record = ref3[j];
+      this.drawFloatingBlock(record, startWidth, endWidth, rect, opts);
+    }
     if (opts.boundingRectangle != null) {
       this.mainCtx.restore();
     }
     this.redrawCursors();
     this.redrawHighlights();
-    ref3 = editorBindings.redraw_main;
-    for (j = 0, len = ref3.length; j < len; j++) {
-      binding = ref3[j];
+    this.resizeGutter();
+    ref4 = editorBindings.redraw_main;
+    for (k = 0, len1 = ref4.length; k < len1; k++) {
+      binding = ref4[k];
       binding.call(this, layoutResult);
     }
     if (this.changeEventVersion !== this.tree.version) {
@@ -61146,7 +61230,7 @@ Editor.prototype.redrawHighlights = function() {
   ref1 = this.markedLines;
   for (line in ref1) {
     info = ref1[line];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
@@ -61156,7 +61240,7 @@ Editor.prototype.redrawHighlights = function() {
   ref2 = this.markedBlocks;
   for (id in ref2) {
     info = ref2[id];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
@@ -61166,17 +61250,18 @@ Editor.prototype.redrawHighlights = function() {
   ref3 = this.extraMarks;
   for (id in ref3) {
     info = ref3[id];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
       delete this.extraMarks[id];
     }
   }
-  if ((this.draggingBlock != null) && this.inTree(this.draggingBlock)) {
+  if ((this.draggingBlock != null) && this.inDisplay(this.draggingBlock)) {
     this.view.getViewNodeFor(this.draggingBlock).draw(this.highlightCtx, new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
       grayscale: true
     });
+    this.maskFloatingPaths(this.draggingBlock.getDocument());
   }
   this.redrawCursors();
   return this.redrawLassoHighlight();
@@ -61380,6 +61465,13 @@ EditorState = (function() {
     return true;
   };
 
+  EditorState.prototype.toString = function() {
+    return JSON.stringify({
+      root: this.root,
+      floats: this.floats
+    });
+  };
+
   return EditorState;
 
 })();
@@ -61395,16 +61487,24 @@ Editor.prototype.getSerializedEditorState = function() {
 
 Editor.prototype.undo = function() {
   var currentValue, operation;
+  this.setCursor(this.cursor, (function(x) {
+    return x.type !== 'socketStart';
+  }));
   currentValue = this.getSerializedEditorState();
-  while (!(this.undoStack.length === 0 || (this.undoStack[this.undoStack.length - 1] === 'CAPTURE' && !this.getSerializedEditorState().equals(currentValue)))) {
+  while (!(this.undoStack.length === 0 || (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint && !this.getSerializedEditorState().equals(currentValue)))) {
     operation = this.popUndo();
     if (operation instanceof FloatingOperation) {
       this.performFloatingOperation(operation, 'backward');
     } else {
-      if (operation !== 'CAPTURE') {
-        this.tree.perform(operation, 'backward', [this.cursor]);
+      if (!(operation instanceof CapturePoint)) {
+        this.getDocument(operation.document).perform(operation.operation, 'backward', this.getPreserves(operation.document));
       }
     }
+  }
+  if (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint) {
+    this.rememberedSockets = this.undoStack[this.undoStack.length - 1].rememberedSockets.map(function(x) {
+      return x.clone();
+    });
   }
   this.popUndo();
   this.correctCursor();
@@ -61437,33 +61537,102 @@ Editor.prototype.popRedo = function() {
 Editor.prototype.redo = function() {
   var currentValue, operation;
   currentValue = this.getSerializedEditorState();
-  while (!(this.redoStack.length === 0 || (this.redoStack[this.redoStack.length - 1] === 'CAPTURE' && !this.getSerializedEditorState().equals(currentValue)))) {
+  while (!(this.redoStack.length === 0 || (this.redoStack[this.redoStack.length - 1] instanceof CapturePoint && !this.getSerializedEditorState().equals(currentValue)))) {
     operation = this.popRedo();
     if (operation instanceof FloatingOperation) {
       this.performFloatingOperation(operation, 'forward');
     } else {
-      if (operation !== 'CAPTURE') {
-        this.tree.perform(operation, 'forward', [this.cursor]);
+      if (!(operation instanceof CapturePoint)) {
+        this.getDocument(operation.document).perform(operation.operation, 'forward', this.getPreserves(operation.document));
       }
     }
+  }
+  if (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint) {
+    this.rememberedSockets = this.undoStack[this.undoStack.length - 1].rememberedSockets.map(function(x) {
+      return x.clone();
+    });
   }
   this.popRedo();
   this.redrawMain();
 };
 
 Editor.prototype.undoCapture = function() {
-  return this.pushUndo('CAPTURE');
+  return this.pushUndo(new CapturePoint(this.rememberedSockets));
+};
+
+CapturePoint = (function() {
+  function CapturePoint(rememberedSockets) {
+    this.rememberedSockets = rememberedSockets.map(function(x) {
+      return x.clone();
+    });
+  }
+
+  return CapturePoint;
+
+})();
+
+hook('populate', 7, function() {
+  return this.rememberedSockets = [];
+});
+
+Editor.prototype.getPreserves = function(dropletDocument) {
+  var array;
+  if (dropletDocument instanceof model.Document) {
+    dropletDocument = this.documentIndex(dropletDocument);
+  }
+  array = [this.cursor];
+  array = array.concat(this.rememberedSockets.map(function(x) {
+    return x.socket;
+  }));
+  return array.filter(function(location) {
+    return location.document === dropletDocument;
+  }).map(function(location) {
+    return location.location;
+  });
 };
 
 Editor.prototype.spliceOut = function(node) {
-  var operation;
+  var dropletDocument, i, j, k, len, len1, operation, parent, record, ref1, ref2, socket;
   if (!(node instanceof model.List)) {
     node = new model.List(node, node);
   }
   operation = null;
-  if (this.inTree(node)) {
-    operation = this.tree.remove(node, [this.cursor]);
-    this.pushUndo(operation);
+  dropletDocument = node.getDocument();
+  if (dropletDocument != null) {
+    parent = node.parent;
+    operation = node.getDocument().remove(node, this.getPreserves(dropletDocument));
+    this.pushUndo({
+      operation: operation,
+      document: this.getDocuments().indexOf(dropletDocument)
+    });
+    if ((parent != null ? parent.type : void 0) === 'socket' && node.start.type === 'blockStart') {
+      ref1 = this.rememberedSockets;
+      for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+        socket = ref1[i];
+        if (this.fromCrossDocumentLocation(socket.socket) === parent) {
+          this.rememberedSockets.splice(i, 0);
+          this.populateSocket(parent, socket.text);
+          break;
+        }
+      }
+    }
+    if (dropletDocument.start.next === dropletDocument.end) {
+      ref2 = this.floatingBlocks;
+      for (i = k = 0, len1 = ref2.length; k < len1; i = ++k) {
+        record = ref2[i];
+        if (record.block === dropletDocument) {
+          this.pushUndo(new FloatingOperation(i, record.block, record.position, 'delete'));
+          if (this.cursor.document === i + 1) {
+            this.setCursor(this.tree.start);
+          }
+          if (this.cursor.document > i + 1) {
+            this.cursor.document -= 1;
+          }
+          this.floatingBlocks.splice(i, 1);
+          break;
+        }
+      }
+    }
   }
   this.prepareNode(node, null);
   this.correctCursor();
@@ -61471,40 +61640,73 @@ Editor.prototype.spliceOut = function(node) {
 };
 
 Editor.prototype.spliceIn = function(node, location) {
-  var container, operation, ref1;
+  var container, dropletDocument, operation, ref1;
   container = (ref1 = location.container) != null ? ref1 : location.parent;
   if (container.type === 'block') {
     container = container.parent;
   } else if (container.type === 'socket' && container.start.next !== container.end) {
+    this.rememberedSockets.push(new RememberedSocketRecord(this.toCrossDocumentLocation(container), container.textContent()));
     this.spliceOut(new model.List(container.start.next, container.end.prev));
   }
-  this.prepareNode(node, container);
-  operation = null;
-  operation = this.tree.insert(location, node, [this.cursor]);
-  this.pushUndo(operation);
-  this.correctCursor();
-  return operation;
+  dropletDocument = location.getDocument();
+  if (dropletDocument != null) {
+    this.prepareNode(node, container);
+    operation = dropletDocument.insert(location, node, this.getPreserves(dropletDocument));
+    this.pushUndo({
+      operation: operation,
+      document: this.getDocuments().indexOf(dropletDocument)
+    });
+    this.correctCursor();
+    return operation;
+  } else {
+    return null;
+  }
 };
 
+RememberedSocketRecord = (function() {
+  function RememberedSocketRecord(socket1, text1) {
+    this.socket = socket1;
+    this.text = text1;
+  }
+
+  RememberedSocketRecord.prototype.clone = function() {
+    return new RememberedSocketRecord(this.socket.clone(), this.text);
+  };
+
+  return RememberedSocketRecord;
+
+})();
+
 Editor.prototype.replace = function(before, after, updates) {
-  var operation;
-  operation = this.tree.replace(before, after, updates);
-  this.pushUndo(operation);
-  this.correctCursor();
-  return operation;
+  var dropletDocument, operation;
+  dropletDocument = before.start.getDocument();
+  if (dropletDocument != null) {
+    operation = dropletDocument.replace(before, after, updates.concat(this.getPreserves(dropletDocument)));
+    this.pushUndo({
+      operation: operation,
+      document: this.documentIndex(dropletDocument)
+    });
+    this.correctCursor();
+    return operation;
+  } else {
+    return null;
+  }
 };
 
 Editor.prototype.correctCursor = function() {
   var cursor;
-  cursor = this.tree.getFromLocation(this.cursor);
+  cursor = this.fromCrossDocumentLocation(this.cursor);
   if (!this.validCursorPosition(cursor)) {
-    while (!(this.validCursorPosition(cursor) && cursor.type !== 'socketStart')) {
+    while (!((cursor == null) || (this.validCursorPosition(cursor) && cursor.type !== 'socketStart'))) {
       cursor = cursor.next;
     }
-    while (!(this.validCursorPosition(cursor) && cursor.type !== 'socketStart')) {
+    if (cursor == null) {
+      cursor = this.fromCrossDocumentLocation(this.cursor);
+    }
+    while (!((cursor == null) || (this.validCursorPosition(cursor) && cursor.type !== 'socketStart'))) {
       cursor = cursor.prev;
     }
-    return this.cursor = cursor.getLocation();
+    return this.cursor = this.toCrossDocumentLocation(cursor);
   }
 };
 
@@ -61560,8 +61762,39 @@ Editor.prototype.resizeDragCanvas = function() {
   return this.highlightCanvas.style.left = this.mainCanvas.offsetLeft + "px";
 };
 
+Editor.prototype.getDocuments = function() {
+  var documents, el, i, j, len, ref1;
+  documents = [this.tree];
+  ref1 = this.floatingBlocks;
+  for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+    el = ref1[i];
+    documents.push(el.block);
+  }
+  return documents;
+};
+
+Editor.prototype.getDocument = function(n) {
+  if (n === 0) {
+    return this.tree;
+  } else {
+    return this.floatingBlocks[n - 1].block;
+  }
+};
+
+Editor.prototype.documentIndex = function(block) {
+  return this.getDocuments().indexOf(block.getDocument());
+};
+
+Editor.prototype.fromCrossDocumentLocation = function(location) {
+  return this.getDocument(location.document).getFromLocation(location.location);
+};
+
+Editor.prototype.toCrossDocumentLocation = function(block) {
+  return new CrossDocumentLocation(this.documentIndex(block), block.getLocation());
+};
+
 hook('mousedown', 1, function(point, event, state) {
-  var box, hitTestResult, i, j, len, line, mainPoint, node, ref1;
+  var box, dropletDocument, hitTestResult, i, j, k, len, line, mainPoint, node, record, ref1, ref2;
   if (state.consumedHitTest) {
     return;
   }
@@ -61569,26 +61802,49 @@ hook('mousedown', 1, function(point, event, state) {
     return;
   }
   mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTest(mainPoint, this.tree);
-  if (this.debugging && event.shiftKey) {
-    line = null;
-    node = this.view.getViewNodeFor(hitTestResult);
-    ref1 = node.bounds;
-    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-      box = ref1[i];
-      if (box.contains(mainPoint)) {
-        line = i;
-        break;
+  ref1 = this.getDocuments();
+  for (i = j = ref1.length - 1; j >= 0; i = j += -1) {
+    dropletDocument = ref1[i];
+    if (this.handleTextInputClick(mainPoint, dropletDocument)) {
+      state.consumedHitTest = true;
+      return;
+    } else if (this.cursor.document === i && this.cursorAtSocket()) {
+      this.setCursor(this.cursor, (function(token) {
+        return token.type !== 'socketStart';
+      }));
+    }
+    hitTestResult = this.hitTest(mainPoint, dropletDocument);
+    if (this.debugging && event.shiftKey) {
+      line = null;
+      node = this.view.getViewNodeFor(hitTestResult);
+      ref2 = node.bounds;
+      for (i = k = 0, len = ref2.length; k < len; i = ++k) {
+        box = ref2[i];
+        if (box.contains(mainPoint)) {
+          line = i;
+          break;
+        }
+      }
+      this.dumpNodeForDebug(hitTestResult, line);
+    }
+    if (hitTestResult != null) {
+      this.clickedBlock = hitTestResult;
+      this.clickedBlockPaletteEntry = null;
+      this.setCursor(this.clickedBlock.start.next);
+      this.clickedPoint = point;
+      state.consumedHitTest = true;
+      return;
+    } else if (i > 0) {
+      record = this.floatingBlocks[i - 1];
+      if ((record.grayBoxPath != null) && record.grayBoxPath.contains(this.trackerPointToMain(point))) {
+        this.clickedBlock = new model.List(record.block.start.next, record.block.end.prev);
+        this.clickedPoint = point;
+        this.view.getViewNodeFor(this.clickedBlock).absorbCache();
+        state.consumedHitTest = true;
+        this.redrawMain();
+        return;
       }
     }
-    this.dumpNodeForDebug(hitTestResult, line);
-  }
-  if (hitTestResult != null) {
-    this.clickedBlock = hitTestResult;
-    this.clickedBlockPaletteEntry = null;
-    this.setCursor(this.clickedBlock.start.next);
-    this.clickedPoint = point;
-    return state.consumedHitTest = true;
   }
 });
 
@@ -61607,9 +61863,10 @@ Editor.prototype.wouldDelete = function(position) {
 };
 
 hook('mousemove', 1, function(point, event, state) {
-  var acceptLevel, bound, draggingBlockView, dropPoint, expansion, head, j, len, line, mainPoint, position, ref1, viewNode;
+  var acceptLevel, allowed, bound, draggingBlockView, dropPoint, dropletDocument, expansion, head, i, j, k, l, len, len1, line, mainPoint, position, record, ref1, ref2, ref3, viewNode;
   if (!state.capturedPickup && (this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
     this.draggingBlock = this.clickedBlock;
+    this.dragReplacing = false;
     if (this.clickedBlockPaletteEntry) {
       this.draggingOffset = this.paletteView.getViewNodeFor(this.draggingBlock).bounds[0].upperLeftCorner().from(this.trackerPointToPalette(this.clickedPoint));
       expansion = this.clickedBlockPaletteEntry.expansion;
@@ -61637,6 +61894,7 @@ hook('mousemove', 1, function(point, event, state) {
         this.draggingOffset = viewNode.bounds[0].upperLeftCorner().from(mainPoint);
       }
     }
+    this.dragView.clearCache();
     draggingBlockView = this.dragView.getViewNodeFor(this.draggingBlock);
     draggingBlockView.layout(1, 1);
     this.dragCanvas.width = Math.min(draggingBlockView.totalBounds.width + 10, window.screen.width);
@@ -61650,28 +61908,48 @@ hook('mousemove', 1, function(point, event, state) {
       w: this.mainCanvas.width,
       h: this.mainCanvas.height
     });
-    head = this.tree.start;
-    while (head !== this.tree.end) {
-      if (head === this.draggingBlock.start) {
-        head = this.draggingBlock.end;
+    ref2 = this.getDocuments();
+    for (k = 0, len1 = ref2.length; k < len1; k++) {
+      dropletDocument = ref2[k];
+      head = dropletDocument.start;
+      if (this.draggingBlock.start.prev === head) {
+        head = head.next;
       }
-      if (head instanceof model.StartToken) {
-        acceptLevel = this.getAcceptLevel(this.draggingBlock, head.container);
-        if (acceptLevel !== helper.FORBID) {
-          dropPoint = this.view.getViewNodeFor(head.container).dropPoint;
-          if (dropPoint != null) {
-            this.dropPointQuadTree.insert({
-              x: dropPoint.x,
-              y: dropPoint.y,
-              w: 0,
-              h: 0,
-              acceptLevel: acceptLevel,
-              _droplet_node: head.container
-            });
+      while (head !== dropletDocument.end) {
+        if (head === this.draggingBlock.start) {
+          head = this.draggingBlock.end;
+        }
+        if (head instanceof model.StartToken) {
+          acceptLevel = this.getAcceptLevel(this.draggingBlock, head.container);
+          if (acceptLevel !== helper.FORBID) {
+            dropPoint = this.view.getViewNodeFor(head.container).dropPoint;
+            if (dropPoint != null) {
+              allowed = true;
+              ref3 = this.floatingBlocks;
+              for (i = l = ref3.length - 1; l >= 0; i = l += -1) {
+                record = ref3[i];
+                if (record.block === dropletDocument) {
+                  break;
+                } else if (record.grayBoxPath.contains(dropPoint)) {
+                  allowed = false;
+                  break;
+                }
+              }
+              if (allowed) {
+                this.dropPointQuadTree.insert({
+                  x: dropPoint.x,
+                  y: dropPoint.y,
+                  w: 0,
+                  h: 0,
+                  acceptLevel: acceptLevel,
+                  _droplet_node: head.container
+                });
+              }
+            }
           }
         }
+        head = head.next;
       }
-      head = head.next;
     }
     this.dragCanvas.style.top = (position.y + getOffsetTop(this.dropletElement)) + "px";
     this.dragCanvas.style.left = (position.x + getOffsetLeft(this.dropletElement)) + "px";
@@ -61726,13 +62004,15 @@ hook('mousemove', 0, function(point, event, state) {
     while (((ref1 = head.type) === 'newline' || ref1 === 'cursor') || head.type === 'text' && head.value === '') {
       head = head.next;
     }
-    if (head === this.tree.end && (this.mainCanvas.width + this.scrollOffsets.main.x > (ref2 = mainPoint.x) && ref2 > this.scrollOffsets.main.x - this.gutter.offsetWidth) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref3 = mainPoint.y) && ref3 > this.scrollOffsets.main.y)) {
+    if (head === this.tree.end && this.floatingBlocks.length === 0 && (this.mainCanvas.width + this.scrollOffsets.main.x > (ref2 = mainPoint.x) && ref2 > this.scrollOffsets.main.x - this.gutter.offsetWidth) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref3 = mainPoint.y) && ref3 > this.scrollOffsets.main.y)) {
       this.view.getViewNodeFor(this.tree).highlightArea.draw(this.highlightCtx);
       this.lastHighlight = this.tree;
     } else {
       if (this.hitTest(mainPoint, this.draggingBlock)) {
         best = null;
+        this.dragReplacing = true;
       } else {
+        this.dragReplacing = false;
         testPoints = this.dropPointQuadTree.retrieve({
           x: mainPoint.x - MAX_DROP_DISTANCE,
           y: mainPoint.y - MAX_DROP_DISTANCE,
@@ -61757,6 +62037,7 @@ hook('mousemove', 0, function(point, event, state) {
         this.redrawHighlights();
         if (best != null) {
           this.view.getViewNodeFor(best).highlightArea.draw(this.highlightCtx);
+          this.maskFloatingPaths(best.getDocument());
         }
         this.lastHighlight = best;
       }
@@ -61781,7 +62062,10 @@ hook('mouseup', 0, function() {
 });
 
 hook('mouseup', 1, function(point, event, state) {
-  var currentIndentation, futureCursorLocation, indentation, leadingWhitespaceRegex, line, nextLine, pos, position, prefix, suffix, text;
+  var currentIndentation, el, futureCursorLocation, hadTextToken, hasTextToken, i, indentation, j, leadingWhitespaceRegex, len, line, newBeginning, newIndex, nextLine, pos, position, prefix, rememberedSocketOffsets, suffix, text;
+  if (this.dragReplacing) {
+    this.endDrag();
+  }
   if (this.draggingBlock != null) {
     if (!this.currentlyUsingBlocks) {
       position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
@@ -61814,6 +62098,8 @@ hook('mouseup', 1, function(point, event, state) {
       }
     } else if (this.lastHighlight != null) {
       this.undoCapture();
+      rememberedSocketOffsets = this.spliceRememberedSocketOffsets(this.draggingBlock);
+      hadTextToken = this.draggingBlock.start.next.type === 'text';
       this.spliceOut(this.draggingBlock);
       this.clearHighlightCanvas();
       this.fireEvent('sound', [this.lastHighlight.type]);
@@ -61826,20 +62112,63 @@ hook('mouseup', 1, function(point, event, state) {
           this.spliceIn(this.draggingBlock, this.lastHighlight.end);
           break;
         default:
-          if (this.lastHighlight === this.tree) {
-            this.spliceIn(this.draggingBlock, this.tree.start);
+          if (this.lastHighlight.type === 'document') {
+            this.spliceIn(this.draggingBlock, this.lastHighlight.start);
           }
       }
-      futureCursorLocation = this.draggingBlock.start.getLocation();
+      hasTextToken = this.draggingBlock.start.next.type === 'text';
+      if (hadTextToken && !hasTextToken) {
+        rememberedSocketOffsets.forEach(function(x) {
+          return x.offset -= 1;
+        });
+      } else if (hasTextToken && !hadTextToken) {
+        rememberedSocketOffsets.forEach(function(x) {
+          return x.offset += 1;
+        });
+      }
+      futureCursorLocation = this.toCrossDocumentLocation(this.draggingBlock.start);
       if (this.lastHighlight.type === 'socket') {
         this.reparse(this.draggingBlock.parent.parent);
       }
-      this.setCursor(futureCursorLocation);
-      this.fireEvent('block-click');
-      return this.endDrag();
+      this.endDrag();
+      if (futureCursorLocation != null) {
+        this.setCursor(futureCursorLocation);
+      }
+      newBeginning = futureCursorLocation.location.count;
+      newIndex = futureCursorLocation.document;
+      for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
+        el = rememberedSocketOffsets[i];
+        this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(newIndex, new model.Location(el.offset + newBeginning, 'socket')), el.text));
+      }
+      return this.fireEvent('block-click');
     }
   }
 });
+
+Editor.prototype.spliceRememberedSocketOffsets = function(block) {
+  var blockBegin, el, i, j, len, newRememberedSockets, offsets, ref1;
+  if (block.getDocument() != null) {
+    blockBegin = block.start.getLocation().count;
+    offsets = [];
+    newRememberedSockets = [];
+    ref1 = this.rememberedSockets;
+    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+      el = ref1[i];
+      if (block.contains(this.fromCrossDocumentLocation(el.socket))) {
+        offsets.push({
+          offset: el.socket.location.count - blockBegin,
+          text: el.text
+        });
+      } else {
+        newRememberedSockets.push(el);
+      }
+    }
+    this.rememberedSockets = newRememberedSockets;
+    return offsets;
+  } else {
+    return [];
+  }
+};
 
 hook('populate', 0, function() {
   return this.floatingBlocks = [];
@@ -61857,26 +62186,23 @@ FloatingBlockRecord = (function() {
 
 Editor.prototype.inTree = function(block) {
   var ref1;
-  if ((block instanceof model.List) && !(block instanceof model.Container)) {
-    block = block.start;
-  }
-  block = (ref1 = block.container) != null ? ref1 : block;
-  while (!(block === this.tree || (block == null))) {
-    block = block.parent;
-  }
-  return block === this.tree;
+  return ((ref1 = block.container) != null ? ref1 : block).getDocument() === this.tree;
+};
+
+Editor.prototype.inDisplay = function(block) {
+  var ref1, ref2;
+  return ref1 = ((ref2 = block.container) != null ? ref2 : block).getDocument(), indexOf.call(this.getDocuments(), ref1) >= 0;
 };
 
 hook('mouseup', 0, function(point, event, state) {
-  var palettePoint, ref1, ref2, ref3, ref4, renderPoint, trackPoint;
-  if ((this.draggingBlock != null) && (this.lastHighlight == null)) {
+  var el, i, j, len, newDocument, palettePoint, ref1, ref2, ref3, ref4, rememberedSocketOffsets, renderPoint, trackPoint;
+  if ((this.draggingBlock != null) && (this.lastHighlight == null) && !this.dragReplacing) {
     trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
     renderPoint = this.trackerPointToMain(trackPoint);
     palettePoint = this.trackerPointToPalette(trackPoint);
-    if (this.inTree(this.draggingBlock)) {
-      this.undoCapture();
-      this.spliceOut(this.draggingBlock);
-    }
+    this.undoCapture();
+    rememberedSocketOffsets = this.spliceRememberedSocketOffsets(this.draggingBlock);
+    this.spliceOut(this.draggingBlock);
     palettePoint = this.trackerPointToPalette(point);
     if ((0 < (ref1 = palettePoint.x - this.scrollOffsets.palette.x) && ref1 < this.paletteCanvas.width) && (0 < (ref2 = palettePoint.y - this.scrollOffsets.palette.y) && ref2 < this.paletteCanvas.height) || !((-this.gutter.offsetWidth < (ref3 = renderPoint.x - this.scrollOffsets.main.x) && ref3 < this.mainCanvas.width) && (0 < (ref4 = renderPoint.y - this.scrollOffsets.main.y) && ref4 < this.mainCanvas.height))) {
       if (this.draggingBlock === this.lassoSelection) {
@@ -61887,8 +62213,17 @@ hook('mouseup', 0, function(point, event, state) {
     } else if (renderPoint.x - this.scrollOffsets.main.x < 0) {
       renderPoint.x = this.scrollOffsets.main.x;
     }
-    this.pushUndo(new FloatingOperation(this.floatingBlocks.length, this.draggingBlock, renderPoint, 'create'));
-    this.floatingBlocks.push(new FloatingBlockRecord(this.draggingBlock, renderPoint));
+    newDocument = new model.Document({
+      roundedSingletons: true
+    });
+    newDocument.insert(newDocument.start, this.draggingBlock);
+    this.pushUndo(new FloatingOperation(this.floatingBlocks.length, newDocument, renderPoint, 'create'));
+    this.floatingBlocks.push(new FloatingBlockRecord(newDocument, renderPoint));
+    this.setCursor(this.draggingBlock.start);
+    for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
+      el = rememberedSocketOffsets[i];
+      this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(this.floatingBlocks.length - 1, new model.Location(el.offset, 'socket')), el.text));
+    }
     this.draggingBlock = null;
     this.draggingOffset = null;
     this.lastHighlight = null;
@@ -61900,8 +62235,14 @@ hook('mouseup', 0, function(point, event, state) {
 
 Editor.prototype.performFloatingOperation = function(op, direction) {
   if ((op.type === 'create') === (direction === 'forward')) {
+    if (this.cursor.document > op.index) {
+      this.cursor.document += 1;
+    }
     return this.floatingBlocks.splice(op.index, 0, new FloatingBlockRecord(op.block.clone(), op.position));
   } else {
+    if (this.cursor.document === op.index + 1) {
+      this.setCursor(this.tree.start);
+    }
     return this.floatingBlocks.splice(op.index, 1);
   }
 };
@@ -61912,67 +62253,21 @@ FloatingOperation = (function() {
     this.block = block1;
     this.position = position1;
     this.type = type;
+    this.block = this.block.clone();
   }
+
+  FloatingOperation.prototype.toString = function() {
+    return JSON.stringify({
+      index: this.index,
+      block: this.block.stringify(),
+      position: this.position.toString(),
+      type: this.type
+    });
+  };
 
   return FloatingOperation;
 
 })();
-
-hook('mousedown', 5, function(point, event, state) {
-  var hitTestResult, i, j, len, record, ref1, results;
-  if (state.consumedHitTest) {
-    return;
-  }
-  if (!this.trackerPointIsInMain(point)) {
-    return;
-  }
-  ref1 = this.floatingBlocks;
-  results = [];
-  for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-    record = ref1[i];
-    hitTestResult = this.hitTest(this.trackerPointToMain(point), record.block);
-    if (hitTestResult != null) {
-      this.clickedBlock = record.block;
-      this.clickedPoint = point;
-      state.consumedHitTest = true;
-      results.push(this.redrawMain());
-    } else {
-      results.push(void 0);
-    }
-  }
-  return results;
-});
-
-hook('mousemove', 7, function(point, event, state) {
-  var i, j, len, record, ref1;
-  if ((this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
-    ref1 = this.floatingBlocks;
-    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-      record = ref1[i];
-      if (record.block === this.clickedBlock) {
-        this.undoCapture();
-        this.pushUndo(new FloatingOperation(i, record.block, record.position, 'delete'));
-        this.floatingBlocks.splice(i, 1);
-        this.redrawMain();
-        return;
-      }
-    }
-  }
-});
-
-hook('redraw_main', 7, function() {
-  var blockView, boundingRect, j, len, record, ref1, results;
-  boundingRect = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
-  ref1 = this.floatingBlocks;
-  results = [];
-  for (j = 0, len = ref1.length; j < len; j++) {
-    record = ref1[j];
-    blockView = this.view.getViewNodeFor(record.block);
-    blockView.layout(record.position.x, record.position.y);
-    results.push(blockView.draw(this.mainCtx, boundingRect));
-  }
-  return results;
-});
 
 hook('populate', 0, function() {
   this.paletteHeader = document.createElement('div');
@@ -62148,7 +62443,7 @@ hook('rebuild_palette', 1, function() {
     block = data.block;
     hoverDiv = document.createElement('div');
     hoverDiv.className = 'droplet-hover-div';
-    hoverDiv.title = (ref2 = data.title) != null ? ref2 : block.stringify(this.mode);
+    hoverDiv.title = (ref2 = data.title) != null ? ref2 : block.stringify();
     bounds = this.paletteView.getViewNodeFor(block).totalBounds;
     hoverDiv.style.top = bounds.y + "px";
     hoverDiv.style.left = bounds.x + "px";
@@ -62227,24 +62522,25 @@ last_ = function(array) {
 };
 
 Editor.prototype.redrawTextInput = function() {
-  var endRow, head, line, newp, oldp, rect, sameLength, startRow, textFocusView, treeView;
-  sameLength = this.getCursor().stringify(this.mode).split('\n').length === this.hiddenInput.value.split('\n').length;
+  var dropletDocument, endRow, head, line, newp, oldp, rect, sameLength, startRow, textFocusView, treeView;
+  sameLength = this.getCursor().stringify().split('\n').length === this.hiddenInput.value.split('\n').length;
+  dropletDocument = this.getCursor().getDocument();
   this.populateSocket(this.getCursor(), this.hiddenInput.value);
   textFocusView = this.view.getViewNodeFor(this.getCursor());
-  startRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
-  endRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+  startRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
+  endRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
   if (sameLength && startRow === endRow) {
     line = endRow;
     head = this.getCursor().start;
-    while (head !== this.tree.start) {
+    while (head !== dropletDocument.start) {
       head = head.prev;
       if (head.type === 'newline') {
         line++;
       }
     }
-    treeView = this.view.getViewNodeFor(this.tree);
+    treeView = this.view.getViewNodeFor(dropletDocument);
     oldp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
-    treeView.layout(0, this.nubbyHeight);
+    treeView.layout();
     newp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
     if (helper.deepEquals(newp, oldp)) {
       rect = new this.draw.NoRectangle();
@@ -62276,11 +62572,11 @@ Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
     return;
   }
   textFocusView = this.view.getViewNodeFor(this.getCursor());
-  startRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
-  endRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
-  lines = this.getCursor().stringify(this.mode).split('\n');
-  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
-  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  startRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
+  endRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+  lines = this.getCursor().stringify().split('\n');
+  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
   if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
     this.cursorCtx.lineWidth = 1;
     this.cursorCtx.strokeStyle = '#000';
@@ -62308,18 +62604,9 @@ escapeString = function(str) {
   return str[0] + str.slice(1, -1).replace(/(\'|\"|\n)/g, '\\$1') + str[str.length - 1];
 };
 
-Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
-  if (selectionStart == null) {
-    selectionStart = null;
-  }
-  if (selectionEnd == null) {
-    selectionEnd = null;
-  }
-  if ((focus != null ? focus.id : void 0) in this.extraMarks) {
-    delete this.extraMarks[focus != null ? focus.id : void 0];
-  }
+hook('mousedown', 7, function() {
   return this.hideDropdown();
-};
+});
 
 Editor.prototype.reparse = function(list, recovery, updates, originalTrigger) {
   var context, e, newList, originalText, parent, ref1;
@@ -62447,7 +62734,7 @@ Editor.prototype.getTextPosition = function(point) {
   row = Math.max(row, 0);
   row = Math.min(row, textFocusView.lineLength - 1);
   column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding - (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0)) / this.mainCtx.measureText(' ').width));
-  lines = this.getCursor().stringify(this.mode).split('\n').slice(0, +row + 1 || 9e9);
+  lines = this.getCursor().stringify().split('\n').slice(0, +row + 1 || 9e9);
   lines[lines.length - 1] = lines[lines.length - 1].slice(0, column);
   return lines.join('\n').length;
 };
@@ -62460,8 +62747,8 @@ Editor.prototype.setTextInputAnchor = function(point) {
 Editor.prototype.selectDoubleClick = function(point) {
   var after, before, position, ref1, ref2, ref3, ref4;
   position = this.getTextPosition(point);
-  before = (ref1 = (ref2 = this.getCursor().stringify(this.mode).slice(0, position).match(/\w*$/)[0]) != null ? ref2.length : void 0) != null ? ref1 : 0;
-  after = (ref3 = (ref4 = this.getCursor().stringify(this.mode).slice(position).match(/^\w*/)[0]) != null ? ref4.length : void 0) != null ? ref3 : 0;
+  before = (ref1 = (ref2 = this.getCursor().stringify().slice(0, position).match(/\w*$/)[0]) != null ? ref2.length : void 0) != null ? ref1 : 0;
+  after = (ref3 = (ref4 = this.getCursor().stringify().slice(position).match(/^\w*/)[0]) != null ? ref4.length : void 0) != null ? ref3 : 0;
   this.textInputAnchor = position - before;
   this.textInputHead = position + after;
   return this.hiddenInput.setSelectionRange(this.textInputAnchor, this.textInputHead);
@@ -62472,13 +62759,9 @@ Editor.prototype.setTextInputHead = function(point) {
   return this.hiddenInput.setSelectionRange(Math.min(this.textInputAnchor, this.textInputHead), Math.max(this.textInputAnchor, this.textInputHead));
 };
 
-hook('mousedown', 2, function(point, event, state) {
-  var hitTestResult, mainPoint;
-  if (state.consumedHitTest) {
-    return;
-  }
-  mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+Editor.prototype.handleTextInputClick = function(mainPoint, dropletDocument) {
+  var hitTestResult;
+  hitTestResult = this.hitTestTextInput(mainPoint, dropletDocument);
   if (hitTestResult != null) {
     if (hitTestResult !== this.getCursor()) {
       if (hitTestResult.editable()) {
@@ -62499,13 +62782,11 @@ hook('mousedown', 2, function(point, event, state) {
       this.textInputSelecting = true;
     }
     this.hiddenInput.focus();
-    return state.consumedHitTest = true;
-  } else if (this.cursorAtSocket()) {
-    return this.setCursor(this.cursor, (function(token) {
-      return token.type !== 'socketStart';
-    }));
+    return true;
+  } else {
+    return false;
   }
-});
+};
 
 hook('populate', 0, function() {
   this.dropdownElement = document.createElement('div');
@@ -62594,29 +62875,34 @@ Editor.prototype.hideDropdown = function() {
 };
 
 hook('dblclick', 0, function(point, event, state) {
-  var hitTestResult, mainPoint;
+  var dropletDocument, hitTestResult, j, len, mainPoint, ref1;
   if (state.consumedHitTest) {
     return;
   }
-  mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
-  if (hitTestResult !== this.getCursor()) {
-    if (hitTestResult.editable()) {
-      this.redrawMain();
-      hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+  ref1 = this.getDocuments();
+  for (j = 0, len = ref1.length; j < len; j++) {
+    dropletDocument = ref1[j];
+    mainPoint = this.trackerPointToMain(point);
+    hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+    if (hitTestResult !== this.getCursor()) {
+      if ((hitTestResult != null) && hitTestResult.editable()) {
+        this.redrawMain();
+        hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+      }
     }
-  }
-  if ((hitTestResult != null) && hitTestResult.editable()) {
-    this.setCursor(hitTestResult);
-    this.redrawMain();
-    setTimeout(((function(_this) {
-      return function() {
-        _this.selectDoubleClick(mainPoint);
-        _this.redrawTextInput();
-        return _this.textInputSelecting = false;
-      };
-    })(this)), 0);
-    return state.consumedHitTest = true;
+    if ((hitTestResult != null) && hitTestResult.editable()) {
+      this.setCursor(hitTestResult);
+      this.redrawMain();
+      setTimeout(((function(_this) {
+        return function() {
+          _this.selectDoubleClick(mainPoint);
+          _this.redrawTextInput();
+          return _this.textInputSelecting = false;
+        };
+      })(this)), 0);
+      state.consumedHitTest = true;
+      return;
+    }
   }
 });
 
@@ -62689,27 +62975,50 @@ hook('mousedown', 0, function(point, event, state) {
 });
 
 hook('mousemove', 0, function(point, event, state) {
-  var first, lassoRectangle, last, mainPoint, ref1;
+  var dropletDocument, findLassoSelect, j, lassoRectangle, len, mainPoint, ref1, results;
   if (this.lassoSelectAnchor != null) {
     mainPoint = this.trackerPointToMain(point);
     this.clearLassoSelectCanvas();
     lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
-    first = this.tree.start;
-    while (!((first == null) || first.type === 'blockStart' && this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
-      first = first.next;
-    }
-    last = this.tree.end;
-    while (!((last == null) || last.type === 'blockEnd' && this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
-      last = last.prev;
-    }
-    this.clearLassoSelectCanvas();
-    this.clearHighlightCanvas();
-    this.lassoSelectCtx.strokeStyle = '#00f';
-    this.lassoSelectCtx.strokeRect(lassoRectangle.x - this.scrollOffsets.main.x, lassoRectangle.y - this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
-    if (first && (last != null)) {
-      ref1 = validateLassoSelection(this.tree, first, last), first = ref1[0], last = ref1[1];
-      this.lassoSelection = new model.List(first, last);
-      return this.redrawLassoHighlight();
+    findLassoSelect = (function(_this) {
+      return function(dropletDocument) {
+        var first, last, ref1;
+        first = dropletDocument.start;
+        while (!((first == null) || first.type === 'blockStart' && _this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
+          first = first.next;
+        }
+        last = dropletDocument.end;
+        while (!((last == null) || last.type === 'blockEnd' && _this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
+          last = last.prev;
+        }
+        _this.clearLassoSelectCanvas();
+        _this.clearHighlightCanvas();
+        _this.lassoSelectCtx.strokeStyle = '#00f';
+        _this.lassoSelectCtx.strokeRect(lassoRectangle.x - _this.scrollOffsets.main.x, lassoRectangle.y - _this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
+        if (first && (last != null)) {
+          ref1 = validateLassoSelection(dropletDocument, first, last), first = ref1[0], last = ref1[1];
+          _this.lassoSelection = new model.List(first, last);
+          _this.redrawLassoHighlight();
+          return true;
+        } else {
+          _this.lassoSelection = null;
+          return false;
+        }
+      };
+    })(this);
+    if (!((this.lassoSelectionDocument != null) && findLassoSelect(this.lassoSelectionDocument))) {
+      ref1 = this.getDocuments();
+      results = [];
+      for (j = 0, len = ref1.length; j < len; j++) {
+        dropletDocument = ref1[j];
+        if (findLassoSelect(dropletDocument)) {
+          this.lassoSelectionDocument = dropletDocument;
+          break;
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
     }
   }
 });
@@ -62720,10 +63029,29 @@ Editor.prototype.redrawLassoHighlight = function() {
     mainCanvasRectangle = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
     lassoView = this.view.getViewNodeFor(this.lassoSelection);
     lassoView.absorbCache();
-    return lassoView.draw(this.highlightCtx, mainCanvasRectangle, {
+    lassoView.draw(this.highlightCtx, mainCanvasRectangle, {
       selected: true
     });
+    return this.maskFloatingPaths(this.lassoSelection.start.getDocument());
   }
+};
+
+Editor.prototype.maskFloatingPaths = function(dropletDocument) {
+  var i, j, record, ref1, results;
+  ref1 = this.floatingBlocks;
+  results = [];
+  for (i = j = ref1.length - 1; j >= 0; i = j += -1) {
+    record = ref1[i];
+    if (record.block === dropletDocument) {
+      break;
+    } else {
+      this.highlightCtx.save();
+      record.grayBoxPath.clip(this.highlightCtx);
+      record.grayBoxPath.bounds().clearRect(this.highlightCtx);
+      results.push(this.highlightCtx.restore());
+    }
+  }
+  return results;
 };
 
 validateLassoSelection = function(tree, first, last) {
@@ -62761,28 +63089,15 @@ validateLassoSelection = function(tree, first, last) {
 };
 
 hook('mouseup', 0, function(point, event, state) {
-  var first, lassoRectangle, last, mainPoint, ref1;
   if (this.lassoSelectAnchor != null) {
-    mainPoint = this.trackerPointToMain(point);
-    lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+    if (this.lassoSelection != null) {
+      this.setCursor(this.lassoSelection.end);
+    }
     this.lassoSelectAnchor = null;
     this.clearLassoSelectCanvas();
-    first = this.tree.start;
-    while (!((first == null) || first.type === 'blockStart' && this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
-      first = first.next;
-    }
-    last = this.tree.end;
-    while (!((last == null) || last.type === 'blockEnd' && this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
-      last = last.prev;
-    }
-    if (!((first != null) && (last != null))) {
-      return;
-    }
-    ref1 = validateLassoSelection(this.tree, first, last), first = ref1[0], last = ref1[1];
-    this.lassoSelection = new model.List(first, last);
-    this.setCursor(this.lassoSelection.end);
-    return this.redrawMain();
+    this.redrawMain();
   }
+  return this.lassoSelectionDocument = null;
 });
 
 hook('mousedown', 3, function(point, event, state) {
@@ -62799,8 +63114,26 @@ hook('mousedown', 3, function(point, event, state) {
 });
 
 hook('populate', 0, function() {
-  return this.cursor = new model.Location(0, 'documentStart');
+  return this.cursor = new CrossDocumentLocation(0, new model.Location(0, 'documentStart'));
 });
+
+CrossDocumentLocation = (function() {
+  function CrossDocumentLocation(document1, location1) {
+    this.document = document1;
+    this.location = location1;
+  }
+
+  CrossDocumentLocation.prototype.is = function(other) {
+    return this.location.is(other.location) && this.document === other.document;
+  };
+
+  CrossDocumentLocation.prototype.clone = function() {
+    return new CrossDocumentLocation(this.document, this.location.clone());
+  };
+
+  return CrossDocumentLocation;
+
+})();
 
 Editor.prototype.validCursorPosition = function(destination) {
   var ref1, ref2;
@@ -62808,6 +63141,7 @@ Editor.prototype.validCursorPosition = function(destination) {
 };
 
 Editor.prototype.setCursor = function(destination, validate, direction) {
+  var ref1;
   if (validate == null) {
     validate = (function() {
       return true;
@@ -62816,13 +63150,12 @@ Editor.prototype.setCursor = function(destination, validate, direction) {
   if (direction == null) {
     direction = 'after';
   }
-  if ((destination != null) && !(destination instanceof model.Location)) {
-    destination = destination.getLocation();
+  if ((destination != null) && destination instanceof CrossDocumentLocation) {
+    destination = this.fromCrossDocumentLocation(destination);
   }
-  if (destination == null) {
+  if (!((destination != null) && this.inDisplay(destination))) {
     return;
   }
-  destination = this.tree.getFromLocation(destination);
   if (destination instanceof model.Container) {
     destination = destination.start;
   }
@@ -62832,17 +63165,21 @@ Editor.prototype.setCursor = function(destination, validate, direction) {
       return;
     }
   }
-  destination = destination.getLocation();
+  destination = this.toCrossDocumentLocation(destination);
   if (this.cursorAtSocket() && !this.cursor.is(destination)) {
-    this.reparse(this.getCursor(), null, [this.cursor, destination]);
+    this.reparse(this.getCursor(), null, (destination.document === this.cursor.document ? [destination.location] : []));
     this.hiddenInput.blur();
     this.dropletElement.focus();
   }
   this.cursor = destination;
+  this.correctCursor();
   this.redrawMain();
   this.highlightFlashShow();
   this.redrawHighlights();
   if (this.cursorAtSocket()) {
+    if (((ref1 = this.getCursor()) != null ? ref1.id : void 0) in this.extraMarks) {
+      delete this.extraMarks[typeof focus !== "undefined" && focus !== null ? focus.id : void 0];
+    }
     this.undoCapture();
     this.hiddenInput.value = this.getCursor().textContent();
     this.hiddenInput.focus();
@@ -62870,7 +63207,7 @@ Editor.prototype.determineCursorPosition = function() {
 
 Editor.prototype.getCursor = function() {
   var cursor;
-  cursor = this.tree.getFromLocation(this.cursor);
+  cursor = this.fromCrossDocumentLocation(this.cursor);
   if (cursor.type === 'socketStart') {
     return cursor.container;
   } else {
@@ -63784,7 +64121,7 @@ Editor.prototype.addEmptyLine = function(str) {
 
 Editor.prototype.getValue = function() {
   if (this.currentlyUsingBlocks) {
-    return this.addEmptyLine(this.tree.stringify(this.mode));
+    return this.addEmptyLine(this.tree.stringify());
   } else {
     return this.getAceValue();
   }
@@ -63897,6 +64234,11 @@ hook('mousedown', 10, function() {
 });
 
 Editor.prototype.endDrag = function() {
+  if (this.cursorAtSocket()) {
+    this.setCursor(this.cursor, function(x) {
+      return x.type !== 'socketStart';
+    });
+  }
   this.draggingBlock = null;
   this.draggingOffset = null;
   this.lastHighlight = null;
@@ -64118,17 +64460,6 @@ Editor.prototype.viewOrChildrenContains = function(model, point, view) {
   return false;
 };
 
-hook('mouseup', 0.5, function(point, event) {
-  var renderPoint, trackPoint;
-  if (this.draggingBlock != null) {
-    trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
-    renderPoint = this.trackerPointToMain(trackPoint);
-    if (this.inTree(this.draggingBlock) && this.viewOrChildrenContains(this.draggingBlock, renderPoint)) {
-      return this.endDrag();
-    }
-  }
-});
-
 hook('populate', 0, function() {
   this.gutter = document.createElement('div');
   this.gutter.className = 'droplet-gutter';
@@ -64216,13 +64547,12 @@ Editor.prototype.setAnnotations = function(annotations) {
 };
 
 Editor.prototype.resizeGutter = function() {
-  var ref1, ref2, ref3;
   if (this.lastGutterWidth !== this.aceEditor.renderer.$gutterLayer.gutterWidth) {
     this.lastGutterWidth = this.aceEditor.renderer.$gutterLayer.gutterWidth;
     this.gutter.style.width = this.lastGutterWidth + 'px';
     return this.resize();
   }
-  return this.gutter.style.height = (Math.max(this.dropletElement.offsetHeight, ((ref1 = (ref2 = this.view.getViewNodeFor(this.tree).totalBounds) != null ? typeof ref2.bottom === "function" ? ref2.bottom() : void 0 : void 0) != null ? ref1 : 0) + ((ref3 = this.options.extraBottomHeight) != null ? ref3 : this.fontSize))) + "px";
+  return this.gutter.style.height = (Math.max(this.dropletElement.offsetHeight, this.mainScrollerStuffing.offsetHeight)) + "px";
 };
 
 Editor.prototype.addLineNumberForLine = function(line) {
@@ -64371,28 +64701,32 @@ hook('populate', 1, function() {
       if (_this.readOnly) {
         return;
       }
-      if (pressedVKey) {
+      if (pressedVKey && !_this.cursorAtSocket()) {
+        str = _this.copyPasteInput.value;
+        lines = str.split('\n');
+        minIndent = lines.map(function(line) {
+          return line.length - line.trimLeft().length;
+        }).reduce(function(a, b) {
+          return Math.min(a, b);
+        });
+        str = lines.map(function(line) {
+          return line.slice(minIndent);
+        }).join('\n');
+        str = str.replace(/^\n*|\n*$/g, '');
         try {
-          str = _this.copyPasteInput.value;
-          lines = str.split('\n');
-          minIndent = lines.map(function(x) {
-            return line.length - line.trimLeft().length;
-          }).reduce(function(a, b) {
-            return Math.min(a, b);
-          });
-          str = lines.map(function(line) {
-            return line.slice(minIndent);
-          }).join('\n');
-          str = str.replace(/^\n*|\n*$/g, '');
           blocks = _this.mode.parse(str);
           blocks = new model.List(blocks.start.next, blocks.end.prev);
-          _this.spliceIn(blocks, _this.cursor);
-          _this.setCursor(blocks.end);
-          _this.redrawMain();
         } catch (_error) {
           e = _error;
-          console.log(e.stack);
+          blocks = null;
         }
+        if (blocks == null) {
+          return;
+        }
+        _this.undoCapture();
+        _this.spliceIn(blocks, _this.getCursor());
+        _this.setCursor(blocks.end);
+        _this.redrawMain();
         return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
       } else if (pressedXKey && (_this.lassoSelection != null)) {
         _this.spliceOut(_this.lassoSelection);
@@ -64682,7 +65016,10 @@ exports.Draw = Draw = (function() {
         return (this.x != null) && (this.y != null) && !((point.x < this.x) || (point.x > this.x + this.width) || (point.y < this.y) || (point.y > this.y + this.height));
       };
 
-      Rectangle.prototype.identical = function(other) {
+      Rectangle.prototype.equals = function(other) {
+        if (!(other instanceof Rectangle)) {
+          return false;
+        }
         return this.x === other.x && this.y === other.y && this.width === other.width && this.height === other.height;
       };
 
@@ -64697,6 +65034,10 @@ exports.Draw = Draw = (function() {
       Rectangle.prototype.clip = function(ctx) {
         ctx.rect(this.x, this.y, this.width, this.height);
         return ctx.clip();
+      };
+
+      Rectangle.prototype.clearRect = function(ctx) {
+        return ctx.clearRect(this.x, this.y, this.width, this.height);
       };
 
       Rectangle.prototype.clone = function() {
@@ -64797,6 +65138,7 @@ exports.Draw = Draw = (function() {
         this._cachedTranslation = new Point(0, 0);
         this._cacheFlag = false;
         this._bounds = new NoRectangle();
+        this.bevel = this.noclip = this.dotted = false;
         this.style = {
           'strokeColor': '#000',
           'lineWidth': 1,
@@ -64806,22 +65148,27 @@ exports.Draw = Draw = (function() {
 
       Path.prototype._clearCache = function() {
         var j, len1, maxX, maxY, minX, minY, point, ref;
+        this._cacheFlag = true;
         if (this._cacheFlag) {
-          minX = minY = Infinity;
-          maxX = maxY = 0;
-          ref = this._points;
-          for (j = 0, len1 = ref.length; j < len1; j++) {
-            point = ref[j];
-            minX = min(minX, point.x);
-            maxX = max(maxX, point.x);
-            minY = min(minY, point.y);
-            maxY = max(maxY, point.y);
+          if (this._points.length === 0) {
+            return this._bounds = new NoRectangle();
+          } else {
+            minX = minY = Infinity;
+            maxX = maxY = 0;
+            ref = this._points;
+            for (j = 0, len1 = ref.length; j < len1; j++) {
+              point = ref[j];
+              minX = min(minX, point.x);
+              maxX = max(maxX, point.x);
+              minY = min(minY, point.y);
+              maxY = max(maxY, point.y);
+            }
+            this._bounds.x = minX;
+            this._bounds.y = minY;
+            this._bounds.width = maxX - minX;
+            this._bounds.height = maxY - minY;
+            return this._cacheFlag = false;
           }
-          this._bounds.x = minX;
-          this._bounds.y = minY;
-          this._bounds.width = maxX - minX;
-          this._bounds.height = maxY - minY;
-          return this._cacheFlag = false;
         }
       };
 
@@ -64902,6 +65249,26 @@ exports.Draw = Draw = (function() {
         return this._cacheFlag = true;
       };
 
+      Path.prototype.clip = function(ctx) {
+        var j, len1, point, ref;
+        this._clearCache();
+        if (this._points.length === 0) {
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(this._points[0].x, this._points[0].y);
+        ref = this._points;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          point = ref[j];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineTo(this._points[0].x, this._points[0].y);
+        if (this._points.length > 1) {
+          ctx.lineTo(this._points[1].x, this._points[1].y);
+        }
+        return ctx.clip();
+      };
+
       Path.prototype.draw = function(ctx) {
         var i, j, l, len1, len2, len3, m, point, ref, ref1, ref2;
         this._clearCache();
@@ -64973,6 +65340,9 @@ exports.Draw = Draw = (function() {
           ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#FFF');
           ctx.stroke();
         } else {
+          if (this.dotted && (ctx.setLineDash != null)) {
+            ctx.setLineDash([8, 5]);
+          }
           ctx.stroke();
         }
         return ctx.restore();
@@ -66487,6 +66857,10 @@ CoffeeScriptParser.empty = "``";
 
 CoffeeScriptParser.emptyIndent = "``";
 
+CoffeeScriptParser.startComment = '###';
+
+CoffeeScriptParser.endComment = '###';
+
 CoffeeScriptParser.drop = function(block, context, pred) {
   var ref, ref1;
   if (context.type === 'socket') {
@@ -66711,7 +67085,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.setAttribs = function(node, string) {
-    var att, diff, end, k, len, offset, ref, ref1, results, start;
+    var add, att, diff, end, k, len, newStr, offset, ref, ref1, ref2, results, start;
     offset = node.__location.start;
     node.attributes = [];
     string = string.toLowerCase();
@@ -66728,9 +67102,20 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
         start = string.indexOf(att.name.toLowerCase());
         end = start + att.name.length;
         string = string.slice(end);
+        if (string.trimLeft()[0] === '=') {
+          add = 0;
+          newStr = string.trimLeft().slice(1).trimLeft();
+          add = string.length - newStr.length;
+          string = string.slice(add);
+          if (((ref1 = string[0]) === '"' || ref1 === '\'') && string[0] === string[1]) {
+            add += 2;
+            string = string.slice(2);
+          }
+          end += add;
+        }
         if (att.value.length !== 0) {
           diff = string.indexOf(att.value.toLowerCase());
-          if (((ref1 = string[diff - 1]) === '"' || ref1 === '\'') && string[diff - 1] === string[diff + att.value.length]) {
+          if (((ref2 = string[diff - 1]) === '"' || ref2 === '\'') && string[diff - 1] === string[diff + att.value.length]) {
             diff++;
           }
           diff += att.value.length;
@@ -66882,7 +67267,8 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       precedence: this.getPrecedence(node),
       color: this.getColor(node),
       classes: this.getClasses(node),
-      socketLevel: this.getSocketLevel(node)
+      socketLevel: this.getSocketLevel(node),
+      parseContext: node.nodeName
     });
   };
 
@@ -66915,7 +67301,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.markRoot = function() {
-    var column, i, k, len, line, ref, ref1, root, val;
+    var column, i, k, len, line, parseContext, ref, ref1, root, val;
     this.positions = [];
     line = 0;
     column = 0;
@@ -66936,7 +67322,8 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       'line': line,
       'column': column
     };
-    if (((ref1 = this.opts.parseOptions) != null ? ref1.wrapAtRoot : void 0) === false) {
+    parseContext = (ref1 = this.opts.parseOptions) != null ? ref1.context : void 0;
+    if (parseContext && (parseContext !== 'html' && parseContext !== 'head' && parseContext !== 'body')) {
       root = htmlParser.parseFragment(this.text);
       this.cleanTree(root);
       this.fixBounds(root);
@@ -67946,7 +68333,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
       case 'VariableDeclarator':
         this.jsSocketAndMark(indentDepth, node.id, depth);
         if (node.init != null) {
-          return this.jsSocketAndMark(indentDepth, node.init, depth);
+          return this.jsSocketAndMark(indentDepth, node.init, depth, NEVER_PAREN);
         }
         break;
       case 'LogicalExpression':
@@ -68141,6 +68528,10 @@ isStandardForLoop = function(node) {
 JavaScriptParser.empty = "__";
 
 JavaScriptParser.emptyIndent = "";
+
+JavaScriptParser.startComment = '/*';
+
+JavaScriptParser.endComment = '*/';
 
 module.exports = parser.wrapParser(JavaScriptParser);
 
@@ -68368,7 +68759,8 @@ Operation = (function() {
       location: this.location.toString(),
       list: this.list.stringify(),
       start: this.start.toString(),
-      end: this.end.toString()
+      end: this.end.toString(),
+      type: this.type
     });
   };
 
@@ -68387,6 +68779,18 @@ ReplaceOperation = (function() {
     this.type = 'replace';
   }
 
+  ReplaceOperation.prototype.toString = function() {
+    return JSON.stringify({
+      beforeStart: this.beforeStart.toString(),
+      before: this.before.stringify(),
+      beforeEnd: this.beforeEnd.toString(),
+      afterStart: this.afterStart.toString(),
+      after: this.after.stringify(),
+      afterEnd: this.afterEnd.toString(),
+      type: this.type
+    });
+  };
+
   return ReplaceOperation;
 
 })();
@@ -68400,6 +68804,9 @@ exports.List = List = (function() {
 
   List.prototype.contains = function(token) {
     var head;
+    if (token instanceof Container) {
+      token = token.start;
+    }
     head = this.start;
     while (head !== this.end) {
       if (head === token) {
@@ -68412,6 +68819,10 @@ exports.List = List = (function() {
     } else {
       return false;
     }
+  };
+
+  List.prototype.getDocument = function() {
+    return this.start.getDocument();
   };
 
   List.prototype.insert = function(token, list, updates) {
@@ -69185,18 +69596,18 @@ exports.Token = Token = (function() {
   Token.prototype.getDocument = function() {
     var head, ref;
     head = (ref = this.container) != null ? ref : this;
-    while (!(head instanceof Document)) {
+    while (!((head == null) || head instanceof Document)) {
       head = head.parent;
     }
     return head;
   };
 
   Token.prototype.getLocation = function() {
-    var count, document, head;
+    var count, dropletDocument, head;
     count = 0;
     head = this;
-    document = this.getDocument();
-    while (head !== document.start) {
+    dropletDocument = this.getDocument();
+    while (head !== dropletDocument.start) {
       head = head.prev;
       count += 1;
     }
@@ -69235,6 +69646,10 @@ exports.Location = Location = (function() {
       other = other.getLocation();
     }
     return other.count === this.count && other.type === this.type;
+  };
+
+  Location.prototype.clone = function() {
+    return new Location(this.count, this.type);
   };
 
   return Location;
@@ -69367,11 +69782,12 @@ exports.BlockEndToken = BlockEndToken = (function(superClass) {
 exports.Block = Block = (function(superClass) {
   extend(Block, superClass);
 
-  function Block(precedence, color, socketLevel, classes) {
+  function Block(precedence, color, socketLevel, classes, parseContext) {
     this.precedence = precedence != null ? precedence : 0;
     this.color = color != null ? color : 'blank';
     this.socketLevel = socketLevel != null ? socketLevel : helper.ANY_DROP;
     this.classes = classes != null ? classes : [];
+    this.parseContext = parseContext;
     this.start = new BlockStartToken(this);
     this.end = new BlockEndToken(this);
     this.type = 'block';
@@ -69393,7 +69809,7 @@ exports.Block = Block = (function(superClass) {
 
   Block.prototype._cloneEmpty = function() {
     var clone;
-    clone = new Block(this.precedence, this.color, this.socketLevel, this.classes);
+    clone = new Block(this.precedence, this.color, this.socketLevel, this.classes, this.parseContext);
     clone.currentlyParenWrapped = this.currentlyParenWrapped;
     return clone;
   };
@@ -69610,7 +70026,8 @@ exports.DocumentEndToken = DocumentEndToken = (function(superClass) {
 exports.Document = Document = (function(superClass) {
   extend(Document, superClass);
 
-  function Document() {
+  function Document(opts) {
+    this.opts = opts != null ? opts : {};
     this.start = new DocumentStartToken(this);
     this.end = new DocumentEndToken(this);
     this.classes = ['__document__'];
@@ -69619,7 +70036,7 @@ exports.Document = Document = (function(superClass) {
   }
 
   Document.prototype._cloneEmpty = function() {
-    return new Document();
+    return new Document(this.opts);
   };
 
   Document.prototype.firstChild = function() {
@@ -69863,8 +70280,7 @@ exports.Parser = Parser = (function() {
 
   Parser.prototype.addBlock = function(opts) {
     var block;
-    block = new model.Block(opts.precedence, opts.color, opts.socketLevel, opts.classes, false);
-    block.parseContext = opts.parseContext;
+    block = new model.Block(opts.precedence, opts.color, opts.socketLevel, opts.classes, opts.parseContext);
     return this.addMarkup(block, opts.bounds, opts.depth);
   };
 
@@ -69940,7 +70356,7 @@ exports.Parser = Parser = (function() {
 
   Parser.prototype.constructHandwrittenBlock = function(text) {
     var block, socket, textToken;
-    block = new model.Block(0, 'blank', helper.ANY_DROP, false);
+    block = new model.Block(0, 'blank', helper.ANY_DROP);
     socket = new model.Socket(this.empty, 0, true);
     textToken = new model.TextToken(text);
     helper.connect(block.start, socket.start);
@@ -69950,6 +70366,8 @@ exports.Parser = Parser = (function() {
     if (this.isComment(text)) {
       block.socketLevel = helper.BLOCK_ONLY;
       block.classes = ['__comment__', 'block-only'];
+    } else {
+      block.classes = ['__handwritten__', 'block-only'];
     }
     return block;
   };
@@ -70204,9 +70622,12 @@ exports.wrapParser = function(CustomParser) {
     extend(CustomParserFactory, superClass);
 
     function CustomParserFactory(opts1) {
+      var ref, ref1;
       this.opts = opts1 != null ? opts1 : {};
       this.empty = CustomParser.empty;
       this.emptyIndent = CustomParser.emptyIndent;
+      this.startComment = (ref = CustomParser.startComment) != null ? ref : '/*';
+      this.endComment = (ref1 = CustomParser.endComment) != null ? ref1 : '*/';
     }
 
     CustomParserFactory.prototype.createParser = function(text) {
@@ -70713,6 +71134,7 @@ exports.View = View = (function() {
       this.model = model1;
       this.view = view1;
       this.view.map[this.model.id] = this;
+      this.lastCoordinate = new this.view.draw.Point(0, 0);
       this.invalidate = false;
       this.lineLength = 0;
       this.children = [];
@@ -71424,11 +71846,12 @@ exports.View = View = (function() {
     ListViewNode.prototype.layout = function(left, top) {
       var changedBoundingBox;
       if (left == null) {
-        left = 0;
+        left = this.lastCoordinate.x;
       }
       if (top == null) {
-        top = 0;
+        top = this.lastCoordinate.y;
       }
+      this.lastCoordinate = new this.view.draw.Point(left, top);
       this.computeChildren();
       this.computeCarriageArrow(true);
       this.computeMargins();
@@ -71864,10 +72287,9 @@ exports.View = View = (function() {
     };
 
     BlockViewNode.prototype.shouldAddTab = function() {
-      var parent;
-      if (this.model.parent != null) {
-        parent = this.model.parent;
-        return (parent != null ? parent.type : void 0) !== 'socket';
+      var ref;
+      if ((this.model.parent != null) && this.view.hasViewNodeFor(this.model.parent) && !(this.model.parent.type === 'document' && this.model.parent.opts.roundedSingletons && this.model.start.prev === this.model.parent.start && this.model.end.next === this.model.parent.end)) {
+        return ((ref = this.model.parent) != null ? ref.type : void 0) !== 'socket';
       } else {
         return !(indexOf.call(this.model.classes, 'mostly-value') >= 0 || indexOf.call(this.model.classes, 'value-only') >= 0);
       }
