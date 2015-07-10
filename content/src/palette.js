@@ -122,8 +122,8 @@ module.exports = {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
         }, {
-          block: 'for i in [0...3]\n  ``',
-          title: '  Repeat soemething with a loop variable'
+          block: 'while ``\n  ``',
+          title: '  Repeat while a condition is true'
         }, {
           block: 'if `` is ``\n  ``',
           title: 'Do something only if a condition is true'
