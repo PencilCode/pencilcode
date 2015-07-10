@@ -65,6 +65,15 @@ function scanHtmlTop(html) {
   }
 }
 
+function wrapPython(doc, domain, pragmasOnly) {
+  var out = [
+    '<html><body>Python code:<pre>',
+    escapeHtml(doc.data),
+    '</pre></body></html>'
+  ].join('');
+  return out;
+}
+
 // The job of this function is to take: HTML, CSS, and script content,
 // and merge them into one HTML file.
 function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
@@ -219,6 +228,9 @@ function modifyForPreview(doc, domain,
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
+  } else if (mimeType && /^text\/x-python/.test(mimeType)) {
+    text = wrapPython(doc, domain, pragmasOnly);
+    mimeType = mimeType.replace(/\/x-python/, '/html');
   } else if (pragmasOnly) {
     var safe = false;
     if (mimeType && /^text\/html/.test(mimeType) &&
