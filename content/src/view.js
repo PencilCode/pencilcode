@@ -1548,7 +1548,7 @@ function dropletModeForMimeType(mimeType) {
 }
 
 function paletteForPane(paneState, selfname) {
-  var mimeType = editorMimeType(paneState),
+  var mimeType = editorMimeType(paneState).replace(/;.*$/, ''),
       basePalette = paneState.palette;
   if (!basePalette) {
     if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
@@ -1558,7 +1558,7 @@ function paletteForPane(paneState, selfname) {
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
     }
-    if (mimeType.replace(/;.*$/, '') == 'text/html') {
+    if (mimeType == 'text/html') {
       basePalette = palette.HTML_PALETTE;
     }
   }
