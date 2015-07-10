@@ -295,6 +295,7 @@ function mimeForFilename(filename) {
     'svg'  : 'image/svg+xml',
     'bmp'  : 'image/x-ms-bmp',
     'ico'  : 'image/x-icon',
+    'py'   : 'text/x-python',
     'htm'  : 'text/html',
     'html' : 'text/html',
     'txt'  : 'text/plain',

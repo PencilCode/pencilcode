@@ -1460,6 +1460,7 @@ function getDefaultThumbnail(type) {
     'text/css'          : 'file-css.png',
     'text/coffeescript' : 'file-coffee.png',
     'text/javascript'   : 'file-js.png',
+    'text/x-python'     : 'file-image.png',
     'text/xml'          : 'file-xml.png',
     'text/json'         : 'file-json.png',
     'text/x-pencilcode' : 'file-pencil.png'
@@ -1520,6 +1521,7 @@ function modeForMimeType(mimeType) {
     'text/html': 'html',
     'text/css': 'css',
     'text/javascript': 'javascript',
+    'text/x-python': 'python',
     'text/plain': 'text',
     'image/svg+xml': 'xml',
     'text/xml': 'xml'
@@ -1538,7 +1540,9 @@ function dropletModeForMimeType(mimeType) {
   var result = {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
+    'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
+    'text/x-python': 'python',
     'text/html': 'html',
   }[mimeType];
   if (!result) {
