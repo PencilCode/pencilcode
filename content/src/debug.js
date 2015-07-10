@@ -2,14 +2,11 @@
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+var $         = require('jquery'),
+    view      = require('view'),
+    see       = require('see'),
+    sourcemap = require('source-map');
 
-define([
-  'jquery',
-  'view',
-  'see',
-  'sourcemap/source-map-consumer'
- ],
-function($, view, see, sourcemap) {
 
 eval(see.scope('debug'));
 
@@ -649,6 +646,4 @@ view.on('stop', function() {
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////
 
-return debug;
-
-});
+module.exports = debug;

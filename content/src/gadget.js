@@ -2,7 +2,8 @@
 // GADGET WINDOW UTILITY
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery'], function($) {
+var $ = require('jquery');
+
 
 function makesheet(item) {
   return $('<div></div>').css({
@@ -151,7 +152,5 @@ function addGadget(id, opts) {
   return result.css(css).appendTo('body');
 }
 
-return { addGadget: addGadget };
-
-});
+module.exports =  { addGadget: addGadget };
 
