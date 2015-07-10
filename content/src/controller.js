@@ -1785,10 +1785,13 @@ function cancelAndClearPosition(pos) {
 }
 
 function instrumentCode(code, language) {
-  if (language === 'javascript') {
-    // TODO: support javascript
-  } else if (language === 'coffeescript') {
-    try {
+  try {
+    if (language === 'javascript') {
+      options = {
+        traceFunc: 'ide.trace'
+      };
+      code = pencilTracer.instrumentJs('', code, options);
+    } else if (language === 'coffeescript') {
       options = {
         traceFunc: 'ide.trace',
         sourceMap: true,
@@ -1797,14 +1800,14 @@ function instrumentCode(code, language) {
       result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
       debug.setSourceMap(result.v3SourceMap);
       code = result.js;
-    } catch (err) {
-      // An error here means that either the user's code has a syntax error, or
-      // pencil-tracer has a bug. Returning false here means the user's code
-      // will run directly, without the debugger, and then if there's a syntax
-      // error it will be displayed to them, and if it's a pencil-tracer bug,
-      // their code will still run but with the debugger disabled.
-      return false;
     }
+  } catch (err) {
+    // An error here means that either the user's code has a syntax error, or
+    // pencil-tracer has a bug. Returning false here means the user's code
+    // will run directly, without the debugger, and then if there's a syntax
+    // error it will be displayed to them, and if it's a pencil-tracer bug,
+    // their code will still run but with the debugger disabled.
+    return false;
   }
   return code;
 }
