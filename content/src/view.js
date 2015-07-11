@@ -722,15 +722,19 @@ function showMiddleButton(which) {
 // Show thumbnail under the save button.
 function flashThumbnail(imageDataUrl) {
   if (!imageDataUrl) { return; }
-  var tooltip = $('#save').tooltipster({
+  // Destroy the original title tooltip once there is a thumbnail.
+  $('#screenshot').tooltipster('destroy');
+  $('#screenshot').tooltipster({
     content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
-    multiple: true,
     position: 'bottom',
     theme: 'tooltipster-shadow',
-    timer: 3000,
-    trigger: 'custom'
-  })[0];
-  tooltip.show();
+    interactive: true,
+    timer: 3000
+  });
+  // Flash the thumbnail for 3 seconds, then disable the timer,
+  // so that activation via hovering will not last for only 3 seconds.
+  $('#screenshot').tooltipster('show');
+  $('#screenshot').tooltipster('option', 'timer', 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////
