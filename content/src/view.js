@@ -6,7 +6,7 @@ var $              = require('jquery'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
-    droplet        = require('droplet'),
+    droplet        = require('droplet-editor'),
     palette        = require('palette'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
@@ -1543,6 +1543,7 @@ function dropletModeForMimeType(mimeType) {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
+    'text/html': 'html',
   }[mimeType];
   if (!result) {
     result = 'coffee';
@@ -1551,7 +1552,7 @@ function dropletModeForMimeType(mimeType) {
 }
 
 function paletteForPane(paneState, selfname) {
-  var mimeType = editorMimeType(paneState),
+  var mimeType = editorMimeType(paneState).replace(/;.*$/, ''),
       basePalette = paneState.palette;
   if (!basePalette) {
     if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
@@ -1560,6 +1561,9 @@ function paletteForPane(paneState, selfname) {
     if (mimeType == 'text/javascript' ||
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
+    }
+    if (mimeType == 'text/html') {
+      basePalette = palette.HTML_PALETTE;
     }
   }
   if (basePalette) {
@@ -1589,10 +1593,11 @@ function updatePaneTitle(pane) {
     } else if (/^text\/xml/.test(paneState.mimeType) ||
         /^application\/json/.test(paneState.mimeType)) {
       label = 'data';
-    } else if (/^text\/html/.test(paneState.mimeType)) {
-      label = 'html';
     } else {
       label = 'code';
+      if (/^text\/html/.test(paneState.mimeType)) {
+        label = 'html'
+      }
       if (mimeTypeSupportsBlocks(paneState.mimeType)) {
         textonly = false;
         symbol = 'codeicon'
@@ -2559,7 +2564,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {
@@ -2907,6 +2912,7 @@ function noteNewFilename(pane, filename) {
     paneState.dropletEditor.setMode(
         dropletModeForMimeType(visibleMimeType),
         dropletOptionsForMimeType(visibleMimeType));
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
     paneState.editor.getSession().setMode(modeForMimeType(visibleMimeType));
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);

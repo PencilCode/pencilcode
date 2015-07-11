@@ -3,6 +3,11 @@ var os=require('os');
 module.exports = function(grunt) {
   'use strict';
 
+  var NO_PARSE = [ // It is kind of buggy, only accepts absolute paths.
+    require.resolve('./content/lib/pencil-tracer.js'),
+    require.resolve('./content/lib/droplet.js')
+  ]
+
   grunt.option.init({
     port: 8008
   });
@@ -21,7 +26,7 @@ module.exports = function(grunt) {
           'lib/almond.js': 'almond/almond.js',
           'lib/coffee-script.js': 'coffee-script/extras/coffee-script.js',
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
-          'lib/droplet.css': 'droplet/dist/droplet.min.css',
+          'lib/droplet.css': 'droplet/css/droplet.css',
           'lib/iced-coffee-script.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
@@ -62,20 +67,6 @@ module.exports = function(grunt) {
           'ace' : 'ace-builds/src-min-noconflict',
           'bootstrap' : 'bootstrap'
         }
-      },
-      sourcemap: {
-        options: {
-          destPrefix: 'content/lib/sourcemap'
-        },
-        files: {
-          'array-set.js': 'source-map/lib/source-map/array-set.js',
-          'base64.js': 'source-map/lib/source-map/base64.js',
-          'base64-vlq.js': 'source-map/lib/source-map/base64-vlq.js',
-          'binary-search.js': 'source-map/lib/source-map/binary-search.js',
-          'source-map-consumer.js':
-              'source-map/lib/source-map/source-map-consumer.js',
-          'util.js': 'source-map/lib/source-map/util.js'
-        }
       }
     },
     browserify: {
@@ -85,11 +76,8 @@ module.exports = function(grunt) {
         },
         options: {
           browserifyOptions: {
-            debug: true,
-            noParse: [ // It is kind of buggy, only accepts absolute paths.
-              require.resolve('./content/lib/droplet.js'),
-              require.resolve('./content/lib/pencil-tracer.js')
-            ]
+            debug: false,
+            noParse: NO_PARSE
           },
           watch: false,
           keepalive: false
@@ -102,10 +90,7 @@ module.exports = function(grunt) {
         options: {
           browserifyOptions: {
             debug: true,
-            noParse: [ // It is kind of buggy, only accepts absolute paths.
-              require.resolve('./content/lib/droplet.js'),
-              require.resolve('./content/lib/pencil-tracer.js')
-            ]
+            noParse: NO_PARSE
           },
           watch: true,
           keepalive: true
@@ -124,18 +109,20 @@ module.exports = function(grunt) {
             'content/lib/socket.io.js',
             'content/lib/recolor.js',
             'content/src/showturtle.js'
+          ],
+          'content/editor.js': [
+            'content/editor.js'
           ]
         },
         options: {
           preserveComments: false,
+          screwIE8: true,
           report: 'min',
           compress: {
-            unsafe: true,
-            "screw_ie8": true,
-            "pure_getters": true
+            unsafe: true
           },
           beautify: {
-            semicolons: false
+            beautify: false
           }
         }
       }
@@ -335,7 +322,7 @@ module.exports = function(grunt) {
       ['proxymessage', 'express:sdev', 'browserify:server', 'watch']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('testserver',
-      ['proxymessage', 'express:localtest', 'browserify:server', 'watch']);
+      ['proxymessage', 'express:localtest', 'watch']);
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // "build", for development, builds code without running tests.

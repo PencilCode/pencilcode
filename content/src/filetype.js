@@ -169,26 +169,36 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
     maintype = doc.meta.type;
   }
   var seeline = '\n\n';
-  var trailing = '\n';
-  if (/javascript/.test(maintype)) {
+  var originalLanguage = null;
+  if (/javascript/i.test(maintype)) {
     seeline = 'eval(this._start_ide_js_);\n\n';
+    originalLanguage = 'javascript';
   } else if (/coffeescript/.test(maintype)) {
     seeline = 'eval(this._start_ide_cs_);\n\n';
+    originalLanguage = 'coffeescript';
   }
+  var instrumented = false;
   if (instrumenter) {
     // Instruments the code for debugging, always producing javascript.
-    var language = /javascript/i.test(maintype) ? 'javascript' : 'coffeescript';
-    var newText = instrumenter(text, language);
+    var newText = instrumenter(text, originalLanguage);
     if (newText !== false) {
       text = newText;
       maintype = 'text/javascript';
+      instrumented = true;
     }
   }
-  var mainscript = '<script type="' + maintype + '">\n' + seeline;
+  var mainscript = seeline;
   if (!pragmasOnly) {
     mainscript += text;
   }
-  mainscript += trailing + '<\057script>';
+  if (instrumented && originalLanguage === 'coffeescript') {
+    // Wrap instrumented + compiled coffeescript in a closure, since that's how
+    // coffeescript programs are normally compiled. (We didn't compile it to be
+    // in a closure because the seeline needs to be in the same scope as the
+    // user's program.)
+    mainscript = '(function(){\n' + mainscript + '\n})();';
+  }
+  mainscript = '<script type="' + maintype + '">\n' + mainscript + '\n<\057script>';
   var result = (
     prefix.join('\n') +
     html +

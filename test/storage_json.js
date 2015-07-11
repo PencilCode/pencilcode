@@ -377,7 +377,7 @@ describe('test of server json apis', function() {
   });
   it('loads a file from home', function(done) {
     get('zzz', '/home/jsfile', 'utf8', function(s, data) {
-      assert(/<script type="text\/javascript">[^<]*alert\("hello"\);[\s},0);]*<\/script>/.test(data), data);
+      assert(/<script type="text\/javascript">[^<]*alert\("hello"\);[\s},0();]*<\/script>/.test(data), data);
       done();
     });
   });
