@@ -61,12 +61,13 @@ function getImageInfo(canvas) {
 
   // Find the longer edge and make it a square.
   var longerEdge;
+  var diff = Math.abs((imageWidth - imageHeight) / 2);
   if (imageWidth > imageHeight) {
-    longerEdge = imageWidth;
-    topLeft.y -= (imageWidth - imageHeight) / 2;
+    longerEdge = Math.min(imageWidth, h);
+    topLeft.y = Math.max(topLeft.y - diff, 0);
   } else {
-    longerEdge = imageHeight;
-    topLeft.x -= (imageHeight - imageWidth) / 2;
+    longerEdge = Math.min(imageHeight, w);
+    topLeft.x = Math.max(topLeft.x - diff, 0);
   }
 
   return { x: topLeft.x, y: topLeft.y, size: longerEdge }
