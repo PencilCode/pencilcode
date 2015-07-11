@@ -122,7 +122,7 @@ module.exports = {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
         }, {
-          block: 'while ``\n  ``',
+          block: 'while `` < ``\n  ``',
           title: '  Repeat while a condition is true'
         }, {
           block: 'if `` is ``\n  ``',
@@ -196,9 +196,12 @@ module.exports = {
       color: 'lightgreen',
       blocks: filterblocks([
         {
-          block: 'x = ``',
+          block: 'x = 0',
           title: 'Set a variable',
           id: 'assign'
+        }, {
+          block: 'x += 1',
+          title: 'Increase a variable',
         }, {
           block: '`` is ``',
           title: 'Compare two values'
