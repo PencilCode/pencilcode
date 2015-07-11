@@ -587,11 +587,11 @@ view.on('saveas', saveAs);
 view.on('screenshot',function() {
   var iframe = document.getElementById('output-frame');
   // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
-  thumbnail.generateThumbnailDataUrl(iframe, function(thumbnailDataUrl) {
+  thumbnail.generateThumbnailDataUrl(iframe).then(function(thumbnailDataUrl) {
     modelatpos('right').thumbnail = thumbnailDataUrl;
     updateTopControls();
     view.flashThumbnail(thumbnailDataUrl);
-  });
+  }).catch(console.log);
 });
 
 view.on('overwrite', function() { saveAction(true, null, null); });
@@ -764,7 +764,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     } else {  // Otherwise generate one.
       var iframe = document.getElementById('output-frame');
       // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
-      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+      thumbnail.generateThumbnailDataUrl(iframe).then(postThumbnailGeneration)
+                                                .catch(console.log);
     }
   } else {  // Empty content, file delete, no need for thumbnail.
     postThumbnailGeneration('');
