@@ -1,20 +1,35 @@
+var html2canvas = require('html2canvas');
 var THUMBNAIL_SIZE = 128;
 
 // Public functions
 var thumbnail = {
-  generateThumbnailDataUrl: function(iframe) {
+  generateThumbnailDataUrl: function(iframe, callback) {
     // Get the canvas inside the iframe.
     var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-    // TODO: Add support for multiple turtle.
-    var canvas = innerDoc.getElementsByTagName('canvas')[0];
+    var innerBody = innerDoc.body;
 
-    if (!canvas || canvas.id === 'turtle') { return; }
+    // Hide the test panel and coordinates before capturing the thumbnail.
+    for (var i = 0; i < innerBody.childElementCount; i++) {
+      if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
+          innerBody.children[i].className !== 'turtlefield' ||
+          innerBody.children[i].id == '_testpanel')) {
+        innerBody.children[i].style.display = 'none';
+      }
+    }
 
-    // Get the image data.
-    var imageInfo = getImageInfo(canvas);
+    html2canvas(innerBody).then(onRendered);
 
-    // Get the cropped and resized image data url.
-    return getImageDataUrl(canvas, imageInfo);
+    function onRendered(canvas) {
+      // Show the hidden test panel and coordinates.
+      for (var i = 0; i < innerBody.childElementCount; i++) {
+        if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
+            innerBody.children[i].className !== 'turtlefield' ||
+            innerBody.children[i].id == '_testpanel')) {
+          innerBody.children[i].style.display = '';
+        }
+      }
+      callback(getImageDataUrl(canvas, getImageInfo(canvas)));
+    }
   }
 }
 
