@@ -261,6 +261,12 @@ module.exports = {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
+          block: 'typebox yellow',
+          title: 'Type out a colored square'
+        }, {
+          block: 'typeline()',
+          title: 'Type in a new line'
+        }, {
           block: '@label \'spot\'',
           title: 'Write text at the turtle'
         }, {
@@ -969,6 +975,8 @@ module.exports = {
     await: {color: 'orange'},
     defer: {color: 'orange'},
     type: {color: 'pink'},
+    typebox: {color: 'pink', dropdown: [colors]},
+    typeline: {color: 'pink'},
     '*.sort': {},
     log: {color: 'pink'},
     abs: {value: true, color: 'lightgreen'},
