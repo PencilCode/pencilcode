@@ -221,8 +221,6 @@ function paneid(position) {
 var create_some_run = false;
 var pictures = [];
 function create_some(traceevents, loop, screenshots, turtle_screenshots){
-  console.log(screenshots);
-
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -246,14 +244,13 @@ function create_some(traceevents, loop, screenshots, turtle_screenshots){
    //   range: "min",
       smooth: false,
       slide: function(event, ui){
-        console.log(screenshots.length)
         console.log(ui.value)
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
         var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
-        turtledrawCtx = turtle_canvas.getContext('2d');
-        turtledrawCtx.putImageData(turtle_screenshots[ui.value], 0, 0);
+       /* turtledrawCtx = turtle_canvas.getContext('2d');
+        turtledrawCtx.putImageData(turtle_screenshots[ui.value], 0, 0);*/
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
@@ -285,7 +282,9 @@ function create_some(traceevents, loop, screenshots, turtle_screenshots){
       last: "label",
       labels: { "first": "Start", "last": "End"}
     })
-    .slider("float")
+    .slider("float", {
+       labels : 0
+    })
     var max = $( ".scrubber" ).slider("option", "max");
   }
 
