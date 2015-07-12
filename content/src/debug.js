@@ -22,7 +22,7 @@ var currentSourceMap = null;  // v3 source map for currently-running instrumente
 var traceEvents = [];         // list of event location objects created by tracing events
 var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
                               // the location goes backwards.
-var prevLoc = null;                         
+var prevLocation = null;                         
 var eventQueue = [];          //list of events in order to maintain proper tracing 
 var isLoop = false;
 var screenshots = [];
@@ -46,7 +46,10 @@ function bindframe(w) {
   debugRecordsByLineNo = {};
   traceEvents = [];
   screenshots = [];
-  prevLoc = -1;
+  eventQueue = [];
+  prevLocation = null; 
+  arrows = {"black" : [], "gray" : []};
+  prevLine = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -129,15 +132,14 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    if(lineno <= prevLoc){
+    if(lineno <= prevLine){
       isLoop = true;
     }
 
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
    // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
     view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
-   console.log("NOTICE TURTLE", turtle_screenshots);
-    prevLoc = lineno;
+    prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
@@ -207,8 +209,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var currentLine = eventQueue.shift();
   var currentIndex = -1;
   var currentLocation = null;
-  console.log("Current Line: ", currentLine);
-  console.log("debugRecordsByLineNo of currentLine: ", debugRecordsByLineNo[currentLine])
   currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
   currentLocation = traceEvents[currentIndex].location;
   var recordD = debugRecordsByDebugId[debugId];
@@ -239,15 +239,14 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           tracedLine = -1;
         }
         if(currentLine < prevLine){
-          console.log("HI ABOUT TO DRAW AN ARROW")
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-          var prevLoc = traceEvents[prevIndex].location;
+          prevLocation = traceEvents[prevIndex].location;
           var grayList = arrows["gray"];
           grayList.push(arrows["black"]);
           arrows["gray"] = grayList;
-          console.log("prevLoc: ", prevLoc);
+          console.log("prevLocation: ", prevLocation);
           console.log("currentLocation: ", currentLocation);
-          arrows["black"] = [{first: prevLoc, second: currentLocation}];
+          arrows["black"] = [{first: currentLocation, second: prevLocation}];
           console.log("Arrows: ", arrows);
           view.arrow(view.paneid('left'), arrows); 
         }
@@ -260,15 +259,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
         turtle_screenshots.push(turtle_data);
         traceLine(currentLine);
-        console.log("Event Tracing: ", currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
         currentLine = eventQueue.shift();
-        console.log("current line: ", currentLine);
-        console.log("debugRecordsByLineNo: ", debugRecordsByLineNo);
         currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-        console.log("Current Index: ", currentIndex);
-        console.log("Current Trace Event: ", traceEvents[currentIndex])
         currentLocation = traceEvents[currentIndex].location;
       }
       if (tracedLine != -1){
@@ -277,11 +271,11 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       }
       if (line < prevLine){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-        var prevLoc = traceEvents[prevIndex].location;
+        prevLocation = traceEvents[prevIndex].location;
         var grayList = arrows["gray"];
         grayList.push(arrows["black"]);
         arrows["gray"] = grayList;
-        arrows['black'] = [{first: prevLoc, second: appear_location}];
+        arrows['black'] = [{first: appear_location, second: prevLocation}];
         view.arrow(view.paneid('left'), arrows); 
       }
       prevLine = line;
@@ -342,11 +336,11 @@ function end_program(){
     }
     if(currentLine < prevLine){
       console.log("ARROW");
-      console.log("Drawing Arrow:", "From: " + prevLoc, "To: " + currentLine);
+      console.log("Drawing Arrow:", "From: " + prevLine, "To: " + currentLine);
       var grayList = arrows["gray"];
       grayList.push(arrows["black"]);
       arrows["gray"] = grayList;
-      arrows["black"] = [{first: prevLoc, second: currentLoc}];
+      arrows["black"] = [{first: currentLocation, second: prevLocation}];
       view.arrow(view.paneid('left'), arrows);
     }
     traceLine(currentLine);
@@ -358,6 +352,7 @@ function end_program(){
         tracedLine = -1;
   }
   eventQueue = [];
+  arrows = {"black" : [], "gray" : []};
   prevLine = -1;
 }
 
@@ -706,7 +701,7 @@ function stopButton(command) {
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
     if (eventQueue.length > 0) { 
       eventQueue = []; 
-      prevLoc = null;
+      prevLocation = null;
       prevLine = -1;
     }
     if (!stopButtonShown) {

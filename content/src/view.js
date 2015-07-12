@@ -3179,28 +3179,39 @@ function arrow(pane, arrow_lines){
         } else{
           x_val = endcoords.pageX;
         }
-
-        var offset_top = $(".editor").offset().top;
-        var offset_left = $(".editor").offset().left;
+        var offset_top = $(".ace_editor").offset().top;
+        var offset_left = $(".ace_editor").offset().left;
         console.log("offset: ", offset_top, offset_left);
 
-        var text = "<svg width=" + $(".editor").width() + " height=" + $(".editor").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $(".editor").height() +" " + $(".editor").width()+"'> \
+        
+        /*var text = "<svg width=\""+ $(".ace_editor").width() +"\" height=\""+ $(".ace_editor").height() +"\"> \
+          <rect x=\""+ startcoords.pageX +"\" y=\"" + (startcoords.pageY - offset_top) + "\" width=\"10\" height=\"10\" \
+          style=\"fill:blue;stroke:pink;stroke-width:5;opacity:0.5\" /> \
+          <rect x=\""+ endcoords.pageX +"\" y=\"" + (endcoords.pageY - offset_top) + "\" width=\"10\" height=\"10\" \
+          style=\"fill:blue;stroke:pink;stroke-width:5;opacity:0.5\" /> \
+          </svg>" */
+        
+        var text = "<svg class= 'arrow' width=" + $(".ace_content").width() + " height=" + $(".ace_content").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $('.ace_editor').height() +" " + $('.ace_editor').width() +"'> \
         <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
          <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
         </marker> \
-        <path d='M" + (x_val - offset_left + 3) +","+ (endcoords.pageY - (offset_top - 25)) + " \
-                  A20,20 0 0,1 "+ (x_val - offset_left + 3) + "," + (startcoords.pageY - (offset_top - 25)) + "' marker-start='url(#arrowhead)' \
-               style='stroke:black; fill:none;'/> \
+        <line x1='"+ x_val +"' y1='"+ (startcoords.pageY - offset_top) +"' x2='"+ x_val +"' y2='"+ (endCoords.pageY - offset_top) +"' style='stroke:rgb(255,0,0);stroke-width:2' /> /
         </svg> \
-        "; 
+        ";
+        /*<path d='M" + (x_val) +","+ (startcoords.pageY - offset_top) + " \
+                  A20,20 0 0,1 "+ (x_val) + "," + (endcoords.pageY - offset_top) + "' marker-start='url(#arrowhead)' \
+               style='stroke:black; fill:none;'/> /*/
+        
         var div = document.createElement('div');
         div.className =  "arrow";
         div.innerHTML = text;
-        // div.style.visibility = 'visible';
+        div.style.visibility = 'visible';
         div.style.position = "absolute";
-        div.style.zIndex = "2";
+        div.style.zIndex = "10";
         div.style.left = "0px";
         div.style.top = "0px";
+        console.log("Hi I'm updated!");
+  
         $(".editor").append(div);
         i += 1; 
       }
