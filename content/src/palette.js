@@ -52,16 +52,16 @@ var distances = ['25', '50', '100', '200'],
     sdistances = ['100', '50', '-50', '-100'],
     angles = ['30', '45', '60', '90', '135', '144'],
     sangles = ['0', '90', '180', '270'],
+    turntoarg = ['0', '90', '180', '270', 'lastclick', 'lastmouse'],
     sizes = ['10', '25', '50', '100'],
     scales = ['0.5', '2.0', '3.0'],
+    randarg = ['100', '[true, false]', 'normal', 'position', 'color'],
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'black'];
 
 module.exports = {
 
   expand: expand,
 
-  // The following palette description
-  // is copied from compiled CoffeeScript.
   COFFEESCRIPT_PALETTE: [
     {
       name: 'Move',
@@ -97,9 +97,6 @@ module.exports = {
         }, {
           block: '@turnto 270',
           title: 'Turn to an absolute direction'
-        }, {
-          block: '@turnto lastclick',
-          title: 'Turn toward a located object'
         }, {
           block: '@moveto 100, 50',
           title: 'Move to coordinates'
@@ -344,6 +341,10 @@ module.exports = {
         }, {
           block: '@say \'hello\'',
           title: 'Speak a word'
+        }, {
+          block: 'new Audio(url).play()',
+          expansion: '(new Audio(\'https://upload.wikimedia.org/wikipedia/commons/1/11/06_-_Vivaldi_Summer_mvt_3_Presto_-_John_Harrison_violin.ogg\')).play()',
+          title: 'Play an audio file'
         }
       ])
     }, {
@@ -378,126 +379,169 @@ module.exports = {
 
   JAVASCRIPT_PALETTE: [
     {
-      name: 'Draw',
-      color: 'blue',
-      blocks: [
+      name: 'Move',
+      color: 'lightblue',
+      blocks: filterblocks([
         {
-          block: 'pen(red);',
-          title: 'Set the pen color'
-        }, {
-          block: 'fd(100);',
+          block: '@fd(100);',
           title: 'Move forward'
         }, {
-          block: 'rt(90);',
+          block: '@rt(90);',
           title: 'Turn right'
         }, {
-          block: 'lt(90);',
+          block: '@lt(90);',
           title: 'Turn left'
         }, {
-          block: 'bk(100);',
+          block: '@bk(100);',
           title: 'Move backward'
         }, {
-          block: 'speed(10);',
+          block: '@rt(180, 100);',
+          title: 'Make a wide right arc'
+        }, {
+          block: '@lt(180, 100);',
+          title: 'Make a wide left arc'
+        }, {
+          block: '@speed(10);',
           title: 'Set the speed of the turtle'
         }, {
-          block: 'dot(blue, 50);',
-          title: 'Make a dot'
+          block: '@speed(Infinity);',
+          title: 'Use infinite speed'
         }, {
-          block: 'box(green, 50);',
-          title: 'Make a square'
+          block: '@home();',
+          title: 'Jump to the origin, turned up'
         }, {
-          block: 'write(\'hello\');',
-          title: 'Write text on the screen'
+          block: '@turnto(270);',
+          title: 'Turn to an absolute direction'
         }, {
-          block: 'label(\'hello\');',
-          title: 'Write text at the turtle'
+          block: '@moveto(100, 50);',
+          title: 'Move to coordinates'
         }, {
-          block: 'ht();',
-          title: 'Hide the turtle'
+          block: '@movexy(30, 20);',
+          title: 'Move by changing x and y'
         }, {
-          block: 'st();',
-          title: 'Show the turtle'
+          block: '@jumpto(100, 50);',
+          title: 'Jump to coordinates without drawing'
         }, {
-          block: 'pu();',
-          title: 'Pick the pen up'
-        }, {
-          block: 'pd();',
-          title: 'Put the pen down'
-        }, {
-          block: 'pen(purple, 10);',
-          title: 'Set the pen color and thickness'
-        }, {
-          block: 'rt(180, 100);',
-          title: 'Make a wide right turn'
-        }, {
-          block: 'lt(180, 100);',
-          title: 'Make a wide left turn'
-        }, {
-          block: 'slide(100, 20);',
-          title: 'Slide sideways or diagonally'
-        }, {
-          block: 'jump(100, 20);',
-          title: 'Jump without drawing'
-        }, {
-          block: 'play(\'GEC\');',
-          title: 'Play music notes'
-        }, {
-          block: 'wear(\'/img/cat-icon\');',
-          title: 'Change the turtle image'
+          block: '@jumpxy(30, 20);',
+          title: 'Jump changing x and y without drawing'
         }
-      ]
+      ])
     }, {
       name: 'Control',
       color: 'orange',
-      blocks: [
+      blocks: filterblocks([
         {
-          block: 'for (var i = 0; i < 4; i++) {\n  __;\n}',
+          block: 'for (var j = 0; j < 3; ++j) {\n  __\n}',
           title: 'Do something multiple times'
         }, {
-          block: 'if (__) {\n  __;\n}',
+          block: 'while (__ < __) {\n  __\n}',
+          title: '  Repeat while a condition is true'
+        }, {
+          block: 'if (__ === __) {\n  __\n}',
           title: 'Do something only if a condition is true'
         }, {
-          block: 'if (__) {\n  __;\n} else {\n  __;\n}',
-          title: 'Do something if a condition is true, otherwise do something else'
+          block: 'if (__ === __) {\n  __\n} else {\n  __\n}',
+          title:
+              'Do something if a condition is true, otherwise something else',
+          id: 'ifelse'
         }, {
-          block: 'while (__) {\n  __;\n}',
-          title: 'Repeat something while a condition is true'
+          block: "forever(1, function() {\n  __\n})",
+          title: 'Repeat something forever at qually-spaced times'
+        }, {
+          block: "button(\'Click\', function() {\n  __\n});",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown(\'X\', function() {\n  __\n});",
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click(function(e) {\n  __\n});",
+          title: 'Do something when the mouse is clicked'
         }
-      ]
+      ])
     }, {
-      name: 'Math',
-      color: 'green',
-      blocks: [
+      name: 'Art',
+      color: 'purple',
+      blocks: filterblocks([
+         {
+          block: '@pen(purple, 10);',
+          title: 'Set pen color and size'
+        }, {
+          block: '@dot(green, 50);',
+          title: 'Make a dot'
+        }, {
+          block: '@box(yellow, 50);',
+          title: 'Make a square'
+        }, {
+          block: '@fill(blue);',
+          title: 'Fill traced shape'
+        }, {
+          block: '@wear(\'/img/apple\');',
+          title: 'Use an image for the turtle'
+        }, {
+          block: '@scale(3);',
+          title: 'Scale turtle drawing'
+        }, {
+          block: '@ht();',
+          title: 'Hide the main turtle'
+        }, {
+          block: '@st();',
+          title: 'Show the main turtle'
+        }, {
+          block: 'cs();',
+          title: 'Clear screen'
+        }, {
+          block: '@pu();',
+          title: 'Lift the pen up'
+        }, {
+          block: '@pd();',
+          title: 'Put the pen down'
+        }, {
+          block: '@drawon(s);',
+          title: 'Draw on sprite s'
+        }, {
+          block: '@drawon(document);',
+          title: 'Draw on the document'
+        }
+      ])
+    }, {
+      name: 'Operators',
+      color: 'lightgreen',
+      blocks: filterblocks([
         {
-          block: 'var x = __;',
-          title: 'Create a variable for the first time'
+          block: 'x = 0;',
+          title: 'Set a variable',
+          id: 'assign'
         }, {
-          block: 'x = __;',
-          title: 'Reassign a variable'
-        }, {
-          block: '__ + __',
-          title: 'Add two numbers'
-        }, {
-          block: '__ - __',
-          title: 'Subtract two numbers'
-        }, {
-          block: '__ * __',
-          title: 'Multiply two numbers'
-        }, {
-          block: '__ / __',
-          title: 'Divide two numbers'
+          block: 'x += 1;',
+          title: 'Increase a variable',
         }, {
           block: '__ === __',
-          title: 'Compare two numbers'
-        }, {
-          block: '__ > __',
-          title: 'Compare two numbers'
+          title: 'Compare two values'
         }, {
           block: '__ < __',
-          title: 'Compare two numbers'
+          title: 'Compare two values'
         }, {
-          block: 'random(1, 100)',
-          title: 'Get a random number in a range'
+          block: '__ > __',
+          title: 'Compare two values'
+        }, {
+          block: '__ + __',
+          title: 'Add two numbers',
+          id: 'add'
+        }, {
+          block: '__ - __',
+          title: 'Subtract two numbers',
+          id: 'subtract'
+        }, {
+          block: '__ * __',
+          title: 'Multiply two numbers',
+          id: 'multiply'
+        }, {
+          block: '__ / __',
+          title: 'Divide two numbers',
+          id: 'divide'
+        }, {
+          block: 'random(6)',
+          title: 'Get a random number less than n'
         }, {
           block: 'round(__)',
           title: 'Round to the nearest integer'
@@ -506,33 +550,144 @@ module.exports = {
           title: 'Absolute value'
         }, {
           block: 'max(__, __)',
-          title: 'Absolute value'
+          title: 'Get the larger of two numbers'
         }, {
           block: 'min(__, __)',
-          title: 'Absolute value'
+          title: 'Get the smaller on two numbers'
+        }, {
+          block: 'x.match(/pattern/)',
+          title: 'Test if a text pattern is found in x'
+        }, {
+          block: 'function f(x) {\n  __\n}',
+          title: 'Define a new function'
+        }, {
+          block: 'f(x)',
+          title: 'Use a custom function'
         }
-      ]
+      ])
     }, {
-      name: 'Functions',
-      color: 'violet',
-      blocks: [
+      name: 'Text',
+      color: 'pink',
+      blocks: filterblocks([
         {
-          block: 'function myFunction() {\n  __;\n}',
-          title: 'Create a function without an argument'
+          block: 'write(\'Hello.\');',
+          title: 'Write text in the document'
         }, {
-          block: 'function myFunction(n) {\n  __;\n}',
-          title: 'Create a function with an argument'
+          block: 'type(\'zz*(-.-)*zz\');',
+          title: 'Typewrite text in the document'
         }, {
-          block: 'myFunction()',
-          title: 'Use a function without an argument'
+          block: 'typebox(yellow);',
+          title: 'Type out a colored square'
         }, {
-          block: 'myFunction(n)',
-          title: 'Use a function with argument'
+          block: 'typeline();',
+          title: 'Type in a new line'
+        }, {
+          block: '@label(\'spot\');',
+          title: 'Write text at the turtle'
+        }, {
+          block: 'read(\'?\', function(x) {\n  write(x);\n});',
+          title: 'Send input from the user to a function'
+        }, {
+          block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
+          title: 'Send a number from the user to a function'
+        }, {
+          block: 'log(new Date);',
+          title: 'Log an object to debug'
         }
-      ]
+      ])
+    }, {
+      name: 'Sprites',
+      color: 'teal',
+      blocks: filterblocks([
+        {
+          block: 'var t = new Turtle(red);',
+          title: 'Make a new turtle',
+          id: 'newturtle'
+        }, {
+          block: 'var s = new Sprite();',
+          title: 'Make a blank sprite',
+          id: 'newsprite'
+        }, {
+          block: 'var p = new Piano();',
+          title: 'Make a visible instrument',
+          id: 'newpiano'
+        }, {
+          block: 'var q = new Pencil();',
+          title: 'Make an invisible and fast drawing sprite'
+        }, {
+          block: 'if (@touches(x)) {\n  __\n}',
+          title: 'Do something only if touching the object x'
+        }, {
+          block: 'if (@inside(window)) {\n  __\n}',
+          title: 'Do something only if inside the window'
+        }
+      ])
+    }, {
+      name: 'Sound',
+      color: 'indigo',
+      blocks: filterblocks([
+        {
+          block: '@play(\'c G/G/ AG z\');',
+          title: 'Play music notes in sequence'
+        }, {
+          block: '@play(\'[fA] [ecG]2\');',
+          title: 'Play notes in a chord'
+        }, {
+          block: '@tone(\'B\', 2, 1);',
+          title: 'Sound a note immediately'
+        }, {
+          block: '@tone(\'B\', 0);',
+          title: 'Silence a note immediately'
+        }, {
+          block: '@tone(440, 2, 1);',
+          title: 'Sound a frequency immediately'
+        }, {
+          block: '@tone(440, 0);',
+          title: 'Silence a frequency immediately'
+        }, {
+          block: '@silence();',
+          title: 'Silence all notes'
+        }, {
+          block: '@say(\'hello\');',
+          title: 'Speak a word'
+        }, {
+          block: 'new Audio(url).play();',
+          expansion: '(new Audio(\'https://upload.wikimedia.org/wikipedia/commons/1/11/06_-_Vivaldi_Summer_mvt_3_Presto_-_John_Harrison_violin.ogg\')).play();',
+          title: 'Play an audio file'
+        }
+      ])
+    }, {
+      name: 'Snippets',
+      color: 'deeporange',
+      blocks: filterblocks([
+        {
+          block:
+              "forever(10, function() {\n  turnto(lastmouse);\n  fd(2);\n});",
+          title: 'Continually move towards the last mouse position'
+        }, {
+          block: "forever(10, function() {\n  if (pressed('W')) {\n" +
+                 "    fd(2);\n  }\n});",
+          title: 'Poll a key and move while it is depressed'
+        }, {
+          block: "forever(1, function() {\n  fd(25);\n" +
+                 "  if (!inside(window)) {\n    stop();\n  }\n});",
+          title: 'Move once per second until not inside window'
+        }, {
+          block: "click(function(e) {\n  moveto(e);\n});",
+          title: 'Move to a location when document is clicked'
+        }, {
+          block: "button(\'Click\', function() {\n  write('clicked');\n});",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown(\'X\', function() {\n  write('x pressed');\n});",
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click(function(e) {\n  moveto(e);\n});",
+          title: 'Move to a location when document is clicked'
+        }
+      ])
     }
   ],
-
   HTML_PALETTE: [
     {
       name: "Metadata",
@@ -930,7 +1085,7 @@ module.exports = {
     '?.jump': {color: 'lightblue', dropdown: [sdistances, sdistances]},
     '?.jumpxy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
     '?.jumpto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.turnto': {color: 'lightblue', dropdown: [sangles]},
+    '?.turnto': {color: 'lightblue', dropdown: [turntoarg]},
     '?.home': {color: 'lightblue'},
     '?.pen': {color: 'purple', dropdown: [colors]},
     '?.fill': {color: 'purple', dropdown: [colors]},
@@ -1000,7 +1155,7 @@ module.exports = {
     sqrt: {value: true, color: 'lightgreen'},
     max: {value: true, color: 'lightgreen'},
     min: {value: true, color: 'lightgreen'},
-    random: {value: true, color: 'lightgreen'},
+    random: {value: true, color: 'lightgreen', dropdown: [randarg]},
     'Math.abs': {value: true, color: 'lightgreen'},
     'Math.acos': {value: true, color: 'lightgreen'},
     'Math.asin': {value: true, color: 'lightgreen'},
@@ -1059,6 +1214,8 @@ module.exports = {
     '*.finish': {value: true, command: true},
     '*.text': {value: true, command: true, color: 'pink'},
     loadscript: {value: true, command: true},
+    Date: {value: true, color: 'lightgreen'},
+    Audio: {value: true, color: 'indigo'},
     Turtle: {value: true, color: 'teal'},
     Sprite: {value: true, color: 'teal'},
     Piano: {value: true, color: 'teal'},
