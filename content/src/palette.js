@@ -225,6 +225,18 @@ module.exports = {
           title: 'Divide two numbers',
           id: 'divide'
         }, {
+          block: '`` and ``',
+          title: 'True if both are true',
+          id: 'and'
+        }, {
+          block: '`` or ``',
+          title: 'True if either is true',
+          id: 'or'
+        }, {
+          block: 'not ``',
+          title: 'True if input is false',
+          id: 'not'
+        }, {
           block: 'random 6',
           title: 'Get a random number less than n'
         }, {
@@ -539,6 +551,18 @@ module.exports = {
           block: '__ / __',
           title: 'Divide two numbers',
           id: 'divide'
+        }, {
+          block: '__ && __',
+          title: 'True if both are true',
+          id: 'and'
+        }, {
+          block: '__ || __',
+          title: 'True if either is true',
+          id: 'or'
+        }, {
+          block: '!__',
+          title: 'True if input is false',
+          id: 'not'
         }, {
           block: 'random(6)',
           title: 'Get a random number less than n'
