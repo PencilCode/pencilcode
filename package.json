@@ -68,6 +68,7 @@
     "jquery": "./content/lib/jquery.js",
     "jquery-ui": "./content/lib/jquery-ui.js",
     "jquery-ui-slider-pips": "./content/lib/jquery-ui-slider-pips.js",
+    "html2canvas" : "./content/lib/html2canvas.js",
     "palette": "./content/src/palette.js",
     "pencil-tracer": "./content/lib/pencil-tracer.js",
     "see": "./content/lib/see.js",
@@ -83,6 +84,9 @@
     ]
   },
   "browserify-shim": {
+    "html2canvas": {
+      "exports": "html2canvas"
+    },
     "jquery": {
       "exports": "$"
     },

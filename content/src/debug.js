@@ -5,6 +5,7 @@
 var $         = require('jquery'),
     view      = require('view'),
     see       = require('see'),
+    html2canvas = require('html2canvas'),
     sourcemap = require('source-map');
 
 
@@ -30,6 +31,7 @@ var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 var arrows = {"black" : [], "gray" : []};
+var temp_screenshots = [];
 
 Error.stackTraceLimit = 20;
 
@@ -128,7 +130,6 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
-
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
@@ -223,6 +224,15 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var turtle_ctx = turtle_canvas.getContext('2d')
       var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
       turtle_screenshots.push(turtle_data);
+      html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
+        onrendered: function(canvas){
+          temp_screenshots.push(canvas);
+          var tempCanvas = document.createElement('canvas');
+          var tempCanvasCtx = tempCanvas.getContext('2d');
+           tempCanvasCtx.drawImage(canvas,0,0);
+        }
+      })
+      console.log(temp_screenshots);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -354,6 +364,7 @@ function end_program(){
   eventQueue = [];
   arrows = {"black" : [], "gray" : []};
   prevLine = -1;
+  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
 }
 
 function errorAdvice(msg, text) {
@@ -517,6 +528,7 @@ function traceLine(line) {
 // Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+
 }
 
 // parsestack converts an Error or ErrorEvent object into the following
