@@ -220,7 +220,7 @@ function paneid(position) {
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents, loop, screenshots, turtle_screenshots){
+function create_some(traceevents, loop, screenshots, turtle_screenshots, all_arrows){
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -244,7 +244,15 @@ function create_some(traceevents, loop, screenshots, turtle_screenshots){
    //   range: "min",
       smooth: false,
       slide: function(event, ui){
-        console.log(ui.value)
+
+        if (all_arrows[ui.value]){
+          if (all_arrows[ui.value]["black"].length > 0){
+            console.log("BLACK! ", all_arrows[ui.value]["black"]);
+          }
+          arrow(paneid("left"), all_arrows[ui.value]);
+          console.log("Drawing these arrows: ", all_arrows[ui.value]);
+        }
+
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
@@ -3149,11 +3157,29 @@ function setupHpanelBox(box) {
   });
 }
 
+function curvedVertical(x1, y1, x2, y2) {
+  var radius = Math.abs(y1 - y2);
+  var line = [];
+  console.log("radius: ", radius);
+  //line.push('M'+ x1 + "," + y1);
+  //line.push('A'+ radius + "," radius + " 0 0,0 " + x2 + "," + y2 );
+
+  return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
+}
+
+//$(window).resize(..) event
+
 function arrow(pane, arrow_lines){
   /* note: we expect arrow_lines to be an array of key value pairs where 
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
   $(".arrow").remove();
+
+  console.log("Drawing an arrow!");
+
+  var block_mode = true;
+  if(!getPaneEditorBlockMode(pane)){block_mode = false;}
+
   console.log("arrows: ", arrow_lines);
   console.log("Arrow time!");
 
@@ -3169,7 +3195,7 @@ function arrow(pane, arrow_lines){
         console.log("secondLoc: ", secondLoc);
         
         var startcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((firstLoc.first_line - 1), (firstLoc.last_column + 5));
-        var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((secondLoc.first_line -1), (secondLoc.last_column + 5));
+        var endcoords = pencilcode.view._state.pane.bravo.editor.renderer.textToScreenCoordinates((secondLoc.first_line - 1), (secondLoc.last_column + 5));
         console.log("startcoords: ", startcoords);
         console.log("endCoords: ", endcoords);
 
@@ -3183,6 +3209,10 @@ function arrow(pane, arrow_lines){
         var offset_left = $(".ace_editor").offset().left;
         console.log("offset: ", offset_top, offset_left);
 
+        /*var text = "<svg width=\""+ $(".ace_editor").width() +"\" height=\""+ $(".ace_editor").height() +"\"> \
+                    <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> <path d=\""
+                    + curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY);
+                    + "\" marker-start='url(#arrowhead)'/> </svg>"*/
         
         /*var text = "<svg width=\""+ $(".ace_editor").width() +"\" height=\""+ $(".ace_editor").height() +"\"> \
           <rect x=\""+ startcoords.pageX +"\" y=\"" + (startcoords.pageY - offset_top) + "\" width=\"10\" height=\"10\" \
@@ -3190,17 +3220,20 @@ function arrow(pane, arrow_lines){
           <rect x=\""+ endcoords.pageX +"\" y=\"" + (endcoords.pageY - offset_top) + "\" width=\"10\" height=\"10\" \
           style=\"fill:blue;stroke:pink;stroke-width:5;opacity:0.5\" /> \
           </svg>" */
-        
-        var text = "<svg class= 'arrow' width=" + $(".ace_content").width() + " height=" + $(".ace_content").height() + " xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + $('.ace_editor').height() +" " + $('.ace_editor').width() +"'> \
+
+        var text = "<svg class= 'arrow' width=" 
+        + $(".ace_content").width() + " height=" + $(".ace_content").height() 
+        + "  viewBox='0 0 " + $('.ace_editor').height() +" " + $('.ace_editor').width() +"'> \
         <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
          <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
         </marker> \
-        <line x1='"+ x_val +"' y1='"+ (startcoords.pageY - offset_top) +"' x2='"+ x_val +"' y2='"+ (endCoords.pageY - offset_top) +"' style='stroke:rgb(255,0,0);stroke-width:2' /> /
-        </svg> \
+        <path d='" + curvedVertical(x_val, (startcoords.pageY - offset_top), x_val, (endcoords.pageY - offset_top)) + "' marker-start='url(#arrowhead)' \
+               style='stroke:black; fill:none;' position='relative'/> \
+         </svg> \
         ";
-        /*<path d='M" + (x_val) +","+ (startcoords.pageY - offset_top) + " \
-                  A20,20 0 0,1 "+ (x_val) + "," + (endcoords.pageY - offset_top) + "' marker-start='url(#arrowhead)' \
-               style='stroke:black; fill:none;'/> /*/
+
+        console.log('arrow: ', text);
+        console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
         
         var div = document.createElement('div');
         div.className =  "arrow";
@@ -3210,9 +3243,8 @@ function arrow(pane, arrow_lines){
         div.style.zIndex = "10";
         div.style.left = "0px";
         div.style.top = "0px";
-        console.log("Hi I'm updated!");
   
-        $(".editor").append(div);
+        $(".ace_editor").append(div);
         i += 1; 
       }
     }
