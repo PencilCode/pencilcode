@@ -1324,7 +1324,44 @@ $(window).on('resize.listing', function() {
   }
 });
 
-function updatePaneLinks(pane) {
+
+var searchCache={};
+var prevSearch;
+function updateSearchResults(search,pane){
+    search=search.toLowerCase();
+    if(search==prevSearch)
+        return;
+    
+    if(!state.pane[pane].allLinks)
+        state.pane[pane].allLinks=state.pane[pane].links;
+    
+    var results;
+    if(search){
+        if(searchCache[search])
+            results=searchCache[search];
+        else{
+            results=[];
+            var list=state.pane[pane].allLinks;
+
+            for (j = 0; j < list.length; j++) {
+                if(list[j].html.toLowerCase().indexOf(search)==0)
+                    results.push(list[j]);
+            }
+            searchCache[search]=results;
+        }
+    }else if(search==''){
+        results=state.pane[pane].allLinks;
+    }else
+        return;
+    
+    prevSearch=search;
+    
+    console.log("Search result for *"+search+"* : "+results);
+    state.pane[pane].links=results;
+    updatePaneLinks(pane,search);
+}
+
+function updatePaneLinks(pane,search) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, directory, tag, colsdone, list;
   function fwidth(elem) {
@@ -1336,8 +1373,16 @@ function updatePaneLinks(pane) {
   }
   list = state.pane[pane].links;
   if (!list) { return; }
-  $('#' + pane).html('');
-  directory = $('<div class="directory"></div>').appendTo('#' + pane);
+
+  if($('#fileSearch').length==0)
+    $('<div class="search-file"><input type="text" id="fileSearch" style="width:100%" ></div>').appendTo('#' + pane);
+
+  if($('#directory').length==0){
+    directory = $('<div id="directory" class="directory"></div>').appendTo('#' + pane);
+  }else{
+      directory=$('#directory');
+      directory.empty();
+  }
   width = Math.floor(fwidth(directory.get(0))) - getScrollbarWidth();
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
@@ -1414,6 +1459,10 @@ function updatePaneLinks(pane) {
         fireEvent('linger', [pane, link]);
       }
     }, 600);
+  });
+  
+  $('#fileSearch').on('keyup',function(e){
+    updateSearchResults(document.getElementById("fileSearch").value,pane);
   });
 }
 
