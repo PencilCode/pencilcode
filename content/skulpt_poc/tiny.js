@@ -1,3 +1,8 @@
+// Derived from code in the Brython project:
+//
+// Copyright (c) 2012, Pierre Quentel pierre.quentel@gmail.com
+// All rights reserved.
+
 ;var ___MINIMAL_TEST___ = { };
 
 document.addEventListener('DOMContentLoaded', function($myInstance){
@@ -30,13 +35,13 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
   document.body.appendChild(myCanvas);
   myCanvas.setAttribute("id", myCanvasId);
 
-  var $elts=document.getElementsByTagName('script');
+  var elements=document.getElementsByTagName('script');
 
-  for(var $i=0; $i<$elts.length; $i++) {
-    var $elt = $elts[$i]
+  for (var index = 0; index < elements.length; index++) {
+    var element = elements[index]
 
-    if($elt.type=="text/python"||$elt.type==="text/python3") {
-      executePython($elt, myPre, myCanvas);
+    if(element.type == "text/python" || element.type == "text/python3") {
+      executePython(element, myPre, myCanvas);
     }
   }
 
