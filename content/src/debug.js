@@ -21,7 +21,7 @@ var pollTimer = null;         // poll for stop button.
 var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
-var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw arrows when 
+var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw current_arrows when 
                               // the location goes backwards.
 var prevLocation = null;                         
 var eventQueue = [];          //list of events in order to maintain proper tracing 
@@ -30,7 +30,8 @@ var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
-var arrows = {"black" : [], "gray" : []};
+var current_arrows = {"black" : [], "gray" : []};
+var all_arrows = {};
 var temp_screenshots = [];
 
 Error.stackTraceLimit = 20;
@@ -48,9 +49,10 @@ function bindframe(w) {
   debugRecordsByLineNo = {};
   traceEvents = [];
   screenshots = [];
+  all_arrows = {};
   eventQueue = [];
   prevLocation = null; 
-  arrows = {"black" : [], "gray" : []};
+  current_arrows = {"black" : [], "gray" : []};
   prevLine = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -136,13 +138,15 @@ var debug = window.ide = {
     if(lineno <= prevLine){
       isLoop = true;
     }
+    //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
+   // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
     eventQueue.push(lineno);
-    console.log("traceevents:", traceEvents);
-  },
+      },
   setSourceMap: function (map) {
     currentSourceMap = map;
   }
@@ -237,11 +241,19 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         if(currentLine < prevLine){
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
           prevLocation = traceEvents[prevIndex].location;
-          var grayList = arrows["gray"];
-          grayList.push(arrows["black"]);
+      //    var grayList = arrows["gray"];
+    /*      grayList.push(arrows["black"]);
           arrows["gray"] = grayList;
           arrows["black"] = [{first: currentLocation, second: prevLocation}];
-          view.arrow(view.paneid('left'), arrows); 
+       //   view.arrow(view.paneid('left'), arrows); 
+          var grayList = current_arrows["gray"];
+          if (current_arrows["black"].length > 0){
+            grayList.push(current_arrows["black"]);
+          }
+          current_arrows["gray"] = grayList;
+          current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
+          all_arrows[prevLine] = current_arrows;
+        //  view.arrow(view.paneid('left'), current_arrows); */
         }
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
@@ -263,11 +275,11 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       if (line < prevLine){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         prevLocation = traceEvents[prevIndex].location;
-        var grayList = arrows["gray"];
-        grayList.push(arrows["black"]);
-        arrows["gray"] = grayList;
-        arrows['black'] = [{first: appear_location, second: prevLocation}];
-        view.arrow(view.paneid('left'), arrows); 
+        var grayList = current_arrows["gray"];
+        grayList.push(current_arrows["black"]);
+        current_arrows["gray"] = grayList;
+        current_arrows['black'] = [{first: appear_location, second: prevLocation}];
+        view.arrow(view.paneid('left'), current_arrows); 
       }
       prevLine = line;
       recordD.startCoords[coordId] = collectCoords(elem);
@@ -296,37 +308,51 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       screenshots.push(imageData)
       view.create_some(traceEvents, isLoop, screenshots, recordL);
     }          
-    var grayList = arrows["gray"];
-    if (arrows["black"].length > 0){
-      grayList.push(arrows["black"]);
-      arrows["gray"] = grayList;
-      arrows["black"] = [];
+    var grayList = current_arrows["gray"];
+    if (current_arrows["black"].length > 0){
+      grayList.push(current_arrows["black"]);
+      current_arrows["gray"] = grayList;
+      current_arrows["black"] = [];
     }
-    view.arrow(view.paneid('left'), arrows);
+    view.arrow(view.paneid('left'), current_arrows);
   }
 }
 
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
-  var tracedLine = -1; 
+  var tracedLine = -1;
   while (eventQueue.length > 0){
+    var canvas = $(".preview iframe")[0].contentWindow.canvas()
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    screenshots.push(imageData);
+    var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
+    var turtle_ctx = turtle_canvas.getContext('2d')
+    var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
+    turtle_screenshots.push(turtle_data);
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
+    var currentLocation = null
     if (currentIndex != undefined){
-      var currentLoc = traceEvents[currentIndex].location;
+      currentLocation = traceEvents[currentIndex].location;
     }
     if (tracedLine != -1){
-        untraceLine(tracedLoc);
+        untraceLine(tracedLine);
+        var canvas = $(".preview iframe")[0].contentWindow.canvas()
+        var ctx = canvas.getContext('2d');
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        screenshots.push(imageData);
+        view.create_some(traceEvents, isLoop, screenshots, debugRecordsByLineNo[tracedLine]);
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-      var grayList = arrows["gray"];
-      grayList.push(arrows["black"]);
-      arrows["gray"] = grayList;
-      arrows["black"] = [{first: currentLocation, second: prevLocation}];
-      view.arrow(view.paneid('left'), arrows);
+      var grayList = current_arrows["gray"];
+      grayList.push(current_arrows["black"]);
+      current_arrows["gray"] = grayList;
+      current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
+    //  view.arrow(view.paneid('left'), current_arrows);
     }
     traceLine(currentLine);
     tracedLine = currentLine;
@@ -336,9 +362,8 @@ function end_program(){
         untraceLine(tracedLine);
         tracedLine = -1;
   }
-  eventQueue = [];
-  arrows = {"black" : [], "gray" : []};
-  prevLine = -1; 
+  prevLine = -1;
+
 }
 
 function errorAdvice(msg, text) {

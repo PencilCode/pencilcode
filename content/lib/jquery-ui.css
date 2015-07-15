@@ -843,6 +843,7 @@ body .ui-tooltip {
 	font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
 	font-size: 1em;
 }
+
 .ui-widget-content {
 	border: 1px solid #dddddd;
 	background: #eeeeee url("images/ui-bg_highlight-soft_100_eeeeee_1x100.png") 50% top repeat-x;
@@ -856,7 +857,7 @@ body .ui-tooltip {
 	background: #f6a828 url("images/ui-bg_gloss-wave_35_f6a828_500x100.png") 50% 50% repeat-x;
 	color: #ffffff;
 	font-weight: bold;
-}
+} 
 .ui-widget-header a {
 	color: #ffffff;
 }
