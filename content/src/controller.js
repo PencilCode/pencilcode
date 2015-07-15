@@ -189,7 +189,7 @@ function updateTopControls(addHistory) {
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
-
+    
       //
       // Then insert logout/login buttons depending on if someone
       // is already logged in
@@ -203,7 +203,12 @@ function updateTopControls(addHistory) {
           id: 'login', label: 'Log in',
           title: 'Enter password for ' + model.ownername});
       }
-    } else {
+    } 
+    else if (!nosaveowner()) {
+        buttons.push({
+          id: 'login', label: 'Log in',
+          title: 'Log in and save'});
+      }
       // We're either in some file or directory
       if (m.isdir) {
         //
@@ -216,12 +221,7 @@ function updateTopControls(addHistory) {
         } else {
           buttons.push({id: 'bydate', label: 'Sort by Date'});
         }
-      } else if (!nosaveowner()) {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Log in and save'});
-      }
-    }
+      } 
     buttons.push(
         {id: 'help', label: '<span class=helplink>?</span>' });
     if (m.data && m.data.file) {
@@ -1790,7 +1790,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
 }
 
 function defaultDirSortingByDate() {
-  if (!specialowner()) return false;
+//  if (!specialowner()) return false;
   try {
     if (!window.localStorage) return false;
     return window.localStorage.dirsort === 'bydate';
@@ -1907,10 +1907,12 @@ function sortByDate(a, b) {
 }
 
 function sortByName(a, b) {
-  if (a.name < b.name) {
+  var aName=a.name.toLowerCase();
+  var bName=b.name.toLowerCase();
+  if (aName < bName) {
     return -1;
   }
-  if (a.name > b.name) {
+  else if (aName > bName) {
     return 1;
   }
   return 0;
