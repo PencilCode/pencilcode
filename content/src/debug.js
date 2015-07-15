@@ -254,7 +254,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
         console.log("This non animation is being traced!");
-        view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
+     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;

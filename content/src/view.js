@@ -219,72 +219,63 @@ function paneid(position) {
 
 //note: need to move. 
 var create_some_run = false;
-var records = [];
 var pictures = [];
-function create_some(traceevents, loop, screenshots, turtle_screenshots, record, all_arrows, pane){
+function create_some(traceevents, loop, screenshots, all_arrows, pane){
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
   div.className = 'scrubber';
-  if (!create_some_run && traceevents.length >= 2 && loop){
-  records = [];
-  records.push(record);
+  if (!create_some_run && traceevents.length >= 2){
   $(".scrubbermark").append(div);
   var labels = ["Start", "End"];
   $(function() {
    $(".scrubber").slider({
       min: 0,
-      max: records.length - 1,
+      max: traceevents.length - 1,
       step: 1,
       range: "min",
       smooth: false,
+    /*  change: function() {
+        var value = $(".scrubber").slider("option", "value");
+        console.log("change value")
+        $(".scrubber").find(".ui-slider-handle").text(traceevents[value].location.first_line);
+      },*/
       slide: function(event, ui){
+        if(ui.value > screenshots.length){
+          return false; 
+        }
         if (all_arrows[ui.value]){
           arrow(pane, all_arrows[ui.value]);
           console.log("Drawing these arrows: ", all_arrows[ui.value]);
         }
+        $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);
-        var prevno = records[present_line].line;
+        var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
         present_line = ui.value;
-        var lineno = records[current_value].line;
+        var lineno = traceevents[current_value].location.first_line;
         markPaneEditorLine(
             paneid('left'), lineno, 'guttermouseable', true);
             markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
       }
       })
       .slider("pips", {
-        first: "label",
-        rest: "pip",
-        last: "label",
-        labels: {"first": "Start", "last": "End"}
+        rest: "pip"
       })
-     .slider("float");
     var max = $( ".scrubber" ).slider("option", "max");
     var pips = $(".scrubber").slider("option", "pips");
    // $(".scrubber").css("background-color", "red");
   });
     create_some_run = true;
   }
-  else if(create_some_run && traceevents.length >= 2 && loop){
-    records.push(record);
-    console.log("Traceevents length", traceevents.length);
-    console.log("Records length", records.length);
-    console.log("Records contains:", records);
-    console.log("Traceevents contains:", traceevents);
-    $(".scrubber").slider("option", "max", records.length - 1)
+  else if(create_some_run && traceevents.length >= 2){
+    $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
-      first: "label",
-      rest: "pip",
-      last: "label",
-      labels: { "first": "Start", "last": "End"}
+      rest: "pip"
     })
-   /* .slider("float", {
-      pips: true
-    })*/
     var max = $( ".scrubber" ).slider("option", "max");
   }
 
