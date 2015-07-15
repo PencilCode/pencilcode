@@ -340,7 +340,7 @@ function end_program(){
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
     var currentLocation = null
     if (currentIndex != undefined){
-      var currentLocation = traceEvents[currentIndex].location;
+      currentLocation = traceEvents[currentIndex].location;
     }
     if (tracedLine != -1){
         untraceLine(tracedLine);
