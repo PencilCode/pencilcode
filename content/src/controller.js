@@ -2,8 +2,6 @@
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-console.log('controller is loading!!!');
-
 var $                = require('jquery'),
     view             = require('view'),
     storage          = require('storage'),
@@ -1571,7 +1569,6 @@ function falsish(s) {
 }
 
 function readNewUrl(undo) {
-  console.log('reading new url!');
   if (readNewUrl.suppress) {
     return;
   }

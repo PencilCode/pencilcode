@@ -140,7 +140,6 @@ var debug = window.ide = {
     }
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
    // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
-
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -241,11 +240,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         if(currentLine < prevLine){
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
           prevLocation = traceEvents[prevIndex].location;
-      //    var grayList = arrows["gray"];
-    /*      grayList.push(arrows["black"]);
-          arrows["gray"] = grayList;
-          arrows["black"] = [{first: currentLocation, second: prevLocation}];
-       //   view.arrow(view.paneid('left'), arrows); 
           var grayList = current_arrows["gray"];
           if (current_arrows["black"].length > 0){
             grayList.push(current_arrows["black"]);
@@ -253,14 +247,14 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           current_arrows["gray"] = grayList;
           current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
           all_arrows[prevLine] = current_arrows;
-        //  view.arrow(view.paneid('left'), current_arrows); */
+          view.arrow(view.paneid('left'), current_arrows);
         }
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
         console.log("This non animation is being traced!");
-        view.create_some(traceEvents, isLoop, screenshots, debugRecordsByLineNo[currentLine]);
+        view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
@@ -276,7 +270,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         prevLocation = traceEvents[prevIndex].location;
         var grayList = current_arrows["gray"];
-        grayList.push(current_arrows["black"]);
+        if (current_arrows["black"].length > 0){
+          grayList.push(current_arrows["black"]);
+        }
         current_arrows["gray"] = grayList;
         current_arrows['black'] = [{first: appear_location, second: prevLocation}];
         view.arrow(view.paneid('left'), current_arrows); 
@@ -301,12 +297,11 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
       untraceLine(location);
-      console.log("This record was just resolved", location);
       var canvas = $(".preview iframe")[0].contentWindow.canvas()
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
-      view.create_some(traceEvents, isLoop, screenshots, recordL);
+      view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
     var grayList = current_arrows["gray"];
     if (current_arrows["black"].length > 0){
@@ -344,7 +339,7 @@ function end_program(){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
-        view.create_some(traceEvents, isLoop, screenshots, debugRecordsByLineNo[tracedLine]);
+        view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[tracedLine],all_arrows, view.paneid("left"));
         tracedLine = -1;
     }
     if(currentLine < prevLine){
@@ -363,7 +358,6 @@ function end_program(){
         tracedLine = -1;
   }
   prevLine = -1;
-
 }
 
 function errorAdvice(msg, text) {
