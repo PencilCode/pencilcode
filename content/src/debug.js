@@ -141,7 +141,7 @@ var debug = window.ide = {
 
     //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
    // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
-    view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, all_arrows);
+    view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, all_arrows, view.paneid("left"));
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -284,7 +284,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         prevLocation = traceEvents[prevIndex].location;
         var grayList = current_arrows["gray"];
-        grayList.push(current_arrows["black"]);
+        if (current_arrows["black"].length > 0){
+          grayList.push(current_arrows["black"]);
+        }
         current_arrows["gray"] = grayList;
         current_arrows['black'] = [{first: appear_location, second: prevLocation}];
         view.arrow(view.paneid('left'), current_arrows); 
@@ -323,7 +325,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
-  var tracedLine = -1; 
+  var tracedLine = -1;
   while (eventQueue.length > 0){
     var canvas = $(".preview iframe")[0].contentWindow.canvas()
     var ctx = canvas.getContext('2d');
@@ -336,11 +338,12 @@ function end_program(){
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
+    var currentLocation = null
     if (currentIndex != undefined){
-      var currentLoc = traceEvents[currentIndex].location;
+      var currentLocation = traceEvents[currentIndex].location;
     }
     if (tracedLine != -1){
-        untraceLine(tracedLoc);
+        untraceLine(tracedLine);
         tracedLine = -1;
     }
     if(currentLine < prevLine){
@@ -359,7 +362,7 @@ function end_program(){
         tracedLine = -1;
   }
   prevLine = -1;
-  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, all_arrows);
+  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, all_arrows, view.paneid("left"));
 }
 
 function errorAdvice(msg, text) {
