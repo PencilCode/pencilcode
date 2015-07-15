@@ -136,17 +136,12 @@ var debug = window.ide = {
     if(lineno <= prevLine){
       isLoop = true;
     }
-
-    //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
-   // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
-    view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
     eventQueue.push(lineno);
-    //console.log("events: ", eventQueue);
-
+    console.log("traceevents:", traceEvents);
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -215,15 +210,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
-      //console.log("This is data for", screenshots.length, data)   
-      var canvas = $(".preview iframe")[0].contentWindow.canvas()
-      var ctx = canvas.getContext('2d');
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      screenshots.push(imageData)
-      var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
-      var turtle_ctx = turtle_canvas.getContext('2d')
-      var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
-      turtle_screenshots.push(turtle_data);
       html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
         onrendered: function(canvas){
           temp_screenshots.push(canvas);
@@ -232,7 +218,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
            tempCanvasCtx.drawImage(canvas,0,0);
         }
       })
-      console.log(temp_screenshots);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -247,6 +232,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         if (tracedLine != -1){
           untraceLine(tracedLine);
           tracedLine = -1;
+
         }
         if(currentLine < prevLine){
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
@@ -254,20 +240,15 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           var grayList = arrows["gray"];
           grayList.push(arrows["black"]);
           arrows["gray"] = grayList;
-          console.log("prevLocation: ", prevLocation);
-          console.log("currentLocation: ", currentLocation);
           arrows["black"] = [{first: currentLocation, second: prevLocation}];
-          console.log("Arrows: ", arrows);
           view.arrow(view.paneid('left'), arrows); 
         }
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        screenshots.push(imageData)
-        var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
-        var turtle_ctx = turtle_canvas.getContext('2d')
-        var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
-        turtle_screenshots.push(turtle_data);
+        screenshots.push(imageData);
+        console.log("This non animation is being traced!");
+        view.create_some(traceEvents, isLoop, screenshots, debugRecordsByLineNo[currentLine]);
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
@@ -308,6 +289,12 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
       untraceLine(location);
+      console.log("This record was just resolved", location);
+      var canvas = $(".preview iframe")[0].contentWindow.canvas()
+      var ctx = canvas.getContext('2d');
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      screenshots.push(imageData)
+      view.create_some(traceEvents, isLoop, screenshots, recordL);
     }          
     var grayList = arrows["gray"];
     if (arrows["black"].length > 0){
@@ -324,29 +311,17 @@ function end_program(){
   var currentLine = -1; 
   var tracedLine = -1; 
   while (eventQueue.length > 0){
-    console.log("ending program with: ", traceEvents);
-    var canvas = $(".preview iframe")[0].contentWindow.canvas()
-    var ctx = canvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    screenshots.push(imageData)
-    var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
-    var turtle_ctx = turtle_canvas.getContext('2d')
-    var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
-    turtle_screenshots.push(turtle_data);
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
     if (currentIndex != undefined){
       var currentLoc = traceEvents[currentIndex].location;
     }
-    console.log("end tracing: ", currentLine);
     if (tracedLine != -1){
         untraceLine(tracedLoc);
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-      console.log("ARROW");
-      console.log("Drawing Arrow:", "From: " + prevLine, "To: " + currentLine);
       var grayList = arrows["gray"];
       grayList.push(arrows["black"]);
       arrows["gray"] = grayList;
@@ -363,8 +338,7 @@ function end_program(){
   }
   eventQueue = [];
   arrows = {"black" : [], "gray" : []};
-  prevLine = -1;
-  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots);
+  prevLine = -1; 
 }
 
 function errorAdvice(msg, text) {
