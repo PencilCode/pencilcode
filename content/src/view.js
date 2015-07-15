@@ -3167,6 +3167,11 @@ function arrow(pane, arrow_lines){
   /* note: we expect arrow_lines to be an array of key value pairs where 
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
+
+  var startcoords = null;
+  var endcoords = null;
+  var offset_top =  0; 
+  var offset_left = 0; 
   
   $(".arrow").remove();
 
@@ -3187,15 +3192,24 @@ function arrow(pane, arrow_lines){
         if (firstLoc != undefined && secondLoc != undefined){
           //console.log("firstLoc: ", firstLoc);
           //console.log("secondLoc: ", secondLoc);
-         
-          /*if (block_mode){
-            startcoords = pencilcode.view._state.pane.bravo.editor.renderer.getLineMetrics(firstLoc.first_line);
-            endcoords =  pencilcode.view._state.pane.bravo.editor.renderer.getLineMetrics(firstLoc.first_line);
-          }*/
-          //var dropletEditor = state.pane[pane].dropletEditor;
-          //dropletEditor.getLineMetrics(...)
-          var startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
-          var endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line ), (secondLoc.last_column + 10));
+          
+
+          if (block_mode){
+            var dropletEditor = state.pane[pane].dropletEditor;
+            var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line);
+            var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line);
+            startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
+            endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
+            offset_top = startBounds.bounds.height;
+            offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width);
+          }
+
+          else{
+            offset_top = $(".editor").offset().top;
+            offset_left = $(".editor").offset().left;
+            startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
+            endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line ), (secondLoc.last_column + 10));
+          }
           console.log("startcoords: ", startcoords);
           console.log("endCoords: ", endcoords);
 
@@ -3205,8 +3219,8 @@ function arrow(pane, arrow_lines){
           } else{
             x_val = endcoords.pageX;
           }
-          var offset_top = $(".ace_editor").offset().top;
-          var offset_left = $(".ace_editor").offset().left;
+
+          
           console.log("offset: ", offset_top, offset_left);
 
           var text = "<svg class= 'arrow' width=" 
