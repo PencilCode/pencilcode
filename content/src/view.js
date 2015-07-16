@@ -250,12 +250,15 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  state.callbacks[tag] = cb;
+  if (state.callbacks[tag] == null){
+    state.callbacks[tag] = [];
+  }
+  state.callbacks[tag].push(cb);
 }
 
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
-     var cbs = state.callbacks[tag].slice();
+    var cbs = state.callbacks[tag].slice();
     for (j=0; j < cbs.length; j++ ){
       var cb = cbs[j];
       if (cb) {
