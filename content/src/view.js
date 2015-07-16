@@ -89,7 +89,12 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-  on: function(tag, cb) { state.callbacks[tag] = cb; },
+  on: function(tag, cb) { 
+    if (state.callbacks[tag] == null){
+      state.callbacks[tag] = []
+    }
+    state.callbacks[tag].push(cb); 
+  },
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -308,11 +313,17 @@ function setOnCallback(tag, cb) {
 }
 
 function fireEvent(tag, args) {
+  console.log("fireEvent: ", tag);
   if (tag in state.callbacks) {
-    var cb = state.callbacks[tag];
-    if (cb) {
-      cb.apply(null, args);
-    }
+    var cbs = state.callbacks[tag].slice();
+    for (j=0; j < cbs.length; j++ ){
+      var cb = cbs[j];
+      if (cb) {
+        console.log("fireEvent has a cb: ", tag);
+        console.log(tag, cb);
+        cb.apply(null, args);
+      }
+    }  
   }
 }
 
@@ -2330,12 +2341,14 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.lastChangeTime = +(new Date);
 
   dropletEditor.on('change', function() {
+    console.log("In dropletEditor change");
     if (paneState.settingUp) return;
     paneState.lastChangeTime = +(new Date);
     fireEvent('dirty', [pane]);
     if (hasSubscribers()) publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
+    console.log("Firing delta");
     fireEvent('delta', [pane]);
   });
 
@@ -2376,6 +2389,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
     }
+    console.log("firing delta from session");
     fireEvent('delta', [pane]);
   });
 
@@ -3186,13 +3200,13 @@ function arrow(pane, arrow_lines){
             var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line);
             startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
             endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
-            offset_top = startBounds.bounds.height;
-            offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width);
+            offset_top = startBounds.bounds.height - 30;
+            offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
           }
 
           else{
-            offset_top = $(".editor").offset().top;
-            offset_left = $(".editor").offset().left;
+            offset_top = $(".editor").offset().top ;
+            offset_left = $(".editor").offset().left + 30;
             startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
             endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line ), (secondLoc.last_column + 10));
           }
@@ -3212,13 +3226,13 @@ function arrow(pane, arrow_lines){
           var text = "<svg class= 'arrow' width=" 
           + $(".editor").width() + " height=" + $(".editor").height() 
           + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
-          <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5'> \
+          <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:dodgerblue; fill:dodgerblue;'> \
            <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
           </marker> \
           <path d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val + offset_left, (endcoords.pageY - offset_top)) + "' marker-start='url(#arrowhead)' \
-                 style='stroke:black; fill:none;' position='relative'/> \
+                 style='stroke:dodgerblue; fill:none;' position='relative'/> \
            </svg> \
-          ";
+          ";//stroke-width=3
 
           console.log('arrow: ', text);
           console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
