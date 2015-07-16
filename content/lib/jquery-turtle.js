@@ -8959,7 +8959,7 @@ function random(arg, arg2) {
     }
     return Math.floor(Math.random() * arg);
   }
-  if (typeof(arg) == 'object' && arg.length && arg.slice) {
+  if (typeof(arg) == 'object' && arg && arg.length && arg.slice) {
     return arg[Math.floor(Math.random() * arg.length)];
   }
   if (arg == 'normal') {
@@ -8985,6 +8985,9 @@ function random(arg, arg2) {
   }
   if (arg == 'gray') {
     return 'hsl(0,0,' + Math.floor(Math.random() * 100) + '%)';
+  }
+  if (arg === true) {
+    return Math.random() >= 0.5;
   }
   return Math.random();
 }
