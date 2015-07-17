@@ -721,13 +721,16 @@ module.exports = {
           block: "<!DOCTYPE html>",
           title: "Defines document type"
         }, {
-          block: "<html>\n  \n</html>",
+          block: "<html></html>",
+          expansion: "<html>\n  <head>\n    \n  </head>\n  <body>\n    \n  </body>\n</html>",
           title: "Root of an HTML document"
         }, {
-          block: "<head>\n  \n</head>",
+          block: "<head></head>",
+          expansion: "<head>\n  \n</head>",
           title: "Represents a collection of metadata"
         }, {
-          block: "<body>\n  \n</body>",
+          block: "<body></body>",
+          expansion: "<body>\n  \n</body>",
           title: "Main content of the document"
         }, {
           block: "<title></title>",
@@ -739,10 +742,12 @@ module.exports = {
           block: "<meta charset=\"\" />",
           title: "Metadata about the HTML document"
         }, {
-          block: "<style>\n  \n</style>",
+          block: "<style></style>",
+          expansion: "<style>\n  \n</style>",
           title: "Define style information"
         }, {
-          block: "<script>\n  \n</script>",
+          block: "<script></script>",
+          expansion: "<script>\n  \n</script>",
           title: "Define a client-side script, such as a JavaScript"
         }
       ]
@@ -751,7 +756,8 @@ module.exports = {
       color: "purple",
       blocks: [
         {
-          block: "<p>\n  \n</p>",
+          block: "<p></p>",
+          expansion: "<p>\n  \n</p>",
           title: "Represents a paragraph"
         }, {
           block: "<h3></h3>",
@@ -760,19 +766,22 @@ module.exports = {
           block: "<hr />",
           title: "Paragraph-level thematic break"
         }, {
-          block: "<div>\n  \n</div>",
+          block: "<div></div>",
+          expansion: "<div>\n  \n</div>",
           title: "Defines a division"
         }, {
           block: "<span></span>",
           title: "Group inline-elements"
         }, {
-          block: "<ul>\n  \n</ul>",
+          block: "<ul></ul>",
+          expansion: "<ul>\n  \n</ul>",
           title: "Unordered list - Use 'ol' for ordered list"
         }, {
           block: "<li></li>",
           title: "List item"
         }, {
-          block: "<dl>\n  \n</dl>",
+          block: "<dl></dl>",
+          expansion: "<dl>\n  \n</dl>",
           title: "Description list"
         }, {
           block: "<dt></dt>",
@@ -793,6 +802,10 @@ module.exports = {
           block: "<img src=\"\" alt=\"\" />",
           title: "Image"
         }, {
+          block: "<iframe></iframe>",
+          expansion: "<iframe>\n  \n</iframe>",
+          title: "Nested browsing context"
+        }, {
           block: "<i></i>",
           title: "Italic"
         }, {
@@ -810,12 +823,6 @@ module.exports = {
         }, {
           block: "<br />",
           title: "Line break"
-        }, {
-          block: "<iframe>\n  \n</iframe>",
-          title: "Nested browsing context"
-        }, {
-          block: "<noscript></noscript>",
-          title: "Alternate content for users that have disabled scripts"
         }
       ]
     }, {
@@ -823,13 +830,16 @@ module.exports = {
       color: "orange",
       blocks: [
         {
-          block: "<article>\n  \n</article>",
+          block: "<article></article>",
+          expansion: "<article>\n  \n</article>",
           title: "Independent, self-contained content"
         }, {
-          block: "<section>\n  \n</section>",
+          block: "<section></section>",
+          expansion: "<section>\n  \n</section>",
           title: "Generic section of a document or application"
         }, {
-          block: "<nav>\n  \n</nav>",
+          block: "<nav></nav>",
+          expansion: "<nav>\n  \n</nav>",
           title: "Set of navigation links"
         }
       ]
@@ -838,10 +848,12 @@ module.exports = {
       color: "indigo",
       blocks: [
         {
-          block: "<table>\n  \n</table>",
+          block: "<table></table>",
+          expansion: "<table>\n  \n</table>",
           title: "Defines a table"
         }, {
-          block: "<tr>\n  \n</tr>",
+          block: "<tr></tr>",
+          expansion: "<tr>\n  \n</tr>",
           title: "Row in a table"
         }, {
           block: "<td></td>",
@@ -856,13 +868,15 @@ module.exports = {
       color: "deeporange",
       blocks: [
         {
-          block: "<form action=\"\">\n  \n</form>",
+          block: "<form action=\"\"></form>",
+          expansion: "<form action=\"\">\n  \n</form>",
           title: "Create an HTML form"
         }, {
           block: "<input type=\"\" />",
           title: "Input field where user can enter data"
         }, {
-          block: "<textarea>\n  \n</textarea>",
+          block: "<textarea></textarea>",
+          expansion: "<textarea>\n  \n</textarea>",
           title: "Multi-line text input"
         }, {
           block: "<label for=\"\"></label>",
@@ -871,15 +885,13 @@ module.exports = {
           block: "<button></button>",
           title: "Clickable button"
         }, {
-          block: "<select>\n  \n</select>",
+          block: "<select></select>",
+          expansion: "<select>\n  \n</select>",
           title: "Drop-down list"
         }, {
           block: "<option></option>",
           expansion: "<option value=\"\"></option>",
           title: "Option in a <select> list"
-        }, {
-          block: "<fieldset>\n  \n</fieldset>",
-          title: "Group related items in a form"
         }
       ]
     }
