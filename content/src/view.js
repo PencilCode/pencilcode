@@ -220,12 +220,14 @@ function paneid(position) {
 //note: need to move. 
 var create_some_run = false;
 var pictures = [];
-function create_some(traceevents, loop, screenshots, all_arrows, pane){
+function create_some(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
+  console.log ("targetWindow", target);
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
   div.className = 'scrubber';
-  if (!create_some_run && traceevents.length >= 2){
+  if (!create_some_run && traceevents.length > 0){
+  $('.scrubbermark').css('display', 'block');
   $(".scrubbermark").append(div);
   var labels = ["Start", "End"];
   $(function() {
@@ -235,19 +237,15 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane){
       step: 1,
       range: "min",
       smooth: false,
-    /*  change: function() {
-        var value = $(".scrubber").slider("option", "value");
-        console.log("change value")
-        $(".scrubber").find(".ui-slider-handle").text(traceevents[value].location.first_line);
-      },*/
       slide: function(event, ui){
-        if(ui.value > screenshots.length){
+      if(ui.value > screenshots.length){
           return false; 
-        }
+        } 
         if (all_arrows[ui.value]){
           arrow(pane, all_arrows[ui.value]);
           console.log("Drawing these arrows: ", all_arrows[ui.value]);
         }
+
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
@@ -257,6 +255,8 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane){
         current_value = ui.value;
         present_line = ui.value;
         var lineno = traceevents[current_value].location.first_line;
+        hideProtractor(paneid('right'));
+        displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
         markPaneEditorLine(
             paneid('left'), lineno, 'guttermouseable', true);
             markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
@@ -271,7 +271,7 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane){
   });
     create_some_run = true;
   }
-  else if(create_some_run && traceevents.length >= 2){
+  else if(create_some_run && traceevents.length > 0){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       rest: "pip"
@@ -280,9 +280,54 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane){
   }
 
   else{
+    $(".scrubbermark").css("display", "none" );
     $(".scrubber").remove();
     create_some_run = false;
   }
+}
+
+function parseTurtleTransform(transform) {
+  if (transform === 'none') {
+    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+  }
+  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
+  // and FF put them in there; so allow them.
+  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
+  if (!e) { return null; }
+  var tx = e[1] ? parseFloat(e[1]) : 0,
+      ty = e[2] ? parseFloat(e[2]) : 0,
+      rot = e[3] ? parseFloat(e[3]) : 0,
+      sx = e[4] ? parseFloat(e[4]) : 1,
+      sy = e[5] ? parseFloat(e[5]) : sx,
+      twi = e[6] ? parseFloat(e[6]) : 0;
+  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
+}
+
+function convertCoords(origin, astransform) {
+  if (!origin) { return null; }
+  if (!astransform || !astransform.transform) { return null; }
+  var parsed = parseTurtleTransform(astransform.transform);
+  if (!parsed) return null;
+  return {
+    pageX: origin.left + parsed.tx,
+    pageY: origin.top + parsed.ty,
+    direction: parsed.rot,
+    scale: parsed.sy
+  };
+}
+
+function displayProtractorForRecord(record, targetWindow) {
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = targetWindow.jQuery('#field').offset();
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  showProtractor(paneid('right'), step);
 }
 
 function panepos(id) {

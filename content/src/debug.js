@@ -138,8 +138,7 @@ var debug = window.ide = {
     if(lineno <= prevLine){
       isLoop = true;
     }
-    //screenshots.push($(".preview iframe")[0].contentWindow.canvas())
-   // screenshots.push(thumbnail.getImageInfo($(".preview iframe")[0].contentWindow.canvas()));
+    view.create_some(traceEvents, isLoop, screenshots, all_arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -213,14 +212,14 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
-      html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
+    /*  html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
         onrendered: function(canvas){
           temp_screenshots.push(canvas);
           var tempCanvas = document.createElement('canvas');
           var tempCanvasCtx = tempCanvas.getContext('2d');
            tempCanvasCtx.drawImage(canvas,0,0);
         }
-      })
+      })*/
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -301,7 +300,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
-      view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
+    //  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
     var grayList = current_arrows["gray"];
     if (current_arrows["black"].length > 0){
@@ -321,11 +320,7 @@ function end_program(){
     var canvas = $(".preview iframe")[0].contentWindow.canvas()
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    screenshots.push(imageData);
-    var turtle_canvas = $(".preview iframe")[0].contentWindow.turtle.canvas();
-    var turtle_ctx = turtle_canvas.getContext('2d')
-    var turtle_data = ctx.getImageData(0,0,turtle_canvas.width, turtle_canvas.height);
-    turtle_screenshots.push(turtle_data);
+    screenshots.push(imageData); 
     currentLine = eventQueue.shift();
     //There is a bug  in the following line of code!!!
     var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
@@ -339,7 +334,7 @@ function end_program(){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
-        view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[tracedLine],all_arrows, view.paneid("left"));
+     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[tracedLine],all_arrows, view.paneid("left"));
         tracedLine = -1;
     }
     if(currentLine < prevLine){
