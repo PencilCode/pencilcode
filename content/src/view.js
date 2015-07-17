@@ -226,7 +226,6 @@ function paneid(position) {
 var create_some_run = false;
 var pictures = [];
 function create_some(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
-  console.log ("targetWindow", target);
   var present_line = 0;
   var current_value = 0;
   var div = document.createElement('div');
@@ -243,18 +242,15 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane, debugReco
       range: "min",
       smooth: false,
       slide: function(event, ui){
-      if(ui.value > screenshots.length){
-          return false; 
-        } 
         if (all_arrows[ui.value]){
           arrow(pane, all_arrows[ui.value]);
           console.log("Drawing these arrows: ", all_arrows[ui.value]);
         }
 
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
+     /*   var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[ui.value], 0, 0);
+        drawCtx.putImageData(screenshots[ui.value], 0, 0);*/
         var prevno = traceevents[present_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
         current_value = ui.value;
