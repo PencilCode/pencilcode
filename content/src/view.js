@@ -266,7 +266,8 @@ function fireEvent(tag, args) {
       if (cb) {
         cb.apply(null, args);
       }
-    }  
+    }
+  }    
 }
 
 function setVisibleUrl(targetUrl, addToHistory) {
