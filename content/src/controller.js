@@ -744,8 +744,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   } else if (doc.data !== '') { // If program is not empty, generate thumbnail
       var iframe = document.getElementById('output-frame');
       // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
-      thumbnail.generateThumbnailDataUrl(iframe).then(postThumbnailGeneration)
-                                                .catch(console.log);
+      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
   } else {  // Empty content, file delete, no need for thumbnail.
     postThumbnailGeneration('');
   }

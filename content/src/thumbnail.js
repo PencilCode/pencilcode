@@ -3,8 +3,7 @@ var THUMBNAIL_SIZE = 128;
 
 // Public functions
 var thumbnail = {
-  generateThumbnailDataUrl: function(iframe) {
-    return new Promise(function(resolve, reject) {
+  generateThumbnailDataUrl: function(iframe, callback) {
       // Get the canvas inside the iframe.
       var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
       var innerBody = innerDoc.body;
@@ -27,11 +26,10 @@ var thumbnail = {
             innerBody.children[i].style.display = '';
           }
         }
-        resolve(getImageDataUrl(canvas, getImageInfo(canvas)));
+        callback(getImageDataUrl(canvas, getImageInfo(canvas)));
       }
 
-      html2canvas(innerBody).then(onRendered).catch(reject);
-    });
+      html2canvas(innerBody).then(onRendered).catch(console.log);
   }
 }
 
