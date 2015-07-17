@@ -189,7 +189,7 @@ function updateTopControls(addHistory) {
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
-    
+
       //
       // Then insert logout/login buttons depending on if someone
       // is already logged in
@@ -1790,7 +1790,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
 }
 
 function defaultDirSortingByDate() {
-//  if (!specialowner()) return false;
+  if (!specialowner()) return false;
   try {
     if (!window.localStorage) return false;
     return window.localStorage.dirsort === 'bydate';
@@ -1909,10 +1909,11 @@ function sortByDate(a, b) {
 function sortByName(a, b) {
   var aName=a.name.toLowerCase();
   var bName=b.name.toLowerCase();
-  if (aName < bName) {
+  if (aName == bName){
+     return  a < b ? -1:a > b ? 1:0;
+  } else if (aName < bName) {
     return -1;
-  }
-  else if (aName > bName) {
+  } else if (aName > bName) {
     return 1;
   }
   return 0;
