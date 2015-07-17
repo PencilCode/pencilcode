@@ -132,13 +132,14 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
+    console.log(traceEvents);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
     if(lineno <= prevLine){
       isLoop = true;
     }
-    view.create_some(traceEvents, isLoop, screenshots, all_arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+    view.createSlider(traceEvents, isLoop, screenshots, all_arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;

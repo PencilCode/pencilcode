@@ -136,7 +136,7 @@ window.pencilcode.view = {
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
-  create_some: create_some,
+  createSlider: createSlider,
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,
@@ -222,18 +222,24 @@ function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
 
-//note: need to move. 
-var create_some_run = false;
-var pictures = [];
-function create_some(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
-  var present_line = 0;
-  var current_value = 0;
+// Note, for directories, etc. need to change this
+var sliderCreated = false;
+
+function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
+//  var previous_line = 0;
+  var current_line = 0;
+
+  // Create div element for scrubbber
   var div = document.createElement('div');
   div.className = 'scrubber';
-  if (!create_some_run && traceevents.length > 0){
-  $('.scrubbermark').css('display', 'block');
+
+  // If slider hasn't been created and there are events being pushed, create slider. 
+  if (!sliderCreated && traceevents.length > 0){
+   
+  // Append the newly created div for the slider to the panel at bottom
   $(".scrubbermark").append(div);
-  var labels = ["Start", "End"];
+
+  // Code for the slider 
   $(function() {
    $(".scrubber").slider({
       min: 0,
@@ -242,20 +248,34 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane, debugReco
       range: "min",
       smooth: false,
       slide: function(event, ui){
+
+        // Drawing arrows at each step in the slider
         if (all_arrows[ui.value]){
           arrow(pane, all_arrows[ui.value]);
           console.log("Drawing these arrows: ", all_arrows[ui.value]);
         }
-
+        
+        // Get the handle and add the corresponding line number above it
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
-     /*   var canvas = $(".preview iframe")[0].contentWindow.canvas()
+
+     /*  Note: Screenshot code needs to be revamped 
+        var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);*/
-        var prevno = traceevents[present_line].location.first_line;
+
+        // 
+
+        // get the line of the previously selected tick and clear it
+        var prevno = traceevents[current_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
-        current_value = ui.value;
-        present_line = ui.value;
-        var lineno = traceevents[current_value].location.first_line;
+
+        // after clearing, set the current line to the selected ui value
+        current_line = ui.value
+
+        // get the new line number of the selected value
+        var lineno = traceevents[current_line].location.first_line;
+
+        // display the protractor for that new line and highlight the selected line
         hideProtractor(paneid('right'));
         displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
         markPaneEditorLine(
@@ -266,25 +286,32 @@ function create_some(traceevents, loop, screenshots, all_arrows, pane, debugReco
       .slider("pips", {
         rest: "pip"
       })
+
+    // keep as variable so number of pips and maximum can be modified as events are pushed
     var max = $( ".scrubber" ).slider("option", "max");
     var pips = $(".scrubber").slider("option", "pips");
-   // $(".scrubber").css("background-color", "red");
   });
-    create_some_run = true;
+    // the slider has been created
+    sliderCreated = true;
   }
-  else if(create_some_run && traceevents.length > 0){
+
+  // if the slider has already been created and events are pushed, modify existing slider
+  else if(sliderCreated && traceevents.length > 0){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       rest: "pip"
     })
     var max = $( ".scrubber" ).slider("option", "max");
   }
-
-  else{
+  
+  // remove the slider
+  else {
+    console.log ("this is the case 2")
     $(".scrubbermark").css("display", "none" );
     $(".scrubber").remove();
-    create_some_run = false;
+    sliderCreated = false;
   }
+
 }
 
 function parseTurtleTransform(transform) {
