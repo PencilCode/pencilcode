@@ -760,7 +760,7 @@ module.exports = {
           expansion: "<p>\n  \n</p>",
           title: "Represents a paragraph"
         }, {
-          block: "<h3></h3>",
+          block: "<h1></h1>",
           title: "Heading for its section - Can use h1..h6 for different sizes"
         }, {
           block: "<hr />",
@@ -806,6 +806,12 @@ module.exports = {
           expansion: "<iframe>\n  \n</iframe>",
           title: "Nested browsing context"
         }, {
+          block: "<strong></strong>",
+          title: "Strong importance, seriousness, or urgency for its contents"
+        }, {
+          block: "<em></em>",
+          title: "Stress emphasis of its contents"
+        }, {
           block: "<i></i>",
           title: "Italic"
         }, {
@@ -841,6 +847,14 @@ module.exports = {
           block: "<nav></nav>",
           expansion: "<nav>\n  \n</nav>",
           title: "Set of navigation links"
+        }, {
+          block: "<header></header>",
+          expansion: "<header>\n  \n</header>",
+          title: "Group of introductory or navigational aids"
+        }, {
+          block: "<footer></footer>",
+          expansion: "<footer>\n  \n</footer>",
+          title: "Footer for a document or section"
         }
       ]
     }, {
