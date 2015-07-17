@@ -250,7 +250,7 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  if (state.callbacks[tag] == null){
+  if (state.callbacks[tag] == null) {
     state.callbacks[tag] = [];
   }
   state.callbacks[tag].push(cb);
@@ -261,13 +261,13 @@ function fireEvent(tag, args) {
     var cbs = state.callbacks[tag].slice();
     //take a copy of the array in case other 
     //events are fired while you're indexing it.
-    for (j=0; j < cbs.length; j++ ){
+    for (j=0; j < cbs.length; j++) {
       var cb = cbs[j];
       if (cb) {
         cb.apply(null, args);
       }
     }
-  }    
+  }
 }
 
 function setVisibleUrl(targetUrl, addToHistory) {
