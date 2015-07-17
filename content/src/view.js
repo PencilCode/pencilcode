@@ -248,12 +248,6 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       range: "min",
       smooth: false,
       slide: function(event, ui){
-
-        // Drawing arrows at each step in the slider
-        if (all_arrows[ui.value]){
-          arrow(pane, all_arrows[ui.value]);
-          console.log("Drawing these arrows: ", all_arrows[ui.value]);
-        }
         
         // Get the handle and add the corresponding line number above it
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
@@ -262,8 +256,6 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
         drawCtx.putImageData(screenshots[ui.value], 0, 0);*/
-
-        // 
 
         // get the line of the previously selected tick and clear it
         var prevno = traceevents[current_line].location.first_line;
@@ -274,6 +266,11 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
 
         // get the new line number of the selected value
         var lineno = traceevents[current_line].location.first_line;
+         // Drawing arrows at each step in the slider
+        if (all_arrows[lineno]){
+          arrow(pane, all_arrows[lineno]);
+          console.log("Drawing these arrows: ", all_arrows[lineno]);
+        }
 
         // display the protractor for that new line and highlight the selected line
         hideProtractor(paneid('right'));
@@ -381,14 +378,11 @@ function setOnCallback(tag, cb) {
 }
 
 function fireEvent(tag, args) {
-  console.log("fireEvent: ", tag);
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
     for (j=0; j < cbs.length; j++ ){
       var cb = cbs[j];
       if (cb) {
-        console.log("fireEvent has a cb: ", tag);
-        console.log(tag, cb);
         cb.apply(null, args);
       }
     }  
@@ -2409,14 +2403,12 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.lastChangeTime = +(new Date);
 
   dropletEditor.on('change', function() {
-    console.log("In dropletEditor change");
     if (paneState.settingUp) return;
     paneState.lastChangeTime = +(new Date);
     fireEvent('dirty', [pane]);
     if (hasSubscribers()) publish('update', [dropletEditor.getValue()]);
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
-    console.log("Firing delta");
     fireEvent('delta', [pane]);
   });
 
@@ -2457,7 +2449,6 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
       clearPaneEditorMarks(pane);
       fireEvent('changelines', [pane]);
     }
-    console.log("firing delta from session");
     fireEvent('delta', [pane]);
   });
 
@@ -3257,10 +3248,10 @@ function arrow(pane, arrow_lines){
         var loc = arrows[i];
         var firstLoc = loc["first"];
         var secondLoc = loc['second'];
-        if (firstLoc != undefined && secondLoc != undefined){
-          //console.log("firstLoc: ", firstLoc);
-          //console.log("secondLoc: ", secondLoc);
+        console.log("firstLoc: ", firstLoc);
+        console.log("secondLoc: ", secondLoc);
           
+        if (firstLoc != undefined && secondLoc != undefined){
 
           if (block_mode){
             var dropletEditor = state.pane[pane].dropletEditor;

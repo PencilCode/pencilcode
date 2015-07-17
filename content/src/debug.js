@@ -241,8 +241,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
           prevLocation = traceEvents[prevIndex].location;
           var grayList = current_arrows["gray"];
-          if (current_arrows["black"].length > 0){
-            grayList.push(current_arrows["black"]);
+          var blacklist = current_arrows["black"];
+
+          for (j=0; j < blacklist.length; j++){
+            grayList.push(blacklist[j]);
           }
           current_arrows["gray"] = grayList;
           current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
@@ -270,8 +272,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         prevLocation = traceEvents[prevIndex].location;
         var grayList = current_arrows["gray"];
-        if (current_arrows["black"].length > 0){
-          grayList.push(current_arrows["black"]);
+        var blacklist = current_arrows["black"];
+
+        for (j=0; j < blacklist.length; j++){
+          grayList.push(blacklist[j]);
         }
         current_arrows["gray"] = grayList;
         current_arrows['black'] = [{first: appear_location, second: prevLocation}];
@@ -304,11 +308,12 @@ function reportResolve(method, debugId, length, coordId, elem, args){
     //  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
     var grayList = current_arrows["gray"];
-    if (current_arrows["black"].length > 0){
-      grayList.push(current_arrows["black"]);
-      current_arrows["gray"] = grayList;
-      current_arrows["black"] = [];
+    var blacklist = current_arrows["black"];
+    for (j=0; j < blacklist.length; j++){
+        grayList.push(blacklist[j]);
     }
+    current_arrows["gray"] = grayList;
+    current_arrows["black"] = [];
     view.arrow(view.paneid('left'), current_arrows);
   }
 }
