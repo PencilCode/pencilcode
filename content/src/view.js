@@ -89,7 +89,12 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-  on: function(tag, cb) { state.callbacks[tag] = cb; },
+  on: function(tag, cb) { 
+    if (state.callbacks[tag] == null){
+      state.callbacks[tag] = []
+    }
+    state.callbacks[tag].push(cb); 
+ },
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -234,14 +239,22 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  state.callbacks[tag] = cb;
+  if (state.callbacks[tag] == null) {
+    state.callbacks[tag] = [];
+  }
+  state.callbacks[tag].push(cb);
 }
 
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
-    var cb = state.callbacks[tag];
-    if (cb) {
-      cb.apply(null, args);
+    var cbs = state.callbacks[tag].slice();
+    //take a copy of the array in case other 
+    //events are fired while you're indexing it.
+    for (j=0; j < cbs.length; j++) {
+      var cb = cbs[j];
+      if (cb) {
+        cb.apply(null, args);
+      }
     }
   }
 }
