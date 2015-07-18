@@ -21,6 +21,7 @@ var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
 var stuckTime = null;         // timestmp to detect stuck programs
+var stuckComplexity = 0;      // verification of complexity of stuck loop
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 
 
@@ -40,6 +41,7 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   stuckTime = null;
+  stuckComplexity = 0;
   startPollingWindow();
 }
 
@@ -66,6 +68,8 @@ var debug = window.ide = {
     if (name === "pulse") { stuckTime = null; }
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
+
+    if (name === "enter") { stuckComplexity = Math.max(stuckComplexity, 2); }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -137,7 +141,7 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > stuckTimeLimit) {
+  if (currentTime - stuckTime > (stuckComplexity + 1) * stuckTimeLimit) {
     if ('function' == typeof targetWindow.$.turtle.interrupt) {
       targetWindow.$.turtle.interrupt('hung');
     }
@@ -179,6 +183,7 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 }
 
 function reportAppear(method, debugId, length, coordId, elem, args){
+  stuckComplexity = Math.max(stuckComplexity, 6);
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval) {
