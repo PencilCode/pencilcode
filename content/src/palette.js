@@ -729,10 +729,6 @@ module.exports = {
           expansion: "<head>\n  \n</head>",
           title: "Represents a collection of metadata"
         }, {
-          block: "<body></body>",
-          expansion: "<body>\n  \n</body>",
-          title: "Main content of the document"
-        }, {
           block: "<title></title>",
           title: "Document's title or name"
         }, {
@@ -769,6 +765,9 @@ module.exports = {
         }, {
           block: "<span></span>",
           title: "Group inline-elements"
+        }, {
+          block: "<center></center>",
+          title: "Defines a centered group"
         }, {
           block: "<ul></ul>",
           expansion: "<ul>\n  \n</ul>",
@@ -833,6 +832,10 @@ module.exports = {
       color: "orange",
       blocks: [
         {
+          block: "<body></body>",
+          expansion: "<body>\n  \n</body>",
+          title: "Main content of the document"
+        }, {
           block: "<h1></h1>",
           title: "Heading for its section"
         }, {
@@ -1083,9 +1086,10 @@ module.exports = {
 
   // Overrides to make the palette colors match
   KNOWN_HTML_TAGS: {
-    body: {category: 'metadata'},
     img: {category: 'content'},
     iframe: {category: 'content'},
-    span: {category: 'grouping'}
+    span: {category: 'grouping'},
+    // Add center even though deprecated by WHATWG.
+    center: {category: 'grouping'}
   }
 };
