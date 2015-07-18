@@ -736,10 +736,10 @@ module.exports = {
           block: "<title></title>",
           title: "Document's title or name"
         }, {
-          block: "<link rel=\"\" href=\"\" />",
+          block: "<link rel=\"\" href=\"\">",
           title: "Link between a document and an external resource"
         }, {
-          block: "<meta charset=\"\" />",
+          block: "<meta charset=\"\">",
           title: "Metadata about the HTML document"
         }, {
           block: "<style></style>",
@@ -760,10 +760,7 @@ module.exports = {
           expansion: "<p>\n  \n</p>",
           title: "Represents a paragraph"
         }, {
-          block: "<h1></h1>",
-          title: "Heading for its section - Can use h1..h6 for different sizes"
-        }, {
-          block: "<hr />",
+          block: "<hr>",
           title: "Paragraph-level thematic break"
         }, {
           block: "<div></div>",
@@ -799,7 +796,7 @@ module.exports = {
           block: "<a href=\"\"></a>",
           title: "Defines a hyperlink, which is used to link from one page to another"
         }, {
-          block: "<img src=\"\" alt=\"\" />",
+          block: "<img src=\"\" alt=\"\">",
           title: "Image"
         }, {
           block: "<iframe></iframe>",
@@ -827,7 +824,7 @@ module.exports = {
           block: "<sup></sup>",
           title: "Superscript"
         }, {
-          block: "<br />",
+          block: "<br>",
           title: "Line break"
         }
       ]
@@ -836,6 +833,15 @@ module.exports = {
       color: "orange",
       blocks: [
         {
+          block: "<h1></h1>",
+          title: "Heading for its section"
+        }, {
+          block: "<h2></h2>",
+          title: "Heading for its section"
+        }, {
+          block: "<h3></h3>",
+          title: "Heading for its section"
+        }, {
           block: "<article></article>",
           expansion: "<article>\n  \n</article>",
           title: "Independent, self-contained content"
@@ -886,7 +892,7 @@ module.exports = {
           expansion: "<form action=\"\">\n  \n</form>",
           title: "Create an HTML form"
         }, {
-          block: "<input type=\"\" />",
+          block: "<input type=\"\">",
           title: "Input field where user can enter data"
         }, {
           block: "<textarea></textarea>",
@@ -1073,5 +1079,13 @@ module.exports = {
     value: {color: 'lightgreen'},
     command: {color: 'lightgreen'},
     errors: {color: '#f00'}
+  },
+
+  // Overrides to make the palette colors match
+  KNOWN_HTML_TAGS: {
+    body: {category: 'metadata'},
+    img: {category: 'content'},
+    iframe: {category: 'content'},
+    span: {category: 'grouping'}
   }
 };

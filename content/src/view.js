@@ -1582,10 +1582,16 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
-  return {
-    functions: palette.KNOWN_FUNCTIONS,
-    categories: palette.CATEGORIES
-  };
+  if (mimeType.match(/^text\/html\b/)) {
+    return {
+      tags: palette.KNOWN_HTML_TAGS
+    };
+  } else {
+    return {
+      functions: palette.KNOWN_FUNCTIONS,
+      categories: palette.CATEGORIES
+    };
+  }
 }
 
 function uniqueId(name) {
