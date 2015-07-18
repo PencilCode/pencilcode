@@ -117,9 +117,6 @@ module.exports = function(grunt) {
           preserveComments: false,
           screwIE8: true,
           report: 'min',
-          compress: {
-            unsafe: true
-          },
           beautify: {
             beautify: false
           }
