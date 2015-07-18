@@ -512,10 +512,16 @@ describe('code editor', function() {
   it('should show login prompt when saving', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the save button.
+      console.log = function(x) { (window._log = window._log || []).push(x); }
       $('#save').click();
     }, function() {
       // Wait for the login dialog to pop up.
-      if (!$('.dialog').is(':visible')) return;
+      if (!$('.dialog').is(':visible')) {
+        return {
+          poll: true,
+          log: window._log || 'No log'
+        }
+      }
       return {
         udisabled: $('.username').is(':disabled'),
         uval: $('.username').val(),
