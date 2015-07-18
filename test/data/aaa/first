@@ -1,0 +1,6 @@
+speed(100);
+fd(100);
+(function() { dot(red); })()
+/**@META
+{"type":"text/javascript","libs":[{"name":"turtle","src":"//{site}/turtlebits.js"}]}
+META@**/

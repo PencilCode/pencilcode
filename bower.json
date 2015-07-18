@@ -14,10 +14,9 @@
     "jquery-deparam": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
+    "pencil-tracer": "yjerem/pencil-tracer#master",
     "requirejs": "latest",
-    "seedrandom": "latest",
-    "socket.io-client": "latest",
-    "source-map": "mozilla/source-map#master",
+    "socket.io-client": "#v1.2.0",
     "tooltipster": "latest",
     "zeroclipboard": "latest"
   },

@@ -321,7 +321,7 @@ exports.handleLoad = function(req, res, app, format) {
         if (extIdx > 0) {
           var ext = filename.substring(extIdx + 1);
           if (ext == 'htm' || ext == 'html' || ext == 'js' || ext == 'css') {
-            text += '<a href="/edit/' + origfilename + '"> rel="nofollow">Create /home/' + origfilename + '</a>\n';
+            text += '<a href="/edit/' + origfilename + '" rel="nofollow">Create /home/' + origfilename + '</a>\n';
           }
         }
         text += '</pre>\n';
@@ -427,10 +427,15 @@ function buildDirList(absdir, contents) {
       mtime = 0;
     }
 
-    list.push({name: contents[i],
-         mode: modestr,
-         size: statObj.size,
-         mtime: mtime});
+    var absthumb = utils.makeThumbPath(item);
+
+    list.push({
+      name: contents[i],
+      thumbnail: fs.existsSync(absthumb),   // whether there is a thumbnail
+      mode: modestr,
+      size: statObj.size,
+      mtime: mtime
+    });
   }
 
   return list;

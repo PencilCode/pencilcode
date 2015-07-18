@@ -1,14 +1,15 @@
 .svn
+.DS_Store
 node_modules
 bower_components
 wsgi/config.pyc
 local/data
 local/cache
+content/lib/font-awesome.css
 content/builddate.txt
 content/editor.css
-content/editor.html
 content/editor.js
-content/framed.html
 content/turtlebits.js
 content/welcome.css
 content/worker.js
+.DS_Store

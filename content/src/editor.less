@@ -6,6 +6,18 @@
   box-sizing: content-box
 }
 
+.tooltipster-shadow {
+  border-radius: 5px;
+  background-color: #eeeeee;
+  box-shadow: 0px 0px 14px rgba(0,0,0,0.3);
+  color: #2c2c2c;
+  .tooltipster-content {
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    line-height: 16px;
+  }
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -741,6 +753,11 @@ body#pencildoc #diigolet-csm {
   background: #0D47A1;
 }
 
+.droplet-dropdown-item {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
 .droplet-palette-wrapper {
   cursor: default;
   box-shadow: 0 0 6px gray;
@@ -778,11 +795,17 @@ body#pencildoc #diigolet-csm {
   opacity: 1
 }
 
+.thumb-toggle:hover, .thumb-toggle:hover .fa {
+  color: #fff;
+  opacity: 1
+}
+
 .preview {
   height: 100%;
   overflow: hidden;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=");
   background-position: center;
+  border-left: 1px dashed gainsboro;
 }
 
 .preview iframe {
@@ -795,7 +818,8 @@ body#pencildoc #diigolet-csm {
 
 .directory {
   height: 100%;
-  overflow: auto
+  padding: 10px;
+  overflow: auto;
 }
 
 .directory .column {
@@ -809,25 +833,56 @@ body#pencildoc #diigolet-csm {
   float: left;
   clear: left;
   text-decoration: none;
-  padding: 0 28px 0 12px;
-  min-height: 28px;
   color: #222;
-  cursor: pointer
+  cursor: pointer;
+  width: 154px;
+  div {
+    margin: 0px;
+    max-height: 154px;
+    padding: 2px 0;
+    span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .caption {
+      text-align: center;
+    }
+    .thumbnail {
+      background-color: #eeeeee;
+      width: 100px;
+      height: 100px;
+      margin-top: 16px;
+      margin-left: 27px;
+      border: 1px #ccc solid;
+      border-radius: 4px;
+      padding: 2px;
+    }
+  }
+  &:hover {
+    text-decoration: underline;
+    color: blue;
+    div .thumbnail {
+      padding: 0px;
+      border-width: 2px;
+      border-color: #1679FF;
+    }
+    span:not(.caption) {
+      display: table;
+      text-decoration: underline;
+      position: relative;
+      background-color: #f5f5f5;
+      padding-right: 6px;
+    }
+  }
 }
 
 .directory .create {
   color: #1e90ff;
-  white-space: nowrap;
-}
-
-.directory .create:hover {
-  text-decoration: underline;
-  color: blue
-}
-
-.directory .item:hover {
-  text-decoration: underline;
-  color: blue
+  div .thumbnail {
+    border-style: dashed;
+  }
 }
 
 .loading, #notification.loading {
@@ -1110,7 +1165,7 @@ body#pencildoc #diigolet-csm {
 
 .blocktoggle {
   left: 0px;
-  z-index: 5;
+  z-index: 257;
 }
 
 .blocktoggle .slide:after {

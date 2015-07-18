@@ -2,8 +2,10 @@
 // STORAGE AND CACHE SERVICE
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'see', 'filetype'],
-function($, see, filetype) {
+var $        = require('jquery'),
+    see      = require('see'),
+    filetype = require('filetype');
+
 
 eval(see.scope('storage'));
 function hasBackup(filename) {
@@ -269,6 +271,9 @@ window.pencilcode.storage = {
     // Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
     var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
+    if (msg.thumbnail) {  // Send thumbnail data to server if it exists.
+      payload.thumbnail = msg.thumbnail;
+    }
     if (msg.mtime && !force) {
       payload.conditional = msg.mtime;
     }
@@ -375,7 +380,5 @@ window.pencilcode.storage = {
   }
 };
 
-return window.pencilcode.storage;
-
-});
+module.exports = window.pencilcode.storage;
 

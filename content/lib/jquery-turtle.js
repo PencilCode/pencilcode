@@ -368,6 +368,7 @@ THE SOFTWARE.
 //////////////////////////////////////////////////////////////////////////
 
 var undefined = void 0,
+    global = this,
     __hasProp = {}.hasOwnProperty,
     rootjQuery = jQuery(function() {}),
     interrupted = false,
@@ -752,8 +753,8 @@ function getElementTranslation(elem) {
 
 // Reads out the 2x3 transform matrix of the given element.
 function readTransformMatrix(elem) {
-  var ts = (window.getComputedStyle ?
-      window.getComputedStyle(elem)[transform] :
+  var ts = (global.getComputedStyle ?
+      global.getComputedStyle(elem)[transform] :
       $.css(elem, 'transform'));
   if (!ts || ts === 'none') {
     return null;
@@ -782,7 +783,7 @@ function readTransformOrigin(elem, wh) {
       elem.style[name] = swapout[name];
     }
   }
-  var gcs = (window.getComputedStyle ?  window.getComputedStyle(elem) : null),
+  var gcs = (global.getComputedStyle ?  global.getComputedStyle(elem) : null),
       origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
   if (hidden) {
     for (name in swapout) {
@@ -981,12 +982,12 @@ function getTurtleOrigin(elem, inverseParent, extra) {
 
 function wh() {
   // Quirks-mode compatible window height.
-  return window.innerHeight || $(window).height();
+  return global.innerHeight || $(global).height();
 }
 
 function ww() {
   // Quirks-mode compatible window width.
-  return window.innerWidth || $(window).width();
+  return global.innerWidth || $(global).width();
 }
 
 function dh() {
@@ -1013,7 +1014,7 @@ function getPageGbcr(elem) {
     return makeGbcrLTWH(elem.pageX, elem.pageY, 0, 0);
   } else if ($.isWindow(elem)) {
     return makeGbcrLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(global).scrollLeft(), $(global).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9) {
     return makeGbcrLTWH(0, 0, dw(), dh());
   } else if (!('getBoundingClientRect' in elem)) {
@@ -1057,10 +1058,10 @@ function polyMatchesGbcr(poly, gbcr) {
 function readPageGbcr() {
   var raw = this.getBoundingClientRect();
   return {
-    top: raw.top + window.pageYOffset,
-    bottom: raw.bottom + window.pageYOffset,
-    left: raw.left + window.pageXOffset,
-    right: raw.right + window.pageXOffset,
+    top: raw.top + global.pageYOffset,
+    bottom: raw.bottom + global.pageYOffset,
+    left: raw.left + global.pageXOffset,
+    right: raw.right + global.pageXOffset,
     width: raw.width,
     height: raw.height
   };
@@ -1145,7 +1146,7 @@ function convertLocalXyToPageCoordinates(elem, localxy) {
 function getCenterInPageCoordinates(elem) {
   if ($.isWindow(elem)) {
     return getRoundedCenterLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(global).scrollLeft(), $(global).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9 || elem == document.body) {
     return getRoundedCenterLTWH(0, 0, dw(), dh());
   }
@@ -1180,7 +1181,7 @@ function polyToVectorsOffset(poly, offset) {
 function getCornersInPageCoordinates(elem, untransformed) {
   if ($.isWindow(elem)) {
     return getStraightRectLTWH(
-        $(window).scrollLeft(), $(window).scrollTop(), ww(), wh());
+        $(global).scrollLeft(), $(global).scrollTop(), ww(), wh());
   } else if (elem.nodeType === 9) {
     return getStraightRectLTWH(0, 0, dw(), dh());
   }
@@ -1227,7 +1228,7 @@ function scrollWindowToDocumentPosition(pos, limit) {
       b = $('body'),
       dw = b.width(),
       dh = b.height(),
-      w = $(window);
+      w = $(global);
   if (tx > dw - ww2) { tx = dw - ww2; }
   if (tx < ww2) { tx = ww2; }
   if (ty > dh - wh2) { ty = dh - wh2; }
@@ -1634,7 +1635,7 @@ function getTurtleDrawingCanvas() {
   surface.insertBefore(globalDrawing.canvas, surface.firstChild);
   resizecanvas();
   pollbodysize(resizecanvas);
-  $(window).resize(resizecanvas);
+  $(global).resize(resizecanvas);
   return globalDrawing.canvas;
 }
 
@@ -1682,8 +1683,8 @@ function sizexy() {
   // Using innerHeight || $(window).height() deals with quirks-mode.
   var b = $('body');
   return [
-    Math.max(b.outerWidth(true), window.innerWidth || $(window).width()),
-    Math.max(b.outerHeight(true), window.innerHeight || $(window).height())
+    Math.max(b.outerWidth(true), global.innerWidth || $(global).width()),
+    Math.max(b.outerHeight(true), global.innerHeight || $(global).height())
   ];
 }
 
@@ -2031,7 +2032,6 @@ function flushPenState(elem, state, corner) {
     if (path[0].length) { path[0].length = 0; }
     if (corner) {
       if (!style) {
-        if (window.buggy) console.trace('clearing the retracing path');
         // pen null will clear the retracing path too.
         if (corners.length > 1) corners.length = 1;
         if (corners[0].length) corners[0].length = 0;
@@ -2183,7 +2183,7 @@ function touchesPixel(elem, color) {
   }
   octx.restore();
   // Now examine the results and look for alpha > 0%.
-  data = octx.getImageData(0, 0, w, h).data;
+  var data = octx.getImageData(0, 0, w, h).data;
   if (!rgba || rgba[3] == 0) {
     // Handle the "looking for any color" and "transparent" cases.
     var wantcolor = !rgba;
@@ -2645,7 +2645,7 @@ function apiUrl(url, topdir) {
       result = link.protocol + '//' + link.host + '/' + topdir + '/' +
         link.pathname.replace(/\/[^\/]*(?:\/|$)/, '') + link.search + link.hash;
     }
-  } else if (isPencilHost(window.location.hostname)) {
+  } else if (isPencilHost(global.location.hostname)) {
     // Proxy offdomain requests to avoid CORS issues.
     result = '/proxy/' + result;
   }
@@ -2655,7 +2655,7 @@ function apiUrl(url, topdir) {
 function imgUrl(url) {
   if (/\//.test(url)) { return url; }
   url = '/img/' + url;
-  if (isPencilHost(window.location.hostname)) { return url; }
+  if (isPencilHost(global.location.hostname)) { return url; }
   return '//pencil.io' + url;
 }
 // Retrieves the pencil code login cookie, if there is one.
@@ -3082,7 +3082,7 @@ var Webcam = (function(_super) {
             $(v).off('play.capture' + k);
             next();
           });
-          v.src = window.URL.createObjectURL(stream);
+          v.src = global.URL.createObjectURL(stream);
         }
       }, function() {
         next();
@@ -3398,14 +3398,14 @@ function focusWindowIfFirst() {
   try {
     // If we are in a frame with access to a parent with an activeElement,
     // then try to blur it (as is common inside the pencilcode IDE).
-    window.parent.document.activeElement.blur();
+    global.parent.document.activeElement.blur();
   } catch (e) {}
-  window.focus();
+  global.focus();
 }
 
 // Construction of keyCode names.
 var keyCodeName = (function() {
-  var ua = typeof window !== 'undefined' ? window.navigator.userAgent : '',
+  var ua = typeof global !== 'undefined' ? global.navigator.userAgent : '',
       isOSX = /OS X/.test(ua),
       isOpera = /Opera/.test(ua),
       maybeFirefox = !/like Gecko/.test(ua) && !isOpera,
@@ -3585,9 +3585,9 @@ var pressedKey = (function() {
     resetPressedState();
     for (var name in eventMap) {
       if (turnon) {
-        window.addEventListener(name, eventMap[name], true);
+        global.addEventListener(name, eventMap[name], true);
       } else {
-        window.removeEventListener(name, eventMap[name]);
+        global.removeEventListener(name, eventMap[name]);
       }
     }
   }
@@ -3829,9 +3829,11 @@ function getGlobalInstrument() {
   return global_instrument;
 }
 
+// Beginning of musical.js copy
+
 // Tests for the presence of HTML5 Web Audio (or webkit's version).
 function isAudioPresent() {
-  return !!(window.AudioContext || window.webkitAudioContext);
+  return !!(global.AudioContext || global.webkitAudioContext);
 }
 
 // All our audio funnels through the same AudioContext with a
@@ -3842,7 +3844,7 @@ function getAudioTop() {
   if (!isAudioPresent()) {
     return null;
   }
-  var ac = new (window.AudioContext || window.webkitAudioContext);
+  var ac = new (global.AudioContext || global.webkitAudioContext);
   getAudioTop.audioTop = {
     ac: ac,
     wavetable: makeWavetable(ac),
@@ -3887,6 +3889,48 @@ function audioCurrentStartTime() {
   return atop.currentStart;
 }
 
+// Converts a midi note number to a frequency in Hz.
+function midiToFrequency(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+// Some constants.
+var noteNum =
+    {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};
+var accSym =
+    { '^':1, '': 0, '=':0, '_':-1 };
+var noteName =
+    ['C', '^C', 'D', '_E', 'E', 'F', '^F', 'G', '_A', 'A', '_B', 'B',
+     'c', '^c', 'd', '_e', 'e', 'f', '^f', 'g', '_a', 'a', '_b', 'b'];
+// Converts a frequency in Hz to the closest midi number.
+function frequencyToMidi(freq) {
+  return Math.round(69 + Math.log(freq / 440) * 12 / Math.LN2);
+}
+// Converts an ABC pitch (such as "^G,,") to a midi note number.
+function pitchToMidi(pitch) {
+  var m = /^(\^+|_+|=|)([A-Ga-g])([,']*)$/.exec(pitch);
+  if (!m) { return null; }
+  var octave = m[3].replace(/,/g, '').length - m[3].replace(/'/g, '').length;
+  var semitone =
+      noteNum[m[2]] + accSym[m[1].charAt(0)] * m[1].length + 12 * octave;
+  return semitone + 60; // 60 = midi code middle "C".
+}
+// Converts a midi number to an ABC notation pitch.
+function midiToPitch(midi) {
+  var index = ((midi - 72) % 12);
+  if (midi > 60 || index != 0) { index += 12; }
+  var octaves = Math.round((midi - index - 60) / 12),
+      result = noteName[index];
+  while (octaves != 0) {
+    result += octaves > 0 ? "'" : ",";
+    octaves += octaves > 0 ? -1 : 1;
+  }
+  return result;
+}
+// Converts an ABC pitch to a frequency in Hz.
+function pitchToFrequency(pitch) {
+  return midiToFrequency(pitchToMidi(pitch));
+}
+
 // All further details of audio handling are encapsulated in the Instrument
 // class, which knows how to synthesize a basic timbre; how to play and
 // schedule a tone; and how to parse and sequence a song written in ABC
@@ -3926,6 +3970,7 @@ var Instrument = (function() {
     }
   }
 
+  Instrument.timeOffset = 0.0625;// Seconds to delay all audiable timing.
   Instrument.dequeueTime = 0.5;  // Seconds before an event to reexamine queue.
   Instrument.bufferSecs = 2;     // Seconds ahead to put notes in WebAudio.
   Instrument.toneLength = 1;     // Default duration of a tone.
@@ -4062,7 +4107,7 @@ var Instrument = (function() {
   // node graph for the tone generators and filters for the tone.
   Instrument.prototype._makeSound = function(record) {
     var timbre = record.timbre || this._timbre,
-        starttime = record.time,
+        starttime = record.time + Instrument.timeOffset,
         releasetime = starttime + record.duration,
         attacktime = Math.min(releasetime, starttime + timbre.attack),
         decaytime = timbre.decay *
@@ -4139,12 +4184,13 @@ var Instrument = (function() {
   // Truncates a sound previously scheduled by _makeSound by using
   // cancelScheduledValues and directly ramping down to zero.
   // Can only be used to shorten a sound.
-  Instrument.prototype._truncateSound = function(record, releasetime) {
-    if (releasetime < record.time + record.duration) {
-      record.duration = Math.max(0, releasetime - record.time);
+  Instrument.prototype._truncateSound = function(record, truncatetime) {
+    if (truncatetime < record.time + record.duration) {
+      record.duration = Math.max(0, truncatetime - record.time);
       if (record.gainNode) {
         var timbre = record.timbre || this._timbre,
-            starttime = record.time,
+            starttime = record.time + Instrument.timeOffset,
+            releasetime = truncatetime + Instrument.timeOffset,
             attacktime = Math.min(releasetime, starttime + timbre.attack),
             decaytime = timbre.decay *
                 Math.pow(440 / record.frequency, timbre.decayfollow),
@@ -4583,150 +4629,402 @@ var Instrument = (function() {
     }
   };
 
-  // Parses an ABC file to an object with the following structure:
-  // {
-  //   X: value from the X: lines in header (\n separated for multiple values)
-  //   V: value from the V:myname lines that appear before K:
-  //   (etc): for all the one-letter header-names.
-  //   K: value from the K: lines in header.
-  //   tempo: Q: line parsed as beatsecs
-  //   timbre: ... I:timbre line as parsed by makeTimbre
-  //   voice: {
-  //     myname: { // voice with id "myname"
-  //       V: value from the V:myname lines (from the body)
-  //       stems: [...] as parsed by parseABCstems
-  //    }
-  //  }
-  // }
-  // ABC files are idiosyncratic to parse: the written specifications
-  // do not necessarily reflect the defacto standard implemented by
-  // ABC content on the web.  This implementation is designed to be
-  // practical, working on content as it appears on the web, and only
-  // using the written standard as a guideline.
-  var ABCheader = /^([A-Za-z]):\s*(.*)$/;
-  function parseABCFile(str) {
-    var lines = str.split('\n'),
-        result = {
-          voice: {}
-        },
-        context = result, timbre,
-        j, k, header, stems, key = {}, accent = {}, voiceid, out;
-    // Shifts context to a voice with the given id given.  If no id
-    // given, then just sticks with the current voice.  If the current
-    // voice is unnamed and empty, renames the current voice.
-    function startVoiceContext(id) {
-      id = id || '';
-      if (!id && context !== result) {
-        return;
-      }
-      if (result.voice.hasOwnProperty(id)) {
-        // Resume a named voice.
-        context = result.voice[id];
-        accent = context.accent;
-      } else {
-        // Start a new voice.
-        context = { id: id, accent: { slurred: 0 } };
-        result.voice[id] = context;
-        accent = context.accent;
-      }
+
+  // The default sound is a square wave with a pretty quick decay to zero.
+  var defaultTimbre = Instrument.defaultTimbre = {
+    wave: 'square',   // Oscillator type.
+    gain: 0.1,        // Overall gain at maximum attack.
+    attack: 0.002,    // Attack time at the beginning of a tone.
+    decay: 0.4,       // Rate of exponential decay after attack.
+    decayfollow: 0,   // Amount of decay shortening for higher notes.
+    sustain: 0,       // Portion of gain to sustain indefinitely.
+    release: 0.1,     // Release time after a tone is done.
+    cutoff: 0,        // Low-pass filter cutoff frequency.
+    cutfollow: 0,     // Cutoff adjustment, a multiple of oscillator freq.
+    resonance: 0,     // Low-pass filter resonance.
+    detune: 0         // Detune factor for a second oscillator.
+  };
+
+  // Norrmalizes a timbre object by making a copy that has exactly
+  // the right set of timbre fields, defaulting when needed.
+  // A timbre can specify any of the fields of defaultTimbre; any
+  // unspecified fields are treated as they are set in defaultTimbre.
+  function makeTimbre(options, atop) {
+    if (!options) {
+      options = {};
     }
-    // For picking a default voice, looks for the first voice name.
-    function firstVoiceName() {
-      if (result.V) {
-        return result.V.split(/\s+/)[0];
-      } else {
-        return '';
-      }
+    if (typeof(options) == 'string') {
+      // Abbreviation: name a wave to get a default timbre for that wave.
+      options = { wave: options };
     }
-    // ABC files are parsed one line at a time.
-    for (j = 0; j < lines.length; ++j) {
-      // First, check to see if the line is a header line.
-      header = ABCheader.exec(lines[j]);
-      if (header) {
-        // The following headers are recognized and processed.
-        switch(header[1]) {
-          case 'V':
-            // A V: header switches voices if in the body.
-            // If in the header, then it is just advisory.
-            if (context !== result) {
-              startVoiceContext(header[2].split(' ')[0]);
-            }
-            break;
-          case 'M':
-            parseMeter(header[2], context);
-            break;
-          case 'L':
-            parseUnitNote(header[2], context);
-            break;
-          case 'Q':
-            parseTempo(header[2], context);
-            break;
-        }
-        // All headers (including unrecognized ones) are
-        // just accumulated as properties. Repeated header
-        // lines are accumulated as multiline properties.
-        if (context.hasOwnProperty(header[1])) {
-          context[header[1]] += '\n' + header[2];
-        } else {
-          context[header[1]] = header[2];
-        }
-        // The K header is special: it should be the last one
-        // before the voices and notes begin.
-        if (header[1] == 'K' && context === result) {
-          key = keysig(header[2]);
-          startVoiceContext(firstVoiceName());
-        }
-      } else if (/^\s*(?:%.*)?$/.test(lines[j])) {
-        // Skip blank and comment lines.
-        continue;
-      } else {
-        // A non-blank non-header line should have notes.
-        voiceid = peekABCVoice(lines[j]);
-        if (voiceid) {
-          // If it declares a voice id, respect it.
-          startVoiceContext(voiceid);
-        } else {
-          // Otherwise, start a default voice.
-          if (context === result) {
-            startVoiceContext(firstVoiceName());
-          }
-        }
-        // Parse the notes.
-        stems = parseABCNotes(lines[j], key, accent);
-        if (stems && stems.length) {
-          // Push the line of stems into the voice.
-          if (!('stems' in context)) { context.stems = []; }
-          context.stems.push.apply(context.stems, stems);
-        }
-      }
-    }
-    var infer = ['unitnote', 'unitbeat', 'tempo'];
-    if (result.voice) {
-      out = [];
-      for (j in result.voice) {
-        if (result.voice[j].stems && result.voice[j].stems.length) {
-          // Calculate times for all the tied notes.  This happens at the end
-          // because in principle, the first note of a song could be tied all
-          // the way through to the last note.
-          processTies(result.voice[j].stems);
-          // Bring up inferred tempo values from voices if not specified
-          // in the header.
-          for (k = 0; k < infer.length; ++k) {
-            if (!(infer[k] in result) && (infer[k] in result.voice[j])) {
-              result[infer[k]] = result.voice[j][infer[k]];
-            }
-          }
-        } else {
-          out.push(j);
-        }
-      }
-      // Delete any voices that had no stems.
-      for (j = 0; j < out.length; ++j) {
-        delete result.voice[out[j]];
+    var result = {}, key,
+        wt = atop && atop.wavetable && atop.wavetable[options.wave];
+    for (key in defaultTimbre) {
+      if (options.hasOwnProperty(key)) {
+        result[key] = options[key];
+      } else if (wt && wt.defs && wt.defs.hasOwnProperty(key)) {
+        result[key] = wt.defs[key];
+      } else{
+        result[key] = defaultTimbre[key];
       }
     }
     return result;
   }
+
+  var whiteNoiseBuf = null;
+  function getWhiteNoiseBuf() {
+    if (whiteNoiseBuf == null) {
+      var ac = getAudioTop().ac,
+          bufferSize = 2 * ac.sampleRate,
+          whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
+          output = whiteNoiseBuf.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+    }
+    return whiteNoiseBuf;
+  }
+
+  // This utility function creates an oscillator at the given frequency
+  // and the given wavename.  It supports lookups in a static wavetable,
+  // defined right below.
+  function makeOscillator(atop, wavename, freq) {
+    if (wavename == 'noise') {
+      var whiteNoise = atop.ac.createBufferSource();
+      whiteNoise.buffer = getWhiteNoiseBuf();
+      whiteNoise.loop = true;
+      return whiteNoise;
+    }
+    var wavetable = atop.wavetable, o = atop.ac.createOscillator(),
+        k, pwave, bwf, wf;
+    try {
+      if (wavetable.hasOwnProperty(wavename)) {
+        // Use a customized wavetable.
+        pwave = wavetable[wavename].wave;
+        if (wavetable[wavename].freq) {
+          bwf = 0;
+          // Look for a higher-frequency variant.
+          for (k in wavetable[wavename].freq) {
+            wf = Number(k);
+            if (freq > wf && wf > bwf) {
+              bwf = wf;
+              pwave = wavetable[wavename].freq[bwf];
+            }
+          }
+        }
+        if (!o.setPeriodicWave && o.setWaveTable) {
+          // The old API name: Safari 7 still uses this.
+          o.setWaveTable(pwave);
+        } else {
+          // The new API name.
+          o.setPeriodicWave(pwave);
+        }
+      } else {
+        o.type = wavename;
+      }
+    } catch(e) {
+      if (window.console) { window.console.log(e); }
+      // If unrecognized, just use square.
+      // TODO: support "noise" or other wave shapes.
+      o.type = 'square';
+    }
+    o.frequency.value = freq;
+    return o;
+  }
+
+  // Accepts either an ABC pitch or a midi number and converts to midi.
+  Instrument.pitchToMidi = function(n) {
+    if (typeof(n) == 'string') { return pitchToMidi(n); }
+    return n;
+  }
+
+  // Accepts either an ABC pitch or a midi number and converts to ABC pitch.
+  Instrument.midiToPitch = function(n) {
+    if (typeof(n) == 'number') { return midiToPitch(n); }
+    return n;
+  }
+
+  return Instrument;
+})();
+
+// Parses an ABC file to an object with the following structure:
+// {
+//   X: value from the X: lines in header (\n separated for multiple values)
+//   V: value from the V:myname lines that appear before K:
+//   (etc): for all the one-letter header-names.
+//   K: value from the K: lines in header.
+//   tempo: Q: line parsed as beatsecs
+//   timbre: ... I:timbre line as parsed by makeTimbre
+//   voice: {
+//     myname: { // voice with id "myname"
+//       V: value from the V:myname lines (from the body)
+//       stems: [...] as parsed by parseABCstems
+//    }
+//  }
+// }
+// ABC files are idiosyncratic to parse: the written specifications
+// do not necessarily reflect the defacto standard implemented by
+// ABC content on the web.  This implementation is designed to be
+// practical, working on content as it appears on the web, and only
+// using the written standard as a guideline.
+var ABCheader = /^([A-Za-z]):\s*(.*)$/;
+var ABCtoken = /(?:\[[A-Za-z]:[^\]]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|[_<>@^]?"[^"]*"|\[|\]|>+|<+|(?:(?:\^+|_+|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
+function parseABCFile(str) {
+  var lines = str.split('\n'),
+      result = {},
+      context = result, timbre,
+      j, k, header, stems, key = {}, accent = { slurred: 0 }, voiceid, out;
+  // ABC files are parsed one line at a time.
+  for (j = 0; j < lines.length; ++j) {
+    // First, check to see if the line is a header line.
+    header = ABCheader.exec(lines[j]);
+    if (header) {
+      handleInformation(header[1], header[2].trim());
+    } else if (/^\s*(?:%.*)?$/.test(lines[j])) {
+      // Skip blank and comment lines.
+      continue;
+    } else {
+      // Parse the notes.
+      parseABCNotes(lines[j]);
+    }
+  }
+  var infer = ['unitnote', 'unitbeat', 'tempo'];
+  if (result.voice) {
+    out = [];
+    for (j in result.voice) {
+      if (result.voice[j].stems && result.voice[j].stems.length) {
+        // Calculate times for all the tied notes.  This happens at the end
+        // because in principle, the first note of a song could be tied all
+        // the way through to the last note.
+        processTies(result.voice[j].stems);
+        // Bring up inferred tempo values from voices if not specified
+        // in the header.
+        for (k = 0; k < infer.length; ++k) {
+          if (!(infer[k] in result) && (infer[k] in result.voice[j])) {
+            result[infer[k]] = result.voice[j][infer[k]];
+          }
+        }
+        // Remove this internal state variable;
+        delete result.voice[j].accent;
+      } else {
+        out.push(j);
+      }
+    }
+    // Delete any voices that had no stems.
+    for (j = 0; j < out.length; ++j) {
+      delete result.voice[out[j]];
+    }
+  }
+  return result;
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Parsing helper functions below.
+  ////////////////////////////////////////////////////////////////////////
+
+
+  // Processes header fields such as V: voice, which may appear at the
+  // top of the ABC file, or in the ABC body in a [V:voice] directive.
+  function handleInformation(field, value) {
+    // The following headers are recognized and processed.
+    switch(field) {
+      case 'V':
+        // A V: header switches voices if in the body.
+        // If in the header, then it is just advisory.
+        if (context !== result) {
+          startVoiceContext(value.split(' ')[0]);
+        }
+        break;
+      case 'M':
+        parseMeter(value, context);
+        break;
+      case 'L':
+        parseUnitNote(value, context);
+        break;
+      case 'Q':
+        parseTempo(value, context);
+        break;
+    }
+    // All headers (including unrecognized ones) are
+    // just accumulated as properties. Repeated header
+    // lines are accumulated as multiline properties.
+    if (context.hasOwnProperty(field)) {
+      context[field] += '\n' + value;
+    } else {
+      context[field] = value;
+    }
+    // The K header is special: it should be the last one
+    // before the voices and notes begin.
+    if (field == 'K') {
+      key = keysig(value);
+      if (context === result) {
+        startVoiceContext(firstVoiceName());
+      }
+    }
+  }
+
+  // Shifts context to a voice with the given id given.  If no id
+  // given, then just sticks with the current voice.  If the current
+  // voice is unnamed and empty, renames the current voice.
+  function startVoiceContext(id) {
+    id = id || '';
+    if (!id && context !== result) {
+      return;
+    }
+    if (!result.voice) {
+      result.voice = {};
+    }
+    if (result.voice.hasOwnProperty(id)) {
+      // Resume a named voice.
+      context = result.voice[id];
+      accent = context.accent;
+    } else {
+      // Start a new voice.
+      context = { id: id, accent: { slurred: 0 } };
+      result.voice[id] = context;
+      accent = context.accent;
+    }
+  }
+
+  // For picking a default voice, looks for the first voice name.
+  function firstVoiceName() {
+    if (result.V) {
+      return result.V.split(/\s+/)[0];
+    } else {
+      return '';
+    }
+  }
+
+  // Parses a single line of ABC notes (i.e., not a header line).
+  //
+  // We process an ABC song stream by dividing it into tokens, each of
+  // which is a pitch, duration, or special decoration symbol; then
+  // we process each decoration individually, and we process each
+  // stem as a group using parseStem.
+  // The structure of a single ABC note is something like this:
+  //
+  // NOTE -> STACCATO? PITCH DURATION? TIE?
+  //
+  // I.e., it always has a pitch, and it is prefixed by some optional
+  // decorations such as a (.) staccato marking, and it is suffixed by
+  // an optional duration and an optional tie (-) marking.
+  //
+  // A stem is either a note or a bracketed series of notes, followed
+  // by duration and tie.
+  //
+  // STEM -> NOTE   OR    '[' NOTE * ']' DURAITON? TIE?
+  //
+  // Then a song is just a sequence of stems interleaved with other
+  // decorations such as dynamics markings and measure delimiters.
+  function parseABCNotes(str) {
+    var tokens = str.match(ABCtoken), parsed = null,
+        index = 0, dotted = 0, beatlet = null, t;
+    if (!tokens) {
+      return null;
+    }
+    while (index < tokens.length) {
+      // Ignore %comments and !markings!
+      if (/^[\s%]/.test(tokens[index])) { index++; continue; }
+      // Handle inline [X:...] information fields
+      if (/^\[[A-Za-z]:[^\]]*\]$/.test(tokens[index])) {
+        handleInformation(
+          tokens[index].substring(1, 2),
+          tokens[index].substring(3, tokens[index].length - 1).trim()
+        );
+        index++;
+        continue;
+      }
+      // Handled dotted notation abbreviations.
+      if (/</.test(tokens[index])) {
+        dotted = -tokens[index++].length;
+        continue;
+      }
+      if (/>/.test(tokens[index])) {
+        dotted = tokens[index++].length;
+        continue;
+      }
+      if (/^\(\d+(?::\d+)*/.test(tokens[index])) {
+        beatlet = parseBeatlet(tokens[index++]);
+        continue;
+      }
+      if (/^[!+].*[!+]$/.test(tokens[index])) {
+        parseDecoration(tokens[index++], accent);
+        continue;
+      }
+      if (/^.?".*"$/.test(tokens[index])) {
+        // Ignore double-quoted tokens (chords and general text annotations).
+        index++;
+        continue;
+      }
+      if (/^[()]$/.test(tokens[index])) {
+        if (tokens[index++] == '(') {
+          accent.slurred += 1;
+        } else {
+          accent.slurred -= 1;
+          if (accent.slurred <= 0) {
+            accent.slurred = 0;
+            if (context.stems && context.stems.length >= 1) {
+              // The last notes in a slur are not slurred.
+              slurStem(context.stems[context.stems.length - 1], false);
+            }
+          }
+        }
+        continue;
+      }
+      // Handle measure markings by clearing accidentals.
+      if (/\|/.test(tokens[index])) {
+        for (t in accent) {
+          if (t.length == 1) {
+            // Single-letter accent properties are note accidentals.
+            delete accent[t];
+          }
+        }
+        index++;
+        continue;
+      }
+      parsed = parseStem(tokens, index, key, accent);
+      // Skip unparsable bits
+      if (parsed === null) {
+        index++;
+        continue;
+      }
+      // Process a parsed stem.
+      if (beatlet) {
+        scaleStem(parsed.stem, beatlet.time);
+        beatlet.count -= 1;
+        if (!beatlet.count) {
+          beatlet = null;
+        }
+      }
+      // If syncopated with > or < notation, shift part of a beat
+      // between this stem and the previous one.
+      if (dotted && context.stems && context.stems.length) {
+        if (dotted > 0) {
+          t = (1 - Math.pow(0.5, dotted)) * parsed.stem.time;
+        } else {
+          t = (Math.pow(0.5, -dotted) - 1) *
+              context.stems[context.stems.length - 1].time;
+        }
+        syncopateStem(context.stems[context.stems.length - 1], t);
+        syncopateStem(parsed.stem, -t);
+      }
+      dotted = 0;
+      // Slur all the notes contained within a strem.
+      if (accent.slurred) {
+        slurStem(parsed.stem, true);
+      }
+      // Start a default voice if we're not in a voice yet.
+      if (context === result) {
+        startVoiceContext(firstVoiceName());
+      }
+      if (!('stems' in context)) { context.stems = []; }
+      // Add the stem to the sequence of stems for this voice.
+      context.stems.push(parsed.stem);
+      // Advance the parsing index since a stem is multiple tokens.
+      index = parsed.index;
+    }
+  }
+
   // Parse M: lines.  "3/4" is 3/4 time and "C" is 4/4 (common) time.
   function parseMeter(mline, beatinfo) {
     var d = /^C/.test(mline) ? 4/4 : durationToTime(mline);
@@ -4811,7 +5109,7 @@ var Instrument = (function() {
   // Supports the whole range of scale systems listed in the ABC spec.
   function keysig(keyname) {
     if (!keyname) { return {}; }
-    var key, sigcodes = {
+    var kkey, sigcodes = {
       // Major
       'c#':7, 'f#':6, 'b':5, 'e':4, 'a':3, 'd':2, 'g':1, 'c':0,
       'f':-1, 'bb':-2, 'eb':-3, 'ab':-4, 'db':-5, 'gb':-6, 'cb':-7,
@@ -4843,19 +5141,19 @@ var Instrument = (function() {
     var scale = k.match(/maj|min|mix|dor|phr|lyd|loc|m/);
     if (scale) {
       if (scale == 'maj') {
-        key = k.substr(0, scale.index);
+        kkey = k.substr(0, scale.index);
       } else if (scale == 'min') {
-        key = k.substr(0, scale.index + 1);
+        kkey = k.substr(0, scale.index + 1);
       } else {
-        key = k.substr(0, scale.index + scale[0].length);
+        kkey = k.substr(0, scale.index + scale[0].length);
       }
     } else {
-      key = /^[a-g][#b]?/.exec(k) || '';
+      kkey = /^[a-g][#b]?/.exec(k) || '';
     }
-    var result = accidentals(sigcodes[key]);
-    var extras = keyname.substr(key.length).match(/(_+|=|\^+)[a-g]/ig);
+    var result = accidentals(sigcodes[kkey]);
+    var extras = keyname.substr(kkey.length).match(/(_+|=|\^+)[a-g]/ig);
     if (extras) {
-      for (j = 0; j < extras.length; ++j) {
+      for (var j = 0; j < extras.length; ++j) {
         var note = extras[j].charAt(extras[j].length - 1).toUpperCase();
         if (extras[j].charAt(0) == '=') {
           delete result[note];
@@ -4863,133 +5161,6 @@ var Instrument = (function() {
           result[note] = extras[j].substr(0, extras[j].length - 1);
         }
       }
-    }
-    return result;
-  }
-  // Peeks and looks for a prefix of the form [V:voiceid].
-  function peekABCVoice(line) {
-    var match = /^\[V:([^\]\s]*)\]/.exec(line);
-    if (!match) return null;
-    return match[1];
-  }
-  // Parses a single line of ABC notes (i.e., not a header line).
-  //
-  // We process an ABC song stream by dividing it into tokens, each of
-  // which is a pitch, duration, or special decoration symbol; then
-  // we process each decoration individually, and we process each
-  // stem as a group using parseStem.
-  // The structure of a single ABC note is something like this:
-  //
-  // NOTE -> STACCATO? PITCH DURATION? TIE?
-  //
-  // I.e., it always has a pitch, and it is prefixed by some optional
-  // decorations such as a (.) staccato marking, and it is suffixed by
-  // an optional duration and an optional tie (-) marking.
-  //
-  // A stem is either a note or a bracketed series of notes, followed
-  // by duration and tie.
-  //
-  // STEM -> NOTE   OR    '[' NOTE * ']' DURAITON? TIE?
-  //
-  // Then a song is just a sequence of stems interleaved with other
-  // decorations such as dynamics markings and measure delimiters.
-  var ABCtoken = /(?:^\[V:[^\]\s]*\])|\s+|%[^\n]*|![^\s!:|\[\]]*!|\+[^+|!]*\+|[_<>@^]?"[^"]*"|\[|\]|>+|<+|(?:(?:\^+|_+|=|)[A-Ga-g](?:,+|'+|))|\(\d+(?::\d+){0,2}|\d*\/\d+|\d+\/?|\/+|[xzXZ]|\[?\|\]?|:?\|:?|::|./g;
-  function parseABCNotes(str, key, accent) {
-    var tokens = str.match(ABCtoken), result = [], parsed = null,
-        index = 0, dotted = 0, beatlet = null, t;
-    if (!tokens) {
-      return null;
-    }
-    while (index < tokens.length) {
-      // Ignore %comments and !markings!
-      if (/^[\s%]/.test(tokens[index])) { index++; continue; }
-      if (/^\[V:\S*\]$/.test(tokens[index])) {
-        // Voice id from [V:id] is handled in peekABCVoice.
-        index++;
-        continue;
-      }
-      // Handled dotted notation abbreviations.
-      if (/</.test(tokens[index])) {
-        dotted = -tokens[index++].length;
-        continue;
-      }
-      if (/>/.test(tokens[index])) {
-        dotted = tokens[index++].length;
-        continue;
-      }
-      if (/^\(\d+(?::\d+)*/.test(tokens[index])) {
-        beatlet = parseBeatlet(tokens[index++]);
-        continue;
-      }
-      if (/^[!+].*[!+]$/.test(tokens[index])) {
-        parseDecoration(tokens[index++], accent);
-        continue;
-      }
-      if (/^.?".*"$/.test(tokens[index])) {
-        // Ignore double-quoted tokens (chords and general text annotations).
-        index++;
-        continue;
-      }
-      if (/^[()]$/.test(tokens[index])) {
-        if (tokens[index++] == '(') {
-          accent.slurred += 1;
-        } else {
-          accent.slurred -= 1;
-          if (accent.slurred <= 0) {
-            accent.slurred = 0;
-            if (result.length >= 1) {
-              // The last notes in a slur are not slurred.
-              slurStem(result[result.length - 1], false);
-            }
-          }
-        }
-        continue;
-      }
-      // Handle measure markings by clearing accidentals.
-      if (/\|/.test(tokens[index])) {
-        for (t in accent) {
-          if (t.length == 1) {
-            // Single-letter accent properties are note accidentals.
-            delete accent[t];
-          }
-        }
-        index++;
-        continue;
-      }
-      parsed = parseStem(tokens, index, key, accent);
-      // Skip unparsable bits
-      if (parsed === null) {
-        index++;
-        continue;
-      }
-      // Process a parsed stem.
-      if (beatlet) {
-        scaleStem(parsed.stem, beatlet.time);
-        beatlet.count -= 1;
-        if (!beatlet.count) {
-          beatlet = null;
-        }
-      }
-      // If syncopated with > or < notation, shift part of a beat
-      // between this stem and the previous one.
-      if (dotted && result.length) {
-        if (dotted > 0) {
-          t = (1 - Math.pow(0.5, dotted)) * parsed.stem.time;
-        } else {
-          t = (Math.pow(0.5, -dotted) - 1) * result[result.length - 1].time;
-        }
-        syncopateStem(result[result.length - 1], t);
-        syncopateStem(parsed.stem, -t);
-      }
-      dotted = 0;
-      // Slur all the notes contained within a strem.
-      if (accent.slurred) {
-        slurStem(parsed.stem, true);
-      }
-      // Add the stem to the sequence of stems for this voice.
-      result.push(parsed.stem);
-      // Advance the parsing index since a stem is multiple tokens.
-      index = parsed.index;
     }
     return result;
   }
@@ -5225,47 +5396,6 @@ var Instrument = (function() {
     }
     return stripNatural(pitch);
   }
-  // Converts a midi note number to a frequency in Hz.
-  function midiToFrequency(midi) {
-    return 440 * Math.pow(2, (midi - 69) / 12);
-  }
-  // Some constants.
-  var noteNum =
-      {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};
-  var accSym =
-      { '^':1, '': 0, '=':0, '_':-1 };
-  var noteName =
-      ['C', '^C', 'D', '_E', 'E', 'F', '^F', 'G', '_A', 'A', '_B', 'B',
-       'c', '^c', 'd', '_e', 'e', 'f', '^f', 'g', '_a', 'a', '_b', 'b'];
-  // Converts a frequency in Hz to the closest midi number.
-  function frequencyToMidi(freq) {
-    return Math.round(69 + Math.log(freq / 440) * 12 / Math.LN2);
-  }
-  // Converts an ABC pitch (such as "^G,,") to a midi note number.
-  function pitchToMidi(pitch) {
-    var m = /^(\^+|_+|=|)([A-Ga-g])([,']*)$/.exec(pitch);
-    if (!m) { return null; }
-    var octave = m[3].replace(/,/g, '').length - m[3].replace(/'/g, '').length;
-    var semitone =
-        noteNum[m[2]] + accSym[m[1].charAt(0)] * m[1].length + 12 * octave;
-    return semitone + 60; // 60 = midi code middle "C".
-  }
-  // Converts a midi number to an ABC notation pitch.
-  function midiToPitch(midi) {
-    var index = ((midi - 72) % 12);
-    if (midi > 60 || index != 0) { index += 12; }
-    var octaves = Math.round((midi - index - 60) / 12),
-        result = noteName[index];
-    while (octaves != 0) {
-      result += octaves > 0 ? "'" : ",";
-      octaves += octaves > 0 ? -1 : 1;
-    }
-    return result;
-  }
-  // Converts an ABC pitch to a frequency in Hz.
-  function pitchToFrequency(pitch) {
-    return midiToFrequency(pitchToMidi(pitch));
-  }
   // Converts an ABC duration to a number (e.g., "/3"->0.333 or "11/2"->1.5).
   function durationToTime(duration) {
     var m = /^(\d*)(?:\/(\d*))?$|^(\/+)$/.exec(duration), n, d, i = 0, ilen;
@@ -5284,123 +5414,7 @@ var Instrument = (function() {
     }
     return i + (n / d);
   }
-
-  // The default sound is a square wave with a pretty quick decay to zero.
-  var defaultTimbre = Instrument.defaultTimbre = {
-    wave: 'square',   // Oscillator type.
-    gain: 0.1,        // Overall gain at maximum attack.
-    attack: 0.002,    // Attack time at the beginning of a tone.
-    decay: 0.4,       // Rate of exponential decay after attack.
-    decayfollow: 0,   // Amount of decay shortening for higher notes.
-    sustain: 0,       // Portion of gain to sustain indefinitely.
-    release: 0.1,     // Release time after a tone is done.
-    cutoff: 0,        // Low-pass filter cutoff frequency.
-    cutfollow: 0,     // Cutoff adjustment, a multiple of oscillator freq.
-    resonance: 0,     // Low-pass filter resonance.
-    detune: 0         // Detune factor for a second oscillator.
-  };
-
-  // Norrmalizes a timbre object by making a copy that has exactly
-  // the right set of timbre fields, defaulting when needed.
-  // A timbre can specify any of the fields of defaultTimbre; any
-  // unspecified fields are treated as they are set in defaultTimbre.
-  function makeTimbre(options, atop) {
-    if (!options) {
-      options = {};
-    }
-    if (typeof(options) == 'string') {
-      // Abbreviation: name a wave to get a default timbre for that wave.
-      options = { wave: options };
-    }
-    var result = {}, key,
-        wt = atop && atop.wavetable && atop.wavetable[options.wave];
-    for (key in defaultTimbre) {
-      if (options.hasOwnProperty(key)) {
-        result[key] = options[key];
-      } else if (wt && wt.defs && wt.defs.hasOwnProperty(key)) {
-        result[key] = wt.defs[key];
-      } else{
-        result[key] = defaultTimbre[key];
-      }
-    }
-    return result;
-  }
-
-  var whiteNoiseBuf = null;
-  function getWhiteNoiseBuf() {
-    if (whiteNoiseBuf == null) {
-      var ac = getAudioTop().ac,
-          bufferSize = 2 * ac.sampleRate,
-          whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
-          output = whiteNoiseBuf.getChannelData(0);
-      for (var i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-    }
-    return whiteNoiseBuf;
-  }
-
-  // This utility function creates an oscillator at the given frequency
-  // and the given wavename.  It supports lookups in a static wavetable,
-  // defined right below.
-  function makeOscillator(atop, wavename, freq) {
-    if (wavename == 'noise') {
-      var whiteNoise = atop.ac.createBufferSource();
-      whiteNoise.buffer = getWhiteNoiseBuf();
-      whiteNoise.loop = true;
-      return whiteNoise;
-    }
-    var wavetable = atop.wavetable, o = atop.ac.createOscillator(),
-        k, pwave, bwf, wf;
-    try {
-      if (wavetable.hasOwnProperty(wavename)) {
-        // Use a customized wavetable.
-        pwave = wavetable[wavename].wave;
-        if (wavetable[wavename].freq) {
-          bwf = 0;
-          // Look for a higher-frequency variant.
-          for (k in wavetable[wavename].freq) {
-            wf = Number(k);
-            if (freq > wf && wf > bwf) {
-              bwf = wf;
-              pwave = wavetable[wavename].freq[bwf];
-            }
-          }
-        }
-        if (!o.setPeriodicWave && o.setWaveTable) {
-          // The old API name: Safari 7 still uses this.
-          o.setWaveTable(pwave);
-        } else {
-          // The new API name.
-          o.setPeriodicWave(pwave);
-        }
-      } else {
-        o.type = wavename;
-      }
-    } catch(e) {
-      if (window.console) { window.console.log(e); }
-      // If unrecognized, just use square.
-      // TODO: support "noise" or other wave shapes.
-      o.type = 'square';
-    }
-    o.frequency.value = freq;
-    return o;
-  }
-
-  // Accepts either an ABC pitch or a midi number and converts to midi.
-  Instrument.pitchToMidi = function(n) {
-    if (typeof(n) == 'string') { return pitchToMidi(n); }
-    return n;
-  }
-
-  // Accepts either an ABC pitch or a midi number and converts to ABC pitch.
-  Instrument.midiToPitch = function(n) {
-    if (typeof(n) == 'number') { return midiToPitch(n); }
-    return n;
-  }
-
-  return Instrument;
-})();
+}
 
 // wavetable is a table of names for nonstandard waveforms.
 // The table maps names to objects that have wave: and freq:
@@ -5493,12 +5507,14 @@ function makeWavetable(ac) {
       // TODO: this approach attenuates low notes too much -
       // this should be fixed.
       defs: { wave: 'piano', gain: 0.5,
-              attack: 0.002, decay: 0.4, sustain: 0.005, release: 0.1,
+              attack: 0.002, decay: 0.25, sustain: 0.03, release: 0.1,
               decayfollow: 0.7,
-              cutoff: 800, cutfollow: 0.1, resonance: 1, detune: 1.001 }
+              cutoff: 800, cutfollow: 0.1, resonance: 1, detune: 0.9994 }
     }
   });
 }
+
+// End of musical.js copy.
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -5661,7 +5677,7 @@ function globalhelp(obj) {
     helpwrite('This is an unassigned value.');
     return helpok;
   }
-  if (obj === window) {
+  if (obj === global) {
     helpwrite('The global window object represents the browser window.');
     return helpok;
   }
@@ -5681,7 +5697,7 @@ function globalhelp(obj) {
   helplist = [];
   for (var name in helptable) {
     if (helptable[name].helptext && helptable[name].helptext.length &&
-        (!(name in window) || typeof(window[name]) == 'function')) {
+        (!(name in global) || typeof(global[name]) == 'function')) {
       helplist.push(name);
     }
   }
@@ -5910,7 +5926,7 @@ function wrapwindowevent(name, helptext) {
             : null;
     if (forKey) { focusWindowIfFirst(); }
     if (fn == null && typeof(d) == 'function') { fn = d; d = null; }
-    $(window).on(name + '.turtleevent', null, d, !filter ? fn : function(e) {
+    $(global).on(name + '.turtleevent', null, d, !filter ? fn : function(e) {
       if (interrupted) return;
       if ($(e.target).closest(filter).length) { return; }
       return fn.apply(this, arguments);
@@ -5919,7 +5935,7 @@ function wrapwindowevent(name, helptext) {
 }
 
 function windowhasturtleevent() {
-  var events = $._data(window, 'events');
+  var events = $._data(global, 'events');
   if (!events) return false;
   for (var type in events) {
     var entries = events[type];
@@ -6411,7 +6427,7 @@ var turtlefn = {
       if (!nlocalxy) {
         nlocalxy = computePositionAsLocalOffset(elem, targetpos);
       }
-      dir = radiansToDegrees(Math.atan2(-nlocalxy[0], -nlocalxy[1]));
+      var dir = radiansToDegrees(Math.atan2(-nlocalxy[0], -nlocalxy[1]));
       ts = readTurtleTransform(elem, true);
       if (!(limit === null)) {
         r = convertToRadians(ts.rot);
@@ -6460,40 +6476,39 @@ var turtlefn = {
       cc.appear(j);
 
       //copy over turtle data:
-      olddata = getTurtleData(this);
-      newdata = getTurtleData(t2);
-      for (k in olddata) { newdata[k] = olddata[k]; }
+      var olddata = getTurtleData(this);
+      var newdata = getTurtleData(t2);
+      for (var k in olddata) { newdata[k] = olddata[k]; }
 
       // copy over style attributes:
       t2.attr('style', this.attr('style'));
 
       // copy each thing listed in css hooks:
-      for(property in $.cssHooks) {
+      for (var property in $.cssHooks) {
         var value = this.css(property);
         t2.css(property, value);
       }
 
       // copy attributes, just in case:
       var attrs = this.prop("attributes");
-      //console.log(attrs)
-      for(i in attrs) {
+      for (var i in attrs) {
         t2.attr(attrs[i].name, attrs[i].value);
       }
 
       // copy the canvas:
       var t2canvas = t2.canvas();
       var tcanvas = this.canvas();
-      if(t2canvas && tcanvas) {
+      if (t2canvas && tcanvas) {
         t2canvas.width = tcanvas.width;
         t2canvas.height = tcanvas.height;
-        newCanvasContext = t2canvas.getContext('2d');
+        var newCanvasContext = t2canvas.getContext('2d');
         newCanvasContext.drawImage(tcanvas, 0, 0)
       }
 
       t2.show();
 
       cc.resolve(j);
-    }); // pass in our current clone, otherwise things get applied to the wrong clone
+    }); // pass in our current clone, otherwise things apply to the wrong clone
     sync(t2, this);
     return t2;
   }),
@@ -6808,7 +6823,7 @@ var turtlefn = {
             complete();
           }, 250);
         } catch (e) {
-          console.log(e);
+          if (global.console) { global.console.log(e); }
           complete();
         }
       });
@@ -6971,10 +6986,7 @@ var turtlefn = {
     return this.plan(function(j, elem) {
       cc.appear(j);
       var state = getTurtleData(elem);
-      if (state.drawOnCanvas) {
-        sync(elem, state.drawOnCanvas);
-      }
-      if (!canvas || canvas === window) {
+      if (!canvas || canvas === global) {
         state.drawOnCanvas = null;
       } else if (canvas.jquery && $.isFunction(canvas.canvas)) {
         state.drawOnCanvas = canvas.canvas();
@@ -7081,7 +7093,7 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       if ($.isWindow(elem) || elem.nodeType === 9) {
-        window.location.reload();
+        global.location.reload();
         cc.resolve(j);
         return;
       }
@@ -7658,7 +7670,7 @@ var dollar_turtle_methods = {
     // Disable all input.
     $('.turtleinput').prop('disabled', true);
     // Detach all event handlers on the window.
-    $(window).off('.turtleevent');
+    $(global).off('.turtleevent');
     // Low-level detach all jQuery events
     $('*').not('#_testpanel *').map(
        function(i, e) { $._data(e, 'events', null) });
@@ -7820,11 +7832,16 @@ var dollar_turtle_methods = {
     var val;
     $.ajax(apiUrl(url, 'load'), { async: !!cb, complete: function(xhr) {
       try {
-        val = JSON.parse(xhr.responseText);
+        val = xhr.responseObject = JSON.parse(xhr.responseText);
         if (typeof(val.data) == 'string' && typeof(val.file) == 'string') {
           val = val.data;
+          if (/\.json(?:$|\?|\#)/.test(url)) {
+            try { val = JSON.parse(val); } catch(e) {}
+          }
         } else if ($.isArray(val.list) && typeof(val.directory) == 'string') {
           val = val.list;
+        } else if (val.error) {
+          val = null;
         }
       } catch(e) {
         if (val == null && xhr && xhr.responseText) {
@@ -7843,6 +7860,9 @@ var dollar_turtle_methods = {
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
     var payload = { }, url = apiUrl(url, 'save'), key;
+    if (/\.json(?:$|\?|\#)/.test(url)) {
+      data = JSON.stringify(data, null, 2);
+    }
     if (typeof(data) == 'string' || typeof(data) == 'number') {
       payload.data = data;
     } else {
@@ -7887,6 +7907,17 @@ var dollar_turtle_methods = {
   type: wrapglobalcommand('type',
   ["<u>type(text)</u> Types preformatted text like a typewriter. " +
       "<mark>type 'Hello!\n'</mark>"], plainTextPrint),
+  typebox: wrapglobalcommand('typebox',
+  ["<u>typebox(clr)</u> Draws a colored box as typewriter output. " +
+      "<mark>typebox red</mark>"], function(c, t) {
+    if (t == null && c != null && !isCSSColor(c)) { t = c; c = null; }
+    plainBoxPrint(c, t);
+  }),
+  typeline: wrapglobalcommand('typebox',
+  ["<u>typeline()</u> Same as type '\\n'. " +
+      "<mark>typeline()</mark>"], function(t) {
+    plainTextPrint((t || '') + '\n');
+  }),
   write: wrapglobalcommand('write',
   ["<u>write(html)</u> Writes a line of text. Arbitrary HTML may be written: " +
       "<mark>write 'Hello, world!'</mark>"], doOutput, function() {
@@ -8116,7 +8147,7 @@ var dollar_turtle_methods = {
   ["<u>loadscript(url, callback)</u> Loads Javascript or Coffeescript from " +
        "the given URL, calling callback when done."],
   function loadscript(url, callback) {
-    if (window.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
+    if (global.CoffeeScript && /\.(?:coffee|cs)$/.test(url)) {
       CoffeeScript.load(url, callback);
     } else {
       $.getScript(url, callback);
@@ -8272,18 +8303,18 @@ $.turtle = function turtle(id, options) {
   if (!('see' in options) || options.see) {
     exportsee();
     exportedsee = true;
-    if (window.addEventListener) {
-      window.addEventListener('error', see);
+    if (global.addEventListener) {
+      global.addEventListener('error', see);
     } else {
-      window.onerror = see;
+      global.onerror = see;
     }
     // Set up an alias.
-    window.log = see;
+    global.log = see;
   }
   // Copy $.turtle.* functions into global namespace.
   if (!('functions' in options) || options.functions) {
-    window.printpage = window.print;
-    $.extend(window, dollar_turtle_methods);
+    global.printpage = global.print;
+    $.extend(global, dollar_turtle_methods);
   }
   // Set default turtle speed
   globaldefaultspeed(('defaultspeed' in options) ?
@@ -8324,7 +8355,7 @@ $.turtle = function turtle(id, options) {
   if (!('ids' in options) || options.ids) {
     turtleids(options.idprefix);
     if (selector && id) {
-      window[id] = selector;
+      global[id] = selector;
     }
   }
   // Set up test console.
@@ -8350,7 +8381,7 @@ $.turtle = function turtle(id, options) {
     }
     // Return an eval loop hook string if 'see' is exported.
     if (exportedsee) {
-      if (window.CoffeeScript) {
+      if (global.CoffeeScript) {
         return "see.init(eval(see.cs))";
       } else {
         return see.here;
@@ -8393,9 +8424,9 @@ function copyhelp(method, fname, extrahelp, globalfn) {
 function globalizeMethods(thisobj, fnames) {
   var replaced = [];
   for (var fname in fnames) {
-    if (fnames.hasOwnProperty(fname) && !(fname in window)) {
+    if (fnames.hasOwnProperty(fname) && !(fname in global)) {
       replaced.push(fname);
-      window[fname] = (function(fname) {
+      global[fname] = (function(fname) {
         var method = thisobj[fname], target = thisobj;
         return copyhelp(method, fname, extrahelp,
             (function globalized() { /* Use parentheses to call a function */
@@ -8409,7 +8440,7 @@ function globalizeMethods(thisobj, fnames) {
 function clearGlobalTurtle() {
   global_turtle = null;
   for (var j = 0; j < global_turtle_methods.length; ++j) {
-    delete window[global_turtle_methods[j]];
+    delete global[global_turtle_methods[j]];
   }
   global_turtle_methods.length = 0;
 }
@@ -8424,10 +8455,10 @@ $.cleanData = function(elems) {
       state.stream.stop();
     }
     // Undefine global variablelem.
-    if (elem.id && window[elem.id] && window[elem.id].jquery &&
-        window[elem.id].length === 1 &&
-        window[elem.id][0] === elem) {
-      delete window[elem.id];
+    if (elem.id && global[elem.id] && global[elem.id].jquery &&
+        global[elem.id].length === 1 &&
+        global[elem.id][0] === elem) {
+      delete global[elem.id];
     }
     // Clear global turtlelem.
     if (elem === global_turtle) {
@@ -8719,7 +8750,9 @@ function createRectangleShape(width, height, subpixels) {
     subpixels = 1;
   }
   return (function(color) {
-    var c = getOffscreenCanvas(width, height);
+    var c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
     var ctx = c.getContext('2d');
     if (!color) {
       color = "rgba(128,128,128,0.125)";
@@ -8741,7 +8774,7 @@ function createRectangleShape(width, height, subpixels) {
       css.imageRendering = 'pixelated';
     }
     return {
-      url: c.toDataURL(),
+      img: c,
       css: css
     };
   });
@@ -8822,9 +8855,9 @@ function nameToImg(name, defaultshape) {
     var hostname = absoluteUrlObject(name).hostname;
     // Use proxy to load image if the image is offdomain but the page is on
     // a pencil host (with a proxy).
-    if (!isPencilHost(hostname) && isPencilHost(window.location.hostname)) {
-      name = window.location.protocol + '//' +
-             window.location.host + '/proxy/' + absoluteUrl(name);
+    if (!isPencilHost(hostname) && isPencilHost(global.location.hostname)) {
+      name = global.location.protocol + '//' +
+             global.location.host + '/proxy/' + absoluteUrl(name);
     }
     return {
       url: name,
@@ -8908,8 +8941,8 @@ function hatchone(name, container, defaultshape) {
   if (isID) {
     result.attr('id', name);
     // Update global variable unless there is a conflict.
-    if (attaching_ids && !window.hasOwnProperty(name)) {
-      window[name] = result;
+    if (attaching_ids && !global.hasOwnProperty(name)) {
+      global[name] = result;
     }
   }
   // Move it to the center of the document and export the name as a global.
@@ -8926,7 +8959,7 @@ function random(arg, arg2) {
     }
     return Math.floor(Math.random() * arg);
   }
-  if (typeof(arg) == 'object' && arg.length && arg.slice) {
+  if (typeof(arg) == 'object' && arg && arg.length && arg.slice) {
     return arg[Math.floor(Math.random() * arg.length)];
   }
   if (arg == 'normal') {
@@ -8952,6 +8985,9 @@ function random(arg, arg2) {
   }
   if (arg == 'gray') {
     return 'hsl(0,0,' + Math.floor(Math.random() * 100) + '%)';
+  }
+  if (arg === true) {
+    return Math.random() >= 0.5;
   }
   return Math.random();
 }
@@ -9027,11 +9063,11 @@ function globaltick(rps, fn) {
     rps = 1;
   }
   if (tickinterval) {
-    window.clearInterval(tickinterval);
+    global.clearInterval(tickinterval);
     tickinterval = null;
   }
   if (fn && rps) {
-    tickinterval = window.setInterval(
+    tickinterval = global.setInterval(
       function() {
         // Set default speed to Infinity within tick().
         try {
@@ -9060,7 +9096,7 @@ function turtleids(prefix) {
     prefix = '';
   }
   $('[id]').each(function(j, item) {
-    window[prefix + item.id] = $('#' + item.id);
+    global[prefix + item.id] = $('#' + item.id);
   });
   attaching_ids = true;
 }
@@ -9073,7 +9109,7 @@ function turtleevents(prefix) {
     prefix = 'last';
   }
   if (eventsaver) {
-    $(window).off($.map(eventfn, function(x,k) { return k; }).join(' '),
+    $(global).off($.map(eventfn, function(x,k) { return k; }).join(' '),
         eventsaver);
   }
   if (prefix || prefix === '') {
@@ -9085,20 +9121,20 @@ function turtleevents(prefix) {
       }
       for (j = 0; j < names.length; ++j) {
         var name = names[j];
-        old = window[name], prop;
+        old = global[name], prop;
         if (old && old.__proto__ === e.__proto__) {
           for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
           for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
         } else {
-          window[name] = e;
+          global[name] = e;
         }
       }
     });
-    window[prefix + 'mouse'] = new $.Event();
+    global[prefix + 'mouse'] = new $.Event();
     for (var k in eventfn) {
-      window[prefix + k] = new $.Event();
+      global[prefix + k] = new $.Event();
     }
-    $(window).on($.map(eventfn, function(x,k) { return k; }).join(' '),
+    $(global).on($.map(eventfn, function(x,k) { return k; }).join(' '),
         eventsaver);
   }
 }
@@ -9110,15 +9146,15 @@ function turtleevents(prefix) {
 function autoScrollAfter(f) {
   var slop = 10,
       seen = autoScrollBottomSeen(),
-      stick = ($(window).height() + $(window).scrollTop() + slop >=
+      stick = ($(global).height() + $(global).scrollTop() + slop >=
           $('html').outerHeight(true));
   f();
   if (stick) {
-    var scrollPos = $(window).scrollTop(),
+    var scrollPos = $(global).scrollTop(),
         advancedScrollPos = Math.min(seen,
-            $('html').outerHeight(true) - $(window).height());
+            $('html').outerHeight(true) - $(global).height());
     if (advancedScrollPos > scrollPos) {
-      $(window).scrollTop(advancedScrollPos);
+      $(global).scrollTop(advancedScrollPos);
     }
   }
 }
@@ -9137,7 +9173,7 @@ function autoScrollBottomSeen() {
     var offset = $('body').offset();
     var doctop = offset ? offset.top : 8;
     autoScrollState.bottomSeen = Math.min(
-        $(window).height() + $(window).scrollTop(),
+        $(global).height() + $(global).scrollTop(),
         $('body').height() + doctop);
   }
   return autoScrollState.bottomSeen;
@@ -9146,9 +9182,9 @@ function autoScrollBottomSeen() {
 // location after running the passed function.  (E.g., to allow focusing
 // a control without autoscrolling.)
 function undoScrollAfter(f) {
-  var scrollPos = $(window).scrollTop();
+  var scrollPos = $(global).scrollTop();
   f();
-  $(window).scrollTop(scrollPos);
+  $(global).scrollTop(scrollPos);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -9158,18 +9194,45 @@ function undoScrollAfter(f) {
 //////////////////////////////////////////////////////////////////////////
 
 // Simplify output of preformatted text inside a <pre>.
+function getTrailingPre() {
+  var pre = document.body.lastChild;
+  if (!pre || pre.tagName != 'PRE') {
+    pre = document.createElement('pre');
+    document.body.appendChild(pre);
+  }
+  return pre;
+}
+
 function plainTextPrint() {
   var args = arguments;
   autoScrollAfter(function() {
-    var pre = document.body.lastChild;
-    if (!pre || pre.tagName != 'PRE') {
-      pre = document.createElement('pre');
-      document.body.appendChild(pre);
-    }
+    var pre = getTrailingPre();
     for (var j = 0; j < args.length; j++) {
       pre.appendChild(document.createTextNode(String(args[j])));
     }
   });
+}
+
+function plainBoxPrint(clr, text) {
+  var elem = $("<div>").css({
+    display: 'inline-block',
+    verticalAlign: 'top',
+    textAlign: 'center',
+    height: '1.2em',
+    width: '1.2em',
+    maxWidth: '1.2em',
+    overflow: 'hidden'
+  }).appendTo(getTrailingPre()), finish = function() {
+    if (clr) { elem.css({background: clr}); }
+    if (text) { elem.text(text); }
+  };
+  if (!global_turtle) {
+    finish();
+  } else {
+    var turtle = $(global_turtle);
+    moveto.call(turtle, null, elem);
+    turtle.eq(0).plan(finish);
+  }
 }
 
 // Put this output on the screen.  Called some time after prepareOutput
@@ -9575,7 +9638,7 @@ var debug = {
     try {
       if (parent && parent.ide) {
         this.ide = parent.ide;
-        this.ide.bindframe(window);
+        this.ide.bindframe(global);
         this.attached = true;
       }
     } catch(e) {
@@ -9583,8 +9646,8 @@ var debug = {
       this.attached = false;
     }
     if (this.attached) {
-      if (window.addEventListener) {
-        window.addEventListener('error', function(event) {
+      if (global.addEventListener) {
+        global.addEventListener('error', function(event) {
           // An error event will highlight the error line.
           debug.reportEvent('error', [event]);
         });
@@ -9611,7 +9674,7 @@ debug.init();
 // X Y coordinate showing support
 //////////////////////////////////////////////////////////////////////////
 (function() {
-  if (!debug.ide || (debug.ide.getOptions && !debug.ide.getOptions().panel)) {
+  if (!debug.ide) {
     // Only show the X-Y tip if inside a debugging IDE.
     return;
   }
@@ -9638,7 +9701,7 @@ debug.init();
   }
   var linestart = null, linecanvas = null, lineend = null,
       xa = 0, ya = 0, xb = 0, yb = 0, xt, yt, dr, ar;
-  $(window).on('mousedown mouseup mousemove keydown', function(e) {
+  $(global).on('mousedown mouseup mousemove keydown', function(e) {
     if (e.type == 'keydown') {
       if (e.which < 27) return;
       if (linecanvas) linecanvas.remove();
@@ -9708,7 +9771,7 @@ debug.init();
       ang = Math.atan2(dx, dy) / Math.PI * 180;
       if (linestart) {
         c.save();
-        c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
+        c.clearRect(xa - 10, ya - 10, xb - xa + 20, yb - ya + 20);
         xa = xb = s.pageX;
         ya = yb = s.pageY;
         // Draw a dot
@@ -9765,16 +9828,16 @@ debug.init();
       var pos = { left: '', top: '', right: '', bottom: '' };
       if (p.pageX + 5 < s.pageX) {
         pos.left = Math.max(
-            p.pageX - $(window).scrollLeft() - location.outerWidth() - 5, 2);
+            p.pageX - $(global).scrollLeft() - location.outerWidth() - 5, 2);
       } else {
-        pos.left = Math.min(p.pageX - $(window).scrollLeft() + 5,
+        pos.left = Math.min(p.pageX - $(global).scrollLeft() + 5,
             $(document).width() - location.outerWidth() - 2);
       }
       if (p.pageY + 5 < s.pageY) {
         pos.top = Math.max(
-            p.pageY - $(window).scrollTop() - location.outerHeight() - 5, 2);
+            p.pageY - $(global).scrollTop() - location.outerHeight() - 5, 2);
       } else {
-        pos.top = Math.min(p.pageY - $(window).scrollTop() + 5,
+        pos.top = Math.min(p.pageY - $(global).scrollTop() + 5,
             $(document).height() - location.outerHeight() - 2);
       }
       location.css(pos);
@@ -9816,14 +9879,15 @@ var linestyle = 'position:relative;display:block;font-family:monospace;' +
 var logdepth = 5;
 var autoscroll = false;
 var logelement = 'body';
-var panel = false;
+var panel = 'auto';
 try {
   // show panel by default if framed inside a an ide,
   // and if the screen is big enough (i.e., omit mobile clients).
-  panel = (window.self !== window.top &&
-           screen.width >= 800 && screen.height >= 600 &&
-           parent && parent.ide && parent.ide.getOptions().panel);
+  if (global.self !== global.top &&
+      screen.width >= 800 && screen.height >= 600 &&
+      parent && parent.ide) { panel = parent.ide.getOptions().panel; }
 } catch(e) {}
+var consolelog = panel;
 var see;  // defined below.
 var paneltitle = '';
 var logconsole = null;
@@ -9831,10 +9895,10 @@ var uselocalstorage = '_loghistory';
 var panelheight = 50;
 var currentscope = '';
 var scopes = {
-  '':  { e: window.eval, t: window },
-  top: { e: window.eval, t: window }
+  '':  { e: global.eval, t: global },
+  top: { e: global.eval, t: global }
 };
-var coffeescript = window.CoffeeScript;
+var coffeescript = global.CoffeeScript;
 var seejs = '(function(){return eval(arguments[0]);})';
 
 function init(options) {
@@ -9862,13 +9926,17 @@ function init(options) {
   if ('coffee' in options) { coffeescript = options.coffee; }
   if ('abbreviate' in options) { abbreviate = options.abbreviate; }
   if ('consolehook' in options) { consolehook = options.consolehook; }
+  if ('consolelog' in options) { consolelog = options.consolelog; }
   if ('noconflict' in options) { noconflict(options.noconflict); }
   if (panel) {
     // panel overrides element and autoscroll.
     logelement = '#_testlog';
     autoscroll = '#_testscroll';
-    pulljQuery(tryinitpanel);
+    if (panel === true) {
+      startinitpanel();
+    }
   }
+  if (consolelog === true) { initconsolelog(); }
   return scope();
 }
 
@@ -9892,6 +9960,7 @@ function seeeval(scope, code) {
     if (scopes[scope].e) { ef = scopes[scope].e; }
     if (scopes[scope].t) { et = scopes[scope].t; }
   }
+  debug.reportEvent("seeeval", [scope, code]);
   return ef.call(et, code);
 }
 
@@ -9901,7 +9970,7 @@ var initialvardecl = new RegExp(
 
 function barecs(s) {
   // Compile coffeescript in bare mode.
-  var compiler = coffeescript || window.CoffeeScript;
+  var compiler = coffeescript || global.CoffeeScript;
   var compiled = compiler.compile(s, {bare:1});
   if (compiled) {
     // Further strip top-level var decls out of the coffeescript so
@@ -9928,22 +9997,22 @@ function exportsee() {
   see.js = seejs;
   see.cs = '(function(){return eval(' + seepkg + '.barecs(arguments[0]));})';
   see.version = version;
-  window[seepkg] = see;
+  global[seepkg] = see;
 }
 
 function noteoldvalue(name) {
   return {
     name: name,
-    has: window.hasOwnProperty(name),
-    value: window[name]
+    has: global.hasOwnProperty(name),
+    value: global[name]
   };
 }
 
 function restoreoldvalue(old) {
   if (!old.has) {
-    delete window[old.name];
+    delete global[old.name];
   } else {
-    window[old.name] = old.value;
+    global[old.name] = old.value;
   }
 }
 
@@ -10007,7 +10076,7 @@ var queue = [];
 
 see = function see() {
   if (logconsole && typeof(logconsole.log) == 'function') {
-    logconsole.log.apply(window.console, arguments);
+    logconsole.log.apply(global.console, arguments);
   }
   var args = Array.prototype.slice.call(arguments);
   queue.push('<samp class="_log">');
@@ -10356,12 +10425,12 @@ function expand(prefix, obj, depth, output) {
   }
 }
 function initlogcss() {
-  if (!addedcss && !window.document.getElementById('_logcss')) {
-    var style = window.document.createElement('style');
+  if (!addedcss && !global.document.getElementById('_logcss')) {
+    var style = global.document.createElement('style');
     style.id = '_logcss';
     style.innerHTML = (linestyle ? 'samp._log{' +
         linestyle + '}' : '') + logcss;
-    window.document.head.appendChild(style);
+    global.document.head.appendChild(style);
     addedcss = true;
   }
 }
@@ -10418,7 +10487,7 @@ function flushqueue() {
   var elt = aselement(logelement, null);
   if (elt && elt.appendChild && queue.length) {
     initlogcss();
-    var temp = window.document.createElement('samp');
+    var temp = global.document.createElement('samp');
     temp.innerHTML = queue.join('');
     queue.length = 0;
     var complete = stickscroll();
@@ -10428,6 +10497,9 @@ function flushqueue() {
     complete();
   }
   if (!retrying && queue.length) {
+    if (panel == 'auto') {
+      startinitpanel();
+    }
     retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
   } else if (retrying && !queue.length) {
     clearTimeout(retrying);
@@ -10439,6 +10511,7 @@ function flushqueue() {
 // TEST PANEL SUPPORT
 // ---------------------------------------------------------------------
 var addedpanel = false;
+var initpanelstarted = false;
 var inittesttimer = null;
 var abbreviate = [{}.undefined];
 var consolehook = null;
@@ -10463,7 +10536,7 @@ function promptcaret(color) {
   return '<samp class="_logcaret" style="color:' + color + ';"></samp>';
 }
 function getSelectedText(){
-    if(window.getSelection) { return window.getSelection().toString(); }
+    if(global.getSelection) { return global.getSelection().toString(); }
     else if(document.getSelection) { return document.getSelection(); }
     else if(document.selection) {
         return document.selection.createRange().text; }
@@ -10479,7 +10552,7 @@ function readlocalstorage() {
   }
   var state = { height: panelheight, history: [] }, result;
   try {
-    result = window.JSON.parse(window.localStorage[uselocalstorage]);
+    result = global.JSON.parse(global.localStorage[uselocalstorage]);
   } catch(e) {
     result = noLocalStorage || {};
   }
@@ -10510,14 +10583,32 @@ function updatelocalstorage(state) {
   }
   if (changed) {
     try {
-      window.localStorage[uselocalstorage] = window.JSON.stringify(stored);
+      global.localStorage[uselocalstorage] = global.JSON.stringify(stored);
     } catch(e) {
       noLocalStorage = stored;
     }
   }
 }
 function wheight() {
-  return window.innerHeight || $(window).height();
+  return global.innerHeight || $(global).height();
+}
+function initconsolelog() {
+  try {
+    if (consolelog && global.console && !global.console._log &&
+        'function' == typeof global.console.log) {
+      var _log = global.console._log = global.console.log;
+      global_.console.log = function log() {
+        _log.apply(this, arguments);
+        see.apply(this, arguments);
+      }
+    }
+  } catch(e) { }
+}
+function startinitpanel() {
+  if (!initpanelstarted) {
+    initpanelstarted = true;
+    pulljQuery(tryinitpanel);
+  }
 }
 function tryinitpanel() {
   if (addedpanel) {
@@ -10530,7 +10621,8 @@ function tryinitpanel() {
     }
     $('#_testpanel').show();
   } else {
-    if (!window.document.getElementById('_testlog') && window.document.body) {
+    if (!global.document.getElementById('_testlog') && global.document.body) {
+      initconsolelog();
       initlogcss();
       var state = readlocalstorage();
       var titlehtml = (paneltitle ? formattitle(paneltitle) : '');
@@ -10660,7 +10752,7 @@ function tryinitpanel() {
           }
           if (e.type == 'mouseup' || e.type == 'blur' ||
               e.type == 'mousemove' && e.which != dragwhich) {
-            $(window).off('mousemove mouseup blur', dragfunc);
+            $(global).off('mousemove mouseup blur', dragfunc);
             if (document.releaseCapture) { document.releaseCapture(); }
             if ($('#_testpanel').height() != state.height) {
               state.height = $('#_testpanel').height();
@@ -10668,7 +10760,7 @@ function tryinitpanel() {
             }
           }
         };
-        $(window).on('mousemove mouseup blur', dragfunc);
+        $(global).on('mousemove mouseup blur', dragfunc);
         return false;
       });
       $('#_testpanel').on('mouseup', function(e) {
@@ -10695,14 +10787,14 @@ function transparentHull(image, threshold) {
   if (!threshold) threshold = 0;
   c.width = image.width;
   c.height = image.height;
-  ctx = c.getContext('2d');
+  var ctx = c.getContext('2d');
   ctx.drawImage(image, 0, 0);
   return transparentCanvasHull(c, threshold);
 }
 
 function transparentCanvasHull(canvas, threshold) {
   var ctx = canvas.getContext('2d');
-  data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
   var hull = [];
   var intthresh = 256 * threshold;
   var first, last, prevfirst = Infinity, prevlast = -1;
@@ -10734,7 +10826,7 @@ function transparentCanvasHull(canvas, threshold) {
 function eraseOutsideHull(canvas, hull) {
   var ctx = canvas.getContext('2d'),
       w = canvas.width,
-      h = canvas.height
+      h = canvas.height,
       j = 0;
   ctx.save();
   // Erase everything outside clipping region.
@@ -10763,4 +10855,4 @@ function scalePolygon(poly, sx, sy, tx, ty) {
   }
 }
 
-})(jQuery);
+}).call(this, this.jQuery);

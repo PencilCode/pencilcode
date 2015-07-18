@@ -2,26 +2,20 @@
 // MODEL, CONTROLLER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define([
-  'jquery',
-  'view',
-  'storage',
-  'debug',
-  'filetype',
-  'guide',
-  'seedrandom',
-  'see',
-  'draw-protractor'],
-function(
-  $,
-  view,
-  storage,
-  debug,
-  filetype,
-  guide,
-  seedrandom,
-  see,
-  drawProtractor) {
+var $                = require('jquery'),
+    view             = require('view'),
+    storage          = require('storage'),
+    thumbnail        = require('thumbnail'),
+    debug            = require('debug'),
+    filetype         = require('filetype'),
+    guide            = require('guide'),
+    seedrandom       = require('seedrandom'),
+    see              = require('see'),
+    pencilTracer     = require('pencil-tracer'),
+    icedCoffeeScript = require('iced-coffee-script'),
+    drawProtractor   = require('draw-protractor');
+//    cache            = require('cache');
+
 
 eval(see.scope('controller'));
 
@@ -334,7 +328,17 @@ view.on('share', function() {
       // same share filename if the code is the same.
       sharename = lastSharedName;
     }
-    var data = $.extend({}, modelatpos('left').data, doc);
+    if (!doc) {
+      // There is no editor on the left (or it is misbehaving) - do nothing.
+      console.log("Nothing to share.");
+      return;
+    } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+      var iframe = document.getElementById('output-frame');
+      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+    }
+    var data = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
     storage.saveFile('share', sharename, data, true, 828, false, function(m) {
       var opts = { title: shortfilename };
       if (!m.error && !m.deleted) {
@@ -478,7 +482,6 @@ $(window).on('beforeunload', function() {
     return "There are unsaved changes."
   }
 });
-
 
 view.on('logout', function() {
   model.username = null;
@@ -734,14 +737,20 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename;
+  var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    var iframe = document.getElementById('output-frame');
+    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
   }
   // Remember meta in a cookie.
   saveDefaultMeta(doc.meta);
-  var newdata = $.extend({}, modelatpos('left').data, doc);
+  var newdata = $.extend({
+    thumbnail: thumbnailDataUrl
+  }, modelatpos('left').data, doc);
   // After a successful save, mark the file as clean and update mtime.
   function noteclean(mtime) {
     view.flashNotification('Saved.');
@@ -756,6 +765,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       }
     }
     updateTopControls();
+    // Flash the thumbnail after the control are updated.
+    view.flashThumbnail(thumbnailDataUrl);
   }
   if (newdata.auth && model.ownername != model.username) {
     // If we know auth is required and the user isn't logged in,
@@ -1300,7 +1311,14 @@ function handleDirLink(pane, linkname) {
     rotateModelLeft(true);
     return;
   }
-  var openfile = base + linkname.replace(/\/$/, '');
+  var openfile;
+  if (linkname == '#reload') {
+    openfile = base;
+    loadFileIntoPosition('left', openfile, true, true, function() {});
+    return;
+  } else {
+    openfile = base + linkname.replace(/\/$/, '');
+  }
   var isdir = /\/$/.test(linkname);
   loadFileIntoPosition('right', openfile, isdir, isdir,
     function() { rotateModelLeft(true); });
@@ -1311,7 +1329,7 @@ view.on('linger', function(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
   if (base.length) { base += '/'; }
-  if (linkname == '#new') {
+  if (/^#/.test(linkname)) {
     return;
   }
   var openfile = base + linkname.replace(/\/$/, '');
@@ -1762,6 +1780,31 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
+function instrumentCode(code, language) {
+  if (language === 'javascript') {
+    // TODO: support javascript
+  } else if (language === 'coffeescript') {
+    try {
+      options = {
+        traceFunc: 'ide.trace',
+        sourceMap: true,
+        bare: true
+      };
+      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+      debug.setSourceMap(result.v3SourceMap);
+      code = result.js;
+    } catch (err) {
+      // An error here means that either the user's code has a syntax error, or
+      // pencil-tracer has a bug. Returning false here means the user's code
+      // will run directly, without the debugger, and then if there's a syntax
+      // error it will be displayed to them, and if it's a pencil-tracer bug,
+      // their code will still run but with the debugger disabled.
+      return false;
+    }
+  }
+  return code;
+}
+
 function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
@@ -1776,7 +1819,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var pane = paneatpos(position);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
-      emptyOnly, model.setupScript)
+      emptyOnly, model.setupScript, instrumentCode);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1927,32 +1970,62 @@ function renderDirectory(position) {
   var filenameslash = filename.length ? filename + '/' : '';
   // TODO: fix up visible URL to ensure slash.
   var links = [];
-  for (var j = 0; j < m.list.length; ++j) {
-    var name = m.list[j].name;
-    if (model.ownername === '' && filename === '') {
-      if (m.list[j].mode.indexOf('d') < 0) { continue; }
-      var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
-      links.push({html:name, name:name, href:href, mtime:m.list[j].mtime});
+  if (!m.list) {
+    links.push({
+      html: m.error || 'Network error',
+      link: '#reload'
+    });
+  } else {
+    for (var j = 0; j < m.list.length; ++j) {
+      var name = m.list[j].name;
+      if (model.ownername === '' && filename === '') {
+        if (m.list[j].mode.indexOf('d') < 0) { continue; }
+        var href = '//' + name + '.' + window.pencilcode.domain + '/edit/';
+        links.push({
+          name: name,
+          href: href,
+          type: 'user',
+          mtime: m.list[j].mtime
+        });
+      } else {
+        var thumbnail = '';
+        if (m.list[j].thumbnail) {  // If there is a thumbnail for the file.
+          // Construct the url to the thumbnail.
+          // Append mtime so that when program updates, thumb gets refetched.
+          thumbnail = '/thumb/' + filenameslash + name +
+                      '.png?' + m.list[j].mtime;
+        }
+        var type = 'dir';
+        if (m.list[j].mode.indexOf('d') >= 0) {
+          name += '/';
+        } else {
+          type = filetype.mimeForFilename(name).replace(/;.*$/, '');
+        }
+        var href = '/home/' + filenameslash + name;
+        links.push({
+            name: name,
+            link: name,
+            href: href,
+            type: type,
+            thumbnail: thumbnail,
+            mtime: m.list[j].mtime
+        });
+      }
+    }
+    if (mpp.bydate) {
+      links.sort(sortByDate);
     } else {
-      var label = name;
-      if (m.list[j].mode.indexOf('d') >= 0) { label += '/'; }
-      var href = '/home/' + filenameslash + label;
+      links.sort(sortByName);
+    }
+    if (model.ownername !== '') {
       links.push({
-          html:label, name:name, link:label, href:href, mtime:m.list[j].mtime});
+          name: 'New file',
+          type: 'new',
+          link: '#new'
+      });
     }
   }
-  if (mpp.bydate) {
-    links.sort(sortByDate);
-  } else {
-    links.sort(sortByName);
-  }
-
-  if (model.ownername !== '') {
-    links.push({html:''});
-    links.push({html:'<nobr class="create">Create new file</nobr>',
-        link:'#new'});
-  }
-  view.setPaneLinkText(pane, links, filename);
+  view.setPaneLinkText(pane, links, filename, model.ownername);
   updateTopControls(false);
 }
 
@@ -2128,7 +2201,10 @@ $(window).on('message', function(e) {
       evalAndPostback(data.requestid, data.args[0]);
       break;
     case 'beginRun':
-      view.run();
+      view.fireEvent('run', []);
+      break;
+    case 'stopRun':
+      view.fireEvent('stop', []);
       break;
     case 'save':
       signUpAndSave({filename:data.args[0]});
@@ -2241,6 +2317,4 @@ view.publish('load');
 
 readNewUrl();
 
-return model;
-
-});
+module.exports = model;
