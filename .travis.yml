@@ -1,6 +1,11 @@
 language: node_js
 node_js:
 - '0.12'
+sudo: false
+addons:
+  apt:
+    packages:
+    - netstat
 notifications:
   webhooks:
     urls:
