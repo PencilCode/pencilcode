@@ -1,35 +1,50 @@
 var html2canvas = require('html2canvas');
 var THUMBNAIL_SIZE = 128;
+var NUM_ATTEMPTS = 3;
 
 // Public functions
 var thumbnail = {
   generateThumbnailDataUrl: function(iframe, callback) {
-      // Get the canvas inside the iframe.
-      var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-      var innerBody = innerDoc.body;
+    // Get the canvas inside the iframe.
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var innerBody = innerDoc.body;
 
-      // Hide the test panel and coordinates before capturing the thumbnail.
+    // Hide the test panel and coordinates before capturing the thumbnail.
+    for (var i = 0; i < innerBody.childElementCount; i++) {
+      if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
+          innerBody.children[i].className !== 'turtlefield' ||
+          innerBody.children[i].id == '_testpanel')) {
+        innerBody.children[i].style.display = 'none';
+      }
+    }
+
+    function onRendered(canvas) {
+      // Show the hidden test panel and coordinates.
       for (var i = 0; i < innerBody.childElementCount; i++) {
         if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
             innerBody.children[i].className !== 'turtlefield' ||
             innerBody.children[i].id == '_testpanel')) {
-          innerBody.children[i].style.display = 'none';
+          innerBody.children[i].style.display = '';
         }
       }
+      callback(getImageDataUrl(canvas, getImageInfo(canvas)));
+    }
 
-      function onRendered(canvas) {
-        // Show the hidden test panel and coordinates.
-        for (var i = 0; i < innerBody.childElementCount; i++) {
-          if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
-              innerBody.children[i].className !== 'turtlefield' ||
-              innerBody.children[i].id == '_testpanel')) {
-            innerBody.children[i].style.display = '';
-          }
-        }
-        callback(getImageDataUrl(canvas, getImageInfo(canvas)));
+    function tryHtml2canvas(numAttempts) {
+      if (numAttempts > 0) {
+        html2canvas(innerBody).then(onRendered, function(e) {
+          console.log('html2canvas failed, retrying...');
+          tryHtml2canvas(numAttempts - 1);
+        });
+      } else {
+        // If it gets here, that means all attempts have failed.
+        // Then just call the callback with empty string.
+        callback('');
       }
+    }
 
-      html2canvas(innerBody).then(onRendered, console.log);
+    // Try calling `html2canvas`.
+    tryHtml2canvas(NUM_ATTEMPTS);
   }
 }
 
