@@ -1,5 +1,6 @@
 var html2canvas = require('html2canvas');
 var THUMBNAIL_SIZE = 128;
+var NUM_ATTEMPTS = 3;
 
 
 // Public functions
@@ -29,7 +30,20 @@ function generateThumbnailDataUrl(iframe, callback) {
     callback(getImageDataUrl(canvas, getImageInfo(canvas)));
   }
 
-  html2canvas(innerBody).then(onRendered, console.log);
+  // Since `html2canvas` (or rather `Range.getBoundingClientRect`) is unstable,
+  // we retry a certain number of times if it fails.
+  while (NUM_ATTEMPTS --> 0) {
+    try {
+      html2canvas(innerBody).then(onRendered, console.log);
+      return;   // return once there is a success.
+    } catch (e) {
+      console.log('html2canvas failed, retrying...');
+    }
+  }
+
+  // If it gets here, that means all attempts have failed.
+  // Then just call the callback with empty string.
+  callback('');
 }
 
 // Private functions
