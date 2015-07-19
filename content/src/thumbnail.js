@@ -33,11 +33,11 @@ function generateThumbnailDataUrl(iframe, callback) {
   function tryHtml2canvas(numAttempts) {
     if (numAttempts > 0) {
       html2canvas(innerBody).then(onRendered, function(e) {
-        console.log({
+        console.log(JSON.stringify({
           msg: 'html2canvas failed.',
           status: 'retrying',
-          error: JSON.stringify(e)
-        });
+          error: e
+        }));
         tryHtml2canvas(numAttempts - 1);
       });
     } else {
