@@ -960,6 +960,7 @@ module.exports = {
     '?.drawon': {color:'purple'},
     '?.label': {color: 'pink'},
     '?.reload': {},
+    remove: {color: 'pink'},
     see: {},
     sync: {},
     send: {},
