@@ -2994,13 +2994,14 @@ Support.prototype.testRangeBounds = function(document) {
 
     if (document.createRange) {
         range = document.createRange();
-        if (range.getBoundingClientRect && range.getBoundingClientRect()) {
+        if (range.getBoundingClientRect) {
             testElement = document.createElement('boundtest');
             testElement.style.height = "123px";
             testElement.style.display = "block";
             document.body.appendChild(testElement);
 
             range.selectNode(testElement);
+            console.log({ rangeCollapsed: range.collapsed });
             rangeBounds = range.getBoundingClientRect();
             rangeHeight = rangeBounds.height;
 
