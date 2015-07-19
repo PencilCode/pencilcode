@@ -3001,6 +3001,7 @@ Support.prototype.testRangeBounds = function(document) {
             document.body.appendChild(testElement);
 
             range.selectNode(testElement);
+            console.log({ rangeCollapsed: range.collapsed });
             rangeBounds = range.getBoundingClientRect();
             rangeHeight = rangeBounds.height;
 
