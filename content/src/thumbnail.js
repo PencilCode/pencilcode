@@ -36,7 +36,7 @@ function generateThumbnailDataUrl(iframe, callback) {
         console.log({
           msg: 'html2canvas failed.',
           status: 'retrying',
-          error: e
+          error: JSON.stringify(e)
         });
         tryHtml2canvas(numAttempts - 1);
       });
