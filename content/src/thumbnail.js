@@ -29,7 +29,7 @@ var thumbnail = {
         callback(getImageDataUrl(canvas, getImageInfo(canvas)));
       }
 
-      html2canvas(innerBody).then(onRendered).catch(console.log);
+      html2canvas(innerBody).then(onRendered, console.log);
   }
 }
 
