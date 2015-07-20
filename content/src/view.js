@@ -275,7 +275,8 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
         
          // Drawing arrows at each step in the slider
         arrow(pane, all_arrows, current_line);
-
+ 
+  $.get('/log/' + "~slider", { });
 
         // display the protractor for that new line and highlight the selected line
         hideProtractor(paneid('right'));
