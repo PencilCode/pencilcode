@@ -258,10 +258,10 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
         // Get the handle and add the corresponding line number above it
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
 
-     /*  Note: Screenshot code needs to be revamped 
+     /*  Note: Screenshot code needs to be revamped */
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[ui.value], 0, 0);*/
+        drawCtx.putImageData(screenshots[ui.value], 0, 0);
 
         // get the line of the previously selected tick and clear it
         var prevno = traceevents[current_line].location.first_line;
@@ -3254,10 +3254,8 @@ function arrow(pane, arrows, traceEventNum){
 
 
   if (arrow_data){
-    if (arrow_data['before']){
-      firstBeforeLoc = arrow_data['before']["first"];
-      secondBeforeLoc = arrow_data['before']['second'];
-    }
+    firstBeforeLoc = arrow_data['before']["first"];
+    secondBeforeLoc = arrow_data['before']['second'];
   }
           
   if (firstBeforeLoc != {} && secondBeforeLoc != {}){
