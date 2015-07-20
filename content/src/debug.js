@@ -57,6 +57,7 @@ function bindframe(w) {
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
+  view.removeSlider();
   stuckTime = null;
   startPollingWindow();
 }
