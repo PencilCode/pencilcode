@@ -9,24 +9,29 @@ var thumbnail = {
     var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
     var innerBody = innerDoc.body;
 
+    // Copy the NodeList into an array.
+    var children = Array.prototype.slice.call(innerBody.children);
+    // An extra array to store modified elements.
+    var hiddenElements = [];
+
     // Hide the test panel and coordinates before capturing the thumbnail.
-    for (var i = 0; i < innerBody.childElementCount; i++) {
-      if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
-          innerBody.children[i].className !== 'turtlefield' ||
-          innerBody.children[i].id == '_testpanel')) {
-        innerBody.children[i].style.display = 'none';
+    // Keep a copy of the original style settings in the `hiddenElements` array.
+    children.forEach(function(child) {
+      if (child.tagName.toLowerCase() === 'samp' &&
+          (child.className !== 'turtlefield' || child.id == '_testpanel')) {
+        hiddenElements.push({
+          object: child,
+          display: child.style.display
+        });
+        child.style.display = 'none';
       }
-    }
+    });
 
     function onRendered(canvas) {
-      // Show the hidden test panel and coordinates.
-      for (var i = 0; i < innerBody.childElementCount; i++) {
-        if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
-            innerBody.children[i].className !== 'turtlefield' ||
-            innerBody.children[i].id == '_testpanel')) {
-          innerBody.children[i].style.display = '';
-        }
-      }
+      // Restore the display attribute of the elements.
+      hiddenElements.forEach(function(element) {
+        element.object.style.display = element.display;
+      });
       callback(getImageDataUrl(canvas, getImageInfo(canvas)));
     }
 
