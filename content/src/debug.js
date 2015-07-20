@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////r
+//////////////////////////////////////////////////////////////////////////
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +30,7 @@ var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
-var current_arrows = {"black" : [], "gray" : []};
-var all_arrows = {};
+var arrows = {};
 var temp_screenshots = [];
 
 Error.stackTraceLimit = 20;
@@ -49,10 +48,9 @@ function bindframe(w) {
   debugRecordsByLineNo = {};
   traceEvents = [];
   screenshots = [];
-  all_arrows = {};
+  arrows = {};
   eventQueue = [];
   prevLocation = null; 
-  current_arrows = {"black" : [], "gray" : []};
   prevLine = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
@@ -132,14 +130,13 @@ var debug = window.ide = {
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
     traceEvents.push(event);
-    console.log(traceEvents);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
     if(lineno <= prevLine){
       isLoop = true;
     }
-    view.createSlider(traceEvents, isLoop, screenshots, all_arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+    view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -230,32 +227,38 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var line = traceEvents[index].location.first_line;
       var appear_location = traceEvents[index].location;
       var tracedLine = -1; 
+
       //trace lines that are not animation.
       while (line != currentLine){
         if (tracedLine != -1){
           untraceLine(tracedLine);
           tracedLine = -1;
-
         }
+
         if(currentLine < prevLine){
+
+          var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
           var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
           prevLocation = traceEvents[prevIndex].location;
-          var grayList = current_arrows["gray"];
-          var blacklist = current_arrows["black"];
-
-          for (j=0; j < blacklist.length; j++){
-            grayList.push(blacklist[j]);
+          
+          if (arrows[prevIndex] != null){
+            arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
           }
-          current_arrows["gray"] = grayList;
-          current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
-          all_arrows[prevLine] = current_arrows;
-          view.arrow(view.paneid('left'), current_arrows);
+          else{
+            arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+          }
+          if (arrows[currentIndex] != null){
+            arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+          }
+          else{
+            arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+          }
+          view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
         }
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
-        console.log("This non animation is being traced!");
      //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
         traceLine(currentLine);
         tracedLine = currentLine;
@@ -269,17 +272,23 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         tracedLine = -1;
       }
       if (line < prevLine){
+        var currentIndex = debugRecordsByLineNo[line].eventIndex;
         var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
         prevLocation = traceEvents[prevIndex].location;
-        var grayList = current_arrows["gray"];
-        var blacklist = current_arrows["black"];
-
-        for (j=0; j < blacklist.length; j++){
-          grayList.push(blacklist[j]);
+          
+        if (arrows[prevIndex] != null){
+          arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
         }
-        current_arrows["gray"] = grayList;
-        current_arrows['black'] = [{first: appear_location, second: prevLocation}];
-        view.arrow(view.paneid('left'), current_arrows); 
+        else{
+          arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+        }
+        if (arrows[currentIndex] != null){
+          arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+        }
+        else{
+          arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+        }
+        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
       }
       prevLine = line;
       recordD.startCoords[coordId] = collectCoords(elem);
@@ -293,6 +302,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval){
+      view.arrow(view.paneid('left'), arrows, -1);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -307,14 +317,6 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       screenshots.push(imageData)
     //  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
-    var grayList = current_arrows["gray"];
-    var blacklist = current_arrows["black"];
-    for (j=0; j < blacklist.length; j++){
-        grayList.push(blacklist[j]);
-    }
-    current_arrows["gray"] = grayList;
-    current_arrows["black"] = [];
-    view.arrow(view.paneid('left'), current_arrows);
   }
 }
 
@@ -344,11 +346,25 @@ function end_program(){
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-      var grayList = current_arrows["gray"];
-      grayList.push(current_arrows["black"]);
-      current_arrows["gray"] = grayList;
-      current_arrows["black"] = [{first: currentLocation, second: prevLocation}];
-    //  view.arrow(view.paneid('left'), current_arrows);
+
+        var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+        prevLocation = traceEvents[prevIndex].location;
+          
+        if (arrows[prevIndex] != null){
+          arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
+        }
+        else{
+          arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+        }
+        if (arrows[currentIndex] != null){
+          arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+        }
+        else{
+          arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+        }
+
+        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
     }
     traceLine(currentLine);
     tracedLine = currentLine;

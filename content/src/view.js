@@ -266,11 +266,10 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
 
         // get the new line number of the selected value
         var lineno = traceevents[current_line].location.first_line;
+        
          // Drawing arrows at each step in the slider
-        if (all_arrows[lineno]){
-          arrow(pane, all_arrows[lineno]);
-          console.log("Drawing these arrows: ", all_arrows[lineno]);
-        }
+        arrow(pane, all_arrows, current_line);
+
 
         // display the protractor for that new line and highlight the selected line
         hideProtractor(paneid('right'));
@@ -3222,16 +3221,22 @@ function curvedVertical(x1, y1, x2, y2) {
 
 //$(window).resize(..) event
 
-function arrow(pane, arrow_lines){
+function arrow(pane, arrows, traceEventNum){
   /* note: we expect arrow_lines to be an array of key value pairs where 
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
+  console.log("Arrow Dict: ", arrows);
   var startcoords = null;
   var endcoords = null;
   var offset_top =  0; 
   var offset_left = 0; 
-  
+  var arrow_data = arrows[traceEventNum]; 
+  console.log("Trace Event: ", traceEventNum);
+  console.log("Arrow Data: ", arrow_data);
+  var firstBeforeLoc = {};
+  var secondBeforeLoc = {};
+
   $(".arrow").remove();
 
   var block_mode = null;
@@ -3239,77 +3244,73 @@ function arrow(pane, arrow_lines){
     block_mode = true;
     if(!getPaneEditorBlockMode(pane)){block_mode = false;}
   }
+  
 
-  for (color in arrow_lines) {
-    var i = 0;
-    var arrows = arrow_lines[color];
-    if ( arrows != undefined ){
-      while (i < arrows.length) {
-        var loc = arrows[i];
-        var firstLoc = loc["first"];
-        var secondLoc = loc['second'];
-        console.log("firstLoc: ", firstLoc);
-        console.log("secondLoc: ", secondLoc);
+
+  if (arrow_data){
+    firstBeforeLoc = arrow_data['before']["first"];
+    secondBeforeLoc = arrow_data['before']['second'];
+  }
           
-        if (firstLoc != undefined && secondLoc != undefined){
+  if (firstBeforeLoc != {} && secondBeforeLoc != {}){
 
-          if (block_mode){
-            var dropletEditor = state.pane[pane].dropletEditor;
-            var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line);
-            var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line);
-            startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
-            endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
-            offset_top = startBounds.bounds.height - 30;
-            offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
-          }
-
-          else{
-            offset_top = $(".editor").offset().top ;
-            offset_left = $(".editor").offset().left + 30;
-            startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
-            endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line ), (secondLoc.last_column + 10));
-          }
-          console.log("startcoords: ", startcoords);
-          console.log("endCoords: ", endcoords);
-
-          var x_val = 0;
-          if(startcoords.pageX > endcoords.pageX){
-            x_val = startcoords.pageX;
-          } else{
-            x_val = endcoords.pageX;
-          }
-
-          
-          console.log("offset: ", offset_top, offset_left);
-
-          var text = "<svg class= 'arrow' width=" 
-          + $(".editor").width() + " height=" + $(".editor").height() 
-          + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
-          <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:dodgerblue; fill:dodgerblue;'> \
-           <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
-          </marker> \
-          <path d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val + offset_left, (endcoords.pageY - offset_top)) + "' marker-start='url(#arrowhead)' \
-                 style='stroke:dodgerblue; fill:none;' position='relative'/> \
-           </svg> \
-          ";//stroke-width=3
-
-          console.log('arrow: ', text);
-          console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
-          
-          var div = document.createElement('div');
-          div.className =  "arrow";
-          div.innerHTML = text;
-          div.style.visibility = 'visible';
-          div.style.position = "absolute";
-          div.style.zIndex = "10";
-          div.style.left = "0px";
-          div.style.top = "0px";
-    
-          $(".editor").append(div);
-        }
-        i += 1; 
-      }
+    if (block_mode){
+      var dropletEditor = state.pane[pane].dropletEditor;
+      var startBounds = dropletEditor.getLineMetrics(firstBeforeLoc.first_line);
+      var endBounds = dropletEditor.getLineMetrics(secondBeforeLoc.first_line);
+      startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
+      endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
+      offset_top = startBounds.bounds.height - 30;
+      offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
     }
+
+    else{
+      offset_top = $(".editor").offset().top ;
+      offset_left = $(".editor").offset().left + 30;
+      startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstBeforeLoc.first_line), (firstBeforeLoc.last_column + 10));
+      endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondBeforeLoc.first_line ), (secondBeforeLoc.last_column + 10));
+    }
+    if (Math.abs(secondBeforeLoc.first_line - firstBeforeLoc.first_line) > 1){
+      console.log("startcoords: ", startcoords);
+      console.log("endCoords: ", endcoords);
+
+      var x_val = 0;
+      if(startcoords.pageX > endcoords.pageX){
+        x_val = startcoords.pageX;
+      } 
+      else{
+        x_val = endcoords.pageX;
+      }
+
+      console.log("offset: ", offset_top, offset_left);
+
+      var text = "<svg class= 'arrow' width=" 
+            + $(".editor").width() + " height=" + $(".editor").height() 
+            + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
+            <marker id='arrowhead' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:dodgerblue; fill:dodgerblue;'> \
+             <polygon points='0,0 10,5 0,10'/>    <!-- triangle pointing right --> \
+            </marker> \
+            <path d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val + offset_left, (endcoords.pageY - offset_top)) + "' marker-start='url(#arrowhead)' \
+                   style='stroke:dodgerblue; fill:none;' position='relative'/> \
+             </svg> \
+            ";//stroke-width=3
+
+      console.log('arrow: ', text);
+      console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
+            
+      var div = document.createElement('div');
+      div.className =  "arrow";
+      div.innerHTML = text;
+      div.style.visibility = 'visible';
+      div.style.position = "absolute";
+      div.style.zIndex = "10";
+      div.style.left = "0px";
+      div.style.top = "0px";
+      
+      if (arrow_data){
+       $(".editor").append(div);
+      }
+    }  
   }
 };
 
