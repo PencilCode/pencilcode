@@ -32,7 +32,7 @@ var thumbnail = {
       hiddenElements.forEach(function(element) {
         element.object.style.display = element.display;
       });
-      callback(getImageDataUrl(canvas, getImageInfo(canvas)));
+      callback(getImageDataUrl(canvas));
     }
 
     function tryHtml2canvas(numAttempts) {
@@ -54,7 +54,7 @@ var thumbnail = {
 }
 
 // Private functions
-function getImageInfo(canvas) {
+function getImageDataUrl(canvas) {
   var w = canvas.width;
   var h = canvas.height;
   var ctx = canvas.getContext('2d');
@@ -94,6 +94,10 @@ function getImageInfo(canvas) {
   var imageWidth = bottomRight.x - topLeft.x + 1;
   var imageHeight = bottomRight.y - topLeft.y + 1;
 
+  if (imageWidth <= 0 || imageHeight <= 0) {
+    return '';
+  }
+
   // Find the longer edge and make it a square.
   var longerEdge;
   var diff = Math.abs((imageWidth - imageHeight) / 2);
@@ -105,18 +109,14 @@ function getImageInfo(canvas) {
     topLeft.x = Math.max(topLeft.x - diff, 0);
   }
 
-  return { x: topLeft.x, y: topLeft.y, size: longerEdge }
-}
-
-function getImageDataUrl(canvas, imageInfo) {
   // Draw the cropped image in a temp canvas and scale it down.
   var tempCanvas = document.createElement('canvas');
   var tempCanvasCtx = tempCanvas.getContext('2d');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
   tempCanvasCtx.drawImage(canvas,       // Src canvas.
-      imageInfo.x, imageInfo.y,         // Src coordinates.
-      imageInfo.size, imageInfo.size,   // Src coordinates.
+      topLeft.x, topLeft.y,             // Src coordinates.
+      longerEdge, longerEdge,           // Src coordinates.
       0, 0,                             // Dest coordinates.
       THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
 
