@@ -255,14 +255,14 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       range: "min",
       smooth: false,
       slide: function(event, ui){
-        
+        console.log("This is the value", ui.value);            
         // Get the handle and add the corresponding line number above it
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
 
-     /*  Note: Screenshot code needs to be revamped */
+     /*  Note: Screenshot code needs to be revamped 
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[ui.value], 0, 0);
+        drawCtx.putImageData(screenshots[ui.value], 0, 0); */
 
         // get the line of the previously selected tick and clear it
         var prevno = traceevents[current_line].location.first_line;
@@ -299,20 +299,18 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   }
 
   // if the slider has already been created and events are pushed, modify existing slider
-  else if(sliderCreated && traceevents.length > 0){
+  else if(sliderCreated && traceevents.length < 51){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       rest: "pip"
     })
-    var max = $( ".scrubber" ).slider("option", "max");
   }
   
   // remove the slider
   else {
-    console.log ("this is the case 2")
-    $(".scrubbermark").css("display", "none" );
-    $(".scrubber").remove();
-    sliderCreated = false;
+    $(".scrubber").slider("option", "max", traceevents.length - 1)
+    $(".scrubber").slider("option", "step", Math.round( traceevents.length/50));
+    $(".scrubber").slider("pips",{ rest: "pip" })
   }
 
 }
