@@ -94,18 +94,17 @@ function getImageDataUrl(canvas) {
   var imageWidth = bottomRight.x - topLeft.x + 1;
   var imageHeight = bottomRight.y - topLeft.y + 1;
 
+  // This means the thumbnail is blank, should just return.
   if (imageWidth <= 0 || imageHeight <= 0) {
     return '';
   }
 
   // Find the longer edge and make it a square.
-  var longerEdge;
+  var longerEdge = Math.max(Math.min(imageWidth, h), Math.min(imageHeight, w));
   var diff = Math.abs((imageWidth - imageHeight) / 2);
   if (imageWidth > imageHeight) {
-    longerEdge = Math.min(imageWidth, h);
     topLeft.y = Math.max(topLeft.y - diff, 0);
   } else {
-    longerEdge = Math.min(imageHeight, w);
     topLeft.x = Math.max(topLeft.x - diff, 0);
   }
 
@@ -114,11 +113,20 @@ function getImageDataUrl(canvas) {
   var tempCanvasCtx = tempCanvas.getContext('2d');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
-  tempCanvasCtx.drawImage(canvas,       // Src canvas.
-      topLeft.x, topLeft.y,             // Src coordinates.
-      longerEdge, longerEdge,           // Src coordinates.
-      0, 0,                             // Dest coordinates.
-      THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
+  if (longerEdge < THUMBNAIL_SIZE) {
+    var offset = THUMBNAIL_SIZE / 2 - longerEdge / 2;
+    tempCanvasCtx.drawImage(canvas,       // Src canvas.
+        topLeft.x, topLeft.y,             // Src coordinates.
+        longerEdge, longerEdge,           // Src coordinates.
+        offset, offset,                   // Dest coordinates.
+        longerEdge, longerEdge);          // Dest size.
+  } else {
+    tempCanvasCtx.drawImage(canvas,       // Src canvas.
+        topLeft.x, topLeft.y,             // Src coordinates.
+        longerEdge, longerEdge,           // Src coordinates.
+        0, 0,                             // Dest coordinates.
+        THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
+  }
 
   // Convert the temp canvas to data url and return.
   return tempCanvas.toDataURL();
