@@ -389,22 +389,14 @@ function setOnCallback(tag, cb) {
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
-<<<<<<< HEAD
-    for (j=0; j < cbs.length; j++ ){
-=======
     //take a copy of the array in case other 
     //events are fired while you're indexing it.
     for (j=0; j < cbs.length; j++) {
->>>>>>> upstream/master
       var cb = cbs[j];
       if (cb) {
         cb.apply(null, args);
       }
-<<<<<<< HEAD
-    }  
-=======
     }
->>>>>>> upstream/master
   }
 }
 

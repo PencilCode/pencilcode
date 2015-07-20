@@ -207,15 +207,12 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-<<<<<<< HEAD
   var currentLine = eventQueue.shift();
   var currentIndex = -1;
   var currentLocation = null;
   currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
   currentLocation = traceEvents[currentIndex].location;
-=======
   stuckComplexity = Math.max(stuckComplexity, 6);
->>>>>>> upstream/master
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
