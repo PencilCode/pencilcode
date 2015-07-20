@@ -137,6 +137,7 @@ window.pencilcode.view = {
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   createSlider: createSlider,
+  removeSlider: removeSlider,
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,
@@ -222,8 +223,13 @@ function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
 
-// Note, for directories, etc. need to change this
 var sliderCreated = false;
+function removeSlider () {
+	$(".scrubber").remove();
+        sliderCreated = false;
+
+}
+
 
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
 //  var previous_line = 0;
