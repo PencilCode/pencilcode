@@ -38,8 +38,7 @@ module.exports = function(grunt) {
           'lib/lodash.js': 'lodash/dist/lodash.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
-          'lib/socket.io.js': 'socket.io-client/socket.io.js',
-          'lib/html2canvas.js': 'html2canvas/build/html2canvas.js'
+          'lib/socket.io.js': 'socket.io-client/socket.io.js'
         }
       },
       zeroclipboard: {
