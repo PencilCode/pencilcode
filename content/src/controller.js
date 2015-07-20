@@ -741,59 +741,65 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
-  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-    var iframe = document.getElementById('output-frame');
-    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail
+      var iframe = document.getElementById('output-frame');
+      // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+  } else {  // Empty content, file delete, no need for thumbnail.
+    postThumbnailGeneration('');
   }
-  // Remember meta in a cookie.
-  saveDefaultMeta(doc.meta);
-  var newdata = $.extend({
-    thumbnail: thumbnailDataUrl
-  }, modelatpos('left').data, doc);
-  // After a successful save, mark the file as clean and update mtime.
-  function noteclean(mtime) {
-    view.flashNotification('Saved.');
-    view.notePaneEditorCleanData(paneatpos('left'), newdata);
-    logCodeEvent('save', filename, newdata.data,
-        view.getPaneEditorBlockMode(paneatpos('left')),
-        view.getPaneEditorLanguage(paneatpos('left')));
-    if (modelatpos('left').filename == filename) {
-      var oldmtime = modelatpos('left').data.mtime || 0;
-      if (mtime) {
-        modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
-      }
+  function postThumbnailGeneration(thumbnailDataUrl) {
+    // Remember meta in a cookie.
+    saveDefaultMeta(doc.meta);
+    var newdata = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
+    if (newdata.auth && model.ownername != model.username) {
+      // If we know auth is required and the user isn't logged in,
+      // prompt for a login.
+      logInAndSave(filename, newdata, forceOverwrite,
+                   noteclean, loginPrompt, doneCallback);
+      return;
     }
-    updateTopControls();
-    // Flash the thumbnail after the control are updated.
-    view.flashThumbnail(thumbnailDataUrl);
-  }
-  if (newdata.auth && model.ownername != model.username) {
-    // If we know auth is required and the user isn't logged in,
-    // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite,
-                 noteclean, loginPrompt, doneCallback);
-    return;
-  }
-  // Attempt to save.
-  view.flashNotification('', true);
-  storage.saveFile(
-      model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
-  function(status) {
-    if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean,
-                   loginPrompt, doneCallback);
-    } else {
-      if (!model.username) {
-        // If not yet logged in but we have saved (e.g., no password needed),
-        // then log us in.
-        model.username = model.ownername;
+    // Attempt to save.
+    view.flashNotification('', true);
+    storage.saveFile(
+        model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
+    function(status) {
+      if (status.needauth) {
+        logInAndSave(filename, newdata, forceOverwrite, noteclean,
+                     loginPrompt, doneCallback);
+      } else {
+        if (!model.username) {
+          // If not yet logged in but we have saved (e.g., no password needed),
+          // then log us in.
+          model.username = model.ownername;
+        }
+        handleSaveStatus(status, filename, noteclean);
+        if (doneCallback) {
+          doneCallback();
+        }
       }
-      handleSaveStatus(status, filename, noteclean);
-      if (doneCallback) {
-        doneCallback();
+    });
+    // After a successful save, mark the file as clean and update mtime.
+    function noteclean(mtime) {
+      view.flashNotification('Saved.');
+      view.notePaneEditorCleanData(paneatpos('left'), newdata);
+      logCodeEvent('save', filename, newdata.data,
+          view.getPaneEditorBlockMode(paneatpos('left')),
+          view.getPaneEditorLanguage(paneatpos('left')));
+      if (modelatpos('left').filename == filename) {
+        var oldmtime = modelatpos('left').data.mtime || 0;
+        if (mtime) {
+          modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
+        }
       }
+      // Delete the pre-saved thumbnail from the model.
+      updateTopControls();
+      // Flash the thumbnail after the control are updated.
+      view.flashThumbnail(thumbnailDataUrl);
     }
-  });
+  }
 }
 
 function keyFromPassword(username, p) {

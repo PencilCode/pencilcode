@@ -1,21 +1,53 @@
+var html2canvas = require('html2canvas');
 var THUMBNAIL_SIZE = 128;
+var NUM_ATTEMPTS = 3;
+
 
 // Public functions
-var thumbnail = {
-  generateThumbnailDataUrl: function(iframe) {
-    // Get the canvas inside the iframe.
-    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-    // TODO: Add support for multiple turtle.
-    var canvas = innerDoc.getElementsByTagName('canvas')[0];
+function generateThumbnailDataUrl(iframe, callback) {
+  // Get the canvas inside the iframe.
+  var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+  var innerBody = innerDoc.body;
 
-    if (!canvas || canvas.id === 'turtle') { return; }
-
-    // Get the image data.
-    var imageInfo = getImageInfo(canvas);
-
-    // Get the cropped and resized image data url.
-    return getImageDataUrl(canvas, imageInfo);
+  // Hide the test panel and coordinates before capturing the thumbnail.
+  for (var i = 0; i < innerBody.childElementCount; i++) {
+    if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
+        innerBody.children[i].className !== 'turtlefield' ||
+        innerBody.children[i].id == '_testpanel')) {
+      innerBody.children[i].style.display = 'none';
+    }
   }
+
+  function onRendered(canvas) {
+    // Show the hidden test panel and coordinates.
+    for (var i = 0; i < innerBody.childElementCount; i++) {
+      if (innerBody.children[i].tagName.toLowerCase() === 'samp' && (
+          innerBody.children[i].className !== 'turtlefield' ||
+          innerBody.children[i].id == '_testpanel')) {
+        innerBody.children[i].style.display = '';
+      }
+    }
+    callback(getImageDataUrl(canvas, getImageInfo(canvas)));
+  }
+
+  function tryHtml2canvas(numAttempts) {
+    if (numAttempts > 0) {
+      html2canvas(innerBody).then(onRendered, function(e) {
+        console.log(JSON.stringify({
+          msg: 'html2canvas failed.',
+          status: 'retrying',
+          error: e
+        }));
+        tryHtml2canvas(numAttempts - 1);
+      });
+    } else {
+      // If it gets here, that means all attempts have failed.
+      // Then just call the callback with empty string.
+      callback('');
+    }
+  }
+
+  tryHtml2canvas(NUM_ATTEMPTS);
 }
 
 // Private functions
@@ -61,12 +93,13 @@ function getImageInfo(canvas) {
 
   // Find the longer edge and make it a square.
   var longerEdge;
+  var diff = Math.abs((imageWidth - imageHeight) / 2);
   if (imageWidth > imageHeight) {
-    longerEdge = imageWidth;
-    topLeft.y -= (imageWidth - imageHeight) / 2;
+    longerEdge = Math.min(imageWidth, h);
+    topLeft.y = Math.max(topLeft.y - diff, 0);
   } else {
-    longerEdge = imageHeight;
-    topLeft.x -= (imageHeight - imageWidth) / 2;
+    longerEdge = Math.min(imageHeight, w);
+    topLeft.x = Math.max(topLeft.x - diff, 0);
   }
 
   return { x: topLeft.x, y: topLeft.y, size: longerEdge }
@@ -88,4 +121,6 @@ function getImageDataUrl(canvas, imageInfo) {
   return tempCanvas.toDataURL();
 }
 
-module.exports = thumbnail;
+module.exports = {
+  generateThumbnailDataUrl: generateThumbnailDataUrl
+};
