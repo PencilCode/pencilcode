@@ -3254,8 +3254,10 @@ function arrow(pane, arrows, traceEventNum){
 
 
   if (arrow_data){
-    firstBeforeLoc = arrow_data['before']["first"];
-    secondBeforeLoc = arrow_data['before']['second'];
+    if(arrow_data["before"]){
+      firstBeforeLoc = arrow_data['before']["first"];
+      secondBeforeLoc = arrow_data['before']['second'];
+    }
   }
           
   if (firstBeforeLoc != {} && secondBeforeLoc != {}){
