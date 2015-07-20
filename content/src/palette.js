@@ -729,17 +729,13 @@ module.exports = {
           expansion: "<head>\n  \n</head>",
           title: "Represents a collection of metadata"
         }, {
-          block: "<body></body>",
-          expansion: "<body>\n  \n</body>",
-          title: "Main content of the document"
-        }, {
           block: "<title></title>",
           title: "Document's title or name"
         }, {
-          block: "<link rel=\"\" href=\"\" />",
+          block: "<link rel=\"\" href=\"\">",
           title: "Link between a document and an external resource"
         }, {
-          block: "<meta charset=\"\" />",
+          block: "<meta charset=\"\">",
           title: "Metadata about the HTML document"
         }, {
           block: "<style></style>",
@@ -760,10 +756,7 @@ module.exports = {
           expansion: "<p>\n  \n</p>",
           title: "Represents a paragraph"
         }, {
-          block: "<h3></h3>",
-          title: "Heading for its section - Can use h1..h6 for different sizes"
-        }, {
-          block: "<hr />",
+          block: "<hr>",
           title: "Paragraph-level thematic break"
         }, {
           block: "<div></div>",
@@ -772,6 +765,9 @@ module.exports = {
         }, {
           block: "<span></span>",
           title: "Group inline-elements"
+        }, {
+          block: "<center></center>",
+          title: "Defines a centered group"
         }, {
           block: "<ul></ul>",
           expansion: "<ul>\n  \n</ul>",
@@ -799,12 +795,18 @@ module.exports = {
           block: "<a href=\"\"></a>",
           title: "Defines a hyperlink, which is used to link from one page to another"
         }, {
-          block: "<img src=\"\" alt=\"\" />",
+          block: "<img src=\"\" alt=\"\">",
           title: "Image"
         }, {
           block: "<iframe></iframe>",
           expansion: "<iframe>\n  \n</iframe>",
           title: "Nested browsing context"
+        }, {
+          block: "<strong></strong>",
+          title: "Strong importance, seriousness, or urgency for its contents"
+        }, {
+          block: "<em></em>",
+          title: "Stress emphasis of its contents"
         }, {
           block: "<i></i>",
           title: "Italic"
@@ -821,7 +823,7 @@ module.exports = {
           block: "<sup></sup>",
           title: "Superscript"
         }, {
-          block: "<br />",
+          block: "<br>",
           title: "Line break"
         }
       ]
@@ -830,6 +832,19 @@ module.exports = {
       color: "orange",
       blocks: [
         {
+          block: "<body></body>",
+          expansion: "<body>\n  \n</body>",
+          title: "Main content of the document"
+        }, {
+          block: "<h1></h1>",
+          title: "Heading for its section"
+        }, {
+          block: "<h2></h2>",
+          title: "Heading for its section"
+        }, {
+          block: "<h3></h3>",
+          title: "Heading for its section"
+        }, {
           block: "<article></article>",
           expansion: "<article>\n  \n</article>",
           title: "Independent, self-contained content"
@@ -841,6 +856,14 @@ module.exports = {
           block: "<nav></nav>",
           expansion: "<nav>\n  \n</nav>",
           title: "Set of navigation links"
+        }, {
+          block: "<header></header>",
+          expansion: "<header>\n  \n</header>",
+          title: "Group of introductory or navigational aids"
+        }, {
+          block: "<footer></footer>",
+          expansion: "<footer>\n  \n</footer>",
+          title: "Footer for a document or section"
         }
       ]
     }, {
@@ -872,7 +895,7 @@ module.exports = {
           expansion: "<form action=\"\">\n  \n</form>",
           title: "Create an HTML form"
         }, {
-          block: "<input type=\"\" />",
+          block: "<input type=\"\">",
           title: "Input field where user can enter data"
         }, {
           block: "<textarea></textarea>",
@@ -937,6 +960,7 @@ module.exports = {
     '?.drawon': {color:'purple'},
     '?.label': {color: 'pink'},
     '?.reload': {},
+    remove: {color: 'pink'},
     see: {},
     sync: {},
     send: {},
@@ -1059,5 +1083,14 @@ module.exports = {
     value: {color: 'lightgreen'},
     command: {color: 'lightgreen'},
     errors: {color: '#f00'}
+  },
+
+  // Overrides to make the palette colors match
+  KNOWN_HTML_TAGS: {
+    img: {category: 'content'},
+    iframe: {category: 'content'},
+    span: {category: 'grouping'},
+    // Add center even though deprecated by WHATWG.
+    center: {category: 'grouping'}
   }
 };

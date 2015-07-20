@@ -96,6 +96,7 @@ window.pencilcode.view = {
     state.callbacks[tag].push(cb); 
   },
 
+
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
 
@@ -379,18 +380,31 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  state.callbacks[tag] = cb;
+  if (state.callbacks[tag] == null) {
+    state.callbacks[tag] = [];
+  }
+  state.callbacks[tag].push(cb);
 }
 
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
+<<<<<<< HEAD
     for (j=0; j < cbs.length; j++ ){
+=======
+    //take a copy of the array in case other 
+    //events are fired while you're indexing it.
+    for (j=0; j < cbs.length; j++) {
+>>>>>>> upstream/master
       var cb = cbs[j];
       if (cb) {
         cb.apply(null, args);
       }
+<<<<<<< HEAD
     }  
+=======
+    }
+>>>>>>> upstream/master
   }
 }
 
@@ -1718,10 +1732,16 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
-  return {
-    functions: palette.KNOWN_FUNCTIONS,
-    categories: palette.CATEGORIES
-  };
+  if (mimeType.match(/^text\/html\b/)) {
+    return {
+      tags: palette.KNOWN_HTML_TAGS
+    };
+  } else {
+    return {
+      functions: palette.KNOWN_FUNCTIONS,
+      categories: palette.CATEGORIES
+    };
+  }
 }
 
 function uniqueId(name) {

@@ -29,6 +29,7 @@ var isLoop = false;
 var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
+var stuckComplexity = 0;      // verification of complexity of stuck loop
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 var arrows = {};
 var temp_screenshots = [];
@@ -57,6 +58,7 @@ function bindframe(w) {
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
   stuckTime = null;
+  stuckComplexity = 0;
   startPollingWindow();
 }
 
@@ -83,6 +85,8 @@ var debug = window.ide = {
     if (name === "pulse") { stuckTime = null; }
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
+
+    if (name === "enter") { stuckComplexity = Math.max(stuckComplexity, 2); }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -160,7 +164,7 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > stuckTimeLimit) {
+  if (currentTime - stuckTime > (stuckComplexity + 1) * stuckTimeLimit) {
     if ('function' == typeof targetWindow.$.turtle.interrupt) {
       targetWindow.$.turtle.interrupt('hung');
     }
@@ -203,11 +207,15 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
+<<<<<<< HEAD
   var currentLine = eventQueue.shift();
   var currentIndex = -1;
   var currentLocation = null;
   currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
   currentLocation = traceEvents[currentIndex].location;
+=======
+  stuckComplexity = Math.max(stuckComplexity, 6);
+>>>>>>> upstream/master
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 

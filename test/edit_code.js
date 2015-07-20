@@ -377,8 +377,9 @@ describe('code editor', function() {
       assert.ifError(err);
       // Filename is still shown and unchanged.
       assert.ok(/^untitled/.test(result.filename));
-      // Intentional: we should always add an extra empty line at the bottom.
-      assert.equal(result.text, "speed 10\npen blue\nrt 180, 100\n");
+      // Intentional: trim the added extra empty line at the bottom.
+      assert.equal(result.text.replace(/\n$/, ''),
+          "speed 10\npen blue\nrt 180, 100");
       // Preview is still shown.
       assert.equal(result.preview, 1);
       // The save button is no longer disabled, because the doc is dirty.
