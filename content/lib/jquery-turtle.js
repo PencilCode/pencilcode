@@ -7542,7 +7542,7 @@ function checkForHungLoop(fname) {
     }, 0);
     return;
   }
-  // Timeout after which we interrupt the program: 6 seconds.
+  // Timeout after which we interrupt the program.
   if (now - hangStartTime > $.turtle.hangtime) {
     if (see.visible()) {
       see.html('<span style="color:red">Oops: program ' +
@@ -8287,9 +8287,9 @@ $.turtle = function turtle(id, options) {
   if (!globalDrawing.ctx && ('subpixel' in options)) {
     globalDrawing.subpixel = parseInt(options.subpixel);
   }
-  // Set up hung-browser timeout, default 10 seconds.
+  // Set up hung-browser timeout, default 20 seconds.
   $.turtle.hangtime = ('hangtime' in options) ?
-      parseFloat(options.hangtime) : 10000;
+      parseFloat(options.hangtime) : 20000;
 
   // Set up global events.
   if (!('events' in options) || options.events) {
@@ -9637,8 +9637,10 @@ var debug = {
   init: function initdebug() {
     try {
       if (parent && parent.ide) {
-        this.ide = parent.ide;
-        this.ide.bindframe(global);
+        if (this.ide !== parent.ide) {
+          this.ide = parent.ide;
+          this.ide.bindframe(global);
+        }
         this.attached = true;
       }
     } catch(e) {

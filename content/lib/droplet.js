@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-07-10
+ * Date: 2015-07-20
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -61485,6 +61485,11 @@ Editor.prototype.getSerializedEditorState = function() {
   }));
 };
 
+Editor.prototype.clearUndoStack = function() {
+  this.undoStack.length = 0;
+  return this.redoStack.length = 0;
+};
+
 Editor.prototype.undo = function() {
   var currentValue, operation;
   this.setCursor(this.cursor, (function(x) {
@@ -66919,7 +66924,7 @@ module.exports = parser.wrapParser(CoffeeScriptParser);
 
 
 },{"../../vendor/coffee-script.js":116,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112}],105:[function(require,module,exports){
-var ATTRIBUTE_CLASSES, BLOCK_ELEMENTS, COLORS, DEFAULT_INDENT_DEPTH, EMBEDDED_CONTENT, EMPTY_ELEMENTS, FLOW_CONTENT, FLOW_ELEMENTS, HEADING_CONTENT, HTMLParser, INLINE_ELEMENTS, INTERACTIVE_CONTENT, METADATA_CONTENT, PALPABLE_CONTENT, PHRASING_CONTENT, SCRIPT_SUPPORTING, SECTIONING_CONTENT, helper, htmlParser, htmlSerializer, parse5, parser,
+var ATTRIBUTE_CLASSES, BLOCK_ELEMENTS, CATEGORIES, DEFAULT_INDENT_DEPTH, EMBEDDED_CONTENT, EMPTY_ELEMENTS, FLOW_CONTENT, FLOW_ELEMENTS, HEADING_CONTENT, HTMLParser, INLINE_ELEMENTS, INTERACTIVE_CONTENT, METADATA_CONTENT, PALPABLE_CONTENT, PHRASING_CONTENT, SCRIPT_SUPPORTING, SECTIONING_CONTENT, TAGS, helper, htmlParser, htmlSerializer, parse5, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -66932,42 +66937,391 @@ parse5 = require('parse5');
 
 ATTRIBUTE_CLASSES = ['#attribute'];
 
-COLORS = {
-  'Default': 'cyan',
-  '#comment': 'grey',
-  'a': 'grey',
-  'b': 'teal',
-  'body': 'return',
-  'br': 'command',
-  'button': 'yellow',
-  'center': 'red',
-  'div': 'amber',
-  'document': 'bluegrey',
-  'font': 'value',
-  'form': 'deeporange',
-  'h1': 'teal',
-  'h3': 'indigo',
-  'head': 'cyan',
-  'hr': 'lime',
-  'html': 'amber',
-  'iframe': 'green',
-  'img': 'green',
-  'input': 'brown',
-  'label': 'lightblue',
-  'li': 'pink',
-  'link': 'purple',
-  'marquee': 'command',
-  'meta': 'error',
-  'option': 'control',
-  'p': 'deeppurple',
-  'script': 'orange',
-  'select': 'indigo',
-  'strong': 'yellow',
-  'table': 'lightgreen',
-  'td': 'lightblue',
-  'title': 'green',
-  'tr': 'bluegrey',
-  'ul': 'blue'
+TAGS = {
+  '#documentType': {
+    category: 'metadata'
+  },
+  html: {
+    category: 'metadata'
+  },
+  head: {
+    category: 'metadata'
+  },
+  title: {
+    category: 'metadata'
+  },
+  link: {
+    category: 'metadata'
+  },
+  meta: {
+    category: 'metadata'
+  },
+  style: {
+    category: 'metadata'
+  },
+  script: {
+    category: 'metadata'
+  },
+  base: {
+    category: 'metadata'
+  },
+  p: {
+    category: 'grouping'
+  },
+  hr: {
+    category: 'grouping'
+  },
+  div: {
+    category: 'grouping'
+  },
+  ul: {
+    category: 'grouping'
+  },
+  ol: {
+    category: 'grouping'
+  },
+  li: {
+    category: 'grouping'
+  },
+  dl: {
+    category: 'grouping'
+  },
+  dt: {
+    category: 'grouping'
+  },
+  dd: {
+    category: 'grouping'
+  },
+  pre: {
+    category: 'grouping'
+  },
+  blockquote: {
+    category: 'grouping'
+  },
+  figure: {
+    category: 'grouping'
+  },
+  figcaption: {
+    category: 'grouping'
+  },
+  main: {
+    category: 'grouping'
+  },
+  dd: {
+    category: 'grouping'
+  },
+  a: {
+    category: 'content'
+  },
+  i: {
+    category: 'content'
+  },
+  b: {
+    category: 'content'
+  },
+  u: {
+    category: 'content'
+  },
+  center: {
+    category: 'content'
+  },
+  sub: {
+    category: 'content'
+  },
+  sup: {
+    category: 'content'
+  },
+  br: {
+    category: 'content'
+  },
+  em: {
+    category: 'content'
+  },
+  strong: {
+    category: 'content'
+  },
+  small: {
+    category: 'content'
+  },
+  s: {
+    category: 'content'
+  },
+  cite: {
+    category: 'content'
+  },
+  q: {
+    category: 'content'
+  },
+  dfn: {
+    category: 'content'
+  },
+  abbr: {
+    category: 'content'
+  },
+  ruby: {
+    category: 'content'
+  },
+  rt: {
+    category: 'content'
+  },
+  rp: {
+    category: 'content'
+  },
+  data: {
+    category: 'content'
+  },
+  time: {
+    category: 'content'
+  },
+  code: {
+    category: 'content'
+  },
+  "var": {
+    category: 'content'
+  },
+  samp: {
+    category: 'content'
+  },
+  kbd: {
+    category: 'content'
+  },
+  mark: {
+    category: 'content'
+  },
+  bdi: {
+    category: 'content'
+  },
+  bdo: {
+    category: 'content'
+  },
+  span: {
+    category: 'content'
+  },
+  wbr: {
+    category: 'content'
+  },
+  '#text': {
+    category: 'content'
+  },
+  body: {
+    category: 'sections'
+  },
+  article: {
+    category: 'sections'
+  },
+  section: {
+    category: 'sections'
+  },
+  nav: {
+    category: 'sections'
+  },
+  aside: {
+    category: 'sections'
+  },
+  h1: {
+    category: 'sections'
+  },
+  h2: {
+    category: 'sections'
+  },
+  h3: {
+    category: 'sections'
+  },
+  h4: {
+    category: 'sections'
+  },
+  h5: {
+    category: 'sections'
+  },
+  h6: {
+    category: 'sections'
+  },
+  hgroup: {
+    category: 'sections'
+  },
+  header: {
+    category: 'sections'
+  },
+  footer: {
+    category: 'sections'
+  },
+  address: {
+    category: 'sections'
+  },
+  table: {
+    category: 'table'
+  },
+  caption: {
+    category: 'table'
+  },
+  colgroup: {
+    category: 'table'
+  },
+  col: {
+    category: 'table'
+  },
+  tbody: {
+    category: 'table'
+  },
+  thead: {
+    category: 'table'
+  },
+  tfoot: {
+    category: 'table'
+  },
+  tr: {
+    category: 'table'
+  },
+  td: {
+    category: 'table'
+  },
+  th: {
+    category: 'table'
+  },
+  form: {
+    category: 'form'
+  },
+  input: {
+    category: 'form'
+  },
+  textarea: {
+    category: 'form'
+  },
+  label: {
+    category: 'form'
+  },
+  button: {
+    category: 'form'
+  },
+  select: {
+    category: 'form'
+  },
+  option: {
+    category: 'form'
+  },
+  optgroup: {
+    category: 'form'
+  },
+  datalist: {
+    category: 'form'
+  },
+  keygen: {
+    category: 'form'
+  },
+  output: {
+    category: 'form'
+  },
+  progress: {
+    category: 'form'
+  },
+  meter: {
+    category: 'form'
+  },
+  fieldset: {
+    category: 'form'
+  },
+  legend: {
+    category: 'form'
+  },
+  img: {
+    category: 'embedded'
+  },
+  iframe: {
+    category: 'embedded'
+  },
+  embed: {
+    category: 'embedded'
+  },
+  object: {
+    category: 'embedded'
+  },
+  param: {
+    category: 'embedded'
+  },
+  video: {
+    category: 'embedded'
+  },
+  audio: {
+    category: 'embedded'
+  },
+  source: {
+    category: 'embedded'
+  },
+  track: {
+    category: 'embedded'
+  },
+  map: {
+    category: 'embedded'
+  },
+  area: {
+    category: 'embedded'
+  },
+  ins: {
+    category: 'other'
+  },
+  del: {
+    category: 'other'
+  },
+  details: {
+    category: 'other'
+  },
+  summary: {
+    category: 'other'
+  },
+  menu: {
+    category: 'other'
+  },
+  menuitem: {
+    category: 'other'
+  },
+  dialog: {
+    category: 'other'
+  },
+  noscript: {
+    category: 'other'
+  },
+  template: {
+    category: 'other'
+  },
+  canvas: {
+    category: 'other'
+  },
+  svg: {
+    category: 'other'
+  },
+  frameset: {
+    category: 'other'
+  }
+};
+
+CATEGORIES = {
+  metadata: {
+    color: 'lightblue'
+  },
+  grouping: {
+    color: 'purple'
+  },
+  content: {
+    color: 'lightgreen'
+  },
+  sections: {
+    color: 'orange'
+  },
+  table: {
+    color: 'indigo'
+  },
+  form: {
+    color: 'deeporange'
+  },
+  embedded: {
+    color: 'teal'
+  },
+  other: {
+    color: 'pink'
+  },
+  Default: {
+    color: 'yellow'
+  }
 };
 
 DEFAULT_INDENT_DEPTH = '  ';
@@ -67014,6 +67368,8 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
     this.text = text1;
     this.opts = opts != null ? opts : {};
     HTMLParser.__super__.constructor.apply(this, arguments);
+    this.opts.tags = helper.extend({}, TAGS, this.opts.tags);
+    this.opts.categories = helper.extend({}, CATEGORIES, this.opts.categories);
     this.lines = this.text.split('\n');
   }
 
@@ -67034,8 +67390,10 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.getColor = function(node) {
-    var ref;
-    return (ref = COLORS[node.nodeName]) != null ? ref : COLORS['Default'];
+    if (this.opts.tags[node.nodeName]) {
+      return this.opts.categories[this.opts.tags[node.nodeName].category].color;
+    }
+    return this.opts.categories.Default.color;
   };
 
   HTMLParser.prototype.getBounds = function(node) {
@@ -70391,7 +70749,7 @@ exports.Parser = Parser = (function() {
     for (i = k = 0, len1 = lines.length; k < len1; i = ++k) {
       line = lines[i];
       if (!(i in markupOnLines)) {
-        if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
+        if (indentDepth > line.length || line.slice(0, indentDepth).trim().length > 0) {
           head.specialIndent = ((function() {
             var l, ref1, results;
             results = [];
@@ -70419,7 +70777,7 @@ exports.Parser = Parser = (function() {
         }
         head = helper.connect(head, new model.NewlineToken());
       } else {
-        if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
+        if (indentDepth > line.length || line.slice(0, indentDepth).trim().length > 0) {
           lastIndex = line.length - line.trimLeft().length;
           head.specialIndent = line.slice(0, lastIndex);
         } else {

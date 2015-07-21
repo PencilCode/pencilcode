@@ -741,59 +741,65 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
-  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-    var iframe = document.getElementById('output-frame');
-    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail
+      var iframe = document.getElementById('output-frame');
+      // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+  } else {  // Empty content, file delete, no need for thumbnail.
+    postThumbnailGeneration('');
   }
-  // Remember meta in a cookie.
-  saveDefaultMeta(doc.meta);
-  var newdata = $.extend({
-    thumbnail: thumbnailDataUrl
-  }, modelatpos('left').data, doc);
-  // After a successful save, mark the file as clean and update mtime.
-  function noteclean(mtime) {
-    view.flashNotification('Saved.');
-    view.notePaneEditorCleanData(paneatpos('left'), newdata);
-    logCodeEvent('save', filename, newdata.data,
-        view.getPaneEditorBlockMode(paneatpos('left')),
-        view.getPaneEditorLanguage(paneatpos('left')));
-    if (modelatpos('left').filename == filename) {
-      var oldmtime = modelatpos('left').data.mtime || 0;
-      if (mtime) {
-        modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
-      }
+  function postThumbnailGeneration(thumbnailDataUrl) {
+    // Remember meta in a cookie.
+    saveDefaultMeta(doc.meta);
+    var newdata = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
+    if (newdata.auth && model.ownername != model.username) {
+      // If we know auth is required and the user isn't logged in,
+      // prompt for a login.
+      logInAndSave(filename, newdata, forceOverwrite,
+                   noteclean, loginPrompt, doneCallback);
+      return;
     }
-    updateTopControls();
-    // Flash the thumbnail after the control are updated.
-    view.flashThumbnail(thumbnailDataUrl);
-  }
-  if (newdata.auth && model.ownername != model.username) {
-    // If we know auth is required and the user isn't logged in,
-    // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite,
-                 noteclean, loginPrompt, doneCallback);
-    return;
-  }
-  // Attempt to save.
-  view.flashNotification('', true);
-  storage.saveFile(
-      model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
-  function(status) {
-    if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean,
-                   loginPrompt, doneCallback);
-    } else {
-      if (!model.username) {
-        // If not yet logged in but we have saved (e.g., no password needed),
-        // then log us in.
-        model.username = model.ownername;
+    // Attempt to save.
+    view.flashNotification('', true);
+    storage.saveFile(
+        model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
+    function(status) {
+      if (status.needauth) {
+        logInAndSave(filename, newdata, forceOverwrite, noteclean,
+                     loginPrompt, doneCallback);
+      } else {
+        if (!model.username) {
+          // If not yet logged in but we have saved (e.g., no password needed),
+          // then log us in.
+          model.username = model.ownername;
+        }
+        handleSaveStatus(status, filename, noteclean);
+        if (doneCallback) {
+          doneCallback();
+        }
       }
-      handleSaveStatus(status, filename, noteclean);
-      if (doneCallback) {
-        doneCallback();
+    });
+    // After a successful save, mark the file as clean and update mtime.
+    function noteclean(mtime) {
+      view.flashNotification('Saved.');
+      view.notePaneEditorCleanData(paneatpos('left'), newdata);
+      logCodeEvent('save', filename, newdata.data,
+          view.getPaneEditorBlockMode(paneatpos('left')),
+          view.getPaneEditorLanguage(paneatpos('left')));
+      if (modelatpos('left').filename == filename) {
+        var oldmtime = modelatpos('left').data.mtime || 0;
+        if (mtime) {
+          modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
+        }
       }
+      // Delete the pre-saved thumbnail from the model.
+      updateTopControls();
+      // Flash the thumbnail after the control are updated.
+      view.flashThumbnail(thumbnailDataUrl);
     }
-  });
+  }
 }
 
 function keyFromPassword(username, p) {
@@ -1780,10 +1786,13 @@ function cancelAndClearPosition(pos) {
 }
 
 function instrumentCode(code, language) {
-  if (language === 'javascript') {
-    // TODO: support javascript
-  } else if (language === 'coffeescript') {
-    try {
+  try {
+    if (language === 'javascript') {
+      options = {
+        traceFunc: 'ide.trace'
+      };
+      code = pencilTracer.instrumentJs('', code, options);
+    } else if (language === 'coffeescript') {
       options = {
         traceFunc: 'ide.trace',
         sourceMap: true,
@@ -1792,14 +1801,14 @@ function instrumentCode(code, language) {
       result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
       debug.setSourceMap(result.v3SourceMap);
       code = result.js;
-    } catch (err) {
-      // An error here means that either the user's code has a syntax error, or
-      // pencil-tracer has a bug. Returning false here means the user's code
-      // will run directly, without the debugger, and then if there's a syntax
-      // error it will be displayed to them, and if it's a pencil-tracer bug,
-      // their code will still run but with the debugger disabled.
-      return false;
     }
+  } catch (err) {
+    // An error here means that either the user's code has a syntax error, or
+    // pencil-tracer has a bug. Returning false here means the user's code
+    // will run directly, without the debugger, and then if there's a syntax
+    // error it will be displayed to them, and if it's a pencil-tracer bug,
+    // their code will still run but with the debugger disabled.
+    return false;
   }
   return code;
 }
@@ -1816,9 +1825,11 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
       '//' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
+  var setupScript = (model.setupScript || []).concat(
+      [{ src: "//{site}/lib/start-ide.js" }]);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
-      emptyOnly, model.setupScript, instrumentCode);
+      emptyOnly, setupScript, instrumentCode);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
