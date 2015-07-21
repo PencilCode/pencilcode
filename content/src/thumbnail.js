@@ -122,7 +122,7 @@ function getImageDataUrl(canvas) {
 
   // The amount that the `shorterEdge` needed to extend is the difference
   // between the `longerEdge` and the `shorterEdge` minus `truncateAmount`.
-  var diff = Math.abs((imageWidth - imageHeight - truncateAmount) / 2);
+  var diff = (Math.abs(imageWidth - imageHeight) - truncateAmount) / 2;
   if (imageWidth > imageHeight) {
     topLeft.y = Math.max(topLeft.y - diff, 0);
   } else {
@@ -138,13 +138,13 @@ function getImageDataUrl(canvas) {
     var offset = THUMBNAIL_SIZE / 2 - finalSize / 2;
     tempCanvasCtx.drawImage(canvas,       // Src canvas.
         topLeft.x, topLeft.y,             // Src coordinates.
-        finalSize, finalSize,           // Src coordinates.
+        finalSize, finalSize,             // Src coordinates.
         offset, offset,                   // Dest coordinates.
-        finalSize, finalSize);          // Dest size.
+        finalSize, finalSize);            // Dest size.
   } else {
     tempCanvasCtx.drawImage(canvas,       // Src canvas.
         topLeft.x, topLeft.y,             // Src coordinates.
-        finalSize, finalSize,           // Src coordinates.
+        finalSize, finalSize,             // Src coordinates.
         0, 0,                             // Dest coordinates.
         THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
   }
