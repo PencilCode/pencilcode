@@ -139,6 +139,7 @@ window.pencilcode.view = {
   hideProtractor: hideProtractor,
   createSlider: createSlider,
   removeSlider: removeSlider,
+  removePlay: removePlay,
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,

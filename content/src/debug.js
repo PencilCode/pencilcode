@@ -51,6 +51,7 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
+  view.removePlay();
   stuckTime = null;
   stuckComplexity = 0;
   startPollingWindow();
