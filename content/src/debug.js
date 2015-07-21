@@ -338,9 +338,16 @@ function end_program(){
 
     currentLine = traceEvents[currentIndex].location.first_line;
     var currentLocation = traceEvents[currentIndex].location;
-    var prevLocation = traceEvents[prevIndex].location;
-    var prevLine = prevLocation.first_line;
 
+   if (prevIndex != -1) {
+      var prevLocation = traceEvents[prevIndex].location;
+      var prevLine = prevLocation.first_line;
+    }
+    else{
+      var prevLocation = null;
+      var prevLine = -1;
+    }
+    
     if (tracedLine != -1){
         untraceLine(tracedLine);
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
