@@ -24,10 +24,18 @@ var traceEvents = [];          // list of event location objects created by trac
 var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
-var stuckComplexity = 0;      // verification of complexity of stuck loop
-var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 var arrows = {};
 var temp_screenshots = [];
+// verification of complexity of stuck loop
+var stuckComplexity = {
+  lines: 0,
+  calls: 0,
+  moves: 0
+};
+var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
+var stuckCallingTime = 8000;   // stuck time in a loop making library calls
+var stuckMovingTime = 15000;   // stuck time in a loop moving elements
+
 
 Error.stackTraceLimit = 20;
 
@@ -53,7 +61,11 @@ function bindframe(w) {
   view.removeSlider();
   view.removePlay();
   stuckTime = null;
-  stuckComplexity = 0;
+  stuckComplexity = {
+    lines: 0,
+    calls: 0,
+    moves: 0
+  };
   startPollingWindow();
 }
 
@@ -81,7 +93,7 @@ var debug = window.ide = {
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "enter") { stuckComplexity = Math.max(stuckComplexity, 2); }
+    if (name === "enter") { stuckComplexity.calls += 1; }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -147,6 +159,7 @@ var debug = window.ide = {
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
 function detectStuckProgram() {
+  stuckComplexity.lines += 1;
   var currentTime = +(new Date);
   if (!stuckTime) {
     stuckTime = currentTime;
@@ -154,11 +167,23 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > (stuckComplexity + 1) * stuckTimeLimit) {
-    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+  if (stuckComplexity.lines % 100 != 1) return;
+  var limit = stuckTrivialTime;
+  if (stuckComplexity.moves / stuckComplexity.lines > 0.01) {
+    limit = stuckCallingTime;
+  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
+    limit = stuckMovingTime;
+  }
+  if (currentTime - stuckTime > limit) {
+    var inTurtle = false;
+    try {
+      inTurtle = ('function' == typeof targetWindow.$.turtle.interrupt);
+    } catch(e) { }
+    if (inTurtle) {
       targetWindow.$.turtle.interrupt('hung');
+    } else {
+      targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
-    targetWindow.eval('throw new Exception("Stuck program interrupted")');
   }
 }
 
@@ -201,7 +226,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var currentLine = traceEvents[currentIndex].location.first_line;
   var currentLocation = traceEvents[currentIndex].location;
   var prevLine = -1;
-  stuckComplexity = Math.max(stuckComplexity, 6);
+
+  stuckComplexity.moves += 1;
+
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
