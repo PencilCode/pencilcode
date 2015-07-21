@@ -121,4 +121,23 @@ describe('html editor', function() {
       done();
     });
   });
+  //Rename to a .coffee file
+  var name = 'test' + ('' + Math.random()).substring(2) + '.coffee';
+  it('should switch palette on filetype change', function(done) {
+    asyncTest(_page, one_step_timeout, [name], function(name) {
+      // Alter the editable filename and give up focus.
+      $('#filename').text(name).focus().blur();
+    }, function() {
+      if (!$('.droplet-hover-div.tooltipstered')) return;
+      return {
+        //Content of first block in new mode
+        text: $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content')
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      //First block should be that of coffeescript
+      assert.equal(result.text, 'Move forward');
+      done();
+    });
+  });
 });

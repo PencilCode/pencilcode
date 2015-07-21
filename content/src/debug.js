@@ -21,7 +21,15 @@ var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
 var stuckTime = null;         // timestmp to detect stuck programs
-var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
+// verification of complexity of stuck loop
+var stuckComplexity = {
+  lines: 0,
+  calls: 0,
+  moves: 0
+};
+var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
+var stuckCallingTime = 8000;   // stuck time in a loop making library calls
+var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
 
 Error.stackTraceLimit = 20;
@@ -40,6 +48,11 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   stuckTime = null;
+  stuckComplexity = {
+    lines: 0,
+    calls: 0,
+    moves: 0
+  };
   startPollingWindow();
 }
 
@@ -66,6 +79,8 @@ var debug = window.ide = {
     if (name === "pulse") { stuckTime = null; }
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
+
+    if (name === "enter") { stuckComplexity.calls += 1; }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -130,6 +145,7 @@ var debug = window.ide = {
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
 function detectStuckProgram() {
+  stuckComplexity.lines += 1;
   var currentTime = +(new Date);
   if (!stuckTime) {
     stuckTime = currentTime;
@@ -137,7 +153,14 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > stuckTimeLimit) {
+  if (stuckComplexity.lines % 100 != 1) return;
+  var limit = stuckTrivialTime;
+  if (stuckComplexity.moves / stuckComplexity.lines > 0.01) {
+    limit = stuckCallingTime;
+  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
+    limit = stuckMovingTime;
+  }
+  if (currentTime - stuckTime > limit) {
     if ('function' == typeof targetWindow.$.turtle.interrupt) {
       targetWindow.$.turtle.interrupt('hung');
     }
@@ -179,6 +202,7 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 }
 
 function reportAppear(method, debugId, length, coordId, elem, args){
+  stuckComplexity.moves += 1;
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval) {
