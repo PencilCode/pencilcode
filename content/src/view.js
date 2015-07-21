@@ -225,12 +225,18 @@ function paneid(position) {
 }
 
 var sliderCreated = false;
+var playButton = false;
+
 function removeSlider () {
 	$(".scrubber").remove();
         sliderCreated = false;
 
 }
 
+function removePlay () {
+	$(".p_button").remove();
+        playButton = false;
+}
 
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
 //  var previous_line = 0;
@@ -308,9 +314,15 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   
   // remove the slider
   else {
+    if (!playButton) {
+        var buttonDiv = document.createElement("div");
+        buttonDiv.className = 'p_button';
+        $(".scrubbermark").append(buttonDiv); 
+  	playButton = true;	
+    }
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("option", "step", Math.round( traceevents.length/50));
-    $(".scrubber").slider("pips",{ rest: "pip" })
+    $(".scrubber").slider("pips",{ rest: "pip" }) 
   }
 
 }
