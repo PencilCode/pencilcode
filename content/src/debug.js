@@ -28,7 +28,7 @@ var stuckComplexity = 0;      // verification of complexity of stuck loop
 var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 var arrows = {};
 var temp_screenshots = [];
-
+var linesRun = 0; 
 Error.stackTraceLimit = 20;
 
 
@@ -48,6 +48,7 @@ function bindframe(w) {
   currentEventIndex = 0;
   prevEventIndex = -1;
   isLoop = false;
+//  linesRun = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
@@ -133,6 +134,7 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
+    console.log("traceevents:", traceEvents);
     view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -818,6 +820,15 @@ view.on('stop', function() {
 view.on('delta', function(){ 
   $(".arrow").remove();
   //need to add code that stops animation!!!
+});
+
+
+///////////////////////////////////////////////////////////////////////////
+// STEP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+view.on('.p_button', function(){
+   console.log("remove");
+
 });
 
 ///////////////////////////////////////////////////////////////////////////
