@@ -11,21 +11,17 @@ var $         = require('jquery'),
 
 eval(see.scope('debug'));
 
-var targetWindow = null;      // window object of the frame being debugged.
-var currentEventIndex = 0;    // current index into traceEvents.
-var currentDebugId = 0;       // id used to pair jquery-turtle events with trace events.
-var debugRecordsByDebugId = {}; // map debug ids -> line execution records.
-var debugRecordsByLineNo = {};  // map line numbers -> line execution records.
-var cachedParseStack = {};    // parsed stack traces for currently-running code.
-var pollTimer = null;         // poll for stop button.
-var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
-var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
-var traceEvents = [];         // list of event location objects created by tracing events
-var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw current_arrows when 
-                              // the location goes backwards.
-var prevLocation = null;                         
-var eventQueue = [];          //list of events in order to maintain proper tracing 
-var isLoop = false;
+var targetWindow = null;       // window object of the frame being debugged.
+var currentIndex = 0;          // current index into traceEvents.
+var prevIndex = -1;            // previous index of prior traceEvent.
+var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
+var debugRecordsByDebugId = {};// map debug ids -> line execution records.
+var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
+var cachedParseStack = {};     // parsed stack traces for currently-running code.
+var pollTimer = null;          // poll for stop button.
+var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
+var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
+var traceEvents = [];          // list of event location objects created by tracing events             
 var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
@@ -50,9 +46,8 @@ function bindframe(w) {
   traceEvents = [];
   screenshots = [];
   arrows = {};
-  eventQueue = [];
-  prevLocation = null; 
-  prevLine = -1;
+  currentEventIndex = 0;
+  prevEventIndex = -1;
   isLoop = false;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
@@ -138,16 +133,11 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    if(lineno <= prevLine){
-      isLoop = true;
-    }
     view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
-    prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
-    eventQueue.push(lineno);
-      },
+  },
   setSourceMap: function (map) {
     currentSourceMap = map;
   }
@@ -207,11 +197,10 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-  var currentLine = eventQueue.shift();
-  var currentIndex = -1;
-  var currentLocation = null;
-  currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-  currentLocation = traceEvents[currentIndex].location;
+
+  var currentLine = traceEvents[currentIndex].location.first_line;
+  var currentLocation = traceEvents[currentIndex].location;
+  var prevLine = -1;
   stuckComplexity = Math.max(stuckComplexity, 6);
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
@@ -236,6 +225,16 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
       //trace lines that are not animation.
       while (line != currentLine){
+
+        if (prevIndex != -1) {
+          var prevLocation = traceEvents[prevIndex].location;
+          var prevLine = prevLocation.first_line;
+        }
+        else{
+          var prevLocation = null;
+          var prevLine = -1;
+        }
+
         if (tracedLine != -1){
           untraceLine(tracedLine);
           tracedLine = -1;
@@ -243,10 +242,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
         if(currentLine < prevLine){
 
-          var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-          var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-          prevLocation = traceEvents[prevIndex].location;
-          
           if (arrows[prevIndex] != null){
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
           }
@@ -265,12 +260,12 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
-     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
-        currentLine = eventQueue.shift();
-        currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        prevIndex = currentIndex;
+        currentIndex += 1;
+        currentLine = traceEvents[currentIndex].location.first_line;
         currentLocation = traceEvents[currentIndex].location;
       }
       if (tracedLine != -1){
@@ -278,8 +273,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         tracedLine = -1;
       }
       if (line < prevLine){
-        var currentIndex = debugRecordsByLineNo[line].eventIndex;
-        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+
         prevLocation = traceEvents[prevIndex].location;
           
         if (arrows[prevIndex] != null){
@@ -288,15 +282,19 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         else{
           arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
         }
-        if (arrows[currentIndex] != null){
-          arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+        if (arrows[index] != null){
+          arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
         }
         else{
-          arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+          arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
       }
+
+      console.log("4. end of reportAppear currentIndex is: ", currentIndex);
+
       prevLine = line;
+      console.log("Previous line after appear: ", prevLine);
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
@@ -321,7 +319,6 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       var ctx = canvas.getContext('2d');
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       screenshots.push(imageData)
-    //  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
   }
 }
@@ -330,32 +327,27 @@ function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
   var tracedLine = -1;
-  while (eventQueue.length > 0){
+  while (currentIndex < traceEvents.length){
+
     var canvas = $(".preview iframe")[0].contentWindow.canvas()
     var ctx = canvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     screenshots.push(imageData); 
-    currentLine = eventQueue.shift();
-    //There is a bug  in the following line of code!!!
-    var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
-    var currentLocation = null
-    if (currentIndex != undefined){
-      currentLocation = traceEvents[currentIndex].location;
-    }
+
+    currentLine = traceEvents[currentIndex].location.first_line;
+    var currentLocation = traceEvents[currentIndex].location;
+    var prevLocation = traceEvents[prevIndex].location;
+    var prevLine = prevLocation.first_line;
+
     if (tracedLine != -1){
         untraceLine(tracedLine);
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         screenshots.push(imageData);
-     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[tracedLine],all_arrows, view.paneid("left"));
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-
-        var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-        prevLocation = traceEvents[prevIndex].location;
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -375,6 +367,8 @@ function end_program(){
     traceLine(currentLine);
     tracedLine = currentLine;
     prevLine = currentLine;
+    prevIndex = currentIndex;
+    currentIndex += 1;
   }
   if (tracedLine != -1){
         untraceLine(tracedLine);
@@ -727,11 +721,12 @@ function stopButton(command) {
   if (command === 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
-    if (eventQueue.length > 0) { 
-      eventQueue = []; 
-      prevLocation = null;
-      prevLine = -1;
-    }
+
+    currentIndex = 0;
+    prevIndex = -1;
+    prevLocation = null;
+    prevLine = -1;
+
     if (!stopButtonShown) {
       view.showMiddleButton('stop');
       stopButtonShown = 1;
@@ -822,6 +817,7 @@ view.on('stop', function() {
 
 view.on('delta', function(){ 
   $(".arrow").remove();
+  //need to add code that stops animation!!!
 });
 
 ///////////////////////////////////////////////////////////////////////////
