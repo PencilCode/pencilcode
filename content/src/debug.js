@@ -26,6 +26,7 @@ var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
 var arrows = {};
 var temp_screenshots = [];
+
 // verification of complexity of stuck loop
 var stuckComplexity = {
   lines: 0,
@@ -36,7 +37,7 @@ var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
 var stuckCallingTime = 8000;   // stuck time in a loop making library calls
 var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
-
+var linesRun = 0; 
 Error.stackTraceLimit = 20;
 
 
@@ -56,6 +57,7 @@ function bindframe(w) {
   currentEventIndex = 0;
   prevEventIndex = -1;
   isLoop = false;
+//  linesRun = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
@@ -145,6 +147,7 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
+    console.log("traceevents:", traceEvents);
     view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -852,6 +855,15 @@ view.on('stop', function() {
 view.on('delta', function(){ 
   $(".arrow").remove();
   //need to add code that stops animation!!!
+});
+
+
+///////////////////////////////////////////////////////////////////////////
+// STEP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+view.on('.p_button', function(){
+   console.log("remove");
+
 });
 
 ///////////////////////////////////////////////////////////////////////////

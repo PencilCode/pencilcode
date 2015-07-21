@@ -90,7 +90,8 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { 
-    if (state.callbacks[tag] == null){
+  console.log("this is being called");  
+  if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
     state.callbacks[tag].push(cb); 
@@ -246,7 +247,11 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   // Create div element for scrubbber
   var div = document.createElement('div');
   div.className = 'scrubber';
+  
+  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
+      traceevents.pop();
 
+  }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0){
    
@@ -306,7 +311,7 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   }
 
   // if the slider has already been created and events are pushed, modify existing slider
-  else if(sliderCreated && traceevents.length < 51){
+  else if(sliderCreated && traceevents.length < 100){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       rest: "pip"
@@ -322,7 +327,7 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   	playButton = true;	
     }
     $(".scrubber").slider("option", "max", traceevents.length - 1)
-    $(".scrubber").slider("option", "step", Math.round( traceevents.length/50));
+    $(".scrubber").slider("option", "step", Math.round( traceevents.length/100));
     $(".scrubber").slider("pips",{ rest: "pip" }) 
   }
 
