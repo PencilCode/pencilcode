@@ -1852,12 +1852,12 @@ function showPaneEditorLanguagesDialog(pane) {
   var emptyHtml = !(meta && meta.html && meta.html.trim());
   var emptyCss = !(meta && meta.css && meta.css.trim());
   var turtlebits = findLibrary(meta, 'turtle');
-  var processingjs = findLibrary(meta, 'processingjs');
+  var p5js = findLibrary(meta, 'p5js');
   var hasBits = turtlebits != null;
   var hasTurtle = turtlebits && (!turtlebits.attrs ||
       turtlebits.attrs.turtle == null ||
       turtlebits.attrs.turtle != 'false');
-  var hasPjs = processingjs != null;
+  var hasP5js = p5js != null;
 
   var opts = {leftopts: 1};
   opts.content =
@@ -1881,10 +1881,10 @@ function showPaneEditorLanguagesDialog(pane) {
       '<div style="padding:8px 5px 15px">' +
       '<label title="Include jQuery, LoDash, and jQ-Turtle">' +
       '<input type="checkbox" class="bits"> Common Library</label><br>' +
-      '<label title="Start with a turtle">' +
+      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label title="Start with a turtle">' +
       '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
-      '<label title="Include Processing.js">' +
-      '<input type="checkbox" class="pjs"> Processing.js</label><br>' +
+      '<label title="p5.js from The Processing Foundation">' +
+      '<input type="checkbox" class="p5js"> Processing p5.js</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -1915,8 +1915,8 @@ function showPaneEditorLanguagesDialog(pane) {
         dialog.find('.turtle').prop('checked', true);
       }
     }
-    if (hasPjs) {
-      dialog.find('.pjs').prop('checked', true);
+    if (hasP5js) {
+      dialog.find('.p5js').prop('checked', true);
     }
   }
 
@@ -1927,7 +1927,7 @@ function showPaneEditorLanguagesDialog(pane) {
       css: dialog.find('.css').prop('checked'),
       turtle: dialog.find('.turtle').prop('checked'),
       bits: dialog.find('.bits').prop('checked'),
-      pjs: dialog.find('.pjs').prop('checked')
+      p5js: dialog.find('.p5js').prop('checked')
     };
   }
 
@@ -1957,12 +1957,11 @@ function showPaneEditorLanguagesDialog(pane) {
       toggleLibrary(paneState.meta, lib, state.bits);
       change = true;
     }
-    console.log('pjs', state.pjs, hasPjs);
-    if (state.pjs != hasPjs) {
-      var lib = { name: 'processingjs', src: '//{site}/lib/processing.js' };
+    if (state.p5js != hasP5js) {
+      var lib = { name: 'p5js', src: '//cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.6/p5.js' };
       if (!paneState.meta) { paneState.meta = {}; }
       console.log(paneState.meta);
-      toggleLibrary(paneState.meta, lib, state.pjs);
+      toggleLibrary(paneState.meta, lib, state.p5js);
       change = true;
     }
     var wantCoffeeScript = false;

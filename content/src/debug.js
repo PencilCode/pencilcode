@@ -161,10 +161,15 @@ function detectStuckProgram() {
     limit = stuckMovingTime;
   }
   if (currentTime - stuckTime > limit) {
-    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+    var inTurtle = false;
+    try {
+      inTurtle = ('function' == typeof targetWindow.$.turtle.interrupt);
+    } catch(e) { }
+    if (inTurtle) {
       targetWindow.$.turtle.interrupt('hung');
+    } else {
+      targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
-    targetWindow.eval('throw new Exception("Stuck program interrupted")');
   }
 }
 
