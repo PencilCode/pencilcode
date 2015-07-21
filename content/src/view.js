@@ -2431,17 +2431,6 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
     $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
 
-  editor.on('selectpalette', function(p) {
-    fireEvent('selectpalette', [pane, p]);
-  });
-  editor.on('pickblock', function(p) {
-    fireEvent('pickblock', [pane, p]);
-  });
-
-  editor.on('linehover', function(ev) {
-    fireEvent('icehover', [pane, ev]);
-  });
-
   editor.on('toggledone', function() {
     $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
@@ -2455,10 +2444,9 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
     '<div class="slide"><div class="info"></div></div></div>').appendTo(
       $(editor.wrapperElement).find('.ace_editor'));
 
-  editor = editor.aceEditor;
-  editor.on('change', paneState.handleHtmlCssChange);
-  setupAceEditor(pane, container, editor, "ace/mode/" + htmlorcss, text);
-  var session = editor.getSession();
+  aceEditor = editor.aceEditor;
+  aceEditor.on('change', paneState.handleHtmlCssChange);
+  setupAceEditor(pane, container, aceEditor, "ace/mode/" + htmlorcss, text);
 }
 
 function tearDownSubEditor(box, pane, paneState, htmlorcss) {
