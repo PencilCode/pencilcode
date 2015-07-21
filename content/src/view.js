@@ -3282,10 +3282,11 @@ function arrow(pane, arrows, traceEventNum){
     }
   }
           
-  if (firstBeforeLoc != {} && secondBeforeLoc != {}){
-
+  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined){
+    
     if (block_mode){
       var dropletEditor = state.pane[pane].dropletEditor;
+      console.log("rows passed to droplet: ", firstBeforeLoc.first_line, secondBeforeLoc.first_line);
       var startBounds = dropletEditor.getLineMetrics(firstBeforeLoc.first_line);
       var endBounds = dropletEditor.getLineMetrics(secondBeforeLoc.first_line);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
