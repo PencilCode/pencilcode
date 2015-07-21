@@ -16,6 +16,7 @@
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",
     "pencil-tracer": "yjerem/pencil-tracer#master",
+    "Processing.js": "latest",
     "requirejs": "latest",
     "socket.io-client": "#v1.2.0",
     "tooltipster": "latest",

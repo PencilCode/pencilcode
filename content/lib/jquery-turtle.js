@@ -9637,8 +9637,10 @@ var debug = {
   init: function initdebug() {
     try {
       if (parent && parent.ide) {
-        this.ide = parent.ide;
-        this.ide.bindframe(global);
+        if (this.ide !== parent.ide) {
+          this.ide = parent.ide;
+          this.ide.bindframe(global);
+        }
         this.attached = true;
       }
     } catch(e) {

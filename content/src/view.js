@@ -1852,10 +1852,12 @@ function showPaneEditorLanguagesDialog(pane) {
   var emptyHtml = !(meta && meta.html && meta.html.trim());
   var emptyCss = !(meta && meta.css && meta.css.trim());
   var turtlebits = findLibrary(meta, 'turtle');
+  var processingjs = findLibrary(meta, 'processingjs');
   var hasBits = turtlebits != null;
   var hasTurtle = turtlebits && (!turtlebits.attrs ||
       turtlebits.attrs.turtle == null ||
       turtlebits.attrs.turtle != 'false');
+  var hasPjs = processingjs != null;
 
   var opts = {leftopts: 1};
   opts.content =
@@ -1881,6 +1883,8 @@ function showPaneEditorLanguagesDialog(pane) {
       '<input type="checkbox" class="bits"> Common Library</label><br>' +
       '<label title="Start with a turtle">' +
       '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '<label title="Include Processing.js">' +
+      '<input type="checkbox" class="pjs"> Processing.js</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -1911,6 +1915,9 @@ function showPaneEditorLanguagesDialog(pane) {
         dialog.find('.turtle').prop('checked', true);
       }
     }
+    if (hasPjs) {
+      dialog.find('.pjs').prop('checked', true);
+    }
   }
 
   opts.retrieveState = function(dialog) {
@@ -1919,7 +1926,8 @@ function showPaneEditorLanguagesDialog(pane) {
       html: dialog.find('.html').prop('checked'),
       css: dialog.find('.css').prop('checked'),
       turtle: dialog.find('.turtle').prop('checked'),
-      bits: dialog.find('.bits').prop('checked')
+      bits: dialog.find('.bits').prop('checked'),
+      pjs: dialog.find('.pjs').prop('checked')
     };
   }
 
@@ -1947,6 +1955,14 @@ function showPaneEditorLanguagesDialog(pane) {
       if (!state.turtle) { lib.attrs = { turtle: 'false' }; }
       if (!paneState.meta) { paneState.meta = {}; }
       toggleLibrary(paneState.meta, lib, state.bits);
+      change = true;
+    }
+    console.log('pjs', state.pjs, hasPjs);
+    if (state.pjs != hasPjs) {
+      var lib = { name: 'processingjs', src: '//{site}/lib/processing.js' };
+      if (!paneState.meta) { paneState.meta = {}; }
+      console.log(paneState.meta);
+      toggleLibrary(paneState.meta, lib, state.pjs);
       change = true;
     }
     var wantCoffeeScript = false;

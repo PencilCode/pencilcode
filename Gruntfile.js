@@ -37,6 +37,7 @@ module.exports = function(grunt) {
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lib/lodash.js': 'lodash/dist/lodash.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
+          'lib/processing.js' : 'Processing.js/processing.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
           'lib/socket.io.js': 'socket.io-client/socket.io.js'
         }
