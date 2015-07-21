@@ -1366,7 +1366,7 @@ function updateSearchResults(search,pane) {
     
   var results;
   if (search) {
-    var savedCache=cache.get(searchCache,search);
+    var savedCache = cache.get(searchCache,search);
     if (savedCache) {
       results = savedCache;
     } else {
@@ -1406,7 +1406,7 @@ function updatePaneLinks(pane,search) {
   if (!list) { return; }
 
   if ($('#fileSearch').length==0) {
-    $('<div class="search-file"><input type="text" id="fileSearch" style="width:100%" ></div>').appendTo('#' + pane);
+    $('<div class="search-file"><input type="text" id="fileSearch" placeholder="Search"><span class="fa fa-search"></span></div>').appendTo('#' + pane);
   }
 
   if ($('#directory').length==0) {
@@ -1507,7 +1507,7 @@ function updatePaneLinks(pane,search) {
     }, 600);
   });
   
-  $('#fileSearch').on('keyup',function(e){
+  $('#fileSearch').on('keyup', function(e){
     updateSearchResults(document.getElementById("fileSearch").value,pane);
   });
 }

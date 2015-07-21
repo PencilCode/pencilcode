@@ -1328,6 +1328,12 @@ body#pencildoc #diigolet-csm {
   background-color: #FFAB91
 }
 
+.search-file {
+  position: relative;
+  color: #aaa;
+  font-size: 16px;
+}
+
 .search-file input[type="text"] {
   display: block;
   margin: 0;
@@ -1341,9 +1347,22 @@ body#pencildoc #diigolet-csm {
   border-bottom: solid 2px #c9c9c9;
   transition: border 0.3s;
   color: rgb(169, 169, 169);
+  text-indent: 32px;
 }
-.search-file input[type="text"]:focus{
-  border-bottom: solid 2px #969696;
+
+.search-file input[type="text"]:focus {
+  border-bottom: solid 2px dodgerblue;
   outline: none;
   color: dodgerblue;
 }
+
+.search-file .fa-search { 
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.search-file input[type="text"]:focus + .fa-search {
+  color:dodgerblue;
+}
+

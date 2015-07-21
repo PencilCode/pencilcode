@@ -2,25 +2,16 @@
 // CACHE SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-var $              = require('jquery'),
-    filetype       = require('filetype'),
-    tooltipster    = require('tooltipster'),
-    see            = require('see'),
-    droplet        = require('droplet-editor'),
-    palette        = require('palette'),
-    codescan       = require('codescan'),
-    drawProtractor = require('draw-protractor'),
-    ZeroClipboard  = require('ZeroClipboard'),
-    FontLoader     = require('FontLoader');
+var see = require('see');
 
 eval(see.scope('cache'));
 
 var cache = window.pencilcode.cacheObj = {};
 
 var model = window.pencilcode.cache = {
-  put:put,
-  get:get,
-  delete:deleteCache
+  put: put,
+  get: get,
+  delete: deleteCache
 };
 
 /**
@@ -53,7 +44,7 @@ function deleteCache(name) {
  * @param {string} key
  * @returns {unresolved}
  */
-function get(cacheName,key) {
+function get(cacheName, key) {
     if (cache[cacheName]) {
         return cache[cacheName][key];
     }
@@ -67,7 +58,7 @@ function get(cacheName,key) {
  * @param {type} key
  * @returns {undefined}
  */
-function put(cacheName,key,value) {
+function put(cacheName, key, value) {
     initializeCache(cacheName);
     cache[cacheName][key] = value;
 }

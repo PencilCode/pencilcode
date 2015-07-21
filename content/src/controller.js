@@ -1949,10 +1949,10 @@ function sortByDate(a, b) {
 }
 
 function sortByName(a, b) {
-  var aName=a.name.toLowerCase();
-  var bName=b.name.toLowerCase();
-  if (aName == bName){
-     return  a < b ? -1:a > b ? 1:0;
+  var aName = a.name.toLowerCase();
+  var bName = b.name.toLowerCase();
+  if (aName == bName) {
+     return  a < b ? -1 : a > b ? 1 : 0;
   } else if (aName < bName) {
     return -1;
   } else if (aName > bName) {
