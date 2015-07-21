@@ -8,7 +8,6 @@ var $         = require('jquery'),
     html2canvas = require('html2canvas'),
     sourcemap = require('source-map');
 
-
 eval(see.scope('debug'));
 
 var targetWindow = null;       // window object of the frame being debugged.
