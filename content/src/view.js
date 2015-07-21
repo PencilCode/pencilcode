@@ -1958,9 +1958,8 @@ function showPaneEditorLanguagesDialog(pane) {
       change = true;
     }
     if (state.p5js != hasP5js) {
-      var lib = { name: 'p5js', src: '//cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.6/p5.js' };
+      var lib = { name: 'p5js', src: '//{site}/lib/p5.js' };
       if (!paneState.meta) { paneState.meta = {}; }
-      console.log(paneState.meta);
       toggleLibrary(paneState.meta, lib, state.p5js);
       change = true;
     }
