@@ -147,7 +147,6 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    console.log("traceevents:", traceEvents);
     view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
@@ -286,10 +285,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           }
           view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
         }
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
-        var ctx = canvas.getContext('2d');
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        screenshots.push(imageData);
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
@@ -320,11 +315,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         }
         view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
       }
-
-      console.log("4. end of reportAppear currentIndex is: ", currentIndex);
-
       prevLine = line;
-      console.log("Previous line after appear: ", prevLine);
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
@@ -345,10 +336,6 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
       untraceLine(location);
-      var canvas = $(".preview iframe")[0].contentWindow.canvas()
-      var ctx = canvas.getContext('2d');
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      screenshots.push(imageData)
     }          
   }
 }
@@ -358,12 +345,6 @@ function end_program(){
   var currentLine = -1; 
   var tracedLine = -1;
   while (currentIndex < traceEvents.length){
-
-    var canvas = $(".preview iframe")[0].contentWindow.canvas()
-    var ctx = canvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    screenshots.push(imageData); 
-
     currentLine = traceEvents[currentIndex].location.first_line;
     var currentLocation = traceEvents[currentIndex].location;
 
@@ -378,10 +359,6 @@ function end_program(){
     
     if (tracedLine != -1){
         untraceLine(tracedLine);
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
-        var ctx = canvas.getContext('2d');
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        screenshots.push(imageData);
         tracedLine = -1;
     }
     if(currentLine < prevLine){

@@ -266,8 +266,7 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       step: 1,
       range: "min",
       smooth: false,
-      slide: function(event, ui){
-        console.log("This is the value", ui.value);            
+      slide: function(event, ui){            
         // Get the handle and add the corresponding line number above it
         $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
 
@@ -3274,14 +3273,11 @@ function arrow(pane, arrows, traceEventNum){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  console.log("Arrow Dict: ", arrows);
   var startcoords = null;
   var endcoords = null;
   var offset_top =  0; 
   var offset_left = 0; 
   var arrow_data = arrows[traceEventNum]; 
-  console.log("Trace Event: ", traceEventNum);
-  console.log("Arrow Data: ", arrow_data);
   var firstBeforeLoc = {};
   var secondBeforeLoc = {};
 
@@ -3322,8 +3318,6 @@ function arrow(pane, arrows, traceEventNum){
       endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondBeforeLoc.first_line ), (secondBeforeLoc.last_column + 10));
     }
     if (Math.abs(secondBeforeLoc.first_line - firstBeforeLoc.first_line) > 1){
-      console.log("startcoords: ", startcoords);
-      console.log("endCoords: ", endcoords);
 
       var x_val = 0;
       if(startcoords.pageX > endcoords.pageX){
@@ -3333,7 +3327,6 @@ function arrow(pane, arrows, traceEventNum){
         x_val = endcoords.pageX;
       }
 
-      console.log("offset: ", offset_top, offset_left);
 
       var text = "<svg class= 'arrow' width=" 
             + $(".editor").width() + " height=" + $(".editor").height() 
@@ -3346,9 +3339,6 @@ function arrow(pane, arrows, traceEventNum){
              </svg> \
             ";//stroke-width=3
 
-      console.log('arrow: ', text);
-      console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
-            
       var div = document.createElement('div');
       div.className =  "arrow";
       div.innerHTML = text;
