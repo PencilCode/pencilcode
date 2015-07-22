@@ -10601,7 +10601,7 @@ function initconsolelog() {
     if (consolelog && global.console && !global.console._log &&
         'function' == typeof global.console.log) {
       var _log = global.console._log = global.console.log;
-      global_.console.log = function log() {
+      global.console.log = function log() {
         _log.apply(this, arguments);
         see.apply(this, arguments);
       }
