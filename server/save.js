@@ -303,6 +303,8 @@ exports.handleSave = function(req, res, app) {
       var base64data = thumbnail.replace(/^data:image\/png;base64,/, '');
       tryToMkdirsSync(absthumb);
       tryToWriteFileSync(absthumb, base64data, { encoding: 'base64' });
+    } else {
+      tryToRemoveSync(absthumb);
     }
 
     var statObj = fs.statSync(absfile);

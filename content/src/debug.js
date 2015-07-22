@@ -8,31 +8,36 @@ var $         = require('jquery'),
     html2canvas = require('html2canvas'),
     sourcemap = require('source-map');
 
-
 eval(see.scope('debug'));
 
-var targetWindow = null;      // window object of the frame being debugged.
-var currentEventIndex = 0;    // current index into traceEvents.
-var currentDebugId = 0;       // id used to pair jquery-turtle events with trace events.
-var debugRecordsByDebugId = {}; // map debug ids -> line execution records.
-var debugRecordsByLineNo = {};  // map line numbers -> line execution records.
-var cachedParseStack = {};    // parsed stack traces for currently-running code.
-var pollTimer = null;         // poll for stop button.
-var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
-var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
-var traceEvents = [];         // list of event location objects created by tracing events
-var prevLine = -1;             // keeps track of the current location being traced in the code so we can draw current_arrows when 
-                              // the location goes backwards.
-var prevLocation = null;                         
-var eventQueue = [];          //list of events in order to maintain proper tracing 
-var isLoop = false;
+var targetWindow = null;       // window object of the frame being debugged.
+var currentIndex = 0;          // current index into traceEvents.
+var prevIndex = -1;            // previous index of prior traceEvent.
+var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
+var debugRecordsByDebugId = {};// map debug ids -> line execution records.
+var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
+var cachedParseStack = {};     // parsed stack traces for currently-running code.
+var pollTimer = null;          // poll for stop button.
+var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
+var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
+var traceEvents = [];          // list of event location objects created by tracing events             
 var screenshots = [];
 var turtle_screenshots = [];
 var stuckTime = null;         // timestmp to detect stuck programs
-var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
 var arrows = {};
 var temp_screenshots = [];
 
+// verification of complexity of stuck loop
+var stuckComplexity = {
+  lines: 0,
+  calls: 0,
+  moves: 0
+};
+var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
+var stuckCallingTime = 8000;   // stuck time in a loop making library calls
+var stuckMovingTime = 15000;   // stuck time in a loop moving elements
+
+var linesRun = 0; 
 Error.stackTraceLimit = 20;
 
 
@@ -49,14 +54,20 @@ function bindframe(w) {
   traceEvents = [];
   screenshots = [];
   arrows = {};
-  eventQueue = [];
-  prevLocation = null; 
-  prevLine = -1;
+  currentEventIndex = 0;
+  prevEventIndex = -1;
   isLoop = false;
+//  linesRun = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
+  view.removePlay();
   stuckTime = null;
+  stuckComplexity = {
+    lines: 0,
+    calls: 0,
+    moves: 0
+  };
   startPollingWindow();
 }
 
@@ -83,6 +94,8 @@ var debug = window.ide = {
     if (name === "pulse") { stuckTime = null; }
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
+
+    if (name === "enter") { stuckComplexity.calls += 1; }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -134,16 +147,11 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    if(lineno <= prevLine){
-      isLoop = true;
-    }
     view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
-    prevLine = lineno;
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
-    eventQueue.push(lineno);
-      },
+  },
   setSourceMap: function (map) {
     currentSourceMap = map;
   }
@@ -153,6 +161,7 @@ var debug = window.ide = {
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
 function detectStuckProgram() {
+  stuckComplexity.lines += 1;
   var currentTime = +(new Date);
   if (!stuckTime) {
     stuckTime = currentTime;
@@ -160,11 +169,23 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > stuckTimeLimit) {
-    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+  if (stuckComplexity.lines % 100 != 1) return;
+  var limit = stuckTrivialTime;
+  if (stuckComplexity.moves / stuckComplexity.lines > 0.01) {
+    limit = stuckCallingTime;
+  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
+    limit = stuckMovingTime;
+  }
+  if (currentTime - stuckTime > limit) {
+    var inTurtle = false;
+    try {
+      inTurtle = ('function' == typeof targetWindow.$.turtle.interrupt);
+    } catch(e) { }
+    if (inTurtle) {
       targetWindow.$.turtle.interrupt('hung');
+    } else {
+      targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
-    targetWindow.eval('throw new Exception("Stuck program interrupted")');
   }
 }
 
@@ -203,11 +224,13 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-  var currentLine = eventQueue.shift();
-  var currentIndex = -1;
-  var currentLocation = null;
-  currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-  currentLocation = traceEvents[currentIndex].location;
+
+  var currentLine = traceEvents[currentIndex].location.first_line;
+  var currentLocation = traceEvents[currentIndex].location;
+  var prevLine = -1;
+
+  stuckComplexity.moves += 1;
+
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
@@ -231,6 +254,16 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
       //trace lines that are not animation.
       while (line != currentLine){
+
+        if (prevIndex != -1) {
+          var prevLocation = traceEvents[prevIndex].location;
+          var prevLine = prevLocation.first_line;
+        }
+        else{
+          var prevLocation = null;
+          var prevLine = -1;
+        }
+
         if (tracedLine != -1){
           untraceLine(tracedLine);
           tracedLine = -1;
@@ -238,10 +271,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
         if(currentLine < prevLine){
 
-          var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-          var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-          prevLocation = traceEvents[prevIndex].location;
-          
           if (arrows[prevIndex] != null){
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
           }
@@ -256,16 +285,12 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           }
           view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
         }
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
-        var ctx = canvas.getContext('2d');
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        screenshots.push(imageData);
-     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[currentLine], all_arrows, view.paneid("left"));
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
-        currentLine = eventQueue.shift();
-        currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
+        prevIndex = currentIndex;
+        currentIndex += 1;
+        currentLine = traceEvents[currentIndex].location.first_line;
         currentLocation = traceEvents[currentIndex].location;
       }
       if (tracedLine != -1){
@@ -273,8 +298,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         tracedLine = -1;
       }
       if (line < prevLine){
-        var currentIndex = debugRecordsByLineNo[line].eventIndex;
-        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
+
         prevLocation = traceEvents[prevIndex].location;
           
         if (arrows[prevIndex] != null){
@@ -283,11 +307,11 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         else{
           arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
         }
-        if (arrows[currentIndex] != null){
-          arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+        if (arrows[index] != null){
+          arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
         }
         else{
-          arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+          arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
       }
@@ -312,11 +336,6 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
       untraceLine(location);
-      var canvas = $(".preview iframe")[0].contentWindow.canvas()
-      var ctx = canvas.getContext('2d');
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      screenshots.push(imageData)
-    //  view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots, recordL, all_arrows, view.paneid("left"));
     }          
   }
 }
@@ -325,32 +344,24 @@ function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
   var tracedLine = -1;
-  while (eventQueue.length > 0){
-    var canvas = $(".preview iframe")[0].contentWindow.canvas()
-    var ctx = canvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    screenshots.push(imageData); 
-    currentLine = eventQueue.shift();
-    //There is a bug  in the following line of code!!!
-    var currentIndex = debugRecordsByLineNo[currentLine].eventIndex
-    var currentLocation = null
-    if (currentIndex != undefined){
-      currentLocation = traceEvents[currentIndex].location;
+  while (currentIndex < traceEvents.length){
+    currentLine = traceEvents[currentIndex].location.first_line;
+    var currentLocation = traceEvents[currentIndex].location;
+
+   if (prevIndex != -1) {
+      var prevLocation = traceEvents[prevIndex].location;
+      var prevLine = prevLocation.first_line;
     }
+    else{
+      var prevLocation = null;
+      var prevLine = -1;
+    }
+    
     if (tracedLine != -1){
         untraceLine(tracedLine);
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
-        var ctx = canvas.getContext('2d');
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        screenshots.push(imageData);
-     //   view.create_some(traceEvents, isLoop, screenshots, turtle_screenshots,debugRecordsByLineNo[tracedLine],all_arrows, view.paneid("left"));
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-
-        var currentIndex = debugRecordsByLineNo[currentLine].eventIndex;
-        var prevIndex = debugRecordsByLineNo[prevLine].eventIndex;
-        prevLocation = traceEvents[prevIndex].location;
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -370,6 +381,8 @@ function end_program(){
     traceLine(currentLine);
     tracedLine = currentLine;
     prevLine = currentLine;
+    prevIndex = currentIndex;
+    currentIndex += 1;
   }
   if (tracedLine != -1){
         untraceLine(tracedLine);
@@ -722,11 +735,12 @@ function stopButton(command) {
   if (command === 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
-    if (eventQueue.length > 0) { 
-      eventQueue = []; 
-      prevLocation = null;
-      prevLine = -1;
-    }
+
+    currentIndex = 0;
+    prevIndex = -1;
+    prevLocation = null;
+    prevLine = -1;
+
     if (!stopButtonShown) {
       view.showMiddleButton('stop');
       stopButtonShown = 1;
@@ -817,6 +831,16 @@ view.on('stop', function() {
 
 view.on('delta', function(){ 
   $(".arrow").remove();
+  //need to add code that stops animation!!!
+});
+
+
+///////////////////////////////////////////////////////////////////////////
+// STEP BUTTON SUPPORT
+///////////////////////////////////////////////////////////////////////////
+view.on('.p_button', function(){
+   console.log("remove");
+
 });
 
 ///////////////////////////////////////////////////////////////////////////

@@ -90,11 +90,13 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { 
-    if (state.callbacks[tag] == null){
+  console.log("this is being called");  
+  if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
     state.callbacks[tag].push(cb); 
   },
+
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -138,6 +140,7 @@ window.pencilcode.view = {
   hideProtractor: hideProtractor,
   createSlider: createSlider,
   removeSlider: removeSlider,
+  removePlay: removePlay,
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   // setPaneRunUrl: setPaneRunUrl,
@@ -224,13 +227,19 @@ function paneid(position) {
 }
 
 var sliderCreated = false;
+var playButton = false;
+
 function removeSlider () {
 	$(".scrubber").remove();
         sliderCreated = false;
 
 }
 
-
+function removePlay () {
+	$(".p_button").remove();
+        playButton = false;
+}
+var linenoList = [];
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
 //  var previous_line = 0;
   var current_line = 0;
@@ -238,13 +247,24 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   // Create div element for scrubbber
   var div = document.createElement('div');
   div.className = 'scrubber';
+ 
+  var firstLabel = (1).toString();
+  var secondLabel = (traceevents.length).toString();
+  
+if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
+      traceevents.pop();
 
+  }
+  if (!sliderCreated) {
+     linenoList = []
+  } 
+  linenoList.push(traceevents[traceevents.length-1].location.first_line)
+  
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0){
-   
   // Append the newly created div for the slider to the panel at bottom
   $(".scrubbermark").append(div);
-
+  
   // Code for the slider 
   $(function() {
    $(".scrubber").slider({
@@ -253,15 +273,14 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       step: 1,
       range: "min",
       smooth: false,
-      slide: function(event, ui){
-        
+      slide: function(event, ui){            
         // Get the handle and add the corresponding line number above it
-        $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
+       // $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
 
-     /*  Note: Screenshot code needs to be revamped */
+     /*  Note: Screenshot code needs to be revamped 
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
         var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[ui.value], 0, 0);
+        drawCtx.putImageData(screenshots[ui.value], 0, 0); */
 
         // get the line of the previously selected tick and clear it
         var prevno = traceevents[current_line].location.first_line;
@@ -287,7 +306,14 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       }
       })
       .slider("pips", {
-        rest: "pip"
+        first: "label",
+        rest: "pip",
+        last: "label",
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
+      })
+      .slider("float", { 
+        labels: linenoList,
+        prefix: "Line " 
       })
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
@@ -299,20 +325,32 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   }
 
   // if the slider has already been created and events are pushed, modify existing slider
-  else if(sliderCreated && traceevents.length > 0){
+  else if(sliderCreated && traceevents.length < 100){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
-      rest: "pip"
+      first: "label",
+      rest: "pip",
+      last: "label",
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
     })
-    var max = $( ".scrubber" ).slider("option", "max");
+    .slider("float", { 
+           labels: linenoList,
+           prefix: "Line  "
+    })
   }
   
   // remove the slider
   else {
-    console.log ("this is the case 2")
-    $(".scrubbermark").css("display", "none" );
-    $(".scrubber").remove();
-    sliderCreated = false;
+    if (!playButton) {
+        var buttonDiv = document.createElement("div");
+        buttonDiv.className = 'p_button';
+        $(".scrubbermark").append(buttonDiv); 
+  	playButton = true;	
+    }
+    $(".scrubber").slider("option", "max", traceevents.length - 1)
+    $(".scrubber").slider("option", "step", Math.round( traceevents.length/100));
+    $(".scrubber").slider("pips",{ rest: "pip" }).slider("float", { labels: linenoList    })
+ 
   }
 
 }
@@ -380,18 +418,23 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  state.callbacks[tag] = cb;
+  if (state.callbacks[tag] == null) {
+    state.callbacks[tag] = [];
+  }
+  state.callbacks[tag].push(cb);
 }
 
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
-    for (j=0; j < cbs.length; j++ ){
+    //take a copy of the array in case other 
+    //events are fired while you're indexing it.
+    for (j=0; j < cbs.length; j++) {
       var cb = cbs[j];
       if (cb) {
         cb.apply(null, args);
       }
-    }  
+    }
   }
 }
 
@@ -1719,10 +1762,16 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
-  return {
-    functions: palette.KNOWN_FUNCTIONS,
-    categories: palette.CATEGORIES
-  };
+  if (mimeType.match(/^text\/html\b/)) {
+    return {
+      tags: palette.KNOWN_HTML_TAGS
+    };
+  } else {
+    return {
+      functions: palette.KNOWN_FUNCTIONS,
+      categories: palette.CATEGORIES
+    };
+  }
 }
 
 function uniqueId(name) {
@@ -1983,10 +2032,12 @@ function showPaneEditorLanguagesDialog(pane) {
   var emptyHtml = !(meta && meta.html && meta.html.trim());
   var emptyCss = !(meta && meta.css && meta.css.trim());
   var turtlebits = findLibrary(meta, 'turtle');
+  var p5js = findLibrary(meta, 'p5js');
   var hasBits = turtlebits != null;
   var hasTurtle = turtlebits && (!turtlebits.attrs ||
       turtlebits.attrs.turtle == null ||
       turtlebits.attrs.turtle != 'false');
+  var hasP5js = p5js != null;
 
   var opts = {leftopts: 1};
   opts.content =
@@ -2010,8 +2061,10 @@ function showPaneEditorLanguagesDialog(pane) {
       '<div style="padding:8px 5px 15px">' +
       '<label title="Include jQuery, LoDash, and jQ-Turtle">' +
       '<input type="checkbox" class="bits"> Common Library</label><br>' +
-      '<label title="Start with a turtle">' +
+      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label title="Start with a turtle">' +
       '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '<label title="p5.js from The Processing Foundation">' +
+      '<input type="checkbox" class="p5js"> Processing p5.js</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -2042,6 +2095,9 @@ function showPaneEditorLanguagesDialog(pane) {
         dialog.find('.turtle').prop('checked', true);
       }
     }
+    if (hasP5js) {
+      dialog.find('.p5js').prop('checked', true);
+    }
   }
 
   opts.retrieveState = function(dialog) {
@@ -2050,7 +2106,8 @@ function showPaneEditorLanguagesDialog(pane) {
       html: dialog.find('.html').prop('checked'),
       css: dialog.find('.css').prop('checked'),
       turtle: dialog.find('.turtle').prop('checked'),
-      bits: dialog.find('.bits').prop('checked')
+      bits: dialog.find('.bits').prop('checked'),
+      p5js: dialog.find('.p5js').prop('checked')
     };
   }
 
@@ -2078,6 +2135,12 @@ function showPaneEditorLanguagesDialog(pane) {
       if (!state.turtle) { lib.attrs = { turtle: 'false' }; }
       if (!paneState.meta) { paneState.meta = {}; }
       toggleLibrary(paneState.meta, lib, state.bits);
+      change = true;
+    }
+    if (state.p5js != hasP5js) {
+      var lib = { name: 'p5js', src: '//{site}/lib/p5.js' };
+      if (!paneState.meta) { paneState.meta = {}; }
+      toggleLibrary(paneState.meta, lib, state.p5js);
       change = true;
     }
     var wantCoffeeScript = false;
@@ -3233,14 +3296,11 @@ function arrow(pane, arrows, traceEventNum){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  console.log("Arrow Dict: ", arrows);
   var startcoords = null;
   var endcoords = null;
   var offset_top =  0; 
   var offset_left = 0; 
   var arrow_data = arrows[traceEventNum]; 
-  console.log("Trace Event: ", traceEventNum);
-  console.log("Arrow Data: ", arrow_data);
   var firstBeforeLoc = {};
   var secondBeforeLoc = {};
 
@@ -3261,10 +3321,11 @@ function arrow(pane, arrows, traceEventNum){
     }
   }
           
-  if (firstBeforeLoc != {} && secondBeforeLoc != {}){
-
+  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined){
+    
     if (block_mode){
       var dropletEditor = state.pane[pane].dropletEditor;
+      console.log("rows passed to droplet: ", firstBeforeLoc.first_line, secondBeforeLoc.first_line);
       var startBounds = dropletEditor.getLineMetrics(firstBeforeLoc.first_line);
       var endBounds = dropletEditor.getLineMetrics(secondBeforeLoc.first_line);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
@@ -3280,8 +3341,6 @@ function arrow(pane, arrows, traceEventNum){
       endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondBeforeLoc.first_line ), (secondBeforeLoc.last_column + 10));
     }
     if (Math.abs(secondBeforeLoc.first_line - firstBeforeLoc.first_line) > 1){
-      console.log("startcoords: ", startcoords);
-      console.log("endCoords: ", endcoords);
 
       var x_val = 0;
       if(startcoords.pageX > endcoords.pageX){
@@ -3291,7 +3350,6 @@ function arrow(pane, arrows, traceEventNum){
         x_val = endcoords.pageX;
       }
 
-      console.log("offset: ", offset_top, offset_left);
 
       var text = "<svg class= 'arrow' width=" 
             + $(".editor").width() + " height=" + $(".editor").height() 
@@ -3304,9 +3362,6 @@ function arrow(pane, arrows, traceEventNum){
              </svg> \
             ";//stroke-width=3
 
-      console.log('arrow: ', text);
-      console.log("curvedVertical: ", curvedVertical(startcoords.pageX, startcoords.pageY, endcoords.pageX, endcoords.pageY));
-            
       var div = document.createElement('div');
       div.className =  "arrow";
       div.innerHTML = text;

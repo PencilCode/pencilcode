@@ -1,7 +1,3 @@
-/*! jQuery-ui-Slider-Pips - v1.10.4 - 2015-06-08
-* Copyright (c) 2015 Simon Goellner <simey.me@gmail.com>; Licensed MIT */
-
-// PIPS
 
 (function($) {
 
@@ -12,8 +8,7 @@
         pips: function( settings ) {
 
             var slider = this, i, j, p, collection = "",
-                mousedownHandlers = $._data( slider.element.get(0), "events").mousedown,
-                originalMousedown,
+                mousedownHandlers,
                 min = slider._valueMin(),
                 max = slider._valueMax(),
                 value = slider._value(),
@@ -53,12 +48,22 @@
 
             };
 
-            $.extend( options, settings );
+            if ( $.type( settings ) === "object" || $.type( settings ) === "undefined"  ) {
+                $.extend( options, settings );
+            } else {
+                if ( settings === "destroy" ) {
+                    destroy();
+                }
+                return;
+            }
 
-            slider.options.pipStep = options.step;
+
+            // we don't want the step ever to be a floating point.
+            slider.options.pipStep = Math.round( options.step );
 
             // get rid of all pips that might already exist.
             slider.element
+                .off( ".selectPip" )
                 .addClass("ui-slider-pips")
                 .find(".ui-slider-pip")
                 .remove();
@@ -74,6 +79,23 @@
                     $pips
                         .filter(".ui-slider-pip-" + this.classLabel(value) )
                         .addClass("ui-slider-pip-selected");
+
+                    if ( slider.options.range ) {
+
+                        $pips.each(function(k,v) {
+
+                            var pipVal = $(v).children(".ui-slider-label").data("value");
+
+                            if (( slider.options.range === "min" && pipVal < value ) ||
+                                ( slider.options.range === "max" && pipVal > value )) {
+
+                                $(v).addClass("ui-slider-pip-inrange");
+
+                            }
+
+                        });
+
+                    }
 
                 },
 
@@ -171,6 +193,17 @@
                 }
 
                 return closestHandle;
+
+            }
+
+            function destroy() {
+
+                slider.element
+                    .off(".selectPip")
+                    .on("mousedown.slider", slider.element.data("mousedown-original") )
+                    .removeClass("ui-slider-pips")
+                    .find(".ui-slider-pip")
+                    .remove();
 
             }
 
@@ -304,8 +337,10 @@
                     for( i = 0; i < values.length; i++ ) {
 
                         if ( labelValue === values[i] ) {
+
                             classes += " ui-slider-pip-initial-" + (i+1);
                             classes += " ui-slider-pip-selected-" + (i+1);
+
                         }
 
                     }
@@ -324,8 +359,21 @@
                 } else {
 
                     if ( labelValue === value ) {
+
                         classes += " ui-slider-pip-initial";
                         classes += " ui-slider-pip-selected";
+
+                    }
+
+                    if ( slider.options.range ) {
+
+                        if (( slider.options.range === "min" && labelValue < value ) ||
+                            ( slider.options.range === "max" && labelValue > value )) {
+
+                            classes += " ui-slider-pip-inrange";
+
+                        }
+
                     }
 
                 }
@@ -344,9 +392,6 @@
                         "</span>";
 
             }
-
-            // we don't want the step ever to be a floating point.
-            slider.options.pipStep = Math.round( slider.options.pipStep );
 
             // create our first pip
             collection += createPip("first");
@@ -369,13 +414,28 @@
 
 
 
+            // store the mousedown handlers for later, just in case we reset
+            // the slider, the handler would be lost!
+            
+            if ( $._data( slider.element.get(0), "events").mousedown && 
+                $._data( slider.element.get(0), "events").mousedown.length ) {
+
+                mousedownHandlers = $._data( slider.element.get(0), "events").mousedown;
+
+            } else {
+
+                mousedownHandlers = slider.element.data("mousedown-handlers");
+
+            }
+
+            slider.element.data("mousedown-handlers", mousedownHandlers.slice() );
 
             // loop through all the mousedown handlers on the slider,
             // and store the original namespaced (.slider) event handler so
             // we can trigger it later.
             for( j = 0; j < mousedownHandlers.length; j++ ) {
                 if( mousedownHandlers[j].namespace === "slider" ) {
-                    originalMousedown = mousedownHandlers[j].handler;
+                    slider.element.data("mousedown-original", mousedownHandlers[j].handler );
                 }
             }
 
@@ -408,6 +468,7 @@
 
                     } else {
 
+                        var originalMousedown = slider.element.data("mousedown-original");
                         originalMousedown(e);
 
                     }
@@ -495,7 +556,17 @@
 
             };
 
-            $.extend( options, settings );
+            if ( $.type( settings ) === "object" || $.type( settings ) === "undefined"  ) {
+                $.extend( options, settings );
+            } else {
+                if ( settings === "destroy" ) {
+                    destroy();
+                }
+                return;
+            }
+
+
+
 
             if ( value < min ) { 
                 value = min; 
@@ -526,6 +597,19 @@
                 .addClass("ui-slider-float")
                 .find(".ui-slider-tip, .ui-slider-tip-label")
                 .remove();
+
+
+
+            function destroy() {
+
+                slider.element
+                    .off(".sliderFloat")
+                    .removeClass("ui-slider-float")
+                    .find(".ui-slider-tip, .ui-slider-tip-label")
+                    .remove();
+
+            }
+
 
             function getPipLabels( values ) {
 
@@ -644,16 +728,18 @@
             }
 
             // when slider changes, update handle tip label.
-            slider.element.on( options.event , function( e, ui ) {
+            slider.element
+                .off(".sliderFloat")
+                .on( options.event + ".sliderFloat", function( e, ui ) {
 
-                var uiValue = ( $.type( ui.value ) === "array" ) ? ui.value : [ ui.value ],
-                    val = options.formatLabel( getPipLabels( uiValue )[0] );
+                    var uiValue = ( $.type( ui.value ) === "array" ) ? ui.value : [ ui.value ],
+                        val = options.formatLabel( getPipLabels( uiValue )[0] );
 
-                $(ui.handle)
-                    .find(".ui-slider-tip")
-                    .html( val );
+                    $(ui.handle)
+                        .find(".ui-slider-tip")
+                        .html( val );
 
-            });
+                });
 
         }
 
