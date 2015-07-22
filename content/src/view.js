@@ -2431,6 +2431,14 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
     $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
 
+  editor.on('selectpalette', function(p) {
+    fireEvent('selectpalette', [pane, p]);
+  });
+
+  editor.on('pickblock', function(p) {
+    fireEvent('pickblock', [pane, p]);
+  });
+
   editor.on('toggledone', function() {
     $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
   });
