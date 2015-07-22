@@ -254,12 +254,14 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
 if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
       traceevents.pop();
 
+  }
+  if (!sliderCreated) {
+     linenoList = []
   } 
   linenoList.push(traceevents[traceevents.length-1].location.first_line)
   
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0){
-   
   // Append the newly created div for the slider to the panel at bottom
   $(".scrubbermark").append(div);
   
