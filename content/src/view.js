@@ -231,6 +231,7 @@ var playButton = false;
 
 function removeSlider () {
 	$(".scrubber").remove();
+        $(".scrubbermark").css("visibility", "hidden")
         sliderCreated = false;
 
 }
@@ -241,6 +242,7 @@ function removePlay () {
 }
 var linenoList = [];
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
+    $(".scrubbermark").css("visibility", "visible");
 //  var previous_line = 0;
   var current_line = 0;
 
@@ -274,13 +276,6 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
       range: "min",
       smooth: false,
       slide: function(event, ui){            
-        // Get the handle and add the corresponding line number above it
-       // $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
-
-     /*  Note: Screenshot code needs to be revamped 
-        var canvas = $(".preview iframe")[0].contentWindow.canvas()
-        var drawCtx = canvas.getContext('2d');
-        drawCtx.putImageData(screenshots[ui.value], 0, 0); */
 
         // get the line of the previously selected tick and clear it
         var prevno = traceevents[current_line].location.first_line;
@@ -2413,7 +2408,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" share="10" >',
+    '<div class="hpanel scrubbermark" style= "visibility:hidden" share="5" >',
     '</div>',
     '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
