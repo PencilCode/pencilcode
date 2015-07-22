@@ -247,8 +247,11 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   // Create div element for scrubbber
   var div = document.createElement('div');
   div.className = 'scrubber';
+ 
+  var firstLabel = (1).toString();
+  var secondLabel = (traceevents.length).toString();
   
-  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
+if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
       traceevents.pop();
 
   }
@@ -257,7 +260,7 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
    
   // Append the newly created div for the slider to the panel at bottom
   $(".scrubbermark").append(div);
-
+  
   // Code for the slider 
   $(function() {
    $(".scrubber").slider({
@@ -298,7 +301,10 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
       }
       })
       .slider("pips", {
-        rest: "pip"
+        first: "label",
+        rest: "pip",
+        last: "label",
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Step")}
       })
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
@@ -313,7 +319,10 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   else if(sliderCreated && traceevents.length < 100){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
-      rest: "pip"
+      first: "label",
+      rest: "pip",
+      last: "label",
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Step")}
     })
   }
   
