@@ -239,7 +239,7 @@ function removePlay () {
 	$(".p_button").remove();
         playButton = false;
 }
-
+var linenoList = [];
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
 //  var previous_line = 0;
   var current_line = 0;
@@ -254,7 +254,9 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
 if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
       traceevents.pop();
 
-  }
+  } 
+  linenoList.push(traceevents[traceevents.length-1].location.first_line)
+  
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0){
    
@@ -271,7 +273,7 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
       smooth: false,
       slide: function(event, ui){            
         // Get the handle and add the corresponding line number above it
-        $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
+       // $(".scrubber").find(".ui-slider-handle").text(traceevents[ui.value].location.first_line);
 
      /*  Note: Screenshot code needs to be revamped 
         var canvas = $(".preview iframe")[0].contentWindow.canvas()
@@ -304,7 +306,11 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
         first: "label",
         rest: "pip",
         last: "label",
-      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Step")}
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
+      })
+      .slider("float", { 
+        labels: linenoList,
+        prefix: "Line " 
       })
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
@@ -322,7 +328,11 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
       first: "label",
       rest: "pip",
       last: "label",
-      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Step")}
+      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
+    })
+    .slider("float", { 
+           labels: linenoList,
+           prefix: "Line  "
     })
   }
   
@@ -336,7 +346,8 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
     }
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("option", "step", Math.round( traceevents.length/100));
-    $(".scrubber").slider("pips",{ rest: "pip" }) 
+    $(".scrubber").slider("pips",{ rest: "pip" }).slider("float", { labels: linenoList    })
+ 
   }
 
 }
