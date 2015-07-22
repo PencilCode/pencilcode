@@ -2700,7 +2700,7 @@ function setPaneEditorBlockMode(pane, useblocks, editor) {
   if (!paneState.dropletEditor) return false;
   useblocks = !!useblocks;
   if (editor) {
-    if (editor == "dropletEditor"){
+    if (editor == "dropletEditor") {
       return setMainEditorBlockMode(paneState.dropletEditor, useblocks);
     }
     return setSubEditorBlockMode(paneState[editor], useblocks);
