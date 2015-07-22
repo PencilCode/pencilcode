@@ -8194,6 +8194,8 @@ function pollSendRecv(name) {
 
 deprecate(dollar_turtle_methods, 'defaultspeed', 'speed');
 
+dollar_turtle_methods.save.loginCookie = loginCookie;
+
 var helpok = {};
 
 var colors = [
