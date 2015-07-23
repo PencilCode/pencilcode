@@ -5,7 +5,10 @@ function filterblocks(a) {
   }
   return a.map(function(e) {
     if (!e.id) {
-      e.id = e.block.replace(/\W..*$/, '');
+      // As the id (for logging), use the first (non-puncutation) word
+      e.id = e.block.replace(/^\W*/, '').replace(/\W.*$/, '');
+      // If that doesn't turn into anything, use the whole block text.
+      if (!e.id) { e.id = e.block; }
     }
     return e;
   });
