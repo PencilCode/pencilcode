@@ -68,10 +68,10 @@
     } 
 
     /* make it easy to see when we hover a label */
-    .ui-slider-pips:not(.ui-slider-disabled) .ui-slider-pip:hover .ui-slider-label {
+ /*   .ui-slider-pips:not(.ui-slider-disabled) .ui-slider-pip:hover .ui-slider-label {
         color: black;
         font-weight: bold;
-    } 
+    } */
 
 
 
