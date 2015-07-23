@@ -90,7 +90,6 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) { 
-  console.log("this is being called");  
   if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
