@@ -247,6 +247,7 @@ var current_line = 0;
 var previous_line = 0;
 
 function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
+        console.log(traceevents);
         var prevno = traceevents[previous_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
 
@@ -388,7 +389,7 @@ $('#forwardButton').on('click', function() {
     }
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("option", "step", Math.round( traceevents.length/100));
-    $(".scrubber").slider("pips",{ rest: "pip" }).slider("float", { labels: linenoList    })
+    $(".scrubber").slider("pips",{ first: "label", rest: "pip", last: "label", labels: {"first": firstLabel.concat(" Step"),"last": secondLabel.concat(" Steps")    } }).slider("float", { labels: linenoList, prefix: "Line  "    })
  
   }
 
