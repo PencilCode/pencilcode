@@ -230,6 +230,8 @@ var playButton = false;
 
 function removeSlider () {
 	$(".scrubber").remove();
+        $("#backButton").remove();
+        $("#forwardButton").remove();
         $(".scrubbermark").css("visibility", "hidden")
         sliderCreated = false;
 
@@ -238,16 +240,49 @@ function removeSlider () {
 function removePlay () {
 	$(".p_button").remove();
         playButton = false;
-}
+} 
+
 var linenoList = [];
+var current_line = 0;
+var previous_line = 0;
+
+function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
+        var prevno = traceevents[previous_line].location.first_line;
+        clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+
+        // after clearing, set the current line to the selected ui value
+        current_line = ui.value
+        previous_line = current_line
+        // get the new line number of the selected value
+        var lineno = traceevents[current_line].location.first_line;
+
+         // Drawing arrows at each step in the slider
+        arrow(pane, all_arrows, current_line);
+
+        // display the protractor for that new line and highlight the selected line
+        hideProtractor(paneid('right'));
+        displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
+        markPaneEditorLine(
+            paneid('left'), lineno, 'guttermouseable', true);
+            markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+  }
+
+
+
+
+
+
+
 function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
     $(".scrubbermark").css("visibility", "visible");
 //  var previous_line = 0;
-  var current_line = 0;
+
 
   // Create div element for scrubbber
   var div = document.createElement('div');
   div.className = 'scrubber';
+
+ 
  
   var firstLabel = (1).toString();
   var secondLabel = (traceevents.length).toString();
@@ -263,9 +298,21 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
   
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0){
-  // Append the newly created div for the slider to the panel at bottom
-  $(".scrubbermark").append(div);
+  current_line = 0;
+  previous_line = 0;
+  var backDiv = document.createElement('div');
+  var forwardDiv = document.createElement('div');
   
+  // Append the newly created div for the slider to the panel at bottom
+  $(".scrubbermark").append(div); 
+       
+  backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
+  $(".scrubbermark").append(backDiv);
+
+  forwardDiv = document.createElement('div');
+  forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
+  
+  $(".scrubbermark").append(forwardDiv); 
   // Code for the slider 
   $(function() {
    $(".scrubber").slider({
@@ -273,30 +320,16 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
       max: traceevents.length - 1,
       step: 1,
       range: "min",
+      value: current_line,
       smooth: false,
-      slide: function(event, ui){            
+      change: function(event, ui)  {
+                 change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows)
+     }, 
+      slide: function(event, ui) {
 
-        // get the line of the previously selected tick and clear it
-        var prevno = traceevents[current_line].location.first_line;
-        clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+      change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows);
 
-        // after clearing, set the current line to the selected ui value
-        current_line = ui.value
-
-        // get the new line number of the selected value
-        var lineno = traceevents[current_line].location.first_line;
-        
-         // Drawing arrows at each step in the slider
-        arrow(pane, all_arrows, current_line);
-
-
-        // display the protractor for that new line and highlight the selected line
-        hideProtractor(paneid('right'));
-        displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
-        markPaneEditorLine(
-            paneid('left'), lineno, 'guttermouseable', true);
-            markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
-      }
+     } 
       })
       .slider("pips", {
         first: "label",
@@ -308,11 +341,24 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
         labels: linenoList,
         prefix: "Line " 
       })
-
+$('#backButton').on('click', function() {
+   if (current_line != 0) {
+     current_line--;
+     $(".scrubber").slider("value",current_line);
+}
+});
+ 
+$('#forwardButton').on('click', function() {
+  if (current_line != traceevents.length - 1) {
+    current_line++
+    $(".scrubber").slider("value", current_line);
+}
+})
     // keep as variable so number of pips and maximum can be modified as events are pushed
     var max = $( ".scrubber" ).slider("option", "max");
     var pips = $(".scrubber").slider("option", "pips");
   });
+             
     // the slider has been created
     sliderCreated = true;
   }
