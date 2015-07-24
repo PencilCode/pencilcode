@@ -138,7 +138,7 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event, data) {
+  trace: function(event, data) { 
     detectStuckProgram();
     // This receives events for the new debugger to use.
     currentDebugId += 1;

@@ -247,7 +247,6 @@ var current_line = 0;
 var previous_line = 0;
 
 function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
-        console.log(traceevents);
         var prevno = traceevents[previous_line].location.first_line;
         clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
 
