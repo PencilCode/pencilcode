@@ -139,9 +139,9 @@ window.pencilcode.view = {
   hideProtractor: hideProtractor,
   createSlider: createSlider,
   removeSlider: removeSlider,
-  removePlay: removePlay,
   setPrimaryFocus: setPrimaryFocus,
-  arrow:arrow,
+  initializeSlider: initializeSlider,
+  arrow: arrow,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -226,145 +226,137 @@ function paneid(position) {
 }
 
 var sliderCreated = false;
-var playButton = false;
 
-function removeSlider () {
+function removeSlider() {
 	$(".scrubber").remove();
-        $("#backButton").remove();
-        $("#forwardButton").remove();
-        $(".scrubbermark").css("visibility", "hidden")
-        sliderCreated = false;
-
+  $("#backButton").remove();
+  $("#forwardButton").remove();
+  $(".scrubbermark").css("visibility", "hidden")
+  sliderCreated = false;
 }
-
-function removePlay () {
-	$(".p_button").remove();
-        playButton = false;
-} 
 
 var linenoList = [];
 var current_line = 0;
 var previous_line = 0;
 
 function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
-        var prevno = traceevents[previous_line].location.first_line;
-        clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+  // need this previous line for the forward and back buttons to work
+  var prevno = traceevents[previous_line].location.first_line;
+  clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
 
-        // after clearing, set the current line to the selected ui value
-        current_line = ui.value
-        previous_line = current_line
-        // get the new line number of the selected value
-        var lineno = traceevents[current_line].location.first_line;
+  // after clearing, set the current line to the selected ui value
+  current_line = ui.value;
+  previous_line = current_line;
 
-         // Drawing arrows at each step in the slider
-        arrow(pane, all_arrows, current_line);
+  // get the new line number of the selected value
+  var lineno = traceevents[current_line].location.first_line;
 
-        // display the protractor for that new line and highlight the selected line
-        hideProtractor(paneid('right'));
-        displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
-        markPaneEditorLine(
-            paneid('left'), lineno, 'guttermouseable', true);
-            markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+   // Drawing arrows at each step in the slider
+  arrow(pane, all_arrows, current_line);
+ 
+  // ISSUE: CIRCULAR DEPENDICIES 
+  // display the protractor for that new line and highlight the selected line
+  hideProtractor(paneid('right'));
+  displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
+  markPaneEditorLine(
+      paneid('left'), lineno, 'guttermouseable', true);
+      markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+}
+
+function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target) {
+    // Create div element for scrubbber
+    var div = document.createElement('div');
+    div.className = 'scrubber';
+
+    current_line = 0;
+    previous_line = 0;
+
+    var backDiv = document.createElement('div');
+    var forwardDiv = document.createElement('div');
+    
+    // Append the newly created div for the slider to the panel at bottom
+    $(".scrubbermark").append(div); 
+         
+    backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
+    $(".scrubbermark").append(backDiv);
+
+    forwardDiv = document.createElement('div');
+    forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
+  
+    $(".scrubbermark").append(forwardDiv); 
+    // Code for the slider 
+    $(function() {
+     $(".scrubber").slider({
+        min: 0,
+        max: traceevents.length - 1,
+        step: 1,
+        range: "min",
+        value: current_line,
+        smooth: false,
+        change: function(event, ui)  {
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows)
+        }, 
+        slide: function(event, ui) {
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows);
+        } 
+        })
+        .slider("pips", {
+          first: "label",
+          rest: "pip",
+          last: "label",
+          labels: {"first": "1 step", "last": "1 step"}
+        })
+        .slider("float", { 
+          labels: linenoList,
+          prefix: "Line " 
+        })
+    });
+}
+
+function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
+  $(".scrubbermark").css("visibility", "visible");
+  
+  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
+    traceevents.pop();
   }
 
-
-
-
-
-
-
-function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
-    $(".scrubbermark").css("visibility", "visible");
-//  var previous_line = 0;
-
-
-  // Create div element for scrubbber
-  var div = document.createElement('div');
-  div.className = 'scrubber';
-
- 
- 
   var firstLabel = (1).toString();
   var secondLabel = (traceevents.length).toString();
-  
-if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
-      traceevents.pop();
 
-  }
+  // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
-     linenoList = []
+     linenoList = [];
   } 
+
   linenoList.push(traceevents[traceevents.length-1].location.first_line)
   
   // If slider hasn't been created and there are events being pushed, create slider. 
-  if (!sliderCreated && traceevents.length > 0){
-  current_line = 0;
-  previous_line = 0;
-  var backDiv = document.createElement('div');
-  var forwardDiv = document.createElement('div');
-  
-  // Append the newly created div for the slider to the panel at bottom
-  $(".scrubbermark").append(div); 
-       
-  backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
-  $(".scrubbermark").append(backDiv);
+  if (!sliderCreated && traceevents.length > 0) {
+    initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target);
+    $('#backButton').on('click', function() {
+      if (current_line != 0) {
+        current_line--;
+        $(".scrubber").slider("value",current_line);
+      }
+    });
 
-  forwardDiv = document.createElement('div');
-  forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
-  
-  $(".scrubbermark").append(forwardDiv); 
-  // Code for the slider 
-  $(function() {
-   $(".scrubber").slider({
-      min: 0,
-      max: traceevents.length - 1,
-      step: 1,
-      range: "min",
-      value: current_line,
-      smooth: false,
-      change: function(event, ui)  {
-                 change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows)
-     }, 
-      slide: function(event, ui) {
+    $('#forwardButton').on('click', function() {
+      if (current_line != traceevents.length - 1) {
+        current_line++
+        $(".scrubber").slider("value", current_line);
+      }
+    });
 
-      change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows);
-
-     } 
-      })
-      .slider("pips", {
-        first: "label",
-        rest: "pip",
-        last: "label",
-      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
-      })
-      .slider("float", { 
-        labels: linenoList,
-        prefix: "Line " 
-      })
-$('#backButton').on('click', function() {
-   if (current_line != 0) {
-     current_line--;
-     $(".scrubber").slider("value",current_line);
-}
-});
- 
-$('#forwardButton').on('click', function() {
-  if (current_line != traceevents.length - 1) {
-    current_line++
-    $(".scrubber").slider("value", current_line);
-}
-})
     // keep as variable so number of pips and maximum can be modified as events are pushed
     var max = $( ".scrubber" ).slider("option", "max");
     var pips = $(".scrubber").slider("option", "pips");
-  });
-             
+
     // the slider has been created
     sliderCreated = true;
   }
 
   // if the slider has already been created and events are pushed, modify existing slider
-  else if(sliderCreated && traceevents.length < 100){
+   if(sliderCreated){
     $(".scrubber").slider("option", "max", traceevents.length - 1)
     $(".scrubber").slider("pips",{ 
       first: "label",
@@ -377,21 +369,6 @@ $('#forwardButton').on('click', function() {
            prefix: "Line  "
     })
   }
-  
-  // remove the slider
-  else {
-    if (!playButton) {
-        var buttonDiv = document.createElement("div");
-        buttonDiv.className = 'p_button';
-        $(".scrubbermark").append(buttonDiv); 
-  	playButton = true;	
-    }
-    $(".scrubber").slider("option", "max", traceevents.length - 1)
-    $(".scrubber").slider("option", "step", Math.round( traceevents.length/100));
-    $(".scrubber").slider("pips",{ first: "label", rest: "pip", last: "label", labels: {"first": firstLabel.concat(" Step"),"last": secondLabel.concat(" Steps")    } }).slider("float", { labels: linenoList, prefix: "Line  "    })
- 
-  }
-
 }
 
 function parseTurtleTransform(transform) {

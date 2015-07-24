@@ -21,11 +21,8 @@ var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
 var traceEvents = [];          // list of event location objects created by tracing events             
-var screenshots = [];
-var turtle_screenshots = [];
-var stuckTime = null;         // timestmp to detect stuck programs
-var arrows = {};
-var temp_screenshots = [];
+var stuckTime = null;          // timestmp to detect stuck programs
+var arrows = {};               // keep track of arrows that appear in the program
 
 // verification of complexity of stuck loop
 var stuckComplexity = {
@@ -56,12 +53,9 @@ function bindframe(w) {
   arrows = {};
   currentEventIndex = 0;
   prevEventIndex = -1;
-  isLoop = false;
-//  linesRun = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
-  view.removePlay();
   stuckTime = null;
   stuckComplexity = {
     lines: 0,
@@ -147,7 +141,7 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+    view.createSlider(traceEvents, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
@@ -224,7 +218,6 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-
   var currentLine = traceEvents[currentIndex].location.first_line;
   var currentLocation = traceEvents[currentIndex].location;
   var prevLine = -1;
@@ -234,14 +227,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
-    /*  html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
-        onrendered: function(canvas){
-          temp_screenshots.push(canvas);
-          var tempCanvas = document.createElement('canvas');
-          var tempCanvasCtx = tempCanvas.getContext('2d');
-           tempCanvasCtx.drawImage(canvas,0,0);
-        }
-      })*/
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -253,31 +238,30 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       var tracedLine = -1; 
 
       //trace lines that are not animation.
-      while (line != currentLine){
-
+      while (line != currentLine) {
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           var prevLine = prevLocation.first_line;
         }
-        else{
+        else {
           var prevLocation = null;
           var prevLine = -1;
         }
 
-        if (tracedLine != -1){
+        if (tracedLine != -1) {
           untraceLine(tracedLine);
           tracedLine = -1;
         }
 
-        if(currentLine < prevLine){
+        if(currentLine < prevLine) {
 
-          if (arrows[prevIndex] != null){
+          if (arrows[prevIndex] != null) {
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
           }
-          else{
+          else {
             arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
           }
-          if (arrows[currentIndex] != null){
+          if (arrows[currentIndex] != null) {
             arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
           }
           else{
@@ -293,7 +277,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         currentLine = traceEvents[currentIndex].location.first_line;
         currentLocation = traceEvents[currentIndex].location;
       }
-      if (tracedLine != -1){
+      if (tracedLine != -1) {
         untraceLine(tracedLine);
         tracedLine = -1;
       }
@@ -833,16 +817,6 @@ view.on('delta', function(){
   $(".arrow").remove();
   //need to add code that stops animation!!!
 });
-
-
-///////////////////////////////////////////////////////////////////////////
-// STEP BUTTON SUPPORT
-///////////////////////////////////////////////////////////////////////////
-$("#backButton").click(function() {
-   console.log("ok");
-
-
-})
 
 ///////////////////////////////////////////////////////////////////////////
 // DEBUG EXPORT
