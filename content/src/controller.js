@@ -196,12 +196,7 @@ function updateTopControls(addHistory) {
           id: 'login', label: 'Log in',
           title: 'Enter password for ' + model.ownername});
       }
-    } 
-    else if (!nosaveowner()) {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Log in and save'});
-      }
+    } else {
       // We're either in some file or directory
       if (m.isdir) {
         //
@@ -214,7 +209,12 @@ function updateTopControls(addHistory) {
         } else {
           buttons.push({id: 'bydate', label: 'Sort by Date'});
         }
-      } 
+      } else if (!nosaveowner()) {
+        buttons.push({
+          id: 'login', label: 'Log in',
+          title: 'Log in and save'});
+      }
+    }
     buttons.push(
         {id: 'help', label: '<span class=helplink>?</span>' });
     if (m.data && m.data.file) {

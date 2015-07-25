@@ -1404,17 +1404,20 @@ function updatePaneLinks(pane,search) {
   }
   list = paneState.links;
   if (!list) { return; }
+  
+  $('#' + pane).html('');
+  directory = $('<div class="directory"></div>').appendTo('#' + pane);
 
-  if ($('#fileSearch').length==0) {
-    $('<div class="search-file"><input type="text" id="fileSearch" placeholder="Search"><span class="fa fa-search"></span></div>').appendTo('#' + pane);
-  }
-
-  if ($('#directory').length==0) {
-    directory = $('<div id="directory" class="directory"></div>').appendTo('#' + pane);
-  } else {
-      directory=$('#directory');
-      directory.empty();
-  }
+//  if ($('#fileSearch').length==0) {
+//    $('<div class="search-file"><input type="text" id="fileSearch" placeholder="Search"><span class="fa fa-search"></span></div>').appendTo('#' + pane);
+//  }
+//
+//  if ($('#directory').length==0) {
+//    directory = $('<div id="directory" class="directory"></div>').appendTo('#' + pane);
+//  } else {
+//      directory=$('#directory');
+//      directory.empty();
+//  }
 
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
@@ -1695,14 +1698,15 @@ function updatePaneTitle(pane) {
     }
   } else if (paneState.links) {
     if (paneState.path === '/') {
-      label = 'directory';
+      label = '<div class="thick-bar">directory</div>';
     } else {
       var icon = shouldShowThumb(paneState.path)?
               '<i class="fa fa-th-large"></i>' :
               '<i class="fa fa-align-left"></i>';
-      label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">'
-            + icon + '</div>directory';
+      label = '<div class="thick-bar"><div class="thumb-toggle pull-right" title="Toggle thumbnails">'
+            + icon + '</div>directory</div>';
     }
+    label+='<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
@@ -1825,6 +1829,13 @@ $('.panetitle').on('click', '.thumb-toggle', function(e) {
   setShouldShowThumb(path, !showThumb);
   updatePaneLinks(pane);
   updatePaneTitle(pane);
+});
+
+$('.panetitle').on('keyup', '.search-toggle', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  e.preventDefault();
+  updateSearchResults($(this).closest('.panetitle').find('.search-toggle').val(),pane);
+  enabeSearchResults($(this).closest('.panebox').find('.directory'), true);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {

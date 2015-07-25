@@ -385,7 +385,7 @@ body.modal #overlay {
   height: 28px;
   width: 100%;
   background: #1e90ff;
-  padding: 0 12px;
+  padding: 0px;
   color: #87ceeb;
   letter-spacing: 2px;
   border-left: 1px solid #fff;
@@ -819,7 +819,9 @@ body#pencildoc #diigolet-csm {
 .directory {
   height: 100%;
   padding: 10px;
+  padding-top: 20px;
   overflow: auto;
+  transition: padding 0.3s;
 }
 
 .directory .column {
@@ -1332,6 +1334,11 @@ body#pencildoc #diigolet-csm {
   position: relative;
   color: #aaa;
   font-size: 16px;
+  z-index: 3;
+}
+
+.search-results{
+    padding-top: 30px;
 }
 
 .search-file input[type="text"] {
@@ -1339,7 +1346,7 @@ body#pencildoc #diigolet-csm {
   margin: 0;
   width: 100%;
   font-family: sans-serif;
-  font-size: 18px;
+  font-size: 10px;
   box-shadow: none;
   border-radius: none;
   padding: 10px;
@@ -1352,13 +1359,15 @@ body#pencildoc #diigolet-csm {
 
 .search-file input[type="text"]:focus {
   border-bottom: solid 2px dodgerblue;
+  font-size: 15px;
   outline: none;
   color: dodgerblue;
+  padding: 7px;
 }
 
 .search-file .fa-search { 
   position: absolute;
-  top: 10px;
+  top: 7px;
   left: 10px;
 }
 
@@ -1366,3 +1375,7 @@ body#pencildoc #diigolet-csm {
   color:dodgerblue;
 }
 
+.thick-bar{
+    padding-left: 12px;
+    padding-right: 12px;
+}
