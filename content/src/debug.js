@@ -143,7 +143,7 @@ var debug = window.ide = {
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
-    view.createSlider(traceEvents, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+    setTimeout(function() {view.createSlider(traceEvents, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
     record.line = lineno;
     debugRecordsByDebugId[currentDebugId] = record;
     debugRecordsByLineNo[lineno] = record;
