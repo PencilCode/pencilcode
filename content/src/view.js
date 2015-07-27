@@ -3388,8 +3388,6 @@ function arrow(pane, arrows, traceEventNum){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  console.log('ARROW!');
-
   var startcoords = null;
   var endcoords = null;
   var offset_top =  0; 

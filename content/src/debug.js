@@ -221,21 +221,20 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 function reportEnter(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   var recordL = debugRecordsByLineNo[recordD.line];
-  recordD.method = method;
-  recordL.method = method;
-  recordD.args = args;
-  recordL.args = args;
   recordD.animated = false;
   recordL.animated = false;
 }
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-  console.log("currentRecordID: ", currentRecordID);
+  var recordD = debugRecordsByDebugId[debugId];
+  var recordL = debugRecordsByLineNo[recordD.line];
+  recordD.method = method;
+  recordL.method = method;
+  recordD.args = args;
+  recordL.args = args;
 
-  console.log("debugRecordsByDebugId: ", debugRecordsByDebugId);
   var currentRecord = debugRecordsByDebugId[currentRecordID];
-  console.log("currentRecord: ", currentRecord);
   var currentIndex = currentRecord.eventIndex;
   var currentLocation = traceEvents[currentIndex].location;
   var currentLine = currentLocation.first_line;
@@ -244,10 +243,8 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
   stuckComplexity.moves += 1;
 
-  var recordD = debugRecordsByDebugId[debugId];
   if (recordD) { 
     if (!recordD.seeeval){ 
-      var recordL = debugRecordsByLineNo[recordD.line];
       var index = recordD.eventIndex;
       var line = traceEvents[index].location.first_line;
       var appear_location = traceEvents[index].location;
@@ -347,11 +344,9 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
-  console.log("begin end_program");
   var currentLine = -1; 
   var tracedLine = -1;
   while (currentRecordID < currentDebugId){
-    console.log("loop end_program");
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
     var currentIndex = currentRecord.eventIndex;
@@ -372,9 +367,6 @@ function end_program(){
         tracedLine = -1;
     }
     if(currentLine < prevLine){
-
-        console.log("currentLine: ", currentLine);
-        console.log('prevLine: ', prevLine);
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -403,7 +395,6 @@ function end_program(){
         tracedLine = -1;
   }
   prevLine = -1;
-  console.log("end end_program");
 }
 
 function errorAdvice(msg, text) {
