@@ -1394,7 +1394,7 @@ function doneWithFile(filename) {
     }
   } else {
     if (filename.indexOf('/') >= 0) {
-      filename = filename.replace(/\/[^\/]+\/?$/, '');
+      filename = filename.replace(/[^\/]+\/?$/, '');
     } else {
       filename = '';
     }
