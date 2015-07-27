@@ -700,6 +700,8 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
+  var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
+  view.arrow(view.paneid('left'), arrows, eventIndex, true);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   displayProtractorForRecord(debugRecordsByLineNo[lineno]);
@@ -708,6 +710,7 @@ view.on('entergutter', function(pane, lineno) {
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
+  $(".editor").remove("arrow");
 });
 
 view.on('icehover', function(pane, ev) {

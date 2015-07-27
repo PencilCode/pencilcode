@@ -3389,7 +3389,7 @@ function curvedVertical(x1, y1, x2, y2) {
 
 //$(window).resize(..) event
 
-function arrow(pane, arrows, traceEventNum, slider_call){
+function arrow(pane, arrows, traceEventNum, show_fade){
   /* note: we expect arrow_lines to be an array of key value pairs where 
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
@@ -3457,7 +3457,7 @@ function arrow(pane, arrows, traceEventNum, slider_call){
         x_val = endcoordsBefore.pageX;
       }
     }
-    if (slider_call){
+    if (show_fade){
       before_arrowtext = "<path d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
                         + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none;' position='relative'/> \ "
     }
