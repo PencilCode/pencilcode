@@ -228,7 +228,7 @@ function paneid(position) {
 var sliderCreated = false;
 
 function removeSlider() {
-	$(".scrubber").remove();
+  $(".scrubber").remove();
   $("#backButton").remove();
   $("#forwardButton").remove();
   $(".scrubbermark").css("visibility", "hidden")
@@ -254,6 +254,7 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
    // Drawing arrows at each step in the slider
   arrow(pane, all_arrows, current_line);
  
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
   // ISSUE: CIRCULAR DEPENDICIES 
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
@@ -276,20 +277,26 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
 
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
-    
+    var sliderDiv = document.createElement('div');
+    sliderDiv.id = 'slider'; 
     // Append the newly created div for the slider to the panel at bottom
     $(".scrubbermark").append(div); 
-         
+    $(".scrubber").append(sliderDiv);     
     backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
-    $(".scrubbermark").append(backDiv);
+    $(".scrubber").append(backDiv);
 
     forwardDiv = document.createElement('div');
     forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
-  
-    $(".scrubbermark").append(forwardDiv); 
+    $(".scrubber").append(forwardDiv); 
+    
+    var label = document.createElement('div');
+    label.id = 'label';
+    label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
+    $(".scrubber").append(label);
+
     // Code for the slider 
     $(function() {
-     $(".scrubber").slider({
+     $("#slider").slider({
         min: 0,
         max: traceevents.length - 1,
         step: 1,
@@ -304,16 +311,17 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
         } 
         })
         .slider("pips", {
-          first: "label",
+          first: "pip",
           rest: "pip",
-          last: "label",
-          labels: {"first": "1 step", "last": "1 step"}
+          last: "pip"
         })
         .slider("float", { 
           labels: linenoList,
           prefix: "Line " 
         })
     });
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+
 }
 
 function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
@@ -323,9 +331,6 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
     traceevents.pop();
   }
-
-  var firstLabel = (1).toString();
-  var secondLabel = (traceevents.length).toString();
 
   // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
@@ -340,20 +345,20 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
     $('#backButton').on('click', function() {
       if (current_line != 0) {
         current_line--;
-        $(".scrubber").slider("value",current_line);
+        $("#slider").slider("value",current_line);
       }
     });
 
     $('#forwardButton').on('click', function() {
       if (current_line != traceevents.length - 1) {
         current_line++
-        $(".scrubber").slider("value", current_line);
+        $("#slider").slider("value", current_line);
       }
     });
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
-    var max = $( ".scrubber" ).slider("option", "max");
-    var pips = $(".scrubber").slider("option", "pips");
+   var max = $("#slider").slider("option", "max");
+    var pips = $("#slider").slider("option", "pips");
 
     // the slider has been created
     sliderCreated = true;
@@ -361,17 +366,18 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
 
   // if the slider has already been created and events are pushed, modify existing slider
    if(sliderCreated){
-    $(".scrubber").slider("option", "max", traceevents.length - 1)
-    $(".scrubber").slider("pips",{ 
-      first: "label",
+    $("#slider").slider("option", "max", traceevents.length - 1)
+    $("#slider").slider("pips",{ 
+      first: "pip",
       rest: "pip",
-      last: "label",
-      labels: {"first": firstLabel.concat(" Step"), "last": secondLabel.concat(" Steps")}
+      last: "pip"
     })
     .slider("float", { 
            labels: linenoList,
            prefix: "Line  "
     })
+     $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+
   }
 }
 
