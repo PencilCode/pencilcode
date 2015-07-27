@@ -6,7 +6,8 @@ var $         = require('jquery'),
     view      = require('view'),
     see       = require('see'),
     html2canvas = require('html2canvas'),
-    sourcemap = require('source-map');
+    sourcemap = require('source-map'),
+    util      = require('util');
 
 eval(see.scope('debug'));
 
@@ -16,6 +17,7 @@ var prevIndex = -1;            // previous index of prior traceEvent.
 var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
 var debugRecordsByDebugId = {};// map debug ids -> line execution records.
 var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
+var variablesByLineNo = {};    // map line numbers -> tracked variables.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
 var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
@@ -48,6 +50,7 @@ function bindframe(w) {
   cachedParseStack = {};
   debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
+  variablesByLineNo = {};
   traceEvents = [];
   screenshots = [];
   arrows = {};
@@ -151,8 +154,9 @@ var debug = window.ide = {
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
       debugRecordsByLineNo[lineno] = record;
+      updateVariables(event.location.first_line, currentEventIndex, event.vars);
     } else if (event.type === 'after') {
-      view.showVariables(view.paneid("left"), event.location.first_line, event.vars, event.functionCalls);
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
     } else if (event.type === 'leave') {
       // This event happens when a function is left, and contains the return
       // value or thrown error. We aren't using this event for now.
@@ -193,6 +197,57 @@ function detectStuckProgram() {
       targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+// VARIABLE & FUNCTION CALL TRACKING
+//////////////////////////////////////////////////////////////////////
+
+function updateVariables(lineNum, eventIndex, vars, functionCalls) {
+  functionCalls = functionCalls || [];
+  variablesByLineNo[lineNum] = variablesByLineNo[lineNum] || [];
+
+  var newVars = [];
+  for (var i = 0; i < vars.length; i++) {
+    newVars[i] = {name: vars[i].name, value: valueToString(vars[i].value)};
+  }
+
+  var newFunctionCalls = [];
+  for (var i = 0; i < functionCalls.length; i++) {
+    newFunctionCalls[i] = {name: functionCalls[i].name, value: valueToString(functionCalls[i].value)};
+  }
+
+  // TODO: combine variables from other events with the current ones.
+  variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+}
+
+function valueToString(value) {
+  if (typeof value === 'function') {
+    return '<function>';
+  } else if (typeof value === 'object') {
+    return '<object>';
+  } else {
+    return util.inspect(value);
+  }
+}
+
+function showVariablesFor(lineNum, eventIndex) {
+  var vars = [];
+  var functionCalls = [];
+
+  // Find what the state of the tracked variables were at this eventIndex.
+  if (variablesByLineNo[lineNum]) {
+    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
+      var entry = variablesByLineNo[lineNum][i];
+      if (entry.eventIndex > eventIndex) {
+        break;
+      }
+      vars = entry.vars;
+      functionCalls = entry.functionCalls;
+    }
+  }
+
+  view.showVariables(view.paneid('left'), lineNum, vars, functionCalls);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -263,6 +318,8 @@ if (!programChanged) {
 
       //trace lines that are not animation.
       while (currentRecordID < debugId) {
+        showVariablesFor(currentLine, currentIndex);
+
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           var prevLine = prevLocation.first_line;
@@ -368,6 +425,8 @@ function end_program(){
     var currentIndex = currentRecord.eventIndex;
     var currentLocation = traceEvents[currentIndex].location;
     currentLine = currentLocation.first_line;
+
+    showVariablesFor(currentLine, currentIndex);
 
    if (prevIndex != -1) {
       var prevLocation = traceEvents[prevIndex].location;

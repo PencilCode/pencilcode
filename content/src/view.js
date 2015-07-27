@@ -14,8 +14,7 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
-    FontLoader     = require('FontLoader'),
-    util           = require('util');
+    FontLoader     = require('FontLoader');
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
     return c=='<'?'&lt;':c=='>'?'&gt;':c=='&'?'&amp;':'&quot;';});
@@ -3534,16 +3533,6 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     }  
 };
 
-function valueToString(value) {
-  if (typeof value === "function") {
-    return "<function>";
-  } else if (typeof value === "object") {
-    return "<object>";
-  } else {
-    return util.inspect(value);
-  }
-}
-
 function showVariables(pane, lineNum, vars, functionCalls) {
   var coords = null;
   var offsetTop = 0;
@@ -3567,25 +3556,28 @@ function showVariables(pane, lineNum, vars, functionCalls) {
 
     var text = "";
     for (var i = 0; i < vars.length; i++) {
-      text += vars[i].name + "=" + htmlEscape(valueToString(vars[i].value)) + " ";
+      text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
     }
     for (var i = 0; i < functionCalls.length; i++) {
-      text += functionCalls[i].name + "()=" + htmlEscape(valueToString(functionCalls[i].value)) + " ";
+      text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
     }
 
-    $("#line" + lineNum + "vars").remove();
+    var divId = "line" + lineNum + "vars";
+    if ($("#" + divId).length) {
+      $("#" + divId).html(text);
+    } else {
+      var div = document.createElement('div');
+      div.id = divId;
+      div.className = "vars";
+      div.innerHTML = text;
+      div.style.visibility = 'visible';
+      div.style.position = "absolute";
+      div.style.zIndex = "10";
+      div.style.right = "0";
+      div.style.top = String(coords.pageY - offsetTop) + "px";
 
-    var div = document.createElement('div');
-    div.id = "line" + lineNum + "vars";
-    div.className = "vars";
-    div.innerHTML = text;
-    div.style.visibility = 'visible';
-    div.style.position = "absolute";
-    div.style.zIndex = "10";
-    div.style.right = "0";
-    div.style.top = String(coords.pageY - offsetTop) + "px";
-
-    $(".editor").append(div);
+      $(".editor").append(div);
+    }
   }
 }
 
