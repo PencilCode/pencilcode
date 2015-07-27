@@ -11,7 +11,7 @@ var $         = require('jquery'),
 eval(see.scope('debug'));
 
 var targetWindow = null;       // window object of the frame being debugged.
-var currentIndex = 0;          // current index into traceEvents.
+var currentRecordID = 1;          // current index into traceEvents.
 var prevIndex = -1;            // previous index of prior traceEvent.
 var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
 var debugRecordsByDebugId = {};// map debug ids -> line execution records.
@@ -51,8 +51,9 @@ function bindframe(w) {
   traceEvents = [];
   screenshots = [];
   arrows = {};
-  currentEventIndex = 0;
-  prevEventIndex = -1;
+  currentRecordID = 1;
+  currentDebugId = 0;
+  prevIndex = -1; 
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
@@ -89,7 +90,7 @@ var debug = window.ide = {
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "enter") { stuckComplexity.calls += 1; }
+    if (name === "enter") { reportEnter.apply(null, data); stuckComplexity.calls += 1; }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -136,7 +137,8 @@ var debug = window.ide = {
     detectStuckProgram();
     // This receives events for the new debugger to use.
     currentDebugId += 1;
-    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
+    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
+        data: "", seeeval:false};
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
@@ -216,10 +218,28 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
   debugRecordsByDebugId[currentDebugId] = record;
 }
 
+function reportEnter(method, debugId, length, coordId, elem, args){
+  var recordD = debugRecordsByDebugId[debugId];
+  var recordL = debugRecordsByLineNo[recordD.line];
+  recordD.method = method;
+  recordL.method = method;
+  recordD.args = args;
+  recordL.args = args;
+  recordD.animated = false;
+  recordL.animated = false;
+}
+
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-  var currentLine = traceEvents[currentIndex].location.first_line;
+  console.log("currentRecordID: ", currentRecordID);
+
+  console.log("debugRecordsByDebugId: ", debugRecordsByDebugId);
+  var currentRecord = debugRecordsByDebugId[currentRecordID];
+  console.log("currentRecord: ", currentRecord);
+  var currentIndex = currentRecord.eventIndex;
   var currentLocation = traceEvents[currentIndex].location;
+  var currentLine = currentLocation.first_line;
+
   var prevLine = -1;
 
   stuckComplexity.moves += 1;
@@ -228,17 +248,13 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   if (recordD) { 
     if (!recordD.seeeval){ 
       var recordL = debugRecordsByLineNo[recordD.line];
-      recordD.method = method;
-      recordL.method = method;
-      recordD.args = args;
-      recordL.args = args;
       var index = recordD.eventIndex;
       var line = traceEvents[index].location.first_line;
       var appear_location = traceEvents[index].location;
       var tracedLine = -1; 
 
       //trace lines that are not animation.
-      while (line != currentLine) {
+      while (currentRecordID < debugId) {
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           var prevLine = prevLocation.first_line;
@@ -267,13 +283,15 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           else{
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-          view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
+          view.arrow(view.paneid('left'), arrows, currentRecordID);//should I pass in prevIndex and currentRecordID or?
         }
         traceLine(currentLine);
         tracedLine = currentLine;
         prevLine = currentLine;
-        prevIndex = currentIndex;
-        currentIndex += 1;
+        prevIndex = debugRecordsByDebugId[currentRecordID].eventIndex;
+        currentRecordID += 1;
+        currentRecord = debugRecordsByDebugId[currentRecordID];
+        currentIndex = currentRecord.eventIndex
         currentLine = traceEvents[currentIndex].location.first_line;
         currentLocation = traceEvents[currentIndex].location;
       }
@@ -297,8 +315,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         else{
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
+        view.arrow(view.paneid('left'), arrows, currentRecordID);//should I pass in prevIndex and currentRecordID or?
       }
+      currentRecordID = debugId;
       prevLine = line;
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
@@ -315,6 +334,8 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
+      recordD.animated = true;
+      recordL.animated = true;
       var index = recordD.eventIndex;
       var location = traceEvents[index].location.first_line
       recordD.endCoords[coordId] = collectCoords(elem);
@@ -326,11 +347,16 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
+  console.log("begin end_program");
   var currentLine = -1; 
   var tracedLine = -1;
-  while (currentIndex < traceEvents.length){
-    currentLine = traceEvents[currentIndex].location.first_line;
+  while (currentRecordID < currentDebugId){
+    console.log("loop end_program");
+
+    var currentRecord = debugRecordsByDebugId[currentRecordID];
+    var currentIndex = currentRecord.eventIndex;
     var currentLocation = traceEvents[currentIndex].location;
+    currentLine = currentLocation.first_line;
 
    if (prevIndex != -1) {
       var prevLocation = traceEvents[prevIndex].location;
@@ -346,6 +372,9 @@ function end_program(){
         tracedLine = -1;
     }
     if(currentLine < prevLine){
+
+        console.log("currentLine: ", currentLine);
+        console.log('prevLine: ', prevLine);
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -360,19 +389,21 @@ function end_program(){
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
 
-        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
+        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentRecordID or?
     }
     traceLine(currentLine);
     tracedLine = currentLine;
     prevLine = currentLine;
     prevIndex = currentIndex;
-    currentIndex += 1;
+    currentRecordID += 1;
   }
   if (tracedLine != -1){
         untraceLine(tracedLine);
+        view.arrow(view.paneid('left'), arrows, -1);
         tracedLine = -1;
   }
   prevLine = -1;
+  console.log("end end_program");
 }
 
 function errorAdvice(msg, text) {
@@ -720,7 +751,7 @@ function stopButton(command) {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
 
-    currentIndex = 0;
+    currentRecordID = 0;
     prevIndex = -1;
     prevLocation = null;
     prevLine = -1;

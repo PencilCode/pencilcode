@@ -314,6 +314,7 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
 }
 
 function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
+
   $(".scrubbermark").css("visibility", "visible");
   
   if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
@@ -3383,6 +3384,8 @@ function arrow(pane, arrows, traceEventNum){
   /* note: we expect arrow_lines to be an array of key value pairs where 
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
+
+  console.log('ARROW!');
 
   var startcoords = null;
   var endcoords = null;
