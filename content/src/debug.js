@@ -58,6 +58,7 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
+  view.removeVariables();
   stuckTime = null;
   stuckComplexity = {
     lines: 0,
@@ -151,7 +152,7 @@ var debug = window.ide = {
       debugRecordsByDebugId[currentDebugId] = record;
       debugRecordsByLineNo[lineno] = record;
     } else if (event.type === 'after') {
-
+      view.showVariables(view.paneid("left"), event.location.first_line, event.vars, event.functionCalls);
     } else if (event.type === 'leave') {
       // This event happens when a function is left, and contains the return
       // value or thrown error. We aren't using this event for now.
@@ -857,6 +858,7 @@ view.on('stop', function() {
 
 view.on('delta', function(){ 
   $(".arrow").remove();
+  view.removeVariables();
   //need to add code that stops animation!!!
   programChanged = true;
 });
