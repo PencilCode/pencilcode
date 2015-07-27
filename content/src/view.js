@@ -88,11 +88,11 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-  on: function(tag, cb) { 
+  on: function(tag, cb) {
     if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
-    state.callbacks[tag].push(cb); 
+    state.callbacks[tag].push(cb);
  },
 
   // Simulate firing of an event
@@ -247,7 +247,7 @@ function setOnCallback(tag, cb) {
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
-    //take a copy of the array in case other 
+    //take a copy of the array in case other
     //events are fired while you're indexing it.
     for (j=0; j < cbs.length; j++) {
       var cb = cbs[j];
@@ -735,15 +735,19 @@ function showMiddleButton(which) {
 // Show thumbnail under the save button.
 function flashThumbnail(imageDataUrl) {
   if (!imageDataUrl) { return; }
-  var tooltip = $('#save').tooltipster({
+  // Destroy the original title tooltip once there is a thumbnail.
+  $('#screenshot').tooltipster('destroy');
+  $('#screenshot').tooltipster({
     content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
-    multiple: true,
     position: 'bottom',
     theme: 'tooltipster-shadow',
-    timer: 3000,
-    trigger: 'custom'
-  })[0];
-  tooltip.show();
+    interactive: true,
+    timer: 3000
+  });
+  // Flash the thumbnail for 3 seconds, then disable the timer,
+  // so that activation via hovering will not last for only 3 seconds.
+  $('#screenshot').tooltipster('show');
+  $('#screenshot').tooltipster('option', 'timer', 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1832,13 +1836,13 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
 $('.pane').on('click', '.texttoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
-  setPaneEditorBlockMode(pane, false);
+  setPaneEditorBlockMode(pane, false, $(this).attr('droplet-editor'));
 });
 
 $('.pane').on('click', '.blocktoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
-  setPaneEditorBlockMode(pane, true);
+  setPaneEditorBlockMode(pane, true,$(this).attr('droplet-editor'));
 });
 
 function showPaneEditorLanguagesDialog(pane) {
@@ -1852,10 +1856,12 @@ function showPaneEditorLanguagesDialog(pane) {
   var emptyHtml = !(meta && meta.html && meta.html.trim());
   var emptyCss = !(meta && meta.css && meta.css.trim());
   var turtlebits = findLibrary(meta, 'turtle');
+  var p5js = findLibrary(meta, 'p5js');
   var hasBits = turtlebits != null;
   var hasTurtle = turtlebits && (!turtlebits.attrs ||
       turtlebits.attrs.turtle == null ||
       turtlebits.attrs.turtle != 'false');
+  var hasP5js = p5js != null;
 
   var opts = {leftopts: 1};
   opts.content =
@@ -1879,8 +1885,10 @@ function showPaneEditorLanguagesDialog(pane) {
       '<div style="padding:8px 5px 15px">' +
       '<label title="Include jQuery, LoDash, and jQ-Turtle">' +
       '<input type="checkbox" class="bits"> Common Library</label><br>' +
-      '<label title="Start with a turtle">' +
+      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label title="Start with a turtle">' +
       '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '<label title="p5.js from The Processing Foundation">' +
+      '<input type="checkbox" class="p5js"> Processing p5.js</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -1911,6 +1919,9 @@ function showPaneEditorLanguagesDialog(pane) {
         dialog.find('.turtle').prop('checked', true);
       }
     }
+    if (hasP5js) {
+      dialog.find('.p5js').prop('checked', true);
+    }
   }
 
   opts.retrieveState = function(dialog) {
@@ -1919,7 +1930,8 @@ function showPaneEditorLanguagesDialog(pane) {
       html: dialog.find('.html').prop('checked'),
       css: dialog.find('.css').prop('checked'),
       turtle: dialog.find('.turtle').prop('checked'),
-      bits: dialog.find('.bits').prop('checked')
+      bits: dialog.find('.bits').prop('checked'),
+      p5js: dialog.find('.p5js').prop('checked')
     };
   }
 
@@ -1949,6 +1961,12 @@ function showPaneEditorLanguagesDialog(pane) {
       toggleLibrary(paneState.meta, lib, state.bits);
       change = true;
     }
+    if (state.p5js != hasP5js) {
+      var lib = { name: 'p5js', src: '//{site}/lib/p5.js' };
+      if (!paneState.meta) { paneState.meta = {}; }
+      toggleLibrary(paneState.meta, lib, state.p5js);
+      change = true;
+    }
     var wantCoffeeScript = false;
     if (change && paneState.meta && /coffeescript/.test(state.lang) &&
         !findLibrary(paneState.meta, 'turtle')) {
@@ -1966,7 +1984,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (box.length) {
       if (state.html != hasHtml) {
         if (state.html) {
-          setupSubEditor(box, pane, paneState, '', 'html');
+          setupDropletSubEditor(box, pane, paneState, '', 'html', null, true);
         } else {
           tearDownSubEditor(box, pane, paneState, 'html');
         }
@@ -2298,10 +2316,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
         dropletEditor.paletteWrapper);
   }
 
-  $('<div class="texttoggle">' +
+  $('<div class="texttoggle" droplet-editor="dropletEditor">' +
     '<div class="slide"><div class="info"></div></div></div>').appendTo(
       dropletEditor.paletteWrapper);
-  $('<div class="blocktoggle">' +
+  $('<div class="blocktoggle" droplet-editor="dropletEditor">' +
     '<div class="slide"><div class="info"></div></div></div>').appendTo(
       $(dropletEditor.wrapperElement).find('.ace_editor'));
 
@@ -2366,7 +2384,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.handleHtmlCssChange = handleHtmlCssChange;
 
   if (box.find('.htmlmark').is(':visible')) {
-    setupSubEditor(box, pane, paneState, meta.html, 'html');
+    setupDropletSubEditor(box, pane, paneState, meta.html, 'html', null, useblocks);
   }
 
   if (box.find('.cssmark').is(':visible')) {
@@ -2389,9 +2407,64 @@ function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   setupResizeHandler(container.parent(), editor);
 }
 
+function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, useblocks) {
+  var id = uniqueId(htmlorcss + 'edit');
+  box.find('.' + htmlorcss + 'mark').html(
+     '<div id="' + id + '" class="editor"></div>').css('display', 'block');
+  var container = $('#' + id);
+  var editor = paneState[htmlorcss + 'Editor'] =
+      new droplet.Editor(
+          document.getElementById(id),
+          {
+            mode: htmlorcss,
+            palette: htmlorcss == 'html' ? palette.HTML_PALETTE : palette.CSS_PALETTE,
+            modeOptions: dropletOptionsForMimeType('text/' + htmlorcss)
+          });
+  editor.setPaletteWidth(250);
+  if (!/^frame\./.test(window.location.hostname)) {
+    // Blue nubby when inside pencilcode.
+    editor.setTopNubbyStyle(0, '#1e90ff');
+  } else {
+    // Gray nubby when framed.
+    editor.setTopNubbyStyle(0, '#dddddd');
+  }
+  editor.setEditorState(useblocks);
+  editor.setValue(text);
+
+  editor.on('changepalette', function() {
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+  });
+
+  editor.on('selectpalette', function(p) {
+    fireEvent('selectpalette', [pane, p]);
+  });
+
+  editor.on('pickblock', function(p) {
+    fireEvent('pickblock', [pane, p]);
+  });
+
+  editor.on('toggledone', function() {
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+  });
+
+  setupResizeHandler(container.parent(), editor);
+
+  $('<div class="texttoggle" droplet-editor="' + htmlorcss + 'Editor">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      editor.paletteWrapper);
+  $('<div class="blocktoggle" droplet-editor="' + htmlorcss + 'Editor">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      $(editor.wrapperElement).find('.ace_editor'));
+
+  aceEditor = editor.aceEditor;
+  aceEditor.on('change', paneState.handleHtmlCssChange);
+  setupAceEditor(pane, container, aceEditor, "ace/mode/" + htmlorcss, text);
+}
+
 function tearDownSubEditor(box, pane, paneState, htmlorcss) {
   if (paneState[htmlorcss + 'Editor']) {
-    paneState[htmlorcss + 'Editor'].destroy();
+    if (paneState[htmlorcss + 'Editor'].destroy)
+      paneState[htmlorcss + 'Editor'].destroy();
     paneState[htmlorcss + 'Editor'] = null;
   }
   box.find('.' + htmlorcss + 'mark').html('').css('display', 'none');
@@ -2612,17 +2685,34 @@ function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   }
 }
 
-function setPaneEditorBlockMode(pane, useblocks) {
+function setPaneEditorBlockMode(pane, useblocks, editor) {
+  function setMainEditorBlockMode(editor, useblocks) {
+    if (editor.currentlyUsingBlocks == useblocks) return false;
+    var visibleMimeType = editorMimeType(paneState);
+    if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
+    var togglingSucceeded = editor.toggleBlocks();
+    if (!togglingSucceeded) return false;
+    fireEvent('toggleblocks', [pane, editor.currentlyUsingBlocks]);
+    return true;
+  }
+  function setSubEditorBlockMode(editor, useblocks) {
+    if (!editor) return false;
+    if (editor.currentlyUsingBlocks == useblocks) return false;
+    return editor.toggleBlocks();
+  }
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
   useblocks = !!useblocks;
-  if (paneState.dropletEditor.currentlyUsingBlocks == useblocks) return false;
-  var visibleMimeType = editorMimeType(paneState);
-  if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
-  var togglingSucceeded = paneState.dropletEditor.toggleBlocks();
-  if (!togglingSucceeded) return false;
-  fireEvent('toggleblocks', [pane, paneState.dropletEditor.currentlyUsingBlocks]);
-  return true;
+  if (editor) {
+    if (editor == "dropletEditor") {
+      return setMainEditorBlockMode(paneState.dropletEditor, useblocks);
+    }
+    return setSubEditorBlockMode(paneState[editor], useblocks);
+  }
+  var result = setMainEditorBlockMode(paneState.dropletEditor, useblocks);
+  setSubEditorBlockMode(paneState.htmlEditor, useblocks);
+  setSubEditorBlockMode(paneState.cssEditor, useblocks);
+  return result;
 }
 
 function getPaneEditorBlockMode(pane) {

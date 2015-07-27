@@ -8194,6 +8194,8 @@ function pollSendRecv(name) {
 
 deprecate(dollar_turtle_methods, 'defaultspeed', 'speed');
 
+dollar_turtle_methods.save.loginCookie = loginCookie;
+
 var helpok = {};
 
 var colors = [
@@ -9637,8 +9639,10 @@ var debug = {
   init: function initdebug() {
     try {
       if (parent && parent.ide) {
-        this.ide = parent.ide;
-        this.ide.bindframe(global);
+        if (this.ide !== parent.ide) {
+          this.ide = parent.ide;
+          this.ide.bindframe(global);
+        }
         this.attached = true;
       }
     } catch(e) {
@@ -10597,7 +10601,7 @@ function initconsolelog() {
     if (consolelog && global.console && !global.console._log &&
         'function' == typeof global.console.log) {
       var _log = global.console._log = global.console.log;
-      global_.console.log = function log() {
+      global.console.log = function log() {
         _log.apply(this, arguments);
         see.apply(this, arguments);
       }

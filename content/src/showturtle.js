@@ -17,20 +17,6 @@
     }
   }
   $.turtle(map);
-  if (ww.ide == null) try {
-    ww.ide = null;
-    // Propagate the ide variable from the parent window, if present.
-    // When running framed inside in the pencilcode ide, this object
-    // is set up by debug.js.
-    if (ww.parent !== ww && ww.parent.ide &&
-        $.isFunction(ww.parent.ide.getEditorText)) {
-      ww.ide = ww.parent.ide;
-    }
-    // Now try to register a service worker if possible
-    if (ww.ide && ww.ide.serviceWorker) {
-      navigator.serviceWorker.register(ww.ide.serviceWorker);
-    }
-  } catch (e) {}
   ww._start_ide_ = function(pump) {
     if (ww.see) ww.see.init(pump);
     if (ww.ide && ww.ide.reportEvent) ww.ide.reportEvent('init');
