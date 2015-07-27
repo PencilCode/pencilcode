@@ -257,7 +257,10 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // ISSUE: CIRCULAR DEPENDICIES 
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
-  displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
+  if (target.jQuery != null) {
+    
+    displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
+  }
   markPaneEditorLine(
       paneid('left'), lineno, 'guttermouseable', true);
       markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
@@ -327,9 +330,9 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   if (!sliderCreated) {
      linenoList = [];
   } 
-
-  linenoList.push(traceevents[traceevents.length-1].location.first_line)
-  
+  for (var i = 0; i < traceevents.length; i++) {
+    linenoList[i] = (traceevents[i].location.first_line)
+  }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
     initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target);
