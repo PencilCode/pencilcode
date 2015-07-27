@@ -23,7 +23,7 @@ var currentSourceMap = null;   // v3 source map for currently-running instrument
 var traceEvents = [];          // list of event location objects created by tracing events             
 var stuckTime = null;          // timestmp to detect stuck programs
 var arrows = {};               // keep track of arrows that appear in the program
-
+var programChanged = false;    // whether user edited program while running
 // verification of complexity of stuck loop
 var stuckComplexity = {
   lines: 0,
@@ -51,6 +51,7 @@ function bindframe(w) {
   traceEvents = [];
   screenshots = [];
   arrows = {};
+  programChanged = false;
   currentRecordID = 1;
   currentDebugId = 0;
   prevIndex = -1; 
@@ -227,6 +228,7 @@ function reportEnter(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
+if (!programChanged) { 
   var recordD = debugRecordsByDebugId[debugId];
   var recordL = debugRecordsByLineNo[recordD.line];
   recordD.method = method;
@@ -321,6 +323,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       traceLine(line);
     }
   }
+}
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
@@ -838,6 +841,7 @@ view.on('stop', function() {
 view.on('delta', function(){ 
   $(".arrow").remove();
   //need to add code that stops animation!!!
+  programChanged = true;
 });
 
 ///////////////////////////////////////////////////////////////////////////
