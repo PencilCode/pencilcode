@@ -141,7 +141,7 @@ var debug = window.ide = {
   trace: function(event, data) { 
     detectStuckProgram();
 
-    if (event.type === 'before' || event.type === 'enter') {
+    if (event.type === 'before' || event.type === 'after' || event.type === 'enter') {
       currentDebugId += 1;
       var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
           data: "", seeeval:false};
@@ -154,12 +154,7 @@ var debug = window.ide = {
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
       debugRecordsByLineNo[lineno] = record;
-      updateVariables(event.location.first_line, currentEventIndex, event.vars);
-    } else if (event.type === 'after') {
-      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
-    } else if (event.type === 'leave') {
-      // This event happens when a function is left, and contains the return
-      // value or thrown error. We aren't using this event for now.
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls || []);
     }
   },
   setSourceMap: function (map) {
@@ -218,6 +213,7 @@ function updateVariables(lineNum, eventIndex, vars, functionCalls) {
   }
 
   // TODO: combine variables from other events with the current ones.
+  // TODO: don't push anything if nothing changed.
   variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
 }
 
@@ -391,6 +387,7 @@ if (!programChanged) {
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
+      showVariablesFor(line, index);
     }
   }
 }
