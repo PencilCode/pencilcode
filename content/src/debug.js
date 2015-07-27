@@ -280,7 +280,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           else{
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-          view.arrow(view.paneid('left'), arrows, currentRecordID);//should I pass in prevIndex and currentRecordID or?
+          view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
         }
         traceLine(currentLine);
         tracedLine = currentLine;
@@ -312,7 +312,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         else{
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        view.arrow(view.paneid('left'), arrows, currentRecordID);//should I pass in prevIndex and currentRecordID or?
+        view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
       }
       currentRecordID = debugId;
       prevLine = line;
@@ -327,7 +327,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval){
-      view.arrow(view.paneid('left'), arrows, -1);
+      view.arrow(view.paneid('left'), arrows, -1, false);
       var recordL = debugRecordsByLineNo[recordD.line];
       recordD.method = method;
       recordL.method = method;
@@ -381,7 +381,7 @@ function end_program(){
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
 
-        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentRecordID or?
+        view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
     traceLine(currentLine);
     tracedLine = currentLine;
@@ -391,7 +391,7 @@ function end_program(){
   }
   if (tracedLine != -1){
         untraceLine(tracedLine);
-        view.arrow(view.paneid('left'), arrows, -1);
+        view.arrow(view.paneid('left'), arrows, -1, false);
         tracedLine = -1;
   }
   prevLine = -1;
