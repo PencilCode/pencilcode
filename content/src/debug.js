@@ -200,23 +200,56 @@ function detectStuckProgram() {
 // VARIABLE & FUNCTION CALL TRACKING
 //////////////////////////////////////////////////////////////////////
 
+function mergeVars(oldVars, curVars) {
+  var newVars = oldVars.slice();
+  var anyChanges = false;
+  for (var i = 0; i < curVars.length; i++) {
+    // TODO: keep arrays sorted to prevent the inner loop?
+    var found = false;
+    for (var j = 0; j < oldVars.length; j++) {
+      if (oldVars[j].name === curVars[i].name) {
+        found = true;
+        if (oldVars[j].value !== curVars[i].value) {
+          newVars[j] = {name: curVars[i].name, value: valueToString(curVars[i].value)};
+          anyChanges = true;
+        }
+        break;
+      }
+    }
+    if (!found) {
+      newVars.push({name: curVars[i].name, value: valueToString(curVars[i].value)});
+      anyChanges = true;
+    }
+  }
+
+  if (anyChanges) {
+    return newVars;
+  } else {
+    return false;
+  }
+}
+
 function updateVariables(lineNum, eventIndex, vars, functionCalls) {
-  functionCalls = functionCalls || [];
   variablesByLineNo[lineNum] = variablesByLineNo[lineNum] || [];
 
-  var newVars = [];
-  for (var i = 0; i < vars.length; i++) {
-    newVars[i] = {name: vars[i].name, value: valueToString(vars[i].value)};
+  var oldVars = [];
+  var oldFunctionCalls = [];
+  if (variablesByLineNo[lineNum].length > 0) {
+    var last = variablesByLineNo[lineNum][variablesByLineNo[lineNum].length - 1];
+    oldVars = last.vars;
+    oldFunctionCalls = last.functionCalls;
   }
 
-  var newFunctionCalls = [];
-  for (var i = 0; i < functionCalls.length; i++) {
-    newFunctionCalls[i] = {name: functionCalls[i].name, value: valueToString(functionCalls[i].value)};
-  }
+  // Merge vars with this line's previously displayed vars.
+  var newVars = mergeVars(oldVars, vars);
+  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls);
 
-  // TODO: combine variables from other events with the current ones.
-  // TODO: don't push anything if nothing changed.
-  variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+  // If nothing changed, don't do anything.
+  if (newVars !== false || newFunctionCalls !== false) {
+    if (newVars === false) { newVars = oldVars; }
+    if (newFunctionCalls === false) { newFunctionCalls = oldFunctionCalls; }
+    variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+  }
 }
 
 function valueToString(value) {
