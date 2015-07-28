@@ -144,6 +144,7 @@ window.pencilcode.view = {
   initializeSlider: initializeSlider,
   arrow: arrow,
   showVariables: showVariables,
+  showAllVariablesAt: showAllVariablesAt,
   removeVariables: removeVariables,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
@@ -242,7 +243,7 @@ var linenoList = [];
 var current_line = 0;
 var previous_line = 0;
 
-function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
+function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo) {
   // need this previous line for the forward and back buttons to work
   var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
@@ -257,6 +258,9 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
    // Drawing arrows at each step in the slider
   arrow(pane, all_arrows, current_line, true);
  
+  // Show variables for each line for this step in the slider.
+  showAllVariablesAt(current_line, variablesByLineNo);
+
   $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
   // ISSUE: CIRCULAR DEPENDICIES 
   // display the protractor for that new line and highlight the selected line
@@ -270,7 +274,7 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
       markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
 }
 
-function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target) {
+function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
@@ -307,10 +311,10 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
         value: current_line,
         smooth: false,
         change: function(event, ui)  {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows)
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo)
         }, 
         slide: function(event, ui) {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows);
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo);
         } 
         })
         .slider("pips", {
@@ -338,9 +342,6 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   } 
   for (var i = 0; i < traceevents.length; i++) {
     linenoList[i] = (traceevents[i].location.first_line);
-    if (traceevents[i].type == "enter" || traceevents[i].type == "leave") {
-      traceevents.splice(i, 1);
-    }
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
@@ -3543,46 +3544,69 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     if (!getPaneEditorBlockMode(pane)) { block_mode = false; }
   }
 
-  if (vars.length > 0 || functionCalls.length > 0) {
-    if (block_mode) {
-      var dropletEditor = state.pane[pane].dropletEditor;
-      var bounds = dropletEditor.getLineMetrics(lineNum - 1);
-      coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
-    } else {
-      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
-      coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
-      offsetTop = $(".editor").offset().top;
-    }
+  if (block_mode) {
+    var dropletEditor = state.pane[pane].dropletEditor;
+    var bounds = dropletEditor.getLineMetrics(lineNum - 1);
+    coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
+  } else {
+    var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+    coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+    offsetTop = $(".editor").offset().top;
+  }
 
-    var text = "";
-    for (var i = 0; i < vars.length; i++) {
-      text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
-    }
-    for (var i = 0; i < functionCalls.length; i++) {
-      text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
-    }
+  var text = "";
+  for (var i = 0; i < vars.length; i++) {
+    text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
+  }
+  for (var i = 0; i < functionCalls.length; i++) {
+    text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
+  }
 
-    var divId = "line" + lineNum + "vars";
-    if ($("#" + divId).length) {
-      $("#" + divId).html(text);
-    } else {
-      var div = document.createElement('div');
-      div.id = divId;
-      div.className = "vars";
-      div.innerHTML = text;
-      div.style.visibility = 'visible';
-      div.style.position = "absolute";
-      div.style.zIndex = "10";
-      div.style.right = "0";
-      div.style.top = String(coords.pageY - offsetTop) + "px";
+  var divId = "line" + lineNum + "vars";
+  if ($("#" + divId).length) {
+    $("#" + divId).html(text);
+  } else {
+    var div = document.createElement('div');
+    div.id = divId;
+    div.className = "vars";
+    div.innerHTML = text;
+    div.style.visibility = 'visible';
+    div.style.position = "absolute";
+    div.style.zIndex = "10";
+    div.style.right = "0";
+    div.style.top = String(coords.pageY - offsetTop) + "px";
 
-      $(".editor").append(div);
-    }
+    $(".editor").append(div);
   }
 }
 
 function removeVariables() {
   $(".editor > .vars").remove();
+}
+
+function showVariablesFor(lineNum, eventIndex, variablesByLineNo) {
+  var vars = [];
+  var functionCalls = [];
+
+  // Find what the state of the tracked variables were at this eventIndex.
+  if (variablesByLineNo[lineNum]) {
+    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
+      var entry = variablesByLineNo[lineNum][i];
+      if (entry.eventIndex > eventIndex) {
+        break;
+      }
+      vars = entry.vars;
+      functionCalls = entry.functionCalls;
+    }
+  }
+
+  showVariables(paneid('left'), lineNum, vars, functionCalls);
+}
+
+function showAllVariablesAt(eventIndex, variablesByLineNo) {
+  for (var lineNum in variablesByLineNo) {
+    showVariablesFor(lineNum, eventIndex, variablesByLineNo);
+  }
 }
 
 window.FontLoader = FontLoader;
