@@ -337,7 +337,10 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
      linenoList = [];
   } 
   for (var i = 0; i < traceevents.length; i++) {
-    linenoList[i] = (traceevents[i].location.first_line)
+    linenoList[i] = (traceevents[i].location.first_line);
+    if (traceevents[i].type == "enter" || traceevents[i].type == "leave") {
+      traceevents.splice(i, 1);
+    }
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
