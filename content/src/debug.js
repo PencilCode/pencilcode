@@ -281,6 +281,8 @@ function reportAppear(method, debugId, length, coordId, elem, args){
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
           view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+          debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
+          debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         }
         traceLine(currentLine);
         tracedLine = currentLine;
@@ -313,6 +315,8 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+        debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
+        debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
       }
       currentRecordID = debugId;
       prevLine = line;
@@ -380,7 +384,8 @@ function end_program(){
         else{
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-
+        debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
+        debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
     traceLine(currentLine);
