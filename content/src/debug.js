@@ -141,6 +141,7 @@ var debug = window.ide = {
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
         data: "", seeeval:false};
     traceEvents.push(event);
+    console.log("traceEvents:", traceEvents);
     currentEventIndex = traceEvents.length - 1;
     record.eventIndex = currentEventIndex;
     var lineno = traceEvents[currentEventIndex].location.first_line;
@@ -705,6 +706,7 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
+  console.log("debugRecordsByLineNo", debugRecordsByLineNo);
   var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
   view.arrow(view.paneid('left'), arrows, eventIndex, true);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
