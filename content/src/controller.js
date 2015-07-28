@@ -432,6 +432,18 @@ view.on('changehtmlcss', function(pane) {
   saveDefaultMeta(doc.meta);
 });
 
+view.on('runcode', function(pane, code) {
+  // Only run code when in the left position
+  if (paneatpos('left') != pane) {
+    return;
+  }
+  // Only run code when the right position is running.
+  // TODO: consider flipping the RHS into run mode automatically
+  if (modelatpos('right').running) {
+    view.evalInRunningPane(paneatpos('right'), code);
+  }
+});
+
 view.on('run', runAction);
 
 function runAction() {

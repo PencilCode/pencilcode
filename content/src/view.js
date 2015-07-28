@@ -2236,7 +2236,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
           {
             mode: dropletMode,
             palette: paletteForPane(paneState),
-            modeOptions: dropletOptionsForMimeType(visibleMimeType)
+            modeOptions: dropletOptionsForMimeType(visibleMimeType),
+            playButtons: {
+              color: 'dodgerblue'
+            }
           });
   // Set up fonts - once they are loaded.
   whenCodeFontLoaded(function () {
@@ -2254,6 +2257,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   // Listen to parseerror event before setting up text.
   dropletEditor.on('parseerror', function(e) {
     fireEvent('parseerror', [pane, e]);
+  });
+  // Listen to runcode event
+  dropletEditor.on('runcode', function(e) {
+    fireEvent('runcode', [pane, e]);
   });
   dropletEditor.setEditorState(useblocks);
   dropletEditor.setValue(text);
