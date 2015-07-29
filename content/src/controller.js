@@ -1420,6 +1420,8 @@ function doneWithFile(filename) {
     }
   } else {
     if (filename.indexOf('/') >= 0) {
+      // `history.state.previous` is like '/edit/demo/', so we should
+      // strip the filename after '/' and keep the '/'.
       filename = filename.replace(/[^\/]+\/?$/, '');
     } else {
       filename = '';
