@@ -5,7 +5,6 @@
 var $              = require('jquery'),
     jqueryui       = require('jquery-ui'),
     jqueryuisliderpips = require('jquery-ui-slider-pips'),
-    nouislider = require('nouislider'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
