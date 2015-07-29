@@ -279,7 +279,7 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
     current_line = 0;
     previous_line = 0;
-
+    console.log(debugRecordsByLineNo);
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -330,7 +330,6 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 }
 
 function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) { 
-  console.log("traceevents: ", traceevents);
 
   $(".scrubbermark").css("visibility", "visible");
 
@@ -1427,6 +1426,7 @@ function hideProtractor(pane) {
   var protractor = preview.find('.protractor');
   if (protractor.length) {
     protractor.remove();
+    $('.turtle').remove();
     preview.find('.protractor-label').remove();
   }
 }
@@ -1517,6 +1517,7 @@ function labelStep(preview, step) {
     top: step.startCoords.pageY + $(label).height(),
     left: step.startCoords.pageX - $(label).outerWidth() / 2
   });
+  console.log(step.startCoords.pageY);
 }
 
 
@@ -3400,9 +3401,6 @@ function arrow(pane, arrows, traceEventNum, show_fade){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  console.log("In arrows! Arrows are: ", arrows);
-  console.log("traceEventNum: ", traceEventNum);
-
   var arrow_data = arrows[traceEventNum];
   var startcoordsBefore = null;
   var endcoordsBefore = null;
@@ -3516,7 +3514,7 @@ function arrow(pane, arrows, traceEventNum, show_fade){
              <polygon points='0,0 10,5 0,10'/>  \
             </marker>  \ " + before_arrowtext + after_arrowtext +  "</svg> ";
 
-    console.log('arrow text: ', text);
+    
     
     var div = document.createElement('div');
     div.className =  "arrow";
