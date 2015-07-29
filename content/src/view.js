@@ -268,9 +268,8 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
     
     displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
   }
-  markPaneEditorLine(
-      paneid('left'), lineno, 'guttermouseable', true);
-      markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+  markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
+  markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
 }
 
 function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
