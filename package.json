@@ -67,9 +67,11 @@
     "html2canvas": "./content/lib/html2canvas.js",
     "iced-coffee-script": "./content/lib/iced-coffee-script.js",
     "jquery": "./content/lib/jquery.js",
+    "jquery-turtle": "./content/lib/jquery-turtle.js",
     "jquery-ui": "./content/lib/jquery-ui.js",
     "jquery-ui-slider-pips": "./content/lib/jquery-ui-slider-pips.js",
     "html2canvas" : "./content/lib/html2canvas.js",
+    "nouislider" : "./content/lib/nouislider.js", 
     "palette": "./content/src/palette.js",
     "pencil-tracer": "./content/lib/pencil-tracer.js",
     "see": "./content/lib/see.js",
@@ -96,6 +98,11 @@
       "depends": [
         "jquery:jQuery"
       ]
+    },
+    "jquery-turtle": {
+     "depends": [
+      "jquery:jQuery"
+     ]
     },
     "see": {
       "exports": "see",
