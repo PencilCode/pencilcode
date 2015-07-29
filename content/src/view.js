@@ -331,7 +331,7 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
 }
 
-function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
+function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) { 
   console.log("traceevents: ", traceevents);
 
   $(".scrubbermark").css("visibility", "visible");
@@ -345,7 +345,7 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target);
+    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target);
     $('#backButton').on('click', function() {
       if (current_line != 0) {
         current_line--;

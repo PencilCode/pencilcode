@@ -330,8 +330,6 @@ if (!programChanged) {
 
       //trace lines that are not animation.
       while (currentRecordID < debugId) {
-        showVariablesFor(currentLine, currentIndex);
-
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           var prevLine = prevLocation.first_line;
@@ -433,7 +431,7 @@ function end_program(){
   var currentLine = -1; 
   var tracedLine = -1;
   var justEnded = (currentRecordID < currentDebugId);
-  while (currentRecordID < currentDebugId){
+  while (currentRecordID <= currentDebugId){
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
     var currentIndex = currentRecord.eventIndex;
