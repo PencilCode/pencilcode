@@ -325,19 +325,19 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
 }
 
 function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
+  console.log("traceevents: ", traceevents);
 
   $(".scrubbermark").css("visibility", "visible");
-  
-  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
-    traceevents.pop();
-  }
 
   // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
      linenoList = [];
   } 
   for (var i = 0; i < traceevents.length; i++) {
-    linenoList[i] = (traceevents[i].location.first_line)
+    linenoList[i] = (traceevents[i].location.first_line);
+    if (traceevents[i].type == "enter" || traceevents[i].type == "leave") {
+      traceevents.splice(i, 1);
+    }
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
@@ -3383,13 +3383,11 @@ function setupHpanelBox(box) {
 function curvedVertical(x1, y1, x2, y2) {
   var radius = Math.abs(y1 - y2);
   var line = [];
-  console.log("radius: ", radius);
   
   x1 = parseFloat(x1);
   y1 = parseFloat(y1);
   x2 = parseFloat(x2);
   y2 = parseFloat(y2);
-  console.log("xs and ys: ", x1, y1, x2, y2);
   return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
 }
 
@@ -3400,7 +3398,10 @@ function arrow(pane, arrows, traceEventNum, show_fade){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  var arrow_data = arrows[traceEventNum]; 
+  console.log("In arrows! Arrows are: ", arrows);
+  console.log("traceEventNum: ", traceEventNum);
+
+  var arrow_data = arrows[traceEventNum];
   var startcoordsBefore = null;
   var endcoordsBefore = null;
   var offset_top_before =  0; 
@@ -3436,20 +3437,15 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     }
   }
           
-  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined){
+  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined) {
     
-    console.log("firstBeforeLoc.first_line: ", firstBeforeLoc.first_line);
-    console.log('secondBeforeLoc.first_line: ', secondBeforeLoc.first_line);
     if (block_mode){
       var dropletEditor = state.pane[pane].dropletEditor;
-
       var startBoundsBefore = dropletEditor.getLineMetrics(firstBeforeLoc.first_line - 1);
       var endBoundsBefore = dropletEditor.getLineMetrics(secondBeforeLoc.first_line - 1);
-      console.log("startBoundsBefore: ", startBoundsBefore);
-      console.log("endBoundsBefore: ", endBoundsBefore);
       startcoordsBefore = {pageX : startBoundsBefore.bounds.x, pageY: startBoundsBefore.bounds.y};
       endcoordsBefore =  {pageX : endBoundsBefore.bounds.x, pageY: endBoundsBefore.bounds.y};
-      offset_top_before = startBoundsBefore.bounds.height - 30;
+      offset_top_before = startBoundsBefore.bounds.height - 60;
       offset_left_before = Math.max(startBoundsBefore.bounds.width, endBoundsBefore.bounds.width)  + 20;
     }
     else{
@@ -3468,11 +3464,7 @@ function arrow(pane, arrows, traceEventNum, show_fade){
         x_val = endcoordsBefore.pageX;
       }
     }
-    console.log("Start Coords: ", startcoordsBefore);
-    console.log("End Coords: ", endcoordsBefore);
-    console.log("curvedVertical result: ", curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)))
-    console.log("x_val: ", x_val);
-    if (show_fade){
+    if (show_fade) {
       before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
                         + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:2' position='relative'/> \ "
     }
@@ -3481,19 +3473,15 @@ function arrow(pane, arrows, traceEventNum, show_fade){
                         + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
     } 
   }
-  if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined){
-    console.log("firstAfterLoc: ", firstAfterLoc);
-    console.log("secondAfterLoc: ", secondAfterLoc);
+  if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined) {
     if (block_mode){
-      console.log("In block mode locations are: ", firstAfterLoc, secondAfterLoc);
+      var dropletEditor = state.pane[pane].dropletEditor;
       var startBoundsAfter= dropletEditor.getLineMetrics(firstAfterLoc.first_line - 1);
-      var endBoundsAfter = dropletEditor.getLineMetrics(secondAfterLoc.first_line - 1);
+      var endBoundsAfter = dropletEditor.getLineMetrics(secondAfterLoc.first_line -1 );
       startcoordsAfter = {pageX : startBoundsAfter.bounds.x, pageY: startBoundsAfter.bounds.y};
       endcoordsAfter =  {pageX : endBoundsAfter.bounds.x, pageY: endBoundsAfter.bounds.y};
-      offset_top_after = startBoundsAfter.bounds.height - 30;
+      offset_top_after = startBoundsAfter.bounds.height - 60;
       offset_left_after = Math.max(startBoundsAfter.bounds.width, endBoundsAfter.bounds.width)  + 20;
-      console.log("Start Coords: ", startcoordsAfter);
-      console.log("End Coords: ", endcoordsAfter);
     }
     else{
       offset_top_after = $(".editor").offset().top ;
@@ -3511,7 +3499,7 @@ function arrow(pane, arrows, traceEventNum, show_fade){
         x_val = endcoordsAfter.pageX;
       }
     }
-    after_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
+      after_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
              + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
   } 
 
@@ -3526,6 +3514,8 @@ function arrow(pane, arrows, traceEventNum, show_fade){
              <polygon points='0,0 10,5 0,10'/>  \
             </marker>  \ " + before_arrowtext + after_arrowtext +  "</svg> ";
 
+    console.log('arrow text: ', text);
+    
     var div = document.createElement('div');
     div.className =  "arrow";
     div.innerHTML = text;
