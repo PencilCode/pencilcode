@@ -142,6 +142,9 @@ window.pencilcode.view = {
   setPrimaryFocus: setPrimaryFocus,
   initializeSlider: initializeSlider,
   arrow: arrow,
+  showVariables: showVariables,
+  showAllVariablesAt: showAllVariablesAt,
+  removeVariables: removeVariables,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -239,7 +242,7 @@ var linenoList = [];
 var current_line = 0;
 var previous_line = 0;
 
-function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
+function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo) {
   // need this previous line for the forward and back buttons to work
   var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
@@ -254,6 +257,9 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
    // Drawing arrows at each step in the slider
   arrow(pane, all_arrows, current_line, true);
  
+  // Show variables for each line for this step in the slider.
+  showAllVariablesAt(current_line, variablesByLineNo);
+
   $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
   // ISSUE: CIRCULAR DEPENDICIES 
   // display the protractor for that new line and highlight the selected line
@@ -267,7 +273,7 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
       markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
 }
 
-function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target) {
+function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
@@ -304,10 +310,10 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
         value: current_line,
         smooth: false,
         change: function(event, ui)  {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows)
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo)
         }, 
         slide: function(event, ui) {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows);
+          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo);
         } 
         })
         .slider("pips", {
@@ -324,13 +330,10 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
 
 }
 
-function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, target) { 
+function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) { 
+  console.log("traceevents: ", traceevents);
 
   $(".scrubbermark").css("visibility", "visible");
-  
-  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
-    traceevents.pop();
-  }
 
   // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
@@ -338,13 +341,10 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   } 
   for (var i = 0; i < traceevents.length; i++) {
     linenoList[i] = (traceevents[i].location.first_line);
-    if (traceevents[i].type == "enter" || traceevents[i].type == "leave") {
-      traceevents.splice(i, 1);
-    }
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target);
+    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target);
     $('#backButton').on('click', function() {
       if (current_line != 0) {
         current_line--;
@@ -3386,7 +3386,11 @@ function setupHpanelBox(box) {
 function curvedVertical(x1, y1, x2, y2) {
   var radius = Math.abs(y1 - y2);
   var line = [];
-
+  
+  x1 = parseFloat(x1);
+  y1 = parseFloat(y1);
+  x2 = parseFloat(x2);
+  y2 = parseFloat(y2);
   return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
 }
 
@@ -3397,7 +3401,10 @@ function arrow(pane, arrows, traceEventNum, show_fade){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  var arrow_data = arrows[traceEventNum]; 
+  console.log("In arrows! Arrows are: ", arrows);
+  console.log("traceEventNum: ", traceEventNum);
+
+  var arrow_data = arrows[traceEventNum];
   var startcoordsBefore = null;
   var endcoordsBefore = null;
   var offset_top_before =  0; 
@@ -3412,6 +3419,7 @@ function arrow(pane, arrows, traceEventNum, show_fade){
   var offset_left_after = 0; 
   var before_arrowtext = "";
   var after_arrowtext = "";
+  var x_val = 0;
 
   $(".arrow").remove();
 
@@ -3432,21 +3440,20 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     }
   }
           
-  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined){
+  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined) {
     
     if (block_mode){
       var dropletEditor = state.pane[pane].dropletEditor;
-      var startBoundsBefore = dropletEditor.getLineMetrics(firstBeforeLoc.first_line);
-      var endBoundsBefore = dropletEditor.getLineMetrics(secondBeforeLoc.first_line);
+      var startBoundsBefore = dropletEditor.getLineMetrics(firstBeforeLoc.first_line - 1);
+      var endBoundsBefore = dropletEditor.getLineMetrics(secondBeforeLoc.first_line - 1);
       startcoordsBefore = {pageX : startBoundsBefore.bounds.x, pageY: startBoundsBefore.bounds.y};
       endcoordsBefore =  {pageX : endBoundsBefore.bounds.x, pageY: endBoundsBefore.bounds.y};
-      offset_top_before = startBoundsBefore.bounds.height - 30;
+      offset_top_before = startBoundsBefore.bounds.height - 60;
       offset_left_before = Math.max(startBoundsBefore.bounds.width, endBoundsBefore.bounds.width)  + 20;
-
     }
     else{
       offset_top_before = $(".editor").offset().top ;
-      offset_left_before = $(".editor").offset().left + 30;
+      offset_left_before = $(".editor").offset().left + 50;
       startcoordsBefore = state.pane[pane].editor.renderer.textToScreenCoordinates((firstBeforeLoc.first_line), (firstBeforeLoc.last_column + 10));
       endcoordsBefore = state.pane[pane].editor.renderer.textToScreenCoordinates((secondBeforeLoc.first_line ), (secondBeforeLoc.last_column + 10));
     }
@@ -3460,27 +3467,28 @@ function arrow(pane, arrows, traceEventNum, show_fade){
         x_val = endcoordsBefore.pageX;
       }
     }
-    if (show_fade){
-      before_arrowtext = "<path d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none;' position='relative'/> \ "
+    if (show_fade) {
+      before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
+                        + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:2' position='relative'/> \ "
     }
     else{
-     before_arrowtext = "<path d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none;' position='relative'/> \ "
+     before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
+                        + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
     } 
   }
-  if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined){
+  if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined) {
     if (block_mode){
-      var startBoundsAfter= dropletEditor.getLineMetrics(firstAfterLoc.first_line);
-      var endBoundsAfter = dropletEditor.getLineMetrics(secondAfterLoc.first_line);
+      var dropletEditor = state.pane[pane].dropletEditor;
+      var startBoundsAfter= dropletEditor.getLineMetrics(firstAfterLoc.first_line - 1);
+      var endBoundsAfter = dropletEditor.getLineMetrics(secondAfterLoc.first_line -1 );
       startcoordsAfter = {pageX : startBoundsAfter.bounds.x, pageY: startBoundsAfter.bounds.y};
       endcoordsAfter =  {pageX : endBoundsAfter.bounds.x, pageY: endBoundsAfter.bounds.y};
-      offset_top_after = startBoundsAfter.bounds.height - 30;
+      offset_top_after = startBoundsAfter.bounds.height - 60;
       offset_left_after = Math.max(startBoundsAfter.bounds.width, endBoundsAfter.bounds.width)  + 20;
     }
     else{
       offset_top_after = $(".editor").offset().top ;
-      offset_left_after = $(".editor").offset().left + 30;
+      offset_left_after = $(".editor").offset().left + 50;
       startcoordsAfter = state.pane[pane].editor.renderer.textToScreenCoordinates((firstAfterLoc.first_line), (firstAfterLoc.last_column + 10));
       endcoordsAfter = state.pane[pane].editor.renderer.textToScreenCoordinates((secondAfterLoc.first_line ), (secondAfterLoc.last_column + 10));
     }
@@ -3494,8 +3502,8 @@ function arrow(pane, arrows, traceEventNum, show_fade){
         x_val = endcoordsAfter.pageX;
       }
     }
-    after_arrowtext = "<path d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
-             + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none;' position='relative'/> \ "
+      after_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
+             + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
   } 
 
     var text = "<svg class= 'arrow' width=" 
@@ -3509,6 +3517,8 @@ function arrow(pane, arrows, traceEventNum, show_fade){
              <polygon points='0,0 10,5 0,10'/>  \
             </marker>  \ " + before_arrowtext + after_arrowtext +  "</svg> ";
 
+    console.log('arrow text: ', text);
+    
     var div = document.createElement('div');
     div.className =  "arrow";
     div.innerHTML = text;
@@ -3523,6 +3533,80 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     }  
 };
 
+function showVariables(pane, lineNum, vars, functionCalls) {
+  var coords = null;
+  var offsetTop = 0;
+
+  var block_mode = null;
+  if (pane) {
+    block_mode = true;
+    if (!getPaneEditorBlockMode(pane)) { block_mode = false; }
+  }
+
+  if (block_mode) {
+    var dropletEditor = state.pane[pane].dropletEditor;
+    var bounds = dropletEditor.getLineMetrics(lineNum - 1);
+    coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
+  } else {
+    var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+    coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+    offsetTop = $(".editor").offset().top;
+  }
+
+  var text = "";
+  for (var i = 0; i < vars.length; i++) {
+    text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
+  }
+  for (var i = 0; i < functionCalls.length; i++) {
+    text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
+  }
+
+  var divId = "line" + lineNum + "vars";
+  if ($("#" + divId).length) {
+    $("#" + divId).html(text);
+  } else {
+    var div = document.createElement('div');
+    div.id = divId;
+    div.className = "vars";
+    div.innerHTML = text;
+    div.style.visibility = 'visible';
+    div.style.position = "absolute";
+    div.style.zIndex = "10";
+    div.style.right = "0";
+    div.style.top = String(coords.pageY - offsetTop) + "px";
+
+    $(".editor").append(div);
+  }
+}
+
+function removeVariables() {
+  $(".editor > .vars").remove();
+}
+
+function showVariablesFor(lineNum, eventIndex, variablesByLineNo) {
+  var vars = [];
+  var functionCalls = [];
+
+  // Find what the state of the tracked variables were at this eventIndex.
+  if (variablesByLineNo[lineNum]) {
+    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
+      var entry = variablesByLineNo[lineNum][i];
+      if (entry.eventIndex > eventIndex) {
+        break;
+      }
+      vars = entry.vars;
+      functionCalls = entry.functionCalls;
+    }
+  }
+
+  showVariables(paneid('left'), lineNum, vars, functionCalls);
+}
+
+function showAllVariablesAt(eventIndex, variablesByLineNo) {
+  for (var lineNum in variablesByLineNo) {
+    showVariablesFor(lineNum, eventIndex, variablesByLineNo);
+  }
+}
 
 window.FontLoader = FontLoader;
 window.fontloader = fontloader;

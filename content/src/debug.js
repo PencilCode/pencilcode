@@ -6,7 +6,8 @@ var $         = require('jquery'),
     view      = require('view'),
     see       = require('see'),
     html2canvas = require('html2canvas'),
-    sourcemap = require('source-map');
+    sourcemap = require('source-map'),
+    util      = require('util');
 
 eval(see.scope('debug'));
 
@@ -16,6 +17,7 @@ var prevIndex = -1;            // previous index of prior traceEvent.
 var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
 var debugRecordsByDebugId = {};// map debug ids -> line execution records.
 var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
+var variablesByLineNo = {};    // map line numbers -> tracked variables.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
 var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
@@ -48,6 +50,7 @@ function bindframe(w) {
   cachedParseStack = {};
   debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
+  variablesByLineNo = {};
   traceEvents = [];
   screenshots = [];
   arrows = {};
@@ -58,6 +61,7 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
+  view.removeVariables();
   stuckTime = null;
   stuckComplexity = {
     lines: 0,
@@ -136,18 +140,24 @@ var debug = window.ide = {
   },
   trace: function(event, data) { 
     detectStuckProgram();
-    // This receives events for the new debugger to use.
-    currentDebugId += 1;
-    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
-        data: "", seeeval:false};
-    traceEvents.push(event);
-    currentEventIndex = traceEvents.length - 1;
-    record.eventIndex = currentEventIndex;
-    var lineno = traceEvents[currentEventIndex].location.first_line;
-    setTimeout(function() {view.createSlider(traceEvents, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
-    record.line = lineno;
-    debugRecordsByDebugId[currentDebugId] = record;
-    debugRecordsByLineNo[lineno] = record;
+
+    if (event.type === 'before' || event.type === 'enter') {
+      currentDebugId += 1;
+      var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
+          data: "", seeeval:false};
+      traceEvents.push(event);
+      console.log("traceEvents:", traceEvents);
+      currentEventIndex = traceEvents.length - 1;
+      record.eventIndex = currentEventIndex;
+      var lineno = traceEvents[currentEventIndex].location.first_line;
+      setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
+      record.line = lineno;
+      debugRecordsByDebugId[currentDebugId] = record;
+      debugRecordsByLineNo[lineno] = record;
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
+    } else if (event.type === 'after') {
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
+    }
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
@@ -183,6 +193,72 @@ function detectStuckProgram() {
     } else {
       targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// VARIABLE & FUNCTION CALL TRACKING
+//////////////////////////////////////////////////////////////////////
+
+function mergeVars(oldVars, curVars) {
+  var newVars = oldVars.slice();
+  var anyChanges = false;
+  for (var i = 0; i < curVars.length; i++) {
+    // TODO: keep arrays sorted to prevent the inner loop?
+    var found = false;
+    for (var j = 0; j < oldVars.length; j++) {
+      if (oldVars[j].name === curVars[i].name) {
+        found = true;
+        if (oldVars[j].value !== curVars[i].value) {
+          newVars[j] = {name: curVars[i].name, value: valueToString(curVars[i].value)};
+          anyChanges = true;
+        }
+        break;
+      }
+    }
+    if (!found) {
+      newVars.push({name: curVars[i].name, value: valueToString(curVars[i].value)});
+      anyChanges = true;
+    }
+  }
+
+  if (anyChanges) {
+    return newVars;
+  } else {
+    return false;
+  }
+}
+
+function updateVariables(lineNum, eventIndex, vars, functionCalls) {
+  variablesByLineNo[lineNum] = variablesByLineNo[lineNum] || [];
+
+  var oldVars = [];
+  var oldFunctionCalls = [];
+  if (variablesByLineNo[lineNum].length > 0) {
+    var last = variablesByLineNo[lineNum][variablesByLineNo[lineNum].length - 1];
+    oldVars = last.vars;
+    oldFunctionCalls = last.functionCalls;
+  }
+
+  // Merge vars with this line's previously displayed vars.
+  var newVars = mergeVars(oldVars, vars);
+  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls);
+
+  // If nothing changed, don't do anything.
+  if (newVars !== false || newFunctionCalls !== false) {
+    if (newVars === false) { newVars = oldVars; }
+    if (newFunctionCalls === false) { newFunctionCalls = oldFunctionCalls; }
+    variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+  }
+}
+
+function valueToString(value) {
+  if (typeof value === 'function') {
+    return '<function>';
+  } else if (typeof value === 'object') {
+    return '<object>';
+  } else {
+    return util.inspect(value);
   }
 }
 
@@ -325,6 +401,7 @@ if (!programChanged) {
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
+      view.showAllVariablesAt(index, variablesByLineNo);
     }
   }
 }
@@ -353,7 +430,8 @@ function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
   var tracedLine = -1;
-  while (currentRecordID < currentDebugId){
+  var justEnded = (currentRecordID < currentDebugId);
+  while (currentRecordID <= currentDebugId){
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
     var currentIndex = currentRecord.eventIndex;
@@ -403,6 +481,9 @@ function end_program(){
         tracedLine = -1;
   }
   prevLine = -1;
+  if (justEnded) {
+    view.showAllVariablesAt(currentIndex, variablesByLineNo);
+  }
 }
 
 function errorAdvice(msg, text) {
@@ -705,6 +786,7 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
+  console.log("debugRecordsByLineNo", debugRecordsByLineNo);
   var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
   view.arrow(view.paneid('left'), arrows, eventIndex, true);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
@@ -848,6 +930,7 @@ view.on('stop', function() {
 
 view.on('delta', function(){ 
   $(".arrow").remove();
+  view.removeVariables();
   //need to add code that stops animation!!!
   programChanged = true;
 });
