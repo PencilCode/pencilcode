@@ -651,7 +651,7 @@ describe('code editor', function() {
   });
   it('should capture thumbnail when camera button is pressed', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
-      // Then click the save button.
+      // Then click the camera button.
       $('#screenshot').click();
     }, function() {
       // Wait for thumbnail to be flashed
