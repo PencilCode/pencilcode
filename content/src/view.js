@@ -89,6 +89,7 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
+<<<<<<< HEAD
   on: function(tag, cb) { 
   if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
@@ -96,6 +97,14 @@ window.pencilcode.view = {
     state.callbacks[tag].push(cb); 
   },
 
+=======
+  on: function(tag, cb) {
+    if (state.callbacks[tag] == null){
+      state.callbacks[tag] = []
+    }
+    state.callbacks[tag].push(cb);
+ },
+>>>>>>> upstream/master
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -454,7 +463,7 @@ function setOnCallback(tag, cb) {
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
-    //take a copy of the array in case other 
+    //take a copy of the array in case other
     //events are fired while you're indexing it.
     for (j=0; j < cbs.length; j++) {
       var cb = cbs[j];
@@ -942,15 +951,19 @@ function showMiddleButton(which) {
 // Show thumbnail under the save button.
 function flashThumbnail(imageDataUrl) {
   if (!imageDataUrl) { return; }
-  var tooltip = $('#save').tooltipster({
+  // Destroy the original title tooltip once there is a thumbnail.
+  $('#screenshot').tooltipster('destroy');
+  $('#screenshot').tooltipster({
     content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
-    multiple: true,
     position: 'bottom',
     theme: 'tooltipster-shadow',
-    timer: 3000,
-    trigger: 'custom'
-  })[0];
-  tooltip.show();
+    interactive: true,
+    timer: 3000
+  });
+  // Flash the thumbnail for 3 seconds, then disable the timer,
+  // so that activation via hovering will not last for only 3 seconds.
+  $('#screenshot').tooltipster('show');
+  $('#screenshot').tooltipster('option', 'timer', 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////

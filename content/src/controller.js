@@ -30,6 +30,7 @@ var model = window.pencilcode.model = {
   // Url used for starting the guide.
   guideUrl: null,
   // Contents of the three panes.
+  tempThumbnail: null,
   pane: {
     alpha: {
       filename: null,
@@ -132,6 +133,11 @@ function nosaveowner() {
   return model.ownername === 'frame';
 }
 
+function cansave() {
+  return specialowner() || !model.username || model.tempThumbnail ||
+      view.isPaneEditorDirty(paneatpos('left'));
+}
+
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
   // Update visible URL and main title name.
@@ -157,15 +163,21 @@ function updateTopControls(addHistory) {
       //
       // If so, then insert save button
       //
-      var cansave = specialowner() || !model.username ||
-                    view.isPaneEditorDirty(paneatpos('left'));
       buttons.push(
-        { id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
+        {
+          id: 'save',
+          title: 'Save program (Ctrl+S)',
+          label: 'Save',
           menu: [
             { id: 'save2', label: 'Save' },
             { id: 'saveas', label: 'Copy and Save As...' }
           ],
-          disabled: !cansave,
+          disabled: !cansave(),
+        },
+        {
+          id: 'screenshot',
+          title: 'Take screenshot',
+          label: '<i class="fa fa-camera"></i>'
         });
 
       // Also insert share button
@@ -400,9 +412,8 @@ view.on('byname', function() {
 
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
-    var cansave = specialowner() || view.isPaneEditorDirty(pane);
-    view.enableButton('save', cansave);
-    view.enableButton('save2', cansave);
+    view.enableButton('save', cansave());
+    view.enableButton('save2', cansave());
     // Toggle button between triangle and refresh.
     view.showMiddleButton('run');
   }
@@ -576,6 +587,16 @@ view.on('setpass', function() {
   });
 });
 
+view.on('screenshot', function() {
+  var iframe = document.getElementById('output-frame');
+  // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+  thumbnail.generateThumbnailDataUrl(iframe, function(thumbnailDataUrl) {
+    model.tempThumbnail = thumbnailDataUrl;
+    updateTopControls();
+    view.flashThumbnail(thumbnailDataUrl);
+  });
+});
+
 view.on('save', function() { saveAction(false, null, null); });
 view.on('save2', function() { saveAction(false, null, null); });
 view.on('saveas', saveAs);
@@ -744,9 +765,13 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     console.log("Nothing to save.");
     return;
   } else if (doc.data !== '') { // If program is not empty, generate thumbnail
+    if (model.tempThumbnail) {
+      postThumbnailGeneration(model.tempThumbnail);
+    } else {
       var iframe = document.getElementById('output-frame');
       // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
       thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+    }
   } else {  // Empty content, file delete, no need for thumbnail.
     postThumbnailGeneration('');
   }
@@ -797,6 +822,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
         }
       }
       // Delete the pre-saved thumbnail from the model.
+      model.tempThumbnail = null;
       updateTopControls();
       // Flash the thumbnail after the control are updated.
       view.flashThumbnail(thumbnailDataUrl);
@@ -1396,7 +1422,9 @@ function doneWithFile(filename) {
     }
   } else {
     if (filename.indexOf('/') >= 0) {
-      filename = filename.replace(/\/[^\/]+\/?$/, '');
+      // `history.state.previous` is like '/edit/demo/', so we should
+      // strip the filename after '/' and keep the '/'.
+      filename = filename.replace(/[^\/]+\/?$/, '');
     } else {
       filename = '';
     }
@@ -1615,13 +1643,21 @@ function readNewUrl(undo) {
   // Login from cookie.
       cookielogin = null;
   // Give the user a chance to abort navigation.
-  if (undo && view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
-    view.flashButton('save');
-    if (!window.confirm(
-      "There are unsaved changes.\n\n" +
+  if (undo && !nosaveowner()) {
+    var type = null;
+    if (view.isPaneEditorDirty(paneatpos('left'))) {
+      type = 'changes';
+    } else if (model.tempThumbnail) {
+      type = 'thumbnail';
+    }
+    if (type && !window.confirm(
+      "There are unsaved " + type + ".\n\n" +
       "Are you sure you want to leave this page?")) {
+      view.flashButton('save');
       undo();
       return;
+    } else {
+      model.tempThumbnail = null;
     }
   }
   if (!login) {
