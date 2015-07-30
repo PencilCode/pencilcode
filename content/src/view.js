@@ -5,7 +5,6 @@
 var $              = require('jquery'),
     jqueryui       = require('jquery-ui'),
     jqueryuisliderpips = require('jquery-ui-slider-pips'),
-    nouislider = require('nouislider'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
@@ -269,9 +268,8 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
     
     displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
   }
-  markPaneEditorLine(
-      paneid('left'), lineno, 'guttermouseable', true);
-      markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+  markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
+  markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
 }
 
 function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
@@ -281,7 +279,7 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
     current_line = 0;
     previous_line = 0;
-
+    console.log(debugRecordsByLineNo);
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -1428,6 +1426,7 @@ function hideProtractor(pane) {
   var protractor = preview.find('.protractor');
   if (protractor.length) {
     protractor.remove();
+    $('.turtle').remove();
     preview.find('.protractor-label').remove();
   }
 }
@@ -1518,6 +1517,7 @@ function labelStep(preview, step) {
     top: step.startCoords.pageY + $(label).height(),
     left: step.startCoords.pageX - $(label).outerWidth() / 2
   });
+  console.log(step.startCoords.pageY);
 }
 
 
