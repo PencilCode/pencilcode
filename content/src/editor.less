@@ -1,3 +1,4 @@
+
 * {
   box-sizing: border-box
 }
@@ -18,28 +19,24 @@
   }
 }
 #backButton {
-  position: relative;
-  left: 20%;
   float: left;
+  margin-left: 100px;
   display: inline-block;
   vertical-align: middle;
 }
 
 #forwardButton {
-  position: relative;
-  left: 40%;
-  float: left;
+  float: right;
+  margin-right: 100px;
   display: inline-block;
   vertical-align: middle;
 }
 
 #label {
- position: relative;
- float: left;
- left: 10%;
- display: inline-block;
+ text-align: center;
  vertical-align: middle;
- font-size: 50%;
+ font-family: Lato,Verdana,Helvetica,sans-serif;
+ font-size: 80%;
 }
 
 body {
@@ -652,6 +649,9 @@ body, .panetitle, #owner {
   right: 6%
 }
 
+.scrubbermark {
+  z-index: 10;
+}
 .htmlmark:hover:before, .cssmark:hover:before, .jsmark:hover:before {
   opacity: .15
 }
@@ -1204,7 +1204,11 @@ body#pencildoc #diigolet-csm {
 #slider.ui-slider.ui-slider-horizontal .ui-slider-pip[class*=ui-slider-pip-selected] .ui-slider-line {
   height: 10px; 
 }
-              
+
+#slider.ui-slider-horizontal .ui-slider-range-min {
+  background: #1E90FF;
+} 
+
 #slider.ui-slider.ui-slider-horizontal .ui-slider-pip.ui-slider-pip-inrange .ui-slider-line {
   height: 5px; 
 }

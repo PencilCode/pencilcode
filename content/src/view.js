@@ -287,13 +287,18 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
     // Append the newly created div for the slider to the panel at bottom
     $(".scrubbermark").append(div); 
     $(".scrubber").append(sliderDiv);     
-    backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
+    backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
     $(".scrubber").append(backDiv);
-
+  //  $('#backButton').button();
     forwardDiv = document.createElement('div');
-    forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
+    forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
     $(".scrubber").append(forwardDiv); 
-    
+    $('#backButton').tooltipster({
+      content: "back a step"
+    });
+    $('#forwardButton').tooltipster({
+      content: "forward a step"
+    })
     var label = document.createElement('div');
     label.id = 'label';
     label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
@@ -2443,7 +2448,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" style= "visibility:hidden" share="5" >',
+    '<div class="hpanel scrubbermark" style= "visibility:hidden,zIndex:10 " share="5" >',
     '</div>',
     '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
