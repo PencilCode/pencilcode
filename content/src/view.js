@@ -89,22 +89,12 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-<<<<<<< HEAD
   on: function(tag, cb) { 
   if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
     state.callbacks[tag].push(cb); 
   },
-
-=======
-  on: function(tag, cb) {
-    if (state.callbacks[tag] == null){
-      state.callbacks[tag] = []
-    }
-    state.callbacks[tag].push(cb);
- },
->>>>>>> upstream/master
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
