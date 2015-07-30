@@ -55,6 +55,7 @@
     "watchify": "latest"
   },
   "browser": {
+    "advisor": "./content/src/advisor.js",
     "codescan": "./content/src/codescan.js",
     "controller": "./content/src/controller.js",
     "debug": "./content/src/debug.js",
