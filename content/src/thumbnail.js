@@ -10,11 +10,30 @@ var thumbnail = {
     // Get the canvas inside the iframe.
     var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
     var innerBody = innerDoc.body;
+    var jqueryTurtle = iframe.contentWindow.$;
+
+    // An extra array to store modified elements.
+    var hiddenElements = [];
+
+    var turtles = innerDoc.getElementsByClassName('turtle');
+    // If there is only a single turtle.
+    if (turtles.length === 1 && turtles[0].id === 'turtle') {
+      var turtle = turtles[0];
+      var coordinates = jqueryTurtle(turtle).getxy();
+      var direction = jqueryTurtle(turtle).direction();
+      // If the turtle is at its original position and direction, ignore it.
+      if (coordinates && coordinates[0] === 0 && coordinates[1] === 0 &&
+          direction === 0) {
+        hiddenElements.push({
+          object: turtle,
+          display: turtle.style.display
+        });
+        turtle.style.display = 'none';
+      }
+    }
 
     // Copy the NodeList into an array.
     var children = Array.prototype.slice.call(innerBody.children);
-    // An extra array to store modified elements.
-    var hiddenElements = [];
 
     // Hide the test panel and coordinates before capturing the thumbnail.
     // Keep a copy of the original style settings in the `hiddenElements` array.
