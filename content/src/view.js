@@ -245,6 +245,9 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // need this previous line for the forward and back buttons to work
   var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+  /*if (prevno > 0){
+    //clearPaneEditorLine(paneid('left'), prevno-1, 'debugtraceprev');
+  } */
 
   // after clearing, set the current line to the selected ui value
   current_line = ui.value;
@@ -269,6 +272,9 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   }
   markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
   markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+  /*if (lineno > 0){
+    markPaneEditorLine(paneid('left'), lineno-1, 'debugtraceprev');
+  }*/ 
 }
 
 function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
@@ -3087,7 +3093,9 @@ function getPaneEditorData(pane) {
 //   (one for each CSS class used for highlighting)
 // }
 function markPaneEditorLine(pane, line, markclass) {
-  console.log("markPaneEditorLine: ", line);
+  
+  $(markclass).removeClass('inactive').addClass('active');
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -3137,6 +3145,9 @@ function markPaneEditorLine(pane, line, markclass) {
 // The inverse of markPaneEditorLine: clears a marked line by
 // looking up the ACE marked-line ID and unmarking it.
 function clearPaneEditorLine(pane, line, markclass) {
+
+  $(markclass).removeClass('active').addClass('inactive');
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;

@@ -551,19 +551,17 @@ function traceLine(line) {
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  if (line > 0){
+  /*if (line > 0){
     view.markPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
-    console.log("debugtraceprev Highlights!");
-  } 
+  } */
 }
 
 // Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  if (line > 0) {
+  /*if (line > 0) {
     view.clearPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
-    console.log("debugtraceprev unHighlights!");
-  }
+  }*/
 }
 
 // parsestack converts an Error or ErrorEvent object into the following
