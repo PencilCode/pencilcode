@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-07-23
+ * Date: 2015-07-30
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -62227,7 +62227,7 @@ hook('mouseup', 0, function(point, event, state) {
     this.setCursor(this.draggingBlock.start);
     for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
       el = rememberedSocketOffsets[i];
-      this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(this.floatingBlocks.length - 1, new model.Location(el.offset, 'socket')), el.text));
+      this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(this.floatingBlocks.length, new model.Location(el.offset + 1, 'socket')), el.text));
     }
     this.draggingBlock = null;
     this.draggingOffset = null;
@@ -62503,7 +62503,6 @@ hook('populate', 1, function() {
       return function() {
         _this.highlightFlashShow();
         if (_this.cursorAtSocket()) {
-          _this.populateSocket(_this.getCursor(), _this.hiddenInput.value);
           _this.redrawTextInput();
           if (_this.dropdownVisible) {
             return _this.formatDropdown();
@@ -62596,7 +62595,7 @@ Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
     if (startRow === endRow) {
       this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
     } else {
-      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding + textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
+      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
       for (i = j = ref1 = startRow + 1, ref2 = endRow; ref1 <= ref2 ? j < ref2 : j > ref2; i = ref1 <= ref2 ? ++j : --j) {
         this.cursorCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
       }
@@ -62716,7 +62715,7 @@ Editor.prototype.populateSocket = function(socket, string) {
       if (!(i > 0)) {
         continue;
       }
-      last = helper.connect(new model.NewlineToken(), last);
+      last = helper.connect(last, new model.NewlineToken());
       last = helper.connect(last, new model.TextToken(line));
     }
     return this.spliceIn(new model.List(first, last), socket.start);
@@ -63149,7 +63148,7 @@ Editor.prototype.validCursorPosition = function(destination) {
 };
 
 Editor.prototype.setCursor = function(destination, validate, direction) {
-  var ref1;
+  var end, ref1, ref2, start;
   if (validate == null) {
     validate = (function() {
       return true;
@@ -63191,7 +63190,8 @@ Editor.prototype.setCursor = function(destination, validate, direction) {
     this.undoCapture();
     this.hiddenInput.value = this.getCursor().textContent();
     this.hiddenInput.focus();
-    return this.setTextSelectionRange(0, this.hiddenInput.value.length);
+    ref2 = this.mode.getDefaultSelectionRange(this.hiddenInput.value), start = ref2.start, end = ref2.end;
+    return this.setTextSelectionRange(start, end);
   }
 };
 
@@ -63347,7 +63347,7 @@ hook('keydown', 0, function(event, state) {
     return;
   }
   if (event.which === ENTER_KEY) {
-    if (!this.cursorAtSocket() && !event.shiftKey) {
+    if (!this.cursorAtSocket() && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
       newBlock = new model.Block();
       newSocket = new model.Socket(this.mode.empty, Infinity);
       newSocket.handwritten = true;
@@ -66923,6 +66923,24 @@ CoffeeScriptParser.parens = function(leading, trailing, node, context) {
   }
 };
 
+CoffeeScriptParser.getDefaultSelectionRange = function(string) {
+  var end, ref, ref1, start;
+  start = 0;
+  end = string.length;
+  if (string.length > 1 && string[0] === string[string.length - 1] && ((ref = string[0]) === '"' || ref === '\'' || ref === '/')) {
+    start += 1;
+    end -= 1;
+    if (string.length > 5 && string.slice(0, 3) === string.slice(-3) && ((ref1 = string.slice(0, 3)) === '"""' || ref1 === '\'\'\'' || ref1 === '///')) {
+      start += 2;
+      end -= 2;
+    }
+  }
+  return {
+    start: start,
+    end: end
+  };
+};
+
 module.exports = parser.wrapParser(CoffeeScriptParser);
 
 
@@ -68894,6 +68912,20 @@ JavaScriptParser.startComment = '/*';
 
 JavaScriptParser.endComment = '*/';
 
+JavaScriptParser.getDefaultSelectionRange = function(string) {
+  var end, ref, start;
+  start = 0;
+  end = string.length;
+  if (string[0] === string[string.length - 1] && ((ref = string[0]) === '"' || ref === '\'' || ref === '/')) {
+    start += 1;
+    end -= 1;
+  }
+  return {
+    start: start,
+    end: end
+  };
+};
+
 module.exports = parser.wrapParser(JavaScriptParser);
 
 
@@ -70517,7 +70549,7 @@ module.exports = {
 
 
 },{"./languages/c.coffee":103,"./languages/coffee.coffee":104,"./languages/html.coffee":105,"./languages/java.coffee":106,"./languages/javascript.coffee":107,"./languages/python.coffee":108}],112:[function(require,module,exports){
-var Parser, ParserFactory, YES, _extend, hasSomeTextAfter, helper, model, sax, stripFlaggedBlocks,
+var Parser, ParserFactory, YES, _extend, getDefaultSelectionRange, hasSomeTextAfter, helper, model, sax, stripFlaggedBlocks,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
@@ -70977,18 +71009,26 @@ Parser.empty = '';
 
 Parser.emptyIndent = '';
 
+getDefaultSelectionRange = function(string) {
+  return {
+    start: 0,
+    end: string.length
+  };
+};
+
 exports.wrapParser = function(CustomParser) {
   var CustomParserFactory;
   return CustomParserFactory = (function(superClass) {
     extend(CustomParserFactory, superClass);
 
     function CustomParserFactory(opts1) {
-      var ref, ref1;
+      var ref, ref1, ref2;
       this.opts = opts1 != null ? opts1 : {};
       this.empty = CustomParser.empty;
       this.emptyIndent = CustomParser.emptyIndent;
       this.startComment = (ref = CustomParser.startComment) != null ? ref : '/*';
       this.endComment = (ref1 = CustomParser.endComment) != null ? ref1 : '*/';
+      this.getDefaultSelectionRange = (ref2 = CustomParser.getDefaultSelectionRange) != null ? ref2 : getDefaultSelectionRange;
     }
 
     CustomParserFactory.prototype.createParser = function(text) {
