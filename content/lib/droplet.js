@@ -66188,11 +66188,38 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   };
 
   CoffeeScriptParser.prototype.addCode = function(node, depth, indentDepth) {
-    var j, len, param, ref;
-    ref = node.params;
-    for (j = 0, len = ref.length; j < len; j++) {
-      param = ref[j];
-      this.csSocketAndMark(param, depth, 0, indentDepth, FORBID_ALL);
+    var match, nodeBoundsStart, ref, ref1;
+    if ((ref = (ref1 = node.params) != null ? ref1.length : void 0) != null ? ref : 0 > 0) {
+      this.addSocket({
+        bounds: this.boundCombine(this.getBounds(node.params[0]), this.getBounds(node.params[node.params.length - 1])),
+        depth: depth,
+        precedence: 0,
+        dropdown: null,
+        classes: ['forbid-all', '__function_param__'],
+        empty: ''
+      });
+    } else {
+      nodeBoundsStart = this.getBounds(node).start;
+      match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)\s*(-|=)>/);
+      if (match != null) {
+        this.addSocket({
+          bounds: {
+            start: {
+              line: nodeBoundsStart.line,
+              column: nodeBoundsStart.column + match[1].length
+            },
+            end: {
+              line: nodeBoundsStart.line,
+              column: nodeBoundsStart.column + match[1].length + match[2].length
+            }
+          },
+          depth: depth,
+          precedence: 0,
+          dropdown: null,
+          classes: ['forbid-all', '__function_param__'],
+          empty: ''
+        });
+      }
     }
     return this.mark(node.body, depth, 0, null, indentDepth);
   };
@@ -66525,6 +66552,16 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
     } else {
       return a;
     }
+  };
+
+  CoffeeScriptParser.prototype.boundCombine = function(a, b) {
+    var end, start;
+    start = this.boundMin(a.start, b.start);
+    end = this.boundMax(a.end, b.end);
+    return {
+      start: start,
+      end: end
+    };
   };
 
   CoffeeScriptParser.prototype.getBounds = function(node) {
@@ -68518,7 +68555,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-    var argument, block, currentElif, declaration, element, expression, i, j, k, known, l, len, len1, len10, len2, len3, len4, len5, len6, len7, len8, len9, m, n, o, p, param, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results10, results11, results2, results3, results4, results5, results6, results7, results8, results9, s, statement, switchCase, t;
+    var argument, block, currentElif, declaration, element, expression, i, j, k, known, l, len, len1, len2, len3, len4, len5, len6, len7, len8, m, match, n, nodeBoundsStart, o, p, position, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, results6, results7, results8, results9, statement, switchCase;
     switch (node.type) {
       case 'Program':
         ref = node.body;
@@ -68546,13 +68583,41 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         this.jsBlock(node, depth, bounds);
         this.mark(indentDepth, node.body, depth + 1, null);
         this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
-        ref2 = node.params;
-        results2 = [];
-        for (l = 0, len2 = ref2.length; l < len2; l++) {
-          param = ref2[l];
-          results2.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
+        if (node.params.length > 0) {
+          return this.addSocket({
+            bounds: {
+              start: this.getBounds(node.params[0]).start,
+              end: this.getBounds(node.params[node.params.length - 1]).end
+            },
+            depth: depth + 1,
+            precedence: 0,
+            dropdown: null,
+            classes: ['no-drop'],
+            empty: ''
+          });
+        } else {
+          nodeBoundsStart = this.getBounds(node.id).end;
+          match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
+          if (match != null) {
+            return this.addSocket({
+              bounds: {
+                start: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length
+                },
+                end: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length + match[2].length
+                }
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['forbid-all', '__function_param__'],
+              empty: ''
+            });
+          }
         }
-        return results2;
         break;
       case 'FunctionExpression':
         this.jsBlock(node, depth, bounds);
@@ -68560,13 +68625,46 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         if (node.id != null) {
           this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
         }
-        ref3 = node.params;
-        results3 = [];
-        for (m = 0, len3 = ref3.length; m < len3; m++) {
-          param = ref3[m];
-          results3.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
+        if (node.params.length > 0) {
+          return this.addSocket({
+            bounds: {
+              start: this.getBounds(node.params[0]).start,
+              end: this.getBounds(node.params[node.params.length - 1]).end
+            },
+            depth: depth + 1,
+            precedence: 0,
+            dropdown: null,
+            classes: ['no-drop'],
+            empty: ''
+          });
+        } else {
+          if (node.id != null) {
+            nodeBoundsStart = this.getBounds(node.id).end;
+            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
+          } else {
+            nodeBoundsStart = this.getBounds(node).start;
+            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*function\s*\()(\s*\))/);
+          }
+          if (match != null) {
+            return position = this.addSocket({
+              bounds: {
+                start: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length
+                },
+                end: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length + match[2].length
+                }
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['forbid-all', '__function_param__'],
+              empty: ''
+            });
+          }
         }
-        return results3;
         break;
       case 'AssignmentExpression':
         this.jsBlock(node, depth, bounds);
@@ -68584,18 +68682,18 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         this.jsSocketAndMark(indentDepth, node.test, depth + 1, NEVER_PAREN);
         this.jsSocketAndMark(indentDepth, node.consequent, depth + 1, null);
         currentElif = node.alternate;
-        results4 = [];
+        results2 = [];
         while (currentElif != null) {
           if (currentElif.type === 'IfStatement') {
             this.jsSocketAndMark(indentDepth, currentElif.test, depth + 1, null);
             this.jsSocketAndMark(indentDepth, currentElif.consequent, depth + 1, null);
-            results4.push(currentElif = currentElif.alternate);
+            results2.push(currentElif = currentElif.alternate);
           } else {
             this.jsSocketAndMark(indentDepth, currentElif, depth + 1, 10);
-            results4.push(currentElif = null);
+            results2.push(currentElif = null);
           }
         }
-        return results4;
+        return results2;
         break;
       case 'ForInStatement':
         this.jsBlock(node, depth, bounds);
@@ -68649,20 +68747,20 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           depth: depth,
           prefix: prefix
         });
-        ref4 = node.body;
-        results5 = [];
-        for (n = 0, len4 = ref4.length; n < len4; n++) {
-          statement = ref4[n];
-          results5.push(this.mark(indentDepth, statement, depth + 1, null));
+        ref2 = node.body;
+        results3 = [];
+        for (l = 0, len2 = ref2.length; l < len2; l++) {
+          statement = ref2[l];
+          results3.push(this.mark(indentDepth, statement, depth + 1, null));
         }
-        return results5;
+        return results3;
         break;
       case 'BinaryExpression':
         this.jsBlock(node, depth, bounds);
         this.jsSocketAndMark(indentDepth, node.left, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
         return this.jsSocketAndMark(indentDepth, node.right, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
       case 'UnaryExpression':
-        if (!(((ref5 = node.operator) === '-' || ref5 === '+') && ((ref6 = node.argument.type) === 'Identifier' || ref6 === 'Literal'))) {
+        if (!(((ref3 = node.operator) === '-' || ref3 === '+') && ((ref4 = node.argument.type) === 'Identifier' || ref4 === 'Literal'))) {
           this.jsBlock(node, depth, bounds);
           return this.jsSocketAndMark(indentDepth, node.argument, depth + 1, this.getPrecedence(node));
         }
@@ -68684,13 +68782,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         } else if (known.anyobj && node.callee.type === 'MemberExpression') {
           this.jsSocketAndMark(indentDepth, node.callee.object, depth + 1, NEVER_PAREN);
         }
-        ref7 = node["arguments"];
-        results6 = [];
-        for (i = o = 0, len5 = ref7.length; o < len5; i = ++o) {
-          argument = ref7[i];
-          results6.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref8 = known.fn) != null ? (ref9 = ref8.dropdown) != null ? ref9[i] : void 0 : void 0 : void 0));
+        ref5 = node["arguments"];
+        results4 = [];
+        for (i = m = 0, len3 = ref5.length; m < len3; i = ++m) {
+          argument = ref5[i];
+          results4.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref6 = known.fn) != null ? (ref7 = ref6.dropdown) != null ? ref7[i] : void 0 : void 0 : void 0));
         }
-        return results6;
+        return results4;
         break;
       case 'MemberExpression':
         this.jsBlock(node, depth, bounds);
@@ -68701,13 +68799,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
       case 'VariableDeclaration':
         this.jsBlock(node, depth, bounds);
-        ref10 = node.declarations;
-        results7 = [];
-        for (p = 0, len6 = ref10.length; p < len6; p++) {
-          declaration = ref10[p];
-          results7.push(this.mark(indentDepth, declaration, depth + 1));
+        ref8 = node.declarations;
+        results5 = [];
+        for (n = 0, len4 = ref8.length; n < len4; n++) {
+          declaration = ref8[n];
+          results5.push(this.mark(indentDepth, declaration, depth + 1));
         }
-        return results7;
+        return results5;
         break;
       case 'VariableDeclarator':
         this.jsSocketAndMark(indentDepth, node.id, depth);
@@ -68726,25 +68824,25 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
       case 'ObjectExpression':
         this.jsBlock(node, depth, bounds);
-        ref11 = node.properties;
-        results8 = [];
-        for (q = 0, len7 = ref11.length; q < len7; q++) {
-          property = ref11[q];
+        ref9 = node.properties;
+        results6 = [];
+        for (o = 0, len5 = ref9.length; o < len5; o++) {
+          property = ref9[o];
           this.jsSocketAndMark(indentDepth, property.key, depth + 1);
-          results8.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
+          results6.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
         }
-        return results8;
+        return results6;
         break;
       case 'SwitchStatement':
         this.jsBlock(node, depth, bounds);
         this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
-        ref12 = node.cases;
-        results9 = [];
-        for (r = 0, len8 = ref12.length; r < len8; r++) {
-          switchCase = ref12[r];
-          results9.push(this.mark(indentDepth, switchCase, depth + 1, null));
+        ref10 = node.cases;
+        results7 = [];
+        for (p = 0, len6 = ref10.length; p < len6; p++) {
+          switchCase = ref10[p];
+          results7.push(this.mark(indentDepth, switchCase, depth + 1, null));
         }
-        return results9;
+        return results7;
         break;
       case 'SwitchCase':
         if (node.test != null) {
@@ -68759,13 +68857,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
             depth: depth + 1,
             prefix: prefix
           });
-          ref13 = node.consequent;
-          results10 = [];
-          for (s = 0, len9 = ref13.length; s < len9; s++) {
-            statement = ref13[s];
-            results10.push(this.mark(indentDepth, statement, depth + 2));
+          ref11 = node.consequent;
+          results8 = [];
+          for (q = 0, len7 = ref11.length; q < len7; q++) {
+            statement = ref11[q];
+            results8.push(this.mark(indentDepth, statement, depth + 2));
           }
-          return results10;
+          return results8;
         }
         break;
       case 'TryStatement':
@@ -68786,17 +68884,17 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         break;
       case 'ArrayExpression':
         this.jsBlock(node, depth, bounds);
-        ref14 = node.elements;
-        results11 = [];
-        for (t = 0, len10 = ref14.length; t < len10; t++) {
-          element = ref14[t];
+        ref12 = node.elements;
+        results9 = [];
+        for (r = 0, len8 = ref12.length; r < len8; r++) {
+          element = ref12[r];
           if (element != null) {
-            results11.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
+            results9.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
           } else {
-            results11.push(void 0);
+            results9.push(void 0);
           }
         }
-        return results11;
+        return results9;
         break;
       case 'Literal':
         return null;
@@ -68823,7 +68921,6 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         depth: depth,
         precedence: precedence,
         classes: classes != null ? classes : [],
-        accepts: this.getAcceptsRule(node),
         dropdown: dropdown
       });
     }
@@ -70678,8 +70775,8 @@ exports.Parser = Parser = (function() {
   };
 
   Parser.prototype.addSocket = function(opts) {
-    var socket;
-    socket = new model.Socket(this.empty, opts.precedence, false, opts.classes, opts.dropdown);
+    var ref, socket;
+    socket = new model.Socket((ref = opts.empty) != null ? ref : this.empty, opts.precedence, false, opts.classes, opts.dropdown);
     return this.addMarkup(socket, opts.bounds, opts.depth);
   };
 
