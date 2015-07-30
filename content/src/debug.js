@@ -146,7 +146,6 @@ var debug = window.ide = {
       var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
           data: "", seeeval:false};
       traceEvents.push(event);
-      console.log("traceEvents:", traceEvents);
       currentEventIndex = traceEvents.length - 1;
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
@@ -642,12 +641,19 @@ function traceLine(line) {
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+  if (line > 0){
+    view.markPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
+    console.log("debugtraceprev Highlights!");
+  } 
 }
 
 // Unhighlights the given line number as a line no longer being traced.
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-
+  if (line > 0) {
+    view.clearPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
+    console.log("debugtraceprev unHighlights!");
+  }
 }
 
 // parsestack converts an Error or ErrorEvent object into the following
@@ -786,7 +792,6 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
-  console.log("debugRecordsByLineNo", debugRecordsByLineNo);
   var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
   view.arrow(view.paneid('left'), arrows, eventIndex, true);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
@@ -813,6 +818,8 @@ view.on('icehover', function(pane, ev) {
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   if (debugRecordsByLineNo[lineno]) {
     displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+    var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
+    view.arrow(view.paneid('left'), arrows, eventIndex, true);
   }
 });
 

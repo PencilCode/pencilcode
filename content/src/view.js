@@ -332,7 +332,6 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 }
 
 function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) { 
-  console.log("traceevents: ", traceevents);
 
   $(".scrubbermark").css("visibility", "visible");
 
@@ -3085,6 +3084,7 @@ function getPaneEditorData(pane) {
 //   (one for each CSS class used for highlighting)
 // }
 function markPaneEditorLine(pane, line, markclass) {
+  console.log("markPaneEditorLine: ", line);
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -3402,9 +3402,6 @@ function arrow(pane, arrows, traceEventNum, show_fade){
   each key is a color for the arrow, and each value is a list of location pairs
   to draw an arrow on.   */
 
-  console.log("In arrows! Arrows are: ", arrows);
-  console.log("traceEventNum: ", traceEventNum);
-
   var arrow_data = arrows[traceEventNum];
   var startcoordsBefore = null;
   var endcoordsBefore = null;
@@ -3470,11 +3467,11 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     }
     if (show_fade) {
       before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:2' position='relative'/> \ "
+                        + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:4' position='relative'/> \ "
     }
     else{
      before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
+                        + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
     } 
   }
   if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined) {
@@ -3504,21 +3501,19 @@ function arrow(pane, arrows, traceEventNum, show_fade){
       }
     }
       after_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
-             + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:2' position='relative'/> \ "
+             + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
   } 
 
     var text = "<svg class= 'arrow' width=" 
             + $(".editor").width() + " height=" + $(".editor").height() 
             + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
-            <marker id='arrowhead1' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:dodgerblue; fill:dodgerblue;'> \
-             <polygon points='0,0 10,5 0,10'/>  \
-            </marker> <marker id='arrowhead2' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:#8EC8FF; fill:#8EC8FF;'> \
-             <polygon points='0,0 10,5 0,10'/>  \
-            </marker><marker id='arrowhead3' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='2' refY='5' style='stroke:dodgerblue; fill:dodgerblue;'> \
-             <polygon points='0,0 10,5 0,10'/>  \
+            <marker id='arrowhead1' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:dodgerblue; fill:dodgerblue; stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth' > \
+             <polygon points='0,0 5,2.5 0,5'/>  \
+            </marker> <marker id='arrowhead2' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:#8EC8FF; fill:#8EC8FF; stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth' > \
+             <polygon points='0,0 5,2.5 0,5'/>  \
+            </marker><marker id='arrowhead3' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:dodgerblue; fill:dodgerblue;stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth'> \
+             <polygon points='0,0 5,2.5 0,5'/>  \
             </marker>  \ " + before_arrowtext + after_arrowtext +  "</svg> ";
-
-    console.log('arrow text: ', text);
     
     var div = document.createElement('div');
     div.className =  "arrow";
