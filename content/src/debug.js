@@ -887,11 +887,11 @@ $('.panetitle').on('click', '.debugtoggle', function () {
   debugMode = !debugMode;
   if(!debugMode) {
     view.removeSlider();
-    $(".debugtoggle").text('debug on');
+    $(".debugtoggle").text('debug off');
   }
   else {
     setTimeout(view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow), 500);
-    $(".debugtoggle").text('debug off');
+    $(".debugtoggle").text('debug on');
   }
 })
 ///////////////////////////////////////////////////////////////////////////
