@@ -341,7 +341,7 @@ if (!programChanged) {
           tracedIndex = -1;
         }
 
-        if(currentLine < prevLine) {
+        if(currentLine < prevLine && currentIndex == prevIndex + 1) {
 
           if (arrows[prevIndex] != null) {
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -373,7 +373,7 @@ if (!programChanged) {
         untraceLine(tracedIndex);
         tracedIndex = -1;
       }
-      if (line < prevLine){
+      if (line < prevLine && index == prevIndex + 1){
 
         prevLocation = traceEvents[prevIndex].location;
           
@@ -434,7 +434,10 @@ function end_program(){
   var currentLine = -1; 
   var tracedIndex = -1;
   var justEnded = (currentRecordID < currentDebugId);
-  var prevLine = traceEvents[prevIndex].location.first_line; 
+  var prevLine =  -1;
+  if (traceEvents[prevIndex]){
+    prevLine = traceEvents[prevIndex].location.first_line; 
+  } 
   while (currentRecordID <= currentDebugId){
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
@@ -455,7 +458,7 @@ function end_program(){
         untraceLine(tracedIndex);
         tracedIndex = -1;
     }
-    if(currentLine < prevLine){
+    if(currentLine < prevLine && currentIndex == prevIndex + 1){
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -670,7 +673,7 @@ function editorLineNumberForError(error) {
     }
   }
   // For debugging:
-  //console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
+  //(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {

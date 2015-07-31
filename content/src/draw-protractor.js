@@ -16,7 +16,6 @@ function to360(v) {
 }
 
 function renderProtractor(canvas, step) {
-  console.log("Step", step);
   var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
