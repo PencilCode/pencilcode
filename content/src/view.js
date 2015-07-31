@@ -1842,7 +1842,7 @@ function updatePaneTitle(pane) {
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
             paneState.filename + '"><span class="' + symbol +
             '"></span> <span alt="' + alt + '">' +
-            '<span>' + label + '</span></span></a><span class="debugtoggle">Debug On/Off </span>';
+            '<span>' + label + '</span></span></a>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         var visibleMimeType = editorMimeType(paneState);
@@ -1851,7 +1851,7 @@ function updatePaneTitle(pane) {
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
         label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
-                '&nbsp;</div></div>'
+                '&nbsp;</div></div><div class = "debugtoggle pull-right">debug off</div>'
               + label;
       }
     }
@@ -1977,6 +1977,11 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   e.preventDefault();
   showPaneEditorLanguagesDialog(pane);
+});
+
+$('.panetitle').on('click', '.debugtoggle', function() {
+  removeSlider();
+  $('.debugtoggle').text('debug on');
 });
 
 $('.panetitle').on('click', '.thumb-toggle', function(e) {

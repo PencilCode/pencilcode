@@ -338,7 +338,7 @@ if (!programChanged) {
           tracedIndex = -1;
         }
 
-        if(currentLine < prevLine) {
+        if(currentLine < prevLine && currentIndex == prevIndex + 1) {
 
           if (arrows[prevIndex] != null) {
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
@@ -370,7 +370,7 @@ if (!programChanged) {
         untraceLine(tracedIndex);
         tracedIndex = -1;
       }
-      if (line < prevLine){
+      if (line < prevLine && index == prevIndex + 1){
 
         prevLocation = traceEvents[prevIndex].location;
           
@@ -455,7 +455,7 @@ function end_program(){
         untraceLine(tracedIndex);
         tracedIndex = -1;
     }
-    if(currentLine < prevLine){
+    if(currentLine < prevLine && currentIndex == prevIndex + 1){
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
