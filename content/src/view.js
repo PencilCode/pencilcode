@@ -1842,7 +1842,7 @@ function updatePaneTitle(pane) {
         label = '<a target="_blank" class="toggleblocks" href="/code/' +
             paneState.filename + '"><span class="' + symbol +
             '"></span> <span alt="' + alt + '">' +
-            '<span>' + label + '</span></span></a>';
+            '<span>' + label + '</span></span></a><span class="debugtoggle">Debug On/Off </span>';
       }
       if (/pencilcode/.test(paneState.mimeType)) {
         var visibleMimeType = editorMimeType(paneState);
@@ -3533,7 +3533,7 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     div.style.top = "0px";
       
     if (arrow_data){
-      $(".editor").append(div);
+      $("div[id^='editor_']").append(div);
     }  
 };
 
@@ -3579,7 +3579,7 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     div.style.right = "0";
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
-    $(".editor").append(div);
+    $("div[id^='editor_']").append(div);
   }
 }
 
