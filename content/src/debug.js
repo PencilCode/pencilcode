@@ -311,7 +311,7 @@ if (!programChanged) {
   var currentLocation = traceEvents[currentIndex].location;
   var currentLine = currentLocation.first_line;
 
-  var prevLine = -1;
+  var prevLine = 0;
 
   stuckComplexity.moves += 1;
 
@@ -320,22 +320,22 @@ if (!programChanged) {
       var index = recordD.eventIndex;
       var line = traceEvents[index].location.first_line;
       var appear_location = traceEvents[index].location;
-      var tracedLine = -1; 
+      var tracedIndex = -1; 
 
       //trace lines that are not animation.
       while (currentRecordID < debugId) {
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
-          var prevLine = prevLocation.first_line;
+          prevLine = prevLocation.first_line;
         }
         else {
           var prevLocation = null;
-          var prevLine = -1;
+          prevLine = -1;
         }
 
-        if (tracedLine != -1) {
-          untraceLine(tracedLine);
-          tracedLine = -1;
+        if (tracedIndex!= -1) {
+          untraceLine(tracedIndex);
+          tracedIndex = -1;
         }
 
         if(currentLine < prevLine) {
@@ -356,8 +356,8 @@ if (!programChanged) {
           debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
           debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         }
-        traceLine(currentLine);
-        tracedLine = currentLine;
+        traceLine(currentIndex);
+        tracedIndex = currentIndex;
         prevLine = currentLine;
         prevIndex = debugRecordsByDebugId[currentRecordID].eventIndex;
         currentRecordID += 1;
@@ -366,9 +366,9 @@ if (!programChanged) {
         currentLine = traceEvents[currentIndex].location.first_line;
         currentLocation = traceEvents[currentIndex].location;
       }
-      if (tracedLine != -1) {
-        untraceLine(tracedLine);
-        tracedLine = -1;
+      if (tracedIndex != -1) {
+        untraceLine(tracedIndex);
+        tracedIndex = -1;
       }
       if (line < prevLine){
 
@@ -390,11 +390,10 @@ if (!programChanged) {
         debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
         debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
       }
+      traceLine(index);
       currentRecordID = debugId;
-      prevLine = line;
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
-      traceLine(line);
       view.showAllVariablesAt(index, variablesByLineNo);
     }
   }
@@ -402,6 +401,7 @@ if (!programChanged) {
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
+  
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval){
@@ -412,10 +412,16 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       recordD.animated = true;
       recordL.animated = true;
       var index = recordD.eventIndex;
-      var location = traceEvents[index].location.first_line
+      var line = traceEvents[index].location.first_line
+      if (index > 0){
+        var prevLine = traceEvents[index -1].location.first_line;
+      }
+      else{
+        var prevLine = -1;
+      }
       recordD.endCoords[coordId] = collectCoords(elem);
       recordL.endCoords[coordId] = collectCoords(elem);
-      untraceLine(location);
+      untraceLine(index);
     }          
   }
 }
@@ -423,8 +429,9 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
-  var tracedLine = -1;
+  var tracedIndex = -1;
   var justEnded = (currentRecordID < currentDebugId);
+  var prevLine = traceEvents[prevIndex].location.first_line; 
   while (currentRecordID <= currentDebugId){
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
@@ -441,9 +448,9 @@ function end_program(){
       var prevLine = -1;
     }
     
-    if (tracedLine != -1){
-        untraceLine(tracedLine);
-        tracedLine = -1;
+    if (tracedIndex != -1){
+        untraceLine(tracedIndex);
+        tracedIndex = -1;
     }
     if(currentLine < prevLine){
           
@@ -463,16 +470,16 @@ function end_program(){
         debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
-    traceLine(currentLine);
-    tracedLine = currentLine;
+    traceLine(currentIndex);
+    tracedIndex = currentIndex;
     prevLine = currentLine;
     prevIndex = currentIndex;
     currentRecordID += 1;
   }
-  if (tracedLine != -1){
-        untraceLine(tracedLine);
+  if (tracedIndex != -1){
+        untraceLine(tracedIndex);
         view.arrow(view.paneid('left'), arrows, -1, false);
-        tracedLine = -1;
+        tracedIndex = -1;
   }
   prevLine = -1;
   if (justEnded) {
@@ -547,21 +554,41 @@ function parseTurtleTransform(transform) {
 }
 
 // Highlights the given line number as a line being traced.
-function traceLine(line) {
+function traceLine(lineIndex) {
+  var line = traceEvents[lineIndex].location.first_line;
+  var prevLine = -1;
+  var block_mode = true;
+
+  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+ 
+  if (traceEvents[lineIndex-1]){
+    prevLine = traceEvents[lineIndex-1].location.first_line;
+  }
+  $('debugtraceprev').removeClass('inactive').addClass('active');
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  /*if (line > 0){
-    view.markPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
-  } */
+  if (!block_mode) {
+    view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+  }
+
 }
 
 // Unhighlights the given line number as a line no longer being traced.
-function untraceLine(line) {
+function untraceLine(lineIndex) {
+  var line = traceEvents[lineIndex].location.first_line;
+  var prevLine = -1;
+  var block_mode = true;
+
+  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+ 
+  if (traceEvents[lineIndex-1]){
+    prevLine = traceEvents[lineIndex-1].location.first_line;
+  }
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  /*if (line > 0) {
-    view.clearPaneEditorLine(view.paneid('left'), line-1, 'debugtraceprev');
-  }*/
+  if (!block_mode){
+    view.clearPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+  }
 }
 
 // parsestack converts an Error or ErrorEvent object into the following

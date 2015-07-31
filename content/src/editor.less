@@ -685,20 +685,15 @@ body, .panetitle, #owner {
 .debugtrace {
   position: absolute;
   background: #62B1FF;
-  opacity: 1;
-  transition: opacity 0.2s;
 }
 
-.debugtrace.active{
+.debugtraceprev{
   position: absolute;
   background: #A1D0FF;
-  opacity: 1.0;
+  opacity: 1; 
+  transition: opacity 0.2s; 
 }
 
-.debugtrace.inactive{
-  opacity: 0.0;
-  position: absolute;
-}
 
 /* Code line highlighting for mouse-focused code */
 .debugfocus {

@@ -267,14 +267,10 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
   if (target.jQuery != null) {
-    
     displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
   }
   markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
   markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
-  /*if (lineno > 0){
-    markPaneEditorLine(paneid('left'), lineno-1, 'debugtraceprev');
-  }*/ 
 }
 
 function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
@@ -284,7 +280,6 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
     current_line = 0;
     previous_line = 0;
-    console.log(debugRecordsByLineNo);
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -292,13 +287,18 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
     // Append the newly created div for the slider to the panel at bottom
     $(".scrubbermark").append(div); 
     $(".scrubber").append(sliderDiv);     
-    backDiv.innerHTML = "<button id = 'backButton'> Back One Step </button>";
+    backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
     $(".scrubber").append(backDiv);
-
+  //  $('#backButton').button();
     forwardDiv = document.createElement('div');
-    forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
+    forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
     $(".scrubber").append(forwardDiv); 
-    
+    $('#backButton').tooltipster({
+      content: "back a step"
+    });
+    $('#forwardButton').tooltipster({
+      content: "forward a step"
+    })
     var label = document.createElement('div');
     label.id = 'label';
     label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
@@ -1526,7 +1526,6 @@ function labelStep(preview, step) {
     top: step.startCoords.pageY + $(label).height(),
     left: step.startCoords.pageX - $(label).outerWidth() / 2
   });
-  console.log(step.startCoords.pageY);
 }
 
 
@@ -2452,7 +2451,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" style= "visibility:hidden" share="5" >',
+    '<div class="hpanel scrubbermark" style= "visibility:hidden,zIndex:10 " share="5" >',
     '</div>',
     '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
@@ -3093,8 +3092,6 @@ function getPaneEditorData(pane) {
 //   (one for each CSS class used for highlighting)
 // }
 function markPaneEditorLine(pane, line, markclass) {
-  
-  $(markclass).removeClass('inactive').addClass('active');
 
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -3145,8 +3142,6 @@ function markPaneEditorLine(pane, line, markclass) {
 // The inverse of markPaneEditorLine: clears a marked line by
 // looking up the ACE marked-line ID and unmarking it.
 function clearPaneEditorLine(pane, line, markclass) {
-
-  $(markclass).removeClass('active').addClass('inactive');
 
   var paneState = state.pane[pane];
   if (!paneState.editor) {
