@@ -241,7 +241,7 @@ var linenoList = [];
 var current_line = 0;
 var previous_line = 0;
 
-function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo) {
+function change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo) {
   // need this previous line for the forward and back buttons to work
   var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
@@ -267,13 +267,13 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
   if (target.jQuery != null) {
-    displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
+    displayProtractorForRecord(debugRecordsByDebugId[ui.value + 1], target);
   }
   markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
   markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
 }
 
-function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) {
+function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
@@ -314,10 +314,10 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
         value: current_line,
         smooth: false,
         change: function(event, ui)  {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo)
+          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo)
         }, 
         slide: function(event, ui) {
-          change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows, variablesByLineNo);
+          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo);
         } 
         })
         .slider("pips", {
@@ -334,7 +334,7 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
 }
 
-function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target) { 
+function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) { 
 
   $(".scrubbermark").css("visibility", "visible");
 
@@ -347,7 +347,7 @@ function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRec
   }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target);
+    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target);
     $('#backButton').on('click', function() {
       if (current_line != 0) {
         current_line--;
