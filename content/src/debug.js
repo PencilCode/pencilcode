@@ -6,7 +6,6 @@ var $         = require('jquery'),
     view      = require('view'),
     advisor   = require('advisor'),
     see       = require('see'),
-    html2canvas = require('html2canvas'),
     sourcemap = require('source-map'),
     util      = require('util');
 
@@ -27,6 +26,8 @@ var traceEvents = [];          // list of event location objects created by trac
 var stuckTime = null;          // timestmp to detect stuck programs
 var arrows = {};               // keep track of arrows that appear in the program
 var programChanged = false;    // whether user edited program while running
+var debugMode = true;          // user has debug mode turned on
+
 // verification of complexity of stuck loop
 var stuckComplexity = {
   lines: 0,
@@ -150,7 +151,9 @@ var debug = window.ide = {
       currentEventIndex = traceEvents.length - 1;
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
-      setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
+      if (debugMode) {
+        setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
+      }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
       debugRecordsByLineNo[lineno] = record;
@@ -877,6 +880,17 @@ view.on('delta', function(){
   programChanged = true;
 });
 
+$('.panetitle').on('click', '.debugtoggle', function () {
+  debugMode = !debugMode;
+  if(!debugMode) {
+    view.removeSlider();
+    $(".debugtoggle").text('debug on');
+  }
+  else {
+    setTimeout(view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow), 500);
+    $(".debugtoggle").text('debug off');
+  }
+})
 ///////////////////////////////////////////////////////////////////////////
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////

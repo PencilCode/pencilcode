@@ -1979,11 +1979,6 @@ $('.panetitle').on('click', '.langmenu', function(e) {
   showPaneEditorLanguagesDialog(pane);
 });
 
-$('.panetitle').on('click', '.debugtoggle', function() {
-  removeSlider();
-  $('.debugtoggle').text('debug on');
-});
-
 $('.panetitle').on('click', '.thumb-toggle', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   var path = state.pane[pane].path;
