@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box
 }
@@ -19,24 +18,28 @@
   }
 }
 #backButton {
+  position: relative;
+  left: 20%;
   float: left;
-  margin-left: 100px;
   display: inline-block;
   vertical-align: middle;
 }
 
 #forwardButton {
-  float: right;
-  margin-right: 100px;
+  position: relative;
+  left: 40%;
+  float: left;
   display: inline-block;
   vertical-align: middle;
 }
 
 #label {
- text-align: center;
+ position: relative;
+ float: left;
+ left: 10%;
+ display: inline-block;
  vertical-align: middle;
- font-family: Lato,Verdana,Helvetica,sans-serif;
- font-size: 80%;
+ font-size: 50%;
 }
 
 body {
@@ -649,9 +652,6 @@ body, .panetitle, #owner {
   right: 6%
 }
 
-.scrubbermark {
-  z-index: 10;
-}
 .htmlmark:hover:before, .cssmark:hover:before, .jsmark:hover:before {
   opacity: .15
 }
@@ -694,9 +694,6 @@ body, .panetitle, #owner {
   transition: opacity 0.2s; 
 }
 
-.debugtraceprev:hover{
-  opacity: 0;
-}
 
 /* Code line highlighting for mouse-focused code */
 .debugfocus {
@@ -1204,11 +1201,7 @@ body#pencildoc #diigolet-csm {
 #slider.ui-slider.ui-slider-horizontal .ui-slider-pip[class*=ui-slider-pip-selected] .ui-slider-line {
   height: 10px; 
 }
-
-#slider.ui-slider-horizontal .ui-slider-range-min {
-  background: #1E90FF;
-} 
-
+              
 #slider.ui-slider.ui-slider-horizontal .ui-slider-pip.ui-slider-pip-inrange .ui-slider-line {
   height: 5px; 
 }

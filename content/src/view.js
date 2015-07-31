@@ -245,6 +245,9 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // need this previous line for the forward and back buttons to work
   var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
+  /*if (prevno > 0){
+    //clearPaneEditorLine(paneid('left'), prevno-1, 'debugtraceprev');
+  } */
 
   // after clearing, set the current line to the selected ui value
   current_line = ui.value;
@@ -264,7 +267,6 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
   if (target.jQuery != null) {
-    
     displayProtractorForRecord(debugRecordsByLineNo[lineno], target);
   }
   markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
@@ -278,7 +280,6 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
     current_line = 0;
     previous_line = 0;
-    console.log(debugRecordsByLineNo);
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -1525,7 +1526,6 @@ function labelStep(preview, step) {
     top: step.startCoords.pageY + $(label).height(),
     left: step.startCoords.pageX - $(label).outerWidth() / 2
   });
-  console.log(step.startCoords.pageY);
 }
 
 
@@ -3097,7 +3097,7 @@ function getPaneEditorData(pane) {
 //   (one for each CSS class used for highlighting)
 // }
 function markPaneEditorLine(pane, line, markclass) {
-  console.log("markPaneEditorLine: ", line);
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -3147,6 +3147,7 @@ function markPaneEditorLine(pane, line, markclass) {
 // The inverse of markPaneEditorLine: clears a marked line by
 // looking up the ACE marked-line ID and unmarking it.
 function clearPaneEditorLine(pane, line, markclass) {
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
