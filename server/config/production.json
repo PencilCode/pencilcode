@@ -7,5 +7,9 @@
   "uid": "www-data",
   "gid": "www-data",
   "umask": "002",
-  "useHttps": false
+  "useHttps": false,
+  "reCaptchaKeyPaths": {
+    "public": "/srv/pencilcode.net/key/recaptcha.public",
+    "secret": "/srv/pencilcode.net/key/recaptcha.secret"
+  }
 }

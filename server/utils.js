@@ -8,6 +8,10 @@ exports.param = function(req, name, def) {
   return result;
 }
 
+exports.ip = function(req) {
+  return req.ip;
+}
+
 exports.getRootCacheName = function(app) {
   return path.join(app.locals.config.dirs.cachedir, 'rootcache');
 };

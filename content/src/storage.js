@@ -355,9 +355,10 @@ window.pencilcode.storage = {
       });
     });
   },
-  setPassKey: function(ownername, key, oldkey, callback) {
+  setPassKey: function(ownername, key, oldkey, recaptcha, callback) {
+    console.log('recaptcha', recaptcha);
     $.post('//' + ownername + '.' + window.pencilcode.domain + '/save/',
-        $.extend({ mode: 'setkey', data: key}, oldkey ? { key: oldkey } : {}),
+        $.extend({ mode: 'setkey', data: key, recaptcha: recaptcha}, oldkey ? { key: oldkey } : {}),
         function(m) {
       callback && callback(m);
     }, 'json').error(function() {

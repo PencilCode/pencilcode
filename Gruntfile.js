@@ -169,12 +169,14 @@ module.exports = function(grunt) {
     express: {
       options: {
         port: grunt.option('port'),
-        output: 'listening'
+        output: 'listening',
+        logs: 'server.log'
       },
       dev: {
         options: {
           script: 'server/devserver.js',
-          node_env: 'development'
+          node_env: 'development',
+          logs: 'server.log'
         }
       },
       sdev: {

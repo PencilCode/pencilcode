@@ -6,5 +6,9 @@
   },
   "host": "pencilcode.net.dev",
   "useProxy": 1,
-  "useHttps": false
+  "useHttps": false,
+  "reCaptchaKeyPaths": {
+    "public": "./server/config/recaptcha.public",
+    "secret": "./server/config/recaptcha.secret"
+  }
 }

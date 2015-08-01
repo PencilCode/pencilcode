@@ -27,6 +27,7 @@
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
+    "request": "^2.60.0",
     "seedrandom": "latest",
     "source-map": "latest",
     "tamper": "latest"
@@ -77,7 +78,9 @@
     "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
   },
   "browserify": {
-    "transform": [ "browserify-shim" ]
+    "transform": [
+      "browserify-shim"
+    ]
   },
   "browserify-shim": {
     "html2canvas": {
@@ -88,11 +91,15 @@
     },
     "tooltipster": {
       "exports": "jQuery.fn.tooltipster",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
     },
     "see": {
       "exports": "see",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
     }
   }
 }

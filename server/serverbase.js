@@ -3,10 +3,12 @@ var express = require('express'),
     path = require('path'),
     http = require('http'),
     url = require('url'),
+    fs = require('fs'),
     save = require('./save.js'),
     load = require('./load.js'),
     config = require('./config'),
-    utils = require('./utils.js');
+    utils = require('./utils.js'),
+    publicKey = fs.readFileSync(config.reCaptchaKeyPaths.public);
 
 exports.initialize = function(app) {
   // Remove the express header.
@@ -119,6 +121,7 @@ exports.initialize2 = function(app) {
   app.use('/run', userDataPrinter('run'));
   app.use('/print', userDataPrinter('print'));
   app.use('/thumb', loadThumb());
+  app.use('/publickey', function(req, res) { res.send(publicKey); });
   app.use('/log', function(req, res) { res.status(204).send(); });
 
   // Anything not matching a special top-level directory name

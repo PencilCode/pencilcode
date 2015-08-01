@@ -508,7 +508,7 @@ view.on('login', function() {
       model.passkey = keyFromPassword(model.username, state.password);
       state.update({info: 'Logging in...', disable: true});
       storage.setPassKey(
-          model.username, model.passkey, model.passkey,
+          model.username, model.passkey, model.passkey, null,
       function(m) {
         if (m.needauth) {
           state.update({info: 'Wrong password.', disable: false});
@@ -549,8 +549,9 @@ view.on('setpass', function() {
     done: function(state) {
       var oldpasskey = keyFromPassword(model.ownername, state.password);
       var newpasskey = keyFromPassword(model.ownername, state.newpass);
+      var recaptcha = grecaptcha.getResponse();
       state.update({info: 'Changing password...', disable: true});
-      storage.setPassKey(model.ownername, newpasskey, oldpasskey,
+      storage.setPassKey(model.ownername, newpasskey, oldpasskey, recaptcha,
       function(m) {
         if (m.needauth) {
           state.update({info: 'Wrong password.', disable: false});
@@ -895,6 +896,7 @@ function signUpAndSave(options) {
     center: options.center,
     cancel: options.cancel,
     info: 'Accounts on pencilcode are free.',
+    recaptcha: true,
     validate: function(state) {
       var username = state.username.toLowerCase();
       shouldCreateAccount = true;
@@ -1023,6 +1025,7 @@ function signUpAndSave(options) {
       var rename = state.rename || mp.filename;
       var forceOverwrite = (username != model.ownername) || specialowner();
       var key = keyFromPassword(username, state.password);
+      var recaptcha = grecaptcha.getResponse();
       var step2 = function() {
         storage.saveFile(
             username, rename, $.extend({}, doc),
@@ -1081,7 +1084,7 @@ function signUpAndSave(options) {
         });
       }
       if (key && shouldCreateAccount) {
-        storage.setPassKey(username, key, null, function(m) {
+        storage.setPassKey(username, key, null, recaptcha, function(m) {
           if (m.error) {
             console.log('got error', m.error);
             state.update({info: 'Could not create account.<br>' +

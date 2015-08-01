@@ -1,12 +1,17 @@
 var path = require('path');
 var fs = require('fs');
 var fsExtra = require('fs-extra');
+var http = require('http');
+var request = require('request');
 var utils = require('./utils');
 var filemeta = require('./filemeta');
 var filetype = require('../content/src/filetype');
+var config = require('./config');
+var secretKey = fs.readFileSync(config.reCaptchaKeyPaths.secret);
 
 exports.handleSave = function(req, res, app) {
   var data = utils.param(req, 'data');
+  var recaptcha = utils.param(req, 'recaptcha');
   var meta = utils.param(req, 'meta');
   var thumbnail = utils.param(req, 'thumbnail');
   var sourcefile = utils.param(req, 'source');
@@ -14,6 +19,7 @@ exports.handleSave = function(req, res, app) {
   var conditional = utils.param(req, 'conditional');
   var key = utils.param(req, 'key');
   var sourcekey = utils.param(req, 'sourcekey', key);
+  var ip = utils.ip(req);
 
   try {
     var user = res.locals.owner;
@@ -125,7 +131,7 @@ exports.handleSave = function(req, res, app) {
         utils.errorExit('Can only set key on a top-level user directory.');
       }
 
-      doSetKey(user, key, data, res, app);
+      doSetKey(user, key, data, recaptcha, ip, res, app);
       res.json((data) ? {keyset: user} : {keycleared: user});
       return;
     }
@@ -420,46 +426,60 @@ function isValidKey(user, key, app) {
 // user key dir.  This is called when the user sets or changes
 // their password.
 //
-function doSetKey(user, oldkey, newkey, res, app) {
+function doSetKey(user, oldkey, newkey, recaptcha, ip, res, app) {
   if (oldkey == newkey) {
     return;
   }
+  console.log("setting key");
 
-  var keydir = utils.getKeyDir(user, app);
+  // Verify reCaptcha
+  var postData = {
+    secret: secretKey,
+    response: recaptcha,
+    remoteip: ip
+  };
+  request.post('https://www.google.com/recaptcha/api/siteverify', {
+    form: postData
+  }, function (err, res, body) {
+    console.log(res);
+    if (res.success) {
+      var keydir = utils.getKeyDir(user, app);
 
-  try {
-    // Create directory if not present
-    if (!fs.existsSync(keydir)) {
-      checkReservedUser(user, app);
-      fsExtra.mkdirsSync(keydir);
-    }
+      try {
+        // Create directory if not present
+        if (!fs.existsSync(keydir)) {
+          checkReservedUser(user, app);
+          fsExtra.mkdirsSync(keydir);
+        }
 
-    if (oldkey) {
-      //
-      // Delete old password file if present
-      //
+        if (oldkey) {
+          //
+          // Delete old password file if present
+          //
 
-      var keys = fs.readdirSync(keydir);
+          var keys = fs.readdirSync(keydir);
 
-      for (var i = 0; i < keys.length; i++) {
-        if (oldkey.indexOf(keys[i].substring(1)) == 0) {
-          fs.unlink(path.join(keydir, keys[i]));
+          for (var i = 0; i < keys.length; i++) {
+            if (oldkey.indexOf(keys[i].substring(1)) == 0) {
+              fs.unlink(path.join(keydir, keys[i]));
+            }
+          }
+        }
+
+        if (newkey) {
+          // Now create new password file
+          keyfile = path.join(keydir, 'k' + newkey);
+          fs.closeSync(fs.openSync(keyfile, 'w'));
         }
       }
+      catch (e) {
+        if (e instanceof utils.ImmediateReturnError) {
+          throw e;
+        }
+        utils.errorExit('Could not set password.');
+      }
     }
-
-    if (newkey) {
-      // Now create new password file
-      keyfile = path.join(keydir, 'k' + newkey);
-      fs.closeSync(fs.openSync(keyfile, 'w'));
-    }
-  }
-  catch (e) {
-    if (e instanceof utils.ImmediateReturnError) {
-      throw e;
-    }
-    utils.errorExit('Could not set password.');
-  }
+  });
 }
 
 function letterComplexity(s) {

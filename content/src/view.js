@@ -998,85 +998,89 @@ function showDialog(opts) {
 function showLoginDialog(opts) {
   if (!opts)
     opts = { };
-
-  opts.content =
-    '<div class="content">' +
-    '<div class="field">Name:<div style="display:inline-table">'+
+  $.get('/publickey', function(data) {
+    opts.content =
+      '<div class="content">' +
+      '<div class="field">Name:<div style="display:inline-table">'+
       '<input class="username"' +
       (opts.username ? ' value="' + opts.username + '" disabled' : '') +
       '>' +
       (opts.switchuser ? '<div class="fieldlink">&nbsp;' +
        '<a href="//' + window.pencilcode.domain + '/" class="switchuser">' +
        'Not me? Switch user.</a></div>' : '') +
-    '</div></div>' +
+      '</div></div>' +
       (opts.setpass ?
-        '<div class="field">Old password:<input ' +
-        'type="password" class="password"></div>' +
-        '<div class="field">New password:<input ' +
-        'type="password" class="newpass"></div>'
-      : opts.nopass ? '' : '<div class="field">Password:<input ' +
-        'type="password" class="password"></div>') +
+       '<div class="field">Old password:<input ' +
+       'type="password" class="password"></div>' +
+       '<div class="field">New password:<input ' +
+       'type="password" class="newpass"></div>'
+       : opts.nopass ? '' : '<div class="field">Password:<input ' +
+       'type="password" class="password"></div>') +
+      (opts.recaptcha ?
+       '<div class="field g-recaptcha" data-sit' +
+       'ekey="' + data + '"></div>' : '') +
       (opts.rename ?
-        '<div class="field">Filename:<input class="rename" value="' +
-         opts.rename + '">' : '') +
-    '</div><br>' +
-    '<button class="ok">OK</button>' +
-    '<button class="cancel">Cancel</button>';
-  opts.init = function(dialog) {
-    dialog.find('.username').on('keypress', function(e) {
-      if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
-            String.fromCharCode(e.which))) {
+       '<div class="field">Filename:<input class="rename" value="' +
+       opts.rename + '">' : '') +
+      '</div><br>' +
+      '<button class="ok">OK</button>' +
+      '<button class="cancel">Cancel</button>';
+    opts.init = function(dialog) {
+      dialog.find('.username').on('keypress', function(e) {
+        if (e.which >= 20 && e.which <= 127 && !/[A-Za-z0-9]/.test(
+              String.fromCharCode(e.which))) {
+          return false;
+        }
+      });
+      dialog.find('.rename').on('keypress', function(e) {
+        if (e.which >= 20 && e.which <= 127 && !/[-\._A-Za-z0-9\/]/.test(
+              String.fromCharCode(e.which))) {
+          return false;
+        }
+      }).on('keyup blur', function(e) {
+        var val = dialog.find('.rename').val();
+        var fixed = fixTypedFilename(val);
+        if (fixed != val) {
+          dialog.find('.rename').val(fixed);
+        }
+      });
+      function focusDialog() {
+        dialog.find('input:not([disabled])').eq(0).select().focus();
+      }
+      focusDialog();
+      // This focusout handler is added so that in the #new case where the
+      // dialog and ACE editor are competing for focus, the dialog wins.
+      dialog.on('focusout', focusDialog);
+      // Stop doing this after 0.5 seconds.
+      setTimeout(function() { dialog.off('focusout'); }, 500);
+    }
+    opts.onkeydown = function(e, dialog, state) {
+      if (e.which == 13) {
+        if (dialog.find('.username').is(':focus')) {
+          dialog.find('.password,.rename').eq(0).focus();
+        } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
+          opts.done(state);
+        }
+      }
+    }
+    opts.onclick = function(e, dialog, state) {
+      if (opts.switchuser && $(e.target).hasClass('switchuser')) {
+        opts.switchuser();
         return false;
       }
-    });
-    dialog.find('.rename').on('keypress', function(e) {
-      if (e.which >= 20 && e.which <= 127 && !/[-\._A-Za-z0-9\/]/.test(
-            String.fromCharCode(e.which))) {
-        return false;
-      }
-    }).on('keyup blur', function(e) {
-      var val = dialog.find('.rename').val();
-      var fixed = fixTypedFilename(val);
-      if (fixed != val) {
-        dialog.find('.rename').val(fixed);
-      }
-    });
-    function focusDialog() {
-      dialog.find('input:not([disabled])').eq(0).select().focus();
     }
-    focusDialog();
-    // This focusout handler is added so that in the #new case where the
-    // dialog and ACE editor are competing for focus, the dialog wins.
-    dialog.on('focusout', focusDialog);
-    // Stop doing this after 0.5 seconds.
-    setTimeout(function() { dialog.off('focusout'); }, 500);
-  }
-  opts.onkeydown = function(e, dialog, state) {
-    if (e.which == 13) {
-      if (dialog.find('.username').is(':focus')) {
-        dialog.find('.password,.rename').eq(0).focus();
-      } else if (!dialog.find('button.ok').is(':disabled') && opts.done) {
-        opts.done(state);
-      }
+    opts.retrieveState = function(dialog) {
+      return {
+        username: dialog.find('.username').val(),
+        checkbox: dialog.find('.agreetoterms').prop('checked'),
+        password: dialog.find('.password').val(),
+        newpass: dialog.find('.newpass').val(),
+        rename: fixTypedFilename(dialog.find('.rename').val()),
+      };
     }
-  }
-  opts.onclick = function(e, dialog, state) {
-    if (opts.switchuser && $(e.target).hasClass('switchuser')) {
-      opts.switchuser();
-      return false;
-    }
-  }
-  opts.retrieveState = function(dialog) {
-    return {
-      username: dialog.find('.username').val(),
-      checkbox: dialog.find('.agreetoterms').prop('checked'),
-      password: dialog.find('.password').val(),
-      newpass: dialog.find('.newpass').val(),
-      rename: fixTypedFilename(dialog.find('.rename').val()),
-    };
-  }
 
-  showDialog(opts);
+    showDialog(opts);
+  });
 }
 
 ///////////////////////////////////////////////////////////////////////////
