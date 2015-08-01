@@ -1416,7 +1416,8 @@ function doneWithFile(filename) {
       '//' + window.pencilcode.domain + '/edit/') {
       window.location.href = '//' + window.pencilcode.domain + '/';
     } else {
-      window.location.href = '//' + window.pencilcode.domain + '/edit/';
+      // Do nothing when clicking the folder icon when at the root
+      // of a user's directory.
     }
   } else {
     if (filename.indexOf('/') >= 0) {
