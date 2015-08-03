@@ -162,7 +162,6 @@ var debug = window.ide = {
       linenoList.push(lineno);
       if (debugMode) {
         setupSlider();
-   //     setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
@@ -185,7 +184,7 @@ function setupSlider() {
     clearTimeout(sliderTimer);
     sliderTimer = null;
   }
-  sliderTime = setTimeout(function() {view.createSlider(traceEvents, linenoList)}, 1000);
+  sliderTime = setTimeout(function() {view.createSlider(linenoList)}, 1000);
  
 }
 
@@ -429,7 +428,7 @@ if (!programChanged) {
           else{
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-         // view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+          view.arrow(view.paneid('left'), arrows, currentIndex, false);
           debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
           debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         }
@@ -957,6 +956,10 @@ view.on('delta', function(){
   programChanged = true;
 });
 
+///////////////////////////////////////////////////////////////////////////
+// SLIDER SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
 $('.panetitle').on('click', '.debugtoggle', function () {
   debugMode = !debugMode;
   if(!debugMode) {
@@ -982,29 +985,23 @@ function sliderToggle() {
   sliderprevLine = slidercurrLine;
 
   var lineno = debugRecordsByDebugId[slidercurrLine + 1].line;
+
+  view.arrow(view.paneid('left'), arrows, slidercurrLine, true);
+  view.showAllVariablesAt(slidercurrLine, variablesByLineNo);
   view.hideProtractor(view.paneid('right'));
   
   if (targetWindow.jQuery != null) {
     displayProtractorForRecord(debugRecordsByDebugId[slidercurrLine + 1]);
   }
-
+ 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
 
   $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
 
 }
-///////////////////////////////////////////////////////////////////////////
-// SLIDER SUPPORT
-///////////////////////////////////////////////////////////////////////////
 
 $(document).on('slide', '#slider', function(event, ui) {
-  console.log("this happened");
-  sliderResponse(event, ui);
-})
-
-$(document).on('change', '#slider', function(event, ui) {
-  console.log("IT CHANGED");
   sliderResponse(event, ui);
 })
 
@@ -1016,13 +1013,13 @@ $(document).on('click', '#backButton', function() {
     }
   });
 
-  $(document).on('click', '#forwardButton', function() {
-    if (slidercurrLine != traceEvents.length - 1) {
-      slidercurrLine++
-      $("#slider").slider("value", slidercurrLine);
-      sliderToggle();
-    }
-  });
+$(document).on('click', '#forwardButton', function() {
+  if (slidercurrLine != traceEvents.length - 1) {
+    slidercurrLine++
+    $("#slider").slider("value", slidercurrLine);
+    sliderToggle();
+  }
+});
 ///////////////////////////////////////////////////////////////////////////
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////

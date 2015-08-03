@@ -13,6 +13,7 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
+    arrows         = require('arrows'),
     FontLoader     = require('FontLoader');
 
 function htmlEscape(s) {
@@ -238,7 +239,7 @@ function removeSlider() {
   sliderCreated = false;
 }
 
-function initializeSlider (traceevents, linenoList) {
+function initializeSlider (linenoList) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
@@ -270,7 +271,7 @@ function initializeSlider (traceevents, linenoList) {
     $(function() {
      $("#slider").slider({
         min: 0,
-        max: traceevents.length - 1,
+        max: linenoList.length - 1,
         step: 1,
         range: "min",
         smooth: false
@@ -285,16 +286,16 @@ function initializeSlider (traceevents, linenoList) {
           prefix: "Line " 
         })
     });
-    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
 
 }
 
-function createSlider(traceevents, linenoList) {
+function createSlider(linenoList) {
   $(".scrubbermark").css("visibility", "visible");
 
   // If slider hasn't been created and there are events being pushed, create slider. 
-  if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, linenoList);
+  if (!sliderCreated && linenoList.length > 0) {
+    initializeSlider (linenoList);
    
     // keep as variable so number of pips and maximum can be modified as events are pushed
    var max = $("#slider").slider("option", "max");
@@ -306,7 +307,7 @@ function createSlider(traceevents, linenoList) {
 
   // if the slider has already been created and events are pushed, modify existing slider
    if (sliderCreated){
-    $("#slider").slider("option", "max", traceevents.length - 1)
+    $("#slider").slider("option", "max", linenoList.length - 1)
     $("#slider").slider("pips",{ 
       first: "pip",
       rest: "pip",
@@ -316,53 +317,8 @@ function createSlider(traceevents, linenoList) {
            labels: linenoList,
            prefix: "Line  "
     })
-     $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
 
   }
-}
-
-function parseTurtleTransform(transform) {
-  if (transform === 'none') {
-    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
-  }
-  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
-  // and FF put them in there; so allow them.
-  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
-  if (!e) { return null; }
-  var tx = e[1] ? parseFloat(e[1]) : 0,
-      ty = e[2] ? parseFloat(e[2]) : 0,
-      rot = e[3] ? parseFloat(e[3]) : 0,
-      sx = e[4] ? parseFloat(e[4]) : 1,
-      sy = e[5] ? parseFloat(e[5]) : sx,
-      twi = e[6] ? parseFloat(e[6]) : 0;
-  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
-}
-
-function convertCoords(origin, astransform) {
-  if (!origin) { return null; }
-  if (!astransform || !astransform.transform) { return null; }
-  var parsed = parseTurtleTransform(astransform.transform);
-  if (!parsed) return null;
-  return {
-    pageX: origin.left + parsed.tx,
-    pageY: origin.top + parsed.ty,
-    direction: parsed.rot,
-    scale: parsed.sy
-  };
-}
-
-function displayProtractorForRecord(record, targetWindow) {
-  // TODO: generalize this for turtles that are not in the main field.
-  var origin = targetWindow.jQuery('#field').offset();
-  var step = {
-    startCoords: convertCoords(
-      origin, record.startCoords[record.startCoords.length - 1]),
-    endCoords: convertCoords(
-      origin, record.endCoords[record.endCoords.length - 1]),
-    command: record.method,
-    args: record.args
-  };
-  showProtractor(paneid('right'), step);
 }
 
 function panepos(id) {
