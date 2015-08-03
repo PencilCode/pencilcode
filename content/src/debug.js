@@ -215,12 +215,62 @@ function detectStuckProgram() {
 // VARIABLE & FUNCTION CALL TRACKING
 //////////////////////////////////////////////////////////////////////
 
-function mergeVars(oldVars, curVars) {
+var untrackedVariables = [
+  // Colors
+  "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige",
+  "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown",
+  "burlywood", "cadetblue", "chartreuse", "chocolate", "coral",
+  "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
+  "darkgoldenrod", "darkgray", "darkgrey", "darkgreen", "darkkhaki",
+  "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred",
+  "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
+  "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue",
+  "dimgray", "dimgrey", "dodgerblue", "firebrick", "floralwhite",
+  "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+  "gray", "grey", "green", "greenyellow", "honeydew", "hotpink",
+  "indianred", "indigo", "ivory", "khaki", "lavender", "lavenderblush",
+  "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
+  "lightgoldenrodyellow", "lightgray", "lightgrey", "lightgreen",
+  "lightpink", "lightsalmon", "lightseagreen", "lightskyblue",
+  "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow",
+  "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
+  "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen",
+  "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+  "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin",
+  "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange",
+  "orangered", "orchid", "palegoldenrod", "palegreen", "paleturquoise",
+  "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum",
+  "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
+  "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna",
+  "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow",
+  "springgreen", "steelblue", "tan", "teal", "thistle", "tomato",
+  "turquoise", "violet", "wheat", "white", "whitesmoke", "yellow",
+  "yellowgreen", "transparent",
+
+  // Other special strings
+  "none", "erase", "path", "up", "down", "color", "position", "normal", "touch"
+];
+
+var untrackedFunctions = [
+  "fd", "bk", "rt", "lt", "slide", "jump", "moveto", "jumpto", "turnto", "play",
+  "home", "pen", "pu", "pd", "pe", "fill", "dot", "label", "speed", "ht", "st",
+  "wear", "scale", "twist", "mirror", "reload", "done", "plan", "cs", "cg", "ct",
+  "defaultspeed", "timer", "tick", "done", "remove", "write", "read", "readnum",
+  "readstr", "button", "table", "send", "recv"
+];
+
+function mergeVars(oldVars, curVars, areFunctionCalls) {
   var newVars = oldVars.slice();
   var anyChanges = false;
   for (var i = 0; i < curVars.length; i++) {
     // Filter out function definitions.
     if (curVars[i].functionDef) continue;
+
+    // Filter out special turtle variables.
+    if (!areFunctionCalls && untrackedVariables.indexOf(curVars[i].name) !== -1) continue;
+
+    // Filter out common turtle functions.
+    if (areFunctionCalls && untrackedFunctions.indexOf(curVars[i].name) !== -1) continue;
 
     // TODO: keep arrays sorted to prevent the inner loop?
     var found = false;
@@ -259,8 +309,8 @@ function updateVariables(lineNum, eventIndex, vars, functionCalls) {
   }
 
   // Merge vars with this line's previously displayed vars.
-  var newVars = mergeVars(oldVars, vars);
-  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls);
+  var newVars = mergeVars(oldVars, vars, false);
+  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls, true);
 
   // If nothing changed, don't do anything.
   if (newVars !== false || newFunctionCalls !== false) {
