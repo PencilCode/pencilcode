@@ -3396,6 +3396,7 @@ function setupHpanelBox(box) {
 function curvedVertical(x1, y1, x2, y2) {
   var radius = Math.abs(y1 - y2);
   var line = [];
+  y2 = y2 - 12;
   
   x1 = parseFloat(x1);
   y1 = parseFloat(y1);
@@ -3532,6 +3533,9 @@ function arrow(pane, arrows, traceEventNum, show_fade){
     div.style.zIndex = "10";
     div.style.left = "0px";
     div.style.top = "0px";
+    
+    $(".droplet-main-scroller, .ace_scrollbar-v").scroll(function(e){console.log(e.target.scrollTop);})
+
       
     if (arrow_data){
       $("div[id^='editor_']").append(div);
