@@ -244,7 +244,7 @@ describe('code editor', function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text');
+          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text').find('.toggleblocks');
       // Wait for this title to say "blocks" in it.
       if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
@@ -340,7 +340,7 @@ describe('code editor', function() {
     }, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
-          .find('.panetitle-text');
+          .find('.panetitle-text').find('.toggleblocks');
       if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
@@ -365,7 +365,7 @@ describe('code editor', function() {
     }, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
-          .find('.panetitle-text');
+          .find('.panetitle-text').find('.toggleblocks');
       if (/code/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
@@ -429,7 +429,7 @@ describe('code editor', function() {
     }, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
-          .find('.panetitle-text');
+          .find('.panetitle-text').find('.toggleblocks');
       if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
@@ -600,7 +600,7 @@ describe('code editor', function() {
         if (/Using|Saved|^$/.test($('#notification').text())) return;
         var lefttitle = $('.panetitle').filter(
             function() { return $(this).parent().position().left == 0; })
-            .find('.panetitle-text');
+            .find('.panetitle-text').find('.toggleblocks');
         return {
           notification: $('#notification').text(),
           lefttitle: lefttitle.text().trim(),
