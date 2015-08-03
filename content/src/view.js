@@ -3488,10 +3488,10 @@ function showVariables(pane, lineNum, vars, functionCalls) {
 
   var text = "";
   for (var i = 0; i < vars.length; i++) {
-    text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
+    text += htmlEscape(vars[i].name) + "=" + htmlEscape(vars[i].value) + " ";
   }
   for (var i = 0; i < functionCalls.length; i++) {
-    text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
+    text += htmlEscape(functionCalls[i].name) + "()=" + htmlEscape(functionCalls[i].value) + " ";
   }
 
   var divId = "line" + lineNum + "vars";
