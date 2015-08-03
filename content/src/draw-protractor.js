@@ -19,19 +19,18 @@ function renderProtractor(canvas, step) {
   var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
-  t =  new $.turtle.Turtle;
-  t.appendTo('.preview')
-  t.css('position', 'relative'); 
   if (step.startCoords != null) {
-  var offset = $('.preview').offset()
-  t.moveto({pageX: step.startCoords.pageX + offset.left, pageY:step.startCoords.pageY + offset.top});
-  t.wear('gray');
-  if (step.command == "rt") {
-    t.rt(step.endCoords.direction)
-  }
-  if (step.command == "lt") {
-    t.lt(step.endCoords.direction)
-  }
+    t =  new $.turtle.Turtle;
+    t.appendTo('.preview')
+    var offset = $('.preview').offset()
+    t.moveto({pageX: step.startCoords.pageX + offset.left, pageY:step.startCoords.pageY + offset.top});
+    t.wear('gray');
+    if (step.command == "rt") {
+      t.rt(step.endCoords.direction)
+    }
+    if (step.command == "lt") {
+      t.lt(step.endCoords.direction)
+    }
   }
   if (!step.startCoords) {
     return;

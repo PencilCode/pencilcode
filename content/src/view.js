@@ -243,20 +243,17 @@ var previous_line = 0;
 
 function change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo) {
   // need this previous line for the forward and back buttons to work
-  var prevno = traceevents[previous_line].location.first_line;
+  var prevno = debugRecordsByDebugId[previous_line + 1].line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
-  /*if (prevno > 0){
-    //clearPaneEditorLine(paneid('left'), prevno-1, 'debugtraceprev');
-  } */
-
+  
   // after clearing, set the current line to the selected ui value
   current_line = ui.value;
   previous_line = current_line;
-
+   
   // get the new line number of the selected value
-  var lineno = traceevents[current_line].location.first_line;
+  var lineno = debugRecordsByDebugId[current_line + 1].line;
 
-   // Drawing arrows at each step in the slider
+  // Drawing arrows at each step in the slider
   arrow(pane, all_arrows, current_line, true);
  
   // Show variables for each line for this step in the slider.
@@ -267,7 +264,7 @@ function change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all
   // display the protractor for that new line and highlight the selected line
   hideProtractor(paneid('right'));
   if (target.jQuery != null) {
-    displayProtractorForRecord(debugRecordsByDebugId[ui.value + 1], target);
+    displayProtractorForRecord(debugRecordsByDebugId[current_line + 1], target);
   }
   markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
   markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
@@ -341,7 +338,8 @@ function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRec
   // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
      linenoList = [];
-  } 
+  }
+   
   for (var i = 0; i < traceevents.length; i++) {
     linenoList[i] = (traceevents[i].location.first_line);
   }
@@ -364,14 +362,14 @@ function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRec
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
    var max = $("#slider").slider("option", "max");
-    var pips = $("#slider").slider("option", "pips");
+   var pips = $("#slider").slider("option", "pips");
 
     // the slider has been created
     sliderCreated = true;
   }
 
   // if the slider has already been created and events are pushed, modify existing slider
-   if(sliderCreated){
+   if (sliderCreated){
     $("#slider").slider("option", "max", traceevents.length - 1)
     $("#slider").slider("pips",{ 
       first: "pip",
