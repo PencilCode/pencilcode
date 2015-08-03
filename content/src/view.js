@@ -3358,6 +3358,15 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
   coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
   coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
 
+  $(".droplet-main-scroller, .ace_scrollbar-v").scroll(
+    function(e){
+      $(".arrow").remove();
+      coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
+      coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
+    }
+  )
+
+
 }
 
 function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dropletEditor) {
@@ -3373,7 +3382,7 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
       offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
     }
     else{
-      offset_top = $(".editor").offset().top ;
+      offset_top = $(".editor").offset().top;
       offset_left = $(".editor").offset().left + 50;
       startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
       endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line), (secondLoc.last_column + 10));
@@ -3413,10 +3422,10 @@ function showVariables(pane, lineNum, vars, functionCalls) {
 
   var text = "";
   for (var i = 0; i < vars.length; i++) {
-    text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
+    text += htmlEscape(vars[i].name) + "=" + htmlEscape(vars[i].value) + " ";
   }
   for (var i = 0; i < functionCalls.length; i++) {
-    text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
+    text += htmlEscape(functionCalls[i].name) + "()=" + htmlEscape(functionCalls[i].value) + " ";
   }
 
   var divId = "line" + lineNum + "vars";
