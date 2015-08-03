@@ -239,46 +239,10 @@ function removeSlider() {
   sliderCreated = false;
 }
 
-var linenoList = [];
-var current_line = 0;
-var previous_line = 0;
-
-function change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo) {
-  // need this previous line for the forward and back buttons to work
-  var prevno = debugRecordsByDebugId[previous_line + 1].line;
-  clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
-  
-  // after clearing, set the current line to the selected ui value
-  current_line = ui.value;
-  previous_line = current_line;
-   
-  // get the new line number of the selected value
-  var lineno = debugRecordsByDebugId[current_line + 1].line;
-
-  // Drawing arrows at each step in the slider
-  arrow(pane, all_arrows, current_line, true);
- 
-  // Show variables for each line for this step in the slider.
-  showAllVariablesAt(current_line, variablesByLineNo);
-
-  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
-  // ISSUE: CIRCULAR DEPENDICIES 
-  // display the protractor for that new line and highlight the selected line
-  hideProtractor(paneid('right'));
-  if (target.jQuery != null) {
-    displayProtractorForRecord(debugRecordsByDebugId[current_line + 1], target);
-  }
-  markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
-  markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
-}
-
-function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) {
+function initializeSlider (linenoList) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
-
-    current_line = 0;
-    previous_line = 0;
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -307,17 +271,10 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
     $(function() {
      $("#slider").slider({
         min: 0,
-        max: traceevents.length - 1,
+        max: linenoList.length - 1,
         step: 1,
         range: "min",
-        value: current_line,
-        smooth: false,
-        change: function(event, ui)  {
-          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo)
-        }, 
-        slide: function(event, ui) {
-          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo);
-        } 
+        smooth: false
         })
         .slider("pips", {
           first: "pip",
@@ -329,39 +286,17 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
           prefix: "Line " 
         })
     });
-    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
 
 }
 
-function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) { 
-
+function createSlider(linenoList) {
   $(".scrubbermark").css("visibility", "visible");
 
-  // reset the list of line numbers before pushing a new number 
-  if (!sliderCreated) {
-     linenoList = [];
-  }
-   
-  for (var i = 0; i < traceevents.length; i++) {
-    linenoList[i] = (traceevents[i].location.first_line);
-  }
   // If slider hasn't been created and there are events being pushed, create slider. 
-  if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target);
-    $('#backButton').on('click', function() {
-      if (current_line != 0) {
-        current_line--;
-        $("#slider").slider("value",current_line);
-      }
-    });
-
-    $('#forwardButton').on('click', function() {
-      if (current_line != traceevents.length - 1) {
-        current_line++
-        $("#slider").slider("value", current_line);
-      }
-    });
-
+  if (!sliderCreated && linenoList.length > 0) {
+    initializeSlider (linenoList);
+   
     // keep as variable so number of pips and maximum can be modified as events are pushed
    var max = $("#slider").slider("option", "max");
    var pips = $("#slider").slider("option", "pips");
@@ -372,7 +307,7 @@ function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRec
 
   // if the slider has already been created and events are pushed, modify existing slider
    if (sliderCreated){
-    $("#slider").slider("option", "max", traceevents.length - 1)
+    $("#slider").slider("option", "max", linenoList.length - 1)
     $("#slider").slider("pips",{ 
       first: "pip",
       rest: "pip",
@@ -382,53 +317,8 @@ function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRec
            labels: linenoList,
            prefix: "Line  "
     })
-     $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
-
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
   }
-}
-
-function parseTurtleTransform(transform) {
-  if (transform === 'none') {
-    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
-  }
-  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
-  // and FF put them in there; so allow them.
-  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
-  if (!e) { return null; }
-  var tx = e[1] ? parseFloat(e[1]) : 0,
-      ty = e[2] ? parseFloat(e[2]) : 0,
-      rot = e[3] ? parseFloat(e[3]) : 0,
-      sx = e[4] ? parseFloat(e[4]) : 1,
-      sy = e[5] ? parseFloat(e[5]) : sx,
-      twi = e[6] ? parseFloat(e[6]) : 0;
-  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
-}
-
-function convertCoords(origin, astransform) {
-  if (!origin) { return null; }
-  if (!astransform || !astransform.transform) { return null; }
-  var parsed = parseTurtleTransform(astransform.transform);
-  if (!parsed) return null;
-  return {
-    pageX: origin.left + parsed.tx,
-    pageY: origin.top + parsed.ty,
-    direction: parsed.rot,
-    scale: parsed.sy
-  };
-}
-
-function displayProtractorForRecord(record, targetWindow) {
-  // TODO: generalize this for turtles that are not in the main field.
-  var origin = targetWindow.jQuery('#field').offset();
-  var step = {
-    startCoords: convertCoords(
-      origin, record.startCoords[record.startCoords.length - 1]),
-    endCoords: convertCoords(
-      origin, record.endCoords[record.endCoords.length - 1]),
-    command: record.method,
-    args: record.args
-  };
-  showProtractor(paneid('right'), step);
 }
 
 function panepos(id) {

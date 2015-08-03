@@ -6,6 +6,7 @@ var $         = require('jquery'),
     view      = require('view'),
     advisor   = require('advisor'),
     see       = require('see'),
+    jqueryui  = require('jquery-ui'),
     sourcemap = require('source-map'),
     util      = require('util');
 
@@ -28,6 +29,9 @@ var sliderTimer = null;        // detect if there is existing timer
 var arrows = {};               // keep track of arrows that appear in the program
 var programChanged = false;    // whether user edited program while running
 var debugMode = true;          // user has debug mode turned on
+var slidercurrLine = 0;
+var sliderprevLine = 0;
+var linenoList = [];
 
 // verification of complexity of stuck loop
 var stuckComplexity = {
@@ -56,11 +60,14 @@ function bindframe(w) {
   variablesByLineNo = {};
   traceEvents = [];
   screenshots = [];
+  linenoList = [];
   arrows = {};
   programChanged = false;
   currentRecordID = 1;
   currentDebugId = 0;
   prevIndex = -1; 
+  slidercurrLine = 0;
+  sliderprevLine = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
@@ -152,9 +159,9 @@ var debug = window.ide = {
       currentEventIndex = traceEvents.length - 1;
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
+      linenoList.push(lineno);
       if (debugMode) {
         setupSlider();
-   //     setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
@@ -177,7 +184,7 @@ function setupSlider() {
     clearTimeout(sliderTimer);
     sliderTimer = null;
   }
-  sliderTime = setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
+  sliderTime = setTimeout(function() {view.createSlider(linenoList)}, 1000);
  
 }
 
@@ -421,7 +428,7 @@ if (!programChanged) {
           else{
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-          view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+          view.arrow(view.paneid('left'), arrows, currentIndex, false);
           debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
           debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
         }
@@ -952,6 +959,10 @@ view.on('delta', function(){
   programChanged = true;
 });
 
+///////////////////////////////////////////////////////////////////////////
+// SLIDER SUPPORT
+///////////////////////////////////////////////////////////////////////////
+
 $('.panetitle').on('click', '.debugtoggle', function () {
   debugMode = !debugMode;
   if(!debugMode) {
@@ -963,6 +974,55 @@ $('.panetitle').on('click', '.debugtoggle', function () {
     $(".debugtoggle").text('debug on');
   }
 })
+
+function sliderResponse (event, ui) {
+  slidercurrLine = ui.value;
+  sliderToggle();
+}
+
+function sliderToggle() {
+
+  var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
+
+  view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
+  sliderprevLine = slidercurrLine;
+
+  var lineno = debugRecordsByDebugId[slidercurrLine + 1].line;
+
+  view.arrow(view.paneid('left'), arrows, slidercurrLine, true);
+  view.showAllVariablesAt(slidercurrLine, variablesByLineNo);
+  view.hideProtractor(view.paneid('right'));
+  
+  if (targetWindow.jQuery != null) {
+    displayProtractorForRecord(debugRecordsByDebugId[slidercurrLine + 1]);
+  }
+ 
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
+
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
+
+}
+
+$(document).on('slide', '#slider', function(event, ui) {
+  sliderResponse(event, ui);
+})
+
+$(document).on('click', '#backButton', function() {
+    if (slidercurrLine != 0) {
+      slidercurrLine--;
+      $("#slider").slider("value", slidercurrLine);
+      sliderToggle();
+    }
+  });
+
+$(document).on('click', '#forwardButton', function() {
+  if (slidercurrLine != traceEvents.length - 1) {
+    slidercurrLine++
+    $("#slider").slider("value", slidercurrLine);
+    sliderToggle();
+  }
+});
 ///////////////////////////////////////////////////////////////////////////
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////
