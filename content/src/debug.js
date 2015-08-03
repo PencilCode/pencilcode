@@ -455,7 +455,7 @@ if (!programChanged) {
         else{
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+        view.arrow(view.paneid('left'), arrows, currentIndex, false);
         debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
         debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
       }
@@ -799,11 +799,14 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
-  var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
-  view.arrow(view.paneid('left'), arrows, eventIndex, true);
-  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
-  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  if (debugRecordsByLineNo[lineno]){
+    var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
+    view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+    view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  }
+  
 });
 
 view.on('leavegutter', function(pane, lineno) {

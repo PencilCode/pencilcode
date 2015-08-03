@@ -3394,6 +3394,9 @@ function setupHpanelBox(box) {
 }
 
 function arrow(pane, arrow_list, traceEventNum, show_fade) {
+  /* note: we expect arrow_list to be an array of key value pairs where 
+  each key is a color for the arrow, and each value is a list of location pairs
+  to draw an arrow on.   */
 
   var dropletEditor = state.pane[pane].dropletEditor;
   var arrow_data = arrow_list[traceEventNum];
@@ -3436,6 +3439,7 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
 }
 
 function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dropletEditor) {
+  /* Helper function to grab proper coordinates to draw the arrows.*/
 
   if (firstLoc.first_line != undefined && secondLoc.first_line != undefined) {
     
