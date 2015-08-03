@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     bowercopy: {
       options: {
-        clean: true
+        clean: false
       },
       top: {
         options: {
