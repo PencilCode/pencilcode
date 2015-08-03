@@ -13,7 +13,6 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
-    arrows         = require('arrows'),
     FontLoader     = require('FontLoader');
 
 function htmlEscape(s) {
@@ -239,46 +238,10 @@ function removeSlider() {
   sliderCreated = false;
 }
 
-var linenoList = [];
-var current_line = 0;
-var previous_line = 0;
-
-function change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo) {
-  // need this previous line for the forward and back buttons to work
-  var prevno = debugRecordsByDebugId[previous_line + 1].line;
-  clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
-  
-  // after clearing, set the current line to the selected ui value
-  current_line = ui.value;
-  previous_line = current_line;
-   
-  // get the new line number of the selected value
-  var lineno = debugRecordsByDebugId[current_line + 1].line;
-
-  // Drawing arrows at each step in the slider
-  arrow(pane, all_arrows, current_line, true);
- 
-  // Show variables for each line for this step in the slider.
-  showAllVariablesAt(current_line, variablesByLineNo);
-
-  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
-  // ISSUE: CIRCULAR DEPENDICIES 
-  // display the protractor for that new line and highlight the selected line
-  hideProtractor(paneid('right'));
-  if (target.jQuery != null) {
-    displayProtractorForRecord(debugRecordsByDebugId[current_line + 1], target);
-  }
-  markPaneEditorLine(paneid('left'), lineno, 'guttermouseable', true);
-  markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
-}
-
-function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) {
+function initializeSlider (traceevents, linenoList) {
     // Create div element for scrubbber
     var div = document.createElement('div');
     div.className = 'scrubber';
-
-    current_line = 0;
-    previous_line = 0;
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
@@ -310,14 +273,7 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
         max: traceevents.length - 1,
         step: 1,
         range: "min",
-        value: current_line,
-        smooth: false,
-        change: function(event, ui)  {
-          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo)
-        }, 
-        slide: function(event, ui) {
-          change(event, ui, traceevents, debugRecordsByDebugId, target, pane, all_arrows, variablesByLineNo);
-        } 
+        smooth: false
         })
         .slider("pips", {
           first: "pip",
@@ -333,35 +289,13 @@ function initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, deb
 
 }
 
-function createSlider(traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target) { 
-
+function createSlider(traceevents, linenoList) {
   $(".scrubbermark").css("visibility", "visible");
 
-  // reset the list of line numbers before pushing a new number 
-  if (!sliderCreated) {
-     linenoList = [];
-  }
-   
-  for (var i = 0; i < traceevents.length; i++) {
-    linenoList[i] = (traceevents[i].location.first_line);
-  }
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
-    initializeSlider (traceevents, all_arrows, variablesByLineNo, pane, debugRecordsByDebugId, target);
-    $('#backButton').on('click', function() {
-      if (current_line != 0) {
-        current_line--;
-        $("#slider").slider("value",current_line);
-      }
-    });
-
-    $('#forwardButton').on('click', function() {
-      if (current_line != traceevents.length - 1) {
-        current_line++
-        $("#slider").slider("value", current_line);
-      }
-    });
-
+    initializeSlider (traceevents, linenoList);
+   
     // keep as variable so number of pips and maximum can be modified as events are pushed
    var max = $("#slider").slider("option", "max");
    var pips = $("#slider").slider("option", "pips");
