@@ -152,7 +152,7 @@ var debug = window.ide = {
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
       if (debugMode) {
-        setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow)}, 1000);
+        setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
@@ -890,7 +890,7 @@ $('.panetitle').on('click', '.debugtoggle', function () {
     $(".debugtoggle").text('debug off');
   }
   else {
-    setTimeout(view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow), 500);
+    setTimeout(view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow), 500);
     $(".debugtoggle").text('debug on');
   }
 })
