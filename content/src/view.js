@@ -13,7 +13,9 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
+    arrows         = require('arrows'),
     FontLoader     = require('FontLoader');
+
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
     return c=='<'?'&lt;':c=='>'?'&gt;':c=='&'?'&amp;':'&quot;';});
@@ -3391,48 +3393,22 @@ function setupHpanelBox(box) {
   });
 }
 
-function curvedVertical(x1, y1, x2, y2) {
-  var radius = Math.abs(y1 - y2);
-  var line = [];
-  
-  x1 = parseFloat(x1);
-  y1 = parseFloat(y1);
-  x2 = parseFloat(x2);
-  y2 = parseFloat(y2);
-  return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
-}
+function arrow(pane, arrow_list, traceEventNum, show_fade) {
 
-//$(window).resize(..) event
-
-function arrow(pane, arrows, traceEventNum, show_fade){
-  /* note: we expect arrow_lines to be an array of key value pairs where 
-  each key is a color for the arrow, and each value is a list of location pairs
-  to draw an arrow on.   */
-
-  var arrow_data = arrows[traceEventNum];
-  var startcoordsBefore = null;
-  var endcoordsBefore = null;
-  var offset_top_before =  0; 
-  var offset_left_before = 0; 
+  var dropletEditor = state.pane[pane].dropletEditor;
+  var arrow_data = arrow_list[traceEventNum];
   var firstBeforeLoc = {};
   var secondBeforeLoc = {};
   var firstAfterLoc = {};
   var secondAfterLoc = {};
-  var startcoordsAfter = null;
-  var endcoordsAfter = null;
-  var offset_top_after =  0; 
-  var offset_left_after = 0; 
-  var before_arrowtext = "";
-  var after_arrowtext = "";
-  var x_val = 0;
-
-  $(".arrow").remove();
 
   var block_mode = null;
   if (pane){
     block_mode = true;
     if(!getPaneEditorBlockMode(pane)){block_mode = false;}
   }
+
+  $(".arrow").remove();
 
   if (arrow_data){
     if(arrow_data["before"]){
@@ -3444,97 +3420,42 @@ function arrow(pane, arrows, traceEventNum, show_fade){
       secondAfterLoc = arrow_data["after"]["second"];
     }
   }
-          
-  if (firstBeforeLoc.first_line != undefined && secondBeforeLoc.first_line != undefined) {
+
+  coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
+  coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
+
+}
+
+function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dropletEditor) {
+
+  if (firstLoc.first_line != undefined && secondLoc.first_line != undefined) {
     
     if (block_mode){
-      var dropletEditor = state.pane[pane].dropletEditor;
-      var startBoundsBefore = dropletEditor.getLineMetrics(firstBeforeLoc.first_line - 1);
-      var endBoundsBefore = dropletEditor.getLineMetrics(secondBeforeLoc.first_line - 1);
-      startcoordsBefore = {pageX : startBoundsBefore.bounds.x, pageY: startBoundsBefore.bounds.y};
-      endcoordsBefore =  {pageX : endBoundsBefore.bounds.x, pageY: endBoundsBefore.bounds.y};
-      offset_top_before = startBoundsBefore.bounds.height - 60;
-      offset_left_before = Math.max(startBoundsBefore.bounds.width, endBoundsBefore.bounds.width)  + 20;
+      var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line - 1);
+      var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
+      startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
+      endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
+      offset_top = startBounds.bounds.height - 60;
+      offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
     }
     else{
-      offset_top_before = $(".editor").offset().top ;
-      offset_left_before = $(".editor").offset().left + 50;
-      startcoordsBefore = state.pane[pane].editor.renderer.textToScreenCoordinates((firstBeforeLoc.first_line), (firstBeforeLoc.last_column + 10));
-      endcoordsBefore = state.pane[pane].editor.renderer.textToScreenCoordinates((secondBeforeLoc.first_line ), (secondBeforeLoc.last_column + 10));
+      offset_top = $(".editor").offset().top ;
+      offset_left = $(".editor").offset().left + 50;
+      startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
+      endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line), (secondLoc.last_column + 10));
     }
-    if (Math.abs(secondBeforeLoc.first_line - firstBeforeLoc.first_line) > 1){
-
+    if (Math.abs(secondLoc.first_line - firstLoc.first_line) > 1){
       var x_val = 0;
-      if(startcoordsBefore.pageX > endcoordsBefore.pageX){
-        x_val = startcoordsBefore.pageX;
+      if(startcoords.pageX > endcoords.pageX){
+        x_val = startcoords.pageX;
       } 
       else{
-        x_val = endcoordsBefore.pageX;
+        x_val = endcoords.pageX;
       }
     }
-    if (show_fade) {
-      before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:4' position='relative'/> \ "
-    }
-    else{
-     before_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_before, (startcoordsBefore.pageY - offset_top_before), x_val + offset_left_before, (endcoordsBefore.pageY - offset_top_before)) 
-                        + "' marker-start='url(#arrowhead3)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
-    } 
-  }
-  if (firstAfterLoc.first_line != undefined && secondAfterLoc.first_line != undefined) {
-    if (block_mode){
-      var dropletEditor = state.pane[pane].dropletEditor;
-      var startBoundsAfter= dropletEditor.getLineMetrics(firstAfterLoc.first_line - 1);
-      var endBoundsAfter = dropletEditor.getLineMetrics(secondAfterLoc.first_line -1 );
-      startcoordsAfter = {pageX : startBoundsAfter.bounds.x, pageY: startBoundsAfter.bounds.y};
-      endcoordsAfter =  {pageX : endBoundsAfter.bounds.x, pageY: endBoundsAfter.bounds.y};
-      offset_top_after = startBoundsAfter.bounds.height - 60;
-      offset_left_after = Math.max(startBoundsAfter.bounds.width, endBoundsAfter.bounds.width)  + 20;
-    }
-    else{
-      offset_top_after = $(".editor").offset().top ;
-      offset_left_after = $(".editor").offset().left + 50;
-      startcoordsAfter = state.pane[pane].editor.renderer.textToScreenCoordinates((firstAfterLoc.first_line), (firstAfterLoc.last_column + 10));
-      endcoordsAfter = state.pane[pane].editor.renderer.textToScreenCoordinates((secondAfterLoc.first_line ), (secondAfterLoc.last_column + 10));
-    }
-    if (Math.abs(secondAfterLoc.first_line - firstAfterLoc.first_line) > 1){
-
-      var x_val = 0;
-      if(startcoordsAfter.pageX > endcoordsAfter.pageX){
-        x_val = startcoordsAfter.pageX;
-      } 
-      else{
-        x_val = endcoordsAfter.pageX;
-      }
-    }
-      after_arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left_after, (startcoordsAfter.pageY - offset_top_after), x_val + offset_left_after, (endcoordsAfter.pageY - offset_top_after))
-             + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
-  } 
-
-    var text = "<svg class= 'arrow' width=" 
-            + $(".editor").width() + " height=" + $(".editor").height() 
-            + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
-            <marker id='arrowhead1' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:dodgerblue; fill:dodgerblue; stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth' > \
-             <polygon points='0,0 5,2.5 0,5'/>  \
-            </marker> <marker id='arrowhead2' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:#8EC8FF; fill:#8EC8FF; stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth' > \
-             <polygon points='0,0 5,2.5 0,5'/>  \
-            </marker><marker id='arrowhead3' markerWidth='10' markerHeight='10' orient='auto-start-reverse' refX='0' refY='2.5' style='stroke:dodgerblue; fill:dodgerblue;stroke-linejoin: miter; stroke-width:0px;' markerUnits='strokeWidth'> \
-             <polygon points='0,0 5,2.5 0,5'/>  \
-            </marker>  \ " + before_arrowtext + after_arrowtext +  "</svg> ";
-    
-    var div = document.createElement('div');
-    div.className =  "arrow";
-    div.innerHTML = text;
-    div.style.visibility = 'visible';
-    div.style.position = "absolute";
-    div.style.zIndex = "10";
-    div.style.left = "0px";
-    div.style.top = "0px";
-      
-    if (arrow_data){
-      $("div[id^='editor_']").append(div);
-    }  
-};
+    arrows.arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top);
+  }  
+}
 
 function showVariables(pane, lineNum, vars, functionCalls) {
   var coords = null;
