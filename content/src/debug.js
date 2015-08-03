@@ -219,6 +219,9 @@ function mergeVars(oldVars, curVars) {
   var newVars = oldVars.slice();
   var anyChanges = false;
   for (var i = 0; i < curVars.length; i++) {
+    // Filter out function definitions.
+    if (curVars[i].functionDef) continue;
+
     // TODO: keep arrays sorted to prevent the inner loop?
     var found = false;
     for (var j = 0; j < oldVars.length; j++) {
