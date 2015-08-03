@@ -24,6 +24,7 @@ var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
 var traceEvents = [];          // list of event location objects created by tracing events             
 var stuckTime = null;          // timestmp to detect stuck programs
+var sliderTimer = null;        // detect if there is existing timer
 var arrows = {};               // keep track of arrows that appear in the program
 var programChanged = false;    // whether user edited program while running
 var debugMode = true;          // user has debug mode turned on
@@ -152,7 +153,8 @@ var debug = window.ide = {
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
       if (debugMode) {
-        setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
+        setupSlider();
+   //     setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
@@ -170,6 +172,16 @@ var debug = window.ide = {
 //////////////////////////////////////////////////////////////////////
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
+function setupSlider() {
+  if (sliderTimer) {
+    clearTimeout(sliderTimer);
+    sliderTimer = null;
+  }
+  sliderTime = setTimeout(function() {view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow)}, 1000);
+ 
+}
+
+
 function detectStuckProgram() {
   stuckComplexity.lines += 1;
   var currentTime = +(new Date);
@@ -890,7 +902,7 @@ $('.panetitle').on('click', '.debugtoggle', function () {
     $(".debugtoggle").text('debug off');
   }
   else {
-    setTimeout(view.createSlider(traceEvents, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByDebugId, targetWindow), 500);
+    setupSlider();
     $(".debugtoggle").text('debug on');
   }
 })
