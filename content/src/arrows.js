@@ -49,8 +49,6 @@ function arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top
     div.style.zIndex = "10";
     div.style.left = "0px";
     div.style.top = "0px";
-    
-    $(".droplet-main-scroller, .ace_scrollbar-v").scroll(function(e){console.log(e.target.scrollTop);})
 
     $("div[id^='editor_']").append(div);
 };
