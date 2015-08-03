@@ -317,7 +317,7 @@ function createSlider(linenoList) {
            labels: linenoList,
            prefix: "Line  "
     })
-
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
   }
 }
 
