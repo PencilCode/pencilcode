@@ -498,7 +498,7 @@ function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
   var tracedIndex = -1;
-  var justEnded = (currentRecordID < currentDebugId);
+  var justEnded = (currentRecordID <= currentDebugId);
   var prevLine =  -1;
   if (traceEvents[prevIndex]){
     prevLine = traceEvents[prevIndex].location.first_line; 
@@ -554,7 +554,7 @@ function end_program(){
   }
   prevLine = -1;
   if (justEnded) {
-    view.showAllVariablesAt(currentIndex, variablesByLineNo);
+    view.showAllVariablesAt(currentIndex + 1, variablesByLineNo);
   }
 }
 
