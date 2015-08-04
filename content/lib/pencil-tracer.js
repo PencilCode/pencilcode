@@ -1113,6 +1113,13 @@
       if ((ref1 = node.type) === "CallExpression" || ref1 === "NewExpression") {
         node.pencilTracerReturnVar = this.temporaryVariable("returnVar", true);
       }
+      if (node.type === "ForStatement" && !node.test && !node.update) {
+        node.test = {
+          type: "Literal",
+          value: true,
+          loc: node.loc
+        };
+      }
       return this.mapChildren(node, (function(_this) {
         return function(child) {
           var newBlock, ref2, ref3, ref4, tryStatement, varDecl;
@@ -4934,13 +4941,16 @@ process.umask = function() { return 0; };
   Copyright (C) 2012 Joost-Wim Boekesteijn <joost-wim@boekesteijn.nl>
   Copyright (C) 2012 Kris Kowal <kris.kowal@cixar.com>
   Copyright (C) 2012 Arpad Borsos <arpad.borsos@googlemail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -7482,13 +7492,16 @@ process.umask = function() { return 0; };
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -8325,13 +8338,16 @@ process.umask = function() { return 0; };
 },{}],9:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -8469,13 +8485,16 @@ process.umask = function() { return 0; };
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -8568,13 +8587,16 @@ process.umask = function() { return 0; };
 },{}],11:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -8704,13 +8726,16 @@ process.umask = function() { return 0; };
 },{"./code":10}],12:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+
     * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE

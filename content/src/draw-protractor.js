@@ -27,13 +27,13 @@ function renderProtractor(canvas, step) {
     t.wear('gray');
     if (step.endCoords != null) {
       if (step.command == "rt") {
-        t.rt(step.endCoords.direction)
+        t.rt(step.endCoords.direction);
       } 
 
       if (step.command == "lt") {
-        t.lt(step.endCoords.direction)
+        t.lt(step.endCoords.direction);
       }
-   }
+    }
   }
   if (!step.startCoords) {
     return;
