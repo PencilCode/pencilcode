@@ -1034,8 +1034,7 @@ function showDialog(opts) {
           } else {
             x.val(up[attr]);
           }
-        }
-        else {
+        } else {
           x.html(up[attr]);
         }
       }
@@ -2042,8 +2041,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (state.turtle && !state.bits) {
       if (ev && $(ev.target).hasClass('bits')) {
         state.turtle = false;
-      }
-      else {
+      } else {
         state.bits = true;
       }
       return state;
@@ -3338,14 +3336,19 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
       var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
       endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
-      offset_top = startBounds.bounds.height - 60;
-      offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + 20;
+      offset_top = startBounds.bounds.height - $(".editor").offset().top;
+      var pixel_cushion = 20; //add to every left offset to keep arrow off of the blocks.
+      offset_left = Math.max(startBounds.bounds.width, endBounds.bounds.width)  + pixel_cushion;
     }
     else{
-      offset_top = $(".editor").offset().top;
-      offset_left = $(".editor").offset().left + 50;
+      var font_size = state.pane[pane].editor.getFontSize();
+      offset_top = $(".editor").offset().top - font_size/2;
+      var pixel_cushion = 50; //add to every left offset to keep arrow off of the text
+      offset_left = $(".editor").offset().left + pixel_cushion;
       startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
       endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line), (secondLoc.last_column + 10));
+      startcoords.pageY = startcoords.pageY - font_size/2;
+      endcoords.pageY = endcoords.pageY - font_size/2;
     }
     if (Math.abs(secondLoc.first_line - firstLoc.first_line) > 1){
       var x_val = 0;
