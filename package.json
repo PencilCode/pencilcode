@@ -55,6 +55,7 @@
     "watchify": "latest"
   },
   "browser": {
+    "cache": "./content/src/cache.js",
     "codescan": "./content/src/codescan.js",
     "controller": "./content/src/controller.js",
     "debug": "./content/src/debug.js",
@@ -74,8 +75,7 @@
     "thumbnail": "./content/src/thumbnail.js",
     "tooltipster": "./content/lib/tooltipster/js/jquery.tooltipster.js",
     "view": "./content/src/view.js",
-    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js",
-    "cache": "./content/src/cache.js"
+    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
   },
   "browserify": {
     "transform": [ "browserify-shim" ]
