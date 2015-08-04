@@ -3315,13 +3315,19 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
   coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
   coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
 
-  $(".droplet-main-scroller, .ace_scrollbar-v").scroll(
+  state.pane[pane].editor.getSession().on("changeScrollTop", function() {
+    $(".arrow").remove();
+    coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
+    coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
+  });
+
+  /*$(".droplet-main-scroller, .ace_scrollbar-v").scroll(
     function(e){
       $(".arrow").remove();
       coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
       coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
     }
-  )
+  )*/
 
 
 }

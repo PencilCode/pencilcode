@@ -222,13 +222,17 @@ describe('code debugger', function() {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         if (!$('.ace_gutter-cell').length) return;
         // Simulate hovering over a program line.
-        window._simulate('mouseover', $('.ace_gutter-cell')[0]);
+        window._simulate('mouseover', $('.ace_gutter-cell')[2]);
         // Wait until hovering occurs.
         if ($('.debugfocus').length == 0) {
           return;
+        } 
+        if ($('.arrow').length == 0){
+          return;
         }
         return {
-          debugfocus: $('.debugfocus').length
+          debugfocus: $('.debugfocus').length,
+          arrows: $('.arrow').length
         };
       }
       catch(e) {
@@ -238,6 +242,7 @@ describe('code debugger', function() {
       assert.ifError(err);
       // A line of code should be highlighted.
       assert.equal(1, result.debugfocus);
+      assert.ok(result.arrows > 0);
       done();
     });
   });

@@ -159,7 +159,32 @@ describe('debugger', function() {
       done();
     });
   }); 
-  
+
+  it('should show arrows during runtime', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle "run" button 
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+
+    // Wait for the slider to appear after automated delay
+     if (!$('.arrow').length) return;
+         //  $('#forwardButton').click()  
+
+       return {
+          label: $('.arrow').length
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.label > 0);
+      done();
+    });
+  }); 
 
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
