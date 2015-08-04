@@ -518,8 +518,29 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should capture thumbnail when camera button is pressed', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Then click the camera button.
+      $('#screenshot').click();
+    }, function() {
+      // Wait for thumbnail to be flashed
+      if (!$('.tooltipster-shadow').is(':visible')) return;
+      if (!$('img[alt="thumbnail"]').is(':visible')) return;
+      return {
+        saveEnabled: !$('#save').attr('disabled'),
+        dataurl: $('img[alt="thumbnail"]').attr('src')
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.saveEnabled);
+      // Thumbnail should not be empty.
+      assert.ok(result.dataurl.length > 0);
+      done();
+    });
+  });
   it('should flash thumbnail after run and save', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
+      $('.tooltipster-shadow').hide();
       // Then click the save button.
       $('#save').click();
     }, function() {
@@ -785,26 +806,6 @@ describe('code editor', function() {
         assert.ok(/login=/.test(result.cookie));
         done();
       });
-    });
-  });
-  it('should capture thumbnail when camera button is pressed', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-      // Then click the camera button.
-      $('#screenshot').click();
-    }, function() {
-      // Wait for thumbnail to be flashed
-      if (!$('.tooltipster-shadow').is(':visible')) return;
-      if (!$('img[alt="thumbnail"]').is(':visible')) return;
-      return {
-        saveEnabled: !$('#save').attr('disabled'),
-        dataurl: $('img[alt="thumbnail"]').attr('src')
-      };
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.ok(result.saveEnabled);
-      // Thumbnail should not be empty.
-      assert.ok(result.dataurl.length > 0);
-      done();
     });
   });
   it('should delete when empty is saved', function(done) {

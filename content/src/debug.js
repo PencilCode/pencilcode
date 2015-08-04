@@ -165,7 +165,7 @@ var debug = window.ide = {
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
-      debugRecordsByLineNo[lineno] = record;
+      debugRecordsByLineNo[lineno] = currentDebugId;
       updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
     } else if (event.type === 'after') {
       updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
@@ -366,21 +366,16 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 
 function reportEnter(method, debugId, length, coordId, elem, args){
   stuckComplexity.calls += 1;
-  var recordD = debugRecordsByDebugId[debugId];
-  var recordL = debugRecordsByLineNo[recordD.line];
-  recordD.animated = false;
-  recordL.animated = false;
+  var record = debugRecordsByDebugId[debugId];
+  record.animated = false;
 }
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
 if (!programChanged) { 
-  var recordD = debugRecordsByDebugId[debugId];
-  var recordL = debugRecordsByLineNo[recordD.line];
-  recordD.method = method;
-  recordL.method = method;
-  recordD.args = args;
-  recordL.args = args;
+  var record = debugRecordsByDebugId[debugId];
+  record.method = method;
+  record.args = args;
 
   var currentRecord = debugRecordsByDebugId[currentRecordID];
   var currentIndex = currentRecord.eventIndex;
@@ -391,9 +386,9 @@ if (!programChanged) {
 
   stuckComplexity.moves += 1;
 
-  if (recordD) { 
-    if (!recordD.seeeval){ 
-      var index = recordD.eventIndex;
+  if (record) { 
+    if (!record.seeeval){ 
+      var index = record.eventIndex;
       var line = traceEvents[index].location.first_line;
       var appear_location = traceEvents[index].location;
       var tracedIndex = -1; 
@@ -429,8 +424,8 @@ if (!programChanged) {
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
           view.arrow(view.paneid('left'), arrows, currentIndex, false);
-          debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
-          debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
+          debugRecordsByLineNo[prevLine] = currentRecordID - 1;
+          debugRecordsByLineNo[currentLine] = currentRecordID;
         }
         traceLine(currentIndex);
         tracedIndex = currentIndex;
@@ -463,13 +458,12 @@ if (!programChanged) {
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex, false);
-        debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
-        debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
+        debugRecordsByLineNo[prevLine] = currentRecordID - 1;
+        debugRecordsByLineNo[currentLine] = currentRecordID;
       }
       traceLine(index);
       currentRecordID = debugId;
-      recordD.startCoords[coordId] = collectCoords(elem);
-      recordL.startCoords[coordId] = collectCoords(elem);
+      record.startCoords[coordId] = collectCoords(elem);
       view.showAllVariablesAt(index, variablesByLineNo);
     }
   }
@@ -478,16 +472,13 @@ if (!programChanged) {
 
 function reportResolve(method, debugId, length, coordId, elem, args){
   
-  var recordD = debugRecordsByDebugId[debugId];
-  if (recordD) {
-    if (!recordD.seeeval){
+  var record = debugRecordsByDebugId[debugId];
+  if (record) {
+    if (!record.seeeval){
       view.arrow(view.paneid('left'), arrows, -1, false);
-      var recordL = debugRecordsByLineNo[recordD.line];
-      recordD.method = method;
-      recordL.method = method;
-      recordD.animated = true;
-      recordL.animated = true;
-      var index = recordD.eventIndex;
+      record.method = method;
+      record.animated = true;
+      var index = record.eventIndex;
       var line = traceEvents[index].location.first_line
       if (index > 0){
         var prevLine = traceEvents[index -1].location.first_line;
@@ -495,8 +486,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       else{
         var prevLine = -1;
       }
-      recordD.endCoords[coordId] = collectCoords(elem);
-      recordL.endCoords[coordId] = collectCoords(elem);
+      record.endCoords[coordId] = collectCoords(elem);
       untraceLine(index);
     }          
   }
@@ -545,8 +535,8 @@ function end_program(){
         else{
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        debugRecordsByLineNo[prevLine].eventIndex = prevIndex;
-        debugRecordsByLineNo[currentLine].eventIndex = currentIndex;
+        debugRecordsByLineNo[prevLine] = currentRecordID - 1;
+        debugRecordsByLineNo[currentLine] = currentRecordID;
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
     traceLine(currentIndex);
@@ -807,11 +797,12 @@ view.on('parseerror', function(pane, err) {
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
   if (debugRecordsByLineNo[lineno]){
-    var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
+    var debugId = debugRecordsByLineNo[lineno]
+    var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
     view.arrow(view.paneid('left'), arrows, eventIndex, true);
     view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
     view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+    displayProtractorForRecord(debugRecordsByDebugId[debugId]);
   }
   
 });
@@ -834,8 +825,9 @@ view.on('icehover', function(pane, ev) {
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   if (debugRecordsByLineNo[lineno]) {
-    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
-    var eventIndex = debugRecordsByLineNo[lineno].eventIndex;
+    var debugId = debugRecordsByLineNo[lineno]
+    displayProtractorForRecord(debugRecordsByDebugId[debugId]);
+    var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
     view.arrow(view.paneid('left'), arrows, eventIndex, true);
   }
 });
