@@ -358,7 +358,96 @@ describe('code editor', function() {
       done();
     });
   });
-  it('should enable the save button after editing a program', function(done) {
+  it('should flip into blocks mode', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the "blocks" tabby button
+      $('.blocktoggle').click();
+    }, function() {
+      var lefttitle = $('.panetitle').filter(
+          function() { return $(this).parent().position().left == 0; })
+          .find('.panetitle-text');
+      if (/code/.test(lefttitle.text())) return;
+      return {
+        filename: $('#filename').text(),
+        title: lefttitle.text().trim(),
+        saved: $('#save').prop('disabled')
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // Filename is still shown and unchanged.
+      assert.ok(/^untitled/.test(result.filename));
+      // Intentional: we should always add an extra empty line at the bottom.
+      assert.equal(result.title, 'blocks');
+      // The save button is still disabled, because the doc is unmodified.
+      assert.equal(result.saved, true);
+      done();
+    });
+  });
+  it('should be able to drag out a block', function(done) {
+    testutil.defineSimulate(_page);
+    // Capture any /log/ HTTP request.
+    var logged = null;
+    _page.onResourceRequested = function(req) {
+      if (/log/.test(req[0].url)) { logged = req[0].url; }
+    }
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Drag a block out: bk 100
+      simulate('mousedown', '[data-id=bk]')
+      simulate('mousemove', '.droplet-drag-cover',
+        { location: '[data-id=bk]', dx: 5 })
+      simulate('mousemove', '.droplet-drag-cover',
+        { location: '.droplet-main-scroller' })
+      simulate('mouseup', '.droplet-drag-cover',
+        { location: '.droplet-main-scroller' })
+    }, function() {
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
+      // Return a ton of UI state.
+      return {
+        filename: $('#filename').text(),
+        text: ace_editor.getSession().getValue(),
+        saved: $('#save').prop('disabled')
+      };
+    }, function(err, result) {
+      _page.onResourceRequested = null;
+      assert.ifError(err);
+      // The filename chosen should start with the word "untitled"
+      assert.ok(/^untitled/.test(result.filename), result.filename);
+      // The program text should be "bk 100".
+      assert.equal(result.text.trim(), 'bk 100');
+      // The "save" button should not be disabled now.
+      assert.equal(result.saved, false);
+      // And pickblock should have been logged
+      assert.equal(logged,
+        "http://livetest.pencilcode.net.dev/log/~pickblock?id=bk");
+      done();
+    });
+  });
+  it('should flip into text mode again', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the "text" tabby button
+      $('.texttoggle').click();
+    }, function() {
+      var lefttitle = $('.panetitle').filter(
+          function() { return $(this).parent().position().left == 0; })
+          .find('.panetitle-text');
+      if (/blocks/.test(lefttitle.text())) return;
+      return {
+        filename: $('#filename').text(),
+        title: lefttitle.text().trim(),
+        saved: $('#save').prop('disabled')
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      // Filename is still shown and unchanged.
+      assert.ok(/^untitled/.test(result.filename));
+      // Intentional: we should always add an extra empty line at the bottom.
+      assert.equal(result.title, 'code');
+      // The save button is still enabled
+      assert.equal(result.saved, false);
+      done();
+    });
+  });
+  it('should be able to edit a program in text mode', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Modify the text in the editor.
       var ace_editor = ace.edit($('.droplet-ace')[0]);
@@ -647,6 +736,26 @@ describe('code editor', function() {
         assert.ok(/login=/.test(result.cookie));
         done();
       });
+    });
+  });
+  it('should capture thumbnail when camera button is pressed', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Then click the camera button.
+      $('#screenshot').click();
+    }, function() {
+      // Wait for thumbnail to be flashed
+      if (!$('.tooltipster-shadow').is(':visible')) return;
+      if (!$('img[alt="thumbnail"]').is(':visible')) return;
+      return {
+        saveEnabled: !$('#save').attr('disabled'),
+        dataurl: $('img[alt="thumbnail"]').attr('src')
+      };
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.saveEnabled);
+      // Thumbnail should not be empty.
+      assert.ok(result.dataurl.length > 0);
+      done();
     });
   });
   it('should delete when empty is saved', function(done) {
