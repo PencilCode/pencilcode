@@ -144,7 +144,7 @@ describe('debugger', function() {
 	  // Wait for the slider to appear after automated delay
 	   if (!$('#slider').length) return;
 	   if (!$('#forwardButton').length) return;
-         //  $('#forwardButton').click()	
+           $('#forwardButton').click()	
 
        return {
           label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim()
@@ -155,7 +155,7 @@ describe('debugger', function() {
       }
     }, function(err, result) {
       assert.ifError(err);
-      assert.equal(result.label, '0');
+      assert.equal(result.label, '1');
       done();
     });
   }); 

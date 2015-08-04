@@ -17,7 +17,7 @@ function to360(v) {
 
 function renderProtractor(canvas, step) {
   var ctx = canvas[0].getContext('2d');
-  ctx.resetTransform();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
   if (step.startCoords != null) {
     t =  new $.turtle.Turtle;
