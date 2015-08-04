@@ -397,7 +397,6 @@ view.on('fullscreen', function(pane) {
 view.on('bydate', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = true;
-//    setDefaultDirSortingByDate(true);
     var pane = paneatpos('left');
     updateSortResults(pane);
   }
@@ -406,7 +405,6 @@ view.on('bydate', function() {
 view.on('byname', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = false;
-//    setDefaultDirSortingByDate(false);
     var pane = paneatpos('left');
     updateSortResults(pane);
   }
@@ -2035,20 +2033,20 @@ function updateSortResults(pane) {
 function updateSearchResults(pane, search, cb) {
   var mpp = model.pane[pane];
   if(specialowner()) {
-    var cacheResults = cache.get('search-keys',search);
+    var cacheResults = cache.get('search-keys', search);
     if(cacheResults) {
       mpp.data = cacheResults;
-      view.setPaneLinks(pane,getUpdatedLinksArray(pane));
+      view.setPaneLinks(pane, getUpdatedLinksArray(pane));
       cb && cb();
     } else {
       storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
         mpp.data = m;
-        cache.put('search-keys',search,m);
-        view.setPaneLinks(pane,getUpdatedLinksArray(pane));
+        cache.put('search-keys', search, m);
+        view.setPaneLinks(pane, getUpdatedLinksArray(pane));
         cb && cb();
       });
     }
-  }else{
+  } else {
     if(!mpp.data.allLinks) {
       mpp.data.allLinks=mpp.data.list;
     }
@@ -2062,7 +2060,7 @@ function updateSearchResults(pane, search, cb) {
       }
     }
     mpp.data.list=results;
-    view.setPaneLinks(pane,getUpdatedLinksArray(pane));
+    view.setPaneLinks(pane, getUpdatedLinksArray(pane));
     cb && cb();
   }
 }

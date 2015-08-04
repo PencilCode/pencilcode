@@ -1344,7 +1344,7 @@ function setPaneLinkText(pane, links, filename, ownername) {
   updatePaneTitle(pane);
 }
 
-function setPaneLinks(pane,links) {
+function setPaneLinks(pane, links) {
   var paneState = state.pane[pane];
   paneState.links = links;
   updatePaneLinks(pane);
@@ -1361,27 +1361,7 @@ $(window).on('resize.listing', function() {
   }
 });
 
-function sortByDate(a, b) {
-  if (b.mtime != a.mtime) {
-    return b.mtime - a.mtime;
-  }
-  return sortByName(a, b);
-}
-
-function sortByName(a, b) {
-  var aName = a.name.toLowerCase();
-  var bName = b.name.toLowerCase();
-  if (aName == bName) {
-     return  a < b ? -1 : a > b ? 1 : 0;
-  } else if (aName < bName) {
-    return -1;
-  } else if (aName > bName) {
-    return 1;
-  }
-  return 0;
-}
-
-function updatePaneLinks(pane,search) {
+function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, figure, thumbnail, directory, colsdone, list;
   var paneState = state.pane[pane];
