@@ -11,8 +11,7 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
-    FontLoader     = require('FontLoader'),
-    cache          = require('cache');
+    FontLoader     = require('FontLoader');
 
 
 function htmlEscape(s) {
@@ -132,6 +131,7 @@ window.pencilcode.view = {
   isPaneEditorEmpty: isPaneEditorEmpty,
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
+  setPaneLinks: setPaneLinks,
   setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
@@ -1340,6 +1340,12 @@ function setPaneLinkText(pane, links, filename, ownername) {
   updatePaneTitle(pane);
 }
 
+function setPaneLinks(pane,links) {
+  var paneState = state.pane[pane];
+  paneState.links = links;
+  updatePaneLinks(pane);
+}
+
 $(window).on('resize.listing', function() {
   var panes = [paneid('left'), paneid('right')];
   for (var j = 0; j < panes.length; j++) {
@@ -1351,44 +1357,24 @@ $(window).on('resize.listing', function() {
   }
 });
 
+function sortByDate(a, b) {
+  if (b.mtime != a.mtime) {
+    return b.mtime - a.mtime;
+  }
+  return sortByName(a, b);
+}
 
-var searchCache = "file-search";
-var prevSearch;
-function updateSearchResults(search,pane) {
-  search = search.toLowerCase();
-  if (search == prevSearch){
-    return;
+function sortByName(a, b) {
+  var aName = a.name.toLowerCase();
+  var bName = b.name.toLowerCase();
+  if (aName == bName) {
+     return  a < b ? -1 : a > b ? 1 : 0;
+  } else if (aName < bName) {
+    return -1;
+  } else if (aName > bName) {
+    return 1;
   }
-    
-  if (!state.pane[pane].allLinks){
-    state.pane[pane].allLinks = state.pane[pane].links;
-  }
-    
-  var results;
-  if (search) {
-    var savedCache = cache.get(searchCache,search);
-    if (savedCache) {
-      results = savedCache;
-    } else {
-      results = [];
-      var list = state.pane[pane].allLinks;
-
-      for (j = 0; j < list.length; j++) {
-        if (list[j].name.toLowerCase().indexOf(search) == 0) {
-          results.push(list[j]);
-        }
-      }
-      cache.put(searchCache,search,results);
-    }
-  } else if (search == '') {
-    results = state.pane[pane].allLinks;
-  } else {
-    return;
-  }
-    
-  prevSearch = search;
-  state.pane[pane].links = results;
-  updatePaneLinks(pane,search);
+  return 0;
 }
 
 function updatePaneLinks(pane,search) {
@@ -1407,17 +1393,6 @@ function updatePaneLinks(pane,search) {
   
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
-
-//  if ($('#fileSearch').length==0) {
-//    $('<div class="search-file"><input type="text" id="fileSearch" placeholder="Search"><span class="fa fa-search"></span></div>').appendTo('#' + pane);
-//  }
-//
-//  if ($('#directory').length==0) {
-//    directory = $('<div id="directory" class="directory"></div>').appendTo('#' + pane);
-//  } else {
-//      directory=$('#directory');
-//      directory.empty();
-//  }
 
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
@@ -1508,10 +1483,6 @@ function updatePaneLinks(pane,search) {
         fireEvent('linger', [pane, link]);
       }
     }, 600);
-  });
-  
-  $('#fileSearch').on('keyup', function(e){
-    updateSearchResults(document.getElementById("fileSearch").value,pane);
   });
 }
 
@@ -1833,9 +1804,11 @@ $('.panetitle').on('click', '.thumb-toggle', function(e) {
 
 $('.panetitle').on('keyup', '.search-toggle', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  var search = $(this).closest('.panetitle').find('.search-toggle').val();
   e.preventDefault();
-  updateSearchResults($(this).closest('.panetitle').find('.search-toggle').val(),pane);
-  enabeSearchResults($(this).closest('.panebox').find('.directory'), true);
+  fireEvent('search',[pane,search,function(){console.log("Done search : "+search);}]);
+//  updateSearchResults($(this).closest('.panetitle').find('.search-toggle').val(),pane);
+//  enabeSearchResults($(this).closest('.panebox').find('.directory'), true);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {
