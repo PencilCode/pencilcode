@@ -398,8 +398,7 @@ if (!programChanged) {
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           prevLine = prevLocation.first_line;
-        }
-        else {
+        } else {
           var prevLocation = null;
           prevLine = -1;
         }
@@ -413,18 +412,15 @@ if (!programChanged) {
 
           if (arrows[prevIndex] != null) {
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-          }
-          else {
+          } else {
             arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
           }
           if (arrows[currentIndex] != null) {
             arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
-          }
-          else{
+          } else{
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
           view.arrow(view.paneid('left'), arrows, currentIndex, false);
-          debugRecordsByLineNo[prevLine] = currentRecordID - 1;
           debugRecordsByLineNo[currentLine] = currentRecordID;
         }
         traceLine(currentIndex);
@@ -447,18 +443,15 @@ if (!programChanged) {
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
         }
         if (arrows[index] != null){
           arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex, false);
-        debugRecordsByLineNo[prevLine] = currentRecordID - 1;
         debugRecordsByLineNo[currentLine] = currentRecordID;
       }
       traceLine(index);
@@ -482,8 +475,7 @@ function reportResolve(method, debugId, length, coordId, elem, args){
       var line = traceEvents[index].location.first_line
       if (index > 0){
         var prevLine = traceEvents[index -1].location.first_line;
-      }
-      else{
+      } else{
         var prevLine = -1;
       }
       record.endCoords[coordId] = collectCoords(elem);
@@ -511,8 +503,7 @@ function end_program(){
    if (prevIndex != -1) {
       var prevLocation = traceEvents[prevIndex].location;
       var prevLine = prevLocation.first_line;
-    }
-    else{
+    } else{
       var prevLocation = null;
       var prevLine = -1;
     }
@@ -525,17 +516,14 @@ function end_program(){
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
         }
         if (arrows[currentIndex] != null){
           arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        debugRecordsByLineNo[prevLine] = currentRecordID - 1;
         debugRecordsByLineNo[currentLine] = currentRecordID;
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
@@ -825,7 +813,7 @@ view.on('icehover', function(pane, ev) {
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   if (debugRecordsByLineNo[lineno]) {
-    var debugId = debugRecordsByLineNo[lineno]
+    var debugId = debugRecordsByLineNo[lineno];
     displayProtractorForRecord(debugRecordsByDebugId[debugId]);
     var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
     view.arrow(view.paneid('left'), arrows, eventIndex, true);
@@ -960,8 +948,7 @@ $('.panetitle').on('click', '.debugtoggle', function () {
   if(!debugMode) {
     view.removeSlider();
     $(".debugtoggle").text('debug off');
-  }
-  else {
+  } else {
     setupSlider();
     $(".debugtoggle").text('debug on');
   }

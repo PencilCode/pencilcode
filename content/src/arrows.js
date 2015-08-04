@@ -23,8 +23,7 @@ function arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top
   if (show_fade) {
     arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val + offset_left, (endcoords.pageY - offset_top)) 
                         + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF; fill:none; stroke-width:4' position='relative'/> \ "
-  }
-  else{
+  } else{
     arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val + offset_left, (endcoords.pageY - offset_top)) 
                         + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
   } 

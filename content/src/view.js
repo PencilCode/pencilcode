@@ -1034,8 +1034,7 @@ function showDialog(opts) {
           } else {
             x.val(up[attr]);
           }
-        }
-        else {
+        } else {
           x.html(up[attr]);
         }
       }
@@ -2042,8 +2041,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (state.turtle && !state.bits) {
       if (ev && $(ev.target).hasClass('bits')) {
         state.turtle = false;
-      }
-      else {
+      } else {
         state.bits = true;
       }
       return state;
