@@ -19,7 +19,7 @@ function renderProtractor(canvas, step) {
   var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
-  if (step.startCoords != null) {
+ /* if (step.startCoords != null) {
     t =  new $.turtle.Turtle;
     t.appendTo('.preview')
     var offset = $('.preview').offset()
@@ -33,7 +33,7 @@ function renderProtractor(canvas, step) {
         t.lt(step.endCoords.direction)
       }
     }
-  }
+  } */
   if (!step.startCoords) {
     return;
   }
