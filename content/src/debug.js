@@ -19,6 +19,7 @@ var currentDebugId = 0;        // id used to pair jquery-turtle events with trac
 var debugRecordsByDebugId = {};// map debug ids -> line execution records.
 var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
 var variablesByLineNo = {};    // map line numbers -> tracked variables.
+var untrackedVariables = [];   // list of (mostly jquery-turtle) globals not to be tracked.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
 var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
@@ -173,6 +174,9 @@ var debug = window.ide = {
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
+  },
+  setUntrackedVars: function (vars) {
+    untrackedVariables = vars;
   }
 };
 
@@ -221,42 +225,6 @@ function detectStuckProgram() {
 //////////////////////////////////////////////////////////////////////
 // VARIABLE & FUNCTION CALL TRACKING
 //////////////////////////////////////////////////////////////////////
-
-var untrackedVariables = [
-  // Colors
-  "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige",
-  "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown",
-  "burlywood", "cadetblue", "chartreuse", "chocolate", "coral",
-  "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
-  "darkgoldenrod", "darkgray", "darkgrey", "darkgreen", "darkkhaki",
-  "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred",
-  "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
-  "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue",
-  "dimgray", "dimgrey", "dodgerblue", "firebrick", "floralwhite",
-  "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
-  "gray", "grey", "green", "greenyellow", "honeydew", "hotpink",
-  "indianred", "indigo", "ivory", "khaki", "lavender", "lavenderblush",
-  "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
-  "lightgoldenrodyellow", "lightgray", "lightgrey", "lightgreen",
-  "lightpink", "lightsalmon", "lightseagreen", "lightskyblue",
-  "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow",
-  "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
-  "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen",
-  "mediumslateblue", "mediumspringgreen", "mediumturquoise",
-  "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin",
-  "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange",
-  "orangered", "orchid", "palegoldenrod", "palegreen", "paleturquoise",
-  "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum",
-  "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
-  "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna",
-  "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow",
-  "springgreen", "steelblue", "tan", "teal", "thistle", "tomato",
-  "turquoise", "violet", "wheat", "white", "whitesmoke", "yellow",
-  "yellowgreen", "transparent",
-
-  // Other special strings
-  "none", "erase", "path", "up", "down", "color", "position", "normal", "touch"
-];
 
 var untrackedFunctions = [
   "fd", "bk", "rt", "lt", "slide", "jump", "moveto", "jumpto", "turnto", "play",
