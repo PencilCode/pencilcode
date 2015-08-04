@@ -2754,6 +2754,9 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     paneState.lastChangeTime = +(new Date);
     fireEvent('changehtmlcss', [pane]);
   }
+  editor.getSession().on("changeScrollTop", function() {
+    repositionVariables(pane);
+  });
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -3363,12 +3366,7 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
 function showVariables(pane, lineNum, vars, functionCalls) {
   var coords = null;
   var offsetTop = 0;
-
-  var block_mode = null;
-  if (pane) {
-    block_mode = true;
-    if (!getPaneEditorBlockMode(pane)) { block_mode = false; }
-  }
+  var block_mode = getPaneEditorBlockMode(pane);
 
   if (block_mode) {
     var dropletEditor = state.pane[pane].dropletEditor;
@@ -3377,7 +3375,7 @@ function showVariables(pane, lineNum, vars, functionCalls) {
   } else {
     var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
     coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
-    offsetTop = $(".editor").offset().top;
+    offsetTop = $("div[id^='editor_']").offset().top;
   }
 
   var text = "";
@@ -3401,15 +3399,32 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     div.style.visibility = 'visible';
     div.style.position = "absolute";
     div.style.zIndex = "10";
-    div.style.right = "0";
+    div.style.right = "25px";
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
-    $("div[id^='editor_']").append(div);
+    if (block_mode) {
+      $("div[id^='editor_'] .droplet-main-scroller").append(div);
+    } else {
+      $("div[id^='editor_']").append(div);
+    }
   }
 }
 
 function removeVariables() {
-  $(".editor > .vars").remove();
+  $(".vars").remove();
+}
+
+function repositionVariables(pane) {
+  $("#" + pane + " .vars").each(function() {
+    var matches = this.id.match(/^line(\d+)vars$/);
+    if (matches) {
+      var lineNum = parseInt(matches[1], 10);
+      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+      var coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+      var offsetTop = $("div[id^='editor_']").offset().top;
+      $(this).css("top", String(coords.pageY - offsetTop) + "px");
+    }
+  });
 }
 
 function showVariablesFor(lineNum, eventIndex, variablesByLineNo) {
