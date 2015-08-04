@@ -107,7 +107,7 @@ describe('wait_code', function() {
       var lefttitle = $('.panetitle').filter(
           function() {
             return $(this).parent().position().left == 0;
-          }).find('.panetitle-text');
+          }).find('.panetitle-text').find('.toggleblocks');
       // Wait for this title to say "blocks" in it.
       if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
@@ -155,7 +155,7 @@ describe('wait_code', function() {
     }, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
-          .find('.panetitle-text');
+          .find('.panetitle-text').find('.toggleblocks');
       if (/blocks/.test(lefttitle.text())) return;
       return {
         filename: $('#filename').text(),
