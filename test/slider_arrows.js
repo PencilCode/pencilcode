@@ -68,8 +68,8 @@ describe('debugger', function() {
     });
   });
   it('should load code', function(done) {
-    // Navigate to see the editor for the program named "hi".
-    _page.open('http://livetest.pencilcode.net.dev/edit/hi',
+    // Navigate to see the editor for the program named "second".
+    _page.open('http://livetest.pencilcode.net.dev/edit/second',
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
@@ -86,7 +86,7 @@ describe('debugger', function() {
       }, function(err, result) {
         assert.ifError(err);
         // The editor text should contain this line of code.
-        assert.ok(/pen blue/.test(result.text));
+        assert.ok(/speed 2/.test(result.text));
         done();
       });
     });
@@ -125,7 +125,7 @@ describe('debugger', function() {
       assert.equal(result.backbutton, 1);
       assert.equal(result.forwardbutton, 1);
       // Assert number of steps on slider equals traceEvents length
-      assert.equal(result.pips, 56);
+      assert.equal(result.pips, 77);
       // Assert that slider tip reflects appropriate line number
       assert.equal(result.label, '0');
       assert.equal(result.slidertip, 'Line  1');
@@ -144,7 +144,7 @@ describe('debugger', function() {
 	  // Wait for the slider to appear after automated delay
 	   if (!$('#slider').length) return;
 	   if (!$('#forwardButton').length) return;
-       // Note: fix this!!! $('#forwardButton').click()	
+         //  $('#forwardButton').click()	
 
        return {
           label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim()
