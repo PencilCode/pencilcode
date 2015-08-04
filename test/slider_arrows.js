@@ -133,21 +133,27 @@ describe('debugger', function() {
     });
   }); 
 
-  it('should allow users to use step buttons', function(done) {
+  it('should allow users to use step buttons to see arrow/protractor', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle "run" button 
       $('#run').mousedown();
       $('#run').click();
     }, function() {
       try {
-
-	  // Wait for the slider to appear after automated delay
+         // Wait for the slider to appear after automated delay
 	   if (!$('#slider').length) return;
 	   if (!$('#forwardButton').length) return;
-         //  $('#forwardButton').click()	
-
+           if (!$('.arrow').length) return;     
+    
+           // Click the forward button four times
+           for (var i = 0; i < 4; i++) {
+             $('#forwardButton').click();
+           }	           
        return {
-          label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim()
+          label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
+          protractor: $('.protractor').length,
+          slidertip: $('.ui-slider-tip').text().trim(),
+          arrows: $('.arrow').length
         };
       }
       catch(e) {
@@ -155,7 +161,13 @@ describe('debugger', function() {
       }
     }, function(err, result) {
       assert.ifError(err);
-      assert.equal(result.label, '0');
+      // Assert that we are on the fourth tick
+      assert.equal(result.label, '4');
+      // Assert that the slider says line 5
+      assert.equal(result.slidertip, 'Line  5');
+      // Assert that protractor and arrows appear with slider
+      assert.equal(result.protractor, 1);
+      assert.ok(result.arrows > 0);
       done();
     });
   }); 
