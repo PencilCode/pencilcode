@@ -11,7 +11,8 @@ var cache = window.pencilcode.cacheObj = {};
 var model = window.pencilcode.cache = {
   put: put,
   get: get,
-  delete: deleteCache
+  delete: deleteCache,
+  clear: clearCache
 };
 
 /**
@@ -35,6 +36,14 @@ function initializeCache(name) {
  */
 function deleteCache(name) {
   delete cache[name];
+}
+
+/**
+ * Ceear the complete cache
+ * @returns {undefined}
+ */
+function clearCache(){
+  cache = window.pencilcode.cacheObj = {};
 }
 
 /**

@@ -2016,6 +2016,7 @@ function sortByName(a, b) {
 }
 
 function renderDirectory(position) {
+  cache.clear();
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
   mpp.bydate = defaultDirSortingByDate();
@@ -2032,36 +2033,43 @@ function updateSortResults(pane) {
 
 function updateSearchResults(pane, search, cb) {
   var mpp = model.pane[pane];
-  if (specialowner()) {
-    var cacheResults = cache.get('search-keys', search);
-    if (cacheResults) {
-      mpp.data = cacheResults;
-      view.setPaneLinks(pane, getUpdatedLinksArray(pane));
-      cb && cb();
-    } else {
-      storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
-        mpp.data = m;
-        cache.put('search-keys', search, m);
-        view.setPaneLinks(pane, getUpdatedLinksArray(pane));
-        cb && cb();
-      });
-    }
+  var searchCacheName = 'search-keys-' + (!model.ownername ? '' : model.ownername);
+  var searchCacheKey= mpp.filename+"-"+search;
+  var cacheResults = cache.get(searchCacheName, searchCacheKey);
+  if (cacheResults) {
+    mpp.data.list=cacheResults.list;
+    updateViewAndCache(cacheResults.list, cacheResults.view);
   } else {
-    if (!mpp.data.allLinks) {
-      mpp.data.allLinks=mpp.data.list;
-    }
-    
-    var results = [];
-    var list = mpp.data.allLinks;
-
-    for (j = 0; j < list.length; j++) {
-      if (list[j].name.toLowerCase().indexOf(search) == 0) {
-        results.push(list[j]);
+    if (!model.ownername) {
+      storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
+        mpp.data=m
+        updateViewAndCache(m.list, getUpdatedLinksArray(pane), cache);
+      });
+    } else {
+      if (!mpp.data.allLinks) {
+        mpp.data.allLinks=mpp.data.list;
       }
+
+      var results = [];
+      var list = mpp.data.allLinks;
+
+      for (j = 0; j < list.length; j++) {
+        if (list[j].name.toLowerCase().indexOf(search) == 0) {
+          results.push(list[j]);
+        }
+      }
+      mpp.data.list = results;
+      updateViewAndCache(results, getUpdatedLinksArray(pane), cache);
     }
-    mpp.data.list=results;
-    view.setPaneLinks(pane, getUpdatedLinksArray(pane));
+  }
+  
+  function updateViewAndCache(list, viewlist, cache) {
+    view.setPaneLinks(pane, viewlist);
     cb && cb();
+    cache && cache.put(searchCacheName, searchCacheKey, {
+      list: list,
+      view: viewlist
+    });
   }
 }
 
