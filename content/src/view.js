@@ -3385,7 +3385,9 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     text += htmlEscape(vars[i].name) + "=" + htmlEscape(vars[i].value) + " ";
   }
   for (var i = 0; i < functionCalls.length; i++) {
-    text += htmlEscape(functionCalls[i].name) + "=" + htmlEscape(functionCalls[i].value) + " ";
+    var argsString = functionCalls[i].argsString;
+    if (argsString.length > 20) argsString = "...";
+    text += htmlEscape(functionCalls[i].name) + "(" + htmlEscape(argsString) + ")=" + htmlEscape(functionCalls[i].value) + " ";
   }
 
   var divId = "line" + lineNum + "vars";
