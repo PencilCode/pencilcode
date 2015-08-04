@@ -43,7 +43,7 @@ for color in [red, gold, green, blue]
       lt 360 / sides
     pen null
     fd 40
-  slide 40, -160
+  move 40, -160
 </pre>
 
 [Try an interactive demo (CoffeeScript syntax) here.](
@@ -62,8 +62,8 @@ $(q).fd(100)      // Forward relative motion in local coordinates.
 $(q).bk(50)       // Back.
 $(q).rt(90)       // Right turn.  Optional second arg is turning radius.
 $(q).lt(45)       // Left turn.  Optional second arg is turning radius.
-$(q).slide(x, y)  // Move right by x while moving forward by y.
-$(q).leap(x, y)   // Like slide, but without drawing.
+$(q).move(x, y)   // Move right by x while moving forward by y.
+$(q).jump(x, y)   // Like move, but without drawing.
 $(q).moveto({pageX:x,pageY:y} | [x,y])  // Absolute motion on page.
 $(q).jumpto({pageX:x,pageY:y} | [x,y])  // Like moveto, without drawing.
 $(q).turnto(direction || position)      // Absolute direction adjustment.
@@ -1569,7 +1569,7 @@ function createSurfaceAndField() {
       pointerEvents: 'none',
       overflow: 'hidden'
     }).addClass('turtlefield');
-  $(field).attr('id', 'origin')
+  $(field).attr('id', 'field')
     .css({
       position: 'absolute',
       display: 'inline-block',
@@ -3695,7 +3695,7 @@ function forwardBodyMouseEventsIfNeeded() {
           var warn = $.turtle.nowarn;
           $.turtle.nowarn = true;
           var sel = $(globalDrawing.surface)
-              .find('.turtle,.turtlelabel').within('touch', e).eq(0);
+              .find('.turtle').within('touch', e).eq(0);
           $.turtle.nowarn = warn;
           if (sel.length === 1) {
             // Erase portions of the event that are wrong for the turtle.
@@ -6045,7 +6045,7 @@ function fdbk(cc, amount) {
 // CARTESIAN MOVEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////
 
-function slide(cc, x, y) {
+function move(cc, x, y) {
   if ($.isArray(x)) {
     y = x[1];
     x = x[0];
@@ -6358,9 +6358,9 @@ var turtlefn = {
   bk: wrapcommand('bk', 1,
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"], fdbk),
-  slide: wrapcommand('slide', 1,
+  move: wrapcommand('move', 1,
   ["<u>move(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>slide 50, 100</mark>"], slide),
+      "<mark>move 50, 100</mark>"], move),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
       "<mark>movexy 50, 100</mark>"], movexy),
@@ -6371,8 +6371,8 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
-  ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
-      "<mark>jump 0, 50</mark>"], makejump(slide)),
+  ["<u>jump(x, y)</u> Move without drawing (compare to <u>move</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(move)),
   jumpxy: wrapcommand('jumpxy', 1,
   ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
       "<mark>jump 0, 50</mark>"], makejump(movexy)),
@@ -7050,10 +7050,6 @@ var turtlefn = {
       // Place the label on the screen using the figured styles.
       var out = prepareOutput(html, 'label').result.css(applyStyles)
           .addClass('turtlelabel').appendTo(getTurtleField());
-      // If the output has a turtleinput, then forward mouse events.
-      if (out.hasClass('turtleinput') || out.find('.turtleinput').length) {
-        mouseSetupHook.apply(out.get(0));
-      }
       if (styles && 'id' in styles) {
         out.attr('id', styles.id);
       }
@@ -7607,7 +7603,7 @@ function deprecate(map, oldname, newname) {
     __extends(map[oldname], map[newname]);
   }
 }
-deprecate(turtlefn, 'move', 'slide');
+deprecate(turtlefn, 'slide', 'move');
 deprecate(turtlefn, 'direct', 'plan');
 deprecate(turtlefn, 'enclosedby', 'inside');
 deprecate(turtlefn, 'bearing', 'direction');
@@ -9260,8 +9256,6 @@ function prepareOutput(html, tag) {
   if (html === undefined || html === null) {
     // Make empty line when no arguments.
     return {result: $(prefix + '<br>' + suffix)};
-  } else if (html.jquery || (html instanceof Element && (html = $(html)))) {
-    return {result: html};
   } else {
     var wrapped = false, result = null;
     html = '' + html;
@@ -10494,7 +10488,7 @@ function stickscroll() {
   }
 }
 function flushqueue() {
-  var elt = aselement(logelement, null), child;
+  var elt = aselement(logelement, null);
   if (elt && elt.appendChild && queue.length) {
     initlogcss();
     var temp = global.document.createElement('samp');
@@ -10510,7 +10504,7 @@ function flushqueue() {
     if (panel == 'auto') {
       startinitpanel();
     }
-    retrying = setTimeout(function() { retrying = null; flushqueue(); }, 100);
+    retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
   } else if (retrying && !queue.length) {
     clearTimeout(retrying);
     retrying = null;
