@@ -23,7 +23,7 @@ var model = window.pencilcode.cache = {
  */
 function initializeCache(name) {
   if (!cache[name]) {
-      cache[name] = {};
+    cache[name] = {};
   }
 }
 
@@ -46,7 +46,7 @@ function deleteCache(name) {
  */
 function get(cacheName, key) {
     if (cache[cacheName]) {
-        return cache[cacheName][key];
+      return cache[cacheName][key];
     }
     return null;
 }
@@ -62,7 +62,5 @@ function put(cacheName, key, value) {
     initializeCache(cacheName);
     cache[cacheName][key] = value;
 }
-
-
 
 module.exports = model;
