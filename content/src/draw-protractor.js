@@ -25,12 +25,15 @@ function renderProtractor(canvas, step) {
     var offset = $('.preview').offset()
     t.moveto({pageX: step.startCoords.pageX + offset.left, pageY:step.startCoords.pageY + offset.top});
     t.wear('gray');
-    if (step.command == "rt") {
-      t.rt(step.endCoords.direction)
-    }
-    if (step.command == "lt") {
-      t.lt(step.endCoords.direction)
-    }
+    if (step.endCoords != null) {
+      if (step.command == "rt") {
+        t.rt(step.endCoords.direction)
+      } 
+
+      if (step.command == "lt") {
+        t.lt(step.endCoords.direction)
+      }
+   }
   }
   if (!step.startCoords) {
     return;
