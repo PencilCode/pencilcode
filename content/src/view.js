@@ -1790,9 +1790,7 @@ $('.panetitle').on('keyup', '.search-toggle', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   var search = $(this).closest('.panetitle').find('.search-toggle').val();
   e.preventDefault();
-  fireEvent('search',[pane,search,function(){console.log("Done search : "+search);}]);
-//  updateSearchResults($(this).closest('.panetitle').find('.search-toggle').val(),pane);
-//  enabeSearchResults($(this).closest('.panebox').find('.directory'), true);
+  fireEvent('search',[pane,search]);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {

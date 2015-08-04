@@ -2032,9 +2032,9 @@ function updateSortResults(pane) {
 
 function updateSearchResults(pane, search, cb) {
   var mpp = model.pane[pane];
-  if(specialowner()) {
+  if (specialowner()) {
     var cacheResults = cache.get('search-keys', search);
-    if(cacheResults) {
+    if (cacheResults) {
       mpp.data = cacheResults;
       view.setPaneLinks(pane, getUpdatedLinksArray(pane));
       cb && cb();
@@ -2047,7 +2047,7 @@ function updateSearchResults(pane, search, cb) {
       });
     }
   } else {
-    if(!mpp.data.allLinks) {
+    if (!mpp.data.allLinks) {
       mpp.data.allLinks=mpp.data.list;
     }
     
