@@ -95,6 +95,10 @@
       }
     };
 
+    CoffeeScriptInstrumenter.prototype.quoteString = function(str) {
+      return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
+    };
+
     CoffeeScriptInstrumenter.prototype.createInstrumentedNode = function(eventType, options) {
       var eventObj, extra, f, funcDef, functionCalls, instrumentedNode, location, locationObj, name, ref, ref1, ref2, vars;
       if (options == null) {
@@ -143,15 +147,27 @@
         }
       }).call(this);
       if (eventType === "after") {
-        extra += ", functionCalls: [" + ((function() {
-          var j, len, results;
-          results = [];
-          for (j = 0, len = functionCalls.length; j < len; j++) {
-            f = functionCalls[j];
-            results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
-          }
-          return results;
-        })()) + "]";
+        if (this.options.includeArgsStrings) {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + ", argsString: '" + (this.quoteString(f.argsString)) + "'}");
+            }
+            return results;
+          }).call(this)) + "]";
+        } else {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
+            }
+            return results;
+          })()) + "]";
+        }
       }
       eventObj = "{ location: " + locationObj + ", type: '" + eventType + "', " + extra + " }";
       instrumentedNode = this.coffee.nodes(this.options.traceFunc + "(" + eventObj + ")").expressions[0];
@@ -249,6 +265,28 @@
       return args;
     };
 
+    CoffeeScriptInstrumenter.prototype.substringByLocation = function(location) {
+      var j, lineNum, ref, ref1, result;
+      result = "";
+      for (lineNum = j = ref = location.first_line, ref1 = location.last_line; ref <= ref1 ? j <= ref1 : j >= ref1; lineNum = ref <= ref1 ? ++j : --j) {
+        result += lineNum === location.first_line && lineNum === location.last_line ? this.lines[lineNum].slice(location.first_column, +location.last_column + 1 || 9e9) : lineNum === location.first_line ? this.lines[lineNum].slice(location.first_column) : lineNum === location.last_line ? this.lines[lineNum].slice(0, +location.last_column + 1 || 9e9) : this.lines[lineNum];
+      }
+      return result;
+    };
+
+    CoffeeScriptInstrumenter.prototype.argsToString = function(argNodes) {
+      var arg;
+      return ((function() {
+        var j, len, results;
+        results = [];
+        for (j = 0, len = argNodes.length; j < len; j++) {
+          arg = argNodes[j];
+          results.push(this.substringByLocation(arg.locationData));
+        }
+        return results;
+      }).call(this)).join(", ");
+    };
+
     CoffeeScriptInstrumenter.prototype.findFunctionCalls = function(node, parent, grandparent, vars) {
       var j, lastProp, len, name, prop, ref, soak;
       if (parent == null) {
@@ -286,7 +324,8 @@
           node.pencilTracerReturnVar = this.temporaryVariable("returnVar");
           vars.push({
             name: name,
-            tempVar: node.pencilTracerReturnVar
+            tempVar: node.pencilTracerReturnVar,
+            argsString: this.argsToString(node.args)
           });
         }
       }
@@ -640,6 +679,7 @@
         sourceMap: this.options.sourceMap,
         literate: this.options.literate
       };
+      this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
       this.referencedVars = csOptions.referencedVars = (function() {
         var j, len, ref, results;
         ref = this.coffee.tokens(code, csOptions);
@@ -762,6 +802,10 @@
       return soakified + closeParens;
     };
 
+    JavaScriptInstrumenter.prototype.quoteString = function(str) {
+      return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
+    };
+
     JavaScriptInstrumenter.prototype.createInstrumentedNode = function(eventType, options) {
       var eventObj, extra, f, funcDef, functionCalls, instrumentedNode, loc, locationObj, name, ref, ref1, ref2, vars;
       if (options == null) {
@@ -807,15 +851,27 @@
         }
       }).call(this);
       if (eventType === "after") {
-        extra += ", functionCalls: [" + ((function() {
-          var j, len, results;
-          results = [];
-          for (j = 0, len = functionCalls.length; j < len; j++) {
-            f = functionCalls[j];
-            results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
-          }
-          return results;
-        })()) + "]";
+        if (this.options.includeArgsStrings) {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + ", argsString: '" + (this.quoteString(f.argsString)) + "'}");
+            }
+            return results;
+          }).call(this)) + "]";
+        } else {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
+            }
+            return results;
+          })()) + "]";
+        }
       }
       eventObj = "{location: " + locationObj + ", type: '" + eventType + "', " + extra + "}";
       instrumentedNode = acorn.parse(this.options.traceFunc + "(" + eventObj + ");").body[0];
@@ -858,6 +914,7 @@
       node = acorn.parse(varName + " = 0;").body[0];
       node.expression.right = expr;
       node.expression.left.pencilTracerGenerated = true;
+      node.expression.loc = expr.loc;
       if (asStatement) {
         return node;
       } else {
@@ -959,6 +1016,28 @@
       return results;
     };
 
+    JavaScriptInstrumenter.prototype.substringByLocation = function(loc) {
+      var j, lineNum, ref, ref1, result;
+      result = "";
+      for (lineNum = j = ref = loc.start.line, ref1 = loc.end.line; ref <= ref1 ? j <= ref1 : j >= ref1; lineNum = ref <= ref1 ? ++j : --j) {
+        result += lineNum === loc.start.line && lineNum === loc.end.line ? this.lines[lineNum].slice(loc.start.column, loc.end.column) : lineNum === loc.start.line ? this.lines[lineNum].slice(loc.start.column) : lineNum === loc.end.line ? this.lines[lineNum].slice(0, loc.end.column) : this.lines[lineNum];
+      }
+      return result;
+    };
+
+    JavaScriptInstrumenter.prototype.argsToString = function(argNodes) {
+      var arg;
+      return ((function() {
+        var j, len, results;
+        results = [];
+        for (j = 0, len = argNodes.length; j < len; j++) {
+          arg = argNodes[j];
+          results.push(this.substringByLocation(arg.loc));
+        }
+        return results;
+      }).call(this)).join(", ");
+    };
+
     JavaScriptInstrumenter.prototype.findFunctionCalls = function(node, vars) {
       var child, j, key, len, name, ref, ref1, ref2;
       if (vars == null) {
@@ -968,7 +1047,8 @@
         name = node.callee.type === "ThisExpression" ? "this" : node.callee.type === "Identifier" ? node.callee.name : node.callee.type === "MemberExpression" && !node.callee.computed ? node.callee.property.name : "<anonymous>";
         vars.push({
           name: name,
-          tempVar: node.pencilTracerReturnVar
+          tempVar: node.pencilTracerReturnVar,
+          argsString: this.argsToString(node["arguments"])
         });
       }
       for (key in node) {
@@ -1140,6 +1220,8 @@
 
     JavaScriptInstrumenter.prototype.instrument = function(filename, code) {
       var ast, name, tempVarsDeclaration;
+      this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
+      this.lines.unshift(null);
       this.undeclaredVars = [];
       this.referencedVars = [];
       ast = acorn.parse(code, {

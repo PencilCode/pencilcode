@@ -279,20 +279,25 @@ function mergeVars(oldVars, curVars, areFunctionCalls) {
     // Filter out common turtle functions.
     if (areFunctionCalls && untrackedFunctions.indexOf(curVars[i].name) !== -1) continue;
 
+    var curVarName = curVars[i].name;
+    if (areFunctionCalls) {
+      curVarName += "(" + curVars[i].argsString + ")";
+    }
+
     // TODO: keep arrays sorted to prevent the inner loop?
     var found = false;
     for (var j = 0; j < oldVars.length; j++) {
-      if (oldVars[j].name === curVars[i].name) {
+      if (oldVars[j].name === curVarName) {
         found = true;
         if (oldVars[j].value !== curVars[i].value) {
-          newVars[j] = {name: curVars[i].name, value: valueToString(curVars[i].value)};
+          newVars[j] = {name: curVarName, value: valueToString(curVars[i].value)};
           anyChanges = true;
         }
         break;
       }
     }
     if (!found) {
-      newVars.push({name: curVars[i].name, value: valueToString(curVars[i].value)});
+      newVars.push({name: curVarName, value: valueToString(curVars[i].value)});
       anyChanges = true;
     }
   }

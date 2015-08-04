@@ -1827,12 +1827,14 @@ function instrumentCode(code, language) {
   try {
     if (language === 'javascript') {
       options = {
-        traceFunc: 'ide.trace'
+        traceFunc: 'ide.trace',
+        includeArgsStrings: true
       };
       code = pencilTracer.instrumentJs('', code, options);
     } else if (language === 'coffeescript') {
       options = {
         traceFunc: 'ide.trace',
+        includeArgsStrings: true,
         sourceMap: true,
         bare: true
       };
