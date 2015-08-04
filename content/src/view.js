@@ -1653,15 +1653,14 @@ function updatePaneTitle(pane) {
     }
   } else if (paneState.links) {
     if (paneState.path === '/') {
-      label = '<div class="thick-bar">directory</div>';
+      label = 'directory';
     } else {
       var icon = shouldShowThumb(paneState.path)?
               '<i class="fa fa-th-large"></i>' :
               '<i class="fa fa-align-left"></i>';
-      label = '<div class="thick-bar"><div class="thumb-toggle pull-right" title="Toggle thumbnails">'
-            + icon + '</div>directory</div>';
+      label = '<div class="thumb-toggle pull-right" title="Toggle thumbnails">'
+            + icon + '</div>directory';
     }
-    label+='<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>';
   } else if (paneState.running) {
     if (paneState.fullScreenLink) {
       label = '<a target="_blank" class="fullscreen" href="/home/' +
@@ -1678,6 +1677,14 @@ function updatePaneTitle(pane) {
       label = 'output';
     }
   }
+  
+  label='<div class="thick-bar">' + label + '</div>';
+  
+  //Adding the search text field to file listings
+  if (paneState.links){
+    label+='<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>';
+  }
+  
   $('#' + pane + 'title_text').html(label);
   $('#' + pane).toggleClass('textonly', textonly);
 }
