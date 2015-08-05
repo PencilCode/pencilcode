@@ -392,7 +392,7 @@
     };
 
     CoffeeScriptInstrumenter.prototype.compileAst = function(ast, originalCode, compileOptions) {
-      var SourceMap, answer, compilerName, currentColumn, currentLine, fragment, fragments, header, j, js, len, map, newLines;
+      var SourceMap, compilerName, currentColumn, currentLine, fragment, fragments, header, j, js, len, map, newLines;
       SourceMap = this.coffee.compile("", {
         sourceMap: true
       }).sourceMap.constructor;
@@ -433,12 +433,10 @@
         js = "// " + header + "\n" + js;
       }
       if (compileOptions.sourceMap) {
-        answer = {
-          js: js
+        return {
+          code: js,
+          map: map.generate(compileOptions, originalCode)
         };
-        answer.sourceMap = map;
-        answer.v3SourceMap = map.generate(compileOptions, originalCode);
-        return answer;
       } else {
         return js;
       }
@@ -1226,13 +1224,14 @@
     };
 
     JavaScriptInstrumenter.prototype.instrument = function(filename, code) {
-      var ast, name, tempVarsDeclaration;
+      var ast, name, result, tempVarsDeclaration;
       this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
       this.lines.unshift(null);
       this.undeclaredVars = [];
       this.referencedVars = [];
       ast = acorn.parse(code, {
         locations: true,
+        sourceFile: filename,
         onToken: (function(_this) {
           return function(token) {
             if (token.type.label === "name" && _this.referencedVars.indexOf(token.value) === -1) {
@@ -1270,7 +1269,19 @@
       if (this.options.ast) {
         return ast;
       }
-      return escodegen.generate(ast);
+      if (this.options.sourceMap) {
+        if (typeof filename !== "string" || filename.length === 0) {
+          filename = "untitled.js";
+        }
+        result = escodegen.generate(ast, {
+          sourceMap: filename,
+          sourceMapWithCode: true
+        });
+        result.map = result.map.toString();
+        return result;
+      } else {
+        return escodegen.generate(ast);
+      }
     };
 
     return JavaScriptInstrumenter;
