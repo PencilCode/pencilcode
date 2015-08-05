@@ -2066,7 +2066,7 @@ function renderDirectory(position) {
         } else {
           type = filetype.mimeForFilename(name).replace(/;.*$/, '');
         }
-        var href = '/home/' + filenameslash + name;
+        var href = '/edit/' + filenameslash + name;
         links.push({
             name: name,
             link: name,
