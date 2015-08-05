@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Arrow Support to Create Code-flow Arrows.
+// The following functions generate the svg necessary to display 
+// arrows on the code.
 ///////////////////////////////////////////////////////////////////////////
 var $              = require('jquery');
 
@@ -16,8 +18,11 @@ function curvedVertical(x1, y1, x2, y2) {
   return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
 };
 
-function arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top){
-  /*  */
+function drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode){
+  /* Given the coordinates and offsets, arrows are drawn with an svg path element that creates an 
+  upward left-facing curve to the right of the blocks/text code from the previous line of code that ran 
+  to the current line that's running. Note that arrows are drawn on the condition that there's an out of order
+  flow in lines of code. i.e., line 5 runs and then line 2 runs. */
 
 
   if (show_fade) {
@@ -46,7 +51,11 @@ function arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top
     div.style.left = "0px";
     div.style.top = "0px";
 
-    $("div[id^='editor_']").append(div);
+    if (block_mode) {
+       $("div[id^='editor_'] .droplet-main-scroller").append(div);
+    } else {
+       $("div[id^='editor_']").append(div);
+    }
 };
 
-module.exports = {arrow : arrow};
+module.exports = {drawArrow : drawArrow};
