@@ -1491,7 +1491,7 @@ function setVisibilityOfSearchTextField(pane) {
     
     //Make the directory a searchable-directory 
     directory.addClass('directory-searchable');
-  } else {
+  } else if(panetitle.find('.search-file') && !panetitle.find('.search-toggle').val()) {
     //Remove the search text field
     panetitle.find('.search-file').remove();
     
