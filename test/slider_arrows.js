@@ -192,7 +192,7 @@ describe('debugger', function() {
          $('.debugtoggle').click();
        return {
           slider: $('#slider').length,
-          toggletext: $('debugtoggle').text().trim()
+          toggletext: $('.debugtoggle').text().trim()
         };
       }
       catch(e) {

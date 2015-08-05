@@ -332,20 +332,20 @@ function reportEnter(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-  if (!programChanged) { 
+
+  if (!programChanged) {
     var record = debugRecordsByDebugId[debugId];
-    record.method = method;
-    record.args = args;
-
-    stuckComplexity.moves += 1;
-
-    if (record) { 
-      if (!record.seeeval){ 
+    if (record) {
+      if (!record.seeeval) {
+        record.method = method;
+        record.args = args;
         var currentRecord = debugRecordsByDebugId[currentRecordID];
         var currentIndex = currentRecord.eventIndex;
         var currentLocation = traceEvents[currentIndex].location;
         var currentLine = currentLocation.first_line;
         var prevLine = 0;
+
+        stuckComplexity.moves += 1;
         var index = record.eventIndex;
         var line = traceEvents[index].location.first_line;
         var appear_location = traceEvents[index].location;

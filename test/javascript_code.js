@@ -154,7 +154,7 @@ describe('javascript editor', function() {
           backbutton: $('#backButton').length,
           forwardbutton: $('#forwardButton').length,
           pips: $('.ui-slider-pip').length,
-          label: $('.ui-slider-pip-selected').find('ui-slider-label').text().trim(),
+          label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
           getxy: seval('getxy()'),
           touchesred: seval('touches(red)')
         };
@@ -167,9 +167,9 @@ describe('javascript editor', function() {
       // Assert that basic sliding functionality exists
       assert.equal(result.sliderpanel, 1);
       assert.equal(result.backbutton, 1);
-      assert.equal(result.forwardButton, 1);
-      assert.equal(result.pips, 3);
-      assert.equal(label, '0');
+      assert.equal(result.forwardbutton, 1);
+      assert.equal(result.pips, 5);
+      assert.equal(result.label, '0');
       // Assert that turtle commands work in javascript
       assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
       assert.ok(result.getxy[1] >= 100);
