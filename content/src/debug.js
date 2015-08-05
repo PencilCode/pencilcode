@@ -332,100 +332,98 @@ function reportEnter(method, debugId, length, coordId, elem, args){
 
 
 function reportAppear(method, debugId, length, coordId, elem, args){
-if (!programChanged) { 
-  var record = debugRecordsByDebugId[debugId];
-  record.method = method;
-  record.args = args;
+  if (!programChanged) { 
+    var record = debugRecordsByDebugId[debugId];
+    record.method = method;
+    record.args = args;
 
-  var currentRecord = debugRecordsByDebugId[currentRecordID];
-  var currentIndex = currentRecord.eventIndex;
-  var currentLocation = traceEvents[currentIndex].location;
-  var currentLine = currentLocation.first_line;
+    stuckComplexity.moves += 1;
 
-  var prevLine = 0;
+    if (record) { 
+      if (!record.seeeval){ 
+        var currentRecord = debugRecordsByDebugId[currentRecordID];
+        var currentIndex = currentRecord.eventIndex;
+        var currentLocation = traceEvents[currentIndex].location;
+        var currentLine = currentLocation.first_line;
+        var prevLine = 0;
+        var index = record.eventIndex;
+        var line = traceEvents[index].location.first_line;
+        var appear_location = traceEvents[index].location;
+        var tracedIndex = -1; 
 
-  stuckComplexity.moves += 1;
+        // trace lines that are not animation.
+        while (currentRecordID < debugId) {
+          if (prevIndex != -1) {
+            var prevLocation = traceEvents[prevIndex].location;
+            prevLine = prevLocation.first_line;
+          } else {
+            var prevLocation = null;
+            prevLine = -1;
+          }
 
-  if (record) { 
-    if (!record.seeeval){ 
-      var index = record.eventIndex;
-      var line = traceEvents[index].location.first_line;
-      var appear_location = traceEvents[index].location;
-      var tracedIndex = -1; 
+          if (tracedIndex!= -1) {
+            untraceLine(tracedIndex);
+            tracedIndex = -1;
+          }
 
-      // trace lines that are not animation.
-      while (currentRecordID < debugId) {
-        if (prevIndex != -1) {
-          var prevLocation = traceEvents[prevIndex].location;
-          prevLine = prevLocation.first_line;
-        } else {
-          var prevLocation = null;
-          prevLine = -1;
+          // decide if it is necessary to draw add and draw any arrows.
+          if (currentLine < prevLine && currentIndex == prevIndex + 1) {
+
+            if (arrows[prevIndex] != null) {
+              arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
+            } else {
+              arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+            }
+            if (arrows[currentIndex] != null) {
+              arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+            } else{
+              arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+            }
+            view.arrow(view.paneid('left'), arrows, currentIndex, false);
+            if (!arrows[currentRecordID]){
+              debugRecordsByLineNo[currentLine] = currentRecordID;
+            }
+          }
+          traceLine(currentIndex);
+          tracedIndex = currentIndex;
+          prevLine = currentLine;
+          prevIndex = debugRecordsByDebugId[currentRecordID].eventIndex;
+          currentRecordID += 1;
+          currentRecord = debugRecordsByDebugId[currentRecordID];
+          currentIndex = currentRecord.eventIndex
+          currentLine = traceEvents[currentIndex].location.first_line;
+          currentLocation = traceEvents[currentIndex].location;
         }
-
-        if (tracedIndex!= -1) {
+        if (tracedIndex != -1) {
           untraceLine(tracedIndex);
           tracedIndex = -1;
         }
+        if (line < prevLine && index == prevIndex + 1){
 
-        // decide if it is necessary to draw add and draw any arrows.
-        if(currentLine < prevLine && currentIndex == prevIndex + 1) {
-
-          if (arrows[prevIndex] != null) {
+          prevLocation = traceEvents[prevIndex].location;
+            
+          if (arrows[prevIndex] != null){
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-          } else {
+          } else{
             arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
           }
-          if (arrows[currentIndex] != null) {
-            arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+          if (arrows[index] != null){
+            arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
           } else{
-            arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+            arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
           view.arrow(view.paneid('left'), arrows, currentIndex, false);
           if (!arrows[currentRecordID]){
             debugRecordsByLineNo[currentLine] = currentRecordID;
           }
         }
-        traceLine(currentIndex);
-        tracedIndex = currentIndex;
-        prevLine = currentLine;
-        prevIndex = debugRecordsByDebugId[currentRecordID].eventIndex;
-        currentRecordID += 1;
-        currentRecord = debugRecordsByDebugId[currentRecordID];
-        currentIndex = currentRecord.eventIndex
-        currentLine = traceEvents[currentIndex].location.first_line;
-        currentLocation = traceEvents[currentIndex].location;
+        traceLine(index);
+        currentRecordID = debugId;
+        record.startCoords[coordId] = collectCoords(elem);
+        view.showAllVariablesAt(index, variablesByLineNo);
       }
-      if (tracedIndex != -1) {
-        untraceLine(tracedIndex);
-        tracedIndex = -1;
-      }
-      if (line < prevLine && index == prevIndex + 1){
-
-        prevLocation = traceEvents[prevIndex].location;
-          
-        if (arrows[prevIndex] != null){
-          arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        } else{
-          arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
-        }
-        if (arrows[index] != null){
-          arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
-        } else{
-          arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
-        }
-        view.arrow(view.paneid('left'), arrows, currentIndex, false);
-        if (!arrows[currentRecordID]){
-          debugRecordsByLineNo[currentLine] = currentRecordID;
-        }
-      }
-      traceLine(index);
-      currentRecordID = debugId;
-      record.startCoords[coordId] = collectCoords(elem);
-      view.showAllVariablesAt(index, variablesByLineNo);
     }
   }
-}
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
