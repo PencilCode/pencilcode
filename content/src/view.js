@@ -3324,15 +3324,6 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
     coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
   });
 
-  /*$(".droplet-main-scroller, .ace_scrollbar-v").scroll(
-    function(e){
-      $(".arrow").remove();
-      coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
-      coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
-    }
-  )*/
-
-
 }
 
 function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dropletEditor) {
@@ -3343,6 +3334,7 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
     if (block_mode){
       var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line - 1);
       var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
+      console.log("line metrics: ", startBounds, endBounds);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y};
       endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y};
       offset_top = startBounds.bounds.height - $(".editor").offset().top;
@@ -3361,14 +3353,13 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
     }
     if (Math.abs(secondLoc.first_line - firstLoc.first_line) > 1){
       var x_val = 0;
-      if(startcoords.pageX > endcoords.pageX){
+      if (startcoords.pageX > endcoords.pageX) {
         x_val = startcoords.pageX;
-      } 
-      else{
+      } else{
         x_val = endcoords.pageX;
       }
     }
-    arrows.arrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top);
+    arrows.drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
   }  
 }
 
