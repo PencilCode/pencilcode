@@ -15,7 +15,10 @@ var maxDirCacheAge = 5 * 60 * 1000;
 var autoRebuildCacheAge = 1 * 60 * 1000;
 
 // Serve at most 600 usernames at a time from root directory.
-var maxRootDirEntries = 600;
+var MAX_ROOT_DIR_ENTRIES = 600;
+
+// Serve at most 600 programs at a time from share site.
+var MAX_SHARE_ENTRIES = 600;
 
 function getRootDirCache(dir) {
   var dircache = globalRootDirCache[dir]
@@ -42,8 +45,8 @@ exports.handleLoad = function(req, res, app, format) {
     var isrootlisting = !user && filename == '' && format == 'json';
     if (isrootlisting) {
       var prefix = utils.param(req, 'prefix') || '';
-      var count = Math.max(maxRootDirEntries,
-          utils.param(req, 'count') || maxRootDirEntries);
+      var count = Math.max(MAX_ROOT_DIR_ENTRIES,
+          utils.param(req, 'count') || MAX_ROOT_DIR_ENTRIES);
       // Grab the dir cache object for this root directory path.
       var dircache = getRootDirCache(app.locals.config.dirs.datadir);
       if (dircache.age() > maxDirCacheAge) {
@@ -134,7 +137,15 @@ exports.handleLoad = function(req, res, app, format) {
           filename += '/';
         }
 
-        var list = buildDirList(absfile, fs.readdirSync(absfile).sort());
+        var files = fs.readdirSync(absfile);
+        if (user === 'share') {
+          files = files.sort(function(a, b) {
+            return fs.statSync(path.join(absfile, b)).mtime.getTime() -
+                   fs.statSync(path.join(absfile, a)).mtime.getTime();
+          }).slice(0, MAX_SHARE_ENTRIES);
+        }
+
+        var list = buildDirList(absfile, files.sort());
 
         var jsonRet =
           {'directory': '/' + filename, 'list': list, 'auth': haskey};
