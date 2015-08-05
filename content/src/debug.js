@@ -154,7 +154,9 @@ var debug = window.ide = {
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
-      debugRecordsByLineNo[lineno] = currentDebugId;
+      if (!debugRecordsByLineNo[lineno]){
+        debugRecordsByLineNo[lineno] = currentDebugId;
+      }
       updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
     } else if (event.type === 'after') {
       updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
@@ -349,7 +351,7 @@ if (!programChanged) {
       var appear_location = traceEvents[index].location;
       var tracedIndex = -1; 
 
-      //trace lines that are not animation.
+      // trace lines that are not animation.
       while (currentRecordID < debugId) {
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
@@ -364,6 +366,7 @@ if (!programChanged) {
           tracedIndex = -1;
         }
 
+        // decide if it is necessary to draw add and draw any arrows.
         if(currentLine < prevLine && currentIndex == prevIndex + 1) {
 
           if (arrows[prevIndex] != null) {
@@ -377,7 +380,9 @@ if (!programChanged) {
             arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
           view.arrow(view.paneid('left'), arrows, currentIndex, false);
-          debugRecordsByLineNo[currentLine] = currentRecordID;
+          if (!arrows[currentRecordID]){
+            debugRecordsByLineNo[currentLine] = currentRecordID;
+          }
         }
         traceLine(currentIndex);
         tracedIndex = currentIndex;
@@ -408,7 +413,9 @@ if (!programChanged) {
           arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
         view.arrow(view.paneid('left'), arrows, currentIndex, false);
-        debugRecordsByLineNo[currentLine] = currentRecordID;
+        if (!arrows[currentRecordID]){
+          debugRecordsByLineNo[currentLine] = currentRecordID;
+        }
       }
       traceLine(index);
       currentRecordID = debugId;
@@ -480,7 +487,9 @@ function end_program(){
         } else{
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-        debugRecordsByLineNo[currentLine] = currentRecordID;
+        if (!arrows[currentRecordID]){
+          debugRecordsByLineNo[currentLine] = currentRecordID;
+        }
         view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
     traceLine(currentIndex);
