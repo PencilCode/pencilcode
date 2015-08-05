@@ -54,7 +54,12 @@ var thumbnail = {
       hiddenElements.forEach(function(element) {
         element.object.style.display = element.display;
       });
-      callback(getImageDataUrl(canvas));
+      try {
+        callback(getImageDataUrl(canvas));
+      } catch (e) {
+        console.log('Capturing thumbnail failed, skipping...')
+        callback('');
+      }
     }
 
     function tryHtml2canvas(numAttempts) {
