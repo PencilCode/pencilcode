@@ -80,7 +80,14 @@ function getImageDataUrl(canvas) {
   var w = canvas.width;
   var h = canvas.height;
   var ctx = canvas.getContext('2d');
-  var imageData = ctx.getImageData(0, 0, w, h);
+  var imageData;
+  try {
+    // Try to get image data. Would fail if canvas is tainted.
+    imageData = ctx.getImageData(0, 0, w, h);
+  } catch (e) {
+    console.log('Get image data failed, skipping...')
+    return '';
+  }
 
   // Initialize the coordinates for the image region,
   // topLeft is initialized to bottom right,
