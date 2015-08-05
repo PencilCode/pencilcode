@@ -21,7 +21,7 @@ var thumbnail = {
 
     var turtles = innerDoc.getElementsByClassName('turtle');
     // If there is only a single turtle.
-    if (typeof(frameJQuery) === 'function' && frameJQuery.turtle &&
+    if (typeof(framejQuery) === 'function' && framejQuery.turtle &&
         turtles.length === 1 && turtles[0].id === 'turtle') {
       var turtle = turtles[0];
       var coordinates = framejQuery(turtle).getxy();
