@@ -2794,6 +2794,9 @@ function setPaneEditorReadOnly(pane, ro) {
   var containers = [];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
+  if (paneState.dropletEditor) {
+    paneState.dropletEditor.setReadOnly(ro);
+  }
   containers.push(paneState.editor.container);
   if (paneState.htmlEditor) {
     paneState.htmlEditor.setReadOnly(ro);
