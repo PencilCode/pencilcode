@@ -1338,16 +1338,17 @@ function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.path = ownername + '/' + filename;
-  paneState.links = links;
   paneState.filename = filename;
-  updatePaneLinks(pane);
+  setPaneLinks(pane, links);
   updatePaneTitle(pane);
+  setVisibilityOfSearchTextField(pane);
 }
 
 function setPaneLinks(pane, links) {
   var paneState = state.pane[pane];
   paneState.links = links;
   updatePaneLinks(pane);
+  setVisibilityOfSearchTextField(pane);
 }
 
 $(window).on('resize.listing', function() {
@@ -1468,6 +1469,35 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
+  
+  setVisibilityOfSearchTextField(pane);
+}
+
+(function($) {
+    $.fn.hasScrollBar = function() {
+        return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
+    }
+})(jQuery);
+
+function setVisibilityOfSearchTextField(pane) {
+  var directory = $('#'+pane).find('.directory');
+  var panetitle = directory.parent().parent().find('.panetitle');
+  
+  if(directory.hasScrollBar()) {
+    //Display the search text field
+    if(panetitle.find('.search-file').length==0) {
+      panetitle.find('.thick-bar').after('<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>');
+    }
+    
+    //Make the directory a searchable-directory 
+    directory.addClass('directory-searchable');
+  } else {
+    //Remove the search text field
+    panetitle.find('.search-file').remove();
+    
+    //Make the directory a non searchable-directory 
+    directory.removeClass('directory-searchable');
+  }
 }
 
 function getDefaultThumbnail(type) {
@@ -1680,13 +1710,10 @@ function updatePaneTitle(pane) {
   
   label='<div class="thick-bar">' + label + '</div>';
   
-  //Adding the search text field to file listings
-  if (paneState.links){
-    label+='<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>';
-  }
-  
   $('#' + pane + 'title_text').html(label);
   $('#' + pane).toggleClass('textonly', textonly);
+  
+  setVisibilityOfSearchTextField(pane);
 }
 
 function getShowThumb() {
