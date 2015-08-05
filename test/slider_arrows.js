@@ -101,12 +101,17 @@ describe('debugger', function() {
       try {
         // Wait for the slider to appear after automated delay
         if (!$('#slider').length) return;
+        var lefttitle = $('.panetitle').filter(
+            function() { return $(this).parent().position().left == 0; })
+            .find('.panetitle-text').find('.debugtoggle');
+        if (/blocks/.test(lefttitle.text())) return;
         return {
           slider: $('#slider').length,
           sliderpanel: $('.scrubbermark').length,
           backbutton: $('#backButton').length,
           forwardbutton: $('#forwardButton').length,
           pips: $('.ui-slider-pip').length,
+          debugtoggle: lefttitle.text().trim(),
           label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
           slidertip: $('.ui-slider-tip').text().trim()
 
@@ -129,6 +134,8 @@ describe('debugger', function() {
       // Assert that slider tip reflects appropriate line number
       assert.equal(result.label, '0');
       assert.equal(result.slidertip, 'Line  1');
+      // Assert that debug on toggle appears on pane
+      assert.equal(result.debugtoggle, 'debug on');
       done();
     });
   }); 
