@@ -1087,24 +1087,27 @@ function showLoginDialog(opts) {
 // PANE MANAGEMENT
 ///////////////////////////////////////////////////////////////////////////
 
-function setPreviewMode(shown) {
+function setPreviewMode(shown, noanimation) {
   var change = (shown != state.previewMode);
+  var delay = (noanimation || !change) ? 0 : 400;
   if (shown) {
     $('#middle').removeClass('rightedge');
-    $('.right').css({left: '50%', width: '50%'});
-    $('.left').css({width: '50%'});
+    $('.right').animate({left: '50%', width: '50%'}, delay);
+    $('.left').animate({width: '50%'}, delay, finished);
     $('.back').css({left: '-50%', width: '50%'});
   } else {
     $('#middle').addClass('rightedge');
-    $('.right').css({left: '100%', width: '100%'});
-    $('.left').css({width: '100%'});
+    $('.right').animate({left: '100%', width: '100%'}, delay);
+    $('.left').animate({width: '100%'}, delay, finished);
     $('.back').css({left: '-100%', width: '100%'});
     // clearPane(paneid('right'));
   }
-  if (change) {
-    // Tell all editors and directory listings to resize.
-    $(window).trigger('resize.editor');
-    $(window).trigger('resize.listing');
+  function finished() {
+    if (change) {
+      // Tell all editors and directory listings to resize.
+      $(window).trigger('resize.editor');
+      $(window).trigger('resize.listing');
+    }
   }
   state.previewMode = shown;
 }
