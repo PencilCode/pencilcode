@@ -1120,7 +1120,6 @@ function rotateLeft() {
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
-  $('#overflow').scrollLeft(0);
   $('.back').finish().css({left:'100%'});
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
@@ -1138,7 +1137,6 @@ function rotateRight() {
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
-  $('#overflow').scrollLeft(0);
   $('.back').finish().css({left:'-50%'});
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
@@ -2409,6 +2407,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   paneState.settingUp = null;
   updatePaneTitle(pane);
+
+  // Work around undesired scrolling bug -
+  // repro: turn off split pane view, and linger over a file to force preload.
+  $('#overflow').scrollLeft(0);
 }
 
 function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
