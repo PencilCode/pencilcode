@@ -761,7 +761,6 @@ view.on('toggleblocks', function(p, useblocks) {
 });
 
 view.on('splitscreen', function() {
-  console.log('splitscreen');
   view.setPreviewMode(!view.getPreviewMode());
 });
 
