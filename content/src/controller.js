@@ -471,7 +471,7 @@ function runAction() {
     rotateModelLeft(true);
   }
   if (!view.getPreviewMode()) {
-    view.setPreviewMode(true);
+    view.setPreviewMode(true, true /* no animation */);
   }
   // Hide the guide, if any
   if (guide.isVisible()) {
