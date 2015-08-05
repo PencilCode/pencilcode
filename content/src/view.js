@@ -1484,17 +1484,19 @@ function setVisibilityOfSearchTextField(pane) {
   var panetitle = directory.parent().parent().find('.panetitle');
   
   if(directory.hasScrollBar()) {
-    //Display the search text field
-    if(panetitle.find('.search-file').length==0) {
+    if(panetitle.find('.search-file').length == 0){
+      //Adding the search text field
       panetitle.find('.thick-bar').after('<div class="search-file"><input type="text" class="search-toggle" placeholder="Filter"><span class="fa fa-search"></span></div>');
     }
-    
-    //Make the directory a searchable-directory 
-    directory.addClass('directory-searchable');
   } else if(panetitle.find('.search-file') && !panetitle.find('.search-toggle').val()) {
     //Remove the search text field
     panetitle.find('.search-file').remove();
-    
+  }
+  
+  if(panetitle.find('.search-file').length != 0) {
+    //Make the directory a searchable-directory 
+    directory.addClass('directory-searchable');
+  } else {
     //Make the directory a non searchable-directory 
     directory.removeClass('directory-searchable');
   }
