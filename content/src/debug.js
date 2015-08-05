@@ -33,6 +33,7 @@ var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
 var linesRun = 0; 
 
+// resets and initializes debugging state
 function resetDebugState () {
   currentRecordID = 1;         // current index into traceEvents
   prevIndex = -1;              // previous index of prior traceEvent
@@ -48,6 +49,7 @@ function resetDebugState () {
   sliderprevLine = 0;          // slider's previously selected line
   linenoList = [];             // keep track of line numbers for slider labeling
 }
+
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
@@ -910,22 +912,25 @@ view.on('delta', function(){
 
 $('.panetitle').on('click', '.debugtoggle', function () {
   debugMode = !debugMode;
-  if(!debugMode) {
+  if (!debugMode) {
     view.removeSlider();
     $(".debugtoggle").text('debug off');
-  } else {
+  }
+  else {
     setupSlider();
     $(".debugtoggle").text('debug on');
   }
 })
 
+// respond to manual clicks within the slider
 function sliderResponse (event, ui) {
   slidercurrLine = ui.value;
   sliderToggle();
 }
 
+// Display protractor, line highlighting, variables,
+// and arrows when event occurs
 function sliderToggle() {
-
   var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
 
   view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
@@ -940,25 +945,23 @@ function sliderToggle() {
   if (targetWindow.jQuery != null) {
     displayProtractorForRecord(debugRecordsByDebugId[slidercurrLine + 1]);
   }
- 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
-
   $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
-
 }
 
+// Event handling for step buttons and slider
 $(document).on('slide', '#slider', function(event, ui) {
   sliderResponse(event, ui);
 })
 
 $(document).on('click', '#backButton', function() {
-    if (slidercurrLine != 0) {
-      slidercurrLine--;
-      $("#slider").slider("value", slidercurrLine);
-      sliderToggle();
-    }
-  });
+  if (slidercurrLine != 0) {
+    slidercurrLine--;
+    $("#slider").slider("value", slidercurrLine);
+    sliderToggle();
+  }
+});
 
 $(document).on('click', '#forwardButton', function() {
   if (slidercurrLine != traceEvents.length - 1) {

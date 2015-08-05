@@ -235,7 +235,7 @@ function removeSlider() {
   $(".scrubber").remove();
   $("#backButton").remove();
   $("#forwardButton").remove();
-  $(".scrubbermark").css("visibility", "hidden")
+  $(".scrubbermark").css("visibility", "hidden");
   sliderCreated = false;
 }
 
@@ -246,28 +246,32 @@ function initializeSlider (linenoList) {
     var backDiv = document.createElement('div');
     var forwardDiv = document.createElement('div');
     var sliderDiv = document.createElement('div');
-    sliderDiv.id = 'slider'; 
+    sliderDiv.id = 'slider';
     // Append the newly created div for the slider to the panel at bottom
-    $(".scrubbermark").append(div); 
-    $(".scrubber").append(sliderDiv);     
+    $(".scrubbermark").append(div);
+    $(".scrubber").append(sliderDiv);
+
     backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
     $(".scrubber").append(backDiv);
-  //  $('#backButton').button();
+
     forwardDiv = document.createElement('div');
     forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
+    
     $(".scrubber").append(forwardDiv); 
+
     $('#backButton').tooltipster({
       content: "back a step"
     });
     $('#forwardButton').tooltipster({
       content: "forward a step"
     })
+
     var label = document.createElement('div');
     label.id = 'label';
     label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
     $(".scrubber").append(label);
 
-    // Code for the slider 
+    // Jquery-ui slider implementation
     $(function() {
      $("#slider").slider({
         min: 0,
@@ -284,16 +288,15 @@ function initializeSlider (linenoList) {
         .slider("float", { 
           labels: linenoList,
           prefix: "Line " 
-        })
+      })
     });
     $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
-
 }
 
 function createSlider(linenoList) {
   $(".scrubbermark").css("visibility", "visible");
 
-  // If slider hasn't been created and there are events being pushed, create slider. 
+  // If slider hasn't been created and there are events being pushed, create slider.
   if (!sliderCreated && linenoList.length > 0) {
     initializeSlider (linenoList);
    
@@ -304,16 +307,15 @@ function createSlider(linenoList) {
     // the slider has been created
     sliderCreated = true;
   }
-
   // if the slider has already been created and events are pushed, modify existing slider
-   if (sliderCreated){
-    $("#slider").slider("option", "max", linenoList.length - 1)
-    $("#slider").slider("pips",{ 
+   if (sliderCreated) {
+    $("#slider").slider("option", "max", linenoList.length - 1);
+    $("#slider").slider("pips", {
       first: "pip",
       rest: "pip",
       last: "pip"
     })
-    .slider("float", { 
+    .slider("float", {
            labels: linenoList,
            prefix: "Line  "
     })
