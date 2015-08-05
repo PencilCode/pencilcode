@@ -11,28 +11,15 @@ var $         = require('jquery'),
     util      = require('util');
 
 eval(see.scope('debug'));
-
+resetDebugState();
 var targetWindow = null;       // window object of the frame being debugged.
-var currentRecordID = 1;          // current index into traceEvents.
-var prevIndex = -1;            // previous index of prior traceEvent.
-var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
-var debugRecordsByDebugId = {};// map debug ids -> line execution records.
-var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
-var variablesByLineNo = {};    // map line numbers -> tracked variables.
 var untrackedVariables = [];   // list of (mostly jquery-turtle) globals not to be tracked.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
 var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
-var traceEvents = [];          // list of event location objects created by tracing events             
-var stuckTime = null;          // timestmp to detect stuck programs
 var sliderTimer = null;        // detect if there is existing timer
-var arrows = {};               // keep track of arrows that appear in the program
-var programChanged = false;    // whether user edited program while running
 var debugMode = true;          // user has debug mode turned on
-var slidercurrLine = 0;
-var sliderprevLine = 0;
-var linenoList = [];
 
 // verification of complexity of stuck loop
 var stuckComplexity = {
@@ -45,9 +32,22 @@ var stuckCallingTime = 8000;   // stuck time in a loop making library calls
 var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
 var linesRun = 0; 
-Error.stackTraceLimit = 20;
 
-
+function resetDebugState () {
+  currentRecordID = 1;         // current index into traceEvents
+  prevIndex = -1;              // previous index of prior traceEvent
+  currentDebugId = 0;          // id used to pair jquery-turtle events with trace events.
+  debugRecordsByDebugId = {};  // map debug ids -> line execution records.
+  debugRecordsByLineNo = {};   // map line numbers -> line execution records.
+  variablesByLineNo = {};      // map line numbers -> tracked variables.
+  traceEvents = [];            // list of event location objects created by tracing events
+  stuckTime = null;            // timestmp to detect stuck programs 
+  arrows = {};                 // keep track of arrows that appear in the program
+  programChanged = false;      // whether user edited program while running
+  slidercurrLine = 0;          // slider's currently selected line
+  sliderprevLine = 0;          // slider's previously selected line
+  linenoList = [];             // keep track of line numbers for slider labeling
+}
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
@@ -55,20 +55,8 @@ Error.stackTraceLimit = 20;
 function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
+  resetDebugState();
   cachedParseStack = {};
-  debugRecordsByDebugId = {};
-  debugRecordsByLineNo = {};
-  variablesByLineNo = {};
-  traceEvents = [];
-  screenshots = [];
-  linenoList = [];
-  arrows = {};
-  programChanged = false;
-  currentRecordID = 1;
-  currentDebugId = 0;
-  prevIndex = -1; 
-  slidercurrLine = 0;
-  sliderprevLine = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
