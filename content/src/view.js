@@ -1486,7 +1486,7 @@ function setVisibilityOfSearchTextField(pane) {
   if(directory.hasScrollBar()) {
     //Display the search text field
     if(panetitle.find('.search-file').length==0) {
-      panetitle.find('.thick-bar').after('<div class="search-file"><input type="text" class="search-toggle" placeholder="Search"><span class="fa fa-search"></span></div>');
+      panetitle.find('.thick-bar').after('<div class="search-file"><input type="text" class="search-toggle" placeholder="Filter"><span class="fa fa-search"></span></div>');
     }
     
     //Make the directory a searchable-directory 
