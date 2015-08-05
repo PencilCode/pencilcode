@@ -83,8 +83,24 @@
       return null;
     };
 
+    CoffeeScriptInstrumenter.prototype.isFunctionDef = function(node) {
+      return node instanceof this.nodeTypes.Assign && !node.context && node.variable instanceof this.nodeTypes.Value && node.variable.base instanceof this.nodeTypes.Literal && node.variable.properties.length === 0 && node.value instanceof this.nodeTypes.Code;
+    };
+
+    CoffeeScriptInstrumenter.prototype.soakify = function(name) {
+      if (name.indexOf(".") === -1) {
+        return "(if typeof " + name + " is 'undefined' then undefined else " + name + ")";
+      } else {
+        return name.replace(/\./g, "?.");
+      }
+    };
+
+    CoffeeScriptInstrumenter.prototype.quoteString = function(str) {
+      return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
+    };
+
     CoffeeScriptInstrumenter.prototype.createInstrumentedNode = function(eventType, options) {
-      var eventObj, extra, f, functionCalls, instrumentedNode, location, locationObj, name, ref, ref1, ref2, soakify, vars;
+      var eventObj, extra, f, funcDef, functionCalls, instrumentedNode, location, locationObj, name, ref, ref1, ref2, vars;
       if (options == null) {
         options = {};
       }
@@ -102,26 +118,20 @@
       locationObj += " first_column: " + (location.first_column + 1) + ",";
       locationObj += " last_line: " + (location.last_line + 1) + ",";
       locationObj += " last_column: " + (location.last_column + 1) + " }";
-      soakify = function(name) {
-        if (name.indexOf(".") === -1) {
-          return "(if typeof " + name + " is 'undefined' then undefined else " + name + ")";
-        } else {
-          return name.replace(/\./g, "?.");
-        }
-      };
       extra = (function() {
         switch (eventType) {
           case "before":
           case "after":
+            funcDef = this.isFunctionDef(options.node) ? ", functionDef: true" : "";
             return "vars: [" + ((function() {
               var j, len, results;
               results = [];
               for (j = 0, len = vars.length; j < len; j++) {
                 name = vars[j];
-                results.push("{name: '" + name + "', value: " + (soakify(name)) + "}");
+                results.push("{name: '" + name + "', value: " + (this.soakify(name)) + " " + funcDef + "}");
               }
               return results;
-            })()) + "]";
+            }).call(this)) + "]";
           case "enter":
             return "vars: [" + ((function() {
               var j, len, results;
@@ -135,17 +145,29 @@
           case "leave":
             return "returnOrThrow: " + options.returnOrThrowVar;
         }
-      })();
+      }).call(this);
       if (eventType === "after") {
-        extra += ", functionCalls: [" + ((function() {
-          var j, len, results;
-          results = [];
-          for (j = 0, len = functionCalls.length; j < len; j++) {
-            f = functionCalls[j];
-            results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
-          }
-          return results;
-        })()) + "]";
+        if (this.options.includeArgsStrings) {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + ", argsString: '" + (this.quoteString(f.argsString)) + "'}");
+            }
+            return results;
+          }).call(this)) + "]";
+        } else {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
+            }
+            return results;
+          })()) + "]";
+        }
       }
       eventObj = "{ location: " + locationObj + ", type: '" + eventType + "', " + extra + " }";
       instrumentedNode = this.coffee.nodes(this.options.traceFunc + "(" + eventObj + ")").expressions[0];
@@ -243,6 +265,28 @@
       return args;
     };
 
+    CoffeeScriptInstrumenter.prototype.substringByLocation = function(location) {
+      var j, lineNum, ref, ref1, result;
+      result = "";
+      for (lineNum = j = ref = location.first_line, ref1 = location.last_line; ref <= ref1 ? j <= ref1 : j >= ref1; lineNum = ref <= ref1 ? ++j : --j) {
+        result += lineNum === location.first_line && lineNum === location.last_line ? this.lines[lineNum].slice(location.first_column, +location.last_column + 1 || 9e9) : lineNum === location.first_line ? this.lines[lineNum].slice(location.first_column) : lineNum === location.last_line ? this.lines[lineNum].slice(0, +location.last_column + 1 || 9e9) : this.lines[lineNum];
+      }
+      return result;
+    };
+
+    CoffeeScriptInstrumenter.prototype.argsToString = function(argNodes) {
+      var arg;
+      return ((function() {
+        var j, len, results;
+        results = [];
+        for (j = 0, len = argNodes.length; j < len; j++) {
+          arg = argNodes[j];
+          results.push(this.substringByLocation(arg.locationData));
+        }
+        return results;
+      }).call(this)).join(", ");
+    };
+
     CoffeeScriptInstrumenter.prototype.findFunctionCalls = function(node, parent, grandparent, vars) {
       var j, lastProp, len, name, prop, ref, soak;
       if (parent == null) {
@@ -280,7 +324,8 @@
           node.pencilTracerReturnVar = this.temporaryVariable("returnVar");
           vars.push({
             name: name,
-            tempVar: node.pencilTracerReturnVar
+            tempVar: node.pencilTracerReturnVar,
+            argsString: this.argsToString(node.args)
           });
         }
       }
@@ -311,7 +356,7 @@
     };
 
     CoffeeScriptInstrumenter.prototype.shouldInstrumentNode = function(node) {
-      return !node.pencilTracerInstrumented && !(node instanceof this.nodeTypes.IcedRuntime) && (!(node instanceof this.nodeTypes.IcedTailCall) || node.value) && !(node instanceof this.nodeTypes.Comment) && !(node instanceof this.nodeTypes.For) && !(node instanceof this.nodeTypes.While) && !(node instanceof this.nodeTypes.Switch) && !(node instanceof this.nodeTypes.If) && !(node instanceof this.nodeTypes.Class) && !(node instanceof this.nodeTypes.Try) && !(node instanceof this.nodeTypes.Await);
+      return !node.pencilTracerInstrumented && !(node instanceof this.nodeTypes.IcedRuntime) && (!(node instanceof this.nodeTypes.IcedTailCall) || node.value instanceof this.nodeTypes.Value) && !(node instanceof this.nodeTypes.Comment) && !(node instanceof this.nodeTypes.For) && !(node instanceof this.nodeTypes.While) && !(node instanceof this.nodeTypes.Switch) && !(node instanceof this.nodeTypes.If) && !(node instanceof this.nodeTypes.Class) && !(node instanceof this.nodeTypes.Try) && !(node instanceof this.nodeTypes.Await);
     };
 
     CoffeeScriptInstrumenter.prototype.mapChildrenArray = function(children, func) {
@@ -634,6 +679,7 @@
         sourceMap: this.options.sourceMap,
         literate: this.options.literate
       };
+      this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
       this.referencedVars = csOptions.referencedVars = (function() {
         var j, len, ref, results;
         ref = this.coffee.tokens(code, csOptions);
@@ -689,12 +735,14 @@
 },{"./coffeescript_instrumenter":1,"./javascript_instrumenter":3}],3:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.3
 (function() {
-  var JavaScriptInstrumenter, acorn, escodegen, isArray,
+  var FIND_VARIABLES_IN, JavaScriptInstrumenter, acorn, escodegen, isArray,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   acorn = require("acorn");
 
   escodegen = require("escodegen");
+
+  FIND_VARIABLES_IN = ["ThisExpression", "ArrayExpression", "ObjectExpression", "Property", "SequenceExpression", "UnaryExpression", "BinaryExpression", "AssignmentExpression", "UpdateExpression", "LogicalExpression", "ConditionalExpression", "CallExpression", "NewExpression", "MemberExpression", "Identifier", "VariableDeclarator"];
 
   isArray = Array.isArray || function(value) {
     return {}.toString.call(value) === '[object Array]';
@@ -729,8 +777,37 @@
       }
     };
 
+    JavaScriptInstrumenter.prototype.isFunctionDef = function(node) {
+      var ref;
+      return (node != null ? node.type : void 0) === "FunctionDeclaration" || ((node != null ? node.type : void 0) === "VariableDeclaration" && node.declarations.length === 1 && ((ref = node.declarations[0].init) != null ? ref.type : void 0) === "FunctionExpression");
+    };
+
+    JavaScriptInstrumenter.prototype.soakify = function(name) {
+      var closeParens, expr, i, j, parts, ref, soakified;
+      soakified = "";
+      closeParens = "";
+      parts = name.split(".");
+      for (i = j = 0, ref = parts.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+        expr = parts.slice(0, +i + 1 || 9e9).join(".");
+        if (i === 0) {
+          expr = "(typeof " + expr + " === 'undefined' ? void 0 : " + expr + ")";
+        }
+        if (i === parts.length - 1) {
+          soakified += expr;
+        } else {
+          soakified += "((typeof " + expr + " === 'undefined' || " + expr + " === null) ? " + expr + " : ";
+          closeParens += ")";
+        }
+      }
+      return soakified + closeParens;
+    };
+
+    JavaScriptInstrumenter.prototype.quoteString = function(str) {
+      return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
+    };
+
     JavaScriptInstrumenter.prototype.createInstrumentedNode = function(eventType, options) {
-      var eventObj, extra, f, functionCalls, instrumentedNode, loc, locationObj, name, ref, ref1, ref2, soakify, vars;
+      var eventObj, extra, f, funcDef, functionCalls, instrumentedNode, loc, locationObj, name, ref, ref1, ref2, vars;
       if (options == null) {
         options = {};
       }
@@ -745,26 +822,20 @@
       locationObj += " first_column: " + (loc.start.column + 1) + ",";
       locationObj += " last_line: " + loc.end.line + ",";
       locationObj += " last_column: " + (loc.end.column + 1) + " }";
-      soakify = function(name) {
-        if (name.indexOf(".") === -1) {
-          return "(typeof " + name + " === 'undefined' ? void 0 : " + name + ")";
-        } else {
-          throw "todo";
-        }
-      };
       extra = (function() {
         switch (eventType) {
           case "before":
           case "after":
+            funcDef = this.isFunctionDef(options.node) ? ", functionDef: true" : "";
             return "vars: [" + ((function() {
               var j, len, results;
               results = [];
               for (j = 0, len = vars.length; j < len; j++) {
                 name = vars[j];
-                results.push("{name: '" + name + "', value: " + (soakify(name)) + "}");
+                results.push("{name: '" + name + "', value: " + (this.soakify(name)) + " " + funcDef + "}");
               }
               return results;
-            })()) + "]";
+            }).call(this)) + "]";
           case "enter":
             return "vars: [" + ((function() {
               var j, len, results;
@@ -778,17 +849,29 @@
           case "leave":
             return "returnOrThrow: " + options.returnOrThrowVar;
         }
-      })();
+      }).call(this);
       if (eventType === "after") {
-        extra += ", functionCalls: [" + ((function() {
-          var j, len, results;
-          results = [];
-          for (j = 0, len = functionCalls.length; j < len; j++) {
-            f = functionCalls[j];
-            results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
-          }
-          return results;
-        })()) + "]";
+        if (this.options.includeArgsStrings) {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + ", argsString: '" + (this.quoteString(f.argsString)) + "'}");
+            }
+            return results;
+          }).call(this)) + "]";
+        } else {
+          extra += ", functionCalls: [" + ((function() {
+            var j, len, results;
+            results = [];
+            for (j = 0, len = functionCalls.length; j < len; j++) {
+              f = functionCalls[j];
+              results.push("{name: '" + f.name + "', value: " + f.tempVar + "}");
+            }
+            return results;
+          })()) + "]";
+        }
       }
       eventObj = "{location: " + locationObj + ", type: '" + eventType + "', " + extra + "}";
       instrumentedNode = acorn.parse(this.options.traceFunc + "(" + eventObj + ");").body[0];
@@ -797,9 +880,14 @@
       return instrumentedNode;
     };
 
-    JavaScriptInstrumenter.prototype.createInstrumentedExpr = function(originalExpr) {
-      var sequenceExpr, tempVar;
-      tempVar = this.temporaryVariable("temp", true);
+    JavaScriptInstrumenter.prototype.createInstrumentedExpr = function(originalExpr, tempVar) {
+      var sequenceExpr;
+      if (tempVar == null) {
+        tempVar = null;
+      }
+      if (tempVar === null) {
+        tempVar = this.temporaryVariable("temp", true);
+      }
       sequenceExpr = {
         type: "SequenceExpression",
         expressions: []
@@ -818,43 +906,100 @@
       return sequenceExpr;
     };
 
-    JavaScriptInstrumenter.prototype.createAssignNode = function(varName, expr) {
-      return {
-        type: "AssignmentExpression",
-        operator: "=",
-        left: {
-          type: "Identifier",
-          name: varName
-        },
-        right: expr
-      };
+    JavaScriptInstrumenter.prototype.createAssignNode = function(varName, expr, asStatement) {
+      var node;
+      if (asStatement == null) {
+        asStatement = false;
+      }
+      node = acorn.parse(varName + " = 0;").body[0];
+      node.expression.right = expr;
+      node.expression.left.pencilTracerGenerated = true;
+      node.expression.loc = expr.loc;
+      if (asStatement) {
+        return node;
+      } else {
+        return node.expression;
+      }
     };
 
-    JavaScriptInstrumenter.prototype.findVariables = function(node, vars) {
-      var child, j, key, len, ref, ref1;
+    JavaScriptInstrumenter.prototype.createReturnNode = function(varName) {
+      return acorn.parse("return " + varName + ";", {
+        allowReturnOutsideFunction: true
+      }).body[0];
+    };
+
+    JavaScriptInstrumenter.prototype.createUndefinedNode = function() {
+      return acorn.parse("void 0").body[0].expression;
+    };
+
+    JavaScriptInstrumenter.prototype.findVariables = function(node, parent, vars) {
+      var child, curNode, foundEndOfMemberExpression, ident, j, key, len, name, parts, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9;
+      if (parent == null) {
+        parent = null;
+      }
       if (vars == null) {
         vars = [];
       }
-      if (node.type === "Identifier") {
-        if (vars.indexOf(node.name) === -1) {
-          vars.push(node.name);
+      if (node.pencilTracerGenerated) {
+        return [];
+      }
+      foundEndOfMemberExpression = false;
+      if ((ref = node.type) === "Identifier" || ref === "ThisExpression") {
+        name = node.type === "ThisExpression" ? "this" : node.name;
+        if (vars.indexOf(name) === -1) {
+          vars.push(name);
+        }
+      } else if (node.type === "MemberExpression" && !node.computed) {
+        curNode = node;
+        parts = [];
+        while (curNode.type === "MemberExpression" && !curNode.computed) {
+          parts.unshift(curNode.property.name);
+          curNode = curNode.object;
+        }
+        if ((ref1 = curNode.type) === "Identifier" || ref1 === "ThisExpression") {
+          foundEndOfMemberExpression = true;
+          ident = curNode.type === "ThisExpression" ? "this" : curNode.name;
+          parts.unshift(ident);
+          if (((ref2 = parent != null ? parent.type : void 0) === "CallExpression" || ref2 === "NewExpression") && parent.callee === node) {
+            parts.pop();
+          }
+          name = parts.join(".");
+          if (vars.indexOf(name) === -1) {
+            vars.push(name);
+          }
         }
       }
       for (key in node) {
+        if (foundEndOfMemberExpression) {
+          continue;
+        }
         if (node.type === "Property" && key === "key") {
           continue;
         }
-        if (((ref = node.type) === "FunctionExpression" || ref === "FunctionDeclaration") && key === "params") {
+        if (((ref3 = node.type) === "FunctionExpression" || ref3 === "FunctionDeclaration") && key === "params") {
+          continue;
+        }
+        if (node.type === "MemberExpression" && key === "property" && !node.computed) {
+          continue;
+        }
+        if (node.type === "MemberExpression" && key === "object" && ((ref4 = node[key].type) === "Identifier" || ref4 === "ThisExpression") && !node.computed) {
+          continue;
+        }
+        if (((ref5 = node.type) === "CallExpression" || ref5 === "NewExpression") && key === "callee" && ((ref6 = node[key].type) === "ThisExpression" || ref6 === "Identifier")) {
           continue;
         }
         if (isArray(node[key])) {
-          ref1 = node[key];
-          for (j = 0, len = ref1.length; j < len; j++) {
-            child = ref1[j];
-            this.findVariables(child, vars);
+          ref7 = node[key];
+          for (j = 0, len = ref7.length; j < len; j++) {
+            child = ref7[j];
+            if (ref8 = child.type, indexOf.call(FIND_VARIABLES_IN, ref8) >= 0) {
+              this.findVariables(child, node, vars);
+            }
           }
         } else if (node[key] && typeof node[key].type === "string") {
-          this.findVariables(node[key], vars);
+          if (ref9 = node[key].type, indexOf.call(FIND_VARIABLES_IN, ref9) >= 0) {
+            this.findVariables(node[key], node, vars);
+          }
         }
       }
       return vars;
@@ -871,26 +1016,66 @@
       return results;
     };
 
-    JavaScriptInstrumenter.prototype.findFunctionCalls = function(node, parent, grandparent, vars) {
-      if (parent == null) {
-        parent = null;
+    JavaScriptInstrumenter.prototype.substringByLocation = function(loc) {
+      var j, lineNum, ref, ref1, result;
+      result = "";
+      for (lineNum = j = ref = loc.start.line, ref1 = loc.end.line; ref <= ref1 ? j <= ref1 : j >= ref1; lineNum = ref <= ref1 ? ++j : --j) {
+        result += lineNum === loc.start.line && lineNum === loc.end.line ? this.lines[lineNum].slice(loc.start.column, loc.end.column) : lineNum === loc.start.line ? this.lines[lineNum].slice(loc.start.column) : lineNum === loc.end.line ? this.lines[lineNum].slice(0, loc.end.column) : this.lines[lineNum];
       }
-      if (grandparent == null) {
-        grandparent = null;
-      }
+      return result;
+    };
+
+    JavaScriptInstrumenter.prototype.argsToString = function(argNodes) {
+      var arg;
+      return ((function() {
+        var j, len, results;
+        results = [];
+        for (j = 0, len = argNodes.length; j < len; j++) {
+          arg = argNodes[j];
+          results.push(this.substringByLocation(arg.loc));
+        }
+        return results;
+      }).call(this)).join(", ");
+    };
+
+    JavaScriptInstrumenter.prototype.findFunctionCalls = function(node, vars) {
+      var child, j, key, len, name, ref, ref1, ref2;
       if (vars == null) {
         vars = [];
       }
-      return [];
+      if (node.pencilTracerReturnVar) {
+        name = node.callee.type === "ThisExpression" ? "this" : node.callee.type === "Identifier" ? node.callee.name : node.callee.type === "MemberExpression" && !node.callee.computed ? node.callee.property.name : "<anonymous>";
+        vars.push({
+          name: name,
+          tempVar: node.pencilTracerReturnVar,
+          argsString: this.argsToString(node["arguments"])
+        });
+      }
+      for (key in node) {
+        if (isArray(node[key])) {
+          ref = node[key];
+          for (j = 0, len = ref.length; j < len; j++) {
+            child = ref[j];
+            if (ref1 = child.type, indexOf.call(FIND_VARIABLES_IN, ref1) >= 0) {
+              this.findFunctionCalls(child, vars);
+            }
+          }
+        } else if (node[key] && typeof node[key].type === "string") {
+          if (ref2 = node[key].type, indexOf.call(FIND_VARIABLES_IN, ref2) >= 0) {
+            this.findFunctionCalls(node[key], vars);
+          }
+        }
+      }
+      return vars;
     };
 
     JavaScriptInstrumenter.prototype.shouldInstrumentWithBlock = function(node, parent) {
       var ref;
-      return ((ref = node.type) === "EmptyStatement" || ref === "ExpressionStatement" || ref === "DebuggerStatement" || ref === "VariableDeclaration" || ref === "FunctionDeclaration") && !(parent.type === "ForStatement" && parent.init === node) && !(parent.type === "ForInStatement" && parent.left === node);
+      return ((ref = node.type) === "EmptyStatement" || ref === "ExpressionStatement" || ref === "DebuggerStatement" || ref === "VariableDeclaration" || ref === "FunctionDeclaration") && !(parent.type === "ForStatement" && parent.init === node) && !(parent.type === "ForInStatement" && parent.left === node) && !(parent.type === "ForInStatement" && parent.body === node);
     };
 
     JavaScriptInstrumenter.prototype.shouldInstrumentExpr = function(node, parent) {
-      return (parent.type === "IfStatement" && parent.test === node) || (parent.type === "WithStatement" && parent.object === node) || (parent.type === "SwitchStatement" && parent.discriminant === node) || (parent.type === "WhileStatement" && parent.test === node) || (parent.type === "DoWhileStatement" && parent.test === node) || (parent.type === "ForStatement" && parent.test === node) || (parent.type === "ForStatement" && parent.update === node) || (parent.type === "SwitchCase" && parent.test === node);
+      return (parent.type === "IfStatement" && parent.test === node) || (parent.type === "WithStatement" && parent.object === node) || (parent.type === "SwitchStatement" && parent.discriminant === node) || (parent.type === "WhileStatement" && parent.test === node) || (parent.type === "DoWhileStatement" && parent.test === node) || (parent.type === "ForStatement" && parent.test === node) || (parent.type === "ForStatement" && parent.update === node) || (parent.type === "ForStatement" && parent.init === node && node.type !== "VariableDeclaration") || (parent.type === "ForInStatement" && parent.right === node) || (parent.type === "SwitchCase" && parent.test === node) || (parent.type === "ThrowStatement");
     };
 
     JavaScriptInstrumenter.prototype.mapChildren = function(node, func) {
@@ -918,16 +1103,26 @@
     };
 
     JavaScriptInstrumenter.prototype.instrumentTree = function(node, parent, returnOrThrowVar) {
-      var ref;
+      var ref, ref1;
       if (parent == null) {
         parent = null;
       }
       if ((ref = node.type) === "FunctionDeclaration" || ref === "FunctionExpression") {
         returnOrThrowVar = this.temporaryVariable("returnOrThrow");
       }
+      if ((ref1 = node.type) === "CallExpression" || ref1 === "NewExpression") {
+        node.pencilTracerReturnVar = this.temporaryVariable("returnVar", true);
+      }
+      if (node.type === "ForStatement" && !node.test && !node.update) {
+        node.test = {
+          type: "Literal",
+          value: true,
+          loc: node.loc
+        };
+      }
       return this.mapChildren(node, (function(_this) {
         return function(child) {
-          var newBlock, ref1, tryStatement;
+          var newBlock, ref2, ref3, ref4, tryStatement, varDecl;
           _this.instrumentTree(child, node, returnOrThrowVar);
           if (_this.shouldInstrumentWithBlock(child, node)) {
             return {
@@ -941,8 +1136,77 @@
               ]
             };
           } else if (_this.shouldInstrumentExpr(child, node)) {
-            return _this.createInstrumentedExpr(child);
-          } else if (((ref1 = node.type) === "FunctionDeclaration" || ref1 === "FunctionExpression") && node.body === child) {
+            if (child.pencilTracerReturnVar) {
+              return _this.createInstrumentedExpr(child, child.pencilTracerReturnVar);
+            } else {
+              return _this.createInstrumentedExpr(child);
+            }
+          } else if (child.pencilTracerReturnVar) {
+            return _this.createAssignNode(child.pencilTracerReturnVar, child);
+          } else if (child.type === "ForStatement" && ((ref2 = child.init) != null ? ref2.type : void 0) === "VariableDeclaration") {
+            varDecl = child.init;
+            child.init = null;
+            return {
+              type: "BlockStatement",
+              body: [
+                _this.createInstrumentedNode("before", {
+                  node: varDecl
+                }), varDecl, _this.createInstrumentedNode("after", {
+                  node: varDecl
+                }), child
+              ]
+            };
+          } else if (node.type === "ForInStatement" && child === node.body) {
+            if (child.type !== "BlockStatement") {
+              child = {
+                type: "BlockStatement",
+                body: [
+                  _this.createInstrumentedNode("before", {
+                    node: child
+                  }), child, _this.createInstrumentedNode("after", {
+                    node: child
+                  })
+                ]
+              };
+            }
+            return {
+              type: "BlockStatement",
+              body: [
+                _this.createInstrumentedNode("before", {
+                  node: node.left
+                }), _this.createInstrumentedNode("after", {
+                  node: node.left
+                }), child
+              ]
+            };
+          } else if (child.type === "ReturnStatement") {
+            if (child.argument === null) {
+              child.argument = _this.createUndefinedNode();
+            }
+            return {
+              type: "BlockStatement",
+              body: [
+                _this.createInstrumentedNode("before", {
+                  node: child
+                }), _this.createAssignNode(returnOrThrowVar + ".value", child.argument, true), _this.createInstrumentedNode("after", {
+                  node: child
+                }), _this.createReturnNode(returnOrThrowVar + ".value")
+              ]
+            };
+          } else if ((ref3 = child.type) === "BreakStatement" || ref3 === "ContinueStatement") {
+            return {
+              type: "BlockStatement",
+              body: [
+                _this.createInstrumentedNode("before", {
+                  node: child,
+                  vars: []
+                }), _this.createInstrumentedNode("after", {
+                  node: child,
+                  vars: []
+                }), child
+              ]
+            };
+          } else if (((ref4 = node.type) === "FunctionDeclaration" || ref4 === "FunctionExpression") && node.body === child) {
             newBlock = acorn.parse("{\n  var " + returnOrThrowVar + " = { type: 'return', value: void 0 };\n  try {}\n  catch (" + _this.caughtErrorVar + ") {\n    " + returnOrThrowVar + ".type = 'throw';\n    " + returnOrThrowVar + ".value = " + _this.caughtErrorVar + ";\n    throw " + _this.caughtErrorVar + ";\n  } finally {}\n}").body[0];
             tryStatement = newBlock.body[1];
             tryStatement.block = child;
@@ -963,6 +1227,8 @@
 
     JavaScriptInstrumenter.prototype.instrument = function(filename, code) {
       var ast, name, tempVarsDeclaration;
+      this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
+      this.lines.unshift(null);
       this.undeclaredVars = [];
       this.referencedVars = [];
       ast = acorn.parse(code, {
