@@ -1087,19 +1087,24 @@ function showLoginDialog(opts) {
 // PANE MANAGEMENT
 ///////////////////////////////////////////////////////////////////////////
 
-function setPreviewMode(shown, instant) {
-  var duration = instant ? 0 : 400;
+function setPreviewMode(shown) {
+  var change = (shown != state.previewMode);
   if (shown) {
-    $('#middle').show();
+    $('#middle').removeClass('rightedge');
     $('.right').css({left: '50%', width: '50%'});
     $('.left').css({width: '50%'});
     $('.back').css({left: '-50%', width: '50%'});
   } else {
-    $('#middle').hide();
+    $('#middle').addClass('rightedge');
     $('.right').css({left: '100%', width: '100%'});
     $('.left').css({width: '100%'});
     $('.back').css({left: '-100%', width: '100%'});
-    clearPane(paneid('right'));
+    // clearPane(paneid('right'));
+  }
+  if (change) {
+    // Tell all editors and directory listings to resize.
+    $(window).trigger('resize.editor');
+    $(window).trigger('resize.listing');
   }
   state.previewMode = shown;
 }
@@ -1112,10 +1117,14 @@ function rotateLeft() {
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
+  $('#overflow').scrollLeft(0);
   $('.back').finish().css({left:'100%'});
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
-  $('.back').animate({left: '50%'});
+  $('.back').animate({left: '50%'}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('right');
   $(panelParts(idr)).removeClass('right').addClass('left');
   $(panelParts(idl)).removeClass('left').addClass('back');
@@ -1126,10 +1135,14 @@ function rotateRight() {
   var idb = paneid('back');
   var idl = paneid('left');
   var idr = paneid('right');
+  $('#overflow').scrollLeft(0);
   $('.back').finish().css({left:'-50%'});
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
-  $('.back').animate({left: 0});
+  $('.back').animate({left: 0}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('left');
   $(panelParts(idr)).removeClass('right').addClass('back');
   $(panelParts(idl)).removeClass('left').addClass('right');
