@@ -179,6 +179,36 @@ describe('debugger', function() {
     });
   }); 
 
+ it('should allow users to turn debugging on and off', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle "run" button
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+         // Wait for the slider to appear after automated delay
+         if (!$('#slider').length) return;
+         // Click on the 'debug on' text
+         $('.debugtoggle').click();
+       return {
+          slider: $('#slider').length,
+          toggletext: $('debugtoggle').text().trim()
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      // Assert that slider disappears when user clicks on toggle
+      assert.equal(result.slider, 0);
+      // Assert that toggle now displays 'debug off' 
+      assert.equal(result.toggletext, 'debug off');
+      done();
+    });
+  });
+
+
   it('should show arrows during runtime', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle "run" button 
@@ -187,10 +217,8 @@ describe('debugger', function() {
     }, function() {
       try {
 
-    // Wait for the slider to appear after automated delay
-     if (!$('.arrow').length) return;
-         //  $('#forwardButton').click()  
-
+    // Wait for the arrow to appear after automated delay
+     if (!$('.arrow').length) return; 
        return {
           label: $('.arrow').length
         };
