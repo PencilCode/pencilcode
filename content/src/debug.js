@@ -4,28 +4,22 @@
 
 var $         = require('jquery'),
     view      = require('view'),
+    advisor   = require('advisor'),
     see       = require('see'),
-    html2canvas = require('html2canvas'),
-    sourcemap = require('source-map');
+    jqueryui  = require('jquery-ui'),
+    sourcemap = require('source-map'),
+    util      = require('util');
 
 eval(see.scope('debug'));
-
+resetDebugState();
 var targetWindow = null;       // window object of the frame being debugged.
-var currentIndex = 0;          // current index into traceEvents.
-var prevIndex = -1;            // previous index of prior traceEvent.
-var currentDebugId = 0;        // id used to pair jquery-turtle events with trace events.
-var debugRecordsByDebugId = {};// map debug ids -> line execution records.
-var debugRecordsByLineNo = {}; // map line numbers -> line execution records.
+var untrackedVariables = [];   // list of (mostly jquery-turtle) globals not to be tracked.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
 var pollTimer = null;          // poll for stop button.
 var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
-var traceEvents = [];          // list of event location objects created by tracing events             
-var screenshots = [];
-var turtle_screenshots = [];
-var stuckTime = null;         // timestmp to detect stuck programs
-var arrows = {};
-var temp_screenshots = [];
+var sliderTimer = null;        // detect if there is existing timer
+var debugMode = true;          // user has debug mode turned on
 
 // verification of complexity of stuck loop
 var stuckComplexity = {
@@ -38,8 +32,23 @@ var stuckCallingTime = 8000;   // stuck time in a loop making library calls
 var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
 var linesRun = 0; 
-Error.stackTraceLimit = 20;
 
+// resets and initializes debugging state
+function resetDebugState () {
+  currentRecordID = 1;         // current index into traceEvents
+  prevIndex = -1;              // previous index of prior traceEvent
+  currentDebugId = 0;          // id used to pair jquery-turtle events with trace events.
+  debugRecordsByDebugId = {};  // map debug ids -> line execution records.
+  debugRecordsByLineNo = {};   // map line numbers -> line execution records.
+  variablesByLineNo = {};      // map line numbers -> tracked variables.
+  traceEvents = [];            // list of event location objects created by tracing events
+  stuckTime = null;            // timestmp to detect stuck programs 
+  arrows = {};                 // keep track of arrows that appear in the program
+  programChanged = false;      // whether user edited program while running
+  slidercurrLine = 0;          // slider's currently selected line
+  sliderprevLine = 0;          // slider's previously selected line
+  linenoList = [];             // keep track of line numbers for slider labeling
+}
 
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
@@ -48,20 +57,12 @@ Error.stackTraceLimit = 20;
 function bindframe(w) {
   if (!targetWindow && !w || targetWindow === w) return;
   targetWindow = w;
+  resetDebugState();
   cachedParseStack = {};
-  debugRecordsByDebugId = {};
-  debugRecordsByLineNo = {};
-  traceEvents = [];
-  screenshots = [];
-  arrows = {};
-  currentEventIndex = 0;
-  prevEventIndex = -1;
-  isLoop = false;
-//  linesRun = 0;
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   view.removeSlider();
-  view.removePlay();
+  view.removeVariables();
   stuckTime = null;
   stuckComplexity = {
     lines: 0,
@@ -95,7 +96,7 @@ var debug = window.ide = {
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
 
-    if (name === "enter") { stuckComplexity.calls += 1; }
+    if (name === "enter") { reportEnter.apply(null, data); }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -138,28 +139,52 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event, data) {
+  trace: function(event, data) { 
     detectStuckProgram();
-    // This receives events for the new debugger to use.
-    currentDebugId += 1;
-    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
-    traceEvents.push(event);
-    currentEventIndex = traceEvents.length - 1;
-    record.eventIndex = currentEventIndex;
-    var lineno = traceEvents[currentEventIndex].location.first_line;
-    view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
-    record.line = lineno;
-    debugRecordsByDebugId[currentDebugId] = record;
-    debugRecordsByLineNo[lineno] = record;
+
+    if (event.type === 'before' || event.type === 'enter') {
+      currentDebugId += 1;
+      var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
+          data: "", seeeval:false};
+      traceEvents.push(event);
+      currentEventIndex = traceEvents.length - 1;
+      record.eventIndex = currentEventIndex;
+      var lineno = traceEvents[currentEventIndex].location.first_line;
+      linenoList.push(lineno);
+      if (debugMode) {
+        setupSlider();
+      }
+      record.line = lineno;
+      debugRecordsByDebugId[currentDebugId] = record;
+      if (!debugRecordsByLineNo[lineno]){
+        debugRecordsByLineNo[lineno] = currentDebugId;
+      }
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
+    } else if (event.type === 'after') {
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
+    }
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
+  },
+  setUntrackedVars: function (vars) {
+    untrackedVariables = vars;
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
+function setupSlider() {
+  if (sliderTimer) {
+    clearTimeout(sliderTimer);
+    sliderTimer = null;
+  }
+  sliderTime = setTimeout(function() {view.createSlider(linenoList)}, 1000);
+ 
+}
+
+
 function detectStuckProgram() {
   stuckComplexity.lines += 1;
   var currentTime = +(new Date);
@@ -190,14 +215,91 @@ function detectStuckProgram() {
 }
 
 //////////////////////////////////////////////////////////////////////
-// ERROR MESSAGE HINT SUPPORT
+// VARIABLE & FUNCTION CALL TRACKING
 //////////////////////////////////////////////////////////////////////
-function getTextOnLine(text, line) {
-  var lines = text.split('\n'), index = line - 1;
-  if (index >= 0 && index < lines.length) return lines[index];
-  return '';
+
+var untrackedFunctions = [
+  "fd", "bk", "rt", "lt", "slide", "jump", "moveto", "jumpto", "turnto", "play",
+  "home", "pen", "pu", "pd", "pe", "fill", "dot", "label", "speed", "ht", "st",
+  "wear", "scale", "twist", "mirror", "reload", "done", "plan", "cs", "cg", "ct",
+  "defaultspeed", "timer", "tick", "done", "remove", "write", "read", "readnum",
+  "readstr", "button", "table", "send", "recv"
+];
+
+function mergeVars(oldVars, curVars, areFunctionCalls) {
+  var newVars = oldVars.slice();
+  var anyChanges = false;
+  for (var i = 0; i < curVars.length; i++) {
+    // Filter out function definitions.
+    if (curVars[i].functionDef) continue;
+
+    // Filter out special turtle variables.
+    if (!areFunctionCalls && untrackedVariables.indexOf(curVars[i].name) !== -1) continue;
+
+    // Filter out common turtle functions.
+    if (areFunctionCalls && untrackedFunctions.indexOf(curVars[i].name) !== -1) continue;
+
+    // TODO: keep arrays sorted to prevent the inner loop?
+    var found = false;
+    for (var j = 0; j < oldVars.length; j++) {
+      if (oldVars[j].name === curVars[i].name && oldVars[j].argsString === curVars[i].argsString) {
+        found = true;
+        if (oldVars[j].value !== curVars[i].value) {
+          newVars[j] = {name: curVars[i].name, value: valueToString(curVars[i].value), argsString: curVars[i].argsString};
+          anyChanges = true;
+        }
+        break;
+      }
+    }
+    if (!found) {
+      newVars.push({name: curVars[i].name, value: valueToString(curVars[i].value), argsString: curVars[i].argsString});
+      anyChanges = true;
+    }
+  }
+
+  if (anyChanges) {
+    return newVars;
+  } else {
+    return false;
+  }
 }
 
+function updateVariables(lineNum, eventIndex, vars, functionCalls) {
+  variablesByLineNo[lineNum] = variablesByLineNo[lineNum] || [];
+
+  var oldVars = [];
+  var oldFunctionCalls = [];
+  if (variablesByLineNo[lineNum].length > 0) {
+    var last = variablesByLineNo[lineNum][variablesByLineNo[lineNum].length - 1];
+    oldVars = last.vars;
+    oldFunctionCalls = last.functionCalls;
+  }
+
+  // Merge vars with this line's previously displayed vars.
+  var newVars = mergeVars(oldVars, vars, false);
+  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls, true);
+
+  // If nothing changed, don't do anything.
+  if (newVars !== false || newFunctionCalls !== false) {
+    if (newVars === false) { newVars = oldVars; }
+    if (newFunctionCalls === false) { newFunctionCalls = oldFunctionCalls; }
+    variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+  }
+}
+
+function valueToString(value) {
+  if (typeof value === 'function') {
+    return '<function>';
+  } else if (typeof value === 'object') {
+    return '<object>';
+  } else {
+    return util.inspect(value);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// ERROR MESSAGE HINT SUPPORT
+//////////////////////////////////////////////////////////////////////
 var showPopupErrorMessage = function (msg) {
   var center = document.getElementById('error-advice') ||
       document.createElement('center');
@@ -222,120 +324,125 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
   debugRecordsByDebugId[currentDebugId] = record;
 }
 
+function reportEnter(method, debugId, length, coordId, elem, args){
+  stuckComplexity.calls += 1;
+  var record = debugRecordsByDebugId[debugId];
+  record.animated = false;
+}
+
 
 function reportAppear(method, debugId, length, coordId, elem, args){
 
-  var currentLine = traceEvents[currentIndex].location.first_line;
-  var currentLocation = traceEvents[currentIndex].location;
-  var prevLine = -1;
+  if (!programChanged) {
+    var record = debugRecordsByDebugId[debugId];
+    if (record) {
+      if (!record.seeeval) {
+        record.method = method;
+        record.args = args;
+        var currentRecord = debugRecordsByDebugId[currentRecordID];
+        var currentIndex = currentRecord.eventIndex;
+        var currentLocation = traceEvents[currentIndex].location;
+        var currentLine = currentLocation.first_line;
+        var prevLine = 0;
 
-  stuckComplexity.moves += 1;
+        stuckComplexity.moves += 1;
+        var index = record.eventIndex;
+        var line = traceEvents[index].location.first_line;
+        var appear_location = traceEvents[index].location;
+        var tracedIndex = -1; 
 
-  var recordD = debugRecordsByDebugId[debugId];
-  if (recordD) { 
-    if (!recordD.seeeval){ 
-    /*  html2canvas(document.getElementById('output-frame').contentDocument.getElementsByClassName('turtlefield')[1],{
-        onrendered: function(canvas){
-          temp_screenshots.push(canvas);
-          var tempCanvas = document.createElement('canvas');
-          var tempCanvasCtx = tempCanvas.getContext('2d');
-           tempCanvasCtx.drawImage(canvas,0,0);
+        // trace lines that are not animation.
+        while (currentRecordID < debugId) {
+          if (prevIndex != -1) {
+            var prevLocation = traceEvents[prevIndex].location;
+            prevLine = prevLocation.first_line;
+          } else {
+            var prevLocation = null;
+            prevLine = -1;
+          }
+
+          if (tracedIndex!= -1) {
+            untraceLine(tracedIndex);
+            tracedIndex = -1;
+          }
+
+          // decide if it is necessary to draw add and draw any arrows.
+          if (currentLine < prevLine && currentIndex == prevIndex + 1) {
+
+            if (arrows[prevIndex] != null) {
+              arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
+            } else {
+              arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+            }
+            if (arrows[currentIndex] != null) {
+              arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+            } else{
+              arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+            }
+            view.arrow(view.paneid('left'), arrows, currentIndex, false);
+            if (!arrows[currentRecordID]){
+              debugRecordsByLineNo[currentLine] = currentRecordID;
+            }
+          }
+          traceLine(currentIndex);
+          tracedIndex = currentIndex;
+          prevLine = currentLine;
+          prevIndex = debugRecordsByDebugId[currentRecordID].eventIndex;
+          currentRecordID += 1;
+          currentRecord = debugRecordsByDebugId[currentRecordID];
+          currentIndex = currentRecord.eventIndex
+          currentLine = traceEvents[currentIndex].location.first_line;
+          currentLocation = traceEvents[currentIndex].location;
         }
-      })*/
-      var recordL = debugRecordsByLineNo[recordD.line];
-      recordD.method = method;
-      recordL.method = method;
-      recordD.args = args;
-      recordL.args = args;
-      var index = recordD.eventIndex;
-      var line = traceEvents[index].location.first_line;
-      var appear_location = traceEvents[index].location;
-      var tracedLine = -1; 
-
-      //trace lines that are not animation.
-      while (line != currentLine){
-
-        if (prevIndex != -1) {
-          var prevLocation = traceEvents[prevIndex].location;
-          var prevLine = prevLocation.first_line;
+        if (tracedIndex != -1) {
+          untraceLine(tracedIndex);
+          tracedIndex = -1;
         }
-        else{
-          var prevLocation = null;
-          var prevLine = -1;
-        }
+        if (line < prevLine && index == prevIndex + 1){
 
-        if (tracedLine != -1){
-          untraceLine(tracedLine);
-          tracedLine = -1;
-        }
-
-        if(currentLine < prevLine){
-
+          prevLocation = traceEvents[prevIndex].location;
+            
           if (arrows[prevIndex] != null){
             arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-          }
-          else{
+          } else{
             arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
           }
-          if (arrows[currentIndex] != null){
-            arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+          if (arrows[index] != null){
+            arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
+          } else{
+            arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-          else{
-            arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+          view.arrow(view.paneid('left'), arrows, currentIndex, false);
+          if (!arrows[currentRecordID]){
+            debugRecordsByLineNo[currentLine] = currentRecordID;
           }
-          view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
         }
-        traceLine(currentLine);
-        tracedLine = currentLine;
-        prevLine = currentLine;
-        prevIndex = currentIndex;
-        currentIndex += 1;
-        currentLine = traceEvents[currentIndex].location.first_line;
-        currentLocation = traceEvents[currentIndex].location;
+        traceLine(index);
+        currentRecordID = debugId;
+        record.startCoords[coordId] = collectCoords(elem);
+        view.showAllVariablesAt(index, variablesByLineNo);
       }
-      if (tracedLine != -1){
-        untraceLine(tracedLine);
-        tracedLine = -1;
-      }
-      if (line < prevLine){
-
-        prevLocation = traceEvents[prevIndex].location;
-          
-        if (arrows[prevIndex] != null){
-          arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
-          arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
-        }
-        if (arrows[index] != null){
-          arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
-          arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
-        }
-        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
-      }
-      prevLine = line;
-      recordD.startCoords[coordId] = collectCoords(elem);
-      recordL.startCoords[coordId] = collectCoords(elem);
-      traceLine(line);
     }
   }
 }
 
 function reportResolve(method, debugId, length, coordId, elem, args){
-  var recordD = debugRecordsByDebugId[debugId];
-  if (recordD) {
-    if (!recordD.seeeval){
-      view.arrow(view.paneid('left'), arrows, -1);
-      var recordL = debugRecordsByLineNo[recordD.line];
-      recordD.method = method;
-      recordL.method = method;
-      var index = recordD.eventIndex;
-      var location = traceEvents[index].location.first_line
-      recordD.endCoords[coordId] = collectCoords(elem);
-      recordL.endCoords[coordId] = collectCoords(elem);
-      untraceLine(location);
+  
+  var record = debugRecordsByDebugId[debugId];
+  if (record) {
+    if (!record.seeeval){
+      view.arrow(view.paneid('left'), arrows, -1, false);
+      record.method = method;
+      record.animated = true;
+      var index = record.eventIndex;
+      var line = traceEvents[index].location.first_line
+      if (index > 0){
+        var prevLine = traceEvents[index -1].location.first_line;
+      } else{
+        var prevLine = -1;
+      }
+      record.endCoords[coordId] = collectCoords(elem);
+      untraceLine(index);
     }          
   }
 }
@@ -343,148 +450,74 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
-  var tracedLine = -1;
-  while (currentIndex < traceEvents.length){
-    currentLine = traceEvents[currentIndex].location.first_line;
+  var tracedIndex = -1;
+  var justEnded = (currentRecordID <= currentDebugId);
+  var prevLine =  -1;
+  if (traceEvents[prevIndex]){
+    prevLine = traceEvents[prevIndex].location.first_line; 
+  } 
+  while (currentRecordID <= currentDebugId){
+
+    var currentRecord = debugRecordsByDebugId[currentRecordID];
+    var currentIndex = currentRecord.eventIndex;
     var currentLocation = traceEvents[currentIndex].location;
+    currentLine = currentLocation.first_line;
 
    if (prevIndex != -1) {
       var prevLocation = traceEvents[prevIndex].location;
       var prevLine = prevLocation.first_line;
-    }
-    else{
+    } else{
       var prevLocation = null;
       var prevLine = -1;
     }
     
-    if (tracedLine != -1){
-        untraceLine(tracedLine);
-        tracedLine = -1;
+    if (tracedIndex != -1){
+        untraceLine(tracedIndex);
+        tracedIndex = -1;
     }
-    if(currentLine < prevLine){
+    if(currentLine < prevLine && currentIndex == prevIndex + 1){
           
         if (arrows[prevIndex] != null){
           arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
         }
         if (arrows[currentIndex] != null){
           arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
-        }
-        else{
+        } else{
           arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
         }
-
-        view.arrow(view.paneid('left'), arrows, currentIndex);//should I pass in prevIndex and currentIndex or?
+        if (!arrows[currentRecordID]){
+          debugRecordsByLineNo[currentLine] = currentRecordID;
+        }
+        view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
     }
-    traceLine(currentLine);
-    tracedLine = currentLine;
+    traceLine(currentIndex);
+    tracedIndex = currentIndex;
     prevLine = currentLine;
     prevIndex = currentIndex;
-    currentIndex += 1;
+    currentRecordID += 1;
   }
-  if (tracedLine != -1){
-        untraceLine(tracedLine);
-        tracedLine = -1;
+  if (tracedIndex != -1){
+        untraceLine(tracedIndex);
+        view.arrow(view.paneid('left'), arrows, -1, false);
+        tracedIndex = -1;
   }
   prevLine = -1;
-}
-
-function errorAdvice(msg, text) {
-  var advice, m, msg;
-  advice = '<p>Oops, the computer got confused.';
-  if (msg) {
-    msg = msg.replace(/^Uncaught [a-z]*Error: /i, '');
-    if (msg !== "Cannot read property '0' of null") {
-      advice += '<p>It says: "' + msg + '"';
-    }
+  if (justEnded) {
+    view.showAllVariablesAt(currentIndex + 1, variablesByLineNo);
   }
-  m = /(\w+) is not defined/.exec(msg);
-  if (m) {
-    if (/^[a-z]{2,}[0-9]+$/i.test(m[1])) {
-      advice += "<p>Is there a missing space in '<b>" + m[1] + "</b>'?";
-    } else if (/[A-Z]/.test(m[1]) && (m[1].toLowerCase() in {
-        'dot':1, 'pen':1, 'fd':1, 'bk':1, 'lt':1, 'rt':1, 'write':1,
-        'type':1, 'menu':1, 'play':1, 'speed':1, 'ht':1, 'st':1,
-        'cs':1, 'cg':1, 'ct':1, 'fill':1, 'rgb':1, 'rgba':1, 'hsl':1,
-        'hsla':1, 'red':1, 'blue':1, 'black':1, 'green':1, 'gray':1,
-        'orange':1, 'purple':1, 'pink':1, 'yellow':1, 'gold':1,
-        'aqua':1, 'tan':1, 'white':1, 'violet':1, 'snow':1, 'true':1,
-        'false':1, 'null':1, 'for':1, 'if':1, 'else':1, 'do':1, 'in':1,
-        'return':1})) {
-      advice += ("<p>Did you mean '<b>" + (m[1].toLowerCase()) + "</b>' ") +
-                ("instead of '<b>" + m[1] + "</b>'?");
-    } else if (m[1].toLowerCase().substring(0, 3) === "inf") {
-      advice += "<p><b>Infinity</b> is spelled like this with a capital I.";
-    } else {
-      if (m[1].length > 3) {
-        advice += "<p>Is <b>" + m[1] + "</b> spelled right?";
-      } else {
-        advice += ("<p>Is '<b>" + m[1] + " = </b><em>something</em>' ") +
-                  "needed first?";
-      }
-      advice += "<p>Or are quotes needed around <b>\"" + m[1] + "\"</b>?";
-    }
-  } else if (/object is not a function/.test(msg)) {
-    advice += "<p>Is there missing punctuation like a dot?";
-  } else if (/undefined is not a function/.test(msg)) {
-    advice += "<p>Is a command misspelled here?";
-  } else if (/indentation/.test(msg)) {
-    advice += "<p>Is the code lined up neatly?";
-    advice += "<p>Or is something unfinished before this?";
-  } else if (/not a function/.test(msg)) {
-    advice += "<p>Is there a missing comma?";
-  } else if (/octal literal/.test(msg)) {
-    advice += "<p>Avoid extra 0 digits before a number.";
-  } else if (/unexpected when/.test(msg)) {
-    advice += "<p>Is the 'when' indented correctly?";
-  } else if (/unexpected newline/.test(msg)) {
-    advice += "<p>Is something missing on the previous line?";
-  } else if (/unexpected ,/.test(msg)) {
-    m = /^.*?\b(\w+)\s+\((?:[^()]|\((?:[^()]|\([^()]*\))*\))+,.+\)/.exec(text);
-    if (m) {
-      advice += '<p>You might need to remove the space after ' +
-                '<b>' + m[1] + '</b>.';
-    } else if (/(^[^'"]*,\s*['"])|(['"],[^'"]*$)/.test(text)) {
-      advice += '<p>You might want to use <b>+</b> instead of <b>,</b> ' +
-                'to combine strings.';
-    } else {
-      advice += "<p>You might not need a comma here.";
-    }
-  } else if (/unexpected ->/.test(msg)) {
-    advice += "<p>Is a comma or '=' missing before the arrow?";
-  } else if (/unexpected end of input/.test(msg)) {
-    advice += "<p>Is there some unfinished code around here?";
-  } else if ((m = /unexpected (\S+)/.exec(msg))) {
-    advice += "<p>Is something missing before " + m[1] + "?";
-  } else if (/missing ["']/.test(msg) ||
-      (msg === "Cannot read property '0' of null")) {
-    advice += "<p>Is there a string with an unmatched quote?";
-    advice += "<p>It might be on an higher line.";
-  } else if (/missing [\])}]/.test(msg)) {
-    advice += "<p>It might be missing on an higher line.";
-  } else if ((m = /unexpected (\w+)$/.exec(msg))) {
-    advice += "<p>You might try removing '" + m[1] + "'";
-  } else if (/interrupt\('hung'\)/.test(msg)) {
-    advice = '<p>Oops, the computer got stuck in calculations.' +
-             '<p>The program was stopped so you can edit it.' +
-             '<p>Maybe reduce the number of repeats?';
-  }
-  return advice;
 }
-
 
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
 function reportError(err) {
   var line = editorLineNumberForError(err);
-  view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
   var m = view.getPaneEditorData(view.paneid('left'));
-  var text = getTextOnLine(m && m.data || '', line);
-  var advice = errorAdvice(err.message, text);
-  showDebugMessage(advice);
+  var advice = advisor.errorAdvice(err.message, line, m.data);
+  view.markPaneEditorLine(view.paneid('left'), advice.line, 'debugerror');
+  showDebugMessage(advice.message);
 }
 
 function showDebugMessage(m) {
@@ -543,16 +576,41 @@ function parseTurtleTransform(transform) {
 }
 
 // Highlights the given line number as a line being traced.
-function traceLine(line) {
+function traceLine(lineIndex) {
+  var line = traceEvents[lineIndex].location.first_line;
+  var prevLine = -1;
+  var block_mode = true;
+
+  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+ 
+  if (traceEvents[lineIndex-1]){
+    prevLine = traceEvents[lineIndex-1].location.first_line;
+  }
+  $('debugtraceprev').removeClass('inactive').addClass('active');
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+  if (!block_mode) {
+    view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+  }
+
 }
 
 // Unhighlights the given line number as a line no longer being traced.
-function untraceLine(line) {
-  view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+function untraceLine(lineIndex) {
+  var line = traceEvents[lineIndex].location.first_line;
+  var prevLine = -1;
+  var block_mode = true;
 
+  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+ 
+  if (traceEvents[lineIndex-1]){
+    prevLine = traceEvents[lineIndex-1].location.first_line;
+  }
+  view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+  if (!block_mode){
+    view.clearPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+  }
 }
 
 // parsestack converts an Error or ErrorEvent object into the following
@@ -631,7 +689,7 @@ function editorLineNumberForError(error) {
     }
   }
   // For debugging:
-  //console.log(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
+  //(JSON.stringify(parsed), '>>>>', JSON.stringify(frame));
   if (!frame) {
     if (error instanceof targetWindow.SyntaxError) {
       if (error.location) {
@@ -691,14 +749,21 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
-  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
-  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+  if (debugRecordsByLineNo[lineno]){
+    var debugId = debugRecordsByLineNo[lineno]
+    var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
+    view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+    view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+    displayProtractorForRecord(debugRecordsByDebugId[debugId]);
+  }
+  
 });
 
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
+  $(".editor").remove("arrow");
 });
 
 view.on('icehover', function(pane, ev) {
@@ -713,7 +778,10 @@ view.on('icehover', function(pane, ev) {
 
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
   if (debugRecordsByLineNo[lineno]) {
-    displayProtractorForRecord(debugRecordsByLineNo[lineno]);
+    var debugId = debugRecordsByLineNo[lineno];
+    displayProtractorForRecord(debugRecordsByDebugId[debugId]);
+    var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
+    view.arrow(view.paneid('left'), arrows, eventIndex, true);
   }
 });
 
@@ -736,7 +804,7 @@ function stopButton(command) {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
 
-    currentIndex = 0;
+    currentRecordID = 0;
     prevIndex = -1;
     prevLocation = null;
     prevLine = -1;
@@ -831,18 +899,75 @@ view.on('stop', function() {
 
 view.on('delta', function(){ 
   $(".arrow").remove();
+  view.removeVariables();
   //need to add code that stops animation!!!
+  programChanged = true;
 });
 
-
 ///////////////////////////////////////////////////////////////////////////
-// STEP BUTTON SUPPORT
+// SLIDER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
-view.on('.p_button', function(){
-   console.log("remove");
 
+$('.panetitle').on('click', '.debugtoggle', function () {
+  debugMode = !debugMode;
+  if (!debugMode) {
+    view.removeSlider();
+    $(".debugtoggle").text('debug off');
+  }
+  else {
+    setupSlider();
+    $(".debugtoggle").text('debug on');
+  }
+})
+
+// respond to manual clicks within the slider
+function sliderResponse (event, ui) {
+  slidercurrLine = ui.value;
+  sliderToggle();
+}
+
+// Display protractor, line highlighting, variables,
+// and arrows when event occurs
+function sliderToggle() {
+  var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
+
+  view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
+  sliderprevLine = slidercurrLine;
+
+  var lineno = debugRecordsByDebugId[slidercurrLine + 1].line;
+
+  view.arrow(view.paneid('left'), arrows, slidercurrLine, true);
+  view.showAllVariablesAt(slidercurrLine, variablesByLineNo);
+  view.hideProtractor(view.paneid('right'));
+  
+  if (targetWindow.jQuery != null) {
+    displayProtractorForRecord(debugRecordsByDebugId[slidercurrLine + 1]);
+  }
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
+}
+
+// Event handling for step buttons and slider
+$(document).on('slide', '#slider', function(event, ui) {
+  sliderResponse(event, ui);
+})
+
+$(document).on('click', '#backButton', function() {
+  if (slidercurrLine != 0) {
+    slidercurrLine--;
+    $("#slider").slider("value", slidercurrLine);
+    sliderToggle();
+  }
 });
 
+$(document).on('click', '#forwardButton', function() {
+  if (slidercurrLine != traceEvents.length - 1) {
+    slidercurrLine++
+    $("#slider").slider("value", slidercurrLine);
+    sliderToggle();
+  }
+});
 ///////////////////////////////////////////////////////////////////////////
 // DEBUG EXPORT
 ///////////////////////////////////////////////////////////////////////////

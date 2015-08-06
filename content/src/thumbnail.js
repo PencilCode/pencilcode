@@ -1,5 +1,7 @@
 var html2canvas = require('html2canvas');
 var THUMBNAIL_SIZE = 128;
+var GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
+var THRESHOLD = GOLDEN_RATIO * 10;
 var NUM_ATTEMPTS = 3;
 
 // Public functions
@@ -8,11 +10,31 @@ var thumbnail = {
     // Get the canvas inside the iframe.
     var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
     var innerBody = innerDoc.body;
+    var framejQuery = iframe.contentWindow.$;
+
+    // An extra array to store modified elements.
+    var hiddenElements = [];
+
+    var turtles = innerDoc.getElementsByClassName('turtle');
+    // If there is only a single turtle.
+    if (typeof(frameJQuery) === 'function' && frameJQuery.turtle &&
+        turtles.length === 1 && turtles[0].id === 'turtle') {
+      var turtle = turtles[0];
+      var coordinates = framejQuery(turtle).getxy();
+      var direction = framejQuery(turtle).direction();
+      // If the turtle is at its original position and direction, ignore it.
+      if (coordinates && coordinates[0] === 0 && coordinates[1] === 0 &&
+          direction === 0) {
+        hiddenElements.push({
+          object: turtle,
+          display: turtle.style.display
+        });
+        turtle.style.display = 'none';
+      }
+    }
 
     // Copy the NodeList into an array.
     var children = Array.prototype.slice.call(innerBody.children);
-    // An extra array to store modified elements.
-    var hiddenElements = [];
 
     // Hide the test panel and coordinates before capturing the thumbnail.
     // Keep a copy of the original style settings in the `hiddenElements` array.
@@ -101,7 +123,26 @@ function getImageDataUrl(canvas) {
 
   // Find the longer edge and make it a square.
   var longerEdge = Math.max(Math.min(imageWidth, h), Math.min(imageHeight, w));
-  var diff = Math.abs((imageWidth - imageHeight) / 2);
+  var shorterEdge = Math.min(Math.min(imageWidth, h), Math.min(imageHeight, w));
+
+  // Initialize `finalSize` and `truncateAmount`.
+  var finalSize = longerEdge;
+  var truncateAmount = 0;
+
+  // If the ratio is greater than the predefined threshold,
+  // and the `longerEdge` is long enough, then we should truncate it.
+  // There is no point truncating thumbnails that are too small.
+  var shouldTruncate = (longerEdge / shorterEdge) > THRESHOLD &&
+                       longerEdge > THUMBNAIL_SIZE;
+  if (shouldTruncate) {
+    // Make sure that it is at least as large as `THUMBNAIL_SIZE`.
+    finalSize = Math.max(shorterEdge * GOLDEN_RATIO, THUMBNAIL_SIZE);
+    truncateAmount = longerEdge - finalSize;
+  }
+
+  // The amount that the `shorterEdge` needed to extend is the difference
+  // between the `longerEdge` and the `shorterEdge` minus `truncateAmount`.
+  var diff = (Math.abs(imageWidth - imageHeight) - truncateAmount) / 2;
   if (imageWidth > imageHeight) {
     topLeft.y = Math.max(topLeft.y - diff, 0);
   } else {
@@ -113,17 +154,17 @@ function getImageDataUrl(canvas) {
   var tempCanvasCtx = tempCanvas.getContext('2d');
   tempCanvas.width = THUMBNAIL_SIZE;
   tempCanvas.height = THUMBNAIL_SIZE;
-  if (longerEdge < THUMBNAIL_SIZE) {
-    var offset = THUMBNAIL_SIZE / 2 - longerEdge / 2;
+  if (finalSize < THUMBNAIL_SIZE) {
+    var offset = THUMBNAIL_SIZE / 2 - finalSize / 2;
     tempCanvasCtx.drawImage(canvas,       // Src canvas.
         topLeft.x, topLeft.y,             // Src coordinates.
-        longerEdge, longerEdge,           // Src coordinates.
+        finalSize, finalSize,             // Src coordinates.
         offset, offset,                   // Dest coordinates.
-        longerEdge, longerEdge);          // Dest size.
+        finalSize, finalSize);            // Dest size.
   } else {
     tempCanvasCtx.drawImage(canvas,       // Src canvas.
         topLeft.x, topLeft.y,             // Src coordinates.
-        longerEdge, longerEdge,           // Src coordinates.
+        finalSize, finalSize,             // Src coordinates.
         0, 0,                             // Dest coordinates.
         THUMBNAIL_SIZE, THUMBNAIL_SIZE);  // Dest size.
   }

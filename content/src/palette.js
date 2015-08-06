@@ -5,7 +5,11 @@ function filterblocks(a) {
   }
   return a.map(function(e) {
     if (!e.id) {
-      e.id = e.block.replace(/\W..*$/, '');
+      // As the id (for logging), use the first (non-puncutation) word
+      e.id = e.block.replace(/^\W*/, '').
+             replace(/^new /, '').replace(/\W.*$/, '');
+      // If that doesn't turn into anything, use the whole block text.
+      if (!e.id) { e.id = e.block; }
     }
     return e;
   });
@@ -199,15 +203,19 @@ module.exports = {
         }, {
           block: 'x += 1',
           title: 'Increase a variable',
+          id: 'increment'
         }, {
           block: '`` is ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'is'
         }, {
           block: '`` < ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'lessthan'
         }, {
           block: '`` > ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'greaterthan'
         }, {
           block: '`` + ``',
           title: 'Add two numbers',
@@ -253,13 +261,16 @@ module.exports = {
           title: 'Get the smaller on two numbers'
         }, {
           block: 'x.match /pattern/',
-          title: 'Test if a text pattern is found in x'
+          title: 'Test if a text pattern is found in x',
+          id: 'match'
         }, {
           block: 'f = (x) ->\n  ``',
-          title: 'Define a new function'
+          title: 'Define a new function',
+          id: 'funcdef'
         }, {
           block: 'f(x)',
-          title: 'Use a custom function'
+          title: 'Use a custom function',
+          id: 'funccall'
         }
       ])
     }, {
@@ -337,16 +348,20 @@ module.exports = {
           title: 'Play notes in a chord'
         }, {
           block: '@tone \'B\', 2, 1',
-          title: 'Sound a note immediately'
+          title: 'Sound a note immediately',
+          id: 'toneNote'
         }, {
           block: '@tone \'B\', 0',
-          title: 'Silence a note immediately'
+          title: 'Silence a note immediately',
+          id: 'toneNote0'
         }, {
           block: '@tone 440, 2, 1',
-          title: 'Sound a frequency immediately'
+          title: 'Sound a frequency immediately',
+          id: 'toneHz'
         }, {
           block: '@tone 440, 0',
-          title: 'Silence a frequency immediately'
+          title: 'Silence a frequency immediately',
+          id: 'toneHz0'
         }, {
           block: '@silence()',
           title: 'Silence all notes'
@@ -365,25 +380,32 @@ module.exports = {
       blocks: filterblocks([
         {
           block: "forever 10, ->\n  turnto lastmouse\n  fd 2",
-          title: 'Continually move towards the last mouse position'
+          title: 'Continually move towards the last mouse position',
+          id: "foreverFollowMouse"
         }, {
           block: "forever 10, ->\n  if pressed 'W'\n    fd 2",
-          title: 'Poll a key and move while it is depressed'
+          title: 'Poll a key and move while it is depressed',
+          id: "foreverPollKey"
         }, {
           block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
-          title: 'Move once per second until not inside window'
+          title: 'Move once per second until not inside window',
+          id: "foreverInsideWindow"
         }, {
           block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
+          title: 'Move to a location when document is clicked',
+          id: "foreverMovetoClick"
         }, {
           block: "button \'Click\', ->\n  write 'clicked'",
-          title: 'Make a button and do something when clicked'
+          title: 'Make a button and do something when clicked',
+          id: "buttonWrite"
         }, {
           block: "keydown \'X\', ->\n  write 'x pressed'",
-          title: 'Do something when a keyboard key is pressed'
+          title: 'Do something when a keyboard key is pressed',
+          id: "keydownWrite"
         }, {
           block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
+          title: 'Move to a location when document is clicked',
+          id: "clickMove"
         }
       ])
     }

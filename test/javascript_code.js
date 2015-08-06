@@ -137,6 +137,8 @@ describe('javascript editor', function() {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
         if (!$('.preview iframe')[0].contentWindow.see) return;
+        // Wait for slider to appear
+        if (!$('#slider').length) return;
         // Evaluate some expression in the javascript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
         seval('interrupt("reset")');
@@ -148,6 +150,11 @@ describe('javascript editor', function() {
           return;
         }
         return {
+          sliderpanel: $('.scrubbermark').length,
+          backbutton: $('#backButton').length,
+          forwardbutton: $('#forwardButton').length,
+          pips: $('.ui-slider-pip').length,
+          label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
           getxy: seval('getxy()'),
           touchesred: seval('touches(red)')
         };
@@ -157,6 +164,13 @@ describe('javascript editor', function() {
       }
     }, function(err, result) {
       assert.ifError(err);
+      // Assert that basic sliding functionality exists
+      assert.equal(result.sliderpanel, 1);
+      assert.equal(result.backbutton, 1);
+      assert.equal(result.forwardbutton, 1);
+      assert.equal(result.pips, 5);
+      assert.equal(result.label, '0');
+      // Assert that turtle commands work in javascript
       assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
       assert.ok(result.getxy[1] >= 100);
       assert.ok(result.touchesred);

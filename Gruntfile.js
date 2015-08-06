@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     bowercopy: {
       options: {
-        clean: true
+        clean: false
       },
       top: {
         options: {
@@ -31,6 +31,9 @@ module.exports = function(grunt) {
           'lib/iced-coffee-script.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
+          'lib/jquery-ui.js' : 'jquery-ui/jquery-ui.js', 
+          'lib/jquery-ui-slider-pips.js': 'jquery-ui-slider-pips/dist/jquery-ui-slider-pips.js',
+          'lib/jquery-ui-slider-pips.css': 'jquery-ui-slider-pips/dist/jquery-ui-slider-pips.css', 
           'lib/jquery.autocomplete.min.js':
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
