@@ -172,8 +172,7 @@ function updateTopControls(addHistory) {
             { id: 'saveas', label: 'Copy and Save As...' }
           ],
           disabled: !cansave(),
-        },
-        {
+        }, {
           id: 'screenshot',
           title: 'Take screenshot',
           label: '<i class="fa fa-camera"></i>'
@@ -191,6 +190,7 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
+
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
@@ -234,6 +234,20 @@ function updateTopControls(addHistory) {
         id: 'guide', label: '<span class=helplink>Guide</span>',
         title: 'Open online guide'});
     }
+
+    //
+    // If this directory has an owner (i.e., not the root owner),
+    // enable splitscreen toggle.
+    //
+
+    if (model.ownername || m.filename) {
+      buttons.push({
+          id: 'splitscreen',
+          title: 'Toggle split screen',
+          label: '<i class="splitscreenicon"></i>'
+      });
+    }
+
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
@@ -462,6 +476,9 @@ function runAction() {
     }
     cancelAndClearPosition('back');
     rotateModelLeft(true);
+  }
+  if (!view.getPreviewMode()) {
+    view.setPreviewMode(true, true /* no animation */);
   }
   // Hide the guide, if any
   if (guide.isVisible()) {
@@ -748,6 +765,10 @@ view.on('toggleblocks', function(p, useblocks) {
       code = (doc && doc.data) || model.pane[p].data.data;
   logCodeEvent('toggle', filename, code, useblocks,
       view.getPaneEditorLanguage(p));
+});
+
+view.on('splitscreen', function() {
+  view.setPreviewMode(!view.getPreviewMode());
 });
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
@@ -2052,7 +2073,7 @@ function renderDirectory(position) {
         } else {
           type = filetype.mimeForFilename(name).replace(/;.*$/, '');
         }
-        var href = '/home/' + filenameslash + name;
+        var href = '/edit/' + filenameslash + name;
         links.push({
             name: name,
             link: name,
