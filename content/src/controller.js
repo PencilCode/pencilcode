@@ -240,7 +240,7 @@ function updateTopControls(addHistory) {
     // enable splitscreen toggle.
     //
 
-    if (model.ownername) {
+    if (model.ownername || m.filename) {
       buttons.push({
           id: 'splitscreen',
           title: 'Toggle split screen',
