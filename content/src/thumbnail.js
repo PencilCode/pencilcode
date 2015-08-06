@@ -12,12 +12,16 @@ var thumbnail = {
     var innerBody = innerDoc.body;
     var framejQuery = iframe.contentWindow.$;
 
+    // Get the current scroll positions.
+    var offsetX = innerBody.scrollLeft;
+    var offsetY = innerBody.scrollTop;
+
     // An extra array to store modified elements.
     var hiddenElements = [];
 
     var turtles = innerDoc.getElementsByClassName('turtle');
     // If there is only a single turtle.
-    if (typeof(frameJQuery) === 'function' && frameJQuery.turtle &&
+    if (typeof(framejQuery) === 'function' && framejQuery.turtle &&
         turtles.length === 1 && turtles[0].id === 'turtle') {
       var turtle = turtles[0];
       var coordinates = framejQuery(turtle).getxy();
@@ -54,7 +58,7 @@ var thumbnail = {
       hiddenElements.forEach(function(element) {
         element.object.style.display = element.display;
       });
-      callback(getImageDataUrl(canvas));
+      callback(getImageDataUrl(canvas, offsetX, offsetY));
     }
 
     function tryHtml2canvas(numAttempts) {
@@ -76,7 +80,7 @@ var thumbnail = {
 }
 
 // Private functions
-function getImageDataUrl(canvas) {
+function getImageDataUrl(canvas, offsetX, offsetY) {
   var w = canvas.width;
   var h = canvas.height;
   var ctx = canvas.getContext('2d');
@@ -92,13 +96,13 @@ function getImageDataUrl(canvas) {
   // Initialize the coordinates for the image region,
   // topLeft is initialized to bottom right,
   // and bottomRight is initialized to top left.
-  var topLeft = { x: h, y: w };
+  var topLeft = { x: w, y: h };
   var bottomRight = { x: 0, y: 0 };
 
   // Iterate through all the points to find the "interesting" region.
   var x, y, index;
-  for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++) {
+  for (y = offsetY; y < h; y++) {
+    for (x = offsetX; x < w; x++) {
       // Every pixel takes up 4 slots in the array, contains R, G, B, A.
       index = (y * w + x) * 4;
       // Thus `index + 3` is the index of the Alpha value.
