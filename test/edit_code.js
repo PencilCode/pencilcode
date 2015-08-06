@@ -182,9 +182,9 @@ describe('code editor', function() {
   });
   it('should inherit thumbnail setting from parent folder', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
-      $('a[href="/home/shapes/"]').click();
+      $('a[href="/edit/shapes/"]').click();
     }, function() {
-      if (!$('a[href="/home/shapes/test"]').is(':visible')) return;
+      if (!$('a[href="/edit/shapes/test"]').is(':visible')) return;
       return {
         showThumb: window.localStorage.showThumb,
       }
@@ -476,6 +476,31 @@ describe('code editor', function() {
       done();
     });
   });
+  it('should be able to switch to single-pane mode', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle run button.
+      $('#splitscreen').click();
+    }, function() {
+      try {
+        // Wait for the preview frame to show
+        if (!/100/.test($('#charliepanebox').prop('style').left)) return;
+        return {
+          bravowidth: $('#bravopanebox').prop('style').width,
+          middleclass: $('#middle').prop('class')
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      // The main pane should be 100% wide.
+      assert.equal(result.bravowidth, '100%');
+      // The middle button should be pulled right.
+      assert.equal(result.middleclass, 'rightedge');
+      done();
+    });
+  });
   it('should be able to run the program', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle run button.
@@ -496,6 +521,7 @@ describe('code editor', function() {
           getxy: seval('getxy()'),
           touchesred: seval('touches red'),
           touchesblue: seval('touches blue'),
+          bravowidth: $('#bravopanebox').prop('style').width,
           queuelen: seval('turtle.queue().length')
         };
       }
@@ -513,6 +539,8 @@ describe('code editor', function() {
       assert.equal(result.touchesred, false);
       // The turtle should be touching blue pixels that it drew.
       assert.equal(result.touchesblue, true);
+      // The main pane should be 50% wide again.
+      assert.equal(result.bravowidth, '50%');
       // There should be no further animations on the turtle queue.
       assert.equal(result.queuelen, 0);
       done();
