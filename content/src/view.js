@@ -136,6 +136,7 @@ window.pencilcode.view = {
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
   setPrimaryFocus: setPrimaryFocus,
+  setEditorTabSync: setEditorTabSync,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -1488,6 +1489,18 @@ function getDefaultThumbnail(type) {
 // ACE EDITOR SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
+
+function setEditorTabSync(pane, data) {
+  var paneState = state.pane[pane];
+
+  if(getPaneEditorBlockMode(pane)) {
+    paneState.dropletEditor.setValue(data.value);
+  } else {
+    paneState.editor.setValue(data.value);
+    paneState.editor.gotoLine(paneState.editor.getSession().getLength(), 0);
+  }
+}
+
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
   if (paneState.dropletEditor && paneState.dropletEditor.destroy) {
@@ -2293,6 +2306,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   paneState.lastChangeTime = +(new Date);
 
+  var localStorageSemaphore = 1;
   dropletEditor.on('change', function() {
     if (paneState.settingUp) return;
     paneState.lastChangeTime = +(new Date);
@@ -2301,7 +2315,25 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     dropletEditor.clearLineMarks();
     fireEvent('changelines', [pane]);
     fireEvent('delta', [pane]);
+
+    /* sync across tabs using localStorage */
+    if(localStorageSemaphore) {
+      setTimeout(function() {
+        var editorValue = dropletEditor.getValue();
+        fireEvent('setLocalStorage', [editorValue]);
+        localStorageSemaphore = 1;
+      }, 1500);
+      localStorageSemaphore = 0;
+    }
   });
+
+  window.addEventListener("storage", function(e) {
+    try {
+      var data = localStorage.getItem('editorValue');
+      fireEvent('getLocalStorage', [data]);
+      fireEvent('dirty', [pane]); 
+    } catch (e) { }
+  }, false);
 
   dropletEditor.on('toggledone', function() {
     if (!$('.droplet-hover-div').hasClass('tooltipstered')) {
