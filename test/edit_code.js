@@ -182,9 +182,9 @@ describe('code editor', function() {
   });
   it('should inherit thumbnail setting from parent folder', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
-      $('a[href="/home/shapes/"]').click();
+      $('a[href="/edit/shapes/"]').click();
     }, function() {
-      if (!$('a[href="/home/shapes/test"]').is(':visible')) return;
+      if (!$('a[href="/edit/shapes/test"]').is(':visible')) return;
       return {
         showThumb: window.localStorage.showThumb,
       }
