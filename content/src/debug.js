@@ -27,7 +27,7 @@ var stuckComplexity = {
   calls: 0,
   moves: 0
 };
-var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
+var stuckTrivialTime = 4000;   // stuck time in a loop with no library calls
 var stuckCallingTime = 8000;   // stuck time in a loop making library calls
 var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
