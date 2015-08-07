@@ -1189,19 +1189,27 @@ function showLoginDialog(opts) {
 // PANE MANAGEMENT
 ///////////////////////////////////////////////////////////////////////////
 
-function setPreviewMode(shown, instant) {
-  var duration = instant ? 0 : 400;
+function setPreviewMode(shown, noanimation) {
+  var change = (shown != state.previewMode);
+  var delay = (noanimation || !change) ? 0 : 400;
   if (shown) {
-    $('#middle').show();
-    $('.right').css({left: '50%', width: '50%'});
-    $('.left').css({width: '50%'});
+    $('#middle').removeClass('rightedge');
+    $('.right').animate({left: '50%', width: '50%'}, delay);
+    $('.left').animate({width: '50%'}, delay, finished);
     $('.back').css({left: '-50%', width: '50%'});
   } else {
-    $('#middle').hide();
-    $('.right').css({left: '100%', width: '100%'});
-    $('.left').css({width: '100%'});
+    $('#middle').addClass('rightedge');
+    $('.right').animate({left: '100%', width: '100%'}, delay);
+    $('.left').animate({width: '100%'}, delay, finished);
     $('.back').css({left: '-100%', width: '100%'});
-    clearPane(paneid('right'));
+    // clearPane(paneid('right'));
+  }
+  function finished() {
+    if (change) {
+      // Tell all editors and directory listings to resize.
+      $(window).trigger('resize.editor');
+      $(window).trigger('resize.listing');
+    }
   }
   state.previewMode = shown;
 }
@@ -1217,7 +1225,10 @@ function rotateLeft() {
   $('.back').finish().css({left:'100%'});
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
-  $('.back').animate({left: '50%'});
+  $('.back').animate({left: '50%'}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('right');
   $(panelParts(idr)).removeClass('right').addClass('left');
   $(panelParts(idl)).removeClass('left').addClass('back');
@@ -1231,7 +1242,10 @@ function rotateRight() {
   $('.back').finish().css({left:'-50%'});
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
-  $('.back').animate({left: 0});
+  $('.back').animate({left: 0}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('left');
   $(panelParts(idr)).removeClass('right').addClass('back');
   $(panelParts(idl)).removeClass('left').addClass('right');
@@ -2498,6 +2512,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   paneState.settingUp = null;
   updatePaneTitle(pane);
+
+  // Work around undesired scrolling bug -
+  // repro: turn off split pane view, and linger over a file to force preload.
+  $('#overflow').scrollLeft(0);
 }
 
 function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
@@ -2884,6 +2902,9 @@ function setPaneEditorReadOnly(pane, ro) {
   var containers = [];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
+  if (paneState.dropletEditor) {
+    paneState.dropletEditor.setReadOnly(ro);
+  }
   containers.push(paneState.editor.container);
   if (paneState.htmlEditor) {
     paneState.htmlEditor.setReadOnly(ro);

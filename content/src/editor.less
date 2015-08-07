@@ -293,6 +293,13 @@ body.modal #overlay {
   position: relative;
 }
 
+#splitscreen > .splitscreenicon {
+  display: block;
+  height: 16px;
+  width: 19px;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMTAiIHk9IjEiIHdpZHRoPSI4IiBoZWlnaHQ9IjE0IiBzdHJva2U9IiMzMzMiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0wLDIgTDYsMiBNMCw2IEw4LDYgTTAsMTAgTDYsMTAgTTAsMTQgTDcsMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+");
+}
+
 #topright button .droparrow {
   position: absolute;
   right: 0;
@@ -531,6 +538,10 @@ body.modal #middle {
   top: 50%;
   right: 50%;
   margin-right: -28px;
+}
+
+#middle.rightedge {
+  right: 38px;
 }
 
 .framed #middle, .framed .vcenter {

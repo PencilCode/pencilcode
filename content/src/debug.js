@@ -27,7 +27,7 @@ var stuckComplexity = {
   calls: 0,
   moves: 0
 };
-var stuckTrivialTime = 2000;   // stuck time in a loop with no library calls
+var stuckTrivialTime = 4000;   // stuck time in a loop with no library calls
 var stuckCallingTime = 8000;   // stuck time in a loop making library calls
 var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
@@ -624,7 +624,6 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(lineIndex) {
-  if (debugMode){
     var line = traceEvents[lineIndex].location.first_line;
     var prevLine = -1;
     var block_mode = true;
@@ -634,14 +633,17 @@ function traceLine(lineIndex) {
     if (traceEvents[lineIndex-1]){
       prevLine = traceEvents[lineIndex-1].location.first_line;
     }
-    $('debugtraceprev').removeClass('inactive').addClass('active');
-    view.markPaneEditorLine(
-        view.paneid('left'), line, 'guttermouseable', true);
-    view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-    if (!block_mode) {
-      view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+    if (debugMode) { 
+      $('debugtraceprev').removeClass('inactive').addClass('active');
+      view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+      if (!block_mode) {
+        view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+      }
     }
-  }
+    view.markPaneEditorLine(
+    view.paneid('left'), line, 'guttermouseable', true);
+
+   
 }
 
 // Unhighlights the given line number as a line no longer being traced.
