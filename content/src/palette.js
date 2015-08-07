@@ -1007,7 +1007,6 @@ module.exports = {
     typeline: {color: 'pink'},
     '*.sort': {},
     debug: {color: 'pink'},
-    log: {color: 'pink'},
     abs: {value: true, color: 'lightgreen'},
     acos: {value: true, color: 'lightgreen'},
     asin: {value: true, color: 'lightgreen'},
