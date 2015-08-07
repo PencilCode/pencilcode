@@ -588,7 +588,6 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(lineIndex) {
-  if (debugMode){
     var line = traceEvents[lineIndex].location.first_line;
     var prevLine = -1;
     var block_mode = true;
@@ -598,14 +597,17 @@ function traceLine(lineIndex) {
     if (traceEvents[lineIndex-1]){
       prevLine = traceEvents[lineIndex-1].location.first_line;
     }
-    $('debugtraceprev').removeClass('inactive').addClass('active');
-    view.markPaneEditorLine(
-        view.paneid('left'), line, 'guttermouseable', true);
-    view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-    if (!block_mode) {
-      view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+    if (debugMode) { 
+      $('debugtraceprev').removeClass('inactive').addClass('active');
+      view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+      if (!block_mode) {
+        view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+      }
     }
-  }
+    view.markPaneEditorLine(
+    view.paneid('left'), line, 'guttermouseable', true);
+
+   
 }
 
 // Unhighlights the given line number as a line no longer being traced.
