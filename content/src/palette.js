@@ -1006,6 +1006,7 @@ module.exports = {
     typebox: {color: 'pink', dropdown: [colors]},
     typeline: {color: 'pink'},
     '*.sort': {},
+    debug: {color: 'pink'},
     log: {color: 'pink'},
     abs: {value: true, color: 'lightgreen'},
     acos: {value: true, color: 'lightgreen'},
