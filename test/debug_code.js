@@ -335,22 +335,21 @@ describe('code debugger', function() {
            done();
       });
   });
-  it('should show trace when interacting with debugger', function(done) {
+  it('should show trace when interacting with debugger in block mode', function(done) {
    asyncTest(_page, one_step_timeout, null, function() {
           // Click on the square stop button.
+          // Note: this is the block mode test
           $('#run').mousedown();
           $('#run').click();
       }, function() {
           try {
             if (!$('.preview iframe').length) return;
             if (!$('.preview iframe')[0].contentWindow.see) return;
-            $(".scrubber").mousedown(function(){
-              $(".scrubber").mousemove();
-
-            })
-            return {
-              debugtracecount: $(".debugtrace").length
-            };
+            else{
+              return {
+                debugtracecount: $(".debugtrace").length
+              };
+            }
           }
           catch(e) {
             return {poll: true, error: e};
@@ -358,6 +357,36 @@ describe('code debugger', function() {
          }, function(err, result) {
            assert.ifError(err);
            assert.equal(1, result.debugtracecount);
+           done();
+      });
+  });
+  it('should show trace when interacting with debugger in text mode', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            // click to transition from block to text mode
+            $('.slide').click()
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            if (!$(".debugtraceprev").length) return;
+            if (!$('.debugtraceprev').length) return;
+            else{
+              return {
+                debugtracecount: $(".debugtrace").length,
+                debugtraceprevcount: $(".debugtraceprev").length
+              };
+            }
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           assert.equal(1, result.debugtracecount);
+           assert.equal(1, result.debugtraceprevcount);
            done();
       });
   });
