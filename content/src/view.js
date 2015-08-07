@@ -2341,7 +2341,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" style= "visibility:hidden,zIndex:10 " share="5" >',
+    '<div class="hpanel scrubbermark" style= "visibility:hidden" share="10" >',
     '</div>',
     '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
