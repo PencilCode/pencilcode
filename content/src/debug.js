@@ -379,7 +379,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
             } else{
               arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
             }
-            view.arrow(view.paneid('left'), arrows, currentIndex, false);
+            //Draw an arrow if the debugger is on
+            if (debugMode) {
+              view.arrow(view.paneid('left'), arrows, currentIndex, false);
+            }
             if (!arrows[currentRecordID]){
               debugRecordsByLineNo[currentLine] = currentRecordID;
             }
@@ -412,7 +415,10 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           } else{
             arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
           }
-          view.arrow(view.paneid('left'), arrows, currentIndex, false);
+          //Draw an arrow if the debugger is on
+          if (debugMode) {
+            view.arrow(view.paneid('left'), arrows, currentIndex, false);
+          }
           if (!arrows[currentRecordID]){
             debugRecordsByLineNo[currentLine] = currentRecordID;
           }
@@ -420,7 +426,9 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         traceLine(index);
         currentRecordID = debugId;
         record.startCoords[coordId] = collectCoords(elem);
-        view.showAllVariablesAt(index, variablesByLineNo);
+        if (debugMode){  
+          view.showAllVariablesAt(index, variablesByLineNo);
+        }
       }
     }
   }
@@ -490,7 +498,10 @@ function end_program(){
         if (!arrows[currentRecordID]){
           debugRecordsByLineNo[currentLine] = currentRecordID;
         }
-        view.arrow(view.paneid('left'), arrows, currentIndex, false);//should I pass in prevIndex and currentRecordID or?
+        //Draw an arrow if the debugger is on
+        if (debugMode) {
+          view.arrow(view.paneid('left'), arrows, currentIndex, false);
+        }
     }
     traceLine(currentIndex);
     tracedIndex = currentIndex;
@@ -504,7 +515,7 @@ function end_program(){
         tracedIndex = -1;
   }
   prevLine = -1;
-  if (justEnded) {
+  if (justEnded && debugMode) {
     view.showAllVariablesAt(currentIndex + 1, variablesByLineNo);
   }
 }
@@ -577,23 +588,24 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(lineIndex) {
-  var line = traceEvents[lineIndex].location.first_line;
-  var prevLine = -1;
-  var block_mode = true;
+  if (debugMode){
+    var line = traceEvents[lineIndex].location.first_line;
+    var prevLine = -1;
+    var block_mode = true;
 
-  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
- 
-  if (traceEvents[lineIndex-1]){
-    prevLine = traceEvents[lineIndex-1].location.first_line;
+    if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+   
+    if (traceEvents[lineIndex-1]){
+      prevLine = traceEvents[lineIndex-1].location.first_line;
+    }
+    $('debugtraceprev').removeClass('inactive').addClass('active');
+    view.markPaneEditorLine(
+        view.paneid('left'), line, 'guttermouseable', true);
+    view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
+    if (!block_mode) {
+      view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
+    }
   }
-  $('debugtraceprev').removeClass('inactive').addClass('active');
-  view.markPaneEditorLine(
-      view.paneid('left'), line, 'guttermouseable', true);
-  view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  if (!block_mode) {
-    view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
-  }
-
 }
 
 // Unhighlights the given line number as a line no longer being traced.
@@ -752,7 +764,9 @@ view.on('entergutter', function(pane, lineno) {
   if (debugRecordsByLineNo[lineno]){
     var debugId = debugRecordsByLineNo[lineno]
     var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
-    view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    if (debugMode) {
+      view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    }
     view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
     view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
     displayProtractorForRecord(debugRecordsByDebugId[debugId]);
@@ -781,7 +795,9 @@ view.on('icehover', function(pane, ev) {
     var debugId = debugRecordsByLineNo[lineno];
     displayProtractorForRecord(debugRecordsByDebugId[debugId]);
     var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
-    view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    if (debugMode){  
+      view.arrow(view.paneid('left'), arrows, eventIndex, true);
+    }
   }
 });
 
@@ -911,6 +927,8 @@ view.on('delta', function(){
 $('.panetitle').on('click', '.debugtoggle', function () {
   debugMode = !debugMode;
   if (!debugMode) {
+    $(".arrow").remove();
+    $(".vars").remove();
     view.removeSlider();
     $(".debugtoggle").text('debug off');
   }
