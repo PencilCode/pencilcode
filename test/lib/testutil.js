@@ -162,3 +162,23 @@ exports.defineSimulate = function(page) {
   });
 };
 
+
+var mochaDescribe=describe;
+var describeDepth=0;
+describe = function(name,callback) {
+  var prefix = '';
+  for(var x = 0;x < describeDepth;x++){
+    if(x==0)
+      prefix+='\n';
+    prefix+='  ';
+  }
+  if(describeDepth!=0) {
+    prefix += '|_';
+  }
+  mochaDescribe(prefix+name,function(){
+    describeDepth++;
+    callback();
+    describeDepth--;
+  });
+};
+
