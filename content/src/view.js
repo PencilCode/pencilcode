@@ -235,8 +235,8 @@ function removeSlider() {
   $(".scrubber").remove();
   $("#backButton").remove();
   $("#forwardButton").remove();
-  $(".scrubbermark").css("visibility", "hidden");
   sliderCreated = false;
+  sizeHtmlCssPanels('bravo');
 }
 
 function initializeSlider (linenoList) {
@@ -294,18 +294,17 @@ function initializeSlider (linenoList) {
 }
 
 function createSlider(linenoList) {
-  $(".scrubbermark").css("visibility", "visible");
-
   // If slider hasn't been created and there are events being pushed, create slider.
   if (!sliderCreated && linenoList.length > 0) {
     initializeSlider (linenoList);
    
     // keep as variable so number of pips and maximum can be modified as events are pushed
-   var max = $("#slider").slider("option", "max");
-   var pips = $("#slider").slider("option", "pips");
+    var max = $("#slider").slider("option", "max");
+    var pips = $("#slider").slider("option", "pips");
 
     // the slider has been created
     sliderCreated = true;
+    sizeHtmlCssPanels('bravo');  
   }
   // if the slider has already been created and events are pushed, modify existing slider
    if (sliderCreated) {
@@ -2311,6 +2310,7 @@ function sizeHtmlCssPanels(pane) {
   var addcss = multipane && meta && meta.hasOwnProperty('css');
   box.find('.htmlmark').css('display', addhtml ? 'block' : 'none');
   box.find('.cssmark').css('display', addcss ? 'block' : 'none');
+  box.find('.scrubbermark').css('display', sliderCreated ? 'block' : 'none');
   setupHpanelBox(box);
 }
 
@@ -2341,7 +2341,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel scrubbermark" style= "visibility:hidden" share="10" >',
+    '<div class="hpanel scrubbermark" style= "display:none" share="10" >',
     '</div>',
     '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
