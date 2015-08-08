@@ -193,7 +193,7 @@ exports.DirCache.prototype = {
     var itempath = path.join(this.path, name);
     var obj = null;
     try {
-      encodeStat(names[i], fs.statSync(itempath));
+      obj = encodeStat(names[i], fs.statSync(itempath));
     } catch (e) {
       // File is gone: let obj be null.
     }
