@@ -162,4 +162,3 @@ exports.defineSimulate = function(page) {
   });
 };
 
-
