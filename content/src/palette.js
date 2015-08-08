@@ -167,8 +167,8 @@ module.exports = {
           block: '@wear \'/img/apple\'',
           title: 'Use an image for the turtle'
         }, {
-          block: '@scale 3',
-          title: 'Scale turtle drawing'
+          block: '@grow 3',
+          title: 'Grow the sizeof the turtle'
         }, {
           block: '@ht()',
           title: 'Hide the main turtle'
@@ -305,7 +305,7 @@ module.exports = {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'log [1..10]',
+          block: 'debug x',
           title: 'Log an object to debug'
         }
       ])
@@ -512,8 +512,8 @@ module.exports = {
           block: '@wear(\'/img/apple\');',
           title: 'Use an image for the turtle'
         }, {
-          block: '@scale(3);',
-          title: 'Scale turtle drawing'
+          block: '@grow(3);',
+          title: 'Grow the size of the turtle'
         }, {
           block: '@ht();',
           title: 'Hide the main turtle'
@@ -637,7 +637,7 @@ module.exports = {
           block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'log(new Date);',
+          block: 'debug(x);',
           title: 'Log an object to debug'
         }
       ])
@@ -963,6 +963,7 @@ module.exports = {
     '?.mirror': {color: 'purple'},
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
+    '?.grow': {color: 'purple', dropdown: [scales]},
     '?.pause': {},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
