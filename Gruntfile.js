@@ -35,7 +35,7 @@ module.exports = function(grunt) {
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
-          'lib/lodash.js': 'lodash/dist/lodash.js',
+          'lib/lodash.js': 'lodash/lodash.js',
           'lib/p5.js': 'p5/index.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',

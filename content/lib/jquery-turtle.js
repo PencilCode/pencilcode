@@ -7091,7 +7091,7 @@ var turtlefn = {
     var intick = insidetick;
     return this.plan(function(j, elem) {
       cc.appear(j);
-      var applyStyles = {padding: 8},
+      var applyStyles = {},
           currentStyles = this.prop('style');
       // For defaults, copy inline styles of the turtle itself except for
       // properties in the following list (these are the properties used to
