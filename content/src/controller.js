@@ -1455,6 +1455,8 @@ function doneWithFile(filename) {
         history.state.previous == newUrl) {
       history.back();
     } else {
+      // Strip any trailing / from the filename before using it for loading.
+      filename = filename.replace(/\/$/, '');
       loadFileIntoPosition('back', filename, true, true);
       rotateModelRight(true);
     }
