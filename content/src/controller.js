@@ -2032,6 +2032,7 @@ function updateSortResults(pane) {
 }
 
 function updateSearchResults(pane, search, cb) {
+  search = search ? search.toLowerCase() : '';
   var mpp = model.pane[pane];
   var searchCacheName = 'search-keys-' + (!model.ownername ? '' : model.ownername);
   var searchCacheKey= mpp.filename+"-"+search;
@@ -2042,8 +2043,10 @@ function updateSearchResults(pane, search, cb) {
   } else {
     if (!model.ownername) {
       storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
-        mpp.data=m
-        updateViewAndCache(m.list, getUpdatedLinksArray(pane), cache);
+        if(m.list) {
+          mpp.data=m
+          updateViewAndCache(m.list, getUpdatedLinksArray(pane), cache);
+        }
       });
     } else {
       if (!mpp.data.allLinks) {

@@ -1826,7 +1826,9 @@ $('.panetitle').on('keyup', '.search-toggle', function(e) {
   var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
   var search = $(this).closest('.panetitle').find('.search-toggle').val();
   e.preventDefault();
-  fireEvent('search',[pane,search]);
+  fireEvent('search',[pane,search,function(){
+      //TODO after search events
+  }]);
 });
 
 $('.pane').on('mousedown', '.blockmenu', function(e) {
