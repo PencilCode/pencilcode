@@ -8,7 +8,7 @@ var phantom = require('node-phantom-simple'),
 
 describe('filter textfield', function () {
   var _ph, _page;
-  before(function (done) {
+  beforeEach(function (done) {
     // Create the headless webkit browser.
     phantom.create(function (error, ph) {
       assert.ifError(error);
@@ -51,9 +51,6 @@ describe('filter textfield', function () {
 
   describe('in root directory', function () {
     it('should filter the content by prefix', function (done) {
-
-      var beforeListCount;
-      // Navigate to see the editor for the program named "first".
       _page.set('viewportSize', {width: 100, height: 200}, function (err) {
         assert.ifError(err);
         _page.open(
@@ -114,12 +111,11 @@ describe('filter textfield', function () {
               });
           });
       });
-
     });
-    it('should toggle the visibility of the filter bar when the window size is changed', function (done) {
 
-      // Navigate to see the editor for the program named "first".
-      _page.set('viewportSize', {width: 100, height: 200}, function (err) {
+
+    it('should show the filter bar when the scroll bars are needed', function (done) {
+      _page.set('viewportSize', {width: 100, height: 50}, function (err) {
         assert.ifError(err);
         _page.open(
           'http://pencilcode.net.dev/edit/',
@@ -131,13 +127,44 @@ describe('filter textfield', function () {
               function () {
               },
               function () {
+                if (!$('.directory').length)
+                  return;
+                
                 var result = this;
                 result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
                 return result;
               },
               function (err, result) {
                 assert.ifError(err);
-                assert.equal(true, result.filterBarIsDisplayed, 'Filter bar should be displayed when the scroll bars are displayed');
+                assert.equal(true, result.filterBarIsDisplayed);
+                done();
+              });
+          });
+      });
+    });
+    it('should hide the filter bar when the scroll bars are not needed', function (done) {
+      _page.set('viewportSize', {width: 1200, height: 1500}, function (err) {
+        assert.ifError(err);
+        _page.open(
+          'http://pencilcode.net.dev/edit/',
+          function (err, status) {
+            assert.ifError(err);
+            assert.equal(status, 'success');
+            asyncTest(
+              _page, extended_timeout, null,
+              function () {
+              },
+              function () {
+                if (!$('.directory').length)
+                  return;
+                
+                var result = this;
+                result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
+                return result;
+              },
+              function (err, result) {
+                assert.ifError(err);
+                assert.equal(false, result.filterBarIsDisplayed);
                 done();
               });
           });
@@ -147,8 +174,6 @@ describe('filter textfield', function () {
 
   describe('in user directory', function () {
     it('should filter the content by prefix', function (done) {
-
-      // Navigate to see the editor for the program named "first".
       _page.set('viewportSize', {width: 100, height: 200}, function (err) {
         assert.ifError(err);
         _page.open(
@@ -211,12 +236,9 @@ describe('filter textfield', function () {
               });
           });
       });
-
     });
-    it('should toggle the visibility of the filter bar when the window size is changed', function (done) {
-
-      // Navigate to see the editor for the program named "first".
-      _page.set('viewportSize', {width: 100, height: 200}, function (err) {
+    it('should hide the filter bar when the scroll bars are needed', function (done) {
+      _page.set('viewportSize', {width: 100, height: 50}, function (err) {
         assert.ifError(err);
         _page.open(
           'http://livetest.pencilcode.net.dev/edit/',
@@ -226,6 +248,7 @@ describe('filter textfield', function () {
             asyncTest(
               _page, extended_timeout, null,
               function () {
+//                $('.thumb-toggle').click();
               },
               function () {
                 var result = this;
@@ -234,7 +257,33 @@ describe('filter textfield', function () {
               },
               function (err, result) {
                 assert.ifError(err);
-                assert.equal(true, result.filterBarIsDisplayed, 'Filter bar should be displayed when the scroll bars are displayed');
+                assert.equal(true, result.filterBarIsDisplayed);
+                done();
+              });
+          });
+      });
+    });
+    it('should hide the filter bar when the scroll bars are not needed', function (done) {
+      _page.set('viewportSize', {width: 1200, height: 1500}, function (err) {
+        assert.ifError(err);
+        _page.open(
+          'http://livetest.pencilcode.net.dev/edit/',
+          function (err, status) {
+            assert.ifError(err);
+            assert.equal(status, 'success');
+            asyncTest(
+              _page, extended_timeout, null,
+              function () {
+//                $('.thumb-toggle').click();
+              },
+              function () {
+                var result = this;
+                result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
+                return result;
+              },
+              function (err, result) {
+                assert.ifError(err);
+                assert.equal(false, result.filterBarIsDisplayed);
                 done();
               });
           });
