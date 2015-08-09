@@ -129,7 +129,7 @@ describe('filter textfield', function () {
               function () {
                 if (!$('.directory').length)
                   return;
-                
+
                 var result = this;
                 result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
                 return result;
@@ -157,7 +157,7 @@ describe('filter textfield', function () {
               function () {
                 if (!$('.directory').length)
                   return;
-                
+
                 var result = this;
                 result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
                 return result;
@@ -248,7 +248,6 @@ describe('filter textfield', function () {
             asyncTest(
               _page, extended_timeout, null,
               function () {
-//                $('.thumb-toggle').click();
               },
               function () {
                 var result = this;
@@ -274,7 +273,6 @@ describe('filter textfield', function () {
             asyncTest(
               _page, extended_timeout, null,
               function () {
-//                $('.thumb-toggle').click();
               },
               function () {
                 var result = this;
