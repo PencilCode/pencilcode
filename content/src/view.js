@@ -1755,7 +1755,7 @@ function updatePaneTitle(pane) {
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
         label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
-                '&nbsp;</div></div><div class = "debugtoggle pull-right">debug on</div>'
+                '&nbsp;</div></div><div class = "debugtoggle pull-right"><i class = "fa fa-bug"></i></div>'
               + label;
       }
     }

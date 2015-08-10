@@ -52,6 +52,7 @@ function resetDebugState () {
   slidercurrLine = 0;          // slider's currently selected line
   sliderprevLine = 0;          // slider's previously selected line
   linenoList = [];             // keep track of line numbers for slider labeling
+  sliderMove = true;           // determine if slider moves with line tracing
 }
 
 // Resets the debugger state:
@@ -639,6 +640,11 @@ function traceLine(lineIndex) {
       if (!block_mode) {
         view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
       }
+      if (sliderMove) {
+        slidercurrLine++;
+        $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps'); 
+        $('#slider').slider('value', slidercurrLine);
+      }
     }
     view.markPaneEditorLine(
     view.paneid('left'), line, 'guttermouseable', true);
@@ -954,7 +960,6 @@ view.on('stop', function() {
 view.on('delta', function(){ 
   $(".arrow").remove();
   view.removeVariables();
-  //need to add code that stops animation!!!
   programChanged = true;
 });
 
@@ -968,11 +973,11 @@ $('.panetitle').on('click', '.debugtoggle', function () {
     $(".arrow").remove();
     $(".vars").remove();
     view.removeSlider();
-    $(".debugtoggle").text('debug off');
+   //  $(".debugtoggle").text('debug off');
   }
   else {
     setupSlider();
-    $(".debugtoggle").text('debug on');
+   //  $(".debugtoggle").text('debug on');
   }
 })
 
@@ -985,6 +990,8 @@ function sliderResponse (event, ui) {
 // Display protractor, line highlighting, variables,
 // and arrows when event occurs
 function sliderToggle() {
+  sliderMove = false;
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
   var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
 
   view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
@@ -1001,11 +1008,11 @@ function sliderToggle() {
   }
   view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
-  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
 }
 
 // Event handling for step buttons and slider
 $(document).on('slide', '#slider', function(event, ui) {
+  sliderMove = false;
   sliderResponse(event, ui);
 })
 
