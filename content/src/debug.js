@@ -52,7 +52,6 @@ function resetDebugState () {
   slidercurrLine = 0;          // slider's currently selected line
   sliderprevLine = 0;          // slider's previously selected line
   linenoList = [];             // keep track of line numbers for slider labeling
-  sliderMove = true;           // determine if slider moves with line tracing
 }
 
 // Resets the debugger state:
@@ -271,7 +270,6 @@ function updateFunctionCalls(lineNum, debugId, funcs) {
     var funcRecord = null;
     var value = valueToString(funcs[i].value);
     for (var j = 0; j < functionCalls.length; j++) {
-      console.log(funcs[i].name);
       if (funcs[i].name === functionCalls[j].name && funcs[i].argsString === functionCalls[j].argsString && lineNum === functionCalls[j].lineNum) {
         funcRecord = functionCalls[j];
         break;
@@ -640,11 +638,6 @@ function traceLine(lineIndex) {
       if (!block_mode) {
         view.markPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
       }
-      if (sliderMove) {
-        slidercurrLine++;
-        $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps'); 
-        $('#slider').slider('value', slidercurrLine);
-      }
     }
     view.markPaneEditorLine(
     view.paneid('left'), line, 'guttermouseable', true);
@@ -983,15 +976,14 @@ $('.panetitle').on('click', '.debugtoggle', function () {
 
 // respond to manual clicks within the slider
 function sliderResponse (event, ui) {
-  slidercurrLine = ui.value;
+  slidercurrLine = ui.value; 
   sliderToggle();
 }
 
 // Display protractor, line highlighting, variables,
 // and arrows when event occurs
 function sliderToggle() {
-  sliderMove = false;
-  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
+  $('#label').text('Step ' + (slidercurrLine + 1)  + ' of ' + traceEvents.length + ' Steps');
   var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
 
   view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
@@ -1012,7 +1004,6 @@ function sliderToggle() {
 
 // Event handling for step buttons and slider
 $(document).on('slide', '#slider', function(event, ui) {
-  sliderMove = false;
   sliderResponse(event, ui);
 })
 
@@ -1025,7 +1016,7 @@ $(document).on('click', '#backButton', function() {
 });
 
 $(document).on('click', '#forwardButton', function() {
-  if (slidercurrLine != traceEvents.length - 1) {
+ if (slidercurrLine < traceEvents.length-1) {
     slidercurrLine++
     $("#slider").slider("value", slidercurrLine);
     sliderToggle();
