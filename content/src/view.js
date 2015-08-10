@@ -3357,11 +3357,11 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
     if (block_mode){
       var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line - 1);
       var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
+      console.log("endBounds: ", endBounds);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y - startBounds.bounds.height/2};
       endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y + endBounds.bounds.height/4};
       offset_top = startBounds.bounds.height - $(".editor").offset().top;
       var pixel_cushion = 50; //add to every left offset to keep arrow off of the blocks.
-      console.log("widths: ", startBounds.bounds.width, endBounds.bounds.width)
       offset_left = $('.editor').offset().left + pixel_cushion;
       var x_val = Math.max(startBounds.bounds.width, endBounds.bounds.width);
     } else {
@@ -3427,7 +3427,7 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
     if (block_mode) {
-      $("div[id^='editor_'] .droplet-main-scroller").append(div);
+      $("div[id^='editor_']").append(div);
     } else {
       $("div[id^='editor_']").append(div);
     }
