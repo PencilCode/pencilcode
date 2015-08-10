@@ -167,8 +167,8 @@ module.exports = {
           block: '@wear \'/img/apple\'',
           title: 'Use an image for the turtle'
         }, {
-          block: '@scale 3',
-          title: 'Scale turtle drawing'
+          block: '@grow 3',
+          title: 'Grow the sizeof the turtle'
         }, {
           block: '@ht()',
           title: 'Hide the main turtle'
@@ -305,7 +305,7 @@ module.exports = {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'log [1..10]',
+          block: 'debug x',
           title: 'Log an object to debug'
         }
       ])
@@ -512,8 +512,8 @@ module.exports = {
           block: '@wear(\'/img/apple\');',
           title: 'Use an image for the turtle'
         }, {
-          block: '@scale(3);',
-          title: 'Scale turtle drawing'
+          block: '@grow(3);',
+          title: 'Grow the size of the turtle'
         }, {
           block: '@ht();',
           title: 'Hide the main turtle'
@@ -637,7 +637,7 @@ module.exports = {
           block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'log(new Date);',
+          block: 'debug(x);',
           title: 'Log an object to debug'
         }
       ])
@@ -963,6 +963,7 @@ module.exports = {
     '?.mirror': {color: 'purple'},
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
+    '?.grow': {color: 'purple', dropdown: [scales]},
     '?.pause': {},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
@@ -1006,15 +1007,20 @@ module.exports = {
     typebox: {color: 'pink', dropdown: [colors]},
     typeline: {color: 'pink'},
     '*.sort': {},
-    log: {color: 'pink'},
+    debug: {color: 'pink'},
     abs: {value: true, color: 'lightgreen'},
     acos: {value: true, color: 'lightgreen'},
     asin: {value: true, color: 'lightgreen'},
     atan: {value: true, color: 'lightgreen'},
-    atan2: {value: true, color: 'lightgreen'},
     cos: {value: true, color: 'lightgreen'},
     sin: {value: true, color: 'lightgreen'},
     tan: {value: true, color: 'lightgreen'},
+    acosd: {value: true, color: 'lightgreen'},
+    asind: {value: true, color: 'lightgreen'},
+    atand: {value: true, color: 'lightgreen'},
+    cosd: {value: true, color: 'lightgreen'},
+    sind: {value: true, color: 'lightgreen'},
+    tand: {value: true, color: 'lightgreen'},
     ceil: {value: true, color: 'lightgreen'},
     floor: {value: true, color: 'lightgreen'},
     round: {value: true, color: 'lightgreen'},

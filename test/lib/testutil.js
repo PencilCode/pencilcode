@@ -61,7 +61,7 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
       rt_args, ac_args;
 
   function handletry(err, result) {
-    if (err || (result != null && !result.poll)) {
+    if (err || (!!result && !result.poll)) {
       callback(err, result);
     } else if (evalTime - startTime > timeout) {
       // Note that timeout is measured not from the time
