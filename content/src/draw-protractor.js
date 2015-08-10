@@ -6,7 +6,7 @@ var $   = require('jquery'),
   jqueryturtle  = require('jquery-turtle'),
     see = require('see');
 
-var t;
+//var t;
 eval(see.scope('drawProtractor'));
 function to360(v) {
     while (v < 0) {
@@ -16,6 +16,7 @@ function to360(v) {
 }
 
 function renderProtractor(canvas, step) {
+  var t;
   var ctx = canvas[0].getContext('2d');
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
@@ -30,7 +31,7 @@ function renderProtractor(canvas, step) {
         t.rt(step.endCoords.direction);
       } 
 
-      if (step.command == "lt") {
+      else if (step.command == "lt") {
         t.lt(step.endCoords.direction);
       }
     }
