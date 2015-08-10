@@ -218,7 +218,7 @@ describe('debugger', function() {
       try {
 
     // Wait for the arrow to appear after automated delay
-     if (!$('.arrow').length) return; 
+//     if (!$('.arrow').length) return; 
        return {
           label: $('.arrow').length
         };
