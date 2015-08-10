@@ -42,7 +42,7 @@ function drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset
              refX='0' refY='2.5' style='stroke:dodgerblue; fill:dodgerblue; stroke-linejoin: miter; \
              stroke-width:0px;' markerUnits='strokeWidth' > <polygon points='0,0 5,2.5 0,5'/>  \
             </marker> <marker id='arrowhead2' markerWidth='10' markerHeight='10' orient='auto-start-reverse'\
-             refX='0' refY='2.5' style='stroke:#8EC8FF; fill:#8EC8FF; stroke-linejoin: miter; stroke-width:0px;' 
+             refX='0' refY='2.5' style='stroke:#8EC8FF; fill:#8EC8FF; stroke-linejoin: miter; stroke-width:0px;' \
              markerUnits='strokeWidth' > \ <polygon points='0,0 5,2.5 0,5'/> \
             </marker>  \ " + arrowtext +  "</svg> ";
     
