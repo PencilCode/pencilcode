@@ -36,7 +36,7 @@ module.exports = function(grunt) {
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
           'lib/js2coffee.js': 'js2coffee/dist/js2coffee.js',
-          'lib/lodash.js': 'lodash/dist/lodash.js',
+          'lib/lodash.js': 'lodash/lodash.js',
           'lib/p5.js': 'p5/index.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
