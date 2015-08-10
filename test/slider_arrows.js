@@ -134,8 +134,6 @@ describe('debugger', function() {
       // Assert that slider tip reflects appropriate line number
       assert.equal(result.label, '0');
       assert.equal(result.slidertip, 'Line  1');
-      // Assert that debug on toggle appears on pane
-      assert.equal(result.debugtoggle, 'debug on');
       done();
     });
   }); 
@@ -202,8 +200,6 @@ describe('debugger', function() {
       assert.ifError(err);
       // Assert that slider disappears when user clicks on toggle
       assert.equal(result.slider, 0);
-      // Assert that toggle now displays 'debug off' 
-      assert.equal(result.toggletext, 'debug off');
       done();
     });
   });
