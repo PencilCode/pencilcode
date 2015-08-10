@@ -143,8 +143,8 @@ window.pencilcode.view = {
   setPrimaryFocus: setPrimaryFocus,
   initializeSlider: initializeSlider,
   arrow: arrow,
-  showVariables: showVariables,
-  showAllVariablesAt: showAllVariablesAt,
+  showVar: showVar,
+  emptyVariables: emptyVariables,
   removeVariables: removeVariables,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
@@ -3387,35 +3387,30 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
   }  
 }
 
-function showVariables(pane, lineNum, vars, functionCalls) {
-  var coords = null;
-  var offsetTop = 0;
-  var block_mode = getPaneEditorBlockMode(pane);
-
-  if (block_mode) {
-    var dropletEditor = state.pane[pane].dropletEditor;
-    var bounds = dropletEditor.getLineMetrics(lineNum - 1);
-    coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
-  } else {
-    var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
-    coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
-    offsetTop = $("div[id^='editor_']").offset().top;
+function showVar(pane, lineNum, name, value, argsString) {
+  var text = htmlEscape(name);
+  if (typeof argsString === "string") {
+    text += "(" + htmlEscape(argsString) + ")";
   }
-
-  var text = "";
-  for (var i = 0; i < vars.length; i++) {
-    text += htmlEscape(vars[i].name) + "=" + htmlEscape(vars[i].value) + " ";
-  }
-  for (var i = 0; i < functionCalls.length; i++) {
-    var argsString = functionCalls[i].argsString;
-    if (argsString.length > 20) argsString = "...";
-    text += htmlEscape(functionCalls[i].name) + "(" + htmlEscape(argsString) + ")=" + htmlEscape(functionCalls[i].value) + " ";
-  }
+  text += "=" + htmlEscape(value) + "&nbsp;&nbsp;";
 
   var divId = "line" + lineNum + "vars";
   if ($("#" + divId).length) {
-    $("#" + divId).html(text);
+    $("#" + divId).append(text);
   } else {
+    var coords;
+    var offsetTop = 0;
+    var blockMode = getPaneEditorBlockMode(pane);
+    if (blockMode) {
+      var dropletEditor = state.pane[pane].dropletEditor;
+      var bounds = dropletEditor.getLineMetrics(lineNum - 1);
+      coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
+    } else {
+      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+      coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+      offsetTop = $("div[id^='editor_']").offset().top;
+    }
+
     var div = document.createElement('div');
     div.id = divId;
     div.className = "vars";
@@ -3426,12 +3421,16 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     div.style.right = "25px";
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
-    if (block_mode) {
-      $("div[id^='editor_']").append(div);
+    if (blockMode) {
+      $("div[id^='editor_'] .droplet-main-scroller").append(div);
     } else {
       $("div[id^='editor_']").append(div);
     }
   }
+}
+
+function emptyVariables() {
+  $(".vars").empty();
 }
 
 function removeVariables() {
@@ -3449,31 +3448,6 @@ function repositionVariables(pane) {
       $(this).css("top", String(coords.pageY - offsetTop) + "px");
     }
   });
-}
-
-function showVariablesFor(lineNum, eventIndex, variablesByLineNo) {
-  var vars = [];
-  var functionCalls = [];
-
-  // Find what the state of the tracked variables were at this eventIndex.
-  if (variablesByLineNo[lineNum]) {
-    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
-      var entry = variablesByLineNo[lineNum][i];
-      if (entry.eventIndex > eventIndex) {
-        break;
-      }
-      vars = entry.vars;
-      functionCalls = entry.functionCalls;
-    }
-  }
-
-  showVariables(paneid('left'), lineNum, vars, functionCalls);
-}
-
-function showAllVariablesAt(eventIndex, variablesByLineNo) {
-  for (var lineNum in variablesByLineNo) {
-    showVariablesFor(lineNum, eventIndex, variablesByLineNo);
-  }
 }
 
 window.FontLoader = FontLoader;

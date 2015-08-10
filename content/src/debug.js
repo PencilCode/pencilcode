@@ -34,13 +34,17 @@ var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 var linesRun = 0; 
 
 // resets and initializes debugging state
+var currentRecordID, prevIndex, currentDebugId, debugRecordsByDebugId,
+    debugRecordsByLineNo, variables, functionCalls, traceEvents, stuckTime,
+    arrows, programChanged, slidercurrLine, sliderprevLine, linenoList;
 function resetDebugState () {
   currentRecordID = 1;         // current index into traceEvents
   prevIndex = -1;              // previous index of prior traceEvent
   currentDebugId = 0;          // id used to pair jquery-turtle events with trace events.
   debugRecordsByDebugId = {};  // map debug ids -> line execution records.
   debugRecordsByLineNo = {};   // map line numbers -> line execution records.
-  variablesByLineNo = {};      // map line numbers -> tracked variables.
+  variables = [];              // histories of each tracked variable.
+  functionCalls = [];          // histories of each tracked function call.
   traceEvents = [];            // list of event location objects created by tracing events
   stuckTime = null;            // timestmp to detect stuck programs 
   arrows = {};                 // keep track of arrows that appear in the program
@@ -159,9 +163,10 @@ var debug = window.ide = {
       if (!debugRecordsByLineNo[lineno]){
         debugRecordsByLineNo[lineno] = currentDebugId;
       }
-      updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
+      updateVariables(event.location.first_line, currentDebugId, event.vars);
     } else if (event.type === 'after') {
-      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
+      updateVariables(event.location.first_line, currentDebugId, event.vars);
+      updateFunctionCalls(event.location.first_line, currentDebugId, event.functionCalls);
     }
   },
   setSourceMap: function (map) {
@@ -226,64 +231,65 @@ var untrackedFunctions = [
   "readstr", "button", "table", "send", "recv"
 ];
 
-function mergeVars(oldVars, curVars, areFunctionCalls) {
-  var newVars = oldVars.slice();
-  var anyChanges = false;
-  for (var i = 0; i < curVars.length; i++) {
+function updateVariables(lineNum, debugId, vars) {
+  for (var i = 0; i < vars.length; i++) {
     // Filter out function definitions.
-    if (curVars[i].functionDef) continue;
+    if (vars[i].functionDef) continue;
 
-    // Filter out special turtle variables.
-    if (!areFunctionCalls && untrackedVariables.indexOf(curVars[i].name) !== -1) continue;
+    // Filter out predefined global variables.
+    if (untrackedVariables.indexOf(vars[i].name) !== -1) continue;
 
-    // Filter out common turtle functions.
-    if (areFunctionCalls && untrackedFunctions.indexOf(curVars[i].name) !== -1) continue;
-
-    // TODO: keep arrays sorted to prevent the inner loop?
-    var found = false;
-    for (var j = 0; j < oldVars.length; j++) {
-      if (oldVars[j].name === curVars[i].name && oldVars[j].argsString === curVars[i].argsString) {
-        found = true;
-        if (oldVars[j].value !== curVars[i].value) {
-          newVars[j] = {name: curVars[i].name, value: valueToString(curVars[i].value), argsString: curVars[i].argsString};
-          anyChanges = true;
-        }
+    var varRecord = null;
+    var value = valueToString(vars[i].value);
+    for (var j = 0; j < variables.length; j++) {
+      if (vars[i].name === variables[j].name) {
+        varRecord = variables[j];
         break;
       }
     }
-    if (!found) {
-      newVars.push({name: curVars[i].name, value: valueToString(curVars[i].value), argsString: curVars[i].argsString});
-      anyChanges = true;
+    if (varRecord === null) {
+      varRecord = {
+        name: vars[i].name,
+        history: [{debugId: debugId, lineNum: lineNum, value: value}]
+      };
+      variables.push(varRecord);
+    } else {
+      var last = varRecord.history[varRecord.history.length - 1];
+      if (last.value !== value) {
+        varRecord.history.push({debugId: debugId, lineNum: lineNum, value: value});
+      }
     }
-  }
-
-  if (anyChanges) {
-    return newVars;
-  } else {
-    return false;
   }
 }
 
-function updateVariables(lineNum, eventIndex, vars, functionCalls) {
-  variablesByLineNo[lineNum] = variablesByLineNo[lineNum] || [];
+function updateFunctionCalls(lineNum, debugId, funcs) {
+  for (var i = 0; i < funcs.length; i++) {
+    // Filter out common turtle functions.
+    if (untrackedFunctions.indexOf(funcs[i].name) !== -1) continue;
 
-  var oldVars = [];
-  var oldFunctionCalls = [];
-  if (variablesByLineNo[lineNum].length > 0) {
-    var last = variablesByLineNo[lineNum][variablesByLineNo[lineNum].length - 1];
-    oldVars = last.vars;
-    oldFunctionCalls = last.functionCalls;
-  }
-
-  // Merge vars with this line's previously displayed vars.
-  var newVars = mergeVars(oldVars, vars, false);
-  var newFunctionCalls = mergeVars(oldFunctionCalls, functionCalls, true);
-
-  // If nothing changed, don't do anything.
-  if (newVars !== false || newFunctionCalls !== false) {
-    if (newVars === false) { newVars = oldVars; }
-    if (newFunctionCalls === false) { newFunctionCalls = oldFunctionCalls; }
-    variablesByLineNo[lineNum].push({eventIndex: eventIndex, vars: newVars, functionCalls: newFunctionCalls});
+    var funcRecord = null;
+    var value = valueToString(funcs[i].value);
+    for (var j = 0; j < functionCalls.length; j++) {
+      console.log(funcs[i].name);
+      if (funcs[i].name === functionCalls[j].name && funcs[i].argsString === functionCalls[j].argsString && lineNum === functionCalls[j].lineNum) {
+        funcRecord = functionCalls[j];
+        break;
+      }
+    }
+    if (funcRecord === null) {
+      funcRecord = {
+        name: funcs[i].name,
+        argsString: funcs[i].argsString,
+        lineNum: lineNum,
+        history: [{debugId: debugId, value: value}]
+      };
+      functionCalls.push(funcRecord);
+    } else {
+      var last = funcRecord.history[funcRecord.history.length - 1];
+      if (last.value !== value) {
+        funcRecord.history.push({debugId: debugId, lineNum: lineNum, value: value});
+      }
+    }
   }
 }
 
@@ -294,6 +300,36 @@ function valueToString(value) {
     return '<object>';
   } else {
     return util.inspect(value);
+  }
+}
+
+function showVariables(debugId) {
+  view.emptyVariables();
+
+  for (var i = 0; i < variables.length; i++) {
+    var historyEntry = null;
+    for (var j = variables[i].history.length - 1; j >= 0; j--) {
+      if (variables[i].history[j].debugId - 1 <= debugId) {
+        historyEntry = variables[i].history[j];
+        break;
+      }
+    }
+    if (historyEntry) {
+      view.showVar(view.paneid('left'), historyEntry.lineNum, variables[i].name, historyEntry.value);
+    }
+  }
+
+  for (var i = 0; i < functionCalls.length; i++) {
+    var historyEntry = null;
+    for (var j = functionCalls[i].history.length - 1; j >= 0; j--) {
+      if (functionCalls[i].history[j].debugId - 1 <= debugId) {
+        historyEntry = functionCalls[i].history[j];
+        break;
+      }
+    }
+    if (historyEntry) {
+      view.showVar(view.paneid('left'), functionCalls[i].lineNum, functionCalls[i].name, historyEntry.value, functionCalls[i].argsString);
+    }
   }
 }
 
@@ -427,7 +463,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         currentRecordID = debugId;
         record.startCoords[coordId] = collectCoords(elem);
         if (debugMode){  
-          view.showAllVariablesAt(index, variablesByLineNo);
+          showVariables(debugId);
         }
       }
     }
@@ -516,7 +552,7 @@ function end_program(){
   }
   prevLine = -1;
   if (justEnded && debugMode) {
-    view.showAllVariablesAt(currentIndex + 1, variablesByLineNo);
+    showVariables(currentRecordID);
   }
 }
 
@@ -957,7 +993,7 @@ function sliderToggle() {
   var lineno = debugRecordsByDebugId[slidercurrLine + 1].line;
 
   view.arrow(view.paneid('left'), arrows, slidercurrLine, true);
-  view.showAllVariablesAt(slidercurrLine, variablesByLineNo);
+  showVariables(slidercurrLine);
   view.hideProtractor(view.paneid('right'));
   
   if (targetWindow.jQuery != null) {
