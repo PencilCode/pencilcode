@@ -3422,9 +3422,9 @@ function showVar(pane, lineNum, name, value, argsString) {
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
     if (blockMode) {
-      $("div[id^='editor_'] .droplet-main-scroller").append(div);
+      $("div[id^='editor_'] ").append(div); // .droplet-main-scroller
     } else {
-      $("div[id^='editor_']").append(div);
+      $("div[id^='editor_']").append(div); 
     }
   }
 }

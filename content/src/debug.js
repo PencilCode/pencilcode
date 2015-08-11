@@ -404,24 +404,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
           // decide if it is necessary to draw add and draw any arrows.
           if (currentLine < prevLine && currentIndex == prevIndex + 1) {
-
-            if (arrows[prevIndex] != null) {
-              arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-            } else {
-              arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
-            }
-            if (arrows[currentIndex] != null) {
-              arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
-            } else{
-              arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
-            }
-            //Draw an arrow if the debugger is on
-            if (debugMode) {
-              view.arrow(view.paneid('left'), arrows, currentIndex, false);
-            }
-            if (!arrows[currentRecordID]){
-              debugRecordsByLineNo[currentLine] = currentRecordID;
-            }
+            update_arrows(prevIndex, currentIndex);
           }
           traceLine(currentIndex);
           tracedIndex = currentIndex;
@@ -437,27 +420,8 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           untraceLine(tracedIndex);
           tracedIndex = -1;
         }
-        if (line < prevLine && index == prevIndex + 1){
-
-          prevLocation = traceEvents[prevIndex].location;
-            
-          if (arrows[prevIndex] != null){
-            arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-          } else{
-            arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
-          }
-          if (arrows[index] != null){
-            arrows[index]['before'] =  {first: currentLocation, second: prevLocation};
-          } else{
-            arrows[index] = {before: {first: currentLocation, second: prevLocation}, after : null};
-          }
-          //Draw an arrow if the debugger is on
-          if (debugMode) {
-            view.arrow(view.paneid('left'), arrows, currentIndex, false);
-          }
-          if (!arrows[currentRecordID]){
-            debugRecordsByLineNo[currentLine] = currentRecordID;
-          }
+        if (line < prevLine && index == prevIndex + 1){  
+          update_arrows(prevIndex, index);
         }
         traceLine(index);
         currentRecordID = debugId;
@@ -519,25 +483,8 @@ function end_program(){
         untraceLine(tracedIndex);
         tracedIndex = -1;
     }
-    if(currentLine < prevLine && currentIndex == prevIndex + 1){
-          
-        if (arrows[prevIndex] != null){
-          arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
-        } else{
-          arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
-        }
-        if (arrows[currentIndex] != null){
-          arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
-        } else{
-          arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
-        }
-        if (!arrows[currentRecordID]){
-          debugRecordsByLineNo[currentLine] = currentRecordID;
-        }
-        //Draw an arrow if the debugger is on
-        if (debugMode) {
-          view.arrow(view.paneid('left'), arrows, currentIndex, false);
-        }
+    if (currentLine < prevLine && currentIndex == prevIndex + 1) {
+      update_arrows(prevIndex, currentIndex);
     }
     traceLine(currentIndex);
     tracedIndex = currentIndex;
@@ -626,9 +573,7 @@ function parseTurtleTransform(transform) {
 function traceLine(lineIndex) {
     var line = traceEvents[lineIndex].location.first_line;
     var prevLine = -1;
-    var block_mode = true;
-
-    if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+    var block_mode = view.getPaneEditorBlockMode(view.paneid("left"));
    
     if (traceEvents[lineIndex-1]){
       prevLine = traceEvents[lineIndex-1].location.first_line;
@@ -650,9 +595,7 @@ function traceLine(lineIndex) {
 function untraceLine(lineIndex) {
   var line = traceEvents[lineIndex].location.first_line;
   var prevLine = -1;
-  var block_mode = true;
-
-  if (!view.getPaneEditorBlockMode(view.paneid("left"))){block_mode = false;}
+  var block_mode = view.getPaneEditorBlockMode(view.paneid("left"));
  
   if (traceEvents[lineIndex-1]){
     prevLine = traceEvents[lineIndex-1].location.first_line;
@@ -838,6 +781,30 @@ view.on('icehover', function(pane, ev) {
     }
   }
 });
+
+function update_arrows(prevIndex, currentIndex) {
+  var prevLocation = traceEvents[prevIndex].location;
+  var currentLocation = traceEvents[currentIndex].location;
+  var currentLine = currentLocation.first_line;
+
+  if (arrows[prevIndex] != null) {
+    arrows[prevIndex]['after'] =  {first: currentLocation, second: prevLocation};
+  } else {
+    arrows[prevIndex] = {before: null, after: {first: currentLocation, second: prevLocation}};
+  }
+  if (arrows[currentIndex] != null) {
+    arrows[currentIndex]['before'] =  {first: currentLocation, second: prevLocation};
+  } else {
+    arrows[currentIndex] = {before: {first: currentLocation, second: prevLocation}, after : null};
+  }
+  if (!arrows[currentRecordID]) {
+    debugRecordsByLineNo[currentLine] = currentRecordID;
+  }
+  //Draw an arrow if the debugger is on
+  if (debugMode) {
+    view.arrow(view.paneid('left'), arrows, currentIndex, false);
+  }
+}
 
 function convertCoords(origin, astransform) {
   if (!origin) { return null; }
