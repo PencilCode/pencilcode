@@ -270,7 +270,6 @@ function updateFunctionCalls(lineNum, debugId, funcs) {
     var funcRecord = null;
     var value = valueToString(funcs[i].value);
     for (var j = 0; j < functionCalls.length; j++) {
-      console.log(funcs[i].name);
       if (funcs[i].name === functionCalls[j].name && funcs[i].argsString === functionCalls[j].argsString && lineNum === functionCalls[j].lineNum) {
         funcRecord = functionCalls[j];
         break;
@@ -921,7 +920,6 @@ view.on('stop', function() {
 view.on('delta', function(){ 
   $(".arrow").remove();
   view.removeVariables();
-  //need to add code that stops animation!!!
   programChanged = true;
 });
 
@@ -935,23 +933,24 @@ $('.panetitle').on('click', '.debugtoggle', function () {
     $(".arrow").remove();
     $(".vars").remove();
     view.removeSlider();
-    $(".debugtoggle").text('debug off');
+   //  $(".debugtoggle").text('debug off');
   }
   else {
     setupSlider();
-    $(".debugtoggle").text('debug on');
+   //  $(".debugtoggle").text('debug on');
   }
 })
 
 // respond to manual clicks within the slider
 function sliderResponse (event, ui) {
-  slidercurrLine = ui.value;
+  slidercurrLine = ui.value; 
   sliderToggle();
 }
 
 // Display protractor, line highlighting, variables,
 // and arrows when event occurs
 function sliderToggle() {
+  $('#label').text('Step ' + (slidercurrLine + 1)  + ' of ' + traceEvents.length + ' Steps');
   var prevno = debugRecordsByDebugId[sliderprevLine + 1].line;
 
   view.clearPaneEditorLine(view.paneid('left'), prevno, 'debugtrace');
@@ -968,7 +967,6 @@ function sliderToggle() {
   }
   view.markPaneEditorLine(view.paneid('left'), lineno, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugtrace');
-  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceEvents.length + ' Steps');
 }
 
 // Event handling for step buttons and slider
@@ -985,7 +983,7 @@ $(document).on('click', '#backButton', function() {
 });
 
 $(document).on('click', '#forwardButton', function() {
-  if (slidercurrLine != traceEvents.length - 1) {
+ if (slidercurrLine < traceEvents.length-1) {
     slidercurrLine++
     $("#slider").slider("value", slidercurrLine);
     sliderToggle();

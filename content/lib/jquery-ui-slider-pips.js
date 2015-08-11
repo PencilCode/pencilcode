@@ -439,8 +439,9 @@
                             });
 
                     } else {
-
-                        originalMousedown(e);
+                        if (originalMousedown) {
+                          originalMousedown(e);
+                        }
 
                     }
 
