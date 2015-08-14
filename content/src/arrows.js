@@ -15,7 +15,8 @@ function curvedVertical(x1, y1, x2, y2) {
   y1 = parseFloat(y1);
   x2 = parseFloat(x2);
   y2 = parseFloat(y2);
-  var radius = Math.abs(y1 - y2);
+  var radius = parseFloat(Math.abs(y1 - y2));
+  console.log("vals", x1, y1, x2, y2);
   return "M"+ x1 + "," + y1 + " " + "A"+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
 };
 
