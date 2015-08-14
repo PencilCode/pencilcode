@@ -43,7 +43,7 @@ for color in [red, gold, green, blue]
       lt 360 / sides
     pen null
     fd 40
-  move 40, -160
+  slide 40, -160
 </pre>
 
 [Try an interactive demo (CoffeeScript syntax) here.](
@@ -62,8 +62,8 @@ $(q).fd(100)      // Forward relative motion in local coordinates.
 $(q).bk(50)       // Back.
 $(q).rt(90)       // Right turn.  Optional second arg is turning radius.
 $(q).lt(45)       // Left turn.  Optional second arg is turning radius.
-$(q).move(x, y)   // Move right by x while moving forward by y.
-$(q).jump(x, y)   // Like move, but without drawing.
+$(q).slide(x, y)  // Move right by x while moving forward by y.
+$(q).leap(x, y)   // Like slide, but without drawing.
 $(q).moveto({pageX:x,pageY:y} | [x,y])  // Absolute motion on page.
 $(q).jumpto({pageX:x,pageY:y} | [x,y])  // Like moveto, without drawing.
 $(q).turnto(direction || position)      // Absolute direction adjustment.
@@ -951,7 +951,8 @@ function cleanedStyle(trans) {
 // center of rotation when no transforms are applied) in page coordinates.
 function getTurtleOrigin(elem, inverseParent, extra) {
   var state = $.data(elem, 'turtleData');
-  if (state && state.quickhomeorigin && state.down && state.style && !extra) {
+  if (state && state.quickhomeorigin && state.down && state.style && !extra
+      && elem.classList && elem.classList.contains('turtle')) {
     return state.quickhomeorigin;
   }
   var hidden = ($.css(elem, 'display') === 'none'),
@@ -1089,8 +1090,7 @@ function computeTargetAsTurtlePosition(elem, target, limit, localx, localy) {
   localTarget = matrixVectorProduct(inverseParent,
       subtractVector([target.pageX, target.pageY], origin));
   if (localx || localy) {
-    var ts = readTurtleTransform(elem, true),
-        sy = ts ? ts.sy : 1;
+    var sy = elemOldScale(elem);
     localTarget[0] += localx * sy;
     localTarget[1] -= localy * sy;
   }
@@ -1118,7 +1118,7 @@ function computePositionAsLocalOffset(elem, home) {
       ts = readTurtleTransform(elem, true),
       localHome = inverseParent && matrixVectorProduct(inverseParent,
           subtractVector([home.pageX, home.pageY], origin)),
-      isy = ts && 1 / ts.sy;
+      isy = 1 / elemOldScale(elem);
   if (!inverseParent) { return; }
   return [(ts.tx - localHome[0]) * isy, (localHome[1] - ts.ty) * isy];
 }
@@ -1127,11 +1127,12 @@ function convertLocalXyToPageCoordinates(elem, localxy) {
   var totalParentTransform = totalTransform2x2(elem.parentElement),
       ts = readTurtleTransform(elem, true),
       center = $(homeContainer(elem)).pagexy(),
+      sy = elemOldScale(elem),
       result = [],
       pageOffset, j;
   for (j = 0; j < localxy.length; j++) {
     pageOffset = matrixVectorProduct(
-        totalParentTransform, [localxy[j][0] * ts.sy, -localxy[j][1] * ts.sy]);
+        totalParentTransform, [localxy[j][0] * sy, -localxy[j][1] * sy]);
     result.push({ pageX: center.pageX + pageOffset[0],
                   pageY: center.pageY + pageOffset[1] });
   }
@@ -1161,10 +1162,26 @@ function getCenterInPageCoordinates(elem) {
       origin = getTurtleOrigin(elem, inverseParent),
       pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
       result = { pageX: pos[0], pageY: pos[1] };
-  if (state && simple && state.down && state.style) {
+  if (state && simple && state.down && state.style && elem.classList &&
+      elem.classList.contains('turtle')) {
     state.quickpagexy = result;
   }
   return result;
+}
+
+// The quickpagexy variable is an optimization that assumes
+// parent coordinates do not change.  This function will clear
+// the cache, and is used when we have a container that is moving.
+function clearChildQuickLocations(elem) {
+  if (elem.tagName != 'CANVAS' && elem.tagName != 'IMG') {
+    $(elem).find('.turtle').each(function(j, e) {
+      var s = $.data(e, 'turtleData');
+      if (s) {
+        s.quickpagexy = null;
+        s.quickhomeorigin = null;
+      }
+    });
+  }
 }
 
 function polyToVectorsOffset(poly, offset) {
@@ -1487,6 +1504,8 @@ function writeTurtleTransform(ts) {
   return result.join(' ');
 }
 
+function modulo(n, m) { return (+n % (m = +m) + m) % m; }
+
 function radiansToDegrees(r) {
   var d = r * 180 / Math.PI;
   if (d > 180) { d -= 360; }
@@ -1494,7 +1513,7 @@ function radiansToDegrees(r) {
 }
 
 function convertToRadians(d) {
-  return d * Math.PI / 180;
+  return d / 180 * Math.PI;
 }
 
 function normalizeRotation(x) {
@@ -1569,7 +1588,7 @@ function createSurfaceAndField() {
       pointerEvents: 'none',
       overflow: 'hidden'
     }).addClass('turtlefield');
-  $(field).attr('id', 'field')
+  $(field).attr('id', 'origin')
     .css({
       position: 'absolute',
       display: 'inline-block',
@@ -1580,7 +1599,10 @@ function createSurfaceAndField() {
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: "0px 0px",
-      pointerEvents: 'all'
+      pointerEvents: 'all',
+      // Setting turtleSpeed to Infinity by default allows
+      // moving the origin instantly without sync.
+      turtleSpeed: Infinity
     }).appendTo(surface);
   globalDrawing.surface = surface;
   globalDrawing.field = field;
@@ -1776,6 +1798,7 @@ function getTurtleData(elem) {
       drawOnCanvas: null,
       quickpagexy: null,
       quickhomeorigin: null,
+      oldscale: 1,
       instrument: null,
       stream: null
     });
@@ -2019,6 +2042,7 @@ function addToPathList(pathList, point) {
 }
 
 function flushPenState(elem, state, corner) {
+  clearChildQuickLocations(elem);
   if (!state) {
     // Default is no pen and no path, so nothing to do.
     return;
@@ -2056,22 +2080,22 @@ function flushPenState(elem, state, corner) {
     addToPathList(corners[0], center);
   }
   if (style.savePath) return;
-  // Add to tracing path, and trace it righ away.
+  // Add to tracing path, and trace it right away.
   addToPathList(path[0], center);
-  var ts = readTurtleTransform(elem, true);
+  var scale = drawingScale(elem);
   // Last argument 2 means that the last two points are saved, which
   // allows us to draw corner miters and also avoid 'butt' lineCap gaps.
-  drawAndClearPath(getDrawOnCanvas(state), state.path, style, ts.sx, 2);
+  drawAndClearPath(getDrawOnCanvas(state), state.path, style, scale, 2);
 }
 
 function endAndFillPenPath(elem, style) {
-  var ts = readTurtleTransform(elem, true),
-      state = getTurtleData(elem);
+  var state = getTurtleData(elem);
   if (state.style) {
     // Apply a default style.
     style = $.extend({}, state.style, style);
   }
-  drawAndClearPath(getDrawOnCanvas(state), state.corners, style, ts.sx, 1);
+  var scale = drawingScale(elem);
+  drawAndClearPath(getDrawOnCanvas(state), state.corners, style, scale, 1);
 }
 
 function clearField(arg) {
@@ -2237,8 +2261,9 @@ function applyImg(sel, img, cb) {
 function doQuickMove(elem, distance, sideways) {
   var ts = readTurtleTransform(elem, true),
       r = ts && convertToRadians(ts.rot),
-      scaledDistance = ts && (distance * ts.sy),
-      scaledSideways = ts && ((sideways || 0) * ts.sy),
+      sy = elemOldScale(elem),
+      scaledDistance = ts && (distance * sy),
+      scaledSideways = ts && ((sideways || 0) * sy),
       dy = -Math.cos(r) * scaledDistance,
       dx = Math.sin(r) * scaledDistance,
       state = $.data(elem, 'turtleData'),
@@ -2285,13 +2310,14 @@ function doQuickRotate(elem, degrees) {
 }
 
 function displacedPosition(elem, distance, sideways) {
-  var ts = readTurtleTransform(elem, true),
-      r = ts && convertToRadians(ts.rot),
-      scaledDistance = ts && (distance * ts.sy),
-      scaledSideways = ts && ((sideways || 0) * ts.sy),
+  var ts = readTurtleTransform(elem, true);
+  if (!ts) { return; }
+  var s = elemOldScale(elem),
+      r = convertToRadians(ts.rot),
+      scaledDistance = distance * s,
+      scaledSideways = (sideways || 0) * s,
       dy = -Math.cos(r) * scaledDistance,
       dx = Math.sin(r) * scaledDistance;
-  if (!ts) { return; }
   if (scaledSideways) {
     dy += Math.sin(r) * scaledSideways;
     dx += Math.cos(r) * scaledSideways;
@@ -2362,16 +2388,18 @@ function makeTurtleForwardHook() {
       if (ts) {
         var r = convertToRadians(ts.rot),
             c = Math.cos(r),
-            s = Math.sin(r);
+            s = Math.sin(r),
+            sy = elemOldScale(elem);
         return cssNum(((ts.tx + middle[0]) * s - (ts.ty + middle[1]) * c)
-            / ts.sy) + 'px';
+            / sy) + 'px';
       }
     },
     set: function(elem, value) {
       var ts = readTurtleTransform(elem, true) ||
               {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
           middle = readTransformOrigin(elem),
-          v = parseFloat(value) * ts.sy,
+          sy = elemOldScale(elem),
+          v = parseFloat(value) * sy,
           r = convertToRadians(ts.rot),
           c = Math.cos(r),
           s = Math.sin(r),
@@ -2417,6 +2445,8 @@ function makeTurtleHook(prop, normalize, unit, displace) {
           };
         }
         flushPenState(elem, state);
+      } else {
+        clearChildQuickLocations(elem);
       }
     }
   };
@@ -2519,7 +2549,8 @@ function maybeArcRotation(end, elem, ts, opt) {
     return tradius === 0 ? normalizeRotation(end) : end;
   }
   var tracing = (state && state.style && state.down),
-      turnradius = tradius * ts.sy, a;
+      sy = (state && state.oldscale) ? ts.sy : 1,
+      turnradius = tradius * sy, a;
   if (tracing) {
     a = addArcBezierPaths(
       state.path[0],                            // path to add to
@@ -2609,6 +2640,8 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
           };
         }
         flushPenState(elem, state);
+      } else {
+        clearChildQuickLocations(elem);
       }
     }
   };
@@ -3695,7 +3728,7 @@ function forwardBodyMouseEventsIfNeeded() {
           var warn = $.turtle.nowarn;
           $.turtle.nowarn = true;
           var sel = $(globalDrawing.surface)
-              .find('.turtle').within('touch', e).eq(0);
+              .find('.turtle,.turtlelabel').within('touch', e).eq(0);
           $.turtle.nowarn = warn;
           if (sel.length === 1) {
             // Erase portions of the event that are wrong for the turtle.
@@ -5728,6 +5761,7 @@ function canElementMoveInstantly(elem) {
   // moving at speed Infinity.
   var atime;
   return (elem && $.queue(elem).length == 0 &&
+      !elem.parentElement.style.transform &&
       ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0));
 }
 
@@ -6000,7 +6034,7 @@ function rtlt(cc, degrees, radius) {
               oldPos,
               oldTs.rot,
               oldTs.rot + (left ? -degrees : degrees),
-              newRadius * oldTs.sy,
+              newRadius * (state.oldscale ? oldTs.sy : 1),
               oldTransform);
           });
         })();
@@ -6045,7 +6079,7 @@ function fdbk(cc, amount) {
 // CARTESIAN MOVEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////
 
-function move(cc, x, y) {
+function slide(cc, x, y) {
   if ($.isArray(x)) {
     y = x[1];
     x = x[0];
@@ -6151,9 +6185,58 @@ function makejump(move) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// SCALING FUNCTIONS
+// Support for old-fashioned scaling and new.
+//////////////////////////////////////////////////////////////////////////
+
+function elemOldScale(elem) {
+  var state = $.data(elem, 'turtleData');
+  return state && (state.oldscale != null) ? state.oldscale : 1;
+}
+
+function scaleCmd(cc, valx, valy) {
+  growImpl.call(this, true, cc, valx, valy);
+}
+
+function grow(cc, valx, valy) {
+  growImpl.call(this, false, cc, valx, valy);
+}
+
+function growImpl(oldscale, cc, valx, valy) {
+  if (valy === undefined) { valy = valx; }
+  // Disallow scaling to zero using this method.
+  if (!valx || !valy) { valx = valy = 1; }
+  var intick = insidetick;
+  this.plan(function(j, elem) {
+    if (oldscale) {
+      getTurtleData(elem).oldscale *= valy;
+    }
+    cc.appear(j);
+    if ($.isWindow(elem) || elem.nodeType === 9) {
+      cc.resolve(j);
+      return;
+    }
+    var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
+    if (c.length === 1) { c.push(c[0]); }
+    c[0] *= valx;
+    c[1] *= valy;
+    this.animate({turtleScale: $.map(c, cssNum).join(' ')},
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
+  });
+  return this;
+}
+
+//////////////////////////////////////////////////////////////////////////
 // DOT AND BOX FUNCTIONS
 // Support for animated drawing of dots and boxes.
 //////////////////////////////////////////////////////////////////////////
+
+function drawingScale(elem, oldscale) {
+  var totalParentTransform = totalTransform2x2(elem.parentElement),
+      simple = isone2x2(totalParentTransform),
+      scale = simple ? 1 : decomposeSVD(totalParentTransform)[1];
+  return scale * elemOldScale(elem);
+}
 
 function animatedDotCommand(fillShape) {
   var intick = insidetick;
@@ -6178,8 +6261,8 @@ function animatedDotCommand(fillShape) {
           ts = readTurtleTransform(elem, true),
           ps = parsePenStyle(style, 'fillStyle'),
           drawOnCanvas = getDrawOnCanvas(state),
-          // Scale by sx.  (TODO: consider parent transforms.)
-          targetDiam = diameter * ts.sx,
+          sx = drawingScale(elem),
+          targetDiam = diameter * sx,
           animDiam = Math.max(0, targetDiam - 2),
           finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
           hasAlpha = /rgba|hsla/.test(ps.fillStyle);
@@ -6358,9 +6441,9 @@ var turtlefn = {
   bk: wrapcommand('bk', 1,
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"], fdbk),
-  move: wrapcommand('move', 1,
+  slide: wrapcommand('slide', 1,
   ["<u>move(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>move 50, 100</mark>"], move),
+      "<mark>slide 50, 100</mark>"], slide),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
       "<mark>movexy 50, 100</mark>"], movexy),
@@ -6371,8 +6454,8 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
-  ["<u>jump(x, y)</u> Move without drawing (compare to <u>move</u>): " +
-      "<mark>jump 0, 50</mark>"], makejump(move)),
+  ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(slide)),
   jumpxy: wrapcommand('jumpxy', 1,
   ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
       "<mark>jump 0, 50</mark>"], makejump(movexy)),
@@ -6677,27 +6760,10 @@ var turtlefn = {
   }),
   scale: wrapcommand('scale', 1,
   ["<u>scale(factor)</u> Scales all motion up or down by a factor. " +
-      "To double all drawing: <mark>scale(2)</mark>"],
-  function scale(cc, valx, valy) {
-    if (valy === undefined) { valy = valx; }
-    // Disallow scaling to zero using this method.
-    if (!valx || !valy) { valx = valy = 1; }
-    var intick = insidetick;
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      if ($.isWindow(elem) || elem.nodeType === 9) {
-        cc.resolve(j);
-        return;
-      }
-      var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
-      if (c.length === 1) { c.push(c[0]); }
-      c[0] *= valx;
-      c[1] *= valy;
-      this.animate({turtleScale: $.map(c, cssNum).join(' ')},
-            animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "To double all drawing: <mark>scale(2)</mark>"], scaleCmd),
+  grow: wrapcommand('grow', 1,
+  ["<u>grow(factor)</u> Changes the size of the element by a factor. " +
+      "To double the size: <mark>grow(2)</mark>"], grow),
   pause: wrapcommand('pause', 1,
   ["<u>pause(seconds)</u> Pauses some seconds before proceeding. " +
       "<mark>fd 100; pause 2.5; bk 100</mark>",
@@ -7025,7 +7091,7 @@ var turtlefn = {
     var intick = insidetick;
     return this.plan(function(j, elem) {
       cc.appear(j);
-      var applyStyles = {padding: 8},
+      var applyStyles = {},
           currentStyles = this.prop('style');
       // For defaults, copy inline styles of the turtle itself except for
       // properties in the following list (these are the properties used to
@@ -7050,6 +7116,10 @@ var turtlefn = {
       // Place the label on the screen using the figured styles.
       var out = prepareOutput(html, 'label').result.css(applyStyles)
           .addClass('turtlelabel').appendTo(getTurtleField());
+      // If the output has a turtleinput, then forward mouse events.
+      if (out.hasClass('turtleinput') || out.find('.turtleinput').length) {
+        mouseSetupHook.apply(out.get(0));
+      }
       if (styles && 'id' in styles) {
         out.attr('id', styles.id);
       }
@@ -7603,7 +7673,7 @@ function deprecate(map, oldname, newname) {
     __extends(map[oldname], map[newname]);
   }
 }
-deprecate(turtlefn, 'slide', 'move');
+deprecate(turtlefn, 'move', 'slide');
 deprecate(turtlefn, 'direct', 'plan');
 deprecate(turtlefn, 'enclosedby', 'inside');
 deprecate(turtlefn, 'bearing', 'direction');
@@ -8055,41 +8125,129 @@ var dollar_turtle_methods = {
   ["<u>abs(x)</u> The absolute value of x. " +
       "<mark>see abs -5</mark>"], Math.abs),
   acos: wrapraw('acos',
-  ["<u>acos(degreees)</u> Trigonometric arccosine, in degrees. " +
-      "<mark>see acos 0.5</mark>"],
-  function acos(x) { return roundEpsilon(Math.acos(x) * 180 / Math.PI); }
-  ),
+  ["<u>acos(x)</u> Trigonometric arccosine, in radians. " +
+      "<mark>see acos 0.5</mark>"], Math.acos),
   asin: wrapraw('asin',
-  ["<u>asin(degreees)</u> Trigonometric arcsine, in degrees. " +
-      "<mark>see asin 0.5</mark>"],
-  function asin(x) { return roundEpsilon(Math.asin(x) * 180 / Math.PI); }
-  ),
+  ["<u>asin(y)</u> Trigonometric arcsine, in radians. " +
+      "<mark>see asin 0.5</mark>"], Math.asin),
   atan: wrapraw('atan',
-  ["<u>atan(degreees)</u> Trigonometric arctangent, in degrees. " +
+  ["<u>atan(y, x = 1)</u> Trigonometric arctangent, in radians. " +
       "<mark>see atan 0.5</mark>"],
-  function atan(x) { return roundEpsilon(Math.atan(x) * 180 / Math.PI); }
+  function atan(y, x) { return Math.atan2(y, (x == undefined) ? 1 : x); }
   ),
-  atan2: wrapraw('atan2',
-  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, " +
-      "in degrees. <mark>see atan -1, 0</mark>"],
-  function atan2(x, y) {
-    return roundEpsilon(Math.atan2(x, y) * 180 / Math.PI);
-  }),
   cos: wrapraw('cos',
-  ["<u>cos(degreees)</u> Trigonometric cosine, in degrees. " +
-      "<mark>see cos 45</mark>"],
-  function cos(x) { return roundEpsilon(Math.cos((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>cos(radians)</u> Trigonometric cosine, in radians. " +
+      "<mark>see cos 0</mark>"], Math.cos),
   sin: wrapraw('sin',
-  ["<u>sin(degreees)</u> Trigonometric sine, in degrees. " +
-      "<mark>see sin 45</mark>"],
-  function sin(x) { return roundEpsilon(Math.sin((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>sin(radians)</u> Trigonometric sine, in radians. " +
+      "<mark>see sin 0</mark>"], Math.sin),
   tan: wrapraw('tan',
-  ["<u>tan(degreees)</u> Trigonometric tangent, in degrees. " +
-      "<mark>see tan 45</mark>"],
-  function tan(x) { return roundEpsilon(Math.tan((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>tan(radians)</u> Trigonometric tangent, in radians. " +
+      "<mark>see tan 0</mark>"], Math.tan),
+
+  // For degree versions of trig functions, make sure we return exact
+  // results when possible. The set of values we have to consider is
+  // fortunately very limited. See "Rational Values of Trigonometric
+  // Functions." http://www.jstor.org/stable/2304540
+
+  acosd: wrapraw('acosd',
+  ["<u>acosd(x)</u> Trigonometric arccosine, in degrees. " +
+      "<mark>see acosd 0.5</mark>"],
+   function acosd(x) {
+     switch (x) {
+       case   1: return   0;
+       case  .5: return  60;
+       case   0: return  90;
+       case -.5: return 120;
+       case  -1: return 180;
+     }
+     return Math.acos(x) * 180 / Math.PI;
+  }),
+  asind: wrapraw('asind',
+  ["<u>asind(x)</u> Trigonometric arcsine, in degrees. " +
+      "<mark>see asind 0.5</mark>"],
+  function asind(x) {
+    switch (x) {
+      case   1: return  90;
+      case  .5: return  30;
+      case   0: return   0;
+      case -.5: return -30;
+      case  -1: return -90;
+    }
+    return Math.asin(x) * 180 / Math.PI;
+  }),
+  atand: wrapraw('atand',
+  ["<u>atand(y, x = 1)</u> Trigonometric arctangent, " +
+      "in degrees. <mark>see atand -1, 0/mark>"],
+  function atand(y, x) {
+    if (x == undefined) { x = 1; }
+    if (y == 0) {
+      return (x == 0) ? NaN : ((x > 0) ? 0 : 180);
+    } else if (x == 0) {
+      return (y > 0) ? Infinity : -Infinity;
+    } else if (abs(y) == abs(x)) {
+      return (y > 0) ? ((x > 0) ? 45 : 135) :
+                       ((x > 0) ? -45 : -135);
+    }
+    return Math.atan2(y, x) * 180 / Math.PI;
+  }),
+  cosd: wrapraw('cosd',
+  ["<u>cosd(degrees)</u> Trigonometric cosine, in degrees. " +
+      "<mark>see cosd 45</mark>"],
+  function cosd(x) {
+    x = modulo(x, 360);
+    if (x % 30 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return   1;
+        case  60: return  .5;
+        case  90: return   0;
+        case 120: return -.5;
+        case 180: return  -1;
+        case 240: return -.5;
+        case 270: return   0;
+        case 300: return  .5;
+      }
+    }
+    return Math.cos(x / 180 * Math.PI);
+  }),
+  sind: wrapraw('sind',
+  ["<u>sind(degrees)</u> Trigonometric sine, in degrees. " +
+      "<mark>see sind 45</mark>"],
+  function sind(x) {
+    x = modulo(x, 360);
+    if (x % 30 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return   0;
+        case  30: return  .5;
+        case  90: return   1;
+        case 150: return  .5;
+        case 180: return   0;
+        case 210: return -.5;
+        case 270: return  -1;
+        case 330: return -.5;
+      }
+    }
+    return Math.sin(x / 180 * Math.PI);
+  }),
+  tand: wrapraw('tand',
+  ["<u>tand(degrees)</u> Trigonometric tangent, in degrees. " +
+      "<mark>see tand 45</mark>"],
+  function tand(x) {
+    x = modulo(x, 360);
+    if (x % 45 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return 0;
+        case  45: return 1;
+        case  90: return Infinity;
+        case 135: return -1;
+        case 180: return 0;
+        case 225: return 1;
+        case 270: return -Infinity;
+        case 315: return -1
+      }
+    }
+    return Math.tan(x / 180 * Math.PI);
+  }),
   ceil: wrapraw('ceil',
   ["<u>ceil(x)</u> Round up. " +
       "<mark>see ceil 1.9</mark>"], Math.ceil),
@@ -8311,7 +8469,9 @@ $.turtle = function turtle(id, options) {
       global.onerror = see;
     }
     // Set up an alias.
-    global.log = see;
+    global.debug = see;
+    // 'debug' should be used now instead of log
+    deprecate(global, 'log', 'debug');
   }
   // Copy $.turtle.* functions into global namespace.
   if (!('functions' in options) || options.functions) {
@@ -9256,6 +9416,8 @@ function prepareOutput(html, tag) {
   if (html === undefined || html === null) {
     // Make empty line when no arguments.
     return {result: $(prefix + '<br>' + suffix)};
+  } else if (html.jquery || (html instanceof Element && (html = $(html)))) {
+    return {result: html};
   } else {
     var wrapped = false, result = null;
     html = '' + html;
@@ -10488,7 +10650,7 @@ function stickscroll() {
   }
 }
 function flushqueue() {
-  var elt = aselement(logelement, null);
+  var elt = aselement(logelement, null), child;
   if (elt && elt.appendChild && queue.length) {
     initlogcss();
     var temp = global.document.createElement('samp');
@@ -10504,7 +10666,7 @@ function flushqueue() {
     if (panel == 'auto') {
       startinitpanel();
     }
-    retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
+    retrying = setTimeout(function() { retrying = null; flushqueue(); }, 100);
   } else if (retrying && !queue.length) {
     clearTimeout(retrying);
     retrying = null;
@@ -10603,6 +10765,11 @@ function initconsolelog() {
       var _log = global.console._log = global.console.log;
       global.console.log = function log() {
         _log.apply(this, arguments);
+        see.apply(this, arguments);
+      }
+      var _debug = global.console._debug = global.console.debug;
+      global.console.debug = function debug() {
+        _debug.apply(this, arguments);
         see.apply(this, arguments);
       }
     }

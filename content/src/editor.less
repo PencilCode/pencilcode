@@ -416,7 +416,7 @@ body.modal #overlay {
   height: 28px;
   width: 100%;
   background: #1e90ff;
-  padding: 0 12px;
+  padding: 0px;
   color: #87ceeb;
   letter-spacing: 2px;
   border-left: 1px solid #fff;
@@ -866,6 +866,11 @@ body#pencildoc #diigolet-csm {
   height: 100%;
   padding: 10px;
   overflow: auto;
+  /*transition: padding 0.3s;*/
+}
+
+.directory-searchable{
+  padding-top: 20px;
 }
 
 .directory .column {
@@ -1443,4 +1448,60 @@ body#pencildoc #diigolet-csm {
 
 .droplet-palette-group-header-selected.quantumdeeporange {
   background-color: #FFAB91
+}
+
+.search-file {
+  position: relative;
+  color: #aaa;
+  font-size: 16px;
+  z-index: 3;
+}
+
+.search-results{
+    padding-top: 30px;
+}
+
+.search-file input[type="text"] {
+  display: block;
+  margin: 0;
+  width: 100%;
+  font-family: sans-serif;
+  font-size: 10px;
+  box-shadow: none;
+  border-radius: none;
+  padding: 10px;
+  border: none;
+  border-bottom: solid 2px #c9c9c9;
+  transition: border 0.3s;
+  color: rgb(169, 169, 169);
+  text-indent: 32px;
+}
+
+.search-file input[type="text"]:focus {
+  border-bottom: solid 2px dodgerblue;
+  font-size: 15px;
+  outline: none;
+  color: dodgerblue;
+  padding: 7px;
+}
+
+.search-file .fa-search { 
+  position: absolute;
+  top: 7px;
+  left: 10px;
+}
+
+.search-file input[type="text"]:focus + .fa-search {
+  color:dodgerblue;
+}
+
+.thick-bar{
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.blue-bar-icons-list{
+  margin: 0px;
+  list-style: none;
+  display: inline-flex;
 }
