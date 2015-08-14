@@ -88,12 +88,12 @@
     "jquery": {
       "exports": "$"
     },
-    "tooltipster": {
-      "exports": "jQuery.fn.tooltipster",
-      "depends": ["jquery:jQuery"]
-    },
     "see": {
       "exports": "see",
+      "depends": ["jquery:jQuery"]
+    },
+    "tooltipster": {
+      "exports": "jQuery.fn.tooltipster",
       "depends": ["jquery:jQuery"]
     }
   }
