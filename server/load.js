@@ -4,7 +4,7 @@ var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
 var filemeta = require('./filemeta');
-var DirCache = require('./dircache').DirCache;
+var DirLoader = require('./dirloader').DirLoader;
 
 var globalDirCache = {};
 
@@ -20,7 +20,7 @@ var MAX_DIR_ENTRIES = 600;
 function getDirCache(dir) {
   var dircache = globalDirCache[dir]
   if (!dircache) {
-    dircache = new DirCache(dir);
+    dircache = new DirLoader(dir);
     globalDirCache[dir] = dircache;
   }
   return dircache;
@@ -132,13 +132,18 @@ exports.handleLoad = function(req, res, app, format) {
           }
         }
 
-        var list = buildDirList(absfile, fs.readdirSync(absfile).sort());
+        var dirloader = new DirLoader(absfile);
+        dirloader.rebuild(function(ok) {
+          var list = dirloader.readPrefix(prefix, count);
+          var jsonRet = {
+            directory: '/' + filename,
+            list: list,
+            auth: haskey
+          };
 
-        var jsonRet =
-          {'directory': '/' + filename, 'list': list, 'auth': haskey};
-
-        res.set('Cache-Control', 'must-revalidate');
-        res.jsonp(jsonRet);
+          res.set('Cache-Control', 'must-revalidate');
+          res.jsonp(jsonRet);
+        });
         return;
       }
 
