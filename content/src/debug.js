@@ -11,7 +11,6 @@ var $         = require('jquery'),
     util      = require('util');
 
 eval(see.scope('debug'));
-resetDebugState();
 var targetWindow = null;       // window object of the frame being debugged.
 var untrackedVariables = [];   // list of (mostly jquery-turtle) globals not to be tracked.
 var cachedParseStack = {};     // parsed stack traces for currently-running code.
@@ -20,6 +19,7 @@ var stopButtonShown = 0;       // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;   // v3 source map for currently-running instrumented code.
 var sliderTimer = null;        // detect if there is existing timer
 var debugMode = true;          // user has debug mode turned on
+resetDebugState();             // reset debugging state
 
 // verification of complexity of stuck loop
 var stuckComplexity = {
@@ -122,9 +122,7 @@ var debug = window.ide = {
       view.publish('error', [simpleData]);
     }
   },
-
   stopButton: stopButton,
-
   getEditorText: function() {
     var doc = view.getPaneEditorData(view.paneid('left'));
     if (doc) {
@@ -145,7 +143,6 @@ var debug = window.ide = {
   },
   trace: function(event, data) { 
     detectStuckProgram();
-
     if (event.type === 'before' || event.type === 'enter') {
       currentDebugId += 1;
       var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", 
@@ -160,7 +157,7 @@ var debug = window.ide = {
       }
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
-      if (!debugRecordsByLineNo[lineno]){
+      if (!debugRecordsByLineNo[lineno]) {
         debugRecordsByLineNo[lineno] = currentDebugId;
       }
       updateVariables(event.location.first_line, currentDebugId, event.vars);
@@ -186,7 +183,6 @@ function setupSlider() {
     sliderTimer = null;
   }
   sliderTime = setTimeout(function() {view.createSlider(linenoList)}, 1000);
- 
 }
 
 
@@ -353,21 +349,19 @@ var showPopupErrorMessage = function (msg) {
   center.innerHTML = msg;
 }
 
-function reportSeeeval(method, debugId, length, coordId, elem, args){
+function reportSeeeval(method, debugId, length, coordId, elem, args) {
   currentDebugId += 1;
   record = {seeeval: true};
   debugRecordsByDebugId[currentDebugId] = record;
 }
 
-function reportEnter(method, debugId, length, coordId, elem, args){
+function reportEnter(method, debugId, length, coordId, elem, args) {
   stuckComplexity.calls += 1;
   var record = debugRecordsByDebugId[debugId];
   record.animated = false;
 }
 
-
-function reportAppear(method, debugId, length, coordId, elem, args){
-
+function reportAppear(method, debugId, length, coordId, elem, args) {
   if (!programChanged) {
     var record = debugRecordsByDebugId[debugId];
     if (record) {
@@ -384,7 +378,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
         var index = record.eventIndex;
         var line = traceEvents[index].location.first_line;
         var appear_location = traceEvents[index].location;
-        var tracedIndex = -1; 
+        var tracedIndex = -1;
 
         // trace lines that are not animation.
         while (currentRecordID < debugId) {
@@ -419,13 +413,13 @@ function reportAppear(method, debugId, length, coordId, elem, args){
           untraceLine(tracedIndex);
           tracedIndex = -1;
         }
-        if (line < prevLine && index == prevIndex + 1){  
+        if (line < prevLine && index == prevIndex + 1) {  
           update_arrows(prevIndex, index);
         }
         traceLine(index);
         currentRecordID = debugId;
         record.startCoords[coordId] = collectCoords(elem);
-        if (debugMode){  
+        if (debugMode) {  
           showVariables(debugId);
         }
       }
@@ -433,37 +427,37 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   }
 }
 
-function reportResolve(method, debugId, length, coordId, elem, args){
+function reportResolve(method, debugId, length, coordId, elem, args) {
   
   var record = debugRecordsByDebugId[debugId];
   if (record) {
-    if (!record.seeeval){
+    if (!record.seeeval) {
       view.arrow(view.paneid('left'), arrows, -1, false);
       record.method = method;
       record.animated = true;
       var index = record.eventIndex;
       var line = traceEvents[index].location.first_line
-      if (index > 0){
+      if (index > 0) {
         var prevLine = traceEvents[index -1].location.first_line;
       } else{
         var prevLine = -1;
       }
       record.endCoords[coordId] = collectCoords(elem);
       untraceLine(index);
-    }          
+    }
   }
 }
 
-function end_program(){
+function end_program() {
   //goes back and traces unanimated lines at the end of programs.
-  var currentLine = -1; 
+  var currentLine = -1;
   var tracedIndex = -1;
   var justEnded = (currentRecordID <= currentDebugId);
   var prevLine =  -1;
-  if (traceEvents[prevIndex]){
-    prevLine = traceEvents[prevIndex].location.first_line; 
-  } 
-  while (currentRecordID <= currentDebugId){
+  if (traceEvents[prevIndex]) {
+    prevLine = traceEvents[prevIndex].location.first_line;
+  }
+  while (currentRecordID <= currentDebugId) {
 
     var currentRecord = debugRecordsByDebugId[currentRecordID];
     var currentIndex = currentRecord.eventIndex;
@@ -478,7 +472,7 @@ function end_program(){
       var prevLine = -1;
     }
     
-    if (tracedIndex != -1){
+    if (tracedIndex != -1) {
         untraceLine(tracedIndex);
         tracedIndex = -1;
     }
@@ -491,7 +485,7 @@ function end_program(){
     prevIndex = currentIndex;
     currentRecordID += 1;
   }
-  if (tracedIndex != -1){
+  if (tracedIndex != -1) {
         untraceLine(tracedIndex);
         view.arrow(view.paneid('left'), arrows, -1, false);
         tracedIndex = -1;
@@ -574,7 +568,7 @@ function traceLine(lineIndex) {
     var prevLine = -1;
     var block_mode = view.getPaneEditorBlockMode(view.paneid("left"));
    
-    if (traceEvents[lineIndex-1]){
+    if (traceEvents[lineIndex-1]) {
       prevLine = traceEvents[lineIndex-1].location.first_line;
     }
     if (debugMode) { 
@@ -596,11 +590,11 @@ function untraceLine(lineIndex) {
   var prevLine = -1;
   var block_mode = view.getPaneEditorBlockMode(view.paneid("left"));
  
-  if (traceEvents[lineIndex-1]){
+  if (traceEvents[lineIndex-1]) {
     prevLine = traceEvents[lineIndex-1].location.first_line;
   }
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
-  if (!block_mode){
+  if (!block_mode) {
     view.clearPaneEditorLine(view.paneid('left'), prevLine, 'debugtraceprev');
   }
 }
@@ -711,7 +705,7 @@ view.on('parseerror', function(pane, err) {
     var line = err.loc.line + 1;
     view.markPaneEditorLine(pane, line, 'debugerror');
   }
-  if (err.message){
+  if (err.message) {
     showDebugMessage(
       "<p>Oops, the computer could not show blocks." +
       "<p>It says:" + err.message.replace(/^.*Error:/i, ''));
@@ -728,7 +722,7 @@ view.on('parseerror', function(pane, err) {
     var line = err.loc.line + 1;
     view.markPaneEditorLine(pane, line, 'debugerror');
   }
-  if (err.message){
+  if (err.message) {
     showDebugMessage(
       "<p>Oops, the computer could not show blocks." +
       "<p>It says:" + err.message.replace(/^.*Error:/i, ''));
@@ -741,7 +735,7 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
-  if (debugRecordsByLineNo[lineno]){
+  if (debugRecordsByLineNo[lineno]) {
     var debugId = debugRecordsByLineNo[lineno]
     var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
     if (debugMode) {
@@ -775,7 +769,7 @@ view.on('icehover', function(pane, ev) {
     var debugId = debugRecordsByLineNo[lineno];
     displayProtractorForRecord(debugRecordsByDebugId[debugId]);
     var eventIndex = debugRecordsByDebugId[debugId].eventIndex;
-    if (debugMode){  
+    if (debugMode) {  
       view.arrow(view.paneid('left'), arrows, eventIndex, true);
     }
   }
@@ -917,7 +911,7 @@ view.on('stop', function() {
   stopPollingWindow();
 });
 
-view.on('delta', function(){ 
+view.on('delta', function() { 
   $(".arrow").remove();
   view.removeVariables();
   programChanged = true;
@@ -943,7 +937,7 @@ $('.panetitle').on('click', '.debugtoggle', function () {
 
 // respond to manual clicks within the slider
 function sliderResponse (event, ui) {
-  slidercurrLine = ui.value; 
+  slidercurrLine = ui.value;
   sliderToggle();
 }
 
