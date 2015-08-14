@@ -13,27 +13,33 @@ function curvedVertical(x1, y1, x2, y2) {
   x2 = parseFloat(x2);
   y2 = parseFloat(y2);
   var radius = Math.abs(y1 - y2);
-  return 'M'+ x1 + "," + y1 + " " + 'A'+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
+  return "M"+ x1 + "," + y1 + " " + "A"+ radius + "," + radius + " 1 0,1 " + x2 + "," + y2;
 };
 
-function drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode){
+function redrawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode) {
+
+	var path_data = curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val 
+    			+ offset_left, (endcoords.pageY - offset_top)); 
+	$("#drawnArrow").attr("d", path_data);
+}
+
+function drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode) {
   /* Given the coordinates and offsets, arrows are drawn with an svg path element that creates an 
   upward left-facing curve to the right of the blocks/text code from the previous line of code that ran 
   to the current line that's running. Note that arrows are drawn on the condition that there's an out of order
   flow in lines of code. i.e., line 5 runs and then line 2 runs. */
 
-
   if (show_fade) {
-    arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val 
+    arrowtext = "<path id='drawnArrow' stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val 
     			+ offset_left, (endcoords.pageY - offset_top)) 
-                + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF;fill:none; stroke-width:4' position='relative'/> \ "
-  } else{
-    arrowtext = "<path stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val
+                + "' marker-start='url(#arrowhead2)' style='stroke:#8EC8FF;fill:none; stroke-width:4';position:'fixed'/> \ "
+  } else {
+    arrowtext = "<path id='drawnArrow' stroke-linecap='square' d='" + curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val
     			 + offset_left, (endcoords.pageY - offset_top)) 
-                 + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:4' position='relative'/> \ "
+                 + "' marker-start='url(#arrowhead1)' style='stroke:dodgerblue; fill:none; stroke-width:4'; position:'fixed'/> \ "
   } 
 
-  var text = "<svg class= 'arrow' width=" 
+  var text = "<svg class= 'arrow' id='arrow' width=" 
             + $(".editor").width() + " height=" + $(".editor").height() 
             + "  viewBox='0 0 " + $('.editor').width() +" " + $('.editor').height() +"'> \
             <marker id='arrowhead1' markerWidth='10' markerHeight='10' orient='auto-start-reverse'\
@@ -56,8 +62,8 @@ function drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset
   if (block_mode) {
     $("div[id^='editor_'] .droplet-main-scroller").append(div);
   } else {
-    $("div[id^='editor_']").append(div);
+    $("div[id^='editor_'] ").append(div);
   }
 };
 
-module.exports = {drawArrow : drawArrow};
+module.exports = {drawArrow : drawArrow, redrawArrow : redrawArrow};

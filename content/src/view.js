@@ -3319,11 +3319,7 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
   var firstAfterLoc = {};
   var secondAfterLoc = {};
 
-  var block_mode = null;
-  if (pane){
-    block_mode = true;
-    if(!getPaneEditorBlockMode(pane)){block_mode = false;}
-  }
+  var block_mode = getPaneEditorBlockMode(pane);
 
   $(".arrow").remove();
 
@@ -3337,15 +3333,11 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
       secondAfterLoc = arrow_data["after"]["second"];
     }
   }
-
-  coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
-  coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
-
-  state.pane[pane].editor.getSession().on("changeScrollTop", function() {
-    $(".arrow").remove();
-    coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
-    coords_and_offsets(firstAfterLoc, secondAfterLoc, false, block_mode, pane, dropletEditor);
+  state.pane[pane].editor.getSession().on("changeScrollTop", function(e) {
+      console.log("scroll:" , e);
+      coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
   });
+  coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
 
 }
 
@@ -3382,9 +3374,12 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
         }
       }
     }
-    
-    arrows.drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
-  }  
+    if ($("#drawnArrow").length > 0) {
+      arrows.redrawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
+    } else {
+      arrows.drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
+    }
+  }
 }
 
 function showVar(pane, lineNum, name, value, argsString) {
@@ -3422,7 +3417,7 @@ function showVar(pane, lineNum, name, value, argsString) {
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
     if (blockMode) {
-      $("div[id^='editor_'] ").append(div); // .droplet-main-scroller
+      $("div[id^='editor_'] .droplet-main-scroller").append(div);  
     } else {
       $("div[id^='editor_']").append(div); 
     }
