@@ -13,7 +13,8 @@ var $                = require('jquery'),
     see              = require('see'),
     pencilTracer     = require('pencil-tracer'),
     icedCoffeeScript = require('iced-coffee-script'),
-    drawProtractor   = require('draw-protractor');
+    drawProtractor   = require('draw-protractor'),
+    cache          = require('cache');
 
 
 eval(see.scope('controller'));
@@ -417,17 +418,22 @@ view.on('fullscreen', function(pane) {
 view.on('bydate', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = true;
-    setDefaultDirSortingByDate(true);
-    renderDirectory('left');
+    var pane = paneatpos('left');
+    updateSortResults(pane);
   }
 });
 
 view.on('byname', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = false;
-    setDefaultDirSortingByDate(false);
-    renderDirectory('left');
+    var pane = paneatpos('left');
+    updateSortResults(pane);
   }
+});
+
+
+view.on('search', function(pane, search, cb) {
+  updateSearchResults(pane, search, cb);
 });
 
 view.on('dirty', function(pane) {
@@ -1461,6 +1467,8 @@ function doneWithFile(filename) {
         history.state.previous == newUrl) {
       history.back();
     } else {
+      // Strip any trailing / from the filename before using it for loading.
+      filename = filename.replace(/\/$/, '');
       loadFileIntoPosition('back', filename, true, true);
       rotateModelRight(true);
     }
@@ -2024,17 +2032,80 @@ function sortByDate(a, b) {
 }
 
 function sortByName(a, b) {
-  if (a.name < b.name) {
+  var aName = a.name.toLowerCase();
+  var bName = b.name.toLowerCase();
+  if (aName == bName) {
+     return  a < b ? -1 : a > b ? 1 : 0;
+  } else if (aName < bName) {
     return -1;
-  }
-  if (a.name > b.name) {
+  } else if (aName > bName) {
     return 1;
   }
   return 0;
 }
 
 function renderDirectory(position) {
+  cache.clear();
   var pane = paneatpos(position);
+  var mpp = model.pane[pane];
+  mpp.bydate = defaultDirSortingByDate();
+  var filename = mpp.filename;
+  view.setPaneLinkText(pane, getUpdatedLinksArray(pane), filename, model.ownername);
+  updateTopControls(false);
+}
+
+
+function updateSortResults(pane) {
+  view.setPaneLinks(pane,getUpdatedLinksArray(pane));
+  updateTopControls(false);
+}
+
+function updateSearchResults(pane, search, cb) {
+  search = search ? search.toLowerCase() : '';
+  var mpp = model.pane[pane];
+  var searchCacheName = 'search-keys-' + (!model.ownername ? '' : model.ownername);
+  var searchCacheKey= mpp.filename+"-"+search;
+  var cacheResults = cache.get(searchCacheName, searchCacheKey);
+  if (cacheResults) {
+    mpp.data.list=cacheResults.list;
+    updateViewAndCache(cacheResults.list, cacheResults.view);
+  } else {
+    if (!model.ownername) {
+      storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
+        if(m.list) {
+          mpp.data=m
+          updateViewAndCache(m.list, getUpdatedLinksArray(pane), cache);
+        }
+      });
+    } else {
+      if (!mpp.data.allLinks) {
+        mpp.data.allLinks=mpp.data.list;
+      }
+
+      var results = [];
+      var list = mpp.data.allLinks;
+
+      for (j = 0; j < list.length; j++) {
+        if (list[j].name.toLowerCase().indexOf(search) == 0) {
+          results.push(list[j]);
+        }
+      }
+      mpp.data.list = results;
+      updateViewAndCache(results, getUpdatedLinksArray(pane), cache);
+    }
+  }
+  
+  function updateViewAndCache(list, viewlist, cache) {
+    view.setPaneLinks(pane, viewlist);
+    cb && cb();
+    cache && cache.put(searchCacheName, searchCacheKey, {
+      list: list,
+      view: viewlist
+    });
+  }
+}
+
+function getUpdatedLinksArray(pane) {
   var mpp = model.pane[pane];
   var m = mpp.data;
   var filename = mpp.filename;
@@ -2096,8 +2167,7 @@ function renderDirectory(position) {
       });
     }
   }
-  view.setPaneLinkText(pane, links, filename, model.ownername);
-  updateTopControls(false);
+  return links;
 }
 
 // True if the doc contains nothing, or nothing but spaces.

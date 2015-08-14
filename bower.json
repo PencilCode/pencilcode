@@ -17,6 +17,7 @@
     "lodash": "latest",
     "p5": "https://github.com/processing/p5.js/releases/download/0.4.6/p5.js",
     "pencil-tracer": "yjerem/pencil-tracer#master",
+    "seedrandom": "latest",
     "socket.io-client": "#v1.2.0",
     "tooltipster": "latest",
     "zeroclipboard": "latest"
