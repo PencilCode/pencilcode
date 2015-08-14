@@ -240,57 +240,57 @@ function removeSlider() {
 }
 
 function initializeSlider (linenoList) {
-    // Create div element for scrubbber
-    var div = document.createElement('div');
-    div.className = 'scrubber';
-    var backDiv = document.createElement('div');
-    var forwardDiv = document.createElement('div');
-    var sliderDiv = document.createElement('div');
-    sliderDiv.id = 'slider';
-    // Append the newly created div for the slider to the panel at bottom
-    $(".scrubbermark").append(div);
-    $(".scrubber").append(sliderDiv);
+  // Create div element for scrubbber
+  var div = document.createElement('div');
+  div.className = 'scrubber';
+  var backDiv = document.createElement('div');
+  var forwardDiv = document.createElement('div');
+  var sliderDiv = document.createElement('div');
+  sliderDiv.id = 'slider';
+  // Append the newly created div for the slider to the panel at bottom
+  $(".scrubbermark").append(div);
+  $(".scrubber").append(sliderDiv);
 
-    backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
-    $(".scrubber").append(backDiv);
+  backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
+  $(".scrubber").append(backDiv);
 
-    forwardDiv = document.createElement('div');
-    forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
+  forwardDiv = document.createElement('div');
+  forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
     
-    $(".scrubber").append(forwardDiv); 
+  $(".scrubber").append(forwardDiv); 
 
-    $('#backButton').tooltipster({
-      content: "back a step"
-    });
-    $('#forwardButton').tooltipster({
-      content: "forward a step"
-    })
+  $('#backButton').tooltipster({
+    content: "back a step"
+  });
+  $('#forwardButton').tooltipster({
+    content: "forward a step"
+  })
 
-    var label = document.createElement('div');
-    label.id = 'label';
-    label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
-    $(".scrubber").append(label);
+  var label = document.createElement('div');
+  label.id = 'label';
+  label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
+  $(".scrubber").append(label);
 
-    // Jquery-ui slider implementation
-    $(function() {
-     $("#slider").slider({
-        min: 0,
-        max: linenoList.length - 1,
-        step: 1,
-        range: "min",
-        smooth: false
-        })
-        .slider("pips", {
-          first: "pip",
-          rest: "pip",
-          last: "pip"
-        })
-        .slider("float", { 
-          labels: linenoList,
-          prefix: "Line " 
+  // Jquery-ui slider implementation
+  $(function() {
+    $("#slider").slider({
+      min: 0,
+      max: linenoList.length - 1,
+      step: 1,
+      range: "min",
+      smooth: false
       })
-    });
-    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
+      .slider("pips", {
+        first: "pip",
+        rest: "pip",
+        last: "pip"
+      })
+      .slider("float", { 
+        labels: linenoList,
+        prefix: "Line " 
+    })
+  });
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
 }
 
 function createSlider(linenoList) {
@@ -481,15 +481,15 @@ function flashNotification(text, loading) {
     $('#notification').removeClass();
   }
   $('#notification').html(text).data('marker', marker).finish()
-      .css({opacity: 0,display: 'inline-block'})
-      .css({left:($(window).width() - $('#notification').outerWidth()) / 2})
-      .animate({opacity:1}, 200)
-      .queue(function(n) {
-    $('body').off('.flashNotification');
-    $(window).off('.flashNotification');
-    $('body').on('blur.flashNotification ' +
+    .css({opacity: 0,display: 'inline-block'})
+    .css({left:($(window).width() - $('#notification').outerWidth()) / 2})
+    .animate({opacity:1}, 200)
+    .queue(function(n) {
+      $('body').off('.flashNotification');
+      $(window).off('.flashNotification');
+      $('body').on('blur.flashNotification ' +
         'mousedown.flashNotification keydown.flashNotification', hidefunc);
-    $(window).on('resize.flashNotification ' +
+      $(window).on('resize.flashNotification ' +
         'popstate.flashNotification', hidefunc);
     n();
   });
@@ -3334,7 +3334,6 @@ function arrow(pane, arrow_list, traceEventNum, show_fade) {
     }
   }
   state.pane[pane].editor.getSession().on("changeScrollTop", function(e) {
-      console.log("scroll:" , e);
       coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
   });
   coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
@@ -3349,7 +3348,6 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
     if (block_mode){
       var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line - 1);
       var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
-      console.log("endBounds: ", endBounds);
       startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y - startBounds.bounds.height/2};
       endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y + endBounds.bounds.height/4};
       offset_top = startBounds.bounds.height - $(".editor").offset().top;

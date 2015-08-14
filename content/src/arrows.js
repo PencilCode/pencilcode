@@ -7,6 +7,9 @@ var $              = require('jquery');
 
 
 function curvedVertical(x1, y1, x2, y2) {
+  /* This function takes two coordinates and calculates an SVG path 
+  	 that is used for the curve of the arrows drawn on the code.
+  */
   y2 = y2 - 12;
   x1 = parseFloat(x1);
   y1 = parseFloat(y1);
@@ -17,7 +20,7 @@ function curvedVertical(x1, y1, x2, y2) {
 };
 
 function redrawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode) {
-
+	/* When the page scrolls we redraw arrows by recalculating the paths and reseting the path data*/
 	var path_data = curvedVertical(x_val + offset_left, (startcoords.pageY - offset_top), x_val 
     			+ offset_left, (endcoords.pageY - offset_top)); 
 	$("#drawnArrow").attr("d", path_data);
