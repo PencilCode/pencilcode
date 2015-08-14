@@ -91,11 +91,11 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-  on: function(tag, cb) { 
+  on: function(tag, cb) {
   if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
-    state.callbacks[tag].push(cb); 
+    state.callbacks[tag].push(cb);
   },
 
   // Simulate firing of an event
@@ -229,7 +229,7 @@ function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
 
-var sliderCreated = false; 
+var sliderCreated = false;
  
 function removeSlider() {
   $(".scrubber").remove();
@@ -257,7 +257,7 @@ function initializeSlider (linenoList) {
   forwardDiv = document.createElement('div');
   forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
     
-  $(".scrubber").append(forwardDiv); 
+  $(".scrubber").append(forwardDiv);
 
   $('#backButton').tooltipster({
     content: "back a step"
@@ -285,7 +285,7 @@ function initializeSlider (linenoList) {
         rest: "pip",
         last: "pip"
       })
-      .slider("float", { 
+      .slider("float", {
         labels: linenoList,
         prefix: "Line " 
     })
@@ -304,7 +304,7 @@ function createSlider(linenoList) {
 
     // the slider has been created
     sliderCreated = true;
-    sizeHtmlCssPanels('bravo');  
+    sizeHtmlCssPanels('bravo');
   }
   // if the slider has already been created and events are pushed, modify existing slider
    if (sliderCreated) {
@@ -519,8 +519,7 @@ function flashButton(id) {
 // FILENAME AND RENAMING
 ///////////////////////////////////////////////////////////////////////////
 
-function selectEndOf(contentEditableElement)
-{
+function selectEndOf(contentEditableElement) {
   var range,selection;
   if (document.createRange) {
     range = document.createRange();
@@ -3030,7 +3029,7 @@ function markPaneEditorLine(pane, line, markclass) {
   // have applied the style on a particular line.
   var idMap = paneState.marked[markclass];
   if (zline in idMap) {
-    return;  // Nothing to do if already highlighted.
+    return; // Nothing to do if already highlighted.
   }
   if (/^gutter/.test(markclass)) {
     paneState.editor.session.addGutterDecoration(zline, markclass);
@@ -3415,9 +3414,9 @@ function showVar(pane, lineNum, name, value, argsString) {
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
     if (blockMode) {
-      $("div[id^='editor_'] .droplet-main-scroller").append(div);  
+      $("div[id^='editor_'] .droplet-main-scroller").append(div);
     } else {
-      $("div[id^='editor_']").append(div); 
+      $("div[id^='editor_']").append(div);
     }
   }
 }
