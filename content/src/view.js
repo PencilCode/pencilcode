@@ -3360,16 +3360,10 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
       offset_left = $(".editor").offset().left + pixel_cushion;
       startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
       endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line), (secondLoc.last_column + 10));
+      console.log("Coords: ", startcoords, endcoords);
       startcoords.pageY = startcoords.pageY - font_size/2;
       endcoords.pageY = endcoords.pageY - font_size/2;
-      if (Math.abs(secondLoc.first_line - firstLoc.first_line) > 1) {
-        var x_val = 0;
-        if (startcoords.pageX > endcoords.pageX) {
-          x_val = startcoords.pageX;
-        } else {
-          x_val = endcoords.pageX;
-        }
-      }
+      var x_val = Math.max(startcoords.pageX, endcoords.pageX);
     }
     if ($("#drawnArrow").length > 0) {
       arrows.redrawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
