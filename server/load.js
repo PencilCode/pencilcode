@@ -4,9 +4,9 @@ var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
 var filemeta = require('./filemeta');
-var DirCache = require('./dircache').DirCache;
+var DirLoader = require('./dirloader').DirLoader;
 
-var globalRootDirCache = {};
+var globalDirCache = {};
 
 // Do not serve cached content older than 5 minutes.
 var maxDirCacheAge = 5 * 60 * 1000;
@@ -14,73 +14,30 @@ var maxDirCacheAge = 5 * 60 * 1000;
 // Rebuild cache in background after serving data older than 1 minute.
 var autoRebuildCacheAge = 1 * 60 * 1000;
 
-// Serve at most 600 usernames at a time from root directory.
-var MAX_ROOT_DIR_ENTRIES = 600;
+// Serve at most 600 entries at a time from root directory or share site.
+var MAX_DIR_ENTRIES = 600;
 
-// Serve at most 600 programs at a time from share site.
-var MAX_SHARE_ENTRIES = 600;
-
-function getRootDirCache(dir) {
-  var dircache = globalRootDirCache[dir]
+function getDirCache(dir) {
+  var dircache = globalDirCache[dir]
   if (!dircache) {
-    dircache = new DirCache(dir);
-    globalRootDirCache[dir] = dircache;
+    dircache = new DirLoader(dir);
+    globalDirCache[dir] = dircache;
   }
   return dircache;
 }
 
 exports.handleLoad = function(req, res, app, format) {
-  var filename = utils.filenameFromUri(req);
+  var filename = utils.filenameFromUri(req) || '';
   var callback = utils.param(req, 'callback');
-  var user = res.locals.owner;
+  var user = res.locals.owner || '';
   var origfilename = filename;
-
-  if (filename == null) {
-    filename = '';
-  }
+  var prefix = utils.param(req, 'prefix', '');
+  var count = Math.max(utils.param(req, 'count', MAX_DIR_ENTRIES), MAX_DIR_ENTRIES);
 
   try {
-    // The root listing, which lists all users,
-    // is handled differently from other requests.
-    var isrootlisting = !user && filename == '' && format == 'json';
-    if (isrootlisting) {
-      var prefix = utils.param(req, 'prefix') || '';
-      var count = Math.max(MAX_ROOT_DIR_ENTRIES,
-          utils.param(req, 'count') || MAX_ROOT_DIR_ENTRIES);
-      // Grab the dir cache object for this root directory path.
-      var dircache = getRootDirCache(app.locals.config.dirs.datadir);
-      if (dircache.age() > maxDirCacheAge) {
-        // A very-old or never-built cache must be rebuilt before serving.
-        dircache.rebuild(sendCachedResult);
-      } else if (prefix) {
-        // When a specific prefix is requested, probe for an exact match.
-        dircache.update(prefix, sendCachedResult);
-      } else {
-        // Fresh cache without prefix: just send the cached result.
-        sendCachedResult(true);
-      }
-      function sendCachedResult(ok) {
-        var data;
-        if (!ok) {
-          data = {error: "Could not read file /"};
-        } else {
-          data = {
-            directory: "/",
-            list: dircache.readPrefix(prefix, count),
-            auth: false
-          };
-          // If the cache was sort-of-old, kick off an early rebuild.
-          if (dircache.age() > autoRebuildCacheAge) {
-            // No callback needed.
-            dircache.rebuild(null);
-          }
-        }
-        res.set('Cache-Control', 'must-revalidate');
-        res.set('Content-Type', 'text/javascript');
-        res.jsonp(data);
-      }
-      return;
-    }
+    // Check if the request is for root listing or share site.
+    var isRootListing = !user && filename === '' && format === 'json';
+    var isShareSite = user === 'share' && filename === '' && format === 'json';
 
     // Validate username
     if (user) {
@@ -137,21 +94,56 @@ exports.handleLoad = function(req, res, app, format) {
           filename += '/';
         }
 
-        var files = fs.readdirSync(absfile);
-        if (user === 'share') {
-          files = files.sort(function(a, b) {
-            return fs.statSync(path.join(absfile, b)).mtime.getTime() -
-                   fs.statSync(path.join(absfile, a)).mtime.getTime();
-          }).slice(0, MAX_SHARE_ENTRIES);
+        // Root listing and share site are cached.
+        if (isRootListing || isShareSite) {
+          // Grab the dir cache object for this root directory path.
+          var dircache = getDirCache(absfile);
+          if (dircache.age() > maxDirCacheAge) {
+            // A very-old or never-built cache must be rebuilt before serving.
+            dircache.rebuild(sendCachedResult);
+          } else if (prefix) {
+            // When a specific prefix is requested, probe for an exact match.
+            dircache.update(prefix, sendCachedResult);
+          } else {
+            // Fresh cache without prefix: just send the cached result.
+            sendCachedResult(true);
+          }
+          return;
+          function sendCachedResult(ok) {
+            var dir = path.join('/', user);
+            var data;
+            if (!ok) {
+              data = { error: 'Could not read file ' + dir };
+            } else {
+              data = {
+                directory: dir,
+                list: dircache.readPrefix(prefix, count),
+                auth: false
+              };
+              // If the cache was sort-of-old, kick off an early rebuild.
+              if (dircache.age() > autoRebuildCacheAge) {
+                // No callback needed.
+                dircache.rebuild(null);
+              }
+            }
+            res.set('Cache-Control', 'must-revalidate');
+            res.set('Content-Type', 'text/javascript');
+            res.jsonp(data);
+          }
         }
 
-        var list = buildDirList(absfile, files.sort());
+        var dirloader = new DirLoader(absfile);
+        dirloader.rebuild(function(ok) {
+          var list = dirloader.readPrefix(prefix, count);
+          var jsonRet = {
+            directory: '/' + filename,
+            list: list,
+            auth: haskey
+          };
 
-        var jsonRet =
-          {'directory': '/' + filename, 'list': list, 'auth': haskey};
-
-        res.set('Cache-Control', 'must-revalidate');
-        res.jsonp(jsonRet);
+          res.set('Cache-Control', 'must-revalidate');
+          res.jsonp(jsonRet);
+        });
         return;
       }
 
