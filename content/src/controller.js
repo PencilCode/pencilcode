@@ -1862,7 +1862,7 @@ function instrumentCode(code, language) {
         includeArgsStrings: true,
         sourceMap: true
       };
-      result = pencilTracer.instrumentJs('', code, options);
+      result = pencilTracer.instrumentJs(code, options);
       debug.setSourceMap(result.map);
       code = result.code;
     } else if (language === 'coffeescript') {
@@ -1872,7 +1872,7 @@ function instrumentCode(code, language) {
         sourceMap: true,
         bare: true
       };
-      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
+      result = pencilTracer.instrumentCoffee(code, icedCoffeeScript, options);
       debug.setSourceMap(result.map);
       code = result.code;
     }

@@ -287,7 +287,7 @@
       }).call(this)).join(", ");
     };
 
-    CoffeeScriptInstrumenter.prototype.findFunctionCalls = function(node, parent, grandparent, vars) {
+    CoffeeScriptInstrumenter.prototype.findFunctionCalls = function(node, parent, grandparent, funcs) {
       var j, lastProp, len, name, prop, ref, soak;
       if (parent == null) {
         parent = null;
@@ -295,8 +295,8 @@
       if (grandparent == null) {
         grandparent = null;
       }
-      if (vars == null) {
-        vars = [];
+      if (funcs == null) {
+        funcs = [];
       }
       if (node instanceof this.nodeTypes.Call && !(grandparent instanceof this.nodeTypes.Op && grandparent.operator === "new")) {
         soak = node.soak;
@@ -322,7 +322,7 @@
             }
           }
           node.pencilTracerReturnVar = this.temporaryVariable("returnVar");
-          vars.push({
+          funcs.push({
             name: name,
             tempVar: node.pencilTracerReturnVar,
             argsString: this.argsToString(node.args)
@@ -336,11 +336,11 @@
           skip || (skip = child instanceof _this.nodeTypes.Code);
           skip || (skip = !_this.shouldInstrumentNode(child));
           if (!skip) {
-            return _this.findFunctionCalls(child, node, parent, vars);
+            return _this.findFunctionCalls(child, node, parent, funcs);
           }
         };
       })(this));
-      return vars;
+      return funcs;
     };
 
     CoffeeScriptInstrumenter.prototype.nodeIsObj = function(node) {
@@ -356,7 +356,7 @@
     };
 
     CoffeeScriptInstrumenter.prototype.shouldInstrumentNode = function(node) {
-      return !node.pencilTracerInstrumented && !(node instanceof this.nodeTypes.IcedRuntime) && (!(node instanceof this.nodeTypes.IcedTailCall) || node.value instanceof this.nodeTypes.Value) && !(node instanceof this.nodeTypes.Comment) && !(node instanceof this.nodeTypes.For) && !(node instanceof this.nodeTypes.While) && !(node instanceof this.nodeTypes.Switch) && !(node instanceof this.nodeTypes.If) && !(node instanceof this.nodeTypes.Class) && !(node instanceof this.nodeTypes.Try) && !(node instanceof this.nodeTypes.Await);
+      return !this.shouldSkipNode(node) && (!(node instanceof this.nodeTypes.IcedTailCall) || node.value instanceof this.nodeTypes.Value) && !(node instanceof this.nodeTypes.Comment) && !(node instanceof this.nodeTypes.For) && !(node instanceof this.nodeTypes.While) && !(node instanceof this.nodeTypes.Switch) && !(node instanceof this.nodeTypes.If) && !(node instanceof this.nodeTypes.Class) && !(node instanceof this.nodeTypes.Try) && !(node instanceof this.nodeTypes.Await);
     };
 
     CoffeeScriptInstrumenter.prototype.mapChildrenArray = function(children, func) {
@@ -668,7 +668,7 @@
       }
     };
 
-    CoffeeScriptInstrumenter.prototype.instrument = function(filename, code) {
+    CoffeeScriptInstrumenter.prototype.instrument = function(code) {
       var ast, csOptions, result, token;
       csOptions = {
         runtime: "inline",
@@ -704,13 +704,13 @@
 
   })();
 
-  exports.instrumentCoffee = function(filename, code, coffee, options) {
+  exports.instrumentCoffee = function(code, coffee, options) {
     var instrumenter;
     if (options == null) {
       options = {};
     }
     instrumenter = new CoffeeScriptInstrumenter(coffee, options);
-    return instrumenter.instrument(filename, code);
+    return instrumenter.instrument(code);
   };
 
 }).call(this);
@@ -871,7 +871,7 @@
           })()) + "]";
         }
       }
-      eventObj = "{location: " + locationObj + ", type: '" + eventType + "', " + extra + "}";
+      eventObj = "{ location: " + locationObj + ", type: '" + eventType + "', " + extra + " }";
       instrumentedNode = acorn.parse(this.options.traceFunc + "(" + eventObj + ");").body[0];
       instrumentedNode.pencilTracerInstrumented = true;
       instrumentedNode.expression.pencilTracerInstrumented = true;
@@ -967,36 +967,35 @@
           }
         }
       }
-      for (key in node) {
-        if (foundEndOfMemberExpression) {
-          continue;
-        }
-        if (node.type === "Property" && key === "key") {
-          continue;
-        }
-        if (((ref3 = node.type) === "FunctionExpression" || ref3 === "FunctionDeclaration") && key === "params") {
-          continue;
-        }
-        if (node.type === "MemberExpression" && key === "property" && !node.computed) {
-          continue;
-        }
-        if (node.type === "MemberExpression" && key === "object" && ((ref4 = node[key].type) === "Identifier" || ref4 === "ThisExpression") && !node.computed) {
-          continue;
-        }
-        if (((ref5 = node.type) === "CallExpression" || ref5 === "NewExpression") && key === "callee" && ((ref6 = node[key].type) === "ThisExpression" || ref6 === "Identifier")) {
-          continue;
-        }
-        if (isArray(node[key])) {
-          ref7 = node[key];
-          for (j = 0, len = ref7.length; j < len; j++) {
-            child = ref7[j];
-            if (ref8 = child.type, indexOf.call(FIND_VARIABLES_IN, ref8) >= 0) {
-              this.findVariables(child, node, vars);
-            }
+      if (!foundEndOfMemberExpression) {
+        for (key in node) {
+          if (node.type === "Property" && key === "key") {
+            continue;
           }
-        } else if (node[key] && typeof node[key].type === "string") {
-          if (ref9 = node[key].type, indexOf.call(FIND_VARIABLES_IN, ref9) >= 0) {
-            this.findVariables(node[key], node, vars);
+          if (((ref3 = node.type) === "FunctionExpression" || ref3 === "FunctionDeclaration") && key === "params") {
+            continue;
+          }
+          if (node.type === "MemberExpression" && key === "property" && !node.computed) {
+            continue;
+          }
+          if (node.type === "MemberExpression" && key === "object" && ((ref4 = node[key].type) === "Identifier" || ref4 === "ThisExpression") && !node.computed) {
+            continue;
+          }
+          if (((ref5 = node.type) === "CallExpression" || ref5 === "NewExpression") && key === "callee" && ((ref6 = node[key].type) === "ThisExpression" || ref6 === "Identifier")) {
+            continue;
+          }
+          if (isArray(node[key])) {
+            ref7 = node[key];
+            for (j = 0, len = ref7.length; j < len; j++) {
+              child = ref7[j];
+              if (ref8 = child.type, indexOf.call(FIND_VARIABLES_IN, ref8) >= 0) {
+                this.findVariables(child, node, vars);
+              }
+            }
+          } else if (node[key] && typeof node[key].type === "string") {
+            if (ref9 = node[key].type, indexOf.call(FIND_VARIABLES_IN, ref9) >= 0) {
+              this.findVariables(node[key], node, vars);
+            }
           }
         }
       }
@@ -1036,14 +1035,14 @@
       }).call(this)).join(", ");
     };
 
-    JavaScriptInstrumenter.prototype.findFunctionCalls = function(node, vars) {
+    JavaScriptInstrumenter.prototype.findFunctionCalls = function(node, funcs) {
       var child, j, key, len, name, ref, ref1, ref2;
-      if (vars == null) {
-        vars = [];
+      if (funcs == null) {
+        funcs = [];
       }
       if (node.pencilTracerReturnVar) {
         name = node.callee.type === "ThisExpression" ? "this" : node.callee.type === "Identifier" ? node.callee.name : node.callee.type === "MemberExpression" && !node.callee.computed ? node.callee.property.name : "<anonymous>";
-        vars.push({
+        funcs.push({
           name: name,
           tempVar: node.pencilTracerReturnVar,
           argsString: this.argsToString(node["arguments"])
@@ -1055,16 +1054,16 @@
           for (j = 0, len = ref.length; j < len; j++) {
             child = ref[j];
             if (ref1 = child.type, indexOf.call(FIND_VARIABLES_IN, ref1) >= 0) {
-              this.findFunctionCalls(child, vars);
+              this.findFunctionCalls(child, funcs);
             }
           }
         } else if (node[key] && typeof node[key].type === "string") {
           if (ref2 = node[key].type, indexOf.call(FIND_VARIABLES_IN, ref2) >= 0) {
-            this.findFunctionCalls(node[key], vars);
+            this.findFunctionCalls(node[key], funcs);
           }
         }
       }
-      return vars;
+      return funcs;
     };
 
     JavaScriptInstrumenter.prototype.shouldInstrumentWithBlock = function(node, parent) {
@@ -1223,7 +1222,7 @@
       })(this));
     };
 
-    JavaScriptInstrumenter.prototype.instrument = function(filename, code) {
+    JavaScriptInstrumenter.prototype.instrument = function(code) {
       var ast, name, result, tempVarsDeclaration;
       this.lines = code.match(/^.*((\r\n|\n|\r)|$)/gm);
       this.lines.unshift(null);
@@ -1231,7 +1230,6 @@
       this.referencedVars = [];
       ast = acorn.parse(code, {
         locations: true,
-        sourceFile: filename,
         onToken: (function(_this) {
           return function(token) {
             if (token.type.label === "name" && _this.referencedVars.indexOf(token.value) === -1) {
@@ -1270,11 +1268,8 @@
         return ast;
       }
       if (this.options.sourceMap) {
-        if (typeof filename !== "string" || filename.length === 0) {
-          filename = "untitled.js";
-        }
         result = escodegen.generate(ast, {
-          sourceMap: filename,
+          sourceMap: "untitled.js",
           sourceMapWithCode: true
         });
         result.map = result.map.toString();
@@ -1288,13 +1283,13 @@
 
   })();
 
-  exports.instrumentJs = function(filename, code, options) {
+  exports.instrumentJs = function(code, options) {
     var instrumenter;
     if (options == null) {
       options = {};
     }
     instrumenter = new JavaScriptInstrumenter(options);
-    return instrumenter.instrument(filename, code);
+    return instrumenter.instrument(code);
   };
 
 }).call(this);
