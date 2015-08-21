@@ -17,10 +17,11 @@
     }
   }
   $.turtle(map);
+  var untrackedVars = Object.keys(ww);
   ww._start_ide_ = function(pump) {
     if (ww.see) ww.see.init(pump);
     if (ww.ide && ww.ide.reportEvent) ww.ide.reportEvent('init');
-    if (ww.ide && ww.ide.setUntrackedVars) ww.ide.setUntrackedVars(Object.keys(ww));
+    if (ww.ide && ww.ide.setUntrackedVars) ww.ide.setUntrackedVars(untrackedVars);
     delete ww._start_ide_;
     delete ww._start_ide_cs_;
     delete ww._start_ide_js_;
