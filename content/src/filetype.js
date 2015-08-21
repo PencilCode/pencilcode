@@ -184,6 +184,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
     // Instruments the code for debugging, always producing javascript.
     var newText = instrumenter(text, originalLanguage);
     if (newText !== false) {
+      // Proceed with the instrumented code if there wasn't a syntax error.
       text = newText;
       maintype = 'text/javascript';
       instrumented = true;

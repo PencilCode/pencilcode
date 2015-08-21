@@ -3428,7 +3428,13 @@ function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dr
   }
 }
 
+// Shows a single variable or function call annotation at a particular line
+// number. If annotations already exist at that line number, the annotation is
+// appended to them.
 function showVar(pane, lineNum, name, value, argsString) {
+  // Create the annotation string that will be displayed to the user. Variable
+  // annotations will look like "x=3", and function call annotations will look
+  // like "f(x, y)=3".
   var text = htmlEscape(name);
   if (typeof argsString === "string") {
     text += "(" + htmlEscape(argsString) + ")";
@@ -3437,8 +3443,13 @@ function showVar(pane, lineNum, name, value, argsString) {
 
   var divId = "line" + lineNum + "vars";
   if ($("#" + divId).length) {
+    // If the annotation div for this line number already exists, append the
+    // new annotation to it.
     $("#" + divId).append(text);
   } else {
+    // Otherwise we have to create an annotation div. First, calculate the
+    // position the div needs to align with its line number. Droplet and Ace
+    // Editor have different APIs for this.
     var coords;
     var offsetTop = 0;
     var blockMode = getPaneEditorBlockMode(pane);
@@ -3452,16 +3463,19 @@ function showVar(pane, lineNum, name, value, argsString) {
       offsetTop = $("div[id^='editor_']").offset().top;
     }
 
+    // Create the div and position it.
     var div = document.createElement('div');
     div.id = divId;
     div.className = "vars";
     div.innerHTML = text;
-    div.style.visibility = 'visible';
+    div.style.visibility = "visible";
     div.style.position = "absolute";
     div.style.zIndex = "10";
     div.style.right = "25px";
     div.style.top = String(coords.pageY - offsetTop) + "px";
 
+    // Append it to the proper element, depending on whether we're in block
+    // mode or not.
     if (blockMode) {
       $("div[id^='editor_'] .droplet-main-scroller").append(div);
     } else {
@@ -3470,14 +3484,19 @@ function showVar(pane, lineNum, name, value, argsString) {
   }
 }
 
+// Clears all the annotation divs, but leaves the divs themselves so we don't
+// have to do all the work of positioning them again.
 function emptyVariables() {
   $(".vars").empty();
 }
 
+// Removes all the annotation divs.
 function removeVariables() {
   $(".vars").remove();
 }
 
+// Repositions each annotation div. This needs to happen when the user scrolls
+// in Ace Editor mode.
 function repositionVariables(pane) {
   $("#" + pane + " .vars").each(function() {
     var matches = this.id.match(/^line(\d+)vars$/);

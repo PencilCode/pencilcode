@@ -219,6 +219,10 @@ function detectStuckProgram() {
 // VARIABLE & FUNCTION CALL TRACKING
 //////////////////////////////////////////////////////////////////////
 
+// jquery-turtle functions that are used very commonly in users' programs, and
+// return either a useless result (like undefined) or a complex result (like
+// a jquery object) just clutter up the variable/function annotations. So we
+// ignore these type of functions when doing function call tracking.
 var untrackedFunctions = [
   "fd", "bk", "rt", "lt", "slide", "jump", "moveto", "jumpto", "turnto", "play",
   "home", "pen", "pu", "pd", "pe", "fill", "dot", "label", "speed", "ht", "st",
@@ -227,6 +231,28 @@ var untrackedFunctions = [
   "readstr", "button", "table", "send", "recv"
 ];
 
+// Adds each variable snapshot in `vars` to `variables`, which keeps track of
+// the history of each variable.
+//
+// Each object in the `variables` array has a `name` property and a `history`
+// property. The `history` property contains an array of objects, each object
+// representing a snapshot of the variable's value at a certain point in time
+// during the program's execution. Each snapshot consists of the line number
+// the variable appears on, the debug id, and the variable's value as a string.
+// Here's an example of what the `variables` array might look like:
+//
+//     [
+//       { name: 'x',
+//         history: [{debugId: 0, lineNum: 1, value: 'undefined'},
+//                   {debugId: 1, lineNum: 1, value: '1'}]},
+//       { name: 'y',
+//         history: [{debugId: 2, lineNum: 2, value: 'undefined'},
+//                   {debugId: 3, lineNum: 2, value: '2'}]}
+//     ]
+//
+// When we want to display these variables at a certain step (debug id) in the
+// program, we'll go through each variable and find the most recent snapshot of
+// its value that is no later than that step.
 function updateVariables(lineNum, debugId, vars) {
   for (var i = 0; i < vars.length; i++) {
     // Filter out function definitions.
@@ -235,21 +261,29 @@ function updateVariables(lineNum, debugId, vars) {
     // Filter out predefined global variables.
     if (untrackedVariables.indexOf(vars[i].name) !== -1) continue;
 
-    var varRecord = null;
+    // Convert the variable's value to a string.
     var value = valueToString(vars[i].value);
+
+    // Find the object in `variables` for this variable, if one exists.
+    var varRecord = null;
     for (var j = 0; j < variables.length; j++) {
       if (vars[i].name === variables[j].name) {
         varRecord = variables[j];
         break;
       }
     }
+
     if (varRecord === null) {
+      // If this is the first time we've seen this variable, make an object for
+      // it and append it to `variables`.
       varRecord = {
         name: vars[i].name,
         history: [{debugId: debugId, lineNum: lineNum, value: value}]
       };
       variables.push(varRecord);
     } else {
+      // Otherwise, push the value of the variable, along with the current
+      // line number and debug id, to the variable's history array.
       var last = varRecord.history[varRecord.history.length - 1];
       if (last.value !== value) {
         varRecord.history.push({debugId: debugId, lineNum: lineNum, value: value});
@@ -258,20 +292,36 @@ function updateVariables(lineNum, debugId, vars) {
   }
 }
 
+// Adds each function call in `funcs` to `functionCalls`, which keeps track of
+// the return value of each function call. Function calls are tracked in the
+// exact same way as variables, see the explanation of updateVariables() above.
 function updateFunctionCalls(lineNum, debugId, funcs) {
   for (var i = 0; i < funcs.length; i++) {
     // Filter out common turtle functions.
     if (untrackedFunctions.indexOf(funcs[i].name) !== -1) continue;
 
-    var funcRecord = null;
+    // Convert the function's return value to a string.
     var value = valueToString(funcs[i].value);
+
+    // Find the object in `functionCalls` for this function call, if one exists.
+    var funcRecord = null;
     for (var j = 0; j < functionCalls.length; j++) {
-      if (funcs[i].name === functionCalls[j].name && funcs[i].argsString === functionCalls[j].argsString && lineNum === functionCalls[j].lineNum) {
+      // Function calls that have the same name, take the same string of
+      // arguments, and appear on the same line are assumed to be the same, for
+      // the purposes of displaying their value.
+      var sameFunction =
+        (funcs[i].name === functionCalls[j].name) &&
+        (funcs[i].argsString === functionCalls[j].argsString) &&
+        (lineNum === functionCalls[j].lineNum);
+      if (sameFunction) {
         funcRecord = functionCalls[j];
         break;
       }
     }
+
     if (funcRecord === null) {
+      // If this is the first time we've seen this function call, make an
+      // object for it and append it to `functionCalls`.
       funcRecord = {
         name: funcs[i].name,
         argsString: funcs[i].argsString,
@@ -280,14 +330,21 @@ function updateFunctionCalls(lineNum, debugId, funcs) {
       };
       functionCalls.push(funcRecord);
     } else {
+      // Otherwise, push the return value, along with the debug id, to the
+      // function call's history array.
       var last = funcRecord.history[funcRecord.history.length - 1];
       if (last.value !== value) {
-        funcRecord.history.push({debugId: debugId, lineNum: lineNum, value: value});
+        funcRecord.history.push({debugId: debugId, value: value});
       }
     }
   }
 }
 
+// Convert a variable's value or function call's return value to a string that
+// will be displayed to the user.
+//
+// For now, functions and objects are displayed as "<function>" and "<object>",
+// and any other values are converted to a string using util.inspect().
 function valueToString(value) {
   if (typeof value === 'function') {
     return '<function>';
@@ -298,9 +355,13 @@ function valueToString(value) {
   }
 }
 
+// Redraw all variable annotations for the given debug id (i.e. step in the
+// program's execution).
 function showVariables(debugId) {
+  // Empty out the annotation divs for each line, but keep the divs.
   view.emptyVariables();
 
+  // Show each tracked variable that existed at this step in the program.
   for (var i = 0; i < variables.length; i++) {
     var historyEntry = null;
     for (var j = variables[i].history.length - 1; j >= 0; j--) {
@@ -314,6 +375,7 @@ function showVariables(debugId) {
     }
   }
 
+  // Show each tracked function call that existed at this step in the program.
   for (var i = 0; i < functionCalls.length; i++) {
     var historyEntry = null;
     for (var j = functionCalls[i].history.length - 1; j >= 0; j--) {
