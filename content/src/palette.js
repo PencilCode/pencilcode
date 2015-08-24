@@ -168,7 +168,7 @@ module.exports = {
           title: 'Use an image for the turtle'
         }, {
           block: '@grow 3',
-          title: 'Grow the sizeof the turtle'
+          title: 'Grow the size of the turtle'
         }, {
           block: '@ht()',
           title: 'Hide the main turtle'
