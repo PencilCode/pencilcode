@@ -113,6 +113,9 @@ module.exports = {
         }, {
           block: '@jumpxy 30, 20',
           title: 'Jump changing x and y without drawing'
+        }, {
+          block: '@pause 5',
+          title: 'Do not move for five seconds'
         }
       ])
     }, {
@@ -967,7 +970,7 @@ module.exports = {
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
     '?.grow': {color: 'purple', dropdown: [scales]},
-    '?.pause': {},
+    '?.pause': {color: 'lightblue'},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
     '?.cs': {color: 'purple'},
