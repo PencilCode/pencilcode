@@ -12,6 +12,8 @@
     "html2canvas": "#0.5.0-alpha1",
     "iced-coffee-script": "PencilCode/pencil-coffee-script#pencil",
     "jquery": "latest",
+    "jquery-ui":"latest",
+    "jquery-ui-slider-pips": "latest", 
     "jquery-deparam": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
     "lodash": "latest",

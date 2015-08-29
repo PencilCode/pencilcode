@@ -12,6 +12,8 @@
 </style>
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/editor.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/droplet.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/flick/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/jquery-ui-slider-pips.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/font-awesome.css">
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css">
 </head>
@@ -77,7 +79,7 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 </div>
 <div id="charlie" class="pane"></div>
 </div>
-<div id="guidepane"><div class="guidetitle">guide</div><div class="guidepreview"><iframe></iframe></div></div>
+<div id="guidepane"><div class="guidetitle">guide</div><div class="guidepreview"><iframe id = 'my-iframe'></iframe></div></div>
 </div><!-- end clip -->
 <script src="/load<!--#echo var="filepath"-->?callback=preload"></script>
 <script src="/lib/ace/ace.js"></script>

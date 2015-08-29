@@ -7,7 +7,8 @@ var phantom = require('node-phantom-simple'),
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
 
-describe('javascript editor', function() {
+
+describe('debugger', function() {
   var _ph, _page;
   before(function(done) {
     // Create the headless webkit browser.
@@ -49,10 +50,9 @@ describe('javascript editor', function() {
     // we can leave orphan processes.
     _ph.exit();
   });
-
   it('should serve static editor HTML', function(done) {
     // Visit the website of the user "livetest."
-    _page.open('http://aaa.pencilcode.net.dev/edit',
+    _page.open('http://livetest.pencilcode.net.dev/edit',
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
@@ -67,38 +67,10 @@ describe('javascript editor', function() {
       });
     });
   });
-
-  it('should open js palette with .js extension', function(done) {
-    //Create a new file with an extension .js
-    _page.open('http://pencilcode.net.dev/edit/test.js',
-      function(err, status) {
-        assert.ifError(err);
-        assert.equal(status, 'success');
-        asyncTest(_page, one_step_timeout, null, function() {
-          var leftlink = $('.panetitle').filter(
-              function() { return $(this).parent().position().left == 0; })
-              .find('a');
-          leftlink.click();
-        }, function() {
-          //If tooltipster test isnt' ready, wait for it
-          if (!$('.droplet-hover-div.tooltipstered')) return;
-          return {
-            //Content of first palette block
-            text: $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content')
-          }
-        }, function(errs, result) {
-          assert.ifError(err);
-          //First block must be 'Move  forward'
-          assert.equal(result.text, 'Move forward');
-          done();
-        });
-      });
-    });
-
   it('should load code', function(done) {
-    // Navigate to see the editor for the program named "first".
-    _page.open('http://aaa.pencilcode.net.dev/edit/first',
-      function(err, status) {
+    // Navigate to see the editor for the program named "second".
+    _page.open('http://livetest.pencilcode.net.dev/edit/second',
+        function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
       asyncTest(_page, one_step_timeout, null, function() {
@@ -114,49 +86,35 @@ describe('javascript editor', function() {
       }, function(err, result) {
         assert.ifError(err);
         // The editor text should contain this line of code.
-        assert.ok(/\(function\(\) \{ dot\(red\); \}\)\(\)/.test(result.text));
+        assert.ok(/speed 2/.test(result.text));
         done();
       });
     });
   });
 
-  it('should be able to run the program in javascript mode', function(done) {
+  it('should show slider when program runs', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the triangle run button.
+      // Click on the triangle "run" button 
       $('#run').mousedown();
       $('#run').click();
     }, function() {
       try {
-        // Toggle javascript mode
-        $(".gear").mousedown();
-        $(".gear").click();
-        $("input[value='text/javascript']").mousedown()
-        $("input[value='text/javascript']").click()
-        $(".ok").mousedown()
-        $(".ok").click()
-        // Wait for the preview frame to show
-        if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
-        // Wait for slider to appear
+        // Wait for the slider to appear after automated delay
         if (!$('#slider').length) return;
-        // Evaluate some expression in the javascript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
-        seval('interrupt("reset")');
-        // Wait for the turtle to start turning, then stop moving.
-        if (seval('turtle.queue().length')) return;
-        seval('jump(0,0)');
-        seval('fd(100)');
-        if(seval('getxy()')[1] < 99){
-          return;
-        }
+        var lefttitle = $('.panetitle').filter(
+            function() { return $(this).parent().position().left == 0; })
+            .find('.panetitle-text').find('.debugtoggle');
+        if (/blocks/.test(lefttitle.text())) return;
         return {
+          slider: $('#slider').length,
           sliderpanel: $('.scrubbermark').length,
           backbutton: $('#backButton').length,
           forwardbutton: $('#forwardButton').length,
           pips: $('.ui-slider-pip').length,
+          debugtoggle: lefttitle.text().trim(),
           label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
-          getxy: seval('getxy()'),
-          touchesred: seval('touches(red)')
+          slidertip: $('.ui-slider-tip').text().trim()
+
         };
       }
       catch(e) {
@@ -164,19 +122,112 @@ describe('javascript editor', function() {
       }
     }, function(err, result) {
       assert.ifError(err);
-      // Assert that basic sliding functionality exists
+      // Assert that the panel containing slider exists
       assert.equal(result.sliderpanel, 1);
+      // Assert that the slider element has appeared 
+      assert.equal(result.slider, 1);
+      // Assert that buttons to toggle steps exists
       assert.equal(result.backbutton, 1);
       assert.equal(result.forwardbutton, 1);
-      assert.equal(result.pips, 5);
+      // Assert number of steps on slider equals traceEvents length
+      assert.equal(result.pips, 77);
+      // Assert that slider tip reflects appropriate line number
       assert.equal(result.label, '0');
-      // Assert that turtle commands work in javascript
-      assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
-      assert.ok(result.getxy[1] >= 100);
-      assert.ok(result.touchesred);
+      assert.equal(result.slidertip, 'Line  1');
+      done();
+    });
+  }); 
+
+  it('should allow users to use step buttons to see arrow/protractor', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle "run" button 
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+         // Wait for the slider to appear after automated delay
+	   if (!$('#slider').length) return;
+	   if (!$('#forwardButton').length) return;
+           if (!$('.arrow').length) return;     
+    
+           // Click the forward button four times
+           for (var i = 0; i < 4; i++) {
+             $('#forwardButton').click();
+           }	           
+       return {
+          label: $('.ui-slider-pip-selected').find('.ui-slider-label').text().trim(),
+          protractor: $('.protractor').length,
+          slidertip: $('.ui-slider-tip').text().trim(),
+          arrows: $('.arrow').length
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      // Assert that we are on the fourth tick
+      assert.equal(result.label, '4');
+      // Assert that the slider says line 5
+      assert.equal(result.slidertip, 'Line  5');
+      // Assert that protractor and arrows appear with slider
+      assert.equal(result.protractor, 1);
+      assert.ok(result.arrows > 0);
+      done();
+    });
+  }); 
+
+ it('should allow users to turn debugging on and off', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle "run" button
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+         // Wait for the slider to appear after automated delay
+         if (!$('#slider').length) return;
+         // Click on the 'debug on' text
+         $('.debugtoggle').click();
+       return {
+          slider: $('#slider').length,
+          toggletext: $('.debugtoggle').text().trim()
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      // Assert that slider disappears when user clicks on toggle
+      assert.equal(result.slider, 0);
       done();
     });
   });
+
+
+  it('should show arrows during runtime', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the triangle "run" button 
+      $('#run').mousedown();
+      $('#run').click();
+    }, function() {
+      try {
+
+    // Wait for the arrow to appear after automated delay
+//     if (!$('.arrow').length) return; 
+       return {
+          label: $('.arrow').length
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.ok(result.label > 0);
+      done();
+    });
+  }); 
 
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
@@ -194,3 +245,4 @@ describe('javascript editor', function() {
     });
   });
 });
+

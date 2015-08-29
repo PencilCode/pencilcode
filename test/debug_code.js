@@ -222,13 +222,17 @@ describe('code debugger', function() {
         if (!$('.preview iframe')[0].contentWindow.see) return;
         if (!$('.ace_gutter-cell').length) return;
         // Simulate hovering over a program line.
-        window._simulate('mouseover', $('.ace_gutter-cell')[0]);
+        window._simulate('mouseover', $('.ace_gutter-cell')[2]);
         // Wait until hovering occurs.
         if ($('.debugfocus').length == 0) {
           return;
+        } 
+        if ($('.arrow').length == 0){
+          return;
         }
         return {
-          debugfocus: $('.debugfocus').length
+          debugfocus: $('.debugfocus').length,
+          arrows: $('.arrow').length
         };
       }
       catch(e) {
@@ -238,6 +242,7 @@ describe('code debugger', function() {
       assert.ifError(err);
       // A line of code should be highlighted.
       assert.equal(1, result.debugfocus);
+      assert.ok(result.arrows > 0);
       done();
     });
   });
@@ -303,6 +308,87 @@ describe('code debugger', function() {
          assert.equal(parseInt(result.originaltrace), parseInt(result.debugtracetop));
          done();
     });
+  });
+ it('should show debugger when running code that loops', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            var slider = $(".scrubber").length
+            if (slider === 0) {
+              return;
+            }
+            return {
+              slider: slider
+            };
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           assert.equal(1, result.slider);
+           done();
+      });
+  });
+  it('should show trace when interacting with debugger in block mode', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          // Note: this is the block mode test
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            else{
+              return {
+                debugtracecount: $(".debugtrace").length
+              };
+            }
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           assert.equal(1, result.debugtracecount);
+           done();
+      });
+  });
+  it('should show trace when interacting with debugger in text mode', function(done) {
+   asyncTest(_page, one_step_timeout, null, function() {
+          // Click on the square stop button.
+          $('#run').mousedown();
+          $('#run').click();
+      }, function() {
+          try {
+            // click to transition from block to text mode
+            $('.slide').click()
+            if (!$('.preview iframe').length) return;
+            if (!$('.preview iframe')[0].contentWindow.see) return;
+            if (!$(".debugtraceprev").length) return;
+            if (!$('.debugtraceprev').length) return;
+            else{
+              return {
+                debugtracecount: $(".debugtrace").length,
+                debugtraceprevcount: $(".debugtraceprev").length
+              };
+            }
+          }
+          catch(e) {
+            return {poll: true, error: e};
+          }
+         }, function(err, result) {
+           assert.ifError(err);
+           assert.equal(1, result.debugtracecount);
+           assert.equal(1, result.debugtraceprevcount);
+           done();
+      });
   });
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {

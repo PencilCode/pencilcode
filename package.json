@@ -36,9 +36,8 @@
     "browserify-shim": "latest",
     "chai": "latest",
     "grunt": "latest",
-    "mocha": "latest",
-    "grunt-browserify": "latest",
     "grunt-bowercopy": "latest",
+    "grunt-browserify": "https://registry.npmjs.org/grunt-browserify/-/grunt-browserify-3.8.0.tgz",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-contrib-copy": "latest",
@@ -50,6 +49,7 @@
     "grunt-mocha-test": "latest",
     "grunt-node-inspector": "latest",
     "grunt-sed": "latest",
+    "mocha": "latest",
     "node-phantom-simple": "latest",
     "phantomjs": "latest",
     "watchify": "latest"
@@ -69,6 +69,11 @@
     "html2canvas": "./content/lib/html2canvas.js",
     "iced-coffee-script": "./content/lib/iced-coffee-script.js",
     "jquery": "./content/lib/jquery.js",
+    "jquery-turtle": "./content/lib/jquery-turtle.js",
+    "jquery-ui": "./content/lib/jquery-ui.js",
+    "jquery-ui-slider-pips": "./content/lib/jquery-ui-slider-pips.js",
+    "html2canvas" : "./content/lib/html2canvas.js",
+    "nouislider" : "./content/lib/nouislider.js", 
     "palette": "./content/src/palette.js",
     "pencil-tracer": "./content/lib/pencil-tracer.js",
     "see": "./content/lib/see.js",
@@ -76,10 +81,13 @@
     "thumbnail": "./content/src/thumbnail.js",
     "tooltipster": "./content/lib/tooltipster/js/jquery.tooltipster.js",
     "view": "./content/src/view.js",
-    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
+    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js",
+    "arrows": "./content/src/arrows.js"
   },
   "browserify": {
-    "transform": [ "browserify-shim" ]
+    "transform": [
+      "browserify-shim"
+    ]
   },
   "browserify-shim": {
     "html2canvas": {
@@ -90,11 +98,20 @@
     },
     "tooltipster": {
       "exports": "jQuery.fn.tooltipster",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
+    },
+    "jquery-turtle": {
+     "depends": [
+      "jquery:jQuery"
+     ]
     },
     "see": {
       "exports": "see",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
     }
   }
 }

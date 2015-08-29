@@ -3,6 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 var $              = require('jquery'),
+    jqueryui       = require('jquery-ui'),
+    jqueryuisliderpips = require('jquery-ui-slider-pips'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
@@ -11,8 +13,8 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
+    arrows         = require('arrows'),
     FontLoader     = require('FontLoader');
-
 
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
@@ -62,6 +64,7 @@ var state = {
   subscribers: [],
   depth: window.history.state && window.history.state.depth || 0,
   aborting: false,
+  showing_arrow: false,
   pane: {
     alpha: initialPaneState(),
     bravo: initialPaneState(),
@@ -89,11 +92,11 @@ ZeroClipboard.config({
 window.pencilcode.view = {
   // Listens to events
   on: function(tag, cb) {
-    if (state.callbacks[tag] == null){
+  if (state.callbacks[tag] == null){
       state.callbacks[tag] = []
     }
     state.callbacks[tag].push(cb);
- },
+  },
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -136,7 +139,14 @@ window.pencilcode.view = {
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
   hideProtractor: hideProtractor,
+  createSlider: createSlider,
+  removeSlider: removeSlider,
   setPrimaryFocus: setPrimaryFocus,
+  initializeSlider: initializeSlider,
+  arrow: arrow,
+  showVar: showVar,
+  emptyVariables: emptyVariables,
+  removeVariables: removeVariables,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
     $('#' + pane + 'title').hide();
@@ -218,6 +228,99 @@ function publish(method, args, requestid){
 
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
+}
+
+var sliderCreated = false;
+ 
+function removeSlider() {
+  $(".scrubber").remove();
+  $("#backButton").remove();
+  $("#forwardButton").remove();
+  sliderCreated = false;
+  sizeHtmlCssPanels('bravo');
+}
+
+function initializeSlider (linenoList) {
+  // Create div element for scrubbber
+  var div = document.createElement('div');
+  div.className = 'scrubber';
+  var backDiv = document.createElement('div');
+  var forwardDiv = document.createElement('div');
+  var sliderDiv = document.createElement('div');
+  sliderDiv.id = 'slider';
+  // Append the newly created div for the slider to the panel at bottom
+  $(".scrubbermark").append(div);
+  $(".scrubber").append(sliderDiv);
+
+  backDiv.innerHTML = "<button id = 'backButton'> <i class='fa fa-arrow-left'> </i></button>";
+  $(".scrubber").append(backDiv);
+
+  forwardDiv = document.createElement('div');
+  forwardDiv.innerHTML = "<button  id = 'forwardButton'> <i class = 'fa fa-arrow-right'></i> </button>";
+    
+  $(".scrubber").append(forwardDiv);
+
+  $('#backButton').tooltipster({
+    content: "back a step"
+  });
+  $('#forwardButton').tooltipster({
+    content: "forward a step"
+  })
+
+  var label = document.createElement('div');
+  label.id = 'label';
+  label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
+  $(".scrubber").append(label);
+
+  // Jquery-ui slider implementation
+  $(function() {
+    $("#slider").slider({
+      min: 0,
+      max: linenoList.length - 1,
+      step: 1,
+      range: "min",
+      smooth: false
+      })
+      .slider("pips", {
+        first: "pip",
+        rest: "pip",
+        last: "pip"
+      })
+      .slider("float", {
+        labels: linenoList,
+        prefix: "Line " 
+    })
+  });
+  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
+}
+
+function createSlider(linenoList) {
+  // If slider hasn't been created and there are events being pushed, create slider.
+  if (!sliderCreated && linenoList.length > 0) {
+    initializeSlider (linenoList);
+   
+    // keep as variable so number of pips and maximum can be modified as events are pushed
+    var max = $("#slider").slider("option", "max");
+    var pips = $("#slider").slider("option", "pips");
+
+    // the slider has been created
+    sliderCreated = true;
+    sizeHtmlCssPanels('bravo');
+  }
+  // if the slider has already been created and events are pushed, modify existing slider
+   if (sliderCreated) {
+    $("#slider").slider("option", "max", linenoList.length - 1);
+    $("#slider").slider("pips", {
+      first: "pip",
+      rest: "pip",
+      last: "pip"
+    })
+    .slider("float", {
+           labels: linenoList,
+           prefix: "Line  "
+    })
+    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + linenoList.length + ' Steps');
+  }
 }
 
 function panepos(id) {
@@ -379,15 +482,15 @@ function flashNotification(text, loading) {
     $('#notification').removeClass();
   }
   $('#notification').html(text).data('marker', marker).finish()
-      .css({opacity: 0,display: 'inline-block'})
-      .css({left:($(window).width() - $('#notification').outerWidth()) / 2})
-      .animate({opacity:1}, 200)
-      .queue(function(n) {
-    $('body').off('.flashNotification');
-    $(window).off('.flashNotification');
-    $('body').on('blur.flashNotification ' +
+    .css({opacity: 0,display: 'inline-block'})
+    .css({left:($(window).width() - $('#notification').outerWidth()) / 2})
+    .animate({opacity:1}, 200)
+    .queue(function(n) {
+      $('body').off('.flashNotification');
+      $(window).off('.flashNotification');
+      $('body').on('blur.flashNotification ' +
         'mousedown.flashNotification keydown.flashNotification', hidefunc);
-    $(window).on('resize.flashNotification ' +
+      $(window).on('resize.flashNotification ' +
         'popstate.flashNotification', hidefunc);
     n();
   });
@@ -417,8 +520,7 @@ function flashButton(id) {
 // FILENAME AND RENAMING
 ///////////////////////////////////////////////////////////////////////////
 
-function selectEndOf(contentEditableElement)
-{
+function selectEndOf(contentEditableElement) {
   var range,selection;
   if (document.createRange) {
     range = document.createRange();
@@ -699,7 +801,7 @@ function showMiddleButton(which) {
              'title="Restart program (Ctrl+Enter)">' +
              '<div class="reload"></div></button>';
     } else {
-      html = '<button id="run" title="Run program (Ctrl+Enter)">' +
+      html = '<button id="run" title="Run program(Ctrl+Enter)">' +
              '<div class="triangle"></div></button>';
     }
     $('#middle').find('div').eq(0).html(html);
@@ -933,8 +1035,7 @@ function showDialog(opts) {
           } else {
             x.val(up[attr]);
           }
-        }
-        else {
+        } else {
           x.html(up[attr]);
         }
       }
@@ -1238,6 +1339,7 @@ function hideProtractor(pane) {
   var protractor = preview.find('.protractor');
   if (protractor.length) {
     protractor.remove();
+    $('.turtle').remove();
     preview.find('.protractor-label').remove();
   }
 }
@@ -1693,7 +1795,7 @@ function updatePaneTitle(pane) {
         $('#' + pane + ' .editor').eq(0).toggleClass('jsmark', showjs);
         label = '<div class="langmenu pull-right" title="Languages">' +
                 '<nobr>&nbsp;<div class="gear">' +
-                '&nbsp;</div></div>'
+                '&nbsp;</div></div><div class = "debugtoggle pull-right"><i class = "fa fa-bug"></i></div>'
               + label;
       }
     }
@@ -2008,8 +2110,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (state.turtle && !state.bits) {
       if (ev && $(ev.target).hasClass('bits')) {
         state.turtle = false;
-      }
-      else {
+      } else {
         state.bits = true;
       }
       return state;
@@ -2277,6 +2378,7 @@ function sizeHtmlCssPanels(pane) {
   var addcss = multipane && meta && meta.hasOwnProperty('css');
   box.find('.htmlmark').css('display', addhtml ? 'block' : 'none');
   box.find('.cssmark').css('display', addcss ? 'block' : 'none');
+  box.find('.scrubbermark').css('display', sliderCreated ? 'block' : 'none');
   setupHpanelBox(box);
 }
 
@@ -2307,7 +2409,9 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
     '<div class="hpanel">',
     '<div id="' + id + '" class="editor"></div>',
     '</div>',
-    '<div class="hpanel cssmark" style="display:none" share="25">',
+    '<div class="hpanel scrubbermark" style= "display:none" share="10" >',
+    '</div>',
+    '<div class="hpanel cssmark" style="display:none, zIndex:1 " share="25">',
     '</div>',
     '<div class="hpanel htmlmark" style="display:none" share="25">',
     '</div>'
@@ -2722,6 +2826,9 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     paneState.lastChangeTime = +(new Date);
     fireEvent('changehtmlcss', [pane]);
   }
+  editor.getSession().on("changeScrollTop", function() {
+    repositionVariables(pane);
+  });
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
@@ -2953,6 +3060,7 @@ function getPaneEditorData(pane) {
 //   (one for each CSS class used for highlighting)
 // }
 function markPaneEditorLine(pane, line, markclass) {
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -2976,7 +3084,7 @@ function markPaneEditorLine(pane, line, markclass) {
   // have applied the style on a particular line.
   var idMap = paneState.marked[markclass];
   if (zline in idMap) {
-    return;  // Nothing to do if already highlighted.
+    return; // Nothing to do if already highlighted.
   }
   if (/^gutter/.test(markclass)) {
     paneState.editor.session.addGutterDecoration(zline, markclass);
@@ -3002,6 +3110,7 @@ function markPaneEditorLine(pane, line, markclass) {
 // The inverse of markPaneEditorLine: clears a marked line by
 // looking up the ACE marked-line ID and unmarking it.
 function clearPaneEditorLine(pane, line, markclass) {
+
   var paneState = state.pane[pane];
   if (!paneState.editor) {
     return;
@@ -3249,6 +3358,155 @@ function setupHpanelBox(box) {
         $(changed).trigger('panelsize');
       }
     });
+  });
+}
+
+function arrow(pane, arrow_list, traceEventNum, show_fade) {
+  /* note: we expect arrow_list to be an array of key value pairs where 
+  each key is a color for the arrow, and each value is a list of location pairs
+  to draw an arrow on.   */
+
+  var dropletEditor = state.pane[pane].dropletEditor;
+  var arrow_data = arrow_list[traceEventNum];
+  var firstBeforeLoc = {};
+  var secondBeforeLoc = {};
+  var firstAfterLoc = {};
+  var secondAfterLoc = {};
+
+  var block_mode = getPaneEditorBlockMode(pane);
+
+  $(".arrow").remove();
+
+  if (arrow_data){
+    if(arrow_data["before"]){
+      firstBeforeLoc = arrow_data['before']["first"];
+      secondBeforeLoc = arrow_data['before']['second'];
+    }
+    if(arrow_data["after"]){
+      firstAfterLoc = arrow_data["after"]["first"];
+      secondAfterLoc = arrow_data["after"]["second"];
+    }
+  }
+  state.pane[pane].editor.getSession().on("changeScrollTop", function(e) {
+      coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
+  });
+  coords_and_offsets(firstBeforeLoc, secondBeforeLoc, show_fade, block_mode, pane, dropletEditor);
+
+}
+
+function coords_and_offsets(firstLoc, secondLoc, show_fade, block_mode, pane, dropletEditor) {
+  /* Helper function to grab proper coordinates to draw the arrows.*/
+
+  if (firstLoc.first_line != undefined && secondLoc.first_line != undefined) {
+    
+    if (block_mode){
+      var startBounds = dropletEditor.getLineMetrics(firstLoc.first_line - 1);
+      var endBounds = dropletEditor.getLineMetrics(secondLoc.first_line - 1);
+      startcoords = {pageX : startBounds.bounds.x, pageY: startBounds.bounds.y - startBounds.bounds.height/2};
+      endcoords =  {pageX : endBounds.bounds.x, pageY: endBounds.bounds.y + endBounds.bounds.height/4};
+      offset_top = startBounds.bounds.height - $(".editor").offset().top;
+      var pixel_cushion = 50; //add to every left offset to keep arrow off of the blocks.
+      offset_left = $('.editor').offset().left + pixel_cushion;
+      var x_val = Math.max(startBounds.bounds.width, endBounds.bounds.width);
+    } else {
+      var font_size = state.pane[pane].editor.getFontSize();
+      offset_top = $(".editor").offset().top - font_size/2;
+      var pixel_cushion = 50; //add to every left offset to keep arrow off of the text
+      offset_left = $(".editor").offset().left + pixel_cushion;
+      startcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((firstLoc.first_line), (firstLoc.last_column + 10));
+      endcoords = state.pane[pane].editor.renderer.textToScreenCoordinates((secondLoc.first_line), (secondLoc.last_column + 10));
+      console.log("Coords: ", startcoords, endcoords);
+      startcoords.pageY = startcoords.pageY - font_size/2;
+      endcoords.pageY = endcoords.pageY - font_size/2;
+      var x_val = Math.max(startcoords.pageX, endcoords.pageX);
+    }
+    if ($("#drawnArrow").length > 0) {
+      arrows.redrawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
+    } else {
+      arrows.drawArrow(show_fade, startcoords, endcoords, x_val, offset_left, offset_top, block_mode);
+    }
+  }
+}
+
+// Shows a single variable or function call annotation at a particular line
+// number. If annotations already exist at that line number, the annotation is
+// appended to them.
+function showVar(pane, lineNum, name, value, argsString) {
+  // Create the annotation string that will be displayed to the user. Variable
+  // annotations will look like "x=3", and function call annotations will look
+  // like "f(x, y)=3".
+  var text = htmlEscape(name);
+  if (typeof argsString === "string") {
+    text += "(" + htmlEscape(argsString) + ")";
+  }
+  text += "=" + htmlEscape(value) + "&nbsp;&nbsp;";
+
+  var divId = "line" + lineNum + "vars";
+  if ($("#" + divId).length) {
+    // If the annotation div for this line number already exists, append the
+    // new annotation to it.
+    $("#" + divId).append(text);
+  } else {
+    // Otherwise we have to create an annotation div. First, calculate the
+    // position the div needs to align with its line number. Droplet and Ace
+    // Editor have different APIs for this.
+    var coords;
+    var offsetTop = 0;
+    var blockMode = getPaneEditorBlockMode(pane);
+    if (blockMode) {
+      var dropletEditor = state.pane[pane].dropletEditor;
+      var bounds = dropletEditor.getLineMetrics(lineNum - 1);
+      coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
+    } else {
+      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+      coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+      offsetTop = $("div[id^='editor_']").offset().top;
+    }
+
+    // Create the div and position it.
+    var div = document.createElement('div');
+    div.id = divId;
+    div.className = "vars";
+    div.innerHTML = text;
+    div.style.visibility = "visible";
+    div.style.position = "absolute";
+    div.style.zIndex = "10";
+    div.style.right = "25px";
+    div.style.top = String(coords.pageY - offsetTop) + "px";
+
+    // Append it to the proper element, depending on whether we're in block
+    // mode or not.
+    if (blockMode) {
+      $("div[id^='editor_'] .droplet-main-scroller").append(div);
+    } else {
+      $("div[id^='editor_']").append(div);
+    }
+  }
+}
+
+// Clears all the annotation divs, but leaves the divs themselves so we don't
+// have to do all the work of positioning them again.
+function emptyVariables() {
+  $(".vars").empty();
+}
+
+// Removes all the annotation divs.
+function removeVariables() {
+  $(".vars").remove();
+}
+
+// Repositions each annotation div. This needs to happen when the user scrolls
+// in Ace Editor mode.
+function repositionVariables(pane) {
+  $("#" + pane + " .vars").each(function() {
+    var matches = this.id.match(/^line(\d+)vars$/);
+    if (matches) {
+      var lineNum = parseInt(matches[1], 10);
+      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+      var coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+      var offsetTop = $("div[id^='editor_']").offset().top;
+      $(this).css("top", String(coords.pageY - offsetTop) + "px");
+    }
   });
 }
 

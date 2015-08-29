@@ -18,6 +18,31 @@
   }
 }
 
+.debugtoggle:hover {
+  color: #fff;
+}
+
+#backButton {
+  float: left;
+  margin-left: 100px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#forwardButton {
+  margin-right: 100px;
+  float: right;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#label {
+  text-align: center;
+  font-family: Lato,Verdana,Helvetica,sans-serif;
+  vertical-align: middle;
+  font-size: 80%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -621,7 +646,7 @@ body, .panetitle, #owner {
   overflow: visible;
 }
 
-.htmlmark:before, .cssmark:before, .jsmark:before {
+.htmlmark:before, .cssmark:before, .jsmark:before, .scrubbermark:before {
   color: #8bf;
   font-size: 60px;
   font-family: Arial, sans-serif;
@@ -629,7 +654,7 @@ body, .panetitle, #owner {
   pointer-events: none;
   opacity: .5;
   transition: opacity .3s;
-  z-index: 3;
+  z-index: 1;
   position: absolute;
   display: table;
   margin: auto;
@@ -671,8 +696,16 @@ body, .panetitle, #owner {
 /* Code line highlighting for currently-running code */
 .debugtrace {
   position: absolute;
-  background: #afeeee
+  background: #62B1FF;
 }
+
+.debugtraceprev{
+  position: absolute;
+  background: #A1D0FF;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
 
 /* Code line highlighting for mouse-focused code */
 .debugfocus {
@@ -715,6 +748,10 @@ body#pencildoc #diigolet-csm {
   color: #87ceeb;
   z-index: 2000;
   cursor: pointer
+}
+
+.ui-slider-label {
+  color: black
 }
 
 .blockmenu {
@@ -1049,8 +1086,9 @@ body#pencildoc #diigolet-csm {
   left: 0;
   height: 100%;
   width: 100%;
-  border-top: 7px solid #cdf;
-  cursor: row-resize
+  border-top: 7px solid #F0F0F0;
+  cursor: row-resize;
+  background-color: rgba(255,255,255,0);
 }
 
 .hpanel:nth-of-type(1) {
@@ -1067,8 +1105,12 @@ body#pencildoc #diigolet-csm {
   z-index: 999999
 }
 
-#pencildoc .droplet-palette-element {
-  background-color: #fffde7;
+.arrow {
+  pointer-events:none;
+}
+
+.editor .vars {
+  font-size: 12px;
 }
 
 #pencildoc .droplet-palette-header {
@@ -1122,6 +1164,69 @@ body#pencildoc #diigolet-csm {
 .droplet-palette-scroller:hover::-webkit-scrollbar-thumb {
   background-color: #fdd835;
   border: 2px solid #fffde7;
+}
+
+#slider {
+  position: relative;
+  top: 20%;
+  left: 10%;
+  width: 80%;
+}
+
+#slider.ui-slider-range {
+  height: 50px;
+}
+ 
+#slider .ui-slider-tip {
+  width: 50px;
+  visibility: visible;
+  opacity: 1;
+  top: -30px;
+}
+
+#slider.ui-slider .ui-slider-handle {
+    top: -6px;
+    height: 15px;
+    width: 15px;
+    transform: rotateZ(360deg);
+    z-index: 400;
+}
+                  
+#slider.ui-slider .ui-slider-handle.ui-state-hover, 
+#slider.ui-slider .ui-slider-handle.ui-state-focus, 
+#slider.ui-slider .ui-slider-handle.ui-state-active {
+  border-color: #172f38;
+}
+
+#slider.ui-slider .ui-slider-pip .ui-slider-line {
+  background: #d5cebc;
+  transition: all 0.4s ease;
+}
+                 
+#slider.ui-slider.ui-slider-horizontal {
+  height: 6px;
+}
+                
+#slider.ui-slider.ui-slider-horizontal .ui-slider-pip {
+  top: 10px;
+}
+                  
+#slider.ui-slider.ui-slider-horizontal .ui-slider-pip .ui-slider-line {
+  width: 2px;
+  height: 5px;
+  margin-left: -1px;
+}
+              
+#slider.ui-slider.ui-slider-horizontal .ui-slider-pip[class*=ui-slider-pip-selected] .ui-slider-line {
+  height: 10px;
+}
+              
+#slider.ui-slider.ui-slider-horizontal .ui-slider-pip.ui-slider-pip-inrange .ui-slider-line {
+  height: 5px;
+}
+
+#slider.ui-slider-horizontal .ui-slider-range-min {
+  background: #1E90FF;
 }
 
 .texttoggle, .blocktoggle {

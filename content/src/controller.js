@@ -93,6 +93,7 @@ function logCodeEvent(action, filename, code, mode, lang) {
 //
 function modelatpos(pos) {
   return model.pane[paneatpos(pos)];
+
 }
 
 //
@@ -533,6 +534,7 @@ view.on('logout', function() {
   updateTopControls(false);
   view.flashNotification('Logged out.');
 });
+
 
 view.on('login', function() {
   if (specialowner()) {
@@ -1858,23 +1860,37 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
+// Takes a JavaScript or CoffeeScript program, instruments it, and returns the
+// result as JavaScript. `language` can be either 'javascript' or
+// 'coffeescript'.
+//
+// Returns false if the input program couldn't be parsed.
 function instrumentCode(code, language) {
   try {
+    // Options for pencil-tracer.
+    var options = {
+      traceFunc: 'ide.trace', // ide.trace() in debug.js will collect trace events.
+      includeArgsStrings: true,
+      sourceMap: true
+    };
+
+    var result;
     if (language === 'javascript') {
-      options = {
-        traceFunc: 'ide.trace'
-      };
-      code = pencilTracer.instrumentJs('', code, options);
+      result = pencilTracer.instrumentJs(code, options);
     } else if (language === 'coffeescript') {
-      options = {
-        traceFunc: 'ide.trace',
-        sourceMap: true,
-        bare: true
-      };
-      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
-      debug.setSourceMap(result.v3SourceMap);
-      code = result.js;
+      options.bare = true;
+      result = pencilTracer.instrumentCoffee(code, icedCoffeeScript, options);
+    } else {
+      // Return original code if we've been passed an unexpected language.
+      return code;
     }
+
+    // Pass the source map to the debugger so it can show line numbers of
+    // errors properly.
+    debug.setSourceMap(result.map);
+
+    // Return the instrumented code.
+    return result.code;
   } catch (err) {
     // An error here means that either the user's code has a syntax error, or
     // pencil-tracer has a bug. Returning false here means the user's code
@@ -1883,7 +1899,6 @@ function instrumentCode(code, language) {
     // their code will still run but with the debugger disabled.
     return false;
   }
-  return code;
 }
 
 function runCodeAtPosition(position, doc, filename, emptyOnly) {

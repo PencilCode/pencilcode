@@ -3,11 +3,11 @@
 // See: http://jsfiddle.net/jamessynge/QQ43x/
 
 var $   = require('jquery'),
+  jqueryturtle  = require('jquery-turtle'),
     see = require('see');
 
-
+//var t;
 eval(see.scope('drawProtractor'));
-
 function to360(v) {
     while (v < 0) {
         v = 7200 - Math.abs(v);
@@ -16,9 +16,26 @@ function to360(v) {
 }
 
 function renderProtractor(canvas, step) {
+  var t;
   var ctx = canvas[0].getContext('2d');
-  ctx.resetTransform();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width(), canvas.height());
+  if (step.startCoords != null) {
+    t =  new $.turtle.Turtle;
+    t.appendTo('.preview')
+    var offset = $('.preview').offset()
+    t.moveto({pageX: step.startCoords.pageX + offset.left, pageY:step.startCoords.pageY + offset.top});
+    t.wear('gray');
+    if (step.endCoords != null) {
+      if (step.command == "rt") {
+        t.rt(step.endCoords.direction);
+      } 
+
+      else if (step.command == "lt") {
+        t.lt(step.endCoords.direction);
+      }
+    }
+  }
   if (!step.startCoords) {
     return;
   }
@@ -202,7 +219,6 @@ function drawOuterLabel(ctx, radius, label, angle, zeroAngle) {
 
 function drawProtractor(ctx, radius, zeroAngle) {
     ctx.save();
-
     zeroAngle = to360(zeroAngle || 0);
     ctx.rotate(zeroAngle * Math.PI / 180.0);
 
