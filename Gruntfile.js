@@ -111,7 +111,8 @@ module.exports = function(grunt) {
             'content/lib/seedrandom.js',
             'content/lib/socket.io.js',
             'content/lib/recolor.js',
-            'content/src/showturtle.js'
+            'content/src/showturtle.js',
+            'content/src/db.js',
           ],
           'content/editor.js': [
             'content/editor.js'
@@ -161,7 +162,8 @@ module.exports = function(grunt) {
           'content/lib/seedrandom.js',
           'content/lib/socket.io.js',
           'content/lib/recolor.js',
-          'content/src/showturtle.js'
+          'content/src/showturtle.js',
+          'content/src/db.js',
         ],
         dest: 'content/turtlebits.js'
       },
