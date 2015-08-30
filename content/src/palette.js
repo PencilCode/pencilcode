@@ -113,6 +113,9 @@ module.exports = {
         }, {
           block: '@jumpxy 30, 20',
           title: 'Jump changing x and y without drawing'
+        }, {
+          block: '@pause 5',
+          title: 'Do not move for five seconds'
         }
       ])
     }, {
@@ -122,6 +125,9 @@ module.exports = {
         {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
+        }, {
+          block: 'for x in [0...10]\n  ``',
+          title: 'Repeat something while counting up x'
         }, {
           block: 'while `` < ``\n  ``',
           title: '  Repeat while a condition is true'
@@ -168,7 +174,7 @@ module.exports = {
           title: 'Use an image for the turtle'
         }, {
           block: '@grow 3',
-          title: 'Grow the sizeof the turtle'
+          title: 'Grow the size of the turtle'
         }, {
           block: '@ht()',
           title: 'Hide the main turtle'
@@ -995,7 +1001,7 @@ module.exports = {
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
     '?.grow': {color: 'purple', dropdown: [scales]},
-    '?.pause': {},
+    '?.pause': {color: 'lightblue'},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
     '?.cs': {color: 'purple'},
