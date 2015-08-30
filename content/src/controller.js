@@ -360,27 +360,34 @@ view.on('share', function() {
       console.log("Nothing to share.");
       return;
     } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-      var iframe = document.getElementById('output-frame');
-      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+      if (model.tempThumbnail) {
+        postThumbnailGeneration(model.tempThumbnail);
+      } else {
+        var iframe = document.getElementById('output-frame');
+        // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+        thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+      }
     }
-    var data = $.extend({
-      thumbnail: thumbnailDataUrl
-    }, modelatpos('left').data, doc);
-    storage.saveFile('share', sharename, data, true, 828, false, function(m) {
-      var opts = { title: shortfilename };
-      if (!m.error && !m.deleted) {
-        opts.shareStageURL = "//share." + window.pencilcode.domain +
-            "/home/" + sharename;
-      }
-      if (model.ownername) {
-        // Share the run URL unless there is no owner (e.g., for /first).
-        opts.shareRunURL = "//" + document.domain + '/home/' +
-            modelatpos('left').filename;
-      }
-      opts.shareEditURL = window.location.href;
-      // Now bring up share dialog
-      view.showShareDialog(opts);
-    });
+    function postThumbnailGeneration(thumbnailDataUrl) {
+      var data = $.extend({
+        thumbnail: thumbnailDataUrl
+      }, modelatpos('left').data, doc);
+      storage.saveFile('share', sharename, data, true, 828, false, function(m) {
+        var opts = { title: shortfilename };
+        if (!m.error && !m.deleted) {
+          opts.shareStageURL = "//share." + window.pencilcode.domain +
+              "/home/" + sharename;
+        }
+        if (model.ownername) {
+          // Share the run URL unless there is no owner (e.g., for /first).
+          opts.shareRunURL = "//" + document.domain + '/home/' +
+              modelatpos('left').filename;
+        }
+        opts.shareEditURL = window.location.href;
+        // Now bring up share dialog
+        view.showShareDialog(opts);
+      });
+    }
   }
 });
 

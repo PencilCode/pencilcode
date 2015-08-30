@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-08-07
+ * Date: 2015-08-30
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -62754,24 +62754,14 @@ Editor.prototype.populateSocket = function(socket, string) {
 };
 
 Editor.prototype.populateBlock = function(block, string) {
-  var cursor, newBlock, oldBlockEnd;
+  var location, newBlock;
   newBlock = this.mode.parse(string, {
     wrapAtRoot: false
   }).start.next.container;
   if (newBlock) {
-    if (this.cursor.count < block.start.getLocation().count) {
-      this.replace(block, newBlock);
-    } else if (this.cursor.count < block.end.getLocation().count) {
-      this.setCursor(block, null, 'before');
-      this.replace(block, newBlock);
-    } else {
-      cursor = this.cursor.clone();
-      oldBlockEnd = block.end.getLocation().count;
-      this.setCursor(this.tree);
-      this.replace(block, newBlock);
-      cursor.count += newBlock.end.getLocation().count - oldBlockEnd;
-      this.cursor = cursor;
-    }
+    location = block.start.prev;
+    this.spliceOut(block);
+    this.spliceIn(newBlock, location);
     return true;
   }
   return false;
@@ -67605,7 +67595,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   HTMLParser.prototype.getButtons = function(node) {
     var buttons, ref;
     buttons = {};
-    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table' || ref === 'div') {
+    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table') {
       buttons.addButton = true;
       if (node.childNodes.length !== 0) {
         buttons.subtractButton = true;
@@ -67851,11 +67841,18 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.makeIndentBounds = function(node) {
-    var bounds, lastLine;
+    var bounds, lastLine, trailingText;
     bounds = {
       start: this.positions[node.__indentLocation.start],
       end: this.positions[node.__indentLocation.end]
     };
+    trailingText = this.lines[bounds.start.line].slice(bounds.start.column);
+    if (trailingText.length > 0 && trailingText.trim().length === 0) {
+      bounds.start = {
+        line: bounds.start.line,
+        column: this.lines[bounds.start.line].length
+      };
+    }
     if (node.__location.endTag != null) {
       lastLine = this.positions[node.__location.endTag.start].line - 1;
       if (lastLine > bounds.end.line || (lastLine === bounds.end.line && this.lines[lastLine].length > bounds.end.column)) {
@@ -67953,13 +67950,11 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
         this.fixBounds(root);
       }
     }
-    window.root = root;
-    window.parse5 = htmlParser;
     return this.mark(0, root, 0, null);
   };
 
   HTMLParser.prototype.mark = function(indentDepth, node, depth, bounds, nomark) {
-    var attrib, child, indentBounds, k, l, lastChild, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, results, results1, results2;
+    var attrib, child, indentBounds, k, l, lastChild, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, ref4, results, results1, results2;
     if (nomark == null) {
       nomark = false;
     }
@@ -68021,15 +68016,15 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
             });
             lastChild = null;
           } else {
-            if (!(TAGS[node.nodeName].content === 'optional' || (node.nodeName === 'script' && this.hasAttribute(node, 'src')) || node.__indentLocation.end === node.__location.end)) {
+            if (!(((ref3 = TAGS[node.nodeName]) != null ? ref3.content : void 0) === 'optional' || (node.nodeName === 'script' && this.hasAttribute(node, 'src')) || node.__indentLocation.end === node.__location.end)) {
               this.htmlSocket(node, depth + 1, null, indentBounds, null, true);
             }
           }
         }
-        ref3 = node.childNodes;
+        ref4 = node.childNodes;
         results2 = [];
-        for (n = 0, len3 = ref3.length; n < len3; n++) {
-          child = ref3[n];
+        for (n = 0, len3 = ref4.length; n < len3; n++) {
+          child = ref4[n];
           if (lastChild && lastChild.__location.end > child.__location.start) {
             nomark = true;
           } else {
@@ -68898,7 +68893,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
             classes: ['no-drop'],
             empty: ''
           });
-        } else {
+        } else if (this.opts.zeroParamFunctions) {
           nodeBoundsStart = this.getBounds(node.id).end;
           match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
           if (match != null) {
@@ -68940,13 +68935,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
             classes: ['no-drop'],
             empty: ''
           });
-        } else {
+        } else if (this.opts.zeroParamFunctions) {
           if (node.id != null) {
             nodeBoundsStart = this.getBounds(node.id).end;
             match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
           } else {
             nodeBoundsStart = this.getBounds(node).start;
-            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*function\s*\()(\s*\))/);
+            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*function\s*\()(\s*)\)/);
           }
           if (match != null) {
             return position = this.addSocket({
@@ -72557,7 +72552,7 @@ exports.View = View = (function() {
             bottomMargin = margins.bottom;
           }
           this.minDistanceToBase[desiredLine].above = Math.max(this.minDistanceToBase[desiredLine].above, minDistanceToBase[line].above + margins.top);
-          this.minDistanceToBase[desiredLine].below = Math.max(this.minDistanceToBase[desiredLine].below, minDistanceToBase[line].below + Math.max(bottomMargin, ((((ref1 = this.model.buttons) != null ? ref1.addButton : void 0) || ((ref2 = this.model.buttons) != null ? ref2.subtractButton : void 0)) && desiredLine === this.lineLength - 1 ? this.view.opts.buttonPadding + this.view.opts.buttonHeight : 0)));
+          this.minDistanceToBase[desiredLine].below = Math.max(this.minDistanceToBase[desiredLine].below, minDistanceToBase[line].below + Math.max(bottomMargin, ((((ref1 = this.model.buttons) != null ? ref1.addButton : void 0) || ((ref2 = this.model.buttons) != null ? ref2.subtractButton : void 0)) && desiredLine === this.lineLength - 1 && this.multilineChildrenData[line] === MULTILINE_END && this.lineChildren[line].length === 1 ? this.view.opts.buttonPadding + this.view.opts.buttonHeight : 0)));
         }
       }
       ref3 = this.minDimensions;
