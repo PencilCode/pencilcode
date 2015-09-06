@@ -27,6 +27,7 @@
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
+    "PencilcodeMicroDatabase": "dinuka2013513/pencilcode-micro-db",
     "seedrandom": "latest",
     "source-map": "latest",
     "tamper": "latest"
@@ -80,7 +81,9 @@
     "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
   },
   "browserify": {
-    "transform": [ "browserify-shim" ]
+    "transform": [
+      "browserify-shim"
+    ]
   },
   "browserify-shim": {
     "html2canvas": {
@@ -91,11 +94,15 @@
     },
     "tooltipster": {
       "exports": "jQuery.fn.tooltipster",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
     },
     "see": {
       "exports": "see",
-      "depends": ["jquery:jQuery"]
+      "depends": [
+        "jquery:jQuery"
+      ]
     }
   }
 }
