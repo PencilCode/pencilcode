@@ -1,6 +1,6 @@
 module.exports = function (dbPath) {
   var app = require('express')();
-  var dbService = require('../../pencilcode-micro-db')(dbPath);
+  var dbService = require('PencilcodeMicroDatabase')(dbPath);
 
   function processRequest(method, req, res) {
     var user = res.locals.owner;
