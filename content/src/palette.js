@@ -427,23 +427,23 @@ module.exports = {
           title: 'Make a connection with a JSON DB',
           id: 'dbConnection'
         },
-//        {
-//          block: ' .send(function(data,error){\n\n});',
-//          title: 'Execute the given query',
-//          id: 'dbSend'
-//        },
         {
-          block: 'db.set(function(db,arg1,arg2){\n\n}, "arg1","arg2");',
+          block: 'request.send(function(data,error){\n\n});',
+          title: 'Execute the given query',
+          id: 'dbSend'
+        },
+        {
+          block: 'var request=db.set(function(db,arg1,arg2){\n\n}, "arg1","arg2");',
           title: 'Update the key with the given value in JSON DB',
           id: 'dbSet'
         },
         {
-          block: 'db.get(function(db,arg1,arg2){\n\n}, "arg1","arg2");',
+          block: 'var request=db.get(function(db,arg1,arg2){\n\n}, "arg1","arg2");',
           title: 'Query the values from JSON DB',
           id: 'dbGet'
         },
         {
-          block: 'db.delete(function(db,arg1,arg2){\n\n}, "arg1","arg2");',
+          block: 'var request=db.delete(db);',
           title: 'Delete the JSON DB',
           id: 'dbGet'
         }
