@@ -7,7 +7,7 @@ var express = require('express'),
     load = require('./load.js'),
     config = require('./config'),
     utils = require('./utils.js');
-    dbServer=require('./dbServer.js')('./db/data');
+    dbServer=require('./microdbserver.js')('./local/data');
 
 exports.initialize = function(app) {
   // Remove the express header.
