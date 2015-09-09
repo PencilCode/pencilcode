@@ -65307,8 +65307,7 @@ exports.Draw = Draw = (function() {
           'strokeColor': 'none',
           'lineWidth': 1,
           'fillColor': 'none',
-          'dotted': '',
-          'transform': ''
+          'dotted': ''
         }, this.style);
         Path.__super__.constructor.call(this);
       }
@@ -65699,7 +65698,7 @@ exports.Draw = Draw = (function() {
           this._lastCssClass = this.style.cssClass;
           this.element.setAttribute('class', this.style.cssClass);
         }
-        if ((this.style.transform != null) && this.style.transform === this._lastTransform) {
+        if ((this.style.transform != null) && this.style.transform !== this._lastTransform) {
           this._lastTransform = this.style.transform;
           this.element.setAttribute('transform', this.style.transform);
         }
@@ -72925,14 +72924,17 @@ exports.View = View = (function() {
     };
 
     GenericViewNode.prototype.hide = function() {
-      var element, j, len1, ref, results;
+      var element, j, len1, ref;
       ref = this.elements;
-      results = [];
       for (j = 0, len1 = ref.length; j < len1; j++) {
         element = ref[j];
-        results.push(element != null ? typeof element.deactivate === "function" ? element.deactivate() : void 0 : void 0);
+        if (element != null) {
+          if (typeof element.deactivate === "function") {
+            element.deactivate();
+          }
+        }
       }
-      return results;
+      return this.activeElements = [];
     };
 
     GenericViewNode.prototype.destroy = function(root) {
@@ -72953,6 +72955,7 @@ exports.View = View = (function() {
       } else if (this.highlightArea != null) {
         this.highlightArea.destroy();
       }
+      this.activeElements = [];
       ref1 = this.children;
       results = [];
       for (l = 0, len2 = ref1.length; l < len2; l++) {
@@ -73855,6 +73858,7 @@ exports.View = View = (function() {
           });
         }
         this.dropdownElement.deactivate();
+        this.dropdownElement.setParent(this.group);
         this.elements.push(this.dropdownElement);
       }
     }
