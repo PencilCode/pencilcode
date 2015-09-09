@@ -19,7 +19,7 @@
     "pencil-tracer": "yjerem/pencil-tracer#master",
     "seedrandom": "latest",
     "socket.io-client": "#v1.2.0",
-    "tooltipster": "latest",
+    "tooltipster": "iamceege/tooltipster#v4",
     "zeroclipboard": "latest"
   },
   "resolutions": {

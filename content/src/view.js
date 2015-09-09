@@ -2346,7 +2346,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   dropletEditor.setValue(text);
 
   dropletEditor.on('changepalette', function() {
-    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+    tooltipsterBlockPalettes();
   });
 
   dropletEditor.on('selectpalette', function(p) {
@@ -2373,9 +2373,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   });
 
   dropletEditor.on('toggledone', function() {
-    if (!$('.droplet-hover-div').hasClass('tooltipstered')) {
-      $('.droplet-hover-div').tooltipster();
-    }
+    tooltipsterBlockPalettes();
     updatePaneTitle(pane);
   });
 
@@ -2505,7 +2503,7 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
   editor.setValue(text);
 
   editor.on('changepalette', function() {
-    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+    tooltipsterBlockPalettes();
   });
 
   editor.on('selectpalette', function(p) {
@@ -2517,7 +2515,7 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
   });
 
   editor.on('toggledone', function() {
-    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+    tooltipsterBlockPalettes();
   });
 
   setupResizeHandler(container.parent(), editor);
@@ -2532,6 +2530,22 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
   aceEditor = editor.aceEditor;
   aceEditor.on('change', paneState.handleHtmlCssChange);
   setupAceEditor(pane, container, aceEditor, "ace/mode/" + htmlorcss, text);
+}
+
+function tooltipsterBlockPalettes() {
+  // Tooltipster all block palette items that are not already tooltipsterized.
+  $('.droplet-palette-canvas > g').each(function() {
+    if (!$(this).data('tooltipster-ns')) {
+      // Copy the title from the svg element if any.
+      var content = $(this).find('title').first().text();
+      if (content) {
+        $(this).tooltipster({
+          content: content, position: 'right', interactive: true
+        });
+        $(this).find('title').remove(); // Remove the existing title elements.
+      }
+    }
+  });
 }
 
 function tearDownSubEditor(box, pane, paneState, htmlorcss) {
