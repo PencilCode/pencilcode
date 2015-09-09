@@ -2,9 +2,9 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-08-30
+ * Date: 2015-09-09
  */
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/anthony/Projects/droplet/antlr/CLexer.js":[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -699,7 +699,7 @@ CLexer.grammarFileName = "C.g4";
 exports.CLexer = CLexer;
 
 
-},{"antlr4/index":50}],2:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/CListener.js":[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -1471,7 +1471,7 @@ CListener.prototype.exitDeclarationList = function(ctx) {
 
 
 exports.CListener = CListener;
-},{"antlr4/index":50}],3:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/CParser.js":[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -11381,7 +11381,7 @@ CParser.prototype.declarationList_sempred = function(localctx, predIndex) {
 
 exports.CParser = CParser;
 
-},{"./CListener":2,"antlr4/index":50}],4:[function(require,module,exports){
+},{"./CListener":"/home/anthony/Projects/droplet/antlr/CListener.js","antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/JavaLexer.js":[function(require,module,exports){
 // Generated from Java.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -11978,7 +11978,7 @@ JavaLexer.grammarFileName = "Java.g4";
 exports.JavaLexer = JavaLexer;
 
 
-},{"antlr4/index":50}],5:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/JavaListener.js":[function(require,module,exports){
 // Generated from Java.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -12903,7 +12903,7 @@ JavaListener.prototype.exitArguments = function(ctx) {
 
 
 exports.JavaListener = JavaListener;
-},{"antlr4/index":50}],6:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/JavaParser.js":[function(require,module,exports){
 // Generated from Java.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -23364,7 +23364,7 @@ JavaParser.prototype.expression_sempred = function(localctx, predIndex) {
 
 exports.JavaParser = JavaParser;
 
-},{"./JavaListener":5,"antlr4/index":50}],7:[function(require,module,exports){
+},{"./JavaListener":"/home/anthony/Projects/droplet/antlr/JavaListener.js","antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/jvmBasicLexer.js":[function(require,module,exports){
 // Generated from jvmBasic.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -23871,7 +23871,7 @@ jvmBasicLexer.grammarFileName = "jvmBasic.g4";
 exports.jvmBasicLexer = jvmBasicLexer;
 
 
-},{"antlr4/index":50}],8:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/jvmBasicListener.js":[function(require,module,exports){
 // Generated from jvmBasic.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -24778,7 +24778,7 @@ jvmBasicListener.prototype.exitAbsfunc = function(ctx) {
 
 
 exports.jvmBasicListener = jvmBasicListener;
-},{"antlr4/index":50}],9:[function(require,module,exports){
+},{"antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/antlr/jvmBasicParser.js":[function(require,module,exports){
 // Generated from jvmBasic.g4 by ANTLR 4.5
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
@@ -34521,7 +34521,7 @@ jvmBasicParser.prototype.absfunc = function() {
 
 exports.jvmBasicParser = jvmBasicParser;
 
-},{"./jvmBasicListener":8,"antlr4/index":50}],10:[function(require,module,exports){
+},{"./jvmBasicListener":"/home/anthony/Projects/droplet/antlr/jvmBasicListener.js","antlr4/index":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/BufferedTokenStream.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -34922,7 +34922,7 @@ BufferedTokenStream.prototype.fill = function() {
 
 exports.BufferedTokenStream = BufferedTokenStream;
 
-},{"./IntervalSet":15,"./Lexer":17,"./Token":23}],11:[function(require,module,exports){
+},{"./IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./Lexer":"/home/anthony/Projects/droplet/node_modules/antlr4/Lexer.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/CommonTokenFactory.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -35017,7 +35017,7 @@ CommonTokenFactory.prototype.createThin = function(type, text) {
 
 exports.CommonTokenFactory = CommonTokenFactory;
 
-},{"./Token":23}],12:[function(require,module,exports){
+},{"./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/CommonTokenStream.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -35146,7 +35146,7 @@ CommonTokenStream.prototype.getNumberOfOnChannelTokens = function() {
 };
 
 exports.CommonTokenStream = CommonTokenStream;
-},{"./BufferedTokenStream":10,"./Token":23}],13:[function(require,module,exports){
+},{"./BufferedTokenStream":"/home/anthony/Projects/droplet/node_modules/antlr4/BufferedTokenStream.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/FileStream.js":[function(require,module,exports){
 //
 //  [The "BSD license"]
 //   Copyright (c) 2012 Terence Parr
@@ -35201,7 +35201,7 @@ FileStream.prototype.constructor = FileStream;
 
 exports.FileStream = FileStream;
 
-},{"./InputStream":14,"fs":54}],14:[function(require,module,exports){
+},{"./InputStream":"/home/anthony/Projects/droplet/node_modules/antlr4/InputStream.js","fs":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/lib/_empty.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/InputStream.js":[function(require,module,exports){
 // 
 //  [The "BSD license"]
 //   Copyright (c) 2012 Terence Parr
@@ -35337,7 +35337,7 @@ InputStream.prototype.toString = function() {
 
 exports.InputStream = InputStream;
 
-},{"./Token":23}],15:[function(require,module,exports){
+},{"./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js":[function(require,module,exports){
 /*jslint smarttabs:true */
 
 var Token = require('./Token').Token;
@@ -35632,7 +35632,7 @@ IntervalSet.prototype.elementName = function(literalNames, symbolicNames, a) {
 exports.Interval = Interval;
 exports.IntervalSet = IntervalSet;
 
-},{"./Token":23}],16:[function(require,module,exports){
+},{"./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/LL1Analyzer.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -35857,7 +35857,7 @@ LL1Analyzer.prototype._LOOK = function(s, stopState , ctx, look, lookBusy, calle
 exports.LL1Analyzer = LL1Analyzer;
 
 
-},{"./IntervalSet":15,"./PredictionContext":20,"./Token":23,"./Utils":24,"./atn/ATNConfig":26,"./atn/ATNState":31,"./atn/Transition":39}],17:[function(require,module,exports){
+},{"./IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./atn/ATNConfig":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfig.js","./atn/ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./atn/Transition":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/Lexer.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -36200,6 +36200,7 @@ Lexer.prototype.notifyListeners = function(e) {
 	var stop = this._input.index;
 	var text = this._input.getText(start, stop);
 	var msg = "token recognition error at: '" + this.getErrorDisplay(text) + "'";
+  msg += e.stack;
 	var listener = this.getErrorListenerDispatch();
 	listener.syntaxError(this, null, this._tokenStartLine,
 			this._tokenStartColumn, msg, e);
@@ -36250,7 +36251,7 @@ Lexer.prototype.recover = function(re) {
 
 exports.Lexer = Lexer;
 
-},{"./CommonTokenFactory":11,"./Recognizer":21,"./Token":23,"./error/Errors":48}],18:[function(require,module,exports){
+},{"./CommonTokenFactory":"/home/anthony/Projects/droplet/node_modules/antlr4/CommonTokenFactory.js","./Recognizer":"/home/anthony/Projects/droplet/node_modules/antlr4/Recognizer.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./error/Errors":"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/Parser.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -36941,7 +36942,7 @@ Parser.prototype.setTrace = function(trace) {
 };
 
 exports.Parser = Parser;
-},{"./Lexer":17,"./Recognizer":21,"./Token":23,"./atn/ATNDeserializationOptions":28,"./atn/ATNDeserializer":29,"./error/ErrorStrategy":47,"./tree/Tree":51}],19:[function(require,module,exports){
+},{"./Lexer":"/home/anthony/Projects/droplet/node_modules/antlr4/Lexer.js","./Recognizer":"/home/anthony/Projects/droplet/node_modules/antlr4/Recognizer.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./atn/ATNDeserializationOptions":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializationOptions.js","./atn/ATNDeserializer":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializer.js","./error/ErrorStrategy":"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorStrategy.js","./tree/Tree":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/ParserRuleContext.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -37174,7 +37175,7 @@ InterpreterRuleContext.prototype = Object.create(ParserRuleContext.prototype);
 InterpreterRuleContext.prototype.constructor = InterpreterRuleContext;
 
 exports.ParserRuleContext = ParserRuleContext;
-},{"./IntervalSet":15,"./RuleContext":22,"./tree/Tree":51}],20:[function(require,module,exports){
+},{"./IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./RuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/RuleContext.js","./tree/Tree":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -37926,7 +37927,7 @@ exports.SingletonPredictionContext = SingletonPredictionContext;
 exports.predictionContextFromRuleContext = predictionContextFromRuleContext;
 exports.getCachedPredictionContext = getCachedPredictionContext;
 
-},{"./RuleContext":22}],21:[function(require,module,exports){
+},{"./RuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/RuleContext.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/Recognizer.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -38099,7 +38100,7 @@ Object.defineProperty(Recognizer.prototype, "state", {
 
 exports.Recognizer = Recognizer;
 
-},{"./Token":23,"./error/ErrorListener":46}],22:[function(require,module,exports){
+},{"./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./error/ErrorListener":"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorListener.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/RuleContext.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
 //  Copyright (c) 2013 Sam Harwell
@@ -38266,7 +38267,7 @@ RuleContext.prototype.toString = function(ruleNames, stop) {
 };
 
 
-},{"./tree/Tree":51,"./tree/Trees":52}],23:[function(require,module,exports){
+},{"./tree/Tree":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js","./tree/Trees":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Trees.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js":[function(require,module,exports){
 //[The "BSD license"]
 // Copyright (c) 2012 Terence Parr
 // Copyright (c) 2012 Sam Harwell
@@ -38443,7 +38444,7 @@ CommonToken.prototype.toString = function() {
 exports.Token = Token;
 exports.CommonToken = CommonToken;
 
-},{}],24:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js":[function(require,module,exports){
 function arrayToString(a) {
 	return "[" + a.join(", ") + "]";
 }
@@ -38645,7 +38646,7 @@ exports.DoubleDict = DoubleDict;
 exports.escapeWhitespace = escapeWhitespace;
 exports.arrayToString = arrayToString;
 
-},{}],25:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
 //  Copyright (c) 2013 Sam Harwell
@@ -38812,7 +38813,7 @@ ATN.prototype.getExpectedTokens = function( stateNumber, ctx ) {
 ATN.INVALID_ALT_NUMBER = 0;
 
 exports.ATN = ATN;
-},{"./../IntervalSet":15,"./../LL1Analyzer":16,"./../Token":23}],26:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../LL1Analyzer":"/home/anthony/Projects/droplet/node_modules/antlr4/LL1Analyzer.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfig.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -38991,7 +38992,7 @@ LexerATNConfig.prototype.checkNonGreedyDecision = function(source, target) {
 
 exports.ATNConfig = ATNConfig;
 exports.LexerATNConfig = LexerATNConfig;
-},{"./ATNState":31,"./SemanticContext":38}],27:[function(require,module,exports){
+},{"./ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./SemanticContext":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/SemanticContext.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -39274,7 +39275,7 @@ OrderedATNConfigSet.prototype.constructor = OrderedATNConfigSet;
 exports.ATNConfigSet = ATNConfigSet;
 exports.OrderedATNConfigSet = OrderedATNConfigSet;
 
-},{"./../PredictionContext":20,"./../Utils":24,"./ATN":25,"./SemanticContext":38}],28:[function(require,module,exports){
+},{"./../PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./SemanticContext":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/SemanticContext.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializationOptions.js":[function(require,module,exports){
 //[The "BSD license"]
 // Copyright (c) 2013 Terence Parr
 // Copyright (c) 2013 Sam Harwell
@@ -39325,7 +39326,7 @@ ATNDeserializationOptions.defaultOptions.readOnly = true;
 
 exports.ATNDeserializationOptions = ATNDeserializationOptions;
 
-},{}],29:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializer.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
 //  Copyright (c) 2013 Sam Harwell
@@ -40016,7 +40017,7 @@ ATNDeserializer.prototype.lexerActionFactory = function(type, data1, data2) {
    
 
 exports.ATNDeserializer = ATNDeserializer;
-},{"./../IntervalSet":15,"./../Token":23,"./ATN":25,"./ATNDeserializationOptions":28,"./ATNState":31,"./ATNType":32,"./LexerAction":34,"./Transition":39}],30:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./ATNDeserializationOptions":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializationOptions.js","./ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./ATNType":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNType.js","./LexerAction":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerAction.js","./Transition":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNSimulator.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
@@ -40093,7 +40094,7 @@ ATNSimulator.prototype.getCachedContext = function(context) {
 
 exports.ATNSimulator = ATNSimulator;
 
-},{"./../PredictionContext":20,"./../dfa/DFAState":43,"./ATNConfigSet":27}],31:[function(require,module,exports){
+},{"./../PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./../dfa/DFAState":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js","./ATNConfigSet":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -40445,7 +40446,7 @@ exports.PlusBlockStartState = PlusBlockStartState;
 exports.StarBlockStartState = StarBlockStartState;
 exports.BasicBlockStartState = BasicBlockStartState;
 
-},{}],32:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNType.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
 //  Copyright (c) 2013 Sam Harwell
@@ -40488,7 +40489,7 @@ ATNType.PARSER = 1;
 exports.ATNType = ATNType;
 
 
-},{}],33:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerATNSimulator.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -41151,7 +41152,7 @@ LexerATNSimulator.prototype.getTokenName = function(tt) {
 
 exports.LexerATNSimulator = LexerATNSimulator;
 
-},{"./../Lexer":17,"./../PredictionContext":20,"./../Token":23,"./../dfa/DFAState":43,"./../error/Errors":48,"./ATN":25,"./ATNConfig":26,"./ATNConfigSet":27,"./ATNSimulator":30,"./ATNState":31,"./LexerActionExecutor":35,"./Transition":39}],34:[function(require,module,exports){
+},{"./../Lexer":"/home/anthony/Projects/droplet/node_modules/antlr4/Lexer.js","./../PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./../dfa/DFAState":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js","./../error/Errors":"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js","./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./ATNConfig":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfig.js","./ATNConfigSet":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js","./ATNSimulator":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNSimulator.js","./ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./LexerActionExecutor":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerActionExecutor.js","./Transition":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerAction.js":[function(require,module,exports){
 //
  //[The "BSD license"]
  // Copyright (c) 2013 Terence Parr
@@ -41536,7 +41537,7 @@ exports.LexerTypeAction = LexerTypeAction;
 exports.LexerPushModeAction = LexerPushModeAction;
 exports.LexerPopModeAction = LexerPopModeAction;
 exports.LexerModeAction = LexerModeAction;
-},{}],35:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerActionExecutor.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2013 Terence Parr
@@ -41713,7 +41714,7 @@ LexerActionExecutor.prototype.equals = function(other) {
 
 exports.LexerActionExecutor = LexerActionExecutor;
 
-},{"./LexerAction":34}],36:[function(require,module,exports){
+},{"./LexerAction":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerAction.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ParserATNSimulator.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -43400,7 +43401,7 @@ ParserATNSimulator.prototype.reportAmbiguity = function(dfa, D, startIndex, stop
 };
             
 exports.ParserATNSimulator = ParserATNSimulator;
-},{"./../IntervalSet":15,"./../ParserRuleContext":19,"./../PredictionContext":20,"./../RuleContext":22,"./../Token":23,"./../Utils":24,"./../dfa/DFAState":43,"./../error/Errors":48,"./ATN":25,"./ATNConfig":26,"./ATNConfigSet":27,"./ATNSimulator":30,"./ATNState":31,"./PredictionMode":37,"./SemanticContext":38,"./Transition":39}],37:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../ParserRuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/ParserRuleContext.js","./../PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./../RuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/RuleContext.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./../dfa/DFAState":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js","./../error/Errors":"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js","./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./ATNConfig":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfig.js","./ATNConfigSet":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js","./ATNSimulator":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNSimulator.js","./ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./PredictionMode":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/PredictionMode.js","./SemanticContext":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/SemanticContext.js","./Transition":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/PredictionMode.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -43984,7 +43985,7 @@ PredictionMode.getSingleViableAlt = function(altsets) {
 };
 
 exports.PredictionMode = PredictionMode;
-},{"./../Utils":24,"./ATN":25,"./ATNState":31}],38:[function(require,module,exports){
+},{"./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/SemanticContext.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -44407,7 +44408,7 @@ exports.SemanticContext = SemanticContext;
 exports.PrecedencePredicate = PrecedencePredicate;
 exports.Predicate = Predicate;
 
-},{"./../Utils":24}],39:[function(require,module,exports){
+},{"./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -44748,13 +44749,13 @@ exports.WildcardTransition = WildcardTransition;
 exports.PredicateTransition = PredicateTransition;
 exports.PrecedencePredicateTransition = PrecedencePredicateTransition;
 exports.AbstractPredicateTransition = AbstractPredicateTransition;
-},{"./../IntervalSet":15,"./../Token":23,"./SemanticContext":38}],40:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./SemanticContext":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/SemanticContext.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/atn/index.js":[function(require,module,exports){
 exports.ATN = require('./ATN').ATN;
 exports.ATNDeserializer = require('./ATNDeserializer').ATNDeserializer;
 exports.LexerATNSimulator = require('./LexerATNSimulator').LexerATNSimulator;
 exports.ParserATNSimulator = require('./ParserATNSimulator').ParserATNSimulator;
 exports.PredictionMode = require('./PredictionMode').PredictionMode;
-},{"./ATN":25,"./ATNDeserializer":29,"./LexerATNSimulator":33,"./ParserATNSimulator":36,"./PredictionMode":37}],41:[function(require,module,exports){
+},{"./ATN":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATN.js","./ATNDeserializer":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNDeserializer.js","./LexerATNSimulator":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/LexerATNSimulator.js","./ParserATNSimulator":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ParserATNSimulator.js","./PredictionMode":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/PredictionMode.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFA.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -44933,7 +44934,7 @@ DFA.prototype.toLexerString = function() {
 
 exports.DFA = DFA;
 
-},{"./../atn/ATNConfigSet":27,"./DFASerializer":42,"./DFAState":43}],42:[function(require,module,exports){
+},{"./../atn/ATNConfigSet":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js","./DFASerializer":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFASerializer.js","./DFAState":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFASerializer.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -45038,7 +45039,7 @@ exports.DFASerializer = DFASerializer;
 exports.LexerDFASerializer = LexerDFASerializer;
 
 
-},{}],43:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -45205,13 +45206,13 @@ DFAState.prototype.hashString = function() {
 
 exports.DFAState = DFAState;
 exports.PredPrediction = PredPrediction;
-},{"./../atn/ATNConfigSet":27}],44:[function(require,module,exports){
+},{"./../atn/ATNConfigSet":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNConfigSet.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/index.js":[function(require,module,exports){
 exports.DFA = require('./DFA').DFA;
 exports.DFASerializer = require('./DFASerializer').DFASerializer;
 exports.LexerDFASerializer = require('./DFASerializer').LexerDFASerializer;
 exports.PredPrediction = require('./DFAState').PredPrediction;
 
-},{"./DFA":41,"./DFASerializer":42,"./DFAState":43}],45:[function(require,module,exports){
+},{"./DFA":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFA.js","./DFASerializer":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFASerializer.js","./DFAState":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/DFAState.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/error/DiagnosticErrorListener.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -45347,7 +45348,7 @@ DiagnosticErrorListener.prototype.getConflictingAlts = function(reportedAlts, co
 };
 
 exports.DiagnosticErrorListener = DiagnosticErrorListener;
-},{"./../IntervalSet":15,"./../Utils":24,"./ErrorListener":46}],46:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./ErrorListener":"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorListener.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorListener.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -45460,7 +45461,7 @@ exports.ConsoleErrorListener = ConsoleErrorListener;
 exports.ProxyErrorListener = ProxyErrorListener;
 
 
-},{}],47:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorStrategy.js":[function(require,module,exports){
 //
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
@@ -46243,7 +46244,7 @@ BailErrorStrategy.prototype.sync = function(recognizer) {
 
 exports.BailErrorStrategy = BailErrorStrategy;
 exports.DefaultErrorStrategy = DefaultErrorStrategy;
-},{"./../IntervalSet":15,"./../Token":23,"./../atn/ATNState":31,"./Errors":48}],48:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./../atn/ATNState":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/ATNState.js","./Errors":"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -46437,7 +46438,7 @@ exports.LexerNoViableAltException = LexerNoViableAltException;
 exports.InputMismatchException = InputMismatchException;
 exports.FailedPredicateException = FailedPredicateException;
 
-},{"./../atn/Transition":39}],49:[function(require,module,exports){
+},{"./../atn/Transition":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/Transition.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/error/index.js":[function(require,module,exports){
 exports.RecognitionException = require('./Errors').RecognitionException;
 exports.NoViableAltException = require('./Errors').NoViableAltException;
 exports.LexerNoViableAltException = require('./Errors').LexerNoViableAltException;
@@ -46446,13 +46447,13 @@ exports.FailedPredicateException = require('./Errors').FailedPredicateException;
 exports.DiagnosticErrorListener = require('./DiagnosticErrorListener').DiagnosticErrorListener;
 exports.BailErrorStrategy = require('./ErrorStrategy').BailErrorStrategy;
 exports.ErrorListener = require('./ErrorListener').ErrorListener;
-},{"./DiagnosticErrorListener":45,"./ErrorListener":46,"./ErrorStrategy":47,"./Errors":48}],50:[function(require,module,exports){
+},{"./DiagnosticErrorListener":"/home/anthony/Projects/droplet/node_modules/antlr4/error/DiagnosticErrorListener.js","./ErrorListener":"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorListener.js","./ErrorStrategy":"/home/anthony/Projects/droplet/node_modules/antlr4/error/ErrorStrategy.js","./Errors":"/home/anthony/Projects/droplet/node_modules/antlr4/error/Errors.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/index.js":[function(require,module,exports){
 exports.atn = require('./atn/index');
 exports.dfa = require('./dfa/index');
 exports.tree = require('./tree/index');
 exports.error = require('./error/index');
 exports.Token = require('./Token').Token;
-exports.CommonToken = require('./Token').Token;
+exports.CommonToken = require('./Token').CommonToken;
 exports.InputStream = require('./InputStream').InputStream;
 exports.FileStream = require('./FileStream').FileStream;
 exports.CommonTokenStream = require('./CommonTokenStream').CommonTokenStream;
@@ -46464,7 +46465,7 @@ exports.ParserRuleContext = require('./ParserRuleContext').ParserRuleContext;
 exports.Interval = require('./IntervalSet').Interval;
 exports.Utils = require('./Utils');
 
-},{"./CommonTokenStream":12,"./FileStream":13,"./InputStream":14,"./IntervalSet":15,"./Lexer":17,"./Parser":18,"./ParserRuleContext":19,"./PredictionContext":20,"./Token":23,"./Utils":24,"./atn/index":40,"./dfa/index":44,"./error/index":49,"./tree/index":53}],51:[function(require,module,exports){
+},{"./CommonTokenStream":"/home/anthony/Projects/droplet/node_modules/antlr4/CommonTokenStream.js","./FileStream":"/home/anthony/Projects/droplet/node_modules/antlr4/FileStream.js","./InputStream":"/home/anthony/Projects/droplet/node_modules/antlr4/InputStream.js","./IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./Lexer":"/home/anthony/Projects/droplet/node_modules/antlr4/Lexer.js","./Parser":"/home/anthony/Projects/droplet/node_modules/antlr4/Parser.js","./ParserRuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/ParserRuleContext.js","./PredictionContext":"/home/anthony/Projects/droplet/node_modules/antlr4/PredictionContext.js","./Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./atn/index":"/home/anthony/Projects/droplet/node_modules/antlr4/atn/index.js","./dfa/index":"/home/anthony/Projects/droplet/node_modules/antlr4/dfa/index.js","./error/index":"/home/anthony/Projects/droplet/node_modules/antlr4/error/index.js","./tree/index":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/index.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js":[function(require,module,exports){
 // [The "BSD license"]
 //  Copyright (c) 2012 Terence Parr
 //  Copyright (c) 2012 Sam Harwell
@@ -46692,7 +46693,7 @@ exports.ParseTreeListener = ParseTreeListener;
 exports.ParseTreeVisitor = ParseTreeVisitor;
 exports.ParseTreeWalker = ParseTreeWalker;
 exports.INVALID_INTERVAL = INVALID_INTERVAL;
-},{"./../IntervalSet":15,"./../Token":23}],52:[function(require,module,exports){
+},{"./../IntervalSet":"/home/anthony/Projects/droplet/node_modules/antlr4/IntervalSet.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Trees.js":[function(require,module,exports){
 /*
  * [The "BSD license"]
  *  Copyright (c) 2012 Terence Parr
@@ -46852,18 +46853,18 @@ Trees.descendants = function(t) {
 
 
 exports.Trees = Trees;
-},{"./../ParserRuleContext":19,"./../Token":23,"./../Utils":24,"./Tree":51}],53:[function(require,module,exports){
+},{"./../ParserRuleContext":"/home/anthony/Projects/droplet/node_modules/antlr4/ParserRuleContext.js","./../Token":"/home/anthony/Projects/droplet/node_modules/antlr4/Token.js","./../Utils":"/home/anthony/Projects/droplet/node_modules/antlr4/Utils.js","./Tree":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js"}],"/home/anthony/Projects/droplet/node_modules/antlr4/tree/index.js":[function(require,module,exports){
 var Tree = require('./Tree');
 exports.Trees = require('./Tree').Trees;
 exports.RuleNode = Tree.RuleNode;
 exports.ParseTreeListener = Tree.ParseTreeListener;
 exports.ParseTreeVisitor = Tree.ParseTreeVisitor;
 exports.ParseTreeWalker = Tree.ParseTreeWalker;
-},{"./Tree":51}],54:[function(require,module,exports){
+},{"./Tree":"/home/anthony/Projects/droplet/node_modules/antlr4/tree/Tree.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/lib/_empty.js":[function(require,module,exports){
 
-},{}],55:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],56:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/browser-resolve/empty.js":[function(require,module,exports){
+arguments[4]["/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/lib/_empty.js"][0].apply(exports,arguments)
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -46880,6 +46881,7 @@ exports.SlowBuffer = SlowBuffer
 exports.INSPECT_MAX_BYTES = 50
 Buffer.poolSize = 8192 // not used by this implementation
 
+var kMaxLength = 0x3fffffff
 var rootParent = {}
 
 /**
@@ -46905,26 +46907,17 @@ var rootParent = {}
  * get the Object implementation, which is slower but will work correctly.
  */
 Buffer.TYPED_ARRAY_SUPPORT = (function () {
-  function Foo () {}
   try {
     var buf = new ArrayBuffer(0)
     var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
-    arr.constructor = Foo
     return arr.foo() === 42 && // typed array instances can be augmented
-        arr.constructor === Foo && // constructor can be set
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
     return false
   }
 })()
-
-function kMaxLength () {
-  return Buffer.TYPED_ARRAY_SUPPORT
-    ? 0x7fffffff
-    : 0x3fffffff
-}
 
 /**
  * Class: Buffer
@@ -47076,9 +47069,9 @@ function allocate (that, length) {
 function checked (length) {
   // Note: cannot use `length < kMaxLength` here because that fails when
   // length is NaN (which is otherwise coerced to zero.)
-  if (length >= kMaxLength()) {
+  if (length >= kMaxLength) {
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
-                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+                         'size: 0x' + kMaxLength.toString(16) + ' bytes')
   }
   return length | 0
 }
@@ -47170,38 +47163,29 @@ Buffer.concat = function concat (list, length) {
 }
 
 function byteLength (string, encoding) {
-  if (typeof string !== 'string') string = '' + string
+  if (typeof string !== 'string') string = String(string)
 
-  var len = string.length
-  if (len === 0) return 0
+  if (string.length === 0) return 0
 
-  // Use a for loop to avoid recursion
-  var loweredCase = false
-  for (;;) {
-    switch (encoding) {
-      case 'ascii':
-      case 'binary':
-      // Deprecated
-      case 'raw':
-      case 'raws':
-        return len
-      case 'utf8':
-      case 'utf-8':
-        return utf8ToBytes(string).length
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return len * 2
-      case 'hex':
-        return len >>> 1
-      case 'base64':
-        return base64ToBytes(string).length
-      default:
-        if (loweredCase) return utf8ToBytes(string).length // assume utf8
-        encoding = ('' + encoding).toLowerCase()
-        loweredCase = true
-    }
+  switch (encoding || 'utf8') {
+    case 'ascii':
+    case 'binary':
+    case 'raw':
+      return string.length
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return string.length * 2
+    case 'hex':
+      return string.length >>> 1
+    case 'utf8':
+    case 'utf-8':
+      return utf8ToBytes(string).length
+    case 'base64':
+      return base64ToBytes(string).length
+    default:
+      return string.length
   }
 }
 Buffer.byteLength = byteLength
@@ -47210,7 +47194,8 @@ Buffer.byteLength = byteLength
 Buffer.prototype.length = undefined
 Buffer.prototype.parent = undefined
 
-function slowToString (encoding, start, end) {
+// toString(encoding, start=0, end=buffer.length)
+Buffer.prototype.toString = function toString (encoding, start, end) {
   var loweredCase = false
 
   start = start | 0
@@ -47251,13 +47236,6 @@ function slowToString (encoding, start, end) {
         loweredCase = true
     }
   }
-}
-
-Buffer.prototype.toString = function toString () {
-  var length = this.length | 0
-  if (length === 0) return ''
-  if (arguments.length === 0) return utf8Slice(this, 0, length)
-  return slowToString.apply(this, arguments)
 }
 
 Buffer.prototype.equals = function equals (b) {
@@ -48302,7 +48280,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":57,"ieee754":58,"is-array":59}],57:[function(require,module,exports){
+},{"base64-js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -48428,16 +48406,16 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],58:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
+  var e, m,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      nBits = -7,
+      i = isLE ? (nBytes - 1) : 0,
+      d = isLE ? -1 : 1,
+      s = buffer[offset + i]
 
   i += d
 
@@ -48463,14 +48441,14 @@ exports.read = function (buffer, offset, isLE, mLen, nBytes) {
 }
 
 exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+  var e, m, c,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+      i = isLE ? 0 : (nBytes - 1),
+      d = isLE ? 1 : -1,
+      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
 
   value = Math.abs(value)
 
@@ -48514,7 +48492,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],59:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
 
 /**
  * isArray
@@ -48549,7 +48527,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],60:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/events/events.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -48852,7 +48830,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],61:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js":[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -48877,12 +48855,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],62:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/isarray/index.js":[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],63:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/process/browser.js":[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -48974,10 +48952,10 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],64:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/duplex.js":[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":65}],65:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -49070,7 +49048,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":67,"./_stream_writable":69,"_process":63,"core-util-is":70,"inherits":61}],66:[function(require,module,exports){
+},{"./_stream_readable":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js","./_stream_writable":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js","_process":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/process/browser.js","core-util-is":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -49118,7 +49096,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":68,"core-util-is":70,"inherits":61}],67:[function(require,module,exports){
+},{"./_stream_transform":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js","core-util-is":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js":[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50073,7 +50051,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":65,"_process":63,"buffer":56,"core-util-is":70,"events":60,"inherits":61,"isarray":62,"stream":75,"string_decoder/":76,"util":55}],68:[function(require,module,exports){
+},{"./_stream_duplex":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js","_process":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/process/browser.js","buffer":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js","core-util-is":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js","events":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/events/events.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js","isarray":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/isarray/index.js","stream":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/stream-browserify/index.js","string_decoder/":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/string_decoder/index.js","util":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/browser-resolve/empty.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -50284,7 +50262,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":65,"core-util-is":70,"inherits":61}],69:[function(require,module,exports){
+},{"./_stream_duplex":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js","core-util-is":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js":[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50765,7 +50743,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":65,"_process":63,"buffer":56,"core-util-is":70,"inherits":61,"stream":75}],70:[function(require,module,exports){
+},{"./_stream_duplex":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js","_process":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/process/browser.js","buffer":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js","core-util-is":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js","stream":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/stream-browserify/index.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50875,10 +50853,10 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":56}],71:[function(require,module,exports){
+},{"buffer":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/passthrough.js":[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":66}],72:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/readable.js":[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -50887,13 +50865,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":65,"./lib/_stream_passthrough.js":66,"./lib/_stream_readable.js":67,"./lib/_stream_transform.js":68,"./lib/_stream_writable.js":69,"stream":75}],73:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js","./lib/_stream_passthrough.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js","./lib/_stream_readable.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js","./lib/_stream_transform.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js","./lib/_stream_writable.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js","stream":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/stream-browserify/index.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/transform.js":[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":68}],74:[function(require,module,exports){
+},{"./lib/_stream_transform.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/writable.js":[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":69}],75:[function(require,module,exports){
+},{"./lib/_stream_writable.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/stream-browserify/index.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -51022,7 +51000,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":60,"inherits":61,"readable-stream/duplex.js":64,"readable-stream/passthrough.js":71,"readable-stream/readable.js":72,"readable-stream/transform.js":73,"readable-stream/writable.js":74}],76:[function(require,module,exports){
+},{"events":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/events/events.js","inherits":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js","readable-stream/duplex.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/duplex.js","readable-stream/passthrough.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/passthrough.js","readable-stream/readable.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/readable.js","readable-stream/transform.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/transform.js","readable-stream/writable.js":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/readable-stream/writable.js"}],"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/string_decoder/index.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -51245,7 +51223,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":56}],77:[function(require,module,exports){
+},{"buffer":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/index.js":[function(require,module,exports){
 'use strict';
 
 exports.Parser = require('./lib/tree_construction/parser');
@@ -51259,7 +51237,7 @@ exports.TreeAdapters = {
     htmlparser2: require('./lib/tree_adapters/htmlparser2')
 };
 
-},{"./lib/jsdom/jsdom_parser":83,"./lib/serialization/serializer":85,"./lib/simple_api/simple_api_parser":86,"./lib/tree_adapters/default":92,"./lib/tree_adapters/htmlparser2":93,"./lib/tree_construction/parser":97}],78:[function(require,module,exports){
+},{"./lib/jsdom/jsdom_parser":"/home/anthony/Projects/droplet/node_modules/parse5/lib/jsdom/jsdom_parser.js","./lib/serialization/serializer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/serialization/serializer.js","./lib/simple_api/simple_api_parser":"/home/anthony/Projects/droplet/node_modules/parse5/lib/simple_api/simple_api_parser.js","./lib/tree_adapters/default":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/default.js","./lib/tree_adapters/htmlparser2":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/htmlparser2.js","./lib/tree_construction/parser":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/parser.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/doctype.js":[function(require,module,exports){
 'use strict';
 
 //Const
@@ -51395,7 +51373,7 @@ exports.serializeContent = function (name, publicId, systemId) {
     return str;
 };
 
-},{}],79:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/foreign_content.js":[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -51654,7 +51632,7 @@ exports.isHtmlIntegrationPoint = function (tn, ns, attrs) {
     return ns === NS.SVG && (tn === $.FOREIGN_OBJECT || tn === $.DESC || tn === $.TITLE);
 };
 
-},{"../tokenization/tokenizer":91,"./html":80}],80:[function(require,module,exports){
+},{"../tokenization/tokenizer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js","./html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js":[function(require,module,exports){
 'use strict';
 
 var NS = exports.NAMESPACES = {
@@ -51924,7 +51902,7 @@ SPECIAL_ELEMENTS[NS.SVG][$.TITLE] = true;
 SPECIAL_ELEMENTS[NS.SVG][$.FOREIGN_OBJECT] = true;
 SPECIAL_ELEMENTS[NS.SVG][$.DESC] = true;
 
-},{}],81:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/unicode.js":[function(require,module,exports){
 'use strict';
 
 exports.REPLACEMENT_CHARACTER = '\uFFFD';
@@ -51974,7 +51952,7 @@ exports.CODE_POINT_SEQUENCES = {
     SYSTEM_STRING: [0x53, 0x59, 0x53, 0x54, 0x45, 0x4D] //SYSTEM
 };
 
-},{}],82:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/utils.js":[function(require,module,exports){
 'use strict';
 
 exports.mergeOptions = function (defaults, options) {
@@ -51989,7 +51967,7 @@ exports.mergeOptions = function (defaults, options) {
     }, {});
 };
 
-},{}],83:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/jsdom/jsdom_parser.js":[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -52031,7 +52009,7 @@ exports.parseInnerHtml = function (innerHtml, contextElement, treeAdapter) {
     return parser.parseFragment(innerHtml, contextElement);
 };
 }).call(this,require('_process'))
-},{"../tree_construction/parser":97,"./parsing_unit":84,"_process":63}],84:[function(require,module,exports){
+},{"../tree_construction/parser":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/parser.js","./parsing_unit":"/home/anthony/Projects/droplet/node_modules/parse5/lib/jsdom/parsing_unit.js","_process":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/process/browser.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/jsdom/parsing_unit.js":[function(require,module,exports){
 'use strict';
 
 var ParsingUnit = module.exports = function (parser) {
@@ -52086,7 +52064,7 @@ ParsingUnit.prototype.done = function (callback) {
     return this;
 };
 
-},{}],85:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/serialization/serializer.js":[function(require,module,exports){
 'use strict';
 
 var DefaultTreeAdapter = require('../tree_adapters/default'),
@@ -52267,7 +52245,7 @@ Serializer.prototype._serializeDocumentTypeNode = function (node) {
     this.html += '<' + Doctype.serializeContent(name, publicId, systemId) + '>';
 };
 
-},{"../common/doctype":78,"../common/html":80,"../common/utils":82,"../tree_adapters/default":92}],86:[function(require,module,exports){
+},{"../common/doctype":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/doctype.js","../common/html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js","../common/utils":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/utils.js","../tree_adapters/default":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/default.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/simple_api/simple_api_parser.js":[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -52376,7 +52354,7 @@ SimpleApiParser.prototype._emitPendingText = function () {
     }
 };
 
-},{"../common/utils":82,"../tokenization/tokenizer":91,"./tokenizer_proxy":87}],87:[function(require,module,exports){
+},{"../common/utils":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/utils.js","../tokenization/tokenizer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js","./tokenizer_proxy":"/home/anthony/Projects/droplet/node_modules/parse5/lib/simple_api/tokenizer_proxy.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/simple_api/tokenizer_proxy.js":[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -52500,7 +52478,7 @@ TokenizerProxy.prototype._handleEndTagToken = function (token) {
         this._leaveCurrentNamespace();
 };
 
-},{"../common/foreign_content":79,"../common/html":80,"../common/unicode":81,"../tokenization/tokenizer":91}],88:[function(require,module,exports){
+},{"../common/foreign_content":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/foreign_content.js","../common/html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js","../common/unicode":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/unicode.js","../tokenization/tokenizer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/location_info_mixin.js":[function(require,module,exports){
 'use strict';
 
 exports.assign = function (tokenizer) {
@@ -52582,7 +52560,7 @@ exports.assign = function (tokenizer) {
         });
 };
 
-},{}],89:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/named_entity_trie.js":[function(require,module,exports){
 'use strict';
 
 //NOTE: this file contains auto generated trie structure that is used for named entity references consumption
@@ -52642,7 +52620,7 @@ module.exports = {
     0x5A: {l: {0x61: {l: {0x63: {l: {0x75: {l: {0x74: {l: {0x65: {l: {0x3B: {c: [377]}}}}}}}}}}}, 0x63: {l: {0x61: {l: {0x72: {l: {0x6F: {l: {0x6E: {l: {0x3B: {c: [381]}}}}}}}}}, 0x79: {l: {0x3B: {c: [1047]}}}}}, 0x64: {l: {0x6F: {l: {0x74: {l: {0x3B: {c: [379]}}}}}}}, 0x65: {l: {0x72: {l: {0x6F: {l: {0x57: {l: {0x69: {l: {0x64: {l: {0x74: {l: {0x68: {l: {0x53: {l: {0x70: {l: {0x61: {l: {0x63: {l: {0x65: {l: {0x3B: {c: [8203]}}}}}}}}}}}}}}}}}}}}}}}}}, 0x74: {l: {0x61: {l: {0x3B: {c: [918]}}}}}}}, 0x66: {l: {0x72: {l: {0x3B: {c: [8488]}}}}}, 0x48: {l: {0x63: {l: {0x79: {l: {0x3B: {c: [1046]}}}}}}}, 0x6F: {l: {0x70: {l: {0x66: {l: {0x3B: {c: [8484]}}}}}}}, 0x73: {l: {0x63: {l: {0x72: {l: {0x3B: {c: [119989]}}}}}}}}},
     0x7A: {l: {0x61: {l: {0x63: {l: {0x75: {l: {0x74: {l: {0x65: {l: {0x3B: {c: [378]}}}}}}}}}}}, 0x63: {l: {0x61: {l: {0x72: {l: {0x6F: {l: {0x6E: {l: {0x3B: {c: [382]}}}}}}}}}, 0x79: {l: {0x3B: {c: [1079]}}}}}, 0x64: {l: {0x6F: {l: {0x74: {l: {0x3B: {c: [380]}}}}}}}, 0x65: {l: {0x65: {l: {0x74: {l: {0x72: {l: {0x66: {l: {0x3B: {c: [8488]}}}}}}}}}, 0x74: {l: {0x61: {l: {0x3B: {c: [950]}}}}}}}, 0x66: {l: {0x72: {l: {0x3B: {c: [120119]}}}}}, 0x68: {l: {0x63: {l: {0x79: {l: {0x3B: {c: [1078]}}}}}}}, 0x69: {l: {0x67: {l: {0x72: {l: {0x61: {l: {0x72: {l: {0x72: {l: {0x3B: {c: [8669]}}}}}}}}}}}}}, 0x6F: {l: {0x70: {l: {0x66: {l: {0x3B: {c: [120171]}}}}}}}, 0x73: {l: {0x63: {l: {0x72: {l: {0x3B: {c: [120015]}}}}}}}, 0x77: {l: {0x6A: {l: {0x3B: {c: [8205]}}}, 0x6E: {l: {0x6A: {l: {0x3B: {c: [8204]}}}}}}}}}
 };
-},{}],90:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/preprocessor.js":[function(require,module,exports){
 'use strict';
 
 var UNICODE = require('../common/unicode');
@@ -52759,7 +52737,7 @@ Preprocessor.prototype.retreat = function () {
     this.pos--;
 };
 
-},{"../common/unicode":81}],91:[function(require,module,exports){
+},{"../common/unicode":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/unicode.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js":[function(require,module,exports){
 'use strict';
 
 var Preprocessor = require('./preprocessor'),
@@ -55078,7 +55056,7 @@ _[CDATA_SECTION_STATE] = function cdataSectionState(cp) {
     }
 };
 
-},{"../common/unicode":81,"./location_info_mixin":88,"./named_entity_trie":89,"./preprocessor":90}],92:[function(require,module,exports){
+},{"../common/unicode":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/unicode.js","./location_info_mixin":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/location_info_mixin.js","./named_entity_trie":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/named_entity_trie.js","./preprocessor":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/preprocessor.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/default.js":[function(require,module,exports){
 'use strict';
 
 //Node construction
@@ -55280,7 +55258,7 @@ exports.isElementNode = function (node) {
     return !!node.tagName;
 };
 
-},{}],93:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/htmlparser2.js":[function(require,module,exports){
 'use strict';
 
 var Doctype = require('../common/doctype');
@@ -55599,7 +55577,7 @@ exports.isElementNode = function (node) {
     return !!node.attribs;
 };
 
-},{"../common/doctype":78}],94:[function(require,module,exports){
+},{"../common/doctype":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/doctype.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/formatting_element_list.js":[function(require,module,exports){
 'use strict';
 
 //Const
@@ -55768,7 +55746,7 @@ FormattingElementList.prototype.getElementEntry = function (element) {
     return null;
 };
 
-},{}],95:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/location_info_mixin.js":[function(require,module,exports){
 'use strict';
 
 var OpenElementStack = require('./open_element_stack'),
@@ -55967,7 +55945,7 @@ exports.assign = function (parser) {
 };
 
 
-},{"../common/html":80,"../tokenization/tokenizer":91,"./open_element_stack":96}],96:[function(require,module,exports){
+},{"../common/html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js","../tokenization/tokenizer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js","./open_element_stack":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/open_element_stack.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/open_element_stack.js":[function(require,module,exports){
 'use strict';
 
 var HTML = require('../common/html');
@@ -56348,7 +56326,7 @@ OpenElementStack.prototype.generateImpliedEndTagsWithExclusion = function (exclu
         this.pop();
 };
 
-},{"../common/html":80}],97:[function(require,module,exports){
+},{"../common/html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js"}],"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/parser.js":[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -59177,7 +59155,7 @@ function endTagInForeignContent(p, token) {
     }
 }
 
-},{"../common/doctype":78,"../common/foreign_content":79,"../common/html":80,"../common/unicode":81,"../common/utils":82,"../tokenization/tokenizer":91,"../tree_adapters/default":92,"./formatting_element_list":94,"./location_info_mixin":95,"./open_element_stack":96}],98:[function(require,module,exports){
+},{"../common/doctype":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/doctype.js","../common/foreign_content":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/foreign_content.js","../common/html":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/html.js","../common/unicode":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/unicode.js","../common/utils":"/home/anthony/Projects/droplet/node_modules/parse5/lib/common/utils.js","../tokenization/tokenizer":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tokenization/tokenizer.js","../tree_adapters/default":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_adapters/default.js","./formatting_element_list":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/formatting_element_list.js","./location_info_mixin":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/location_info_mixin.js","./open_element_stack":"/home/anthony/Projects/droplet/node_modules/parse5/lib/tree_construction/open_element_stack.js"}],"/home/anthony/Projects/droplet/node_modules/sax/lib/sax.js":[function(require,module,exports){
 (function (Buffer){
 // wrapper for non-node envs
 ;(function (sax) {
@@ -60611,7 +60589,7 @@ if (!String.fromCodePoint) {
 })(typeof exports === "undefined" ? sax = {} : exports);
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":56,"stream":75,"string_decoder":76}],99:[function(require,module,exports){
+},{"buffer":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/buffer/index.js","stream":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/stream-browserify/index.js","string_decoder":"/home/anthony/Projects/droplet/node_modules/grunt-browserify/node_modules/browserify/node_modules/string_decoder/index.js"}],"/home/anthony/Projects/droplet/src/antlr.coffee":[function(require,module,exports){
 var ANTLR_PARSER_COLLECTION, antlr4, helper, model, parser, treewalk;
 
 helper = require('./helper.coffee');
@@ -60706,8 +60684,8 @@ exports.createANTLRParser = function(name, config, root) {
 };
 
 
-},{"../antlr/CLexer":1,"../antlr/CParser":3,"../antlr/JavaLexer":4,"../antlr/JavaParser":6,"../antlr/jvmBasicLexer":7,"../antlr/jvmBasicParser":9,"./helper.coffee":102,"./model.coffee":110,"./parser.coffee":112,"./treewalk.coffee":113,"antlr4":50}],100:[function(require,module,exports){
-var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, CapturePoint, CrossDocumentLocation, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, ENTER_KEY, Editor, EditorState, FloatingBlockRecord, FloatingOperation, GRAY_BLOCK_BORDER, GRAY_BLOCK_COLOR, GRAY_BLOCK_HANDLE_HEIGHT, GRAY_BLOCK_HANDLE_WIDTH, GRAY_BLOCK_MARGIN, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, RememberedSocketRecord, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
+},{"../antlr/CLexer":"/home/anthony/Projects/droplet/antlr/CLexer.js","../antlr/CParser":"/home/anthony/Projects/droplet/antlr/CParser.js","../antlr/JavaLexer":"/home/anthony/Projects/droplet/antlr/JavaLexer.js","../antlr/JavaParser":"/home/anthony/Projects/droplet/antlr/JavaParser.js","../antlr/jvmBasicLexer":"/home/anthony/Projects/droplet/antlr/jvmBasicLexer.js","../antlr/jvmBasicParser":"/home/anthony/Projects/droplet/antlr/jvmBasicParser.js","./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","./model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","./parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee","./treewalk.coffee":"/home/anthony/Projects/droplet/src/treewalk.coffee","antlr4":"/home/anthony/Projects/droplet/node_modules/antlr4/index.js"}],"/home/anthony/Projects/droplet/src/controller.coffee":[function(require,module,exports){
+var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, CapturePoint, CrossDocumentLocation, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, EMBOSS_FILTER_SVG, ENTER_KEY, Editor, EditorState, FloatingBlockRecord, FloatingOperation, GRAY_BLOCK_BORDER, GRAY_BLOCK_COLOR, GRAY_BLOCK_HANDLE_HEIGHT, GRAY_BLOCK_HANDLE_WIDTH, GRAY_BLOCK_MARGIN, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, RememberedSocketRecord, SVG_STANDARD, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 helper = require('./helper.coffee');
@@ -60776,7 +60754,7 @@ GRAY_BLOCK_HANDLE_WIDTH = 15;
 
 GRAY_BLOCK_HANDLE_HEIGHT = 30;
 
-GRAY_BLOCK_COLOR = '#FFF';
+GRAY_BLOCK_COLOR = 'rgba(256, 256, 256, 0.5)';
 
 GRAY_BLOCK_BORDER = '#AAA';
 
@@ -60815,6 +60793,10 @@ unsortedEditorBindings = {
 
 editorBindings = {};
 
+SVG_STANDARD = helper.SVG_STANDARD;
+
+EMBOSS_FILTER_SVG = "<svg xlmns=\"" + SVG_STANDARD + "\">\n  <filter id=\"dropShadow\" x=\"0\" y=\"0\" width=\"200%\" height=\"200%\">\n    <feOffset result=\"offOut\" in=\"SourceAlpha\" dx=\"5\" dy=\"5\" />\n    <feGaussianBlur result=\"blurOut\" in=\"offOut\" stdDeviation=\"1\" />\n    <feBlend in=\"SourceGraphic\" in2=\"blurOut\" out=\"blendOut\" mode=\"normal\" />\n    <feComposite in=\"blendOut\" in2=\"SourceGraphic\" k2=\"0.5\" k3=\"0.5\" operator=\"arithmetic\" />\n  </filter>\n</svg>";
+
 hook = function(event, priority, fn) {
   return unsortedEditorBindings[event].push({
     priority: priority,
@@ -60837,35 +60819,47 @@ exports.Editor = Editor = (function() {
     } else {
       this.mode = new coffee(this.options.modeOptions);
     }
-    this.draw = new draw.Draw();
     this.gutterDecorations = {};
     this.debugging = true;
     this.dropletElement = document.createElement('div');
     this.dropletElement.className = 'droplet-wrapper-div';
+    this.dropletElement.innerHTML = EMBOSS_FILTER_SVG;
     this.dropletElement.tabIndex = 0;
     this.wrapperElement.appendChild(this.dropletElement);
     this.wrapperElement.style.backgroundColor = '#FFF';
-    this.mainCanvas = document.createElement('canvas');
-    this.mainCanvas.className = 'droplet-main-canvas';
-    this.mainCanvas.width = this.mainCanvas.height = 0;
-    this.mainCtx = this.mainCanvas.getContext('2d');
-    this.dropletElement.appendChild(this.mainCanvas);
+    this.measureCanvas = document.createElement('canvas');
+    this.measureCtx = this.measureCanvas.getContext('2d');
+    this.mainCanvas = document.createElementNS(SVG_STANDARD, 'svg');
+    this.mainCtxWrapper = document.createElementNS(SVG_STANDARD, 'g');
+    this.mainCtx = document.createElementNS(SVG_STANDARD, 'g');
+    this.mainCanvas.appendChild(this.mainCtxWrapper);
+    this.mainCtxWrapper.appendChild(this.mainCtx);
+    this.mainCanvas.setAttribute('class', 'droplet-main-canvas');
+    this.mainCanvas.setAttribute('shape-rendering', 'optimizeSpeed');
     this.paletteWrapper = document.createElement('div');
     this.paletteWrapper.className = 'droplet-palette-wrapper';
     this.paletteElement = document.createElement('div');
     this.paletteElement.className = 'droplet-palette-element';
     this.paletteWrapper.appendChild(this.paletteElement);
-    this.paletteCanvas = document.createElement('canvas');
-    this.paletteCanvas.className = 'droplet-palette-canvas';
-    this.paletteCanvas.height = this.paletteCanvas.width = 0;
-    this.paletteCtx = this.paletteCanvas.getContext('2d');
-    this.paletteElement.appendChild(this.paletteCanvas);
+    this.paletteCanvas = this.paletteCtx = document.createElementNS(SVG_STANDARD, 'svg');
+    this.paletteCanvas.setAttribute('class', 'droplet-palette-canvas');
     this.paletteWrapper.style.position = 'absolute';
     this.paletteWrapper.style.left = '0px';
     this.paletteWrapper.style.top = '0px';
     this.paletteWrapper.style.bottom = '0px';
     this.paletteWrapper.style.width = '270px';
-    this.dropletElement.style.left = this.paletteWrapper.offsetWidth + 'px';
+    this.dragCanvas = this.dragCtx = document.createElementNS(SVG_STANDARD, 'svg');
+    this.dragCanvas.setAttribute('class', 'droplet-drag-canvas');
+    this.dragCanvas.style.left = '0px';
+    this.dragCanvas.style.top = '0px';
+    this.dragCanvas.style.transform = 'translate(-9999px,-9999px)';
+    this.view = new view.View(this.mainCtx, this.standardViewSettings);
+    this.paletteView = new view.View(this.paletteCtx, helper.extend({}, this.standardViewSettings, {
+      showDropdowns: (ref3 = this.options.showDropdownInPalette) != null ? ref3 : false
+    }));
+    this.dragView = new view.View(this.dragCtx, this.standardViewSettings);
+    this.draw = new draw.Draw(this.mainCtx);
+    this.dropletElement.style.left = this.paletteWrapper.clientWidth + 'px';
     this.wrapperElement.appendChild(this.paletteWrapper);
     this.draw.refreshFontCapital();
     this.standardViewSettings = {
@@ -60883,15 +60877,10 @@ exports.Editor = Editor = (function() {
       emptyLineHeight: 25,
       highlightAreaHeight: 10,
       shadowBlur: 5,
-      ctx: this.mainCtx,
+      ctx: this.measureCtx,
       draw: this.draw
     };
     this.bindings = {};
-    this.view = new view.View(this.standardViewSettings);
-    this.paletteView = new view.View(helper.extend({}, this.standardViewSettings, {
-      showDropdowns: (ref3 = this.options.showDropdownInPalette) != null ? ref3 : false
-    }));
-    this.dragView = new view.View(this.standardViewSettings);
     boundListeners = [];
     ref4 = editorBindings.populate;
     for (j = 0, len = ref4.length; j < len; j++) {
@@ -61009,48 +60998,33 @@ exports.Editor = Editor = (function() {
     this.resizeTextMode();
     this.dropletElement.style.height = this.wrapperElement.clientHeight + "px";
     if (this.paletteEnabled) {
-      this.dropletElement.style.left = this.paletteWrapper.offsetWidth + "px";
-      this.dropletElement.style.width = (this.wrapperElement.clientWidth - this.paletteWrapper.offsetWidth) + "px";
+      this.dropletElement.style.left = this.paletteWrapper.clientWidth + "px";
+      this.dropletElement.style.width = (this.wrapperElement.clientWidth - this.paletteWrapper.clientWidth) + "px";
     } else {
       this.dropletElement.style.left = "0px";
       this.dropletElement.style.width = this.wrapperElement.clientWidth + "px";
     }
-    this.resizeGutter();
-    this.mainCanvas.height = this.dropletElement.offsetHeight;
-    this.mainCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
-    this.mainCanvas.style.height = this.mainCanvas.height + "px";
-    this.mainCanvas.style.width = this.mainCanvas.width + "px";
-    this.mainCanvas.style.left = this.gutter.offsetWidth + "px";
-    this.transitionContainer.style.left = this.gutter.offsetWidth + "px";
+    this.viewports.main.height = this.dropletElement.clientHeight;
+    this.viewports.main.width = this.dropletElement.clientWidth - this.gutter.clientWidth;
+    this.mainCanvas.setAttribute('width', this.dropletElement.clientWidth - this.gutter.clientWidth);
+    this.mainCanvas.style.left = this.gutter.clientWidth + "px";
+    this.transitionContainer.style.left = this.gutter.clientWidth + "px";
     this.resizePalette();
     this.resizePaletteHighlight();
     this.resizeNubby();
     this.resizeMainScroller();
-    this.resizeLassoCanvas();
-    this.resizeCursorCanvas();
     this.resizeDragCanvas();
-    this.scrollOffsets.main.y = this.mainScroller.scrollTop;
-    this.scrollOffsets.main.x = this.mainScroller.scrollLeft;
-    this.mainCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.main.x, -this.scrollOffsets.main.y);
-    this.highlightCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.main.x, -this.scrollOffsets.main.y);
-    this.cursorCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.main.x, -this.scrollOffsets.main.y);
-    return this.redrawMain();
+    this.viewports.main.y = this.mainScroller.scrollTop;
+    return this.viewports.main.x = this.mainScroller.scrollLeft;
   };
 
   Editor.prototype.resizePalette = function() {
     var binding, j, len, ref1;
-    this.paletteCanvas.style.top = this.paletteHeader.offsetHeight + "px";
-    this.paletteCanvas.height = this.paletteWrapper.offsetHeight - this.paletteHeader.offsetHeight;
-    this.paletteCanvas.width = this.paletteWrapper.offsetWidth;
-    this.paletteCanvas.style.height = this.paletteCanvas.height + "px";
-    this.paletteCanvas.style.width = this.paletteCanvas.width + "px";
     ref1 = editorBindings.resize_palette;
     for (j = 0, len = ref1.length; j < len; j++) {
       binding = ref1[j];
       binding.call(this);
     }
-    this.paletteCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.palette.x, -this.scrollOffsets.palette.y);
-    this.paletteHighlightCtx.setTransform(1, 0, 0, 1, -this.scrollOffsets.palette.x, -this.scrollOffsets.palette.y);
     return this.rebuildPalette();
   };
 
@@ -61066,15 +61040,12 @@ exports.Editor = Editor = (function() {
 
 })();
 
-Editor.prototype.clearMain = function(opts) {
-  if (opts.boundingRectangle != null) {
-    return this.mainCtx.clearRect(opts.boundingRectangle.x, opts.boundingRectangle.y, opts.boundingRectangle.width, opts.boundingRectangle.height);
-  } else {
-    return this.mainCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
-  }
-};
+Editor.prototype.clearCanvas = function(canvas) {};
+
+Editor.prototype.clearMain = function(opts) {};
 
 Editor.prototype.setTopNubbyStyle = function(height, color) {
+  var points;
   if (height == null) {
     height = 10;
   }
@@ -61083,19 +61054,22 @@ Editor.prototype.setTopNubbyStyle = function(height, color) {
   }
   this.nubbyHeight = Math.max(0, height);
   this.nubbyColor = color;
-  this.topNubbyPath = new this.draw.Path();
-  if (height >= 0) {
-    this.topNubbyPath.bevel = true;
-    this.topNubbyPath.push(new this.draw.Point(this.mainCanvas.width, -5));
-    this.topNubbyPath.push(new this.draw.Point(this.mainCanvas.width, height));
-    this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth, height));
-    this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), this.view.opts.tabHeight + height));
-    this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * this.view.opts.tabSideWidth, this.view.opts.tabHeight + height));
-    this.topNubbyPath.push(new this.draw.Point(this.view.opts.tabOffset, height));
-    this.topNubbyPath.push(new this.draw.Point(-5, height));
-    this.topNubbyPath.push(new this.draw.Point(-5, -5));
-    this.topNubbyPath.style.fillColor = color;
+  if (this.topNubbyPath == null) {
+    this.topNubbyPath = new this.draw.Path([], true);
   }
+  this.topNubbyPath.activate();
+  this.topNubbyPath.setParent(this.mainCtx);
+  points = [];
+  points.push(new this.draw.Point(this.mainCanvas.clientWidth, -5));
+  points.push(new this.draw.Point(this.mainCanvas.clientWidth, height));
+  points.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth, height));
+  points.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * (1 - this.view.opts.tabSideWidth), this.view.opts.tabHeight + height));
+  points.push(new this.draw.Point(this.view.opts.tabOffset + this.view.opts.tabWidth * this.view.opts.tabSideWidth, this.view.opts.tabHeight + height));
+  points.push(new this.draw.Point(this.view.opts.tabOffset, height));
+  points.push(new this.draw.Point(-5, height));
+  points.push(new this.draw.Point(-5, -5));
+  this.topNubbyPath.setPoints(points);
+  this.topNubbyPath.style.fillColor = color;
   return this.redrawMain();
 };
 
@@ -61103,8 +61077,34 @@ Editor.prototype.resizeNubby = function() {
   return this.setTopNubbyStyle(this.nubbyHeight, this.nubbyColor);
 };
 
+Editor.prototype.initializeFloatingBlock = function(record, i) {
+  var element, j, len, ref1;
+  record.renderGroup = new this.view.draw.Group();
+  record.grayBox = new this.view.draw.NoRectangle();
+  record.grayBoxPath = new this.view.draw.Path([], false, {
+    fillColor: GRAY_BLOCK_COLOR,
+    strokeColor: GRAY_BLOCK_BORDER,
+    lineWidth: 4,
+    dotted: '8 5',
+    cssClass: 'droplet-floating-container'
+  });
+  record.startText = new this.view.draw.Text(new this.view.draw.Point(0, 0), this.mode.startComment);
+  record.endText = new this.view.draw.Text(new this.view.draw.Point(0, 0), this.mode.endComment);
+  ref1 = [record.grayBoxPath, record.startText, record.endText];
+  for (j = 0, len = ref1.length; j < len; j++) {
+    element = ref1[j];
+    element.setParent(record.renderGroup);
+  }
+  this.view.getViewNodeFor(record.block).group.setParent(record.renderGroup);
+  if (i < this.floatingBlocks.length) {
+    return this.mainCtx.insertBefore(record.renderGroup.element, this.floatingBlocks[i].renderGroup.element);
+  } else {
+    return this.mainCtx.appendChild(record.renderGroup);
+  }
+};
+
 Editor.prototype.drawFloatingBlock = function(record, startWidth, endWidth, rect, opts) {
-  var blockView, bottomTextPosition, oldBounds, path, rectangle, ref1, ref2, startHeight;
+  var blockView, bottomTextPosition, oldBounds, points, rectangle, ref1, ref2, startHeight;
   blockView = this.view.getViewNodeFor(record.block);
   blockView.layout(record.position.x, record.position.y);
   rectangle = new this.view.draw.Rectangle();
@@ -61126,149 +61126,125 @@ Editor.prototype.drawFloatingBlock = function(record, startWidth, endWidth, rect
     record.grayBox = rectangle;
     oldBounds = (ref1 = (ref2 = record.grayBoxPath) != null ? typeof ref2.bounds === "function" ? ref2.bounds() : void 0 : void 0) != null ? ref1 : new this.view.draw.NoRectangle();
     startHeight = blockView.bounds[0].height + 10;
-    record.grayBoxPath = path = new this.view.draw.Path();
-    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.y));
-    path.push(new this.view.draw.Point(rectangle.right(), rectangle.y + 5));
-    path.push(new this.view.draw.Point(rectangle.right(), rectangle.bottom() - 5));
-    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.bottom()));
+    points = [];
+    points.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.y));
+    points.push(new this.view.draw.Point(rectangle.right(), rectangle.y + 5));
+    points.push(new this.view.draw.Point(rectangle.right(), rectangle.bottom() - 5));
+    points.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.bottom()));
     if (blockView.lineLength > 1) {
-      path.push(new this.view.draw.Point(rectangle.x + 5, rectangle.bottom()));
-      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom() - 5));
+      points.push(new this.view.draw.Point(rectangle.x + 5, rectangle.bottom()));
+      points.push(new this.view.draw.Point(rectangle.x, rectangle.bottom() - 5));
     } else {
-      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom()));
+      points.push(new this.view.draw.Point(rectangle.x, rectangle.bottom()));
     }
-    path.push(new this.view.draw.Point(rectangle.x, rectangle.y + startHeight));
-    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y + startHeight));
-    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + startHeight - 5));
-    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + 5));
-    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y));
-    path.push(new this.view.draw.Point(rectangle.x, rectangle.y));
-    path.bevel = false;
-    path.noclip = true;
-    path.dotted = true;
-    path.style = {
-      fillColor: GRAY_BLOCK_COLOR,
-      strokeColor: GRAY_BLOCK_BORDER,
-      lineWidth: 4
-    };
+    points.push(new this.view.draw.Point(rectangle.x, rectangle.y + startHeight));
+    points.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y + startHeight));
+    points.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + startHeight - 5));
+    points.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + 5));
+    points.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y));
+    points.push(new this.view.draw.Point(rectangle.x, rectangle.y));
+    record.grayBoxPath.setPoints(points);
     if (opts.boundingRectangle != null) {
       opts.boundingRectangle.unite(path.bounds());
       opts.boundingRectangle.unite(oldBounds);
-      this.mainCtx.restore();
       return this.redrawMain(opts);
     }
   }
-  this.mainCtx.globalAlpha *= 0.8;
-  record.grayBoxPath.draw(this.mainCtx);
-  this.mainCtx.fillStyle = '#000';
-  this.mainCtx.fillText(this.mode.startComment, blockView.totalBounds.x - startWidth, blockView.totalBounds.y + blockView.distanceToBase[0].above - this.fontSize);
-  this.mainCtx.fillText(this.mode.endComment, record.grayBox.right() - endWidth - 5, bottomTextPosition);
-  this.mainCtx.globalAlpha /= 0.8;
-  return blockView.draw(this.mainCtx, rect, {
+  record.grayBoxPath.update();
+  record.startText.point.x = blockView.totalBounds.x - startWidth;
+  record.startText.point.y = blockView.totalBounds.y + blockView.distanceToBase[0].above - this.fontSize;
+  record.startText.update();
+  record.endText.point.x = record.grayBox.right() - endWidth - 5;
+  record.endText.point.y = bottomTextPosition;
+  record.endText.update();
+  return blockView.draw(rect, {
     grayscale: false,
     selected: false,
     noText: false
   });
 };
 
+hook('populate', 0, function() {
+  return this.currentlyDrawnFloatingBlocks = [];
+});
+
 Editor.prototype.redrawMain = function(opts) {
-  var binding, endWidth, j, k, layoutResult, len, len1, oldScroll, options, record, rect, ref1, ref2, ref3, ref4, startWidth;
+  var binding, el, element, endWidth, i, j, k, l, layoutResult, len, len1, len2, options, record, rect, ref1, ref2, ref3, ref4, ref5, startWidth;
   if (opts == null) {
     opts = {};
   }
   if (!this.currentlyAnimating_suprressRedraw) {
-    this.draw.setGlobalFontSize(this.fontSize);
-    this.draw.setCtx(this.mainCtx);
+    this.view.beginDraw();
     this.clearMain(opts);
-    this.topNubbyPath.draw(this.mainCtx);
-    if (opts.boundingRectangle != null) {
-      this.mainCtx.save();
-      opts.boundingRectangle.clip(this.mainCtx);
-    }
-    rect = (ref1 = opts.boundingRectangle) != null ? ref1 : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+    this.topNubbyPath.update();
+    rect = this.viewports.main;
     options = {
       grayscale: false,
       selected: false,
-      noText: (ref2 = opts.noText) != null ? ref2 : false
+      noText: (ref1 = opts.noText) != null ? ref1 : false
     };
     layoutResult = this.view.getViewNodeFor(this.tree).layout(0, this.nubbyHeight);
-    this.view.getViewNodeFor(this.tree).draw(this.mainCtx, rect, options);
-    startWidth = this.mainCtx.measureText(this.mode.startComment).width;
-    endWidth = this.mainCtx.measureText(this.mode.endComment).width;
-    ref3 = this.floatingBlocks;
-    for (j = 0, len = ref3.length; j < len; j++) {
-      record = ref3[j];
-      this.drawFloatingBlock(record, startWidth, endWidth, rect, opts);
+    this.view.getViewNodeFor(this.tree).draw(rect, options);
+    this.view.getViewNodeFor(this.tree).root();
+    ref2 = this.currentlyDrawnFloatingBlocks;
+    for (i = j = 0, len = ref2.length; j < len; i = ++j) {
+      el = ref2[i];
+      if (ref3 = el.record, indexOf.call(this.floatingBlocks, ref3) < 0) {
+        el.record.grayBoxPath.destroy();
+        el.record.startText.destroy();
+        el.record.endText.destroy();
+      }
     }
-    if (opts.boundingRectangle != null) {
-      this.mainCtx.restore();
+    this.currentlyDrawnFloatingBlocks = [];
+    startWidth = this.mode.startComment.length * this.fontWidth;
+    endWidth = this.mode.endComment.length * this.fontWidth;
+    ref4 = this.floatingBlocks;
+    for (k = 0, len1 = ref4.length; k < len1; k++) {
+      record = ref4[k];
+      element = this.drawFloatingBlock(record, startWidth, endWidth, rect, opts);
+      this.currentlyDrawnFloatingBlocks.push({
+        record: record
+      });
     }
     this.redrawCursors();
     this.redrawHighlights();
     this.resizeGutter();
-    ref4 = editorBindings.redraw_main;
-    for (k = 0, len1 = ref4.length; k < len1; k++) {
-      binding = ref4[k];
+    ref5 = editorBindings.redraw_main;
+    for (l = 0, len2 = ref5.length; l < len2; l++) {
+      binding = ref5[l];
       binding.call(this, layoutResult);
     }
     if (this.changeEventVersion !== this.tree.version) {
       this.changeEventVersion = this.tree.version;
-      this.suppressAceChangeEvent = true;
-      oldScroll = this.aceEditor.session.getScrollTop();
-      this.setAceValue(this.getValue());
-      this.suppressAceChangeEvent = false;
-      this.aceEditor.session.setScrollTop(oldScroll);
       this.fireEvent('change', []);
+    }
+    this.view.cleanupDraw();
+    if (!this.alreadyScheduledCleanup) {
+      this.alreadyScheduledCleanup = true;
+      setTimeout(((function(_this) {
+        return function() {
+          _this.alreadyScheduledCleanup = false;
+          return _this.view.garbageCollect();
+        };
+      })(this)), 0);
     }
     return null;
   }
 };
 
 Editor.prototype.redrawHighlights = function() {
-  var id, info, line, path, ref1, ref2, ref3;
-  this.clearHighlightCanvas();
-  ref1 = this.markedLines;
-  for (line in ref1) {
-    info = ref1[line];
-    if (this.inDisplay(info.model)) {
-      path = this.getHighlightPath(info.model, info.style);
-      path.draw(this.highlightCtx);
-    } else {
-      delete this.markedLines[line];
-    }
-  }
-  ref2 = this.markedBlocks;
-  for (id in ref2) {
-    info = ref2[id];
-    if (this.inDisplay(info.model)) {
-      path = this.getHighlightPath(info.model, info.style);
-      path.draw(this.highlightCtx);
-    } else {
-      delete this.markedLines[id];
-    }
-  }
-  ref3 = this.extraMarks;
-  for (id in ref3) {
-    info = ref3[id];
-    if (this.inDisplay(info.model)) {
-      path = this.getHighlightPath(info.model, info.style);
-      path.draw(this.highlightCtx);
-    } else {
-      delete this.extraMarks[id];
-    }
-  }
+  this.redrawCursors();
+  this.redrawLassoHighlight();
   if ((this.draggingBlock != null) && this.inDisplay(this.draggingBlock)) {
-    this.view.getViewNodeFor(this.draggingBlock).draw(this.highlightCtx, new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
+    return this.view.getViewNodeFor(this.draggingBlock).draw(new this.draw.Rectangle(this.viewports.main.x, this.viewports.main.y, this.viewports.main.width, this.viewports.main.height), {
       grayscale: true
     });
-    this.maskFloatingPaths(this.draggingBlock.getDocument());
   }
-  this.redrawCursors();
-  return this.redrawLassoHighlight();
 };
 
 Editor.prototype.clearCursorCanvas = function() {
-  return this.cursorCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.cursorCanvas.width, this.cursorCanvas.height);
+  this.textCursorPath.deactivate();
+  return this.cursorPath.deactivate();
 };
 
 Editor.prototype.redrawCursors = function() {
@@ -61284,34 +61260,35 @@ Editor.prototype.drawCursor = function() {
   return this.strokeCursor(this.determineCursorPosition());
 };
 
-Editor.prototype.clearPalette = function() {
-  return this.paletteCtx.clearRect(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
-};
+Editor.prototype.clearPalette = function() {};
 
-Editor.prototype.clearPaletteHighlightCanvas = function() {
-  return this.paletteHighlightCtx.clearRect(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteHighlightCanvas.width, this.paletteHighlightCanvas.height);
-};
+Editor.prototype.clearPaletteHighlightCanvas = function() {};
 
 Editor.prototype.redrawPalette = function() {
-  var binding, boundingRect, entry, j, k, lastBottomEdge, len, len1, paletteBlockView, ref1, ref2, results;
+  var binding, element, entry, j, k, lastBottomEdge, len, len1, paletteBlockView, ref1, ref2, ref3;
   this.clearPalette();
+  this.paletteView.beginDraw();
   lastBottomEdge = PALETTE_TOP_MARGIN;
-  boundingRect = new this.draw.Rectangle(this.scrollOffsets.palette.x, this.scrollOffsets.palette.y, this.paletteCanvas.width, this.paletteCanvas.height);
   ref1 = this.currentPaletteBlocks;
   for (j = 0, len = ref1.length; j < len; j++) {
     entry = ref1[j];
     paletteBlockView = this.paletteView.getViewNodeFor(entry.block);
     paletteBlockView.layout(PALETTE_LEFT_MARGIN, lastBottomEdge);
-    paletteBlockView.draw(this.paletteCtx, boundingRect);
+    paletteBlockView.draw();
+    paletteBlockView.group.setParent(this.paletteCtx);
+    element = document.createElementNS(SVG_STANDARD, 'title');
+    element.innerHTML = (ref2 = entry.title) != null ? ref2 : entry.block.stringify();
+    paletteBlockView.group.element.appendChild(element);
+    paletteBlockView.group.element.setAttribute('data-id', entry.id);
     lastBottomEdge = paletteBlockView.getBounds().bottom() + PALETTE_MARGIN;
   }
-  ref2 = editorBindings.redraw_palette;
-  results = [];
-  for (k = 0, len1 = ref2.length; k < len1; k++) {
-    binding = ref2[k];
-    results.push(binding.call(this));
+  ref3 = editorBindings.redraw_palette;
+  for (k = 0, len1 = ref3.length; k < len1; k++) {
+    binding = ref3[k];
+    binding.call(this);
   }
-  return results;
+  this.paletteCanvas.style.height = lastBottomEdge + 'px';
+  return this.paletteView.garbageCollect();
 };
 
 Editor.prototype.rebuildPalette = function() {
@@ -61344,7 +61321,7 @@ Editor.prototype.trackerPointToMain = function(point) {
     return new this.draw.Point(NaN, NaN);
   }
   gbr = this.mainCanvas.getBoundingClientRect();
-  return new this.draw.Point(point.x - gbr.left + this.scrollOffsets.main.x, point.y - gbr.top + this.scrollOffsets.main.y);
+  return new this.draw.Point(point.x - gbr.left, point.y - gbr.top);
 };
 
 Editor.prototype.trackerPointToPalette = function(point) {
@@ -61353,7 +61330,7 @@ Editor.prototype.trackerPointToPalette = function(point) {
     return new this.draw.Point(NaN, NaN);
   }
   gbr = this.paletteCanvas.getBoundingClientRect();
-  return new this.draw.Point(point.x - gbr.left + this.scrollOffsets.palette.x, point.y - gbr.top + this.scrollOffsets.palette.y);
+  return new this.draw.Point(point.x - gbr.left, point.y - gbr.top);
 };
 
 Editor.prototype.trackerPointIsInElement = function(point, element) {
@@ -61739,34 +61716,32 @@ hook('populate', 0, function() {
   this.clickedBlockPaletteEntry = null;
   this.draggingBlock = null;
   this.draggingOffset = null;
-  this.lastHighlight = null;
-  this.dragCanvas = document.createElement('canvas');
-  this.dragCanvas.className = 'droplet-drag-canvas';
-  this.dragCanvas.style.left = '-9999px';
-  this.dragCanvas.style.top = '-9999px';
-  this.dragCtx = this.dragCanvas.getContext('2d');
-  this.highlightCanvas = document.createElement('canvas');
-  this.highlightCanvas.className = 'droplet-highlight-canvas';
-  this.highlightCtx = this.highlightCanvas.getContext('2d');
+  this.lastHighlight = this.lastHighlightPath = null;
+  this.highlightCanvas = this.highlightCtx = document.createElementNS(SVG_STANDARD, 'g');
   this.wrapperElement.appendChild(this.dragCanvas);
-  return this.dropletElement.appendChild(this.highlightCanvas);
+  return this.mainCanvas.appendChild(this.highlightCanvas);
 });
 
 Editor.prototype.clearHighlightCanvas = function() {
-  return this.highlightCtx.clearRect(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.highlightCanvas.width, this.highlightCanvas.height);
+  var j, len, path, ref1, results;
+  ref1 = [this.textCursorPath];
+  results = [];
+  for (j = 0, len = ref1.length; j < len; j++) {
+    path = ref1[j];
+    results.push(path.deactivate());
+  }
+  return results;
 };
 
 Editor.prototype.clearDrag = function() {
-  return this.dragCtx.clearRect(0, 0, this.dragCanvas.width, this.dragCanvas.height);
+  return this.clearHighlightCanvas();
 };
 
 Editor.prototype.resizeDragCanvas = function() {
-  this.dragCanvas.width = 0;
-  this.dragCanvas.height = 0;
-  this.highlightCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
-  this.highlightCanvas.style.width = this.highlightCanvas.width + "px";
-  this.highlightCanvas.height = this.dropletElement.offsetHeight;
-  this.highlightCanvas.style.height = this.highlightCanvas.height + "px";
+  this.dragCanvas.style.width = 0. + "px";
+  this.dragCanvas.style.height = 0. + "px";
+  this.highlightCanvas.style.width = (this.dropletElement.clientWidth - this.gutter.clientWidth) + "px";
+  this.highlightCanvas.style.height = this.dropletElement.clientHeight + "px";
   return this.highlightCanvas.style.left = this.mainCanvas.offsetLeft + "px";
 };
 
@@ -61847,7 +61822,6 @@ hook('mousedown', 1, function(point, event, state) {
       if ((record.grayBoxPath != null) && record.grayBoxPath.contains(this.trackerPointToMain(point))) {
         this.clickedBlock = new model.List(record.block.start.next, record.block.end.prev);
         this.clickedPoint = point;
-        this.view.getViewNodeFor(this.clickedBlock).absorbCache();
         state.consumedHitTest = true;
         this.redrawMain();
         return;
@@ -61872,15 +61846,18 @@ hook('mousedown', 4, function(point, event, state) {
   if (hitTestResult != null) {
     hitTestBlock = this.view.getViewNodeFor(hitTestResult);
     str = hitTestResult.stringifyInPlace();
-    if ((hitTestBlock.addButtonRect != null) && hitTestBlock.addButtonRect.contains(mainPoint)) {
+    if ((hitTestBlock.addButtonPath != null) && hitTestBlock.addButtonRect.contains(mainPoint)) {
       line = this.mode.handleButton(str, 'add-button', hitTestResult.getReader());
       this.populateBlock(hitTestResult, line);
       return state.consumedHitTest = true;
-    } else if ((hitTestBlock.subtractButtonRect != null) && hitTestBlock.subtractButtonRect.contains(mainPoint)) {
-      line = this.mode.handleButton(str, 'subtract-button', hitTestResult.getReader());
-      this.populateBlock(hitTestResult, line);
-      return state.consumedHitTest = true;
     }
+
+    /* TODO
+    else if hitTestBlock.subtractButtonRect? and hitTestBlock.subtractButtonRect.contains mainPoint
+      line = @mode.handleButton str, 'subtract-button', hitTestResult.getReader()
+      @populateBlock hitTestResult, line
+      state.consumedHitTest = true
+     */
   }
 });
 
@@ -61892,10 +61869,10 @@ hook('mouseup', 0, function(point, event, state) {
 });
 
 Editor.prototype.wouldDelete = function(position) {
-  var mainPoint, palettePoint, ref1, ref2, ref3, ref4;
+  var mainPoint, palettePoint;
   mainPoint = this.trackerPointToMain(position);
   palettePoint = this.trackerPointToPalette(position);
-  return !this.lastHighlight && !((this.mainCanvas.width + this.scrollOffsets.main.x > (ref1 = mainPoint.x) && ref1 > this.scrollOffsets.main.x) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref2 = mainPoint.y) && ref2 > this.scrollOffsets.main.y)) || ((this.paletteCanvas.width + this.scrollOffsets.palette.x > (ref3 = palettePoint.x) && ref3 > this.scrollOffsets.palette.x) && (this.paletteCanvas.height + this.scrollOffsets.palette.y > (ref4 = palettePoint.y) && ref4 > this.scrollOffsets.palette.y));
+  return !this.lastHighlight && !this.viewports.main.contains(mainPoint);
 };
 
 hook('mousemove', 1, function(point, event, state) {
@@ -61916,6 +61893,9 @@ hook('mousemove', 1, function(point, event, state) {
     } else {
       mainPoint = this.trackerPointToMain(this.clickedPoint);
       viewNode = this.view.getViewNodeFor(this.draggingBlock);
+      if (this.draggingBlock instanceof model.List && !(this.draggingBlock instanceof model.Container)) {
+        viewNode.absorbCache();
+      }
       this.draggingOffset = null;
       ref1 = viewNode.bounds;
       for (line = j = 0, len = ref1.length; j < len; line = ++j) {
@@ -61930,19 +61910,20 @@ hook('mousemove', 1, function(point, event, state) {
         this.draggingOffset = viewNode.bounds[0].upperLeftCorner().from(mainPoint);
       }
     }
-    this.dragView.clearCache();
+    this.dragView.beginDraw();
     draggingBlockView = this.dragView.getViewNodeFor(this.draggingBlock);
     draggingBlockView.layout(1, 1);
-    this.dragCanvas.width = Math.min(draggingBlockView.totalBounds.width + 10, window.screen.width);
-    this.dragCanvas.height = Math.min(draggingBlockView.totalBounds.height + 10, window.screen.height);
-    draggingBlockView.drawShadow(this.dragCtx, 5, 5);
-    draggingBlockView.draw(this.dragCtx, new this.draw.Rectangle(0, 0, this.dragCanvas.width, this.dragCanvas.height));
+    draggingBlockView.root();
+    draggingBlockView.draw();
+    this.dragView.garbageCollect();
+    this.dragCanvas.style.width = (Math.min(draggingBlockView.totalBounds.width + 10, window.screen.width)) + "px";
+    this.dragCanvas.style.height = (Math.min(draggingBlockView.totalBounds.height + 10, window.screen.height)) + "px";
     position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
     this.dropPointQuadTree = QUAD.init({
-      x: this.scrollOffsets.main.x,
-      y: this.scrollOffsets.main.y,
-      w: this.mainCanvas.width,
-      h: this.mainCanvas.height
+      x: this.viewports.main.x,
+      y: this.viewports.main.y,
+      w: this.viewports.main.width,
+      h: this.viewports.main.height
     });
     ref2 = this.getDocuments();
     for (k = 0, len1 = ref2.length; k < len1; k++) {
@@ -61987,8 +61968,7 @@ hook('mousemove', 1, function(point, event, state) {
         head = head.next;
       }
     }
-    this.dragCanvas.style.top = (position.y + getOffsetTop(this.dropletElement)) + "px";
-    this.dragCanvas.style.left = (position.x + getOffsetLeft(this.dropletElement)) + "px";
+    this.dragCanvas.style.transform = "translate(" + (position.x + getOffsetLeft(this.dropletElement)) + "px," + (position.y + getOffsetTop(this.dropletElement)) + "px)";
     this.clickedPoint = this.clickedBlock = null;
     this.clickedBlockPaletteEntry = null;
     this.begunTrash = this.wouldDelete(position);
@@ -62018,7 +61998,7 @@ Editor.prototype.getAcceptLevel = function(drag, drop) {
 };
 
 hook('mousemove', 0, function(point, event, state) {
-  var best, head, mainPoint, min, palettePoint, pos, position, rect, ref1, ref2, ref3, testPoints;
+  var best, head, mainPoint, min, palettePoint, pos, position, rect, ref1, ref2, ref3, ref4, testPoints;
   if (this.draggingBlock != null) {
     position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
     if (!this.currentlyUsingBlocks) {
@@ -62031,8 +62011,7 @@ hook('mousemove', 0, function(point, event, state) {
       }
     }
     rect = this.wrapperElement.getBoundingClientRect();
-    this.dragCanvas.style.top = (position.y - rect.top) + "px";
-    this.dragCanvas.style.left = (position.x - rect.left) + "px";
+    this.dragCanvas.style.transform = "translate(" + (position.x - rect.left) + "px," + (position.y - rect.top) + "px)";
     mainPoint = this.trackerPointToMain(position);
     best = null;
     min = Infinity;
@@ -62040,8 +62019,8 @@ hook('mousemove', 0, function(point, event, state) {
     while (((ref1 = head.type) === 'newline' || ref1 === 'cursor') || head.type === 'text' && head.value === '') {
       head = head.next;
     }
-    if (head === this.tree.end && this.floatingBlocks.length === 0 && (this.mainCanvas.width + this.scrollOffsets.main.x > (ref2 = mainPoint.x) && ref2 > this.scrollOffsets.main.x - this.gutter.offsetWidth) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref3 = mainPoint.y) && ref3 > this.scrollOffsets.main.y)) {
-      this.view.getViewNodeFor(this.tree).highlightArea.draw(this.highlightCtx);
+    if (head === this.tree.end && this.floatingBlocks.length === 0 && (this.viewports.main.right() > (ref2 = mainPoint.x) && ref2 > this.viewports.main.x - this.gutter.clientWidth) && (this.viewports.main.bottom() > (ref3 = mainPoint.y) && ref3 > this.viewports.main.y)) {
+      this.view.getViewNodeFor(this.tree).highlightArea.update();
       this.lastHighlight = this.tree;
     } else {
       if (this.hitTest(mainPoint, this.draggingBlock)) {
@@ -62071,9 +62050,15 @@ hook('mousemove', 0, function(point, event, state) {
       }
       if (best !== this.lastHighlight) {
         this.redrawHighlights();
+        if ((ref4 = this.lastHighlightPath) != null) {
+          if (typeof ref4.deactivate === "function") {
+            ref4.deactivate();
+          }
+        }
         if (best != null) {
-          this.view.getViewNodeFor(best).highlightArea.draw(this.highlightCtx);
-          this.maskFloatingPaths(best.getDocument());
+          this.lastHighlightPath = this.view.getViewNodeFor(best).highlightArea;
+          this.lastHighlightPath.update();
+          this.qualifiedFocus(best, this.lastHighlightPath);
         }
         this.lastHighlight = best;
       }
@@ -62091,6 +62076,17 @@ hook('mousemove', 0, function(point, event, state) {
     }
   }
 });
+
+Editor.prototype.qualifiedFocus = function(node, path) {
+  var documentIndex;
+  documentIndex = this.documentIndex(node);
+  if (documentIndex < this.floatingBlocks.length) {
+    path.activate();
+    return this.mainCtx.insertBefore(path.element, this.floatingBlocks[documentIndex].renderGroup.element);
+  } else {
+    return path.focus();
+  }
+};
 
 hook('mouseup', 0, function() {
   clearTimeout(this.discourageDropTimeout);
@@ -62231,7 +62227,7 @@ Editor.prototype.inDisplay = function(block) {
 };
 
 hook('mouseup', 0, function(point, event, state) {
-  var el, i, j, len, newDocument, palettePoint, ref1, ref2, ref3, ref4, rememberedSocketOffsets, renderPoint, trackPoint;
+  var el, i, j, len, newDocument, palettePoint, record, ref1, ref2, ref3, rememberedSocketOffsets, renderPoint, trackPoint;
   if ((this.draggingBlock != null) && (this.lastHighlight == null) && !this.dragReplacing) {
     trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
     renderPoint = this.trackerPointToMain(trackPoint);
@@ -62239,42 +62235,49 @@ hook('mouseup', 0, function(point, event, state) {
     this.undoCapture();
     rememberedSocketOffsets = this.spliceRememberedSocketOffsets(this.draggingBlock);
     this.spliceOut(this.draggingBlock);
-    palettePoint = this.trackerPointToPalette(point);
-    if ((0 < (ref1 = palettePoint.x - this.scrollOffsets.palette.x) && ref1 < this.paletteCanvas.width) && (0 < (ref2 = palettePoint.y - this.scrollOffsets.palette.y) && ref2 < this.paletteCanvas.height) || !((-this.gutter.offsetWidth < (ref3 = renderPoint.x - this.scrollOffsets.main.x) && ref3 < this.mainCanvas.width) && (0 < (ref4 = renderPoint.y - this.scrollOffsets.main.y) && ref4 < this.mainCanvas.height))) {
+    if (!((this.viewports.main.right() > (ref1 = renderPoint.x) && ref1 > this.viewports.main.x - this.gutter.clientWidth) && (this.viewports.main.bottom() > (ref2 = renderPoint.y) && ref2 > this.viewports.main.y))) {
       if (this.draggingBlock === this.lassoSelection) {
         this.lassoSelection = null;
       }
       this.endDrag();
       return;
-    } else if (renderPoint.x - this.scrollOffsets.main.x < 0) {
-      renderPoint.x = this.scrollOffsets.main.x;
+    } else if (renderPoint.x - this.viewports.main.x < 0) {
+      renderPoint.x = this.viewports.main.x;
     }
     newDocument = new model.Document({
       roundedSingletons: true
     });
     newDocument.insert(newDocument.start, this.draggingBlock);
     this.pushUndo(new FloatingOperation(this.floatingBlocks.length, newDocument, renderPoint, 'create'));
-    this.floatingBlocks.push(new FloatingBlockRecord(newDocument, renderPoint));
+    this.floatingBlocks.push(record = new FloatingBlockRecord(newDocument, renderPoint));
+    this.initializeFloatingBlock(record, this.floatingBlocks.length - 1);
     this.setCursor(this.draggingBlock.start);
     for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
       el = rememberedSocketOffsets[i];
       this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(this.floatingBlocks.length, new model.Location(el.offset + 1, 'socket')), el.text));
     }
+    this.clearDrag();
     this.draggingBlock = null;
     this.draggingOffset = null;
-    this.lastHighlight = null;
-    this.clearDrag();
+    if ((ref3 = this.lastHighlightPath) != null) {
+      if (typeof ref3.destroy === "function") {
+        ref3.destroy();
+      }
+    }
+    this.lastHighlight = this.lastHighlightPath = null;
     this.redrawMain();
     return this.redrawHighlights();
   }
 });
 
 Editor.prototype.performFloatingOperation = function(op, direction) {
+  var record;
   if ((op.type === 'create') === (direction === 'forward')) {
     if (this.cursor.document > op.index) {
       this.cursor.document += 1;
     }
-    return this.floatingBlocks.splice(op.index, 0, new FloatingBlockRecord(op.block.clone(), op.position));
+    this.floatingBlocks.splice(op.index, 0, record = new FloatingBlockRecord(op.block.clone(), op.position));
+    return this.initializeFloatingBlock(record, op.index);
   } else {
     if (this.cursor.document === op.index + 1) {
       this.setCursor(this.tree.start);
@@ -62395,7 +62398,7 @@ Editor.prototype.setPalette = function(paletteGroups) {
 };
 
 hook('mousedown', 6, function(point, event, state) {
-  var entry, hitTestResult, j, len, palettePoint, ref1, ref2, ref3;
+  var entry, hitTestResult, j, len, palettePoint, ref1;
   if (state.consumedHitTest) {
     return;
   }
@@ -62403,10 +62406,10 @@ hook('mousedown', 6, function(point, event, state) {
     return;
   }
   palettePoint = this.trackerPointToPalette(point);
-  if ((this.scrollOffsets.palette.y < (ref1 = palettePoint.y) && ref1 < this.scrollOffsets.palette.y + this.paletteCanvas.height) && (this.scrollOffsets.palette.x < (ref2 = palettePoint.x) && ref2 < this.scrollOffsets.palette.x + this.paletteCanvas.width)) {
-    ref3 = this.currentPaletteBlocks;
-    for (j = 0, len = ref3.length; j < len; j++) {
-      entry = ref3[j];
+  if (this.viewports.palette.contains(palettePoint)) {
+    ref1 = this.currentPaletteBlocks;
+    for (j = 0, len = ref1.length; j < len; j++) {
+      entry = ref1[j];
       hitTestResult = this.hitTest(palettePoint, entry.block, this.paletteView);
       if (hitTestResult != null) {
         this.clickedBlock = entry.block;
@@ -62422,9 +62425,8 @@ hook('mousedown', 6, function(point, event, state) {
 });
 
 hook('populate', 1, function() {
-  this.paletteHighlightCanvas = document.createElement('canvas');
-  this.paletteHighlightCanvas.className = 'droplet-palette-highlight-canvas';
-  this.paletteHighlightCtx = this.paletteHighlightCanvas.getContext('2d');
+  this.paletteHighlightCanvas = this.paletteHighlightCtx = document.createElementNS(SVG_STANDARD, 'svg');
+  this.paletteHighlightCanvas.setAttribute('class', 'droplet-palette-highlight-canvas');
   this.paletteHighlightPath = null;
   this.currentHighlightedPaletteBlock = null;
   return this.paletteElement.appendChild(this.paletteHighlightCanvas);
@@ -62432,66 +62434,15 @@ hook('populate', 1, function() {
 
 Editor.prototype.resizePaletteHighlight = function() {
   this.paletteHighlightCanvas.style.top = this.paletteHeader.offsetHeight + 'px';
-  this.paletteHighlightCanvas.width = this.paletteCanvas.width;
-  return this.paletteHighlightCanvas.height = this.paletteCanvas.height;
+  this.paletteHighlightCanvas.style.width = this.paletteCanvas.clientWidth + "px";
+  return this.paletteHighlightCanvas.style.height = this.paletteCanvas.clientHeight + "px";
 };
 
 hook('redraw_palette', 0, function() {
   this.clearPaletteHighlightCanvas();
   if (this.currentHighlightedPaletteBlock != null) {
-    return this.paletteHighlightPath.draw(this.paletteHighlightCtx);
+    return this.paletteHighlightPath.update();
   }
-});
-
-hook('rebuild_palette', 1, function() {
-  var block, bounds, data, fn1, hoverDiv, j, len, ref1, ref2, results;
-  this.paletteScrollerStuffing.innerHTML = '';
-  this.currentHighlightedPaletteBlock = null;
-  ref1 = this.currentPaletteMetadata;
-  fn1 = (function(_this) {
-    return function(block) {
-      hoverDiv.addEventListener('mousemove', function(event) {
-        var palettePoint;
-        palettePoint = _this.trackerPointToPalette(new _this.draw.Point(event.clientX, event.clientY));
-        if (_this.viewOrChildrenContains(block, palettePoint, _this.paletteView)) {
-          _this.clearPaletteHighlightCanvas();
-          _this.paletteHighlightPath = _this.getHighlightPath(block, {
-            color: '#FF0'
-          }, _this.paletteView);
-          _this.paletteHighlightPath.draw(_this.paletteHighlightCtx);
-          return _this.currentHighlightedPaletteBlock = block;
-        } else if (block === _this.currentHighlightedPaletteBlock) {
-          _this.currentHighlightedPaletteBlock = null;
-          return _this.clearPaletteHighlightCanvas();
-        }
-      });
-      return hoverDiv.addEventListener('mouseout', function(event) {
-        if (block === _this.currentHighlightedPaletteBlock) {
-          _this.currentHighlightedPaletteBlock = null;
-          return _this.paletteHighlightCtx.clearRect(_this.scrollOffsets.palette.x, _this.scrollOffsets.palette.y, _this.paletteHighlightCanvas.width + _this.scrollOffsets.palette.x, _this.paletteHighlightCanvas.height + _this.scrollOffsets.palette.y);
-        }
-      });
-    };
-  })(this);
-  results = [];
-  for (j = 0, len = ref1.length; j < len; j++) {
-    data = ref1[j];
-    block = data.block;
-    hoverDiv = document.createElement('div');
-    hoverDiv.className = 'droplet-hover-div';
-    hoverDiv.title = (ref2 = data.title) != null ? ref2 : block.stringify();
-    if (data.id != null) {
-      hoverDiv.setAttribute('data-id', data.id);
-    }
-    bounds = this.paletteView.getViewNodeFor(block).totalBounds;
-    hoverDiv.style.top = bounds.y + "px";
-    hoverDiv.style.left = bounds.x + "px";
-    hoverDiv.style.width = (Math.min(bounds.width, Infinity)) + "px";
-    hoverDiv.style.height = bounds.height + "px";
-    fn1(block);
-    results.push(this.paletteScrollerStuffing.appendChild(hoverDiv));
-  }
-  return results;
 });
 
 hook('populate', 1, function() {
@@ -62500,17 +62451,20 @@ hook('populate', 1, function() {
   this.hiddenInput.className = 'droplet-hidden-input';
   this.hiddenInput.addEventListener('focus', (function(_this) {
     return function() {
-      var bounds, inputLeft, inputTop;
+      var bounds;
       if (_this.cursorAtSocket()) {
-        bounds = _this.view.getViewNodeFor(_this.getCursor()).bounds[0];
-        inputLeft = bounds.x + _this.mainCanvas.offsetLeft - _this.scrollOffsets.main.x;
-        inputLeft = Math.min(inputLeft, _this.dropletElement.clientWidth - 10);
-        inputLeft = Math.max(_this.mainCanvas.offsetLeft, inputLeft);
-        _this.hiddenInput.style.left = inputLeft + 'px';
-        inputTop = bounds.y - _this.scrollOffsets.main.y;
-        inputTop = Math.min(inputTop, _this.dropletElement.clientHeight - 10);
-        inputTop = Math.max(0, inputTop);
-        return _this.hiddenInput.style.top = inputTop + 'px';
+        return bounds = _this.view.getViewNodeFor(_this.getCursor()).bounds[0];
+
+        /*
+        inputLeft = bounds.x + @mainCanvas.offsetLeft - @viewports.main.x
+        inputLeft = Math.min inputLeft, @dropletElement.clientWidth - 10
+        inputLeft = Math.max @mainCanvas.offsetLeft, inputLeft
+        @hiddenInput.style.left = inputLeft + 'px'
+        inputTop = bounds.y - @viewports.main.y
+        inputTop = Math.min inputTop, @dropletElement.clientHeight - 10
+        inputTop = Math.max 0, inputTop
+        @hiddenInput.style.top = inputTop + 'px'
+         */
       }
     };
   })(this));
@@ -62549,7 +62503,7 @@ Editor.prototype.resizeAceElement = function() {
   var width;
   width = this.wrapperElement.clientWidth;
   if (this.showPaletteInTextMode && this.paletteEnabled) {
-    width -= this.paletteWrapper.offsetWidth;
+    width -= this.paletteWrapper.clientWidth;
   }
   this.aceElement.style.width = width + "px";
   return this.aceElement.style.height = this.wrapperElement.clientHeight + "px";
@@ -62560,7 +62514,7 @@ last_ = function(array) {
 };
 
 Editor.prototype.redrawTextInput = function() {
-  var dropletDocument, endRow, head, line, newp, oldp, rect, sameLength, startRow, textFocusView, treeView;
+  var dropletDocument, endRow, head, line, newp, oldp, sameLength, startRow, textFocusView, treeView;
   sameLength = this.getCursor().stringify().split('\n').length === this.hiddenInput.value.split('\n').length;
   dropletDocument = this.getCursor().getDocument();
   this.populateSocket(this.getCursor(), this.hiddenInput.value);
@@ -62580,32 +62534,34 @@ Editor.prototype.redrawTextInput = function() {
     oldp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
     treeView.layout();
     newp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
-    if (helper.deepEquals(newp, oldp)) {
-      rect = new this.draw.NoRectangle();
-      if (line > 0) {
-        rect.unite(treeView.bounds[line - 1]);
-      }
-      rect.unite(treeView.bounds[line]);
-      if (line + 1 < treeView.bounds.length) {
-        rect.unite(treeView.bounds[line + 1]);
-      }
-      rect.width = Math.max(rect.width, this.mainCanvas.width);
-      return this.redrawMain({
+    return this.redrawMain();
+
+    /*
+    if helper.deepEquals newp, oldp
+      rect = new @draw.NoRectangle()
+    
+      rect.unite treeView.bounds[line - 1] if line > 0
+      rect.unite treeView.bounds[line]
+      rect.unite treeView.bounds[line + 1] if line + 1 < treeView.bounds.length
+    
+      rect.width = Math.max rect.width, @mainCanvas.clientWidth
+    
+      @redrawMain
         boundingRectangle: rect
-      });
-    } else {
-      return this.redrawMain();
-    }
+    
+    else @redrawMain()
+     */
   } else {
     return this.redrawMain();
   }
 };
 
 Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
-  var endPosition, endRow, i, j, lines, ref1, ref2, startPosition, startRow, textFocusView;
+  var el, endPosition, endRow, i, j, k, left, len, lines, points, rectangles, ref1, ref2, right, startPosition, startRow, textFocusView;
   if (scrollIntoView == null) {
     scrollIntoView = false;
   }
+  this.clearHighlightCanvas();
   if (!this.cursorAtSocket()) {
     return;
   }
@@ -62613,28 +62569,44 @@ Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
   startRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
   endRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
   lines = this.getCursor().stringify().split('\n');
-  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
-  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.fontWidth * last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n')).length + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.fontWidth * last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n')).length + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
   if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
-    this.cursorCtx.lineWidth = 1;
-    this.cursorCtx.strokeStyle = '#000';
-    this.cursorCtx.strokeRect(startPosition, textFocusView.bounds[startRow].y, 0, this.view.opts.textHeight);
+    this.qualifiedFocus(this.getCursor(), this.textCursorPath);
+    points = [new this.view.draw.Point(startPosition, textFocusView.bounds[startRow].y), new this.view.draw.Point(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textHeight)];
+    this.textCursorPath.setPoints(points);
+    this.textCursorPath.style.strokeColor = '#000';
+    this.textCursorPath.update();
+    this.qualifiedFocus(this.getCursor(), this.textCursorPath);
     this.textInputHighlighted = false;
   } else {
     this.textInputHighlighted = true;
-    this.cursorCtx.fillStyle = 'rgba(0, 0, 256, 0.3)';
+    rectangles = [];
     if (startRow === endRow) {
-      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
+      rectangles.push(new this.view.draw.Rectangle(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight));
     } else {
-      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
+      rectangles.push(new this.view.draw.Rectangle(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight));
       for (i = j = ref1 = startRow + 1, ref2 = endRow; ref1 <= ref2 ? j < ref2 : j > ref2; i = ref1 <= ref2 ? ++j : --j) {
-        this.cursorCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
+        rectangles.push(new this.view.draw.Rectangle(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight));
       }
-      this.cursorCtx.fillRect(textFocusView.bounds[endRow].x, textFocusView.bounds[endRow].y + this.view.opts.textPadding, endPosition - textFocusView.bounds[endRow].x, this.view.opts.textHeight);
+      rectangles.push(new this.view.draw.Rectangle(textFocusView.bounds[endRow].x, textFocusView.bounds[endRow].y + this.view.opts.textPadding, endPosition - textFocusView.bounds[endRow].x, this.view.opts.textHeight));
     }
+    left = [];
+    right = [];
+    for (i = k = 0, len = rectangles.length; k < len; i = ++k) {
+      el = rectangles[i];
+      left.push(new this.view.draw.Point(el.x, el.y));
+      left.push(new this.view.draw.Point(el.x, el.bottom()));
+      right.push(new this.view.draw.Point(el.right(), el.y));
+      right.push(new this.view.draw.Point(el.right(), el.bottom()));
+    }
+    this.textCursorPath.setPoints(left.concat(right.reverse()));
+    this.textCursorPath.style.strokeColor = 'none';
+    this.textCursorPath.update();
+    this.qualifiedFocus(this.getCursor(), this.textCursorPath);
   }
-  if (scrollIntoView && endPosition > this.scrollOffsets.main.x + this.mainCanvas.width) {
-    return this.mainScroller.scrollLeft = endPosition - this.mainCanvas.width + this.view.opts.padding;
+  if (scrollIntoView && endPosition > this.viewports.main.x + this.mainCanvas.clientWidth) {
+    return this.mainScroller.scrollLeft = endPosition - this.mainCanvas.clientWidth + this.view.opts.padding;
   }
 };
 
@@ -62688,7 +62660,7 @@ Editor.prototype.reparse = function(list, recovery, updates, originalTrigger) {
       if (parent != null) {
         return this.reparse(parent, recovery, updates, originalTrigger);
       } else {
-        this.markBlock(originalTrigger, {
+        this.view.getViewNodeFor(originalTrigger).mark({
           color: '#F00'
         });
         return false;
@@ -62754,14 +62726,14 @@ Editor.prototype.populateSocket = function(socket, string) {
 };
 
 Editor.prototype.populateBlock = function(block, string) {
-  var location, newBlock;
+  var newBlock, position;
   newBlock = this.mode.parse(string, {
     wrapAtRoot: false
   }).start.next.container;
   if (newBlock) {
-    location = block.start.prev;
+    position = block.start.prev;
     this.spliceOut(block);
-    this.spliceIn(newBlock, location);
+    this.spliceIn(newBlock, position);
     return true;
   }
   return false;
@@ -62785,7 +62757,7 @@ Editor.prototype.getTextPosition = function(point) {
   row = Math.floor((point.y - textFocusView.bounds[0].y) / (this.fontSize + 2 * this.view.opts.padding));
   row = Math.max(row, 0);
   row = Math.min(row, textFocusView.lineLength - 1);
-  column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding - (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0)) / this.mainCtx.measureText(' ').width));
+  column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding - (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0)) / this.fontWidth));
   lines = this.getCursor().stringify().split('\n').slice(0, +row + 1 || 9e9);
   lines[lines.length - 1] = lines[lines.length - 1].slice(0, column);
   return lines.join('\n').length;
@@ -62932,15 +62904,15 @@ Editor.prototype.showDropdown = function(socket) {
   return setTimeout(((function(_this) {
     return function() {
       var k, len1, location;
-      if (_this.dropdownElement.offsetHeight < _this.dropdownElement.scrollHeight) {
+      if (_this.dropdownElement.clientHeight < _this.dropdownElement.scrollHeight) {
         for (k = 0, len1 = dropdownItems.length; k < len1; k++) {
           el = dropdownItems[k];
           el.style.paddingRight = DROPDOWN_SCROLLBAR_PADDING;
         }
       }
       location = _this.view.getViewNodeFor(socket).bounds[0];
-      _this.dropdownElement.style.top = location.y + _this.fontSize - _this.scrollOffsets.main.y + 'px';
-      _this.dropdownElement.style.left = location.x - _this.scrollOffsets.main.x + _this.dropletElement.offsetLeft + _this.mainCanvas.offsetLeft + 'px';
+      _this.dropdownElement.style.top = location.y + _this.fontSize - _this.viewports.main.y + 'px';
+      _this.dropdownElement.style.left = location.x - _this.viewports.main.x + _this.dropletElement.offsetLeft + _this.mainCanvas.offsetLeft + 'px';
       return _this.dropdownElement.style.minWidth = location.width + 'px';
     };
   })(this)), 0);
@@ -63008,25 +62980,13 @@ hook('mouseup', 0, function(point, event, state) {
 });
 
 hook('populate', 0, function() {
-  this.lassoSelectCanvas = document.createElement('canvas');
-  this.lassoSelectCanvas.className = 'droplet-lasso-select-canvas';
-  this.lassoSelectCtx = this.lassoSelectCanvas.getContext('2d');
+  this.lassoSelectRect = document.createElementNS(SVG_STANDARD, 'rect');
+  this.lassoSelectRect.setAttribute('stroke', '#00f');
+  this.lassoSelectRect.setAttribute('fill', 'none');
   this.lassoSelectAnchor = null;
   this.lassoSelection = null;
-  return this.dropletElement.appendChild(this.lassoSelectCanvas);
+  return this.mainCanvas.appendChild(this.lassoSelectRect);
 });
-
-Editor.prototype.clearLassoSelectCanvas = function() {
-  return this.lassoSelectCtx.clearRect(0, 0, this.lassoSelectCanvas.width, this.lassoSelectCanvas.height);
-};
-
-Editor.prototype.resizeLassoCanvas = function() {
-  this.lassoSelectCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
-  this.lassoSelectCanvas.style.width = this.lassoSelectCanvas.width + "px";
-  this.lassoSelectCanvas.height = this.dropletElement.offsetHeight;
-  this.lassoSelectCanvas.style.height = this.lassoSelectCanvas.height + "px";
-  return this.lassoSelectCanvas.style.left = this.mainCanvas.offsetLeft + "px";
-};
 
 Editor.prototype.clearLassoSelection = function() {
   this.lassoSelection = null;
@@ -63047,8 +63007,8 @@ hook('mousedown', 0, function(point, event, state) {
   if (this.trackerPointIsInPalette(point)) {
     return;
   }
-  mainPoint = this.trackerPointToMain(point).from(this.scrollOffsets.main);
-  palettePoint = this.trackerPointToPalette(point).from(this.scrollOffsets.palette);
+  mainPoint = this.trackerPointToMain(point).from(this.viewports.main);
+  palettePoint = this.trackerPointToPalette(point).from(this.viewports.palette);
   return this.lassoSelectAnchor = this.trackerPointToMain(point);
 });
 
@@ -63056,7 +63016,6 @@ hook('mousemove', 0, function(point, event, state) {
   var dropletDocument, findLassoSelect, j, lassoRectangle, len, mainPoint, ref1, results;
   if (this.lassoSelectAnchor != null) {
     mainPoint = this.trackerPointToMain(point);
-    this.clearLassoSelectCanvas();
     lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
     findLassoSelect = (function(_this) {
       return function(dropletDocument) {
@@ -63069,10 +63028,13 @@ hook('mousemove', 0, function(point, event, state) {
         while (!((last == null) || last.type === 'blockEnd' && _this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
           last = last.prev;
         }
-        _this.clearLassoSelectCanvas();
         _this.clearHighlightCanvas();
-        _this.lassoSelectCtx.strokeStyle = '#00f';
-        _this.lassoSelectCtx.strokeRect(lassoRectangle.x - _this.scrollOffsets.main.x, lassoRectangle.y - _this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
+        _this.mainCanvas.appendChild(_this.lassoSelectRect);
+        _this.lassoSelectRect.style.display = 'block';
+        _this.lassoSelectRect.setAttribute('x', lassoRectangle.x);
+        _this.lassoSelectRect.setAttribute('y', lassoRectangle.y);
+        _this.lassoSelectRect.setAttribute('width', lassoRectangle.width);
+        _this.lassoSelectRect.setAttribute('height', lassoRectangle.height);
         if (first && (last != null)) {
           ref1 = validateLassoSelection(dropletDocument, first, last), first = ref1[0], last = ref1[1];
           _this.lassoSelection = new model.List(first, last);
@@ -63080,6 +63042,7 @@ hook('mousemove', 0, function(point, event, state) {
           return true;
         } else {
           _this.lassoSelection = null;
+          _this.redrawLassoHighlight();
           return false;
         }
       };
@@ -63102,34 +63065,23 @@ hook('mousemove', 0, function(point, event, state) {
 });
 
 Editor.prototype.redrawLassoHighlight = function() {
-  var lassoView, mainCanvasRectangle;
+  var dropletDocument, dropletDocumentView, j, lassoView, len, ref1;
+  ref1 = this.getDocuments();
+  for (j = 0, len = ref1.length; j < len; j++) {
+    dropletDocument = ref1[j];
+    dropletDocumentView = this.view.getViewNodeFor(dropletDocument);
+    dropletDocumentView.draw(this.viewports.main, {
+      selected: false,
+      noText: this.currentlyAnimating
+    });
+  }
   if (this.lassoSelection != null) {
-    mainCanvasRectangle = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
     lassoView = this.view.getViewNodeFor(this.lassoSelection);
     lassoView.absorbCache();
-    lassoView.draw(this.highlightCtx, mainCanvasRectangle, {
+    return lassoView.draw(this.viewports.main, {
       selected: true
     });
-    return this.maskFloatingPaths(this.lassoSelection.start.getDocument());
   }
-};
-
-Editor.prototype.maskFloatingPaths = function(dropletDocument) {
-  var i, j, record, ref1, results;
-  ref1 = this.floatingBlocks;
-  results = [];
-  for (i = j = ref1.length - 1; j >= 0; i = j += -1) {
-    record = ref1[i];
-    if (record.block === dropletDocument) {
-      break;
-    } else {
-      this.highlightCtx.save();
-      record.grayBoxPath.clip(this.highlightCtx);
-      record.grayBoxPath.bounds().clearRect(this.highlightCtx);
-      results.push(this.highlightCtx.restore());
-    }
-  }
-  return results;
 };
 
 validateLassoSelection = function(tree, first, last) {
@@ -63172,7 +63124,7 @@ hook('mouseup', 0, function(point, event, state) {
       this.setCursor(this.lassoSelection.end);
     }
     this.lassoSelectAnchor = null;
-    this.clearLassoSelectCanvas();
+    this.lassoSelectRect.style.display = 'none';
     this.redrawMain();
   }
   return this.lassoSelectionDocument = null;
@@ -63297,10 +63249,10 @@ Editor.prototype.getCursor = function() {
 Editor.prototype.scrollCursorIntoPosition = function() {
   var axis;
   axis = this.determineCursorPosition().y;
-  if (axis - this.scrollOffsets.main.y < 0) {
+  if (axis < this.viewports.main.y) {
     this.mainScroller.scrollTop = axis;
-  } else if (axis - this.scrollOffsets.main.y > this.mainCanvas.height) {
-    this.mainScroller.scrollTop = axis - this.mainCanvas.height;
+  } else if (axis > this.viewports.main.bottom()) {
+    this.mainScroller.scrollTop = axis - this.viewports.main.height;
   }
   return this.mainScroller.scrollLeft = 0;
 };
@@ -63513,38 +63465,44 @@ getOffsetLeft = function(element) {
 };
 
 Editor.prototype.computePlaintextTranslationVectors = function() {
-  var aceSession, corner, head, rownum, state, textElements, translationVectors, wrappedlines;
+  var aceSession, corner, fontWidth, head, rownum, state, textElements, translationVectors, wrappedlines;
   textElements = [];
   translationVectors = [];
   head = this.tree.start;
   aceSession = this.aceEditor.session;
   state = {
-    x: (this.aceEditor.container.getBoundingClientRect().left - this.aceElement.getBoundingClientRect().left + this.aceEditor.renderer.$gutterLayer.gutterWidth) - this.gutter.offsetWidth + 5,
+    x: (this.aceEditor.container.getBoundingClientRect().left - this.aceElement.getBoundingClientRect().left + this.aceEditor.renderer.$gutterLayer.gutterWidth) - this.gutter.clientWidth + 5,
     y: (this.aceEditor.container.getBoundingClientRect().top - this.aceElement.getBoundingClientRect().top) - aceSession.getScrollTop(),
     indent: 0,
     lineHeight: this.aceEditor.renderer.layerConfig.lineHeight,
-    leftEdge: (this.aceEditor.container.getBoundingClientRect().left - getOffsetLeft(this.aceElement) + this.aceEditor.renderer.$gutterLayer.gutterWidth) - this.gutter.offsetWidth + 5
+    leftEdge: (this.aceEditor.container.getBoundingClientRect().left - getOffsetLeft(this.aceElement) + this.aceEditor.renderer.$gutterLayer.gutterWidth) - this.gutter.clientWidth + 5
   };
-  this.mainCtx.font = this.aceFontSize() + ' ' + this.fontFamily;
+  this.measureCtx.font = this.aceFontSize() + ' ' + this.fontFamily;
+  fontWidth = this.measureCtx.measureText(' ').width;
   rownum = 0;
   while (head !== this.tree.end) {
     switch (head.type) {
       case 'text':
         corner = this.view.getViewNodeFor(head).bounds[0].upperLeftCorner();
-        corner.x -= this.scrollOffsets.main.x;
-        corner.y -= this.scrollOffsets.main.y;
+        corner.x -= this.viewports.main.x;
+        corner.y -= this.viewports.main.y;
         translationVectors.push((new this.draw.Point(state.x, state.y)).from(corner));
         textElements.push(this.view.getViewNodeFor(head));
-        state.x += this.mainCtx.measureText(head.value).width;
+        state.x += fontWidth * head.value.length;
+        break;
+      case 'socketStart':
+        if (head.next === head.container.end || head.next.type === 'text' && head.next.value === '') {
+          state.x += fontWidth * head.container.emptyString.length;
+        }
         break;
       case 'newline':
         wrappedlines = Math.max(1, aceSession.documentToScreenRow(rownum + 1, 0) - aceSession.documentToScreenRow(rownum, 0));
         rownum += 1;
         state.y += state.lineHeight * wrappedlines;
         if (head.specialIndent != null) {
-          state.x = state.leftEdge + this.mainCtx.measureText(head.specialIndent).width;
+          state.x = state.leftEdge + fontWidth * head.specialIndent.length;
         } else {
-          state.x = state.leftEdge + state.indent * this.mainCtx.measureText(' ').width;
+          state.x = state.leftEdge + state.indent * fontWidth;
         }
         break;
       case 'indentStart':
@@ -63576,13 +63534,13 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
     this.hideDropdown();
     this.fireEvent('statechange', [false]);
     this.setAceValue(this.getValue());
-    top = this.findLineNumberAtCoordinate(this.scrollOffsets.main.y);
+    top = this.findLineNumberAtCoordinate(this.viewports.main.y);
     this.aceEditor.scrollToLine(top);
     this.aceEditor.resize(true);
     this.redrawMain({
       noText: true
     });
-    if (this.mainScroller.scrollWidth > this.mainScroller.offsetWidth) {
+    if (this.mainScroller.scrollWidth > this.mainScroller.clientWidth) {
       this.mainScroller.style.overflowX = 'scroll';
     } else {
       this.mainScroller.style.overflowX = 'hidden';
@@ -63596,23 +63554,23 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
     fn1 = (function(_this) {
       return function(div, textElement, translationVectors, i) {
         return setTimeout((function() {
-          div.style.left = (textElement.bounds[0].x - _this.scrollOffsets.main.x + translationVectors[i].x) + 'px';
-          div.style.top = (textElement.bounds[0].y - _this.scrollOffsets.main.y + translationVectors[i].y) + 'px';
+          div.style.left = (textElement.bounds[0].x - _this.viewports.main.x + translationVectors[i].x) + 'px';
+          div.style.top = (textElement.bounds[0].y - _this.viewports.main.y + translationVectors[i].y) + 'px';
           return div.style.fontSize = _this.aceFontSize();
         }), fadeTime);
       };
     })(this);
     for (i = j = 0, len = textElements.length; j < len; i = ++j) {
       textElement = textElements[i];
-      if (!(0 < textElement.bounds[0].bottom() - this.scrollOffsets.main.y + translationVectors[i].y && textElement.bounds[0].y - this.scrollOffsets.main.y + translationVectors[i].y < this.mainCanvas.height)) {
+      if (!(0 < textElement.bounds[0].bottom() - this.viewports.main.y + translationVectors[i].y && textElement.bounds[0].y - this.viewports.main.y + translationVectors[i].y < this.viewports.main.height)) {
         continue;
       }
       div = document.createElement('div');
       div.style.whiteSpace = 'pre';
       div.innerText = div.textContent = textElement.model.value;
       div.style.font = this.fontSize + 'px ' + this.fontFamily;
-      div.style.left = (textElement.bounds[0].x - this.scrollOffsets.main.x) + "px";
-      div.style.top = (textElement.bounds[0].y - this.scrollOffsets.main.y - this.fontAscent) + "px";
+      div.style.left = (textElement.bounds[0].x - this.viewports.main.x) + "px";
+      div.style.top = (textElement.bounds[0].y - this.viewports.main.y - this.fontAscent) + "px";
       div.className = 'droplet-transitioning-element';
       div.style.transition = "left " + translateTime + "ms, top " + translateTime + "ms, font-size " + translateTime + "ms";
       translatingElements.push(div);
@@ -63638,9 +63596,9 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
       div.style.whiteSpace = 'pre';
       div.innerText = div.textContent = line + 1;
       div.style.left = 0;
-      div.style.top = (treeView.bounds[line].y + treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent - this.scrollOffsets.main.y) + "px";
+      div.style.top = (treeView.bounds[line].y + treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent - this.viewports.main.y) + "px";
       div.style.font = this.fontSize + 'px ' + this.fontFamily;
-      div.style.width = this.gutter.offsetWidth + "px";
+      div.style.width = this.gutter.clientWidth + "px";
       translatingElements.push(div);
       div.className = 'droplet-transitioning-element droplet-transitioning-gutter droplet-gutter-line';
       if (this.annotations[line] != null) {
@@ -63651,8 +63609,8 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
       fn2(div, line);
     }
     this.lineNumberWrapper.style.display = 'none';
-    this.mainCanvas.style.transition = this.highlightCanvas.style.transition = this.cursorCanvas.style.opacity = "opacity " + fadeTime + "ms linear";
-    this.mainCanvas.style.opacity = this.highlightCanvas.style.opacity = this.cursorCanvas.style.opacity = 0;
+    this.mainCanvas.style.transition = "opacity " + fadeTime + "ms linear";
+    this.mainCanvas.style.opacity = 0;
     paletteDisappearingWithMelt = this.paletteEnabled && !this.showPaletteInTextMode;
     if (paletteDisappearingWithMelt) {
       this.paletteHeader.style.zIndex = 0;
@@ -63660,7 +63618,7 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
         return function() {
           _this.dropletElement.style.transition = _this.paletteWrapper.style.transition = "left " + translateTime + "ms";
           _this.dropletElement.style.left = '0px';
-          return _this.paletteWrapper.style.left = (-_this.paletteWrapper.offsetWidth) + "px";
+          return _this.paletteWrapper.style.left = (-_this.paletteWrapper.clientWidth) + "px";
         };
       })(this)), fadeTime);
     }
@@ -63670,7 +63628,7 @@ Editor.prototype.performMeltAnimation = function(fadeTime, translateTime, cb) {
         _this.dropletElement.style.transition = _this.paletteWrapper.style.transition = '';
         _this.aceElement.style.top = '0px';
         if (_this.showPaletteInTextMode && _this.paletteEnabled) {
-          _this.aceElement.style.left = _this.paletteWrapper.offsetWidth + "px";
+          _this.aceElement.style.left = _this.paletteWrapper.clientWidth + "px";
         } else {
           _this.aceElement.style.left = '0px';
         }
@@ -63703,7 +63661,7 @@ Editor.prototype.aceFontSize = function() {
 };
 
 Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) {
-  var setValueResult;
+  var afterTime, beforeTime, setValueResult;
   if (fadeTime == null) {
     fadeTime = 500;
   }
@@ -63714,7 +63672,10 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
     cb = function() {};
   }
   if (!this.currentlyUsingBlocks && !this.currentlyAnimating) {
+    beforeTime = +(new Date());
     setValueResult = this.copyAceEditor();
+    afterTime = +(new Date());
+    console.log('elapsed:', afterTime - beforeTime);
     if (!setValueResult.success) {
       if (setValueResult.error) {
         this.fireEvent('parseerror', [setValueResult.error]);
@@ -63731,7 +63692,7 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
     this.fireEvent('statechange', [true]);
     setTimeout(((function(_this) {
       return function() {
-        var aceScrollTop, bottom, div, el, fn1, fn2, i, j, k, l, len, len1, line, lineHeight, paletteAppearingWithFreeze, ref1, ref2, ref3, ref4, textElement, textElements, top, translatingElements, translationVectors, treeView;
+        var aceScrollTop, bottom, div, fn1, fn2, i, j, k, len, line, lineHeight, paletteAppearingWithFreeze, ref1, ref2, ref3, textElement, textElements, top, translatingElements, translationVectors, treeView;
         _this.mainScroller.style.overflow = 'hidden';
         _this.dropletElement.style.width = _this.wrapperElement.clientWidth + 'px';
         _this.redrawMain({
@@ -63743,12 +63704,12 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
         paletteAppearingWithFreeze = _this.paletteEnabled && !_this.showPaletteInTextMode;
         if (paletteAppearingWithFreeze) {
           _this.paletteWrapper.style.top = '0px';
-          _this.paletteWrapper.style.left = (-_this.paletteWrapper.offsetWidth) + "px";
+          _this.paletteWrapper.style.left = (-_this.paletteWrapper.clientWidth) + "px";
           _this.paletteHeader.style.zIndex = 0;
         }
         _this.dropletElement.style.top = "0px";
         if (_this.paletteEnabled && !paletteAppearingWithFreeze) {
-          _this.dropletElement.style.left = _this.paletteWrapper.offsetWidth + "px";
+          _this.dropletElement.style.left = _this.paletteWrapper.clientWidth + "px";
         } else {
           _this.dropletElement.style.left = "0px";
         }
@@ -63756,14 +63717,14 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
         translatingElements = [];
         fn1 = function(div, textElement) {
           return setTimeout((function() {
-            div.style.left = (textElement.bounds[0].x - _this.scrollOffsets.main.x) + "px";
-            div.style.top = (textElement.bounds[0].y - _this.scrollOffsets.main.y - _this.fontAscent) + "px";
+            div.style.left = (textElement.bounds[0].x - _this.viewports.main.x) + "px";
+            div.style.top = (textElement.bounds[0].y - _this.viewports.main.y - _this.fontAscent) + "px";
             return div.style.fontSize = _this.fontSize + 'px';
           }), 0);
         };
         for (i = j = 0, len = textElements.length; j < len; i = ++j) {
           textElement = textElements[i];
-          if (!(0 < textElement.bounds[0].bottom() - _this.scrollOffsets.main.y + translationVectors[i].y && textElement.bounds[0].y - _this.scrollOffsets.main.y + translationVectors[i].y < _this.mainCanvas.height)) {
+          if (!(0 < textElement.bounds[0].bottom() - _this.viewports.main.y + translationVectors[i].y && textElement.bounds[0].y - _this.viewports.main.y + translationVectors[i].y < _this.viewports.main.height)) {
             continue;
           }
           div = document.createElement('div');
@@ -63771,8 +63732,8 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
           div.innerText = div.textContent = textElement.model.value;
           div.style.font = _this.aceFontSize() + ' ' + _this.fontFamily;
           div.style.position = 'absolute';
-          div.style.left = (textElement.bounds[0].x - _this.scrollOffsets.main.x + translationVectors[i].x) + "px";
-          div.style.top = (textElement.bounds[0].y - _this.scrollOffsets.main.y + translationVectors[i].y) + "px";
+          div.style.left = (textElement.bounds[0].x - _this.viewports.main.x + translationVectors[i].x) + "px";
+          div.style.top = (textElement.bounds[0].y - _this.viewports.main.y + translationVectors[i].y) + "px";
           div.className = 'droplet-transitioning-element';
           div.style.transition = "left " + translateTime + "ms, top " + translateTime + "ms, font-size " + translateTime + "ms";
           translatingElements.push(div);
@@ -63787,7 +63748,7 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
         fn2 = function(div, line) {
           return setTimeout((function() {
             div.style.left = 0;
-            div.style.top = (treeView.bounds[line].y + treeView.distanceToBase[line].above - _this.view.opts.textHeight - _this.fontAscent - _this.scrollOffsets.main.y) + "px";
+            div.style.top = (treeView.bounds[line].y + treeView.distanceToBase[line].above - _this.view.opts.textHeight - _this.fontAscent - _this.viewports.main.y) + "px";
             return div.style.fontSize = _this.fontSize + 'px';
           }), 0);
         };
@@ -63796,7 +63757,7 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
           div.style.whiteSpace = 'pre';
           div.innerText = div.textContent = line + 1;
           div.style.font = _this.aceFontSize() + ' ' + _this.fontFamily;
-          div.style.width = _this.aceEditor.renderer.$gutter.offsetWidth + "px";
+          div.style.width = _this.aceEditor.renderer.$gutter.clientWidth + "px";
           div.style.left = 0;
           div.style.top = (_this.aceEditor.session.documentToScreenRow(line, 0) * lineHeight - aceScrollTop) + "px";
           div.className = 'droplet-transitioning-element droplet-transitioning-gutter droplet-gutter-line';
@@ -63808,42 +63769,27 @@ Editor.prototype.performFreezeAnimation = function(fadeTime, translateTime, cb) 
           _this.dropletElement.appendChild(div);
           fn2(div, line);
         }
-        ref4 = [_this.mainCanvas, _this.highlightCanvas, _this.cursorCanvas];
-        for (l = 0, len1 = ref4.length; l < len1; l++) {
-          el = ref4[l];
-          el.style.opacity = 0;
-        }
+        _this.mainCanvas.style.opacity = 0;
         setTimeout((function() {
-          var len2, m, ref5;
-          ref5 = [_this.mainCanvas, _this.highlightCanvas, _this.cursorCanvas];
-          for (m = 0, len2 = ref5.length; m < len2; m++) {
-            el = ref5[m];
-            el.style.transition = "opacity " + fadeTime + "ms linear";
-          }
-          _this.mainCanvas.style.opacity = 1;
-          _this.highlightCanvas.style.opacity = 1;
-          if (_this.editorHasFocus()) {
-            return _this.cursorCanvas.style.opacity = 1;
-          } else {
-            return _this.cursorCanvas.style.opacity = CURSOR_UNFOCUSED_OPACITY;
-          }
+          _this.mainCanvas.style.transition = "opacity " + fadeTime + "ms linear";
+          return _this.mainCanvas.style.opacity = 1;
         }), translateTime);
         _this.dropletElement.style.transition = "left " + fadeTime + "ms";
         if (paletteAppearingWithFreeze) {
           _this.paletteWrapper.style.transition = _this.dropletElement.style.transition;
-          _this.dropletElement.style.left = _this.paletteWrapper.offsetWidth + "px";
+          _this.dropletElement.style.left = _this.paletteWrapper.clientWidth + "px";
           _this.paletteWrapper.style.left = '0px';
         }
         return setTimeout((function() {
-          var len2, m;
+          var l, len1;
           _this.dropletElement.style.transition = _this.paletteWrapper.style.transition = '';
           _this.mainScroller.style.overflow = 'auto';
           _this.currentlyAnimating = false;
           _this.lineNumberWrapper.style.display = 'block';
           _this.redrawMain();
           _this.paletteHeader.style.zIndex = 257;
-          for (m = 0, len2 = translatingElements.length; m < len2; m++) {
-            div = translatingElements[m];
+          for (l = 0, len1 = translatingElements.length; l < len1; l++) {
+            div = translatingElements[l];
             div.parentNode.removeChild(div);
           }
           _this.resizeBlockMode();
@@ -63873,7 +63819,7 @@ Editor.prototype.enablePalette = function(enabled) {
     if (!this.paletteEnabled) {
       activeElement.style.transition = this.paletteWrapper.style.transition = "left 500ms";
       activeElement.style.left = '0px';
-      this.paletteWrapper.style.left = (-this.paletteWrapper.offsetWidth) + "px";
+      this.paletteWrapper.style.left = (-this.paletteWrapper.clientWidth) + "px";
       this.paletteHeader.style.zIndex = 0;
       this.resize();
       return setTimeout(((function(_this) {
@@ -63886,12 +63832,12 @@ Editor.prototype.enablePalette = function(enabled) {
       })(this)), 500);
     } else {
       this.paletteWrapper.style.top = '0px';
-      this.paletteWrapper.style.left = (-this.paletteWrapper.offsetWidth) + "px";
+      this.paletteWrapper.style.left = (-this.paletteWrapper.clientWidth) + "px";
       this.paletteHeader.style.zIndex = 257;
       return setTimeout(((function(_this) {
         return function() {
           activeElement.style.transition = _this.paletteWrapper.style.transition = "left 500ms";
-          activeElement.style.left = _this.paletteWrapper.offsetWidth + "px";
+          activeElement.style.left = _this.paletteWrapper.clientWidth + "px";
           _this.paletteWrapper.style.left = '0px';
           return setTimeout((function() {
             activeElement.style.transition = _this.paletteWrapper.style.transition = '';
@@ -63913,15 +63859,15 @@ Editor.prototype.toggleBlocks = function(cb) {
 };
 
 hook('populate', 2, function() {
-  this.scrollOffsets = {
-    main: new this.draw.Point(0, 0),
-    palette: new this.draw.Point(0, 0)
+  this.viewports = {
+    main: new this.draw.Rectangle(0, 0, 0, 0),
+    palette: new this.draw.Rectangle(0, 0, 0, 0)
   };
   this.mainScroller = document.createElement('div');
   this.mainScroller.className = 'droplet-main-scroller';
   this.mainScrollerStuffing = document.createElement('div');
   this.mainScrollerStuffing.className = 'droplet-main-scroller-stuffing';
-  this.mainScroller.appendChild(this.mainScrollerStuffing);
+  this.mainScroller.appendChild(this.mainCanvas);
   this.dropletElement.appendChild(this.mainScroller);
   this.wrapperElement.addEventListener('scroll', (function(_this) {
     return function() {
@@ -63930,51 +63876,51 @@ hook('populate', 2, function() {
   })(this));
   this.mainScroller.addEventListener('scroll', (function(_this) {
     return function() {
-      _this.scrollOffsets.main.y = _this.mainScroller.scrollTop;
-      _this.scrollOffsets.main.x = _this.mainScroller.scrollLeft;
-      _this.mainCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
-      _this.highlightCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
-      _this.cursorCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.main.x, -_this.scrollOffsets.main.y);
+      _this.viewports.main.y = _this.mainScroller.scrollTop;
+      _this.viewports.main.x = _this.mainScroller.scrollLeft;
       return _this.redrawMain();
     };
   })(this));
   this.paletteScroller = document.createElement('div');
   this.paletteScroller.className = 'droplet-palette-scroller';
+  this.paletteScroller.appendChild(this.paletteCanvas);
   this.paletteScrollerStuffing = document.createElement('div');
   this.paletteScrollerStuffing.className = 'droplet-palette-scroller-stuffing';
   this.paletteScroller.appendChild(this.paletteScrollerStuffing);
   this.paletteElement.appendChild(this.paletteScroller);
   return this.paletteScroller.addEventListener('scroll', (function(_this) {
     return function() {
-      _this.scrollOffsets.palette.y = _this.paletteScroller.scrollTop;
-      _this.paletteCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.palette.x, -_this.scrollOffsets.palette.y);
-      _this.paletteHighlightCtx.setTransform(1, 0, 0, 1, -_this.scrollOffsets.palette.x, -_this.scrollOffsets.palette.y);
-      return _this.redrawPalette();
+      _this.viewports.palette.y = _this.paletteScroller.scrollTop;
+      return _this.viewports.palette.x = _this.paletteScroller.scrollLeft;
     };
   })(this));
 });
 
 Editor.prototype.resizeMainScroller = function() {
-  this.mainScroller.style.width = this.dropletElement.offsetWidth + "px";
-  return this.mainScroller.style.height = this.dropletElement.offsetHeight + "px";
+  this.mainScroller.style.width = this.dropletElement.clientWidth + "px";
+  return this.mainScroller.style.height = this.dropletElement.clientHeight + "px";
 };
 
 hook('resize_palette', 0, function() {
   this.paletteScroller.style.top = this.paletteHeader.offsetHeight + "px";
-  this.paletteScroller.style.width = this.paletteCanvas.offsetWidth + "px";
-  return this.paletteScroller.style.height = this.paletteCanvas.offsetHeight + "px";
+  this.viewports.palette.height = this.paletteScroller.clientHeight;
+  return this.viewports.palette.width = this.paletteScroller.clientWidth;
 });
 
 hook('redraw_main', 1, function() {
-  var bounds, j, len, record, ref1, ref2;
+  var bounds, height, j, len, record, ref1, ref2;
   bounds = this.view.getViewNodeFor(this.tree).getBounds();
   ref1 = this.floatingBlocks;
   for (j = 0, len = ref1.length; j < len; j++) {
     record = ref1[j];
     bounds.unite(this.view.getViewNodeFor(record.block).getBounds());
   }
-  this.mainScrollerStuffing.style.width = (bounds.right()) + "px";
-  return this.mainScrollerStuffing.style.height = (bounds.bottom() + ((ref2 = this.options.extraBottomHeight) != null ? ref2 : this.fontSize)) + "px";
+  height = Math.max(bounds.bottom() + ((ref2 = this.options.extraBottomHeight) != null ? ref2 : this.fontSize), this.dropletElement.clientHeight);
+  if (height !== this.lastHeight) {
+    this.lastHeight = height;
+    this.mainCanvas.setAttribute('height', height);
+    return this.mainCanvas.style.height = height + "px";
+  }
 });
 
 hook('redraw_palette', 0, function() {
@@ -63992,6 +63938,8 @@ hook('populate', 0, function() {
   var metrics;
   this.fontSize = 15;
   this.fontFamily = 'Courier New';
+  this.measureCtx.font = '15px Courier New';
+  this.fontWidth = this.measureCtx.measureText(' ').width;
   metrics = helper.fontMetrics(this.fontFamily, this.fontSize);
   this.fontAscent = metrics.prettytop;
   return this.fontDescent = metrics.descent;
@@ -64000,16 +63948,22 @@ hook('populate', 0, function() {
 Editor.prototype.setFontSize_raw = function(fontSize) {
   var metrics;
   if (this.fontSize !== fontSize) {
+    this.measureCtx.font = fontSize + ' px ' + this.fontFamily;
+    this.fontWidth = this.measureCtx.measureText(' ').width;
     this.fontSize = fontSize;
     this.paletteHeader.style.fontSize = fontSize + "px";
     this.gutter.style.fontSize = fontSize + "px";
     this.tooltipElement.style.fontSize = fontSize + "px";
-    this.view.opts.textHeight = this.dragView.opts.textHeight = helper.getFontHeight(this.fontFamily, this.fontSize);
+    this.view.opts.textHeight = this.paletteView.opts.textHeight = this.dragView.opts.textHeight = helper.getFontHeight(this.fontFamily, this.fontSize);
     metrics = helper.fontMetrics(this.fontFamily, this.fontSize);
     this.fontAscent = metrics.prettytop;
     this.fontDescent = metrics.descent;
     this.view.clearCache();
+    this.paletteView.clearCache();
     this.dragView.clearCache();
+    this.view.draw.setGlobalFontSize(this.fontSize);
+    this.paletteView.draw.setGlobalFontSize(this.fontSize);
+    this.dragView.draw.setGlobalFontSize(this.fontSize);
     this.gutter.style.width = this.aceEditor.renderer.$gutterLayer.gutterWidth + 'px';
     this.redrawMain();
     return this.rebuildPalette();
@@ -64017,6 +63971,7 @@ Editor.prototype.setFontSize_raw = function(fontSize) {
 };
 
 Editor.prototype.setFontFamily = function(fontFamily) {
+  this.measureCtx.font = this.fontSize + 'px ' + fontFamily;
   this.draw.setGlobalFontFamily(fontFamily);
   this.fontFamily = fontFamily;
   this.view.opts.textHeight = helper.getFontHeight(this.fontFamily, this.fontSize);
@@ -64058,50 +64013,20 @@ Editor.prototype.getHighlightPath = function(model, style, view) {
 Editor.prototype.markLine = function(line, style) {
   var block;
   block = this.tree.getBlockOnLine(line);
-  if (block != null) {
-    this.markedLines[line] = {
-      model: block,
-      style: style
-    };
-  }
-  return this.redrawHighlights();
-};
-
-Editor.prototype.markBlock = function(block, style) {
-  var key;
-  key = this.nextMarkedBlockId++;
-  this.markedBlocks[key] = {
-    model: block,
-    style: style
-  };
-  return key;
+  this.view.getViewNodeFor(block).mark(style);
+  return this.redrawMain();
 };
 
 Editor.prototype.mark = function(location, style) {
-  var block, key, ref1;
+  var block, ref1;
   block = this.tree.getFromTextLocation(location);
   block = (ref1 = block.container) != null ? ref1 : block;
-  key = this.nextMarkedBlockId++;
-  this.markedBlocks[key] = {
-    model: block,
-    style: style
-  };
-  this.redrawHighlights();
-  return key;
-};
-
-Editor.prototype.unmark = function(key) {
-  delete this.markedBlocks[key];
-  return true;
-};
-
-Editor.prototype.unmarkLine = function(line) {
-  delete this.markedLines[line];
+  this.view.getViewNodeFor(block).mark(style);
   return this.redrawMain();
 };
 
 Editor.prototype.clearLineMarks = function() {
-  this.markedLines = this.markedBlocks = {};
+  this.view.clearMarks();
   return this.redrawMain();
 };
 
@@ -64249,7 +64174,7 @@ Editor.prototype.setEditorState = function(useBlocks) {
     this.dropletElement.style.top = '0px';
     if (this.paletteEnabled) {
       this.paletteWrapper.style.top = this.paletteWrapper.style.left = '0px';
-      this.dropletElement.style.left = this.paletteWrapper.offsetWidth + "px";
+      this.dropletElement.style.left = this.paletteWrapper.clientWidth + "px";
     } else {
       this.paletteWrapper.style.top = this.paletteWrapper.style.left = '-9999px';
       this.dropletElement.style.left = '0px';
@@ -64277,7 +64202,7 @@ Editor.prototype.setEditorState = function(useBlocks) {
     }
     this.aceElement.style.top = '0px';
     if (paletteVisibleInNewState) {
-      this.aceElement.style.left = this.paletteWrapper.offsetWidth + "px";
+      this.aceElement.style.left = this.paletteWrapper.clientWidth + "px";
     } else {
       this.aceElement.style.left = '0px';
     }
@@ -64302,7 +64227,7 @@ hook('mousedown', -1, function() {
 });
 
 hook('mouseup', 0, function() {
-  this.dragCanvas.style.top = this.dragCanvas.style.left = '-9999px';
+  this.dragCanvas.style.transform = "translate(-9999px, -9999px)";
   return this.dragCover.style.display = 'none';
 });
 
@@ -64313,15 +64238,21 @@ hook('mousedown', 10, function() {
 });
 
 Editor.prototype.endDrag = function() {
+  var ref1;
   if (this.cursorAtSocket()) {
     this.setCursor(this.cursor, function(x) {
       return x.type !== 'socketStart';
     });
   }
+  this.clearDrag();
   this.draggingBlock = null;
   this.draggingOffset = null;
-  this.lastHighlight = null;
-  this.clearDrag();
+  if ((ref1 = this.lastHighlightPath) != null) {
+    if (typeof ref1.deactivate === "function") {
+      ref1.deactivate();
+    }
+  }
+  this.lastHighlight = this.lastHighlightPath = null;
   this.redrawMain();
 };
 
@@ -64418,44 +64349,43 @@ hook('populate', 0, function() {
 });
 
 hook('populate', 0, function() {
-  this.cursorCanvas = document.createElement('canvas');
-  this.cursorCanvas.className = 'droplet-highlight-canvas droplet-cursor-canvas';
-  this.cursorCtx = this.cursorCanvas.getContext('2d');
-  return this.dropletElement.appendChild(this.cursorCanvas);
+  var cursorElement;
+  this.cursorCtx = document.createElementNS(SVG_STANDARD, 'g');
+  this.textCursorPath = new this.view.draw.Path([], false, {
+    'strokeColor': '#000',
+    'lineWidth': '2',
+    'fillColor': 'rgba(0, 0, 256, 0.3)',
+    'cssClass': 'droplet-cursor-path'
+  });
+  this.textCursorPath.setParent(this.mainCtx);
+  cursorElement = document.createElementNS(SVG_STANDARD, 'path');
+  cursorElement.setAttribute('fill', 'none');
+  cursorElement.setAttribute('stroke', '#000');
+  cursorElement.setAttribute('stroke-width', '3');
+  cursorElement.setAttribute('stroke-linecap', 'round');
+  cursorElement.setAttribute('d', ("M" + (this.view.opts.tabOffset + CURSOR_WIDTH_DECREASE / 2) + " 0 ") + ("Q" + (this.view.opts.tabOffset + this.view.opts.tabWidth / 2) + " " + this.view.opts.tabHeight) + (" " + (this.view.opts.tabOffset + this.view.opts.tabWidth - CURSOR_WIDTH_DECREASE / 2) + " 0"));
+  this.cursorPath = new this.view.draw.ElementWrapper(cursorElement);
+  this.cursorPath.setParent(this.mainCtx);
+  return this.mainCanvas.appendChild(this.cursorCtx);
 });
 
-Editor.prototype.resizeCursorCanvas = function() {
-  this.cursorCanvas.width = this.dropletElement.offsetWidth - this.gutter.offsetWidth;
-  this.cursorCanvas.style.width = this.cursorCanvas.width + "px";
-  this.cursorCanvas.height = this.dropletElement.offsetHeight;
-  this.cursorCanvas.style.height = this.cursorCanvas.height + "px";
-  return this.cursorCanvas.style.left = this.mainCanvas.offsetLeft + "px";
-};
-
 Editor.prototype.strokeCursor = function(point) {
-  var arcAngle, arcCenter, endAngle, h, startAngle, w;
   if (point == null) {
     return;
   }
-  this.cursorCtx.beginPath();
-  this.cursorCtx.fillStyle = this.cursorCtx.strokeStyle = '#000';
-  this.cursorCtx.lineCap = 'round';
-  this.cursorCtx.lineWidth = 3;
-  w = this.view.opts.tabWidth / 2 - CURSOR_WIDTH_DECREASE;
-  h = this.view.opts.tabHeight - CURSOR_HEIGHT_DECREASE;
-  arcCenter = new this.draw.Point(point.x + this.view.opts.tabOffset + w + CURSOR_WIDTH_DECREASE, point.y - (w * w + h * h) / (2 * h) + h + CURSOR_HEIGHT_DECREASE / 2);
-  arcAngle = Math.atan2(w, (w * w + h * h) / (2 * h) - h);
-  startAngle = 0.5 * Math.PI - arcAngle;
-  endAngle = 0.5 * Math.PI + arcAngle;
-  this.cursorCtx.arc(arcCenter.x, arcCenter.y, (w * w + h * h) / (2 * h), startAngle, endAngle);
-  return this.cursorCtx.stroke();
+  this.cursorPath.element.setAttribute('transform', "translate(" + point.x + ", " + point.y + ")");
+  return this.qualifiedFocus(this.getCursor(), this.cursorPath);
 };
 
 Editor.prototype.highlightFlashShow = function() {
   if (this.flashTimeout != null) {
     clearTimeout(this.flashTimeout);
   }
-  this.cursorCanvas.style.display = 'block';
+  if (this.cursorAtSocket()) {
+    this.textCursorPath.activate();
+  } else {
+    this.cursorPath.activate();
+  }
   this.highlightsCurrentlyShown = true;
   return this.flashTimeout = setTimeout(((function(_this) {
     return function() {
@@ -64468,7 +64398,11 @@ Editor.prototype.highlightFlashHide = function() {
   if (this.flashTimeout != null) {
     clearTimeout(this.flashTimeout);
   }
-  this.cursorCanvas.style.display = 'none';
+  if (this.cursorAtSocket()) {
+    this.textCursorPath.deactivate();
+  } else {
+    this.cursorPath.deactivate();
+  }
   this.highlightsCurrentlyShown = false;
   return this.flashTimeout = setTimeout(((function(_this) {
     return function() {
@@ -64496,8 +64430,7 @@ hook('populate', 0, function() {
   blurCursors = (function(_this) {
     return function() {
       _this.highlightFlashShow();
-      _this.cursorCanvas.style.transition = '';
-      return _this.cursorCanvas.style.opacity = CURSOR_UNFOCUSED_OPACITY;
+      return _this.cursorCtx.style.opacity = CURSOR_UNFOCUSED_OPACITY;
     };
   })(this);
   this.dropletElement.addEventListener('blur', blurCursors);
@@ -64506,8 +64439,8 @@ hook('populate', 0, function() {
   focusCursors = (function(_this) {
     return function() {
       _this.highlightFlashShow();
-      _this.cursorCanvas.style.transition = '';
-      return _this.cursorCanvas.style.opacity = 1;
+      _this.cursorCtx.style.transition = '';
+      return _this.cursorCtx.style.opacity = 1;
     };
   })(this);
   this.dropletElement.addEventListener('focus', focusCursors);
@@ -64631,52 +64564,61 @@ Editor.prototype.resizeGutter = function() {
     this.gutter.style.width = this.lastGutterWidth + 'px';
     return this.resize();
   }
-  return this.gutter.style.height = (Math.max(this.dropletElement.offsetHeight, this.mainScrollerStuffing.offsetHeight)) + "px";
+  if (this.lastGutterHeight !== Math.max(this.dropletElement.clientHeight, this.mainCanvas.clientHeight)) {
+    this.lastGutterHeight = Math.max(this.dropletElement.clientHeight, this.mainCanvas.clientHeight);
+    return this.gutter.style.height = this.lastGutterHeight + 'px';
+  }
 };
 
 Editor.prototype.addLineNumberForLine = function(line) {
   var lineDiv, title, treeView;
   treeView = this.view.getViewNodeFor(this.tree);
   if (line in this.lineNumberTags) {
-    lineDiv = this.lineNumberTags[line];
+    lineDiv = this.lineNumberTags[line].tag;
   } else {
     lineDiv = document.createElement('div');
     lineDiv.innerText = lineDiv.textContent = line + 1;
-    this.lineNumberTags[line] = lineDiv;
+    this.lineNumberTags[line] = {
+      tag: lineDiv,
+      lastPosition: null
+    };
   }
-  lineDiv.className = 'droplet-gutter-line';
-  if (this.annotations[line] != null) {
-    lineDiv.className += ' droplet_' + getMostSevereAnnotationType(this.annotations[line]);
-    title = this.annotations[line].map(function(x) {
-      return x.text;
-    }).join('\n');
-    lineDiv.addEventListener('mouseover', (function(_this) {
-      return function() {
-        _this.tooltipElement.innerText = _this.tooltipElement.textContent = title;
-        return _this.tooltipElement.style.display = 'block';
-      };
-    })(this));
-    lineDiv.addEventListener('mousemove', (function(_this) {
-      return function(event) {
-        _this.tooltipElement.style.left = event.pageX + 'px';
-        return _this.tooltipElement.style.top = event.pageY + 'px';
-      };
-    })(this));
-    lineDiv.addEventListener('mouseout', (function(_this) {
-      return function() {
-        return _this.tooltipElement.style.display = 'none';
-      };
-    })(this));
+  if (treeView.bounds[line].y !== this.lineNumberTags[line].lastPosition) {
+    lineDiv.className = 'droplet-gutter-line';
+    if (this.annotations[line] != null) {
+      lineDiv.className += ' droplet_' + getMostSevereAnnotationType(this.annotations[line]);
+      title = this.annotations[line].map(function(x) {
+        return x.text;
+      }).join('\n');
+      lineDiv.addEventListener('mouseover', (function(_this) {
+        return function() {
+          _this.tooltipElement.innerText = _this.tooltipElement.textContent = title;
+          return _this.tooltipElement.style.display = 'block';
+        };
+      })(this));
+      lineDiv.addEventListener('mousemove', (function(_this) {
+        return function(event) {
+          _this.tooltipElement.style.left = event.pageX + 'px';
+          return _this.tooltipElement.style.top = event.pageY + 'px';
+        };
+      })(this));
+      lineDiv.addEventListener('mouseout', (function(_this) {
+        return function() {
+          return _this.tooltipElement.style.display = 'none';
+        };
+      })(this));
+    }
+    if (this.breakpoints[line]) {
+      lineDiv.className += ' droplet_breakpoint';
+    }
+    lineDiv.style.top = treeView.bounds[line].y + "px";
+    lineDiv.style.paddingTop = (treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent) + "px";
+    lineDiv.style.paddingBottom = "" + (treeView.distanceToBase[line].below - this.fontDescent);
+    lineDiv.style.height = treeView.bounds[line].height + 'px';
+    lineDiv.style.fontSize = this.fontSize + 'px';
+    this.lineNumberWrapper.appendChild(lineDiv);
+    return this.lineNumberTags[line].lastPosition = treeView.bounds[line].y;
   }
-  if (this.breakpoints[line]) {
-    lineDiv.className += ' droplet_breakpoint';
-  }
-  lineDiv.style.top = treeView.bounds[line].y + "px";
-  lineDiv.style.paddingTop = (treeView.distanceToBase[line].above - this.view.opts.textHeight - this.fontAscent) + "px";
-  lineDiv.style.paddingBottom = "" + (treeView.distanceToBase[line].below - this.fontDescent);
-  lineDiv.style.height = treeView.bounds[line].height + 'px';
-  lineDiv.style.fontSize = this.fontSize + 'px';
-  return this.lineNumberWrapper.appendChild(lineDiv);
 };
 
 TYPE_SEVERITY = {
@@ -64729,8 +64671,8 @@ Editor.prototype.redrawGutter = function(changedBox) {
     changedBox = true;
   }
   treeView = this.view.getViewNodeFor(this.tree);
-  top = this.findLineNumberAtCoordinate(this.scrollOffsets.main.y);
-  bottom = this.findLineNumberAtCoordinate(this.scrollOffsets.main.y + this.mainCanvas.height);
+  top = this.findLineNumberAtCoordinate(this.viewports.main.y);
+  bottom = this.findLineNumberAtCoordinate(this.viewports.main.bottom());
   for (line = j = ref1 = top, ref2 = bottom; ref1 <= ref2 ? j <= ref2 : j >= ref2; line = ref1 <= ref2 ? ++j : --j) {
     this.addLineNumberForLine(line);
   }
@@ -64738,7 +64680,7 @@ Editor.prototype.redrawGutter = function(changedBox) {
   for (line in ref3) {
     tag = ref3[line];
     if (line < top || line > bottom) {
-      this.lineNumberTags[line].parentNode.removeChild(this.lineNumberTags[line]);
+      this.lineNumberTags[line].tag.parentNode.removeChild(this.lineNumberTags[line].tag);
       delete this.lineNumberTags[line];
     }
   }
@@ -64861,10 +64803,7 @@ Editor.prototype.documentDimensions = function() {
 };
 
 Editor.prototype.viewportDimensions = function() {
-  return {
-    width: this.mainCanvas.width,
-    height: this.mainCanvas.height
-  };
+  return this.viewports.main;
 };
 
 Editor.prototype.getLineMetrics = function(row) {
@@ -64905,12 +64844,19 @@ for (key in unsortedEditorBindings) {
 }
 
 
-},{"../vendor/quadtree.js":117,"./draw.coffee":101,"./helper.coffee":102,"./model.coffee":110,"./modes.coffee":111,"./view.coffee":114}],101:[function(require,module,exports){
-var Draw, _area, _intersects, avgColor, helper, max, memoizedAvgColor, min, toHex, toRGB, twoDigitHex, zeroPad,
+},{"../vendor/quadtree.js":"/home/anthony/Projects/droplet/vendor/quadtree.js","./draw.coffee":"/home/anthony/Projects/droplet/src/draw.coffee","./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","./model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","./modes.coffee":"/home/anthony/Projects/droplet/src/modes.coffee","./view.coffee":"/home/anthony/Projects/droplet/src/view.coffee"}],"/home/anthony/Projects/droplet/src/draw.coffee":[function(require,module,exports){
+var BEVEL_SIZE, Draw, EPSILON, SVG_STANDARD, _area, _bisector, _intersects, avgColor, helper, max, memoizedAvgColor, min, toHex, toRGB, twoDigitHex, zeroPad,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
+  hasProp = {}.hasOwnProperty,
+  modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
+
+BEVEL_SIZE = 1.5;
+
+EPSILON = 0.00001;
 
 helper = require('./helper.coffee');
+
+SVG_STANDARD = helper.SVG_STANDARD;
 
 _area = function(a, b, c) {
   return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
@@ -64918,6 +64864,32 @@ _area = function(a, b, c) {
 
 _intersects = function(a, b, c, d) {
   return ((_area(a, b, c) > 0) !== (_area(a, b, d) > 0)) && ((_area(c, d, a) > 0) !== (_area(c, d, b) > 0));
+};
+
+_bisector = function(a, b, c, magnitude) {
+  var diagonal, sample, sampleB, scalar;
+  if (magnitude == null) {
+    magnitude = 1;
+  }
+  if (a.equals(b) || b.equals(c)) {
+    return null;
+  }
+  sample = a.from(b).normalize();
+  diagonal = sample.plus(sampleB = c.from(b).normalize());
+  if (diagonal.x === 0 && diagonal.y === 0) {
+    return null;
+  } else if (sample.almostEquals(sampleB)) {
+    return null;
+  }
+  diagonal = diagonal.normalize();
+  scalar = magnitude / Math.sqrt(1 - Math.pow(diagonal.dot(sample), 2));
+  diagonal.x *= scalar;
+  diagonal.y *= scalar;
+  if (_area(a, b, c) < 0) {
+    diagonal.x *= -1;
+    diagonal.y *= -1;
+  }
+  return diagonal;
 };
 
 max = function(a, b) {
@@ -64932,10 +64904,10 @@ toRGB = function(hex) {
   var b, c, g, r;
   if (hex.length === 4) {
     hex = ((function() {
-      var j, len1, results;
+      var l, len1, results;
       results = [];
-      for (j = 0, len1 = hex.length; j < len1; j++) {
-        c = hex[j];
+      for (l = 0, len1 = hex.length; l < len1; l++) {
+        c = hex[l];
         results.push(c + c);
       }
       return results;
@@ -64950,9 +64922,9 @@ toRGB = function(hex) {
 zeroPad = function(str, len) {
   if (str.length < len) {
     return ((function() {
-      var j, ref, ref1, results;
+      var l, ref, ref1, results;
       results = [];
-      for (j = ref = str.length, ref1 = len; ref <= ref1 ? j < ref1 : j > ref1; ref <= ref1 ? j++ : j--) {
+      for (l = ref = str.length, ref1 = len; ref <= ref1 ? l < ref1 : l > ref1; ref <= ref1 ? l++ : l--) {
         results.push('0');
       }
       return results;
@@ -64969,10 +64941,10 @@ twoDigitHex = function(n) {
 toHex = function(rgb) {
   var k;
   return '#' + ((function() {
-    var j, len1, results;
+    var l, len1, results;
     results = [];
-    for (j = 0, len1 = rgb.length; j < len1; j++) {
-      k = rgb[j];
+    for (l = 0, len1 = rgb.length; l < len1; l++) {
+      k = rgb[l];
       results.push(twoDigitHex(k));
     }
     return results;
@@ -64990,9 +64962,9 @@ avgColor = function(a, factor, b) {
   a = toRGB(a);
   b = toRGB(b);
   newRGB = (function() {
-    var j, len1, results;
+    var l, len1, results;
     results = [];
-    for (i = j = 0, len1 = a.length; j < len1; i = ++j) {
+    for (i = l = 0, len1 = a.length; l < len1; i = ++l) {
       k = a[i];
       results.push(a[i] * factor + b[i] * (1 - factor));
     }
@@ -65002,12 +64974,18 @@ avgColor = function(a, factor, b) {
 };
 
 exports.Draw = Draw = (function() {
-  function Draw() {
-    var NoRectangle, Path, Point, Rectangle, Size, Text, self;
-    this.ctx = null;
+  function Draw(ctx1) {
+    var ElementWrapper, Group, NoRectangle, Path, Point, Rectangle, Size, Text, canvas, self;
+    this.ctx = ctx1;
+    canvas = document.createElement('canvas');
+    this.measureCtx = canvas.getContext('2d');
     this.fontSize = 15;
     this.fontFamily = 'Courier New, monospace';
-    this.fontAscent = 2;
+    this.fontAscent = -2;
+    this.fontBaseline = 10;
+    this.measureCtx.font = this.fontSize + "px " + this.fontFamily;
+    this.ctx.style.fontFamily = this.fontFamily;
+    this.ctx.style.fontSize = this.fontSize;
     self = this;
     this.Point = Point = (function() {
       function Point(x1, y1) {
@@ -65023,6 +65001,14 @@ exports.Draw = Draw = (function() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
       };
 
+      Point.prototype.times = function(scalar) {
+        return new Point(this.x * scalar, this.y * scalar);
+      };
+
+      Point.prototype.normalize = function() {
+        return this.times(1 / this.magnitude());
+      };
+
       Point.prototype.translate = function(vector) {
         this.x += vector.x;
         return this.y += vector.y;
@@ -65031,6 +65017,10 @@ exports.Draw = Draw = (function() {
       Point.prototype.add = function(x, y) {
         this.x += x;
         return this.y += y;
+      };
+
+      Point.prototype.dot = function(other) {
+        return this.x * other.x + this.y * other.y;
       };
 
       Point.prototype.plus = function(arg) {
@@ -65061,6 +65051,10 @@ exports.Draw = Draw = (function() {
 
       Point.prototype.equals = function(point) {
         return point.x === this.x && point.y === this.y;
+      };
+
+      Point.prototype.almostEquals = function(point) {
+        return Math.abs(point.x - this.x) < EPSILON && Math.abs(point.y - this.y) < EPSILON;
       };
 
       return Point;
@@ -65188,11 +65182,11 @@ exports.Draw = Draw = (function() {
       };
 
       Rectangle.prototype.toPath = function() {
-        var j, len1, path, point, ref;
+        var l, len1, path, point, ref;
         path = new Path();
         ref = [[this.x, this.y], [this.x, this.bottom()], [this.right(), this.bottom()], [this.right(), this.y]];
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          point = ref[j];
+        for (l = 0, len1 = ref.length; l < len1; l++) {
+          point = ref[l];
           path.push(new Point(point[0], point[1]));
         }
         return path;
@@ -65211,32 +65205,126 @@ exports.Draw = Draw = (function() {
       return NoRectangle;
 
     })(Rectangle);
-    this.Path = Path = (function() {
-      function Path() {
-        this._points = [];
+    this.ElementWrapper = ElementWrapper = (function() {
+      function ElementWrapper(element1) {
+        var ref, ref1;
+        this.element = element1;
+        if (this.element != null) {
+          this.element.setAttribute('visibility', 'hidden');
+        }
+        this.active = false;
+        this.parent = (ref = (ref1 = this.element) != null ? ref1.parentElement : void 0) != null ? ref : self.ctx;
+      }
+
+      ElementWrapper.prototype.manifest = function() {
+        if (this.element == null) {
+          this.element = this.makeElement();
+          this.getParentElement().appendChild(this.element);
+          if (!this.active) {
+            return this.element.setAttribute('visibility', 'hidden');
+          }
+        }
+      };
+
+      ElementWrapper.prototype.deactivate = function() {
+        var ref;
+        if (this.active) {
+          this.active = false;
+          return (ref = this.element) != null ? ref.setAttribute('visibility', 'hidden') : void 0;
+        }
+      };
+
+      ElementWrapper.prototype.activate = function() {
+        var ref;
+        this.manifest();
+        if (!this.active) {
+          this.active = true;
+          return (ref = this.element) != null ? ref.setAttribute('visibility', 'visible') : void 0;
+        }
+      };
+
+      ElementWrapper.prototype.focus = function() {
+        this.activate();
+        return this.getParentElement().appendChild(this.element);
+      };
+
+      ElementWrapper.prototype.getParentElement = function() {
+        if (this.parent instanceof ElementWrapper) {
+          this.parent.manifest();
+          return this.parent.element;
+        } else {
+          return this.parent;
+        }
+      };
+
+      ElementWrapper.prototype.setParent = function(parent) {
+        this.parent = parent;
+        if (this.element != null) {
+          parent = this.getParentElement();
+          if (parent !== this.element.parentElement) {
+            return parent.appendChild(this.element);
+          }
+        }
+      };
+
+      ElementWrapper.prototype.destroy = function() {
+        if (this.element != null) {
+          if (this.element.parentElement != null) {
+            return this.element.parentElement.removeChild(this.element);
+          }
+        }
+      };
+
+      return ElementWrapper;
+
+    })();
+    this.Group = Group = (function(superClass) {
+      extend(Group, superClass);
+
+      function Group() {
+        Group.__super__.constructor.call(this);
+      }
+
+      Group.prototype.makeElement = function() {
+        return document.createElementNS(SVG_STANDARD, 'g');
+      };
+
+      return Group;
+
+    })(ElementWrapper);
+    this.Path = Path = (function(superClass) {
+      extend(Path, superClass);
+
+      function Path(_points, bevel, style1) {
+        this._points = _points != null ? _points : [];
+        this.bevel = bevel != null ? bevel : false;
+        this.style = style1;
         this._cachedTranslation = new Point(0, 0);
-        this._cacheFlag = false;
+        this._cacheFlag = true;
         this._bounds = new NoRectangle();
-        this.bevel = this.noclip = this.dotted = false;
-        this.style = {
-          'strokeColor': '#000',
+        this._clearCache();
+        this.style = helper.extend({
+          'strokeColor': 'none',
           'lineWidth': 1,
-          'fillColor': null
-        };
+          'fillColor': 'none',
+          'dotted': '',
+          'transform': ''
+        }, this.style);
+        Path.__super__.constructor.call(this);
       }
 
       Path.prototype._clearCache = function() {
-        var j, len1, maxX, maxY, minX, minY, point, ref;
-        this._cacheFlag = true;
+        var i, insetCoord, insidePoints, l, len1, len2, len3, m, maxX, maxY, minX, minY, o, outsidePoints, point, ref, ref1, ref2, subpaths;
         if (this._cacheFlag) {
           if (this._points.length === 0) {
-            return this._bounds = new NoRectangle();
+            this._bounds = new NoRectangle();
+            return this._lightBevelPath = this._darkBevelPath = '';
           } else {
             minX = minY = Infinity;
             maxX = maxY = 0;
             ref = this._points;
-            for (j = 0, len1 = ref.length; j < len1; j++) {
-              point = ref[j];
+            for (l = 0, len1 = ref.length; l < len1; l++) {
+              point = ref[l];
               minX = min(minX, point.x);
               maxX = max(maxX, point.x);
               minY = min(minY, point.y);
@@ -65246,19 +65334,144 @@ exports.Draw = Draw = (function() {
             this._bounds.y = minY;
             this._bounds.width = maxX - minX;
             this._bounds.height = maxY - minY;
+            subpaths = [];
+            outsidePoints = [];
+            insidePoints = [];
+            ref1 = this._points.slice(1);
+            for (i = m = 0, len2 = ref1.length; m < len2; i = ++m) {
+              point = ref1[i];
+              if ((point.x > this._points[i].x && point.y <= this._points[i].y) || (point.y < this._points[i].y && point.x >= this._points[i].x)) {
+                if (outsidePoints.length === 0) {
+                  insetCoord = this.getInsetCoordinate(i, BEVEL_SIZE);
+                  if (insetCoord != null) {
+                    outsidePoints.push(this._points[i]);
+                    insidePoints.push(insetCoord);
+                  }
+                }
+                insetCoord = this.getInsetCoordinate(i + 1, BEVEL_SIZE);
+                if (insetCoord != null) {
+                  outsidePoints.push(point);
+                  insidePoints.push(insetCoord);
+                }
+              } else if (!(point.equals(this._points[i]) || outsidePoints.length === 0)) {
+                subpaths.push('M' + outsidePoints.concat(insidePoints.reverse()).map(function(point) {
+                  return point.x + " " + point.y;
+                }).join(" L") + ' Z');
+                outsidePoints.length = insidePoints.length = 0;
+              }
+            }
+            if (this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y) {
+              if (outsidePoints.length === 0) {
+                insetCoord = this.getInsetCoordinate(this._points.length - 1, BEVEL_SIZE);
+                if (insetCoord != null) {
+                  outsidePoints.push(this._points[this._points.length - 1]);
+                  insidePoints.push(insetCoord);
+                }
+              }
+              insetCoord = this.getInsetCoordinate(0, BEVEL_SIZE);
+              if (insetCoord != null) {
+                outsidePoints.push(this._points[0]);
+                insidePoints.push(insetCoord);
+              }
+            }
+            if (outsidePoints.length > 0) {
+              subpaths.push('M' + outsidePoints.concat(insidePoints.reverse()).map(function(point) {
+                return point.x + " " + point.y;
+              }).join(" L") + ' Z');
+            }
+            this._lightBevelPath = subpaths.join(' ');
+            subpaths = [];
+            outsidePoints = [];
+            insidePoints = [];
+            ref2 = this._points.slice(1);
+            for (i = o = 0, len3 = ref2.length; o < len3; i = ++o) {
+              point = ref2[i];
+              if ((point.x < this._points[i].x && point.y >= this._points[i].y) || (point.y > this._points[i].y && point.x <= this._points[i].x)) {
+                if (outsidePoints.length === 0) {
+                  insetCoord = this.getInsetCoordinate(i, BEVEL_SIZE);
+                  if (insetCoord != null) {
+                    outsidePoints.push(this._points[i]);
+                    insidePoints.push(insetCoord);
+                  }
+                }
+                insetCoord = this.getInsetCoordinate(i + 1, BEVEL_SIZE);
+                if (insetCoord != null) {
+                  outsidePoints.push(point);
+                  insidePoints.push(insetCoord);
+                }
+              } else if (!(point.equals(this._points[i]) || outsidePoints.length === 0)) {
+                subpaths.push('M' + outsidePoints.concat(insidePoints.reverse()).map(function(point) {
+                  return point.x + " " + point.y;
+                }).join(" L") + ' Z');
+                outsidePoints.length = insidePoints.length = 0;
+              }
+            }
+            if (this._points[0].x < this._points[this._points.length - 1].x || this._points[0].y > this._points[this._points.length - 1].y) {
+              if (outsidePoints.length === 0) {
+                insetCoord = this.getInsetCoordinate(this._points.length - 1, BEVEL_SIZE);
+                if (insetCoord != null) {
+                  outsidePoints.push(this._points[this._points.length - 1]);
+                  insidePoints.push(insetCoord);
+                }
+              }
+              insetCoord = this.getInsetCoordinate(0, BEVEL_SIZE);
+              if (insetCoord != null) {
+                outsidePoints.push(this._points[0]);
+                insidePoints.push(insetCoord);
+              }
+            }
+            if (outsidePoints.length > 0) {
+              subpaths.push('M' + outsidePoints.concat(insidePoints.reverse()).map(function(point) {
+                return point.x + " " + point.y;
+              }).join(" L") + ' Z');
+            }
+            this._darkBevelPath = subpaths.join(' ');
             return this._cacheFlag = false;
+          }
+        }
+      };
+
+      Path.prototype._setPoints_raw = function(points) {
+        this._points = points;
+        this._cacheFlag = true;
+        return this._updateFlag = true;
+      };
+
+      Path.prototype.setMarkStyle = function(style) {
+        if ((style != null) && style.color !== (this.markColor != null)) {
+          this.markColor = style.color;
+          return this._markFlag = true;
+        } else if (this.markColor != null) {
+          this.markColor = null;
+          return this._markFlag = true;
+        }
+      };
+
+      Path.prototype.setPoints = function(points) {
+        var el, i, l, len1;
+        if (points.length !== this._points.length) {
+          this._setPoints_raw(points);
+          return;
+        }
+        for (i = l = 0, len1 = points.length; l < len1; i = ++l) {
+          el = points[i];
+          if (!this._points[i].equals(el)) {
+            this._setPoints_raw(points);
+            return;
           }
         }
       };
 
       Path.prototype.push = function(point) {
         this._points.push(point);
-        return this._cacheFlag = true;
+        this._cacheFlag = true;
+        return this._updateFlag = true;
       };
 
       Path.prototype.unshift = function(point) {
         this._points.unshift(point);
-        return this._cacheFlag = true;
+        this._cacheFlag = true;
+        return this._updateFlag = true;
       };
 
       Path.prototype.reverse = function() {
@@ -65267,7 +65480,7 @@ exports.Draw = Draw = (function() {
       };
 
       Path.prototype.contains = function(point) {
-        var count, dest, end, j, last, len1, ref;
+        var count, dest, end, l, last, len1, ref;
         this._clearCache();
         if (this._points.length === 0) {
           return false;
@@ -65279,8 +65492,8 @@ exports.Draw = Draw = (function() {
         count = 0;
         last = this._points[this._points.length - 1];
         ref = this._points;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          end = ref[j];
+        for (l = 0, len1 = ref.length; l < len1; l++) {
+          end = ref[l];
           if (_intersects(last, end, point, dest)) {
             count += 1;
           }
@@ -65289,8 +65502,26 @@ exports.Draw = Draw = (function() {
         return count % 2 === 1;
       };
 
+      Path.prototype.equals = function(other) {
+        var el, i, l, len1, ref;
+        if (!(other instanceof Path)) {
+          return false;
+        }
+        if (other._points.length !== this._points.length) {
+          return false;
+        }
+        ref = other._points;
+        for (i = l = 0, len1 = ref.length; l < len1; i = ++l) {
+          el = ref[i];
+          if (!this._points[i].equals(el)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
       Path.prototype.intersects = function(rectangle) {
-        var end, j, l, last, lastSide, len1, len2, rectSides, ref, side;
+        var end, l, last, lastSide, len1, len2, m, rectSides, ref, side;
         this._clearCache();
         if (this._points.length === 0) {
           return false;
@@ -65301,11 +65532,11 @@ exports.Draw = Draw = (function() {
           last = this._points[this._points.length - 1];
           rectSides = [new Point(rectangle.x, rectangle.y), new Point(rectangle.right(), rectangle.y), new Point(rectangle.right(), rectangle.bottom()), new Point(rectangle.x, rectangle.bottom())];
           ref = this._points;
-          for (j = 0, len1 = ref.length; j < len1; j++) {
-            end = ref[j];
+          for (l = 0, len1 = ref.length; l < len1; l++) {
+            end = ref[l];
             lastSide = rectSides[rectSides.length - 1];
-            for (l = 0, len2 = rectSides.length; l < len2; l++) {
-              side = rectSides[l];
+            for (m = 0, len2 = rectSides.length; m < len2; m++) {
+              side = rectSides[m];
               if (_intersects(last, end, lastSide, side)) {
                 return true;
               }
@@ -65333,166 +65564,218 @@ exports.Draw = Draw = (function() {
         return this._cacheFlag = true;
       };
 
-      Path.prototype.clip = function(ctx) {
-        var j, len1, point, ref;
-        this._clearCache();
+      Path.prototype.getCommandString = function() {
+        var l, len1, pathCommands, point, ref;
         if (this._points.length === 0) {
-          return;
+          return '';
         }
-        ctx.beginPath();
-        ctx.moveTo(this._points[0].x, this._points[0].y);
+        pathCommands = [];
+        pathCommands.push("M" + (Math.round(this._points[0].x)) + " " + (Math.round(this._points[0].y)));
         ref = this._points;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          point = ref[j];
-          ctx.lineTo(point.x, point.y);
+        for (l = 0, len1 = ref.length; l < len1; l++) {
+          point = ref[l];
+          pathCommands.push("L" + (Math.round(point.x)) + " " + (Math.round(point.y)));
         }
-        ctx.lineTo(this._points[0].x, this._points[0].y);
-        if (this._points.length > 1) {
-          ctx.lineTo(this._points[1].x, this._points[1].y);
-        }
-        return ctx.clip();
+        pathCommands.push("L" + (Math.round(this._points[0].x)) + " " + (Math.round(this._points[0].y)));
+        pathCommands.push("Z");
+        return pathCommands.join(' ');
       };
 
-      Path.prototype.draw = function(ctx) {
-        var i, j, l, len1, len2, len3, m, point, ref, ref1, ref2;
+      Path.prototype.getInsetCoordinate = function(i, length) {
+        var j, k, next, point, prev, vector;
+        j = i;
+        prev = this._points[i];
+        while (prev.equals(this._points[i]) && j > i - this._points.length) {
+          j--;
+          prev = this._points[modulo(j, this._points.length)];
+        }
+        k = i;
+        next = this._points[i];
+        while (next.equals(this._points[i]) && k < i + this._points.length) {
+          k++;
+          next = this._points[modulo(k, this._points.length)];
+        }
+        vector = _bisector(prev, this._points[i], next, length);
+        if (vector == null) {
+          return null;
+        }
+        point = this._points[i].plus(vector);
+        return point;
+      };
+
+      Path.prototype.getLightBevelPath = function() {
         this._clearCache();
-        if (this._points.length === 0) {
-          return;
+        return this._lightBevelPath;
+      };
+
+      Path.prototype.getDarkBevelPath = function() {
+        this._clearCache();
+        if (this._darkBevelPath == null) {
+          debugger;
         }
-        ctx.strokeStyle = this.style.strokeColor;
-        ctx.lineWidth = this.style.lineWidth;
+        return this._darkBevelPath;
+      };
+
+      Path.prototype.makeElement = function() {
+        var pathElement, pathString, ref, ref1;
+        this._clearCache();
+        pathElement = document.createElementNS(SVG_STANDARD, 'path');
         if (this.style.fillColor != null) {
-          ctx.fillStyle = this.style.fillColor;
+          pathElement.setAttribute('fill', this.style.fillColor);
         }
-        ctx.beginPath();
-        ctx.moveTo(this._points[0].x, this._points[0].y);
-        ref = this._points;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          point = ref[j];
-          ctx.lineTo(point.x, point.y);
-        }
-        ctx.lineTo(this._points[0].x, this._points[0].y);
-        if (this._points.length > 1) {
-          ctx.lineTo(this._points[1].x, this._points[1].y);
-        }
-        if (this.style.fillColor != null) {
-          ctx.fill();
-        }
-        ctx.save();
-        if (!this.noclip) {
-          ctx.clip();
+        this.__lastFillColor = this.style.fillColor;
+        this.__lastStrokeColor = this.style.strokeColor;
+        this.__lastLineWidth = this.style.lineWidth;
+        this.__lastDotted = this.style.dotted;
+        this.__lastCssClass = this.style.cssClass;
+        this.__lastTransform = this.style.transform;
+        pathString = this.getCommandString();
+        if (pathString.length > 0) {
+          pathElement.setAttribute('d', pathString);
         }
         if (this.bevel) {
-          ctx.beginPath();
-          ctx.moveTo(this._points[0].x, this._points[0].y);
-          ref1 = this._points.slice(1);
-          for (i = l = 0, len2 = ref1.length; l < len2; i = ++l) {
-            point = ref1[i];
-            if ((point.x < this._points[i].x && point.y >= this._points[i].y) || (point.y > this._points[i].y && point.x <= this._points[i].x)) {
-              ctx.lineTo(point.x, point.y);
-            } else if (!point.equals(this._points[i])) {
-              ctx.moveTo(point.x, point.y);
-            }
+          this.backgroundPathElement = pathElement;
+          this.backgroundPathElement.setAttribute('class', 'droplet-background-path');
+          pathElement = document.createElementNS(SVG_STANDARD, 'g');
+          this.lightPathElement = document.createElementNS(SVG_STANDARD, 'path');
+          this.lightPathElement.setAttribute('fill', avgColor(this.style.fillColor, 0.7, '#FFF'));
+          if (pathString.length > 0) {
+            this.lightPathElement.setAttribute('d', this.getLightBevelPath());
           }
-          if (!(this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y)) {
-            ctx.lineTo(this._points[0].x, this._points[0].y);
+          this.lightPathElement.setAttribute('class', 'droplet-light-bevel-path');
+          this.darkPathElement = document.createElementNS(SVG_STANDARD, 'path');
+          this.darkPathElement.setAttribute('fill', avgColor(this.style.fillColor, 0.7, '#000'));
+          if (pathString.length > 0) {
+            this.darkPathElement.setAttribute('d', this.getDarkBevelPath());
           }
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#000');
-          ctx.stroke();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#000');
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(this._points[0].x, this._points[0].y);
-          ref2 = this._points.slice(1);
-          for (i = m = 0, len3 = ref2.length; m < len3; i = ++m) {
-            point = ref2[i];
-            if ((point.x > this._points[i].x && point.y <= this._points[i].y) || (point.y < this._points[i].y && point.x >= this._points[i].x)) {
-              ctx.lineTo(point.x, point.y);
-            } else if (!point.equals(this._points[i])) {
-              ctx.moveTo(point.x, point.y);
-            }
-          }
-          if (this._points[0].x > this._points[this._points.length - 1].x || this._points[0].y < this._points[this._points.length - 1].y) {
-            ctx.lineTo(this._points[0].x, this._points[0].y);
-          }
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.85, '#FFF');
-          ctx.stroke();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#FFF');
-          ctx.stroke();
+          this.darkPathElement.setAttribute('class', 'droplet-dark-bevel-path');
+          pathElement.appendChild(this.backgroundPathElement);
+          pathElement.appendChild(this.lightPathElement);
+          pathElement.appendChild(this.darkPathElement);
         } else {
-          if (this.dotted && (ctx.setLineDash != null)) {
-            ctx.setLineDash([8, 5]);
+          pathElement.setAttribute('stroke', this.style.strokeColor);
+          pathElement.setAttribute('stroke-width', this.style.lineWidth);
+          if (((ref = (ref1 = this.style.dotted) != null ? ref1.length : void 0) != null ? ref : 0) > 0) {
+            pathElement.setAttribute('stroke-dasharray', this.style.dotted);
           }
-          ctx.stroke();
         }
-        return ctx.restore();
+        if (this.style.cssClass != null) {
+          pathElement.setAttribute('class', this.style.cssClass);
+        }
+        if (this.style.transform != null) {
+          pathElement.setAttribute('transform', this.style.transform);
+        }
+        return pathElement;
+      };
+
+      Path.prototype.update = function() {
+        var pathString;
+        if (this.element == null) {
+          return;
+        }
+        if (this.style.fillColor !== this.__lastFillColor) {
+          this.__lastFillColor = this.style.fillColor;
+          if (this.bevel) {
+            this.backgroundPathElement.setAttribute('fill', this.style.fillColor);
+            this.lightPathElement.setAttribute('fill', avgColor(this.style.fillColor, 0.7, '#FFF'));
+            this.darkPathElement.setAttribute('fill', avgColor(this.style.fillColor, 0.7, '#000'));
+          } else {
+            this.element.setAttribute('fill', this.style.fillColor);
+          }
+        }
+        if (!this.bevel && this.style.strokeColor !== this.__lastStrokeColor) {
+          this.__lastStrokeColor = this.style.strokeColor;
+          this.element.setAttribute('stroke', this.style.strokeColor);
+        }
+        if (!this.bevel && this.style.dotted !== this.__lastDotted) {
+          this.__lastDotted = this.style.dotted;
+          this.element.setAttribute('stroke-dasharray', this.style.dotted);
+        }
+        if (!this.bevel && this.style.lineWidth !== this.__lastLineWidth) {
+          this.__lastLineWidth = this.style.lineWidth;
+          this.element.setAttribute('stroke-width', this.style.lineWidth);
+        }
+        if ((this.style.cssClass != null) && this.style.cssClass !== this._lastCssClass) {
+          this._lastCssClass = this.style.cssClass;
+          this.element.setAttribute('class', this.style.cssClass);
+        }
+        if ((this.style.transform != null) && this.style.transform === this._lastTransform) {
+          this._lastTransform = this.style.transform;
+          this.element.setAttribute('transform', this.style.transform);
+        }
+        if (this._markFlag) {
+          if (this.markColor != null) {
+            if (this.bevel) {
+              this.backgroundPathElement.setAttribute('stroke', this.markColor);
+              this.backgroundPathElement.setAttribute('stroke-width', '2');
+              this.lightPathElement.setAttribute('visibility', 'hidden');
+              this.darkPathElement.setAttribute('visibility', 'hidden');
+            } else {
+              this.element.setAttribute('stroke', this.markColor);
+              this.element.setAttribute('stroke-width', '2');
+            }
+          } else {
+            if (this.bevel) {
+              this.backgroundPathElement.setAttribute('stroke', 'none');
+              this.lightPathElement.setAttribute('visibility', 'visible');
+              this.darkPathElement.setAttribute('visibility', 'visible');
+            } else {
+              this.element.setAttribute('stroke', this.style.strokeColor);
+              this.backgroundPathElement.setAttribute('line-width', this.style.lineWidth);
+            }
+          }
+        }
+        if (this._updateFlag) {
+          this._updateFlag = false;
+          pathString = this.getCommandString();
+          if (pathString.length > 0) {
+            if (this.bevel) {
+              this.backgroundPathElement.setAttribute('d', pathString);
+              this.lightPathElement.setAttribute('d', this.getLightBevelPath());
+              return this.darkPathElement.setAttribute('d', this.getDarkBevelPath());
+            } else {
+              return this.element.setAttribute('d', pathString);
+            }
+          }
+        }
       };
 
       Path.prototype.clone = function() {
-        var clone, el, j, len1, ref;
-        clone = new Path();
-        ref = this._points;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          el = ref[j];
-          clone.push(el);
-        }
+        var clone;
+        clone = new Path(this._points.slice(0), this.bevel, {
+          lineWidth: this.style.lineWidth,
+          fillColor: this.style.fillColor,
+          strokeColor: this.style.strokeColor,
+          dotted: this.style.dotted,
+          cssClass: this.style.cssClass
+        });
+        clone._clearCache();
+        clone.update();
         return clone;
-      };
-
-      Path.prototype.drawShadow = function(ctx, offsetX, offsetY, blur) {
-        var j, key, len1, oldValues, point, ref, results, value;
-        this._clearCache();
-        ctx.fillStyle = this.style.fillColor;
-        if (this._points.length === 0) {
-          return;
-        }
-        oldValues = {
-          shadowColor: ctx.shadowColor,
-          shadowBlur: ctx.shadowBlur,
-          shadowOffsetY: ctx.shadowOffsetY,
-          shadowOffsetX: ctx.shadowOffsetX,
-          globalAlpha: ctx.globalAlpha
-        };
-        ctx.globalAlpha = 0.5;
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = blur;
-        ctx.shadowOffsetX = offsetX;
-        ctx.shadowOffsetY = offsetY;
-        ctx.beginPath();
-        ctx.moveTo(this._points[0].x, this._points[0].y);
-        ref = this._points;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          point = ref[j];
-          ctx.lineTo(point.x, point.y);
-        }
-        ctx.lineTo(this._points[0].x, this._points[0].y);
-        ctx.fill();
-        results = [];
-        for (key in oldValues) {
-          if (!hasProp.call(oldValues, key)) continue;
-          value = oldValues[key];
-          results.push(ctx[key] = value);
-        }
-        return results;
       };
 
       return Path;
 
-    })();
-    this.Text = Text = (function() {
-      function Text(point1, value1) {
+    })(ElementWrapper);
+    this.Text = Text = (function(superClass) {
+      extend(Text, superClass);
+
+      function Text(point1, value) {
         this.point = point1;
-        this.value = value1;
-        this.wantedFont = self.fontSize + 'px ' + self.fontFamily;
-        if (self.ctx.font !== this.wantedFont) {
-          self.ctx.font = self.fontSize + 'px ' + self.fontFamily;
-        }
-        this._bounds = new Rectangle(this.point.x, this.point.y, self.ctx.measureText(this.value).width, self.fontSize);
+        this.value = value;
+        this.__lastValue = this.value;
+        this.__lastPoint = this.point.clone();
+        this._bounds = new Rectangle(this.point.x, this.point.y, self.measureCtx.measureText(this.value).width, self.fontSize);
+        Text.__super__.constructor.call(this);
       }
+
+      Text.prototype.clone = function() {
+        return new Text(this.point, this.value);
+      };
+
+      Text.prototype.equals = function(other) {
+        return (other != null) && this.point.equals(other.point) && this.value === other.value;
+      };
 
       Text.prototype.bounds = function() {
         return this._bounds;
@@ -65502,42 +65785,62 @@ exports.Draw = Draw = (function() {
         return this._bounds.contains(point);
       };
 
-      Text.prototype.translate = function(vector) {
-        this.point.translate(vector);
-        return this._bounds.translate(vector);
-      };
-
       Text.prototype.setPosition = function(point) {
         return this.translate(point.from(this.point));
       };
 
-      Text.prototype.draw = function(ctx) {
-        ctx.textBaseline = 'top';
-        ctx.font = self.fontSize + 'px ' + self.fontFamily;
-        ctx.fillStyle = '#000';
-        return ctx.fillText(this.value, this.point.x, this.point.y - self.fontAscent);
+      Text.prototype.makeElement = function() {
+        var element, text;
+        element = document.createElementNS(SVG_STANDARD, 'text');
+        element.setAttribute('x', this.point.x);
+        element.setAttribute('y', this.point.y + self.fontBaseline - self.fontAscent / 2);
+        element.setAttribute('dominant-baseline', 'alphabetic');
+        text = document.createTextNode(this.value.replace(/ /g, '\u00A0'));
+        element.appendChild(text);
+        return element;
+      };
+
+      Text.prototype.update = function() {
+        var text;
+        if (this.element == null) {
+          return;
+        }
+        if (!this.point.equals(this.__lastPoint)) {
+          this.__lastPoint = this.point.clone();
+          this.element.setAttribute('x', this.point.x);
+          this.element.setAttribute('y', this.point.y + self.fontBaseline - self.fontAscent / 2);
+        }
+        if (this.value !== this.__lastValue) {
+          this.__lastValue = this.value;
+          this.element.removeChild(this.element.lastChild);
+          text = document.createTextNode(this.value.replace(/ /g, '\u00A0'));
+          return this.element.appendChild(text);
+        }
       };
 
       return Text;
 
-    })();
+    })(ElementWrapper);
   }
 
   Draw.prototype.refreshFontCapital = function() {
-    return this.fontAscent = helper.fontMetrics(this.fontFamily, this.fontSize).prettytop;
-  };
-
-  Draw.prototype.setCtx = function(ctx) {
-    return this.ctx = ctx;
+    var metrics;
+    metrics = helper.fontMetrics(this.fontFamily, this.fontSize);
+    this.fontAscent = metrics.prettytop;
+    return this.fontBaseline = metrics.baseline;
   };
 
   Draw.prototype.setGlobalFontSize = function(size) {
     this.fontSize = size;
+    this.ctx.style.fontSize = size;
+    this.measureCtx.font = this.fontSize + "px " + this.fontFamily;
     return this.refreshFontCapital();
   };
 
   Draw.prototype.setGlobalFontFamily = function(family) {
     this.fontFamily = family;
+    this.ctx.style.fontFamily = family;
+    this.measureCtx.font = this.fontSize + "px " + this.fontFamily;
     return this.refreshFontCapital();
   };
 
@@ -65550,8 +65853,8 @@ exports.Draw = Draw = (function() {
 })();
 
 
-},{"./helper.coffee":102}],102:[function(require,module,exports){
-var deepCopy, deepEquals, fontMetrics, fontMetricsCache, sax,
+},{"./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee"}],"/home/anthony/Projects/droplet/src/helper.coffee":[function(require,module,exports){
+var _guid, deepCopy, deepEquals, fontMetrics, fontMetricsCache, sax,
   hasProp = {}.hasOwnProperty;
 
 sax = require('sax');
@@ -65565,6 +65868,8 @@ exports.MOSTLY_BLOCK = 2;
 exports.MOSTLY_VALUE = 3;
 
 exports.VALUE_ONLY = 4;
+
+exports.SVG_STANDARD = 'http://www.w3.org/2000/svg';
 
 exports.ENCOURAGE = 1;
 
@@ -65796,8 +66101,14 @@ exports.deepEquals = deepEquals = function(a, b) {
   }
 };
 
+_guid = 0;
 
-},{"sax":98}],103:[function(require,module,exports){
+exports.generateGUID = function() {
+  return (_guid++).toString(16);
+};
+
+
+},{"sax":"/home/anthony/Projects/droplet/node_modules/sax/lib/sax.js"}],"/home/anthony/Projects/droplet/src/languages/c.coffee":[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, antlrHelper, config, parser;
 
 parser = require('../parser.coffee');
@@ -65845,7 +66156,7 @@ config = {
 module.exports = parser.wrapParser(antlrHelper.createANTLRParser('C', config));
 
 
-},{"../antlr.coffee":99,"../parser.coffee":112}],104:[function(require,module,exports){
+},{"../antlr.coffee":"/home/anthony/Projects/droplet/src/antlr.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee"}],"/home/anthony/Projects/droplet/src/languages/coffee.coffee":[function(require,module,exports){
 var ANY_DROP, BLOCK_ONLY, CATEGORIES, CoffeeScript, CoffeeScriptParser, FORBID_ALL, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, NODE_CATEGORY, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, annotateCsNodes, backTickLine, findUnmatchedLine, fixCoffeeScriptError, fixQuotedString, getClassesFor, helper, looseCUnescape, model, parser, quoteAndCEscape, spacestring,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -67100,7 +67411,7 @@ CoffeeScriptParser.handleButton = function(text, button, oldBlock) {
 module.exports = parser.wrapParser(CoffeeScriptParser);
 
 
-},{"../../vendor/coffee-script.js":116,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112}],105:[function(require,module,exports){
+},{"../../vendor/coffee-script.js":"/home/anthony/Projects/droplet/vendor/coffee-script.js","../helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","../model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee"}],"/home/anthony/Projects/droplet/src/languages/html.coffee":[function(require,module,exports){
 var ATTRIBUTE_CLASSES, BLOCK_ELEMENTS, CATEGORIES, DEFAULT_INDENT_DEPTH, EMBEDDED_CONTENT, EMPTY_ELEMENTS, FLOW_CONTENT, FLOW_ELEMENTS, HEADING_CONTENT, HTMLParser, INLINE_ELEMENTS, INTERACTIVE_CONTENT, METADATA_CONTENT, PALPABLE_CONTENT, PHRASING_CONTENT, SCRIPT_SUPPORTING, SECTIONING_CONTENT, TAGS, helper, htmlParser, htmlSerializer, parse5, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -67209,9 +67520,6 @@ TAGS = {
     category: 'content'
   },
   u: {
-    category: 'content'
-  },
-  center: {
     category: 'content'
   },
   sub: {
@@ -67595,7 +67903,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   HTMLParser.prototype.getButtons = function(node) {
     var buttons, ref;
     buttons = {};
-    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table') {
+    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table' || ref === 'div') {
       buttons.addButton = true;
       if (node.childNodes.length !== 0) {
         buttons.subtractButton = true;
@@ -67841,18 +68149,11 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.makeIndentBounds = function(node) {
-    var bounds, lastLine, trailingText;
+    var bounds, lastLine;
     bounds = {
       start: this.positions[node.__indentLocation.start],
       end: this.positions[node.__indentLocation.end]
     };
-    trailingText = this.lines[bounds.start.line].slice(bounds.start.column);
-    if (trailingText.length > 0 && trailingText.trim().length === 0) {
-      bounds.start = {
-        line: bounds.start.line,
-        column: this.lines[bounds.start.line].length
-      };
-    }
     if (node.__location.endTag != null) {
       lastLine = this.positions[node.__location.endTag.start].line - 1;
       if (lastLine > bounds.end.line || (lastLine === bounds.end.line && this.lines[lastLine].length > bounds.end.column)) {
@@ -67950,11 +68251,13 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
         this.fixBounds(root);
       }
     }
+    window.root = root;
+    window.parse5 = htmlParser;
     return this.mark(0, root, 0, null);
   };
 
   HTMLParser.prototype.mark = function(indentDepth, node, depth, bounds, nomark) {
-    var attrib, child, indentBounds, k, l, lastChild, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, ref4, results, results1, results2;
+    var attrib, child, indentBounds, k, l, lastChild, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, results, results1, results2;
     if (nomark == null) {
       nomark = false;
     }
@@ -68016,15 +68319,15 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
             });
             lastChild = null;
           } else {
-            if (!(((ref3 = TAGS[node.nodeName]) != null ? ref3.content : void 0) === 'optional' || (node.nodeName === 'script' && this.hasAttribute(node, 'src')) || node.__indentLocation.end === node.__location.end)) {
+            if (!(TAGS[node.nodeName].content === 'optional' || (node.nodeName === 'script' && this.hasAttribute(node, 'src')) || node.__indentLocation.end === node.__location.end)) {
               this.htmlSocket(node, depth + 1, null, indentBounds, null, true);
             }
           }
         }
-        ref4 = node.childNodes;
+        ref3 = node.childNodes;
         results2 = [];
-        for (n = 0, len3 = ref4.length; n < len3; n++) {
-          child = ref4[n];
+        for (n = 0, len3 = ref3.length; n < len3; n++) {
+          child = ref3[n];
           if (lastChild && lastChild.__location.end > child.__location.start) {
             nomark = true;
           } else {
@@ -68348,7 +68651,7 @@ HTMLParser.drop = function(block, context, pred, next) {
 module.exports = parser.wrapParser(HTMLParser);
 
 
-},{"../helper.coffee":102,"../parser.coffee":112,"parse5":77}],106:[function(require,module,exports){
+},{"../helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee","parse5":"/home/anthony/Projects/droplet/node_modules/parse5/index.js"}],"/home/anthony/Projects/droplet/src/languages/java.coffee":[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, antlrHelper, config, parser;
 
 parser = require('../parser.coffee');
@@ -68388,7 +68691,7 @@ config = {
 module.exports = parser.wrapParser(antlrHelper.createANTLRParser('Java', config));
 
 
-},{"../antlr.coffee":99,"../parser.coffee":112}],107:[function(require,module,exports){
+},{"../antlr.coffee":"/home/anthony/Projects/droplet/src/antlr.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee"}],"/home/anthony/Projects/droplet/src/languages/javascript.coffee":[function(require,module,exports){
 var CATEGORIES, CLASS_EXCEPTIONS, DEFAULT_INDENT_DEPTH, JavaScriptParser, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, NEVER_PAREN, NODE_CATEGORIES, OPERATOR_PRECEDENCES, STATEMENT_NODE_TYPES, acorn, helper, isStandardForLoop, model, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -69354,7 +69657,7 @@ JavaScriptParser.getDefaultSelectionRange = function(string) {
 module.exports = parser.wrapParser(JavaScriptParser);
 
 
-},{"../../vendor/acorn":115,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112}],108:[function(require,module,exports){
+},{"../../vendor/acorn":"/home/anthony/Projects/droplet/vendor/acorn.js","../helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","../model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee"}],"/home/anthony/Projects/droplet/src/languages/python.coffee":[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, config, getBounds, helper, model, parse, parser, skulpt, transform, treewalk;
 
 helper = require('../helper.coffee');
@@ -69448,13 +69751,14 @@ config = {
 module.exports = parser.wrapParser(treewalk.createTreewalkParser(parse, config));
 
 
-},{"../../vendor/skulpt":118,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112,"../treewalk.coffee":113}],109:[function(require,module,exports){
+},{"../../vendor/skulpt":"/home/anthony/Projects/droplet/vendor/skulpt.js","../helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","../model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","../parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee","../treewalk.coffee":"/home/anthony/Projects/droplet/src/treewalk.coffee"}],"/home/anthony/Projects/droplet/src/main.coffee":[function(require,module,exports){
 module.exports = {
-  Editor: require('./controller.coffee').Editor
+  Editor: require('./controller.coffee').Editor,
+  helper: require('./helper.coffee')
 };
 
 
-},{"./controller.coffee":100}],110:[function(require,module,exports){
+},{"./controller.coffee":"/home/anthony/Projects/droplet/src/controller.coffee","./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee"}],"/home/anthony/Projects/droplet/src/model.coffee":[function(require,module,exports){
 var Block, BlockEndToken, BlockStartToken, Container, Document, DocumentEndToken, DocumentStartToken, EndToken, FORBID, Indent, IndentEndToken, IndentStartToken, List, Location, NO, NORMAL, NewlineToken, Operation, ReplaceOperation, Socket, SocketEndToken, SocketStartToken, StartToken, TextLocation, TextToken, Token, YES, _id, helper, isTreeValid, traverseOneLevel,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -69619,6 +69923,10 @@ exports.List = List = (function() {
     this.end = end;
     this.id = ++_id;
   }
+
+  List.prototype.hasParent = function(x) {
+    return false;
+  };
 
   List.prototype.contains = function(token) {
     var head;
@@ -70951,7 +71259,7 @@ traverseOneLevel = function(head, fn, tail) {
 };
 
 
-},{"./helper.coffee":102}],111:[function(require,module,exports){
+},{"./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee"}],"/home/anthony/Projects/droplet/src/modes.coffee":[function(require,module,exports){
 var c, coffee, html, java, javascript, python;
 
 javascript = require('./languages/javascript.coffee');
@@ -70977,7 +71285,7 @@ module.exports = {
 };
 
 
-},{"./languages/c.coffee":103,"./languages/coffee.coffee":104,"./languages/html.coffee":105,"./languages/java.coffee":106,"./languages/javascript.coffee":107,"./languages/python.coffee":108}],112:[function(require,module,exports){
+},{"./languages/c.coffee":"/home/anthony/Projects/droplet/src/languages/c.coffee","./languages/coffee.coffee":"/home/anthony/Projects/droplet/src/languages/coffee.coffee","./languages/html.coffee":"/home/anthony/Projects/droplet/src/languages/html.coffee","./languages/java.coffee":"/home/anthony/Projects/droplet/src/languages/java.coffee","./languages/javascript.coffee":"/home/anthony/Projects/droplet/src/languages/javascript.coffee","./languages/python.coffee":"/home/anthony/Projects/droplet/src/languages/python.coffee"}],"/home/anthony/Projects/droplet/src/parser.coffee":[function(require,module,exports){
 var Parser, ParserFactory, YES, _extend, getDefaultSelectionRange, hasSomeTextAfter, helper, model, sax, stripFlaggedBlocks,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -71477,7 +71785,7 @@ exports.wrapParser = function(CustomParser) {
 };
 
 
-},{"./helper.coffee":102,"./model.coffee":110,"sax":98}],113:[function(require,module,exports){
+},{"./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","./model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","sax":"/home/anthony/Projects/droplet/node_modules/sax/lib/sax.js"}],"/home/anthony/Projects/droplet/src/treewalk.coffee":[function(require,module,exports){
 var helper, model, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -71748,8 +72056,8 @@ exports.createTreewalkParser = function(parse, config, root) {
 };
 
 
-},{"./helper.coffee":102,"./model.coffee":110,"./parser.coffee":112}],114:[function(require,module,exports){
-var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, draw, helper, model, toHex, toRGB, twoDigitHex, zeroPad,
+},{"./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","./model.coffee":"/home/anthony/Projects/droplet/src/model.coffee","./parser.coffee":"/home/anthony/Projects/droplet/src/parser.coffee"}],"/home/anthony/Projects/droplet/src/view.coffee":[function(require,module,exports){
+var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, SVG_STANDARD, VALUE_ONLY, View, YES, arrayEq, avgColor, dedupe, draw, helper, model, toHex, toRGB, twoDigitHex, zeroPad,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -71793,14 +72101,16 @@ DROPDOWN_ARROW_HEIGHT = 8;
 
 DROP_TRIANGLE_COLOR = '#555';
 
+SVG_STANDARD = helper.SVG_STANDARD;
+
 DEFAULT_OPTIONS = {
   buttonWidth: 15,
   buttonHeight: 15,
   buttonPadding: 6,
   showDropdowns: true,
   padding: 5,
-  indentWidth: 10,
-  indentTongueHeight: 10,
+  indentWidth: 20,
+  indentTongueHeight: 20,
   tabOffset: 10,
   tabWidth: 15,
   tabHeight: 5,
@@ -71814,7 +72124,6 @@ DEFAULT_OPTIONS = {
   highlightAreaHeight: 10,
   bevelClip: 3,
   shadowBlur: 5,
-  ctx: document.createElement('canvas').getContext('2d'),
   colors: {
     error: '#ff0000',
     "return": '#fff59d',
@@ -71871,23 +72180,33 @@ arrayEq = function(a, b) {
 };
 
 exports.View = View = (function() {
-  var BlockViewNode, ContainerViewNode, DocumentViewNode, GenericViewNode, IndentViewNode, ListViewNode, SocketViewNode, TextViewNode;
+  var AuxiliaryViewNode, BlockViewNode, ContainerViewNode, DocumentViewNode, GenericViewNode, IndentViewNode, ListViewNode, SocketViewNode, TextViewNode;
 
-  function View(opts) {
-    var option, ref;
+  function View(ctx, opts) {
+    var option;
+    this.ctx = ctx;
     this.opts = opts != null ? opts : {};
+    if (this.ctx == null) {
+      this.ctx = document.createElementNS(SVG_STANDARD, 'svg');
+    }
     this.map = {};
-    this.draw = (ref = this.opts.draw) != null ? ref : new draw.Draw();
+    this.oldRoots = {};
+    this.newRoots = {};
+    this.auxiliaryMap = {};
+    this.flaggedToDelete = {};
+    this.unflaggedToDelete = {};
+    this.marks = {};
+    this.draw = new draw.Draw(this.ctx);
     for (option in DEFAULT_OPTIONS) {
       if (!(option in this.opts)) {
         this.opts[option] = DEFAULT_OPTIONS[option];
       }
     }
-    this.draw.setCtx(this.opts.ctx);
   }
 
   View.prototype.clearCache = function() {
-    return this.map = {};
+    this.beginDraw();
+    return this.garbageCollect();
   };
 
   View.prototype.getViewNodeFor = function(model) {
@@ -71896,6 +72215,136 @@ exports.View = View = (function() {
     } else {
       return this.createView(model);
     }
+  };
+
+  View.prototype.registerMark = function(id) {
+    return this.marks[id] = true;
+  };
+
+  View.prototype.clearMarks = function() {
+    var key, ref, val;
+    ref = this.marks;
+    for (key in ref) {
+      val = ref[key];
+      this.map[key].unmark();
+    }
+    return this.marks = {};
+  };
+
+  View.prototype.beginDraw = function() {
+    return this.newRoots = {};
+  };
+
+  View.prototype.hasViewNodeFor = function(model) {
+    return (model != null) && model.id in this.map;
+  };
+
+  View.prototype.getAuxiliaryNode = function(node) {
+    if (node.id in this.auxiliaryMap) {
+      return this.auxiliaryMap[node.id];
+    } else {
+      return this.auxiliaryMap[node.id] = new AuxiliaryViewNode(this, node);
+    }
+  };
+
+  View.prototype.registerRoot = function(node) {
+    var aux, id, ref;
+    if (node instanceof model.List && !(node instanceof model.Container)) {
+      node.traverseOneLevel((function(_this) {
+        return function(head) {
+          if (!(head instanceof model.NewlineToken)) {
+            return _this.registerRoot(head);
+          }
+        };
+      })(this));
+      return;
+    }
+    ref = this.newRoots;
+    for (id in ref) {
+      aux = ref[id];
+      if (aux.model.hasParent(node)) {
+        delete this.newRoots[id];
+      } else if (node.hasParent(aux.model)) {
+        return;
+      }
+    }
+    return this.newRoots[node.id] = this.getAuxiliaryNode(node);
+  };
+
+  View.prototype.cleanupDraw = function() {
+    var el, id, ref, ref1, ref2, ref3, results;
+    this.flaggedToDelete = {};
+    this.unflaggedToDelete = {};
+    ref = this.oldRoots;
+    for (id in ref) {
+      el = ref[id];
+      if (!(id in this.newRoots)) {
+        this.flag(el);
+      }
+    }
+    ref1 = this.newRoots;
+    for (id in ref1) {
+      el = ref1[id];
+      el.cleanup();
+    }
+    ref2 = this.flaggedToDelete;
+    for (id in ref2) {
+      el = ref2[id];
+      if (id in this.unflaggedToDelete) {
+        delete this.flaggedToDelete[id];
+      }
+    }
+    ref3 = this.flaggedToDelete;
+    results = [];
+    for (id in ref3) {
+      el = ref3[id];
+      if (id in this.map) {
+        results.push(this.map[id].hide());
+      }
+    }
+    return results;
+  };
+
+  View.prototype.flag = function(auxiliaryNode) {
+    return this.flaggedToDelete[auxiliaryNode.model.id] = auxiliaryNode;
+  };
+
+  View.prototype.unflag = function(auxiliaryNode) {
+    return this.unflaggedToDelete[auxiliaryNode.model.id] = auxiliaryNode;
+  };
+
+  View.prototype.garbageCollect = function() {
+    var el, id, ref, ref1;
+    this.cleanupDraw();
+    ref = this.flaggedToDelete;
+    for (id in ref) {
+      el = ref[id];
+      if (!(id in this.map)) {
+        continue;
+      }
+      this.map[id].destroy();
+      this.destroy(id);
+    }
+    ref1 = this.newRoots;
+    for (id in ref1) {
+      el = ref1[id];
+      el.update();
+    }
+    return this.oldRoots = this.newRoots;
+  };
+
+  View.prototype.destroy = function(id) {
+    var child, j, len1, ref;
+    ref = this.map[id].children;
+    for (j = 0, len1 = ref.length; j < len1; j++) {
+      child = ref[j];
+      if ((this.map[child.child.id] != null) && !this.unflaggedToDelete[child.child.id]) {
+        this.destroy(child.child.id);
+      }
+    }
+    delete this.map[id];
+    delete this.auxiliaryMap[id];
+    return delete this.flaggedToDelete[id];
   };
 
   View.prototype.hasViewNodeFor = function(model) {
@@ -71929,15 +72378,90 @@ exports.View = View = (function() {
     }
   };
 
+  AuxiliaryViewNode = (function() {
+    function AuxiliaryViewNode(view1, model1) {
+      this.view = view1;
+      this.model = model1;
+      this.children = {};
+      this.computedVersion = -1;
+    }
+
+    AuxiliaryViewNode.prototype.cleanup = function() {
+      var child, children, id, ref, results;
+      this.view.unflag(this);
+      if (this.model.version === this.computedVersion) {
+        return;
+      }
+      children = {};
+      if (this.model instanceof model.Container) {
+        this.model.traverseOneLevel((function(_this) {
+          return function(head) {
+            if (head instanceof model.NewlineToken) {
+
+            } else {
+              return children[head.id] = _this.view.getAuxiliaryNode(head);
+            }
+          };
+        })(this));
+      }
+      ref = this.children;
+      for (id in ref) {
+        child = ref[id];
+        if (!(id in children)) {
+          this.view.flag(child);
+        }
+      }
+      results = [];
+      for (id in children) {
+        child = children[id];
+        this.children[id] = child;
+        results.push(child.cleanup());
+      }
+      return results;
+    };
+
+    AuxiliaryViewNode.prototype.update = function() {
+      var child, children, id, ref;
+      this.view.unflag(this);
+      if (this.model.version === this.computedVersion) {
+        return;
+      }
+      children = {};
+      if (this.model instanceof model.Container) {
+        this.model.traverseOneLevel((function(_this) {
+          return function(head) {
+            if (head instanceof model.NewlineToken) {
+
+            } else {
+              return children[head.id] = _this.view.getAuxiliaryNode(head);
+            }
+          };
+        })(this));
+      }
+      this.children = children;
+      ref = this.children;
+      for (id in ref) {
+        child = ref[id];
+        child.update();
+      }
+      return this.computedVersion = this.model.version;
+    };
+
+    return AuxiliaryViewNode;
+
+  })();
+
   GenericViewNode = (function() {
     function GenericViewNode(model1, view1) {
       this.model = model1;
       this.view = view1;
       this.view.map[this.model.id] = this;
+      this.view.registerRoot(this.model);
       this.lastCoordinate = new this.view.draw.Point(0, 0);
       this.invalidate = false;
       this.lineLength = 0;
       this.children = [];
+      this.oldChildren = [];
       this.lineChildren = [];
       this.multilineChildrenData = [];
       this.margins = {
@@ -71960,10 +72484,31 @@ exports.View = View = (function() {
       this.bounds = [];
       this.changedBoundingBox = true;
       this.glue = {};
-      this.path = new this.view.draw.Path();
-      this.dropArea = this.highlightArea = null;
+      this.elements = [];
+      this.activeElements = [];
       this.computedVersion = -1;
     }
+
+    GenericViewNode.prototype.draw = function(boundingRect, style, parent) {
+      if (style == null) {
+        style = {};
+      }
+      if (parent == null) {
+        parent = null;
+      }
+      return this.drawSelf(style, parent);
+    };
+
+    GenericViewNode.prototype.root = function() {
+      var element, j, len1, ref, results;
+      ref = this.elements;
+      results = [];
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        element = ref[j];
+        results.push(element.setParent(this.view.draw.ctx));
+      }
+      return results;
+    };
 
     GenericViewNode.prototype.serialize = function(line) {
       var child, i, j, l, len1, len2, len3, len4, len5, len6, m, o, p, prop, q, ref, ref1, ref2, ref3, ref4, ref5, ref6, result, s;
@@ -72010,6 +72555,10 @@ exports.View = View = (function() {
       return this.lineLength;
     };
 
+    GenericViewNode.prototype.focusAll = function() {
+      return this.group.focus();
+    };
+
     GenericViewNode.prototype.computeCarriageArrow = function() {
       var childObj, j, len1, ref;
       ref = this.children;
@@ -72022,7 +72571,7 @@ exports.View = View = (function() {
 
     GenericViewNode.prototype.computeMargins = function() {
       var childObj, j, left, len1, padding, parenttype, ref, ref1, right;
-      if (this.computedVersion === this.model.version && ((this.model.parent == null) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
+      if (this.computedVersion === this.model.version && ((this.model.parent == null) || !this.view.hasViewNodeFor(this.model.parent) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
         return this.margins;
       }
       parenttype = (ref = this.model.parent) != null ? ref.type : void 0;
@@ -72188,7 +72737,7 @@ exports.View = View = (function() {
         this.distanceToBase[i].above = this.minDistanceToBase[i].above;
         this.distanceToBase[i].below = this.minDistanceToBase[i].below;
       }
-      if ((this.model.parent != null) && !root && (this.topLineSticksToBottom || this.bottomLineSticksToTop || (this.lineLength > 1 && !this.model.isLastOnLine()))) {
+      if ((this.model.parent != null) && this.view.hasViewNodeFor(this.model.parent) && !root && (this.topLineSticksToBottom || this.bottomLineSticksToTop || (this.lineLength > 1 && !this.model.isLastOnLine()))) {
         parentNode = this.view.getViewNodeFor(this.model.parent);
         startLine = this.model.getLinesToParent();
         if (this.topLineSticksToBottom) {
@@ -72294,9 +72843,7 @@ exports.View = View = (function() {
       return this.totalBounds;
     };
 
-    GenericViewNode.prototype.computeOwnPath = function() {
-      return this.path = new this.view.draw.Path();
-    };
+    GenericViewNode.prototype.computeOwnPath = function() {};
 
     GenericViewNode.prototype.computePath = function() {
       var bound, child, childObj, j, l, len1, len2, len3, m, maxRight, ref, ref1, ref2;
@@ -72331,7 +72878,9 @@ exports.View = View = (function() {
           }
           this.totalBounds.width = maxRight - this.totalBounds.x;
         }
-        this.totalBounds.unite(this.path.bounds());
+        if (this.path != null) {
+          this.totalBounds.unite(this.path.bounds());
+        }
       }
       this.lastComputedLinePredicate = this.model.isLastOnLine();
       return null;
@@ -72369,77 +72918,48 @@ exports.View = View = (function() {
       return null;
     };
 
-    GenericViewNode.prototype.drawSelf = function(ctx, style) {
+    GenericViewNode.prototype.drawSelf = function(style) {
       if (style == null) {
         style = {};
       }
     };
 
-    GenericViewNode.prototype.draw = function(ctx, boundingRect, style) {
-      var childObj, j, len1, ref;
-      if (style == null) {
-        style = {};
-      }
-      if (this.totalBounds.overlap(boundingRect)) {
-        this.drawSelf(ctx, style);
-        ref = this.children;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          childObj = ref[j];
-          this.view.getViewNodeFor(childObj.child).draw(ctx, boundingRect, style);
-        }
-      }
-      return null;
-    };
-
-    GenericViewNode.prototype.drawShadow = function(ctx) {};
-
-    GenericViewNode.prototype.debugDimensions = function(x, y, line, ctx) {
-      var childObj, childView, j, len1, ref, results;
-      ctx.fillStyle = '#00F';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.fillRect(x, y, this.dimensions[line].width, this.dimensions[line].height);
-      ctx.strokeRect(x, y, this.dimensions[line].width, this.dimensions[line].height);
-      ref = this.lineChildren[line];
+    GenericViewNode.prototype.hide = function() {
+      var element, j, len1, ref, results;
+      ref = this.elements;
       results = [];
       for (j = 0, len1 = ref.length; j < len1; j++) {
-        childObj = ref[j];
-        childView = this.view.getViewNodeFor(childObj.child);
-        x += childView.getMargins(line).left;
-        childView.debugDimensions(x, y, line - childObj.startLine, ctx);
-        results.push(x += childView.dimensions[line - childObj.startLine].width + childView.getMargins(line).right);
+        element = ref[j];
+        results.push(element != null ? typeof element.deactivate === "function" ? element.deactivate() : void 0 : void 0);
       }
       return results;
     };
 
-    GenericViewNode.prototype.debugAllDimensions = function(ctx) {
-      var j, len1, line, ref, size, y;
-      ctx.globalAlpha = 0.1;
-      y = 0;
-      ref = this.dimensions;
-      for (line = j = 0, len1 = ref.length; j < len1; line = ++j) {
-        size = ref[line];
-        this.debugDimensions(0, y, line, ctx);
-        y += size.height;
+    GenericViewNode.prototype.destroy = function(root) {
+      var child, element, j, l, len1, len2, ref, ref1, results;
+      if (root == null) {
+        root = true;
       }
-      return ctx.globalAlpha = 1;
-    };
-
-    GenericViewNode.prototype.debugAllBoundingBoxes = function(ctx) {
-      var bound, childObj, j, l, len1, len2, ref, ref1;
-      ctx.globalAlpha = 0.1;
-      ref = this.bounds;
-      for (j = 0, len1 = ref.length; j < len1; j++) {
-        bound = ref[j];
-        bound.fill(ctx, '#00F');
-        bound.stroke(ctx, '#000');
+      if (root) {
+        ref = this.elements;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          element = ref[j];
+          if (element != null) {
+            if (typeof element.destroy === "function") {
+              element.destroy();
+            }
+          }
+        }
+      } else if (this.highlightArea != null) {
+        this.highlightArea.destroy();
       }
       ref1 = this.children;
+      results = [];
       for (l = 0, len2 = ref1.length; l < len2; l++) {
-        childObj = ref1[l];
-        this.view.getViewNodeFor(childObj.child).debugAllBoundingBoxes(ctx);
+        child = ref1[l];
+        results.push(this.view.getViewNodeFor(child.child).destroy(false));
       }
-      return ctx.globalAlpha = 1;
+      return results;
     };
 
     return GenericViewNode;
@@ -72454,6 +72974,49 @@ exports.View = View = (function() {
       this.view = view1;
       ListViewNode.__super__.constructor.apply(this, arguments);
     }
+
+    ListViewNode.prototype.draw = function(boundingRect, style, parent) {
+      var childObj, j, len1, ref, results;
+      if (style == null) {
+        style = {};
+      }
+      if (parent == null) {
+        parent = null;
+      }
+      ListViewNode.__super__.draw.apply(this, arguments);
+      ref = this.children;
+      results = [];
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        childObj = ref[j];
+        results.push(this.view.getViewNodeFor(childObj.child).draw(boundingRect, style, this.group));
+      }
+      return results;
+    };
+
+    ListViewNode.prototype.root = function() {
+      var child, j, len1, ref, results;
+      ref = this.children;
+      results = [];
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        child = ref[j];
+        results.push(this.view.getViewNodeFor(child.child).root());
+      }
+      return results;
+    };
+
+    ListViewNode.prototype.destroy = function(root) {
+      var child, j, len1, ref, results;
+      if (root == null) {
+        root = true;
+      }
+      ref = this.children;
+      results = [];
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        child = ref[j];
+        results.push(this.view.getViewNodeFor(child.child).destroy());
+      }
+      return results;
+    };
 
     ListViewNode.prototype.computeChildren = function() {
       var base, i, j, line, ref;
@@ -72651,6 +73214,7 @@ exports.View = View = (function() {
       if (top == null) {
         top = this.lastCoordinate.y;
       }
+      this.view.registerRoot(this.model);
       this.lastCoordinate = new this.view.draw.Point(left, top);
       this.computeChildren();
       this.computeCarriageArrow(true);
@@ -72670,6 +73234,7 @@ exports.View = View = (function() {
 
     ListViewNode.prototype.absorbCache = function() {
       var child, childView, j, l, left, len1, len2, line, ref, ref1, size, top;
+      this.view.registerRoot(this.model);
       this.computeChildren();
       this.computeCarriageArrow(true);
       this.computeMargins();
@@ -72736,17 +73301,6 @@ exports.View = View = (function() {
       return this.glue;
     };
 
-    ListViewNode.prototype.drawShadow = function(ctx, x, y) {
-      var childObj, j, len1, ref;
-      this.path.drawShadow(ctx, x, y, this.view.opts.shadowBlur);
-      ref = this.children;
-      for (j = 0, len1 = ref.length; j < len1; j++) {
-        childObj = ref[j];
-        this.view.getViewNodeFor(childObj.child).drawShadow(ctx, x, y);
-      }
-      return null;
-    };
-
     return ListViewNode;
 
   })(GenericViewNode);
@@ -72758,7 +73312,98 @@ exports.View = View = (function() {
       this.model = model1;
       this.view = view1;
       ContainerViewNode.__super__.constructor.apply(this, arguments);
+      this.group = new this.view.draw.Group('droplet-container-group');
+      if (this.model.type === 'block') {
+        this.path = new this.view.draw.Path([], true, {
+          cssClass: 'droplet-block-path'
+        });
+      } else {
+        this.path = new this.view.draw.Path([], false, {
+          cssClass: "droplet-" + this.model.type + "-path"
+        });
+      }
+      this.totalBounds = new this.view.draw.NoRectangle();
+      this.path.setParent(this.group);
+      this.dropArea = null;
+      this.highlightArea = new this.view.draw.Path([], false, {
+        fillColor: '#FF0',
+        strokeColor: '#FF0',
+        lineWidth: 1
+      });
+      this.highlightArea.deactivate();
+      this.elements.push(this.group);
+      this.elements.push(this.path);
+      this.elements.push(this.highlightArea);
     }
+
+    ContainerViewNode.prototype.destroy = function(root) {
+      var child, element, j, l, len1, len2, ref, ref1, results;
+      if (root == null) {
+        root = true;
+      }
+      if (root) {
+        ref = this.elements;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          element = ref[j];
+          if (element != null) {
+            if (typeof element.destroy === "function") {
+              element.destroy();
+            }
+          }
+        }
+      } else if (this.highlightArea != null) {
+        this.highlightArea.destroy();
+      }
+      ref1 = this.children;
+      results = [];
+      for (l = 0, len2 = ref1.length; l < len2; l++) {
+        child = ref1[l];
+        results.push(this.view.getViewNodeFor(child.child).destroy(false));
+      }
+      return results;
+    };
+
+    ContainerViewNode.prototype.root = function() {
+      return this.group.setParent(this.view.draw.ctx);
+    };
+
+    ContainerViewNode.prototype.draw = function(boundingRect, style, parent) {
+      var childObj, element, j, l, len1, len2, ref, ref1, results;
+      if (style == null) {
+        style = {};
+      }
+      if (parent == null) {
+        parent = null;
+      }
+      if ((boundingRect == null) || this.totalBounds.overlap(boundingRect)) {
+        this.drawSelf(style, parent);
+        this.group.activate();
+        this.path.activate();
+        ref = this.activeElements;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          element = ref[j];
+          element.activate();
+        }
+        if (this.highlightArea != null) {
+          this.highlightArea.setParent(this.view.draw.ctx);
+        }
+        if (parent != null) {
+          this.group.setParent(parent);
+        }
+        ref1 = this.children;
+        results = [];
+        for (l = 0, len2 = ref1.length; l < len2; l++) {
+          childObj = ref1[l];
+          results.push(this.view.getViewNodeFor(childObj.child).draw(boundingRect, style, this.group));
+        }
+        return results;
+      } else {
+        this.group.destroy();
+        if (this.highlightArea != null) {
+          return this.highlightArea.destroy();
+        }
+      }
+    };
 
     ContainerViewNode.prototype.computeCarriageArrow = function(root) {
       var head, oldCarriageArrow, parent;
@@ -72768,7 +73413,7 @@ exports.View = View = (function() {
       oldCarriageArrow = this.carriageArrow;
       this.carriageArrow = CARRIAGE_ARROW_NONE;
       parent = this.model.parent;
-      if ((!root) && (parent != null ? parent.type : void 0) === 'indent' && this.view.getViewNodeFor(parent).lineLength > 1 && this.lineLength === 1) {
+      if ((!root) && (parent != null ? parent.type : void 0) === 'indent' && this.view.hasViewNodeFor(parent) && this.view.getViewNodeFor(parent).lineLength > 1 && this.lineLength === 1) {
         head = this.model.start;
         while (!(head === parent.start || head.type === 'newline')) {
           head = head.prev;
@@ -72786,7 +73431,7 @@ exports.View = View = (function() {
       if (this.carriageArrow !== oldCarriageArrow) {
         this.changedBoundingBox = true;
       }
-      if (this.computedVersion === this.model.version && ((this.model.parent == null) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
+      if (this.computedVersion === this.model.version && ((this.model.parent == null) || !this.view.hasViewNodeFor(this.model.parent) || this.model.parent.version === this.view.getViewNodeFor(this.model.parent).computedVersion)) {
         return null;
       }
       return ContainerViewNode.__super__.computeCarriageArrow.apply(this, arguments);
@@ -72840,7 +73485,7 @@ exports.View = View = (function() {
     };
 
     ContainerViewNode.prototype.computeOwnPath = function() {
-      var bounds, destinationBounds, el, glueTop, i, innerLeft, innerRight, j, l, left, leftmost, len1, len2, len3, line, m, multilineBounds, multilineChild, multilineNode, multilineView, newPath, next, parentViewNode, path, point, prev, ref, ref1, ref2, ref3, ref4, ref5, ref6, right, rightmost;
+      var bounds, destinationBounds, glueTop, height, i, innerLeft, innerRight, j, l, lastLine, lastRect, left, leftmost, len1, len2, line, multilineBounds, multilineChild, multilineNode, multilineView, newPath, next, parentViewNode, path, point, prev, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, right, rightmost, start, top;
       left = [];
       right = [];
       if (this.shouldAddTab() && this.model.isFirstOnLine() && this.carriageArrow !== CARRIAGE_ARROW_SIDEALONG) {
@@ -72989,6 +73634,8 @@ exports.View = View = (function() {
       if (this.shouldAddTab() && this.model.isLastOnLine() && this.carriageArrow === CARRIAGE_ARROW_NONE) {
         this.addTab(right, new this.view.draw.Point(this.bounds[this.lineLength - 1].x + this.view.opts.tabOffset, this.bounds[this.lineLength - 1].bottom()));
       }
+      left = dedupe(left);
+      right = dedupe(right);
       path = left.reverse().concat(right);
       newPath = [];
       for (i = l = 0, len2 = path.length; l < len2; i = ++l) {
@@ -73010,10 +73657,30 @@ exports.View = View = (function() {
           newPath.push(point);
         }
       }
-      this.path = new this.view.draw.Path();
-      for (m = 0, len3 = newPath.length; m < len3; m++) {
-        el = newPath[m];
-        this.path.push(el);
+      this.path.setPoints(newPath);
+      if (this.model.type === 'block') {
+        this.path.style.fillColor = this.view.getColor(this.model.color);
+      }
+      if ((ref7 = this.model.buttons) != null ? ref7.addButton : void 0) {
+        lastLine = this.bounds.length - 1;
+        lastRect = this.bounds[lastLine];
+        start = lastRect.x + lastRect.width - this.extraWidth;
+        top = lastRect.y + lastRect.height / 2 - this.view.opts.buttonHeight / 2;
+        if (this.multilineChildrenData[lastLine] === MULTILINE_END) {
+          multilineChild = this.lineChildren[lastLine][0];
+          multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[lastLine - multilineChild.startLine];
+          if (this.lineChildren[lastLine].length > 1) {
+            height = multilineBounds.bottom() - lastRect.y;
+            top = lastRect.y + height / 2 - this.view.opts.buttonHeight / 2;
+          } else {
+            height = lastRect.bottom() - multilineBounds.bottom();
+            top = multilineBounds.bottom() + height / 2 - this.view.opts.buttonHeight / 2;
+          }
+        }
+        this.addButtonPath.style.transform = "translate(" + start + ", " + top + ")";
+        this.addButtonPath.update();
+        this.addButtonRect = new this.view.draw.Rectangle(start, top, this.view.opts.buttonWidth, this.view.opts.buttonHeight);
+        this.elements.push(this.addButtonPath);
       }
       return this.path;
     };
@@ -73034,13 +73701,30 @@ exports.View = View = (function() {
       return array.push(new this.view.draw.Point(point.x + this.view.opts.tabWidth, point.y));
     };
 
+    ContainerViewNode.prototype.mark = function(style) {
+      this.view.registerMark(this.model.id);
+      this.markStyle = style;
+      return this.focusAll();
+    };
+
+    ContainerViewNode.prototype.unmark = function() {
+      return this.markStyle = null;
+    };
+
     ContainerViewNode.prototype.computeOwnDropArea = function() {
-      return this.dropArea = this.highlightArea = null;
+      this.dropArea = null;
+      if (this.highlightArea != null) {
+        this.elements = this.elements.filter(function(x) {
+          return x !== this.highlightArea;
+        });
+        this.highlightArea.destroy();
+        return this.highlightArea = null;
+      }
     };
 
     ContainerViewNode.prototype.shouldAddTab = NO;
 
-    ContainerViewNode.prototype.drawSelf = function(ctx, style) {
+    ContainerViewNode.prototype.drawSelf = function(style) {
       var oldFill, oldStroke;
       if (style == null) {
         style = {};
@@ -73055,7 +73739,8 @@ exports.View = View = (function() {
         this.path.style.fillColor = avgColor(this.path.style.fillColor, 0.7, '#00F');
         this.path.style.strokeColor = avgColor(this.path.style.strokeColor, 0.7, '#00F');
       }
-      this.path.draw(ctx);
+      this.path.setMarkStyle(this.markStyle);
+      this.path.update();
       this.path.style.fillColor = oldFill;
       this.path.style.strokeColor = oldStroke;
       return null;
@@ -73069,7 +73754,20 @@ exports.View = View = (function() {
     extend(BlockViewNode, superClass);
 
     function BlockViewNode() {
+      var ref, textElement;
       BlockViewNode.__super__.constructor.apply(this, arguments);
+      if ((ref = this.model.buttons) != null ? ref.addButton : void 0) {
+        this.addButtonPath = new this.view.draw.Path([new this.view.draw.Point(0, 0), new this.view.draw.Point(0 + this.view.opts.buttonWidth, 0), new this.view.draw.Point(0 + this.view.opts.buttonWidth, 0 + this.view.opts.buttonHeight), new this.view.draw.Point(0, 0 + this.view.opts.buttonHeight)], true, {
+          fillColor: this.view.getColor(this.model.color),
+          cssClass: 'droplet-button-path'
+        });
+        textElement = new this.view.draw.Text(new this.view.draw.Point((this.view.opts.buttonWidth - this.view.draw.measureCtx.measureText('+').width) / 2, this.view.opts.buttonHeight - this.view.opts.textHeight), '+');
+        textElement.setParent(this.addButtonPath);
+        this.addButtonPath.setParent(this.group);
+        this.elements.push(this.addButtonPath);
+        this.activeElements.push(textElement);
+        this.activeElements.push(this.addButtonPath);
+      }
     }
 
     BlockViewNode.prototype.computeMinDimensions = function() {
@@ -73094,40 +73792,6 @@ exports.View = View = (function() {
       return null;
     };
 
-    BlockViewNode.prototype.drawSelf = function(ctx, style) {
-      var drawButton;
-      BlockViewNode.__super__.drawSelf.apply(this, arguments);
-      drawButton = (function(_this) {
-        return function(text, rect, ctx) {
-          var dx, dy, path, textElement;
-          path = rect.toPath().reverse();
-          path.style.fillColor = _this.path.style.fillColor;
-          if (style.grayscale) {
-            path.style.fillColor = avgColor(_this.path.style.fillColor, 0.5, '#888');
-          }
-          if (style.selected) {
-            path.style.fillColor = avgColor(_this.path.style.fillColor, 0.7, '#00F');
-          }
-          path.bevel = true;
-          path.draw(ctx);
-          textElement = new _this.view.draw.Text(new _this.view.draw.Point(0, 0), text);
-          dx = rect.width - textElement.bounds().width;
-          dy = rect.height - _this.view.opts.textHeight;
-          textElement.translate({
-            x: rect.x + Math.ceil(dx / 2),
-            y: rect.y + Math.ceil(dy)
-          });
-          return textElement.draw(ctx);
-        };
-      })(this);
-      if (this.model.buttons.addButton) {
-        drawButton('+', this.addButtonRect, ctx);
-      }
-      if (this.model.buttons.subtractButton) {
-        return drawButton('-', this.subtractButtonRect, ctx);
-      }
-    };
-
     BlockViewNode.prototype.shouldAddTab = function() {
       var ref;
       if ((this.model.parent != null) && this.view.hasViewNodeFor(this.model.parent) && !(this.model.parent.type === 'document' && this.model.parent.opts.roundedSingletons && this.model.start.prev === this.model.parent.start && this.model.end.next === this.model.parent.end)) {
@@ -73137,43 +73801,11 @@ exports.View = View = (function() {
       }
     };
 
-    BlockViewNode.prototype.computePath = function() {
-      var height, lastLine, lastRect, multilineBounds, multilineChild, start, top;
-      BlockViewNode.__super__.computePath.apply(this, arguments);
-      lastLine = this.bounds.length - 1;
-      lastRect = this.bounds[lastLine];
-      start = lastRect.x + lastRect.width - this.extraWidth;
-      top = lastRect.y + lastRect.height / 2 - this.view.opts.buttonHeight / 2;
-      if (this.multilineChildrenData[lastLine] === MULTILINE_END) {
-        multilineChild = this.lineChildren[lastLine][0];
-        multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[lastLine - multilineChild.startLine];
-        if (this.lineChildren[lastLine].length > 1) {
-          height = multilineBounds.bottom() - lastRect.y;
-          top = lastRect.y + height / 2 - this.view.opts.buttonHeight / 2;
-        } else {
-          height = lastRect.bottom() - multilineBounds.bottom();
-          top = multilineBounds.bottom() + height / 2 - this.view.opts.buttonHeight / 2;
-        }
-      }
-      if (this.model.buttons.addButton) {
-        this.addButtonRect = new this.view.draw.Rectangle(start, top, this.view.opts.buttonWidth, this.view.opts.buttonHeight);
-        start += this.view.opts.buttonWidth + this.view.opts.buttonPadding;
-      }
-      if (this.model.buttons.subtractButton) {
-        return this.subtractButtonRect = new this.view.draw.Rectangle(start, top, this.view.opts.buttonWidth, this.view.opts.buttonHeight);
-      }
-    };
-
-    BlockViewNode.prototype.computeOwnPath = function() {
-      BlockViewNode.__super__.computeOwnPath.apply(this, arguments);
-      this.path.style.fillColor = this.view.getColor(this.model.color);
-      this.path.style.strokeColor = '#888';
-      this.path.bevel = true;
-      return this.path;
-    };
-
     BlockViewNode.prototype.computeOwnDropArea = function() {
-      var destinationBounds, highlightAreaPoints, j, lastBoundsLeft, lastBoundsRight, len1, parentViewNode, point;
+      var destinationBounds, highlightAreaPoints, lastBoundsLeft, lastBoundsRight, parentViewNode, ref, ref1;
+      if ((ref = (ref1 = this.model.parent) != null ? ref1.type : void 0) !== 'indent' && ref !== 'document') {
+        return;
+      }
       if (this.carriageArrow === CARRIAGE_ARROW_INDENT) {
         parentViewNode = this.view.getViewNodeFor(this.model.parent);
         destinationBounds = parentViewNode.bounds[1];
@@ -73191,7 +73823,6 @@ exports.View = View = (function() {
         lastBoundsLeft = this.bounds[this.lineLength - 1].x;
         lastBoundsRight = this.bounds[this.lineLength - 1].right();
       }
-      this.highlightArea = new this.view.draw.Path();
       highlightAreaPoints = [];
       highlightAreaPoints.push(new this.view.draw.Point(lastBoundsLeft, this.dropPoint.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
       highlightAreaPoints.push(new this.view.draw.Point(lastBoundsLeft + this.view.opts.bevelClip, this.dropPoint.y - this.view.opts.highlightAreaHeight / 2));
@@ -73203,13 +73834,8 @@ exports.View = View = (function() {
       this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBoundsLeft + this.view.opts.tabOffset, this.dropPoint.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBoundsLeft + this.view.opts.bevelClip, this.dropPoint.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBoundsLeft, this.dropPoint.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-      for (j = 0, len1 = highlightAreaPoints.length; j < len1; j++) {
-        point = highlightAreaPoints[j];
-        this.highlightArea.push(point);
-      }
-      this.highlightArea.style.lineWidth = 1;
-      this.highlightArea.style.strokeColor = '#ff0';
-      return this.highlightArea.style.fillColor = '#ff0';
+      this.highlightArea.setPoints(highlightAreaPoints);
+      return this.highlightArea.deactivate();
     };
 
     return BlockViewNode;
@@ -73221,6 +73847,16 @@ exports.View = View = (function() {
 
     function SocketViewNode() {
       SocketViewNode.__super__.constructor.apply(this, arguments);
+      if (this.view.opts.showDropdowns && (this.model.dropdown != null)) {
+        if (this.dropdownElement == null) {
+          this.dropdownElement = new this.view.draw.Path([], false, {
+            fillColor: DROP_TRIANGLE_COLOR,
+            cssClass: 'droplet-dropdown-arrow'
+          });
+        }
+        this.dropdownElement.deactivate();
+        this.elements.push(this.dropdownElement);
+      }
     }
 
     SocketViewNode.prototype.shouldAddTab = NO;
@@ -73263,42 +73899,48 @@ exports.View = View = (function() {
     };
 
     SocketViewNode.prototype.computeOwnPath = function() {
-      var view;
       if (this.computedVersion === this.model.version && !this.changedBoundingBox) {
         return this.path;
       }
       if (this.model.start.next.type === 'blockStart') {
-        view = this.view.getViewNodeFor(this.model.start.next.container);
-        this.path = view.computeOwnPath().clone();
+        this.path.style.fillColor = 'none';
       } else {
         SocketViewNode.__super__.computeOwnPath.apply(this, arguments);
       }
-      this.path.style.fillColor = '#FFF';
-      this.path.style.strokeColor = '#FFF';
+      if (this.model.start.next === this.model.end && this.model.emptyString === '') {
+        this.path.style.cssClass = 'droplet-socket-path droplet-empty-socket-path';
+      } else {
+        this.path.style.cssClass = 'droplet-socket-path';
+      }
       return this.path;
     };
 
-    SocketViewNode.prototype.drawSelf = function(ctx) {
+    SocketViewNode.prototype.drawSelf = function(style) {
       SocketViewNode.__super__.drawSelf.apply(this, arguments);
       if (this.model.hasDropdown() && this.view.opts.showDropdowns) {
-        ctx.beginPath();
-        ctx.fillStyle = DROP_TRIANGLE_COLOR;
-        ctx.moveTo(this.bounds[0].x + helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2);
-        ctx.lineTo(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH - helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2);
-        ctx.lineTo(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH / 2, this.bounds[0].y + (this.bounds[0].height + DROPDOWN_ARROW_HEIGHT) / 2);
-        return ctx.fill();
+        this.dropdownElement.setPoints([new this.view.draw.Point(this.bounds[0].x + helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2), new this.view.draw.Point(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH - helper.DROPDOWN_ARROW_PADDING, this.bounds[0].y + (this.bounds[0].height - DROPDOWN_ARROW_HEIGHT) / 2), new this.view.draw.Point(this.bounds[0].x + helper.DROPDOWN_ARROW_WIDTH / 2, this.bounds[0].y + (this.bounds[0].height + DROPDOWN_ARROW_HEIGHT) / 2)]);
+        this.dropdownElement.update();
+        return this.activeElements.push(this.dropdownElement);
+      } else if (this.dropdownElement != null) {
+        this.activeElements = this.activeElements.filter(function(x) {
+          return x !== this.dropdownElement;
+        });
+        return this.dropdownElement.deactivate();
       }
     };
 
     SocketViewNode.prototype.computeOwnDropArea = function() {
       if (this.model.start.next.type === 'blockStart') {
-        return this.dropArea = this.highlightArea = null;
+        this.dropArea = null;
+        return this.highlightArea.deactivate();
       } else {
         this.dropPoint = this.bounds[0].upperLeftCorner();
-        this.highlightArea = this.path.clone();
-        this.highlightArea.noclip = true;
+        this.highlightArea.setPoints(this.path._points);
         this.highlightArea.style.strokeColor = '#FF0';
-        return this.highlightArea.style.lineWidth = this.view.opts.padding;
+        this.highlightArea.style.fillColor = 'none';
+        this.highlightArea.style.lineWidth = this.view.opts.padding;
+        this.highlightArea.update();
+        return this.highlightArea.deactivate();
       }
     };
 
@@ -73315,9 +73957,7 @@ exports.View = View = (function() {
       this.lastLastChildren = [];
     }
 
-    IndentViewNode.prototype.computeOwnPath = function() {
-      return this.path = new this.view.draw.Path();
-    };
+    IndentViewNode.prototype.computeOwnPath = function() {};
 
     IndentViewNode.prototype.computeChildren = function() {
       var childObj, childRef, childView, j, l, len1, len2, len3, m, ref, ref1, ref2;
@@ -73370,12 +74010,10 @@ exports.View = View = (function() {
       return results;
     };
 
-    IndentViewNode.prototype.drawSelf = function() {
-      return null;
-    };
+    IndentViewNode.prototype.drawSelf = function() {};
 
     IndentViewNode.prototype.computeOwnDropArea = function() {
-      var highlightAreaPoints, j, lastBounds, len1, point;
+      var highlightAreaPoints, lastBounds;
       lastBounds = new this.view.draw.NoRectangle();
       if (this.model.start.next.type === 'newline') {
         this.dropPoint = this.bounds[1].upperLeftCorner();
@@ -73385,7 +74023,6 @@ exports.View = View = (function() {
         lastBounds.copy(this.bounds[0]);
       }
       lastBounds.width = Math.max(lastBounds.width, this.view.opts.indentDropAreaMinWidth);
-      this.highlightArea = new this.view.draw.Path();
       highlightAreaPoints = [];
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y - this.view.opts.highlightAreaHeight / 2 + this.view.opts.bevelClip));
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y - this.view.opts.highlightAreaHeight / 2));
@@ -73397,13 +74034,8 @@ exports.View = View = (function() {
       this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-      for (j = 0, len1 = highlightAreaPoints.length; j < len1; j++) {
-        point = highlightAreaPoints[j];
-        this.highlightArea.push(point);
-      }
-      this.highlightArea.style.lineWidth = 1;
-      this.highlightArea.style.strokeColor = '#ff0';
-      return this.highlightArea.style.fillColor = '#ff0';
+      this.highlightArea.setPoints(highlightAreaPoints);
+      return this.highlightArea.deactivate();
     };
 
     return IndentViewNode;
@@ -73417,14 +74049,11 @@ exports.View = View = (function() {
       DocumentViewNode.__super__.constructor.apply(this, arguments);
     }
 
-    DocumentViewNode.prototype.computeOwnPath = function() {
-      return this.path = new this.view.draw.Path();
-    };
+    DocumentViewNode.prototype.computeOwnPath = function() {};
 
     DocumentViewNode.prototype.computeOwnDropArea = function() {
-      var highlightAreaPoints, j, lastBounds, len1, point;
+      var highlightAreaPoints, lastBounds;
       this.dropPoint = this.bounds[0].upperLeftCorner();
-      this.highlightArea = new this.view.draw.Path();
       highlightAreaPoints = [];
       lastBounds = new this.view.draw.NoRectangle();
       lastBounds.copy(this.bounds[0]);
@@ -73439,12 +74068,8 @@ exports.View = View = (function() {
       this.addTab(highlightAreaPoints, new this.view.draw.Point(lastBounds.x + this.view.opts.tabOffset, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x + this.view.opts.bevelClip, lastBounds.y + this.view.opts.highlightAreaHeight / 2));
       highlightAreaPoints.push(new this.view.draw.Point(lastBounds.x, lastBounds.y + this.view.opts.highlightAreaHeight / 2 - this.view.opts.bevelClip));
-      for (j = 0, len1 = highlightAreaPoints.length; j < len1; j++) {
-        point = highlightAreaPoints[j];
-        this.highlightArea.push(point);
-      }
-      this.highlightArea.style.fillColor = '#ff0';
-      this.highlightArea.style.strokeColor = '#ff0';
+      this.highlightArea.setPoints(highlightAreaPoints);
+      this.highlightArea.deactivate();
       return null;
     };
 
@@ -73459,6 +74084,9 @@ exports.View = View = (function() {
       this.model = model1;
       this.view = view1;
       TextViewNode.__super__.constructor.apply(this, arguments);
+      this.textElement = new this.view.draw.Text(new this.view.draw.Point(0, 0), this.model.value);
+      this.textElement.destroy();
+      this.elements.push(this.textElement);
     }
 
     TextViewNode.prototype.computeChildren = function() {
@@ -73471,7 +74099,8 @@ exports.View = View = (function() {
       if (this.computedVersion === this.model.version) {
         return null;
       }
-      this.textElement = new this.view.draw.Text(new this.view.draw.Point(0, 0), this.model.value);
+      this.textElement.point = new this.view.draw.Point(0, 0);
+      this.textElement.value = this.model.value;
       height = this.view.opts.textHeight;
       this.minDimensions[0] = new this.view.draw.Size(this.textElement.bounds().width, height);
       this.minDistanceToBase[0] = {
@@ -73491,31 +74120,22 @@ exports.View = View = (function() {
       return TextViewNode.__super__.computeBoundingBoxY.apply(this, arguments);
     };
 
-    TextViewNode.prototype.drawSelf = function(ctx, style) {
+    TextViewNode.prototype.drawSelf = function(style, parent) {
       if (style == null) {
         style = {};
       }
-      if (!style.noText) {
-        this.textElement.draw(ctx);
+      if (parent == null) {
+        parent = null;
       }
-      return null;
-    };
-
-    TextViewNode.prototype.debugDimensions = function(x, y, line, ctx) {
-      var oldPoint;
-      ctx.globalAlpha = 1;
-      oldPoint = this.textElement.point;
-      this.textElement.point = new this.view.draw.Point(x, y);
-      this.textElement.draw(ctx);
-      this.textElement.point = oldPoint;
-      return ctx.globalAlpha = 0.1;
-    };
-
-    TextViewNode.prototype.debugAllBoundingBoxes = function(ctx) {
-      ctx.globalAlpha = 1;
-      this.computeOwnPath();
-      this.textElement.draw(ctx);
-      return ctx.globalAlpha = 0.1;
+      this.textElement.update();
+      if (style.noText) {
+        this.textElement.deactivate();
+      } else {
+        this.textElement.activate();
+      }
+      if (parent != null) {
+        return this.textElement.setParent(parent);
+      }
     };
 
     return TextViewNode;
@@ -73593,8 +74213,24 @@ avgColor = function(a, factor, b) {
   return toHex(newRGB);
 };
 
+dedupe = function(path) {
+  return path.filter(function(x, i) {
+    if (i === 0) {
+      return true;
+    } else {
+      if (x.equals(path[i - 1])) {
+        return false;
+      }
+      if (i < path.length - 1 && x.from(path[i - 1]).normalize().almostEquals(path[i + 1].from(x).normalize())) {
+        return false;
+      }
+      return true;
+    }
+  });
+};
 
-},{"./draw.coffee":101,"./helper.coffee":102,"./model.coffee":110}],115:[function(require,module,exports){
+
+},{"./draw.coffee":"/home/anthony/Projects/droplet/src/draw.coffee","./helper.coffee":"/home/anthony/Projects/droplet/src/helper.coffee","./model.coffee":"/home/anthony/Projects/droplet/src/model.coffee"}],"/home/anthony/Projects/droplet/vendor/acorn.js":[function(require,module,exports){
 // Acorn is a tiny, fast JavaScript parser written in JavaScript.
 //
 // Acorn was written by Marijn Haverbeke and various contributors and
@@ -76128,7 +76764,7 @@ avgColor = function(a, factor, b) {
 
 });
 
-},{}],116:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/vendor/coffee-script.js":[function(require,module,exports){
 /**
  * CoffeeScript Compiler v1.7.1
  * http://coffeescript.org
@@ -76142,7 +76778,7 @@ this.trace(e)},parse:function(e){function t(){var e;return e=n.lexer.lex()||p,"n
 if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObject())return this.compilePatternMatch(e);if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.context)||"&&="===h||"?="===h)return this.compileConditional(e);if("**="===(u=this.context)||"//="===u||"%%="===u)return this.compileSpecialMath(e)}return n=this.variable.compileToFragments(e,L),o=at(n),this.context||(a=this.variable.unwrapAll(),a.isAssignable()||this.variable.error('"'+this.variable.compile(e)+'" cannot be assigned'),("function"==typeof a.hasProperties?a.hasProperties():void 0)||(this.param?e.scope.add(o,"var"):e.scope.find(o))),this.value instanceof c&&(r=S.exec(o))&&(r[2]&&(this.value.klass=r[1]),this.value.name=null!=(l=null!=(p=r[3])?p:r[4])?l:r[5]),s=this.value.compileToFragments(e,L),"object"===this.context?n.concat(this.makeCode(": "),s):(t=n.concat(this.makeCode(" "+(this.context||"=")+" "),s),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compilePatternMatch=function(e){var i,r,o,s,a,c,h,u,l,d,f,m,b,g,k,v,w,C,F,E,S,R,A,I,_,$,O,B;if(v=e.level===x,C=this.value,m=this.variable.base.objects,!(b=m.length))return o=C.compileToFragments(e),e.level>=N?this.wrapInBraces(o):o;if(u=this.variable.isObject(),v&&1===b&&!((f=m[0])instanceof G))return f instanceof n?(A=f,I=A.variable,h=I.base,f=A.value):h=u?f["this"]?f.properties[0].name:f:new D(0),i=y.test(h.unwrap().value||0),C=new Z(C),C.properties.push(new(i?t:T)(h)),_=f.unwrap().value,Ft.call(M,_)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),new n(f,C,null,{param:this.param}).compileToFragments(e,x);for(F=C.compileToFragments(e,L),E=at(F),r=[],s=!1,(!y.test(E)||this.variable.assigns(E))&&(r.push([this.makeCode(""+(g=e.scope.freeVariable("ref"))+" = ")].concat(Lt.call(F))),F=[this.makeCode(g)],E=g),c=S=0,R=m.length;R>S;c=++S){if(f=m[c],h=c,u&&(f instanceof n?($=f,O=$.variable,h=O.base,f=$.value):f.base instanceof j?(B=new Z(f.unwrapAll()).cacheReference(e),f=B[0],h=B[1]):h=f["this"]?f.properties[0].name:f),!s&&f instanceof G)d=f.name.unwrap().value,f=f.unwrap(),w=""+b+" <= "+E+".length ? "+kt("slice")+".call("+E+", "+c,(k=b-c-1)?(l=e.scope.freeVariable("i"),w+=", "+l+" = "+E+".length - "+k+") : ("+l+" = "+c+", [])"):w+=") : []",w=new D(w),s=""+l+"++";else{if(!s&&f instanceof p){(k=b-c-1)&&(1===k?s=""+E+".length - 1":(l=e.scope.freeVariable("i"),w=new D(""+l+" = "+E+".length - "+k),s=""+l+"++",r.push(w.compileToFragments(e,L))));continue}d=f.unwrap().value,(f instanceof G||f instanceof p)&&f.error("multiple splats/expansions are disallowed in an assignment"),"number"==typeof h?(h=new D(s||h),i=!1):i=u&&y.test(h.unwrap().value||0),w=new Z(new D(E),[new(i?t:T)(h)])}null!=d&&Ft.call(M,d)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),r.push(new n(f,w,null,{param:this.param,subpattern:!0}).compileToFragments(e,L))}return v||this.subpattern||r.push(F),a=this.joinFragmentArrays(r,", "),L>e.level?a:this.wrapInBraces(a)},n.prototype.compileConditional=function(e){var t,i,r,o;return o=this.variable.cacheReference(e),i=o[0],r=o[1],!i.properties.length&&i.base instanceof D&&"this"!==i.base.value&&!e.scope.check(i.base.value)&&this.variable.error('the variable "'+i.base.value+"\" can't be assigned with "+this.context+" because it has not been declared before"),Ft.call(this.context,"?")>=0?(e.isExistentialEquals=!0,new v(new l(i),r,{type:"if"}).addElse(new n(r,this.value,"=")).compileToFragments(e)):(t=new $(this.context.slice(0,-1),i,new n(r,this.value,"=")).compileToFragments(e),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compileSpecialMath=function(e){var t,i,r;return r=this.variable.cacheReference(e),t=r[0],i=r[1],new n(t,new $(this.context.slice(0,-1),i,this.value)).compileToFragments(e)},n.prototype.compileSplice=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;return u=this.variable.properties.pop().range,i=u.from,a=u.to,n=u.exclusive,s=this.variable.compile(e),i?(l=this.cacheToCodeFragments(i.cache(e,N)),r=l[0],o=l[1]):r=o="0",a?i instanceof Z&&i.isSimpleNumber()&&a instanceof Z&&a.isSimpleNumber()?(a=a.compile(e)-o,n||(a+=1)):(a=a.compile(e,C)+" - "+o,n||(a+=" + 1")):a="9e9",p=this.value.cache(e,L),c=p[0],h=p[1],t=[].concat(this.makeCode("[].splice.apply("+s+", ["+r+", "+a+"].concat("),c,this.makeCode(")), "),h),e.level>x?this.wrapInBraces(t):t},n}(r),e.Code=c=function(e){function t(e,t,n){this.params=e||[],this.body=t||new o,this.bound="boundfunc"===n}return Ct(t,e),t.prototype.nodeType=function(){return"Code"},t.prototype.children=["params","body"],t.prototype.isStatement=function(){return!!this.ctor},t.prototype.jumps=A,t.prototype.makeScope=function(e){return new H(e,this.body,this)},t.prototype.compileNode=function(e){var r,a,c,h,u,l,d,f,m,y,b,g,k,w,T,F,L,N,E,x,S,R,A,I,_,j,M,B,V,P,U,H,q;if(this.bound&&(null!=(B=e.scope.method)?B.bound:void 0)&&(this.context=e.scope.method.context),this.bound&&!this.context)return this.context="_this",T=new t([new O(new D(this.context))],new o([this])),a=new s(T,[new D("this")]),a.updateLocationDataIfMissing(this.locationData),a.compileNode(e);for(e.scope=it(e,"classScope")||this.makeScope(e.scope),e.scope.shared=it(e,"sharedScope"),e.indent+=X,delete e.bare,delete e.isExistentialEquals,m=[],h=[],V=this.params,F=0,x=V.length;x>F;F++)f=V[F],f instanceof p||e.scope.parameter(f.asReference(e));for(P=this.params,L=0,S=P.length;S>L;L++)if(f=P[L],f.splat||f instanceof p){for(U=this.params,N=0,R=U.length;R>N;N++)d=U[N].name,f instanceof p||(d["this"]&&(d=d.properties[0].name),d.value&&e.scope.add(d.value,"var",!0));b=new i(new Z(new n(function(){var t,n,i,r;for(i=this.params,r=[],t=0,n=i.length;n>t;t++)d=i[t],r.push(d.asReference(e));return r}.call(this))),new Z(new D("arguments")));break}for(H=this.params,E=0,A=H.length;A>E;E++)f=H[E],f.isComplex()?(k=y=f.asReference(e),f.value&&(k=new $("?",y,f.value)),h.push(new i(new Z(f.name),k,"=",{param:!0}))):(y=f,f.value&&(l=new D(y.name.value+" == null"),k=new i(new Z(f.name),f.value,"="),h.push(new v(l,k)))),b||m.push(y);for(w=this.body.isEmpty(),b&&h.unshift(b),h.length&&(q=this.body.expressions).unshift.apply(q,h),u=j=0,I=m.length;I>j;u=++j)d=m[u],m[u]=d.compileToFragments(e),e.scope.parameter(at(m[u]));for(g=[],this.eachParamName(function(e,t){return Ft.call(g,e)>=0&&t.error("multiple parameters named '"+e+"'"),g.push(e)}),w||this.noReturn||this.body.makeReturn(),c="function",this.ctor&&(c+=" "+this.name),c+="(",r=[this.makeCode(c)],u=M=0,_=m.length;_>M;u=++M)d=m[u],u&&r.push(this.makeCode(", ")),r.push.apply(r,d);return r.push(this.makeCode(") {")),this.body.isEmpty()||(r=r.concat(this.makeCode("\n"),this.body.compileWithDeclarations(e),this.makeCode("\n"+this.tab))),r.push(this.makeCode("}")),this.ctor?[this.makeCode(this.tab)].concat(Lt.call(r)):this.front||e.level>=C?this.wrapInBraces(r):r},t.prototype.eachParamName=function(e){var t,n,i,r,o;for(r=this.params,o=[],n=0,i=r.length;i>n;n++)t=r[n],o.push(t.eachName(e));return o},t.prototype.traverseChildren=function(e,n){return e?t.__super__.traverseChildren.call(this,e,n):void 0},t}(r),e.Param=O=function(e){function t(e,t,n){var i;this.name=e,this.value=t,this.splat=n,i=e=this.name.unwrapAll().value,Ft.call(U,i)>=0&&this.name.error('parameter name "'+e+'" is not allowed')}return Ct(t,e),t.prototype.nodeType=function(){return"Param"},t.prototype.children=["name","value"],t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e,L)},t.prototype.asReference=function(e){var t;return this.reference?this.reference:(t=this.name,t["this"]?(t=t.properties[0].name,t.value.reserved&&(t=new D(e.scope.freeVariable(t.value)))):t.isComplex()&&(t=new D(e.scope.freeVariable("arg"))),t=new Z(t),this.splat&&(t=new G(t)),t.updateLocationDataIfMissing(this.locationData),this.reference=t)},t.prototype.isComplex=function(){return this.name.isComplex()},t.prototype.eachName=function(e,t){var n,r,o,s,a,c;if(null==t&&(t=this.name),n=function(t){var n;return n=t.properties[0].name,n.value.reserved?void 0:e(n.value,n)},t instanceof D)return e(t.value,t);if(t instanceof Z)return n(t);for(c=t.objects,s=0,a=c.length;a>s;s++)o=c[s],o instanceof i?this.eachName(e,o.value.unwrap()):o instanceof G?(r=o.name.unwrap(),e(r.value,r)):o instanceof Z?o.isArray()||o.isObject()?this.eachName(e,o.base):o["this"]?n(o):e(o.base.value,o.base):o instanceof p||o.error("illegal parameter "+o.compile())},t}(r),e.Splat=G=function(e){function t(e){this.name=e.compile?e:new D(e)}return Ct(t,e),t.prototype.nodeType=function(){return"Splat"},t.prototype.children=["name"],t.prototype.isAssignable=et,t.prototype.assigns=function(e){return this.name.assigns(e)},t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e)},t.prototype.unwrap=function(){return this.name},t.compileSplattedArray=function(e,n,i){var r,o,s,a,c,h,u,l,p,d;for(u=-1;(l=n[++u])&&!(l instanceof t););if(u>=n.length)return[];if(1===n.length)return l=n[0],c=l.compileToFragments(e,L),i?c:[].concat(l.makeCode(""+kt("slice")+".call("),c,l.makeCode(")"));for(r=n.slice(u),h=p=0,d=r.length;d>p;h=++p)l=r[h],s=l.compileToFragments(e,L),r[h]=l instanceof t?[].concat(l.makeCode(""+kt("slice")+".call("),s,l.makeCode(")")):[].concat(l.makeCode("["),s,l.makeCode("]"));return 0===u?(l=n[0],a=l.joinFragmentArrays(r.slice(1),", "),r[0].concat(l.makeCode(".concat("),a,l.makeCode(")"))):(o=function(){var t,i,r,o;for(r=n.slice(0,u),o=[],t=0,i=r.length;i>t;t++)l=r[t],o.push(l.compileToFragments(e,L));return o}(),o=n[0].joinFragmentArrays(o,", "),a=n[u].joinFragmentArrays(r,", "),[].concat(n[0].makeCode("["),o,n[u].makeCode("].concat("),a,ut(n).makeCode(")")))},t}(r),e.Expansion=p=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return Ct(t,e),t.prototype.nodeType=function(){return"Expansion"},t.prototype.isComplex=A,t.prototype.compileNode=function(){return this.error("Expansion must be used inside a destructuring assignment or parameter list")},t.prototype.asReference=function(){return this},t.prototype.eachName=function(){},t}(r),e.While=Q=function(e){function t(e,t){this.rawCondition=e,this.condition=(null!=t?t.invert:void 0)?e.invert():e,this.guard=null!=t?t.guard:void 0}return Ct(t,e),t.prototype.nodeType=function(){return"While"},t.prototype.children=["condition","guard","body"],t.prototype.isStatement=et,t.prototype.makeReturn=function(e){return e?t.__super__.makeReturn.apply(this,arguments):(this.returns=!this.jumps({loop:!0}),this)},t.prototype.addBody=function(e){return this.body=e,this},t.prototype.jumps=function(){var e,t,n,i,r;if(e=this.body.expressions,!e.length)return!1;for(i=0,r=e.length;r>i;i++)if(n=e[i],t=n.jumps({loop:!0}))return t;return!1},t.prototype.compileNode=function(e){var t,n,i,r;return e.indent+=X,r="",n=this.body,n.isEmpty()?n=this.makeCode(""):(this.returns&&(n.makeReturn(i=e.scope.freeVariable("results")),r=""+this.tab+i+" = [];\n"),this.guard&&(n.expressions.length>1?n.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(n=o.wrap([new v(this.guard,n)]))),n=[].concat(this.makeCode("\n"),n.compileToFragments(e,x),this.makeCode("\n"+this.tab))),t=[].concat(this.makeCode(r+this.tab+"while ("),this.condition.compileToFragments(e,E),this.makeCode(") {"),n,this.makeCode("}")),this.returns&&t.push(this.makeCode("\n"+this.tab+"return "+i+";")),t},t}(r),e.Op=$=function(e){function n(e,t,n,i){if("in"===e)return new w(t,n);if("do"===e)return this.generateDo(t);if("new"===e){if(t instanceof s&&!t["do"]&&!t.isNew)return t.locationData=void 0,t.newInstance();(t instanceof c&&t.bound||t["do"])&&(t=new j(t))}return this.operator=r[e]||e,this.first=t,this.second=n,this.flip=!!i,this}var r,o;return Ct(n,e),n.prototype.nodeType=function(){return"Op"},r={"==":"===","!=":"!==",of:"in"},o={"!==":"===","===":"!=="},n.prototype.children=["first","second"],n.prototype.isSimpleNumber=A,n.prototype.isUnary=function(){return!this.second},n.prototype.isComplex=function(){var e;return!(this.isUnary()&&("+"===(e=this.operator)||"-"===e))||this.first.isComplex()},n.prototype.isChainable=function(){var e;return"<"===(e=this.operator)||">"===e||">="===e||"<="===e||"==="===e||"!=="===e},n.prototype.invert=function(){var e,t,i,r,s;if(this.isChainable()&&this.first.isChainable()){for(e=!0,t=this;t&&t.operator;)e&&(e=t.operator in o),t=t.first;if(!e)return new j(this).invert();for(t=this;t&&t.operator;)t.invert=!t.invert,t.operator=o[t.operator],t=t.first;return this}return(r=o[this.operator])?(this.operator=r,this.first.unwrap()instanceof n&&this.first.invert(),this):this.second?new j(this).invert():"!"===this.operator&&(i=this.first.unwrap())instanceof n&&("!"===(s=i.operator)||"in"===s||"instanceof"===s)?i:new n("!",this)},n.prototype.unfoldSoak=function(e){var t;return("++"===(t=this.operator)||"--"===t||"delete"===t)&&gt(e,this,"first")},n.prototype.generateDo=function(e){var t,n,r,o,a,h,u,l;for(o=[],n=e instanceof i&&(a=e.value.unwrap())instanceof c?a:e,l=n.params||[],h=0,u=l.length;u>h;h++)r=l[h],r.value?(o.push(r.value),delete r.value):o.push(r);return t=new s(e,o),t["do"]=!0,t},n.prototype.compileNode=function(e){var t,n,i,r,o,s;if(n=this.isChainable()&&this.first.isChainable(),n||(this.first.front=this.front),"delete"===this.operator&&e.scope.check(this.first.unwrapAll().value)&&this.error("delete operand may not be argument or var"),("--"===(o=this.operator)||"++"===o)&&(s=this.first.unwrapAll().value,Ft.call(U,s)>=0)&&this.error('cannot increment/decrement "'+this.first.unwrapAll().value+'"'),this.isUnary())return this.compileUnary(e);if(n)return this.compileChain(e);switch(this.operator){case"?":return this.compileExistence(e);case"**":return this.compilePower(e);case"//":return this.compileFloorDivision(e);case"%%":return this.compileModulo(e);default:return i=this.first.compileToFragments(e,N),r=this.second.compileToFragments(e,N),t=[].concat(i,this.makeCode(" "+this.operator+" "),r),N>=e.level?t:this.wrapInBraces(t)}},n.prototype.compileChain=function(e){var t,n,i,r;return r=this.first.second.cache(e),this.first.second=r[0],i=r[1],n=this.first.compileToFragments(e,N),t=n.concat(this.makeCode(" "+(this.invert?"&&":"||")+" "),i.compileToFragments(e),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(e,N)),this.wrapInBraces(t)},n.prototype.compileExistence=function(e){var t,n;return this.first.isComplex()?(n=new D(e.scope.freeVariable("ref")),t=new j(new i(n,this.first))):(t=this.first,n=t),new v(new l(t),n,{type:"if"}).addElse(this.second).compileToFragments(e)},n.prototype.compileUnary=function(e){var t,i,r;return i=[],t=this.operator,i.push([this.makeCode(t)]),"!"===t&&this.first instanceof l?(this.first.negated=!this.first.negated,this.first.compileToFragments(e)):e.level>=C?new j(this).compileToFragments(e):(r="+"===t||"-"===t,("new"===t||"typeof"===t||"delete"===t||r&&this.first instanceof n&&this.first.operator===t)&&i.push([this.makeCode(" ")]),(r&&this.first instanceof n||"new"===t&&this.first.isStatement(e))&&(this.first=new j(this.first)),i.push(this.first.compileToFragments(e,N)),this.flip&&i.reverse(),this.joinFragmentArrays(i,""))},n.prototype.compilePower=function(e){var n;return n=new Z(new D("Math"),[new t(new D("pow"))]),new s(n,[this.first,this.second]).compileToFragments(e)},n.prototype.compileFloorDivision=function(e){var i,r;return r=new Z(new D("Math"),[new t(new D("floor"))]),i=new n("/",this.first,this.second),new s(r,[i]).compileToFragments(e)},n.prototype.compileModulo=function(e){var t;return t=new Z(new D(kt("modulo"))),new s(t,[this.first,this.second]).compileToFragments(e)},n.prototype.toString=function(e){return n.__super__.toString.call(this,e,this.constructor.name+" "+this.operator)},n}(r),e.In=w=function(e){function t(e,t){this.object=e,this.array=t}return Ct(t,e),t.prototype.nodeType=function(){return"In"},t.prototype.children=["object","array"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r,o;if(this.array instanceof Z&&this.array.isArray()&&this.array.base.objects.length){for(o=this.array.base.objects,i=0,r=o.length;r>i;i++)if(n=o[i],n instanceof G){t=!0;break}if(!t)return this.compileOrTest(e)}return this.compileLoopTest(e)},t.prototype.compileOrTest=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;for(u=this.object.cache(e,N),s=u[0],o=u[1],l=this.negated?[" !== "," && "]:[" === "," || "],t=l[0],n=l[1],a=[],p=this.array.base.objects,i=c=0,h=p.length;h>c;i=++c)r=p[i],i&&a.push(this.makeCode(n)),a=a.concat(i?o:s,this.makeCode(t),r.compileToFragments(e,C));return N>e.level?a:this.wrapInBraces(a)},t.prototype.compileLoopTest=function(e){var t,n,i,r;return r=this.object.cache(e,L),i=r[0],n=r[1],t=[].concat(this.makeCode(kt("indexOf")+".call("),this.array.compileToFragments(e,L),this.makeCode(", "),n,this.makeCode(") "+(this.negated?"< 0":">= 0"))),at(i)===at(n)?t:(t=i.concat(this.makeCode(", "),t),L>e.level?t:this.wrapInBraces(t))},t.prototype.toString=function(e){return t.__super__.toString.call(this,e,this.constructor.name+(this.negated?"!":""))},t}(r),e.Try=K=function(e){function t(e,t,n,i){this.attempt=e,this.errorVariable=t,this.recovery=n,this.ensure=i}return Ct(t,e),t.prototype.nodeType=function(){return"Try"},t.prototype.children=["attempt","recovery","ensure"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t;return this.attempt.jumps(e)||(null!=(t=this.recovery)?t.jumps(e):void 0)},t.prototype.makeReturn=function(e){return this.attempt&&(this.attempt=this.attempt.makeReturn(e)),this.recovery&&(this.recovery=this.recovery.makeReturn(e)),this},t.prototype.compileNode=function(e){var t,n,r,o;return e.indent+=X,o=this.attempt.compileToFragments(e,x),t=this.recovery?(r=new D("_error"),this.errorVariable?this.recovery.unshift(new i(this.errorVariable,r)):void 0,[].concat(this.makeCode(" catch ("),r.compileToFragments(e),this.makeCode(") {\n"),this.recovery.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}"))):this.ensure||this.recovery?[]:[this.makeCode(" catch (_error) {}")],n=this.ensure?[].concat(this.makeCode(" finally {\n"),this.ensure.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}")):[],[].concat(this.makeCode(""+this.tab+"try {\n"),o,this.makeCode("\n"+this.tab+"}"),t,n)},t}(r),e.Throw=z=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Throw"},t.prototype.children=["expression"],t.prototype.isStatement=et,t.prototype.jumps=A,t.prototype.makeReturn=Y,t.prototype.compileNode=function(e){return[].concat(this.makeCode(this.tab+"throw "),this.expression.compileToFragments(e),this.makeCode(";"))},t}(r),e.Existence=l=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Existence"},t.prototype.children=["expression"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r;return this.expression.front=this.front,i=this.expression.compile(e,N),y.test(i)&&!e.scope.check(i)?(r=this.negated?["===","||"]:["!==","&&"],t=r[0],n=r[1],i="typeof "+i+" "+t+' "undefined" '+n+" "+i+" "+t+" null"):i=""+i+" "+(this.negated?"==":"!=")+" null",[this.makeCode(F>=e.level?i:"("+i+")")]},t}(r),e.Parens=j=function(e){function t(e){this.body=e}return Ct(t,e),t.prototype.nodeType=function(){return"Parens"},t.prototype.children=["body"],t.prototype.unwrap=function(){return this.body},t.prototype.isComplex=function(){return this.body.isComplex()},t.prototype.compileNode=function(e){var t,n,i;return n=this.body.unwrap(),n instanceof Z&&n.isAtomic()?(n.front=this.front,n.compileToFragments(e)):(i=n.compileToFragments(e,E),t=N>e.level&&(n instanceof $||n instanceof s||n instanceof f&&n.returns),t?i:this.wrapInBraces(i))},t}(r),e.For=f=function(e){function t(e,t){var n;this.source=t.source,this.guard=t.guard,this.step=t.step,this.name=t.name,this.index=t.index,this.body=o.wrap([e]),this.own=!!t.own,this.object=!!t.object,this.object&&(n=[this.index,this.name],this.name=n[0],this.index=n[1]),this.index instanceof Z&&this.index.error("index cannot be a pattern matching expression"),this.range=this.source instanceof Z&&this.source.base instanceof B&&!this.source.properties.length,this.pattern=this.name instanceof Z,this.range&&this.index&&this.index.error("indexes do not apply to range loops"),this.range&&this.pattern&&this.name.error("cannot pattern match over range loops"),this.own&&!this.object&&this.name.error("cannot use own with for-in"),this.returns=!1}return Ct(t,e),t.prototype.nodeType=function(){return"For"},t.prototype.children=["body","source","guard","step"],t.prototype.compileNode=function(e){var t,n,r,s,a,c,h,u,l,p,d,f,m,b,g,k,w,T,C,F,N,E,S,R,A,_,$,O,M,B,P,U,H,q;return t=o.wrap([this.body]),T=null!=(H=ut(t.expressions))?H.jumps():void 0,T&&T instanceof V&&(this.returns=!1),$=this.range?this.source.base:this.source,_=e.scope,this.pattern||(F=this.name&&this.name.compile(e,L)),b=this.index&&this.index.compile(e,L),F&&!this.pattern&&_.find(F),b&&_.find(b),this.returns&&(A=_.freeVariable("results")),g=this.object&&b||_.freeVariable("i"),k=this.range&&F||b||g,w=k!==g?""+k+" = ":"",this.step&&!this.range&&(q=this.cacheToCodeFragments(this.step.cache(e,L)),O=q[0],B=q[1],M=B.match(I)),this.pattern&&(F=g),U="",d="",h="",f=this.tab+X,this.range?p=$.compileToFragments(pt(e,{index:g,name:F,step:this.step})):(P=this.source.compile(e,L),!F&&!this.own||y.test(P)||(h+=""+this.tab+(E=_.freeVariable("ref"))+" = "+P+";\n",P=E),F&&!this.pattern&&(N=""+F+" = "+P+"["+k+"]"),this.object||(O!==B&&(h+=""+this.tab+O+";\n"),this.step&&M&&(l=0>ft(M[0]))||(C=_.freeVariable("len")),a=""+w+g+" = 0, "+C+" = "+P+".length",c=""+w+g+" = "+P+".length - 1",r=""+g+" < "+C,s=""+g+" >= 0",this.step?(M?l&&(r=s,a=c):(r=""+B+" > 0 ? "+r+" : "+s,a="("+B+" > 0 ? ("+a+") : "+c+")"),m=""+g+" += "+B):m=""+(k!==g?"++"+g:""+g+"++"),p=[this.makeCode(""+a+"; "+r+"; "+w+m)])),this.returns&&(S=""+this.tab+A+" = [];\n",R="\n"+this.tab+"return "+A+";",t.makeReturn(A)),this.guard&&(t.expressions.length>1?t.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(t=o.wrap([new v(this.guard,t)]))),this.pattern&&t.expressions.unshift(new i(this.name,new D(""+P+"["+k+"]"))),u=[].concat(this.makeCode(h),this.pluckDirectCall(e,t)),N&&(U="\n"+f+N+";"),this.object&&(p=[this.makeCode(""+k+" in "+P)],this.own&&(d="\n"+f+"if (!"+kt("hasProp")+".call("+P+", "+k+")) continue;")),n=t.compileToFragments(pt(e,{indent:f}),x),n&&n.length>0&&(n=[].concat(this.makeCode("\n"),n,this.makeCode("\n"))),[].concat(u,this.makeCode(""+(S||"")+this.tab+"for ("),p,this.makeCode(") {"+d+U),n,this.makeCode(""+this.tab+"}"+(R||"")))},t.prototype.pluckDirectCall=function(e,t){var n,r,o,a,h,u,l,p,d,f,m,y,b,g,k,v;for(r=[],f=t.expressions,h=p=0,d=f.length;d>p;h=++p)o=f[h],o=o.unwrapAll(),o instanceof s&&(l=null!=(m=o.variable)?m.unwrapAll():void 0,(l instanceof c||l instanceof Z&&(null!=(y=l.base)?y.unwrapAll():void 0)instanceof c&&1===l.properties.length&&("call"===(b=null!=(g=l.properties[0].name)?g.value:void 0)||"apply"===b))&&(a=(null!=(k=l.base)?k.unwrapAll():void 0)||l,u=new D(e.scope.freeVariable("fn")),n=new Z(u),l.base&&(v=[n,l],l.base=v[0],n=v[1]),t.expressions[h]=new s(n,o.args),r=r.concat(this.makeCode(this.tab),new i(u,a).compileToFragments(e,x),this.makeCode(";\n"))));return r},t}(Q),e.Switch=W=function(e){function t(e,t,n){this.subject=e,this.cases=t,this.otherwise=n}return Ct(t,e),t.prototype.nodeType=function(){return"Switch"},t.prototype.children=["subject","cases","otherwise"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t,n,i,r,o,s,a,c;for(null==e&&(e={block:!0}),s=this.cases,r=0,o=s.length;o>r;r++)if(a=s[r],n=a[0],t=a[1],i=t.jumps(e))return i;return null!=(c=this.otherwise)?c.jumps(e):void 0},t.prototype.makeReturn=function(e){var t,n,i,r,s;for(r=this.cases,n=0,i=r.length;i>n;n++)t=r[n],t[1].makeReturn(e);return e&&(this.otherwise||(this.otherwise=new o([new D("void 0")]))),null!=(s=this.otherwise)&&s.makeReturn(e),this},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y;for(c=e.indent+X,h=e.indent=c+X,s=[].concat(this.makeCode(this.tab+"switch ("),this.subject?this.subject.compileToFragments(e,E):this.makeCode("false"),this.makeCode(") {\n")),f=this.cases,a=u=0,p=f.length;p>u;a=++u){for(m=f[a],r=m[0],t=m[1],y=st([r]),l=0,d=y.length;d>l;l++)i=y[l],this.subject||(i=i.invert()),s=s.concat(this.makeCode(c+"case "),i.compileToFragments(e,E),this.makeCode(":\n"));if((n=t.compileToFragments(e,x)).length>0&&(s=s.concat(n,this.makeCode("\n"))),a===this.cases.length-1&&!this.otherwise)break;o=this.lastNonComment(t.expressions),o instanceof V||o instanceof D&&o.jumps()&&"debugger"!==o.value||s.push(i.makeCode(h+"break;\n"))}return this.otherwise&&this.otherwise.expressions.length&&s.push.apply(s,[this.makeCode(c+"default:\n")].concat(Lt.call(this.otherwise.compileToFragments(e,x)),[this.makeCode("\n")])),s.push(this.makeCode(this.tab+"}")),s},t}(r),e.If=v=function(e){function t(e,t,n){this.body=t,null==n&&(n={}),this.rawCondition=e,this.condition="unless"===n.type?e.invert():e,this.elseBody=null,this.elseToken=null,this.isChain=!1,this.soak=n.soak}return Ct(t,e),t.prototype.nodeType=function(){return"If"},t.prototype.children=["condition","body","elseBody"],t.prototype.bodyNode=function(){var e;return null!=(e=this.body)?e.unwrap():void 0},t.prototype.elseBodyNode=function(){var e;return null!=(e=this.elseBody)?e.unwrap():void 0},t.prototype.addElse=function(e,n){return this.isChain?this.elseBodyNode().addElse(e,n):(this.isChain=e instanceof t,this.elseBody=this.ensureBlock(e),this.elseBody.updateLocationDataIfMissing(e.locationData),this.elseToken=n),this},t.prototype.isStatement=function(e){var t;return(null!=e?e.level:void 0)===x||this.bodyNode().isStatement(e)||(null!=(t=this.elseBodyNode())?t.isStatement(e):void 0)},t.prototype.jumps=function(e){var t;return this.body.jumps(e)||(null!=(t=this.elseBody)?t.jumps(e):void 0)},t.prototype.compileNode=function(e){return this.isStatement(e)?this.compileStatement(e):this.compileExpression(e)},t.prototype.makeReturn=function(e){return e&&(this.elseBody||(this.elseBody=new o([new D("void 0")]))),this.body&&(this.body=new o([this.body.makeReturn(e)])),this.elseBody&&(this.elseBody=new o([this.elseBody.makeReturn(e)])),this},t.prototype.ensureBlock=function(e){return e instanceof o?e:new o([e])},t.prototype.compileStatement=function(e){var n,i,r,o,s,a,c;return r=it(e,"chainChild"),(s=it(e,"isExistentialEquals"))?new t(this.condition.invert(),this.elseBodyNode(),{type:"if"}).compileToFragments(e):(c=e.indent+X,o=this.condition.compileToFragments(e,E),i=this.ensureBlock(this.body).compileToFragments(pt(e,{indent:c})),a=[].concat(this.makeCode("if ("),o,this.makeCode(") {\n"),i,this.makeCode("\n"+this.tab+"}")),r||a.unshift(this.makeCode(this.tab)),this.elseBody?(n=a.concat(this.makeCode(" else ")),this.isChain?(e.chainChild=!0,n=n.concat(this.elseBody.unwrap().compileToFragments(e,x))):n=n.concat(this.makeCode("{\n"),this.elseBody.compileToFragments(pt(e,{indent:c}),x),this.makeCode("\n"+this.tab+"}")),n):a)},t.prototype.compileExpression=function(e){var t,n,i,r;return i=this.condition.compileToFragments(e,F),n=this.bodyNode().compileToFragments(e,L),t=this.elseBodyNode()?this.elseBodyNode().compileToFragments(e,L):[this.makeCode("void 0")],r=i.concat(this.makeCode(" ? "),n,this.makeCode(" : "),t),e.level>=F?this.wrapInBraces(r):r},t.prototype.unfoldSoak=function(){return this.soak&&this},t}(r),J={"extends":function(){return"function(child, parent) { for (var key in parent) { if ("+kt("hasProp")+".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }"},bind:function(){return"function(fn, me){ return function(){ return fn.apply(me, arguments); }; }"},indexOf:function(){return"[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }"},modulo:function(){return"function(a, b) { return (+a % (b = +b) + b) % b; }"},hasProp:function(){return"{}.hasOwnProperty"},slice:function(){return"[].slice"}},x=1,E=2,L=3,F=4,N=5,C=6,X="  ",b="[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*",y=RegExp("^"+b+"$"),P=/^[+-]?\d+$/,m=/^[+-]?0x[\da-f]+/i,I=/^[+-]?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)$/i,S=RegExp("^("+b+")(\\.prototype)?(?:\\.("+b+")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\])$"),k=/^['"]/,g=/^\//,kt=function(e){var t;return t="__"+e,H.root.assign(t,J[e]()),t},dt=function(e,t){return e=e.replace(/\n/g,"$&"+t),e.replace(/\s+$/,"")},ft=function(e){return null==e?0:e.match(m)?parseInt(e,16):parseFloat(e)},ct=function(e){return e instanceof D&&"arguments"===e.value&&!e.asKey},ht=function(e){return e instanceof D&&"this"===e.value&&!e.asKey||e instanceof c&&e.bound||e instanceof s&&e.isSuper},gt=function(e,t,n){var i;if(i=t[n].unfoldSoak(e))return t[n]=i.body,i.body=new Z(t),i}}.call(this),t.exports}(),require["./sourcemap"]=function(){var e={},t={exports:e};return function(){var e,n;e=function(){function e(e){this.line=e,this.columns=[]}return e.prototype.add=function(e,t,n){var i,r;return r=t[0],i=t[1],null==n&&(n={}),this.columns[e]&&n.noReplace?void 0:this.columns[e]={line:this.line,column:e,sourceLine:r,sourceColumn:i}},e.prototype.sourceLocation=function(e){for(var t;!((t=this.columns[e])||0>=e);)e--;return t&&[t.sourceLine,t.sourceColumn]},e}(),n=function(){function t(){this.lines=[]}var n,i,r,o;return t.prototype.add=function(t,n,i){var r,o,s,a;return null==i&&(i={}),o=n[0],r=n[1],s=(a=this.lines)[o]||(a[o]=new e(o)),s.add(r,t,i)},t.prototype.sourceLocation=function(e){var t,n,i;for(n=e[0],t=e[1];!((i=this.lines[n])||0>=n);)n--;return i&&i.sourceLocation(t)},t.prototype.generate=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b;for(null==e&&(e={}),null==t&&(t=null),l=0,i=0,o=0,r=0,h=!1,n="",y=this.lines,a=p=0,f=y.length;f>p;a=++p)if(s=y[a])for(b=s.columns,d=0,m=b.length;m>d;d++)if(c=b[d]){for(;c.line>l;)i=0,h=!1,n+=";",l++;h&&(n+=",",h=!1),n+=this.encodeVlq(c.column-i),i=c.column,n+=this.encodeVlq(0),n+=this.encodeVlq(c.sourceLine-o),o=c.sourceLine,n+=this.encodeVlq(c.sourceColumn-r),r=c.sourceColumn,h=!0}return u={version:3,file:e.generatedFile||"",sourceRoot:e.sourceRoot||"",sources:e.sourceFiles||[""],names:[],mappings:n},e.inline&&(u.sourcesContent=[t]),JSON.stringify(u,null,2)},r=5,i=1<<r,o=i-1,t.prototype.encodeVlq=function(e){var t,n,s,a;for(t="",s=0>e?1:0,a=(Math.abs(e)<<1)+s;a||!t;)n=a&o,a>>=r,a&&(n|=i),t+=this.encodeBase64(n);return t},n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",t.prototype.encodeBase64=function(e){return n[e]||function(){throw Error("Cannot Base64 encode value: "+e)}()},t}(),t.exports=n}.call(this),t.exports}(),require["./coffee-script"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k={}.hasOwnProperty,v=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};if(s=require("fs"),d=require("vm"),l=require("path"),t=require("./lexer").Lexer,u=require("./parser").parser,c=require("./helpers"),n=require("./sourcemap"),e.VERSION="1.7.1",e.FILE_EXTENSIONS=[".coffee",".litcoffee",".coffee.md"],e.helpers=c,f=function(e){return function(t,n){var i;null==n&&(n={});try{return e.call(this,t,n)}catch(r){throw i=r,c.updateSyntaxError(i,t,n.filename)}}},e.compile=i=f(function(e,t){var i,r,o,s,a,l,p,d,f,m,y,b,g;for(m=c.merge,s=c.extend,t=s({},t),t.sourceMap&&(f=new n),l=u.parse(h.tokenize(e,t)).compileToFragments(t),o=0,t.header&&(o+=1),t.shiftLine&&(o+=1),r=0,d="",b=0,g=l.length;g>b;b++)a=l[b],t.sourceMap&&(a.locationData&&f.add([a.locationData.first_line,a.locationData.first_column],[o,r],{noReplace:!0}),y=c.count(a.code,"\n"),o+=y,y?r=a.code.length-(a.code.lastIndexOf("\n")+1):r+=a.code.length),d+=a.code;return t.header&&(p="Generated by CoffeeScript "+this.VERSION,d="// "+p+"\n"+d),t.sourceMap?(i={js:d},i.sourceMap=f,i.v3SourceMap=f.generate(t,e),i):d
 }),e.tokens=f(function(e,t){return h.tokenize(e,t)}),e.nodes=f(function(e,t){return"string"==typeof e?u.parse(h.tokenize(e,t)):u.parse(e)}),e.run=function(e,t){var n,r,o,a;return null==t&&(t={}),o=require.main,o.filename=process.argv[1]=t.filename?s.realpathSync(t.filename):".",o.moduleCache&&(o.moduleCache={}),r=t.filename?l.dirname(s.realpathSync(t.filename)):s.realpathSync("."),o.paths=require("module")._nodeModulePaths(r),(!c.isCoffee(o.filename)||require.extensions)&&(n=i(e,t),e=null!=(a=n.js)?a:n),o._compile(e,o.filename)},e.eval=function(e,t){var n,r,o,s,a,c,h,u,p,f,m,y,b,g;if(null==t&&(t={}),e=e.trim()){if(r=d.Script){if(null!=t.sandbox){if(t.sandbox instanceof r.createContext().constructor)h=t.sandbox;else{h=r.createContext(),y=t.sandbox;for(s in y)k.call(y,s)&&(u=y[s],h[s]=u)}h.global=h.root=h.GLOBAL=h}else h=global;if(h.__filename=t.filename||"eval",h.__dirname=l.dirname(h.__filename),h===global&&!h.module&&!h.require){for(n=require("module"),h.module=m=new n(t.modulename||"eval"),h.require=g=function(e){return n._load(e,m,!0)},m.filename=h.__filename,b=Object.getOwnPropertyNames(require),p=0,f=b.length;f>p;p++)c=b[p],"paths"!==c&&(g[c]=require[c]);g.paths=m.paths=n._nodeModulePaths(process.cwd()),g.resolve=function(e){return n._resolveFilename(e,m)}}}a={};for(s in t)k.call(t,s)&&(u=t[s],a[s]=u);return a.bare=!0,o=i(e,a),h===global?d.runInThisContext(o):d.runInContext(o,h)}},e.register=function(){return require("./register")},require.extensions)for(g=this.FILE_EXTENSIONS,y=0,b=g.length;b>y;y++)r=g[y],null==(m=require.extensions)[r]&&(m[r]=function(){throw Error("Use CoffeeScript.register() or require the coffee-script/register module to require "+r+" files.")});e._compileFile=function(e,t){var n,r,o,a;null==t&&(t=!1),o=s.readFileSync(e,"utf8"),a=65279===o.charCodeAt(0)?o.substring(1):o;try{n=i(a,{filename:e,sourceMap:t,literate:c.isLiterate(e)})}catch(h){throw r=h,c.updateSyntaxError(r,a,e)}return n},h=new t,u.lexer={lex:function(){var e,t;return t=this.tokens[this.pos++],t?(e=t[0],this.yytext=t[1],this.yylloc=t[2],this.errorToken=t.origin||t,this.yylineno=this.yylloc.first_line):e="",e},setInput:function(e){return this.tokens=e,this.pos=0},upcomingInput:function(){return""}},u.yy=require("./nodes"),u.yy.parseError=function(e,t){var n,i,r,o,s,a,h;return s=t.token,h=u.lexer,o=h.errorToken,a=h.tokens,i=o[0],r=o[1],n=o[2],r=o===a[a.length-1]?"end of input":"INDENT"===i||"OUTDENT"===i?"indentation":c.nameWhitespaceCharacter(r),c.throwSyntaxError("unexpected "+r,n)},o=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d;return o=void 0,r="",e.isNative()?r="native":(e.isEval()?(o=e.getScriptNameOrSourceURL(),o||(r=""+e.getEvalOrigin()+", ")):o=e.getFileName(),o||(o="<anonymous>"),h=e.getLineNumber(),i=e.getColumnNumber(),l=t(o,h,i),r=l?""+o+":"+l[0]+":"+l[1]:""+o+":"+h+":"+i),s=e.getFunctionName(),a=e.isConstructor(),c=!(e.isToplevel()||a),c?(u=e.getMethodName(),d=e.getTypeName(),s?(p=n="",d&&s.indexOf(d)&&(p=""+d+"."),u&&s.indexOf("."+u)!==s.length-u.length-1&&(n=" [as "+u+"]"),""+p+s+n+" ("+r+")"):""+d+"."+(u||"<anonymous>")+" ("+r+")"):a?"new "+(s||"<anonymous>")+" ("+r+")":s?""+s+" ("+r+")":r},p={},a=function(t){var n,i;if(p[t])return p[t];if(i=null!=l?l.extname(t):void 0,!(0>v.call(e.FILE_EXTENSIONS,i)))return n=e._compileFile(t,!0),p[t]=n.sourceMap},Error.prepareStackTrace=function(t,n){var i,r,s;return s=function(e,t,n){var i,r;return r=a(e),r&&(i=r.sourceLocation([t-1,n-1])),i?[i[0]+1,i[1]+1]:null},r=function(){var t,r,a;for(a=[],t=0,r=n.length;r>t&&(i=n[t],i.getFunction()!==e.run);t++)a.push("  at "+o(i,s));return a}(),""+(""+t)+"\n"+r.join("\n")+"\n"}}.call(this),t.exports}(),require["./browser"]=function(){var exports={},module={exports:exports};return function(){var CoffeeScript,compile,runScripts,__indexOf=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};CoffeeScript=require("./coffee-script"),CoffeeScript.require=require,compile=CoffeeScript.compile,CoffeeScript.eval=function(code,options){return null==options&&(options={}),null==options.bare&&(options.bare=!0),eval(compile(code,options))},CoffeeScript.run=function(e,t){return null==t&&(t={}),t.bare=!0,t.shiftLine=!0,Function(compile(e,t))()},"undefined"!=typeof window&&null!==window&&("undefined"!=typeof btoa&&null!==btoa&&"undefined"!=typeof JSON&&null!==JSON&&"undefined"!=typeof unescape&&null!==unescape&&"undefined"!=typeof encodeURIComponent&&null!==encodeURIComponent&&(compile=function(e,t){var n,i,r;return null==t&&(t={}),t.sourceMap=!0,t.inline=!0,r=CoffeeScript.compile(e,t),n=r.js,i=r.v3SourceMap,""+n+"\n//# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(i)))+"\n//# sourceURL=coffeescript"}),CoffeeScript.load=function(e,t,n,i){var r;return null==n&&(n={}),null==i&&(i=!1),n.sourceFiles=[e],r=window.ActiveXObject?new window.ActiveXObject("Microsoft.XMLHTTP"):new window.XMLHttpRequest,r.open("GET",e,!0),"overrideMimeType"in r&&r.overrideMimeType("text/plain"),r.onreadystatechange=function(){var o,s;if(4===r.readyState){if(0!==(s=r.status)&&200!==s)throw Error("Could not load "+e);if(o=[r.responseText,n],i||CoffeeScript.run.apply(CoffeeScript,o),t)return t(o)}},r.send(null)},runScripts=function(){var e,t,n,i,r,o,s,a,c,h,u;for(a=window.document.getElementsByTagName("script"),t=["text/coffeescript","text/literate-coffeescript"],e=function(){var e,n,i,r;for(r=[],e=0,n=a.length;n>e;e++)o=a[e],i=o.type,__indexOf.call(t,i)>=0&&r.push(o);return r}(),r=0,n=function(){var t;return t=e[r],t instanceof Array?(CoffeeScript.run.apply(CoffeeScript,t),r++,n()):void 0},c=function(i,r){var o;return o={literate:i.type===t[1]},i.src?CoffeeScript.load(i.src,function(t){return e[r]=t,n()},o,!0):(o.sourceFiles=["embedded"],e[r]=[i.innerHTML,o])},i=h=0,u=e.length;u>h;i=++h)s=e[i],c(s,i);return n()},window.addEventListener?window.addEventListener("DOMContentLoaded",runScripts,!1):window.attachEvent("onload",runScripts))}.call(this),module.exports}(),require["./coffee-script"]}();"function"==typeof define&&define.amd?define(function(){return CoffeeScript}):root.CoffeeScript=CoffeeScript})(this);
 
-},{}],117:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/vendor/quadtree.js":[function(require,module,exports){
 (function (global){
 ; var __browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
 /*
@@ -76400,7 +77036,7 @@ QUAD.init = function (args) {
 }).call(global, undefined, undefined, undefined, undefined, function defineExport(ex) { module.exports = ex; });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],118:[function(require,module,exports){
+},{}],"/home/anthony/Projects/droplet/vendor/skulpt.js":[function(require,module,exports){
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.skulptparser = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // generated by pgen/main.py
 var Tokenizer = require('../src/tokenize');
@@ -79996,5 +80632,5 @@ module.exports.tokenNames = {
 
 },{}]},{},[3])(3)
 });
-},{}]},{},[109])(109)
+},{}]},{},["/home/anthony/Projects/droplet/src/main.coffee"])("/home/anthony/Projects/droplet/src/main.coffee")
 });
