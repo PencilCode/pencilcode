@@ -5761,7 +5761,7 @@ function canElementMoveInstantly(elem) {
   // moving at speed Infinity.
   var atime;
   return (elem && $.queue(elem).length == 0 &&
-      !elem.parentElement.style.transform &&
+      (!elem.parentElement || !elem.parentElement.style.transform) &&
       ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0));
 }
 
