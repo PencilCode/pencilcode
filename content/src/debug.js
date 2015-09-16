@@ -147,6 +147,7 @@ var debug = window.ide = {
 //////////////////////////////////////////////////////////////////////
 function detectStuckProgram() {
   stuckComplexity.lines += 1;
+  if (stuckComplexity.lines % 100 != 1) return;
   var currentTime = +(new Date);
   if (!stuckTime) {
     stuckTime = currentTime;
@@ -154,12 +155,11 @@ function detectStuckProgram() {
       'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (stuckComplexity.lines % 100 != 1) return;
   var limit = stuckTrivialTime;
   if (stuckComplexity.moves / stuckComplexity.lines > 0.01) {
-    limit = stuckCallingTime;
-  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
     limit = stuckMovingTime;
+  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
+    limit = stuckCallingTime;
   }
   if (currentTime - stuckTime > limit) {
     var inTurtle = false;
