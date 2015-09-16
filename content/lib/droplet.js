@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-08-30
+ * Date: 2015-09-10
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -62754,12 +62754,15 @@ Editor.prototype.populateSocket = function(socket, string) {
 };
 
 Editor.prototype.populateBlock = function(block, string) {
-  var location, newBlock;
+  var location, newBlock, ref1;
   newBlock = this.mode.parse(string, {
     wrapAtRoot: false
   }).start.next.container;
   if (newBlock) {
     location = block.start.prev;
+    while ((location != null ? location.type : void 0) === 'newline' && !(((ref1 = location.prev) != null ? ref1.type : void 0) === 'indentStart' && location.prev.container.end === block.end.next)) {
+      location = location.prev;
+    }
     this.spliceOut(block);
     this.spliceIn(newBlock, location);
     return true;
@@ -68775,7 +68778,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.getBounds = function(node) {
-    var bounds, line, ref, semicolon, semicolonLength;
+    var bounds, line, ref, ref1, semicolon, semicolonLength;
     if (node.type === 'BlockStatement') {
       bounds = {
         start: {
@@ -68787,12 +68790,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           column: node.loc.end.column - 1
         }
       };
+      bounds.start.column += ((ref = this.lines[bounds.start.line].slice(bounds.start.column).match(/^\s*/)) != null ? ref : [''])[0].length;
       if (this.lines[bounds.end.line].slice(0, bounds.end.column).trim().length === 0) {
         bounds.end.line -= 1;
         bounds.end.column = this.lines[bounds.end.line].length;
       }
       return bounds;
-    } else if (ref = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref) >= 0) {
+    } else if (ref1 = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref1) >= 0) {
       line = this.lines[node.loc.end.line];
       semicolon = this.lines[node.loc.end.line].slice(node.loc.end.column - 1).indexOf(';');
       if (semicolon >= 0) {
@@ -70305,6 +70309,19 @@ exports.Token = Token = (function() {
     this.version = 0;
   }
 
+  Token.prototype.getLinesToParent = function() {
+    var head, lines;
+    head = this;
+    lines = 0;
+    while (head !== this.parent.start) {
+      if (head.type === 'newline') {
+        lines++;
+      }
+      head = head.prev;
+    }
+    return lines;
+  };
+
   Token.prototype.setParent = function(parent1) {
     this.parent = parent1;
   };
@@ -71250,7 +71267,13 @@ exports.Parser = Parser = (function() {
           lastIndex = mark.location.column;
         }
         if (!(lastIndex >= line.length)) {
-          head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          if (stack.length === 0 || stack[stack.length - 1].type === 'indent') {
+            block = this.constructHandwrittenBlock(line.slice(lastIndex, line.length));
+            helper.connect(head, block.start);
+            head = block.end;
+          } else {
+            head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          }
         }
         head = helper.connect(head, new model.NewlineToken());
       }
