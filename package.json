@@ -27,7 +27,6 @@
     "http-proxy": "latest",
     "log-timestamp": "latest",
     "parseurl": "latest",
-    "PencilcodeMicroDatabase": "dinuka2013513/pencilcode-micro-db",
     "seedrandom": "latest",
     "source-map": "latest",
     "tamper": "latest"
@@ -70,7 +69,6 @@
     "html2canvas": "./content/lib/html2canvas.js",
     "iced-coffee-script": "./content/lib/iced-coffee-script.js",
     "jquery": "./content/lib/jquery.js",
-    "js2coffee": "./content/lib/js2coffee.js",
     "palette": "./content/src/palette.js",
     "pencil-tracer": "./content/lib/pencil-tracer.js",
     "see": "./content/lib/see.js",
@@ -81,9 +79,7 @@
     "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
   },
   "browserify": {
-    "transform": [
-      "browserify-shim"
-    ]
+    "transform": [ "browserify-shim" ]
   },
   "browserify-shim": {
     "html2canvas": {
@@ -94,15 +90,11 @@
     },
     "tooltipster": {
       "exports": "jQuery.fn.tooltipster",
-      "depends": [
-        "jquery:jQuery"
-      ]
+      "depends": ["jquery:jQuery"]
     },
     "see": {
       "exports": "see",
-      "depends": [
-        "jquery:jQuery"
-      ]
+      "depends": ["jquery:jQuery"]
     }
   }
 }
