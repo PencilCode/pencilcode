@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-08-30
+ * Date: 2015-09-15
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -62754,12 +62754,15 @@ Editor.prototype.populateSocket = function(socket, string) {
 };
 
 Editor.prototype.populateBlock = function(block, string) {
-  var location, newBlock;
+  var location, newBlock, ref1;
   newBlock = this.mode.parse(string, {
     wrapAtRoot: false
   }).start.next.container;
   if (newBlock) {
     location = block.start.prev;
+    while ((location != null ? location.type : void 0) === 'newline' && !(((ref1 = location.prev) != null ? ref1.type : void 0) === 'indentStart' && location.prev.container.end === block.end.next)) {
+      location = location.prev;
+    }
     this.spliceOut(block);
     this.spliceIn(newBlock, location);
     return true;
@@ -66301,7 +66304,7 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   };
 
   CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-    var arg, bounds, childName, classes, condition, currentNode, errorSocket, expr, fakeBlock, firstBounds, index, infix, j, k, known, l, last, len, len1, len2, len3, len4, len5, len6, len7, len8, len9, line, lines, namenodes, o, object, p, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, s, secondBounds, shouldBeOneLine, switchCase, t, textLine, trueIndentDepth, u, v;
+    var arg, bounds, childName, classes, condition, currentNode, end, errorSocket, expr, fakeBlock, firstBounds, index, infix, j, k, known, l, last, len, len1, len2, len3, len4, len5, len6, len7, len8, len9, line, lines, namenodes, o, object, p, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, s, secondBounds, shouldBeOneLine, space, start, switchCase, t, textLine, trueIndentDepth, u, v, variableBounds;
     switch (node.nodeType()) {
       case 'Block':
         if (node.expressions.length === 0) {
@@ -66449,6 +66452,32 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
           } else if (known.anyobj && ((ref9 = node.variable.properties) != null ? ref9.length : void 0) > 0) {
             this.csSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
           }
+          if (!known && node.args.length === 0 && !node["do"]) {
+            variableBounds = this.getBounds(node.variable);
+            start = {
+              line: variableBounds.end.line,
+              column: variableBounds.end.column + 1
+            };
+            end = {
+              line: start.line,
+              column: start.column
+            };
+            space = this.lines[start.line].slice(start.column).match(/^(\s*)\)/);
+            if (space != null) {
+              end.column += space[1].length;
+            }
+            this.addSocket({
+              bounds: {
+                start: start,
+                end: end
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['mostly-value'],
+              empty: ''
+            });
+          }
         } else {
           this.csBlock(node, depth, 0, wrappingParen, ANY_DROP);
         }
@@ -66461,8 +66490,10 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
             precedence = last ? -1 : 0;
             if (last && arg.nodeType() === 'Code') {
               results2.push(this.addCode(arg, depth + 1, indentDepth));
+            } else if (index === 0 && node.args.length === 1) {
+              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref11 = known.fn) != null ? (ref12 = ref11.dropdown) != null ? ref12[index] : void 0 : void 0 : void 0, ''));
             } else {
-              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref11 = known.fn) != null ? (ref12 = ref11.dropdown) != null ? ref12[index] : void 0 : void 0 : void 0));
+              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref13 = known.fn) != null ? (ref14 = ref13.dropdown) != null ? ref14[index] : void 0 : void 0 : void 0));
             }
           }
           return results2;
@@ -66482,16 +66513,16 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         break;
       case 'For':
         this.csBlock(node, depth, -3, wrappingParen, MOSTLY_BLOCK);
-        ref13 = ['source', 'from', 'guard', 'step'];
-        for (q = 0, len4 = ref13.length; q < len4; q++) {
-          childName = ref13[q];
+        ref15 = ['source', 'from', 'guard', 'step'];
+        for (q = 0, len4 = ref15.length; q < len4; q++) {
+          childName = ref15[q];
           if (node[childName] != null) {
             this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth);
           }
         }
-        ref14 = ['index', 'name'];
-        for (r = 0, len5 = ref14.length; r < len5; r++) {
-          childName = ref14[r];
+        ref16 = ['index', 'name'];
+        for (r = 0, len5 = ref16.length; r < len5; r++) {
+          childName = ref16[r];
           if (node[childName] != null) {
             this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, FORBID_ALL);
           }
@@ -66539,11 +66570,11 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         if (node.objects.length > 0) {
           this.csIndentAndMark(indentDepth, node.objects, depth + 1);
         }
-        ref15 = node.objects;
+        ref17 = node.objects;
         results4 = [];
-        for (s = 0, len6 = ref15.length; s < len6; s++) {
-          object = ref15[s];
-          if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((ref16 = (ref17 = object.properties) != null ? ref17.length : void 0) === 0 || ref16 === (void 0))) {
+        for (s = 0, len6 = ref17.length; s < len6; s++) {
+          object = ref17[s];
+          if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((ref18 = (ref19 = object.properties) != null ? ref19.length : void 0) === 0 || ref18 === (void 0))) {
             results4.push(this.csBlock(object, depth + 2, 100, null, VALUE_ONLY));
           } else {
             results4.push(void 0);
@@ -66569,13 +66600,13 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         if (node.subject != null) {
           this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
         }
-        ref18 = node.cases;
-        for (t = 0, len7 = ref18.length; t < len7; t++) {
-          switchCase = ref18[t];
+        ref20 = node.cases;
+        for (t = 0, len7 = ref20.length; t < len7; t++) {
+          switchCase = ref20[t];
           if (switchCase[0].constructor === Array) {
-            ref19 = switchCase[0];
-            for (u = 0, len8 = ref19.length; u < len8; u++) {
-              condition = ref19[u];
+            ref21 = switchCase[0];
+            for (u = 0, len8 = ref21.length; u < len8; u++) {
+              condition = ref21[u];
               this.csSocketAndMark(condition, depth + 1, 0, indentDepth);
             }
           } else {
@@ -66601,10 +66632,10 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         break;
       case 'Obj':
         this.csBlock(node, depth, 0, wrappingParen, VALUE_ONLY);
-        ref20 = node.properties;
+        ref22 = node.properties;
         results5 = [];
-        for (v = 0, len9 = ref20.length; v < len9; v++) {
-          property = ref20[v];
+        for (v = 0, len9 = ref22.length; v < len9; v++) {
+          property = ref22[v];
           if (property.nodeType() === 'Assign') {
             this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
             results5.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
@@ -66821,7 +66852,7 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
     return results;
   };
 
-  CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes, dropdown) {
+  CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes, dropdown, empty) {
     if (classes == null) {
       classes = [];
     }
@@ -66830,13 +66861,14 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
       depth: depth,
       precedence: precedence,
       dropdown: dropdown,
+      empty: empty,
       classes: getClassesFor(node).concat(classes)
     });
   };
 
-  CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes, dropdown) {
+  CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes, dropdown, empty) {
     var socket;
-    socket = this.csSocket(node, depth, precedence, classes, dropdown);
+    socket = this.csSocket(node, depth, precedence, classes, dropdown, empty);
     this.mark(node, depth + 1, precedence, null, indentDepth);
     return socket;
   };
@@ -68775,7 +68807,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.getBounds = function(node) {
-    var bounds, line, ref, semicolon, semicolonLength;
+    var bounds, line, ref, ref1, semicolon, semicolonLength;
     if (node.type === 'BlockStatement') {
       bounds = {
         start: {
@@ -68787,12 +68819,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           column: node.loc.end.column - 1
         }
       };
+      bounds.start.column += ((ref = this.lines[bounds.start.line].slice(bounds.start.column).match(/^\s*/)) != null ? ref : [''])[0].length;
       if (this.lines[bounds.end.line].slice(0, bounds.end.column).trim().length === 0) {
         bounds.end.line -= 1;
         bounds.end.column = this.lines[bounds.end.line].length;
       }
       return bounds;
-    } else if (ref = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref) >= 0) {
+    } else if (ref1 = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref1) >= 0) {
       line = this.lines[node.loc.end.line];
       semicolon = this.lines[node.loc.end.line].slice(node.loc.end.column - 1).indexOf(';');
       if (semicolon >= 0) {
@@ -68853,7 +68886,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-    var argument, block, currentElif, declaration, element, expression, i, j, k, known, l, len, len1, len2, len3, len4, len5, len6, len7, len8, m, match, n, nodeBoundsStart, o, p, position, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, results6, results7, results8, results9, statement, switchCase;
+    var argument, block, currentElif, declaration, element, endPosition, expression, i, j, k, known, l, len, len1, len2, len3, len4, len5, len6, len7, len8, m, match, n, nodeBoundsStart, o, p, position, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, results6, results7, results8, space, statement, string, switchCase;
     switch (node.type) {
       case 'Program':
         ref = node.body;
@@ -69074,12 +69107,37 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           this.jsSocketAndMark(indentDepth, node.callee.object, depth + 1, NEVER_PAREN);
         }
         ref5 = node["arguments"];
-        results4 = [];
         for (i = m = 0, len3 = ref5.length; m < len3; i = ++m) {
           argument = ref5[i];
-          results4.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref6 = known.fn) != null ? (ref7 = ref6.dropdown) != null ? ref7[i] : void 0 : void 0 : void 0));
+          this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref6 = known.fn) != null ? (ref7 = ref6.dropdown) != null ? ref7[i] : void 0 : void 0 : void 0, (i === 0 && node["arguments"].length === 1 ? '' : void 0));
         }
-        return results4;
+        if (!known && node["arguments"].length === 0) {
+          position = {
+            line: node.callee.loc.end.line,
+            column: node.callee.loc.end.column
+          };
+          string = this.lines[position.line].slice(position.column).match(/^\s*\(/)[0];
+          position.column += string.length;
+          endPosition = {
+            line: position.line,
+            column: position.column
+          };
+          space = this.lines[position.line].slice(position.column).match(/^(\s*)\)/);
+          if (space != null) {
+            endPosition.column += space[1].length;
+          }
+          return this.addSocket({
+            bounds: {
+              start: position,
+              end: endPosition
+            },
+            depth: depth + 1,
+            precedence: NEVER_PAREN,
+            dropdown: null,
+            classes: ['mostly-value'],
+            empty: ''
+          });
+        }
         break;
       case 'MemberExpression':
         this.jsBlock(node, depth, bounds);
@@ -69091,12 +69149,12 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
       case 'VariableDeclaration':
         this.jsBlock(node, depth, bounds);
         ref8 = node.declarations;
-        results5 = [];
+        results4 = [];
         for (n = 0, len4 = ref8.length; n < len4; n++) {
           declaration = ref8[n];
-          results5.push(this.mark(indentDepth, declaration, depth + 1));
+          results4.push(this.mark(indentDepth, declaration, depth + 1));
         }
-        return results5;
+        return results4;
         break;
       case 'VariableDeclarator':
         this.jsSocketAndMark(indentDepth, node.id, depth);
@@ -69116,24 +69174,24 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
       case 'ObjectExpression':
         this.jsBlock(node, depth, bounds);
         ref9 = node.properties;
-        results6 = [];
+        results5 = [];
         for (o = 0, len5 = ref9.length; o < len5; o++) {
           property = ref9[o];
           this.jsSocketAndMark(indentDepth, property.key, depth + 1);
-          results6.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
+          results5.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
         }
-        return results6;
+        return results5;
         break;
       case 'SwitchStatement':
         this.jsBlock(node, depth, bounds);
         this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
         ref10 = node.cases;
-        results7 = [];
+        results6 = [];
         for (p = 0, len6 = ref10.length; p < len6; p++) {
           switchCase = ref10[p];
-          results7.push(this.mark(indentDepth, switchCase, depth + 1, null));
+          results6.push(this.mark(indentDepth, switchCase, depth + 1, null));
         }
-        return results7;
+        return results6;
         break;
       case 'SwitchCase':
         if (node.test != null) {
@@ -69149,12 +69207,12 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
             prefix: prefix
           });
           ref11 = node.consequent;
-          results8 = [];
+          results7 = [];
           for (q = 0, len7 = ref11.length; q < len7; q++) {
             statement = ref11[q];
-            results8.push(this.mark(indentDepth, statement, depth + 2));
+            results7.push(this.mark(indentDepth, statement, depth + 2));
           }
-          return results8;
+          return results7;
         }
         break;
       case 'TryStatement':
@@ -69176,16 +69234,16 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
       case 'ArrayExpression':
         this.jsBlock(node, depth, bounds);
         ref12 = node.elements;
-        results9 = [];
+        results8 = [];
         for (r = 0, len8 = ref12.length; r < len8; r++) {
           element = ref12[r];
           if (element != null) {
-            results9.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
+            results8.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
           } else {
-            results9.push(void 0);
+            results8.push(void 0);
           }
         }
-        return results9;
+        return results8;
         break;
       case 'Literal':
         return null;
@@ -70305,6 +70363,19 @@ exports.Token = Token = (function() {
     this.version = 0;
   }
 
+  Token.prototype.getLinesToParent = function() {
+    var head, lines;
+    head = this;
+    lines = 0;
+    while (head !== this.parent.start) {
+      if (head.type === 'newline') {
+        lines++;
+      }
+      head = head.prev;
+    }
+    return lines;
+  };
+
   Token.prototype.setParent = function(parent1) {
     this.parent = parent1;
   };
@@ -71250,7 +71321,13 @@ exports.Parser = Parser = (function() {
           lastIndex = mark.location.column;
         }
         if (!(lastIndex >= line.length)) {
-          head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          if (stack.length === 0 || stack[stack.length - 1].type === 'indent') {
+            block = this.constructHandwrittenBlock(line.slice(lastIndex, line.length));
+            helper.connect(head, block.start);
+            head = block.end;
+          } else {
+            head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          }
         }
         head = helper.connect(head, new model.NewlineToken());
       }
@@ -71808,6 +71885,7 @@ DEFAULT_OPTIONS = {
   dropAreaHeight: 20,
   indentDropAreaMinWidth: 50,
   minSocketWidth: 10,
+  invisibleSocketWidth: 5,
   textHeight: 15,
   textPadding: 1,
   emptyLineWidth: 50,
@@ -73225,6 +73303,11 @@ exports.View = View = (function() {
 
     SocketViewNode.prototype.shouldAddTab = NO;
 
+    SocketViewNode.prototype.isInvisibleSocket = function() {
+      var ref;
+      return '' === this.model.emptyString && ((ref = this.model.start) != null ? ref.next : void 0) === this.model.end;
+    };
+
     SocketViewNode.prototype.computeMinDimensions = function() {
       var dimension, j, len1, ref;
       if (this.computedVersion === this.model.version) {
@@ -73237,7 +73320,7 @@ exports.View = View = (function() {
       ref = this.minDimensions;
       for (j = 0, len1 = ref.length; j < len1; j++) {
         dimension = ref[j];
-        dimension.width = Math.max(dimension.width, this.view.opts.minSocketWidth);
+        dimension.width = Math.max(dimension.width, this.isInvisibleSocket() ? this.view.opts.invisibleSocketWidth : this.view.opts.minSocketWidth);
         if (this.model.hasDropdown() && this.view.opts.showDropdowns) {
           dimension.width += helper.DROPDOWN_ARROW_WIDTH;
         }
@@ -73263,7 +73346,7 @@ exports.View = View = (function() {
     };
 
     SocketViewNode.prototype.computeOwnPath = function() {
-      var view;
+      var ref, view;
       if (this.computedVersion === this.model.version && !this.changedBoundingBox) {
         return this.path;
       }
@@ -73273,8 +73356,11 @@ exports.View = View = (function() {
       } else {
         SocketViewNode.__super__.computeOwnPath.apply(this, arguments);
       }
-      this.path.style.fillColor = '#FFF';
-      this.path.style.strokeColor = '#FFF';
+      if ('' === this.model.emptyString && ((ref = this.model.start) != null ? ref.next : void 0) === this.model.end) {
+        this.path.style.fillColor = this.path.style.strokeColor = 'rgba(0,0,0,0)';
+      } else {
+        this.path.style.fillColor = this.path.style.strokeColor = '#FFF';
+      }
       return this.path;
     };
 

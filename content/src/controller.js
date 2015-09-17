@@ -1863,18 +1863,23 @@ function instrumentCode(code, language) {
   try {
     if (language === 'javascript') {
       options = {
-        traceFunc: 'ide.trace'
+        traceFunc: 'ide.trace',
+        includeArgsStrings: true,
+        sourceMap: true
       };
-      code = pencilTracer.instrumentJs('', code, options);
+      result = pencilTracer.instrumentJs(code, options);
+      debug.setSourceMap(result.map);
+      code = result.code;
     } else if (language === 'coffeescript') {
       options = {
         traceFunc: 'ide.trace',
+        includeArgsStrings: true,
         sourceMap: true,
         bare: true
       };
-      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
-      debug.setSourceMap(result.v3SourceMap);
-      code = result.js;
+      result = pencilTracer.instrumentCoffee(code, icedCoffeeScript, options);
+      debug.setSourceMap(result.map);
+      code = result.code;
     }
   } catch (err) {
     // An error here means that either the user's code has a syntax error, or
