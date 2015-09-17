@@ -7,7 +7,6 @@ var express = require('express'),
     load = require('./load.js'),
     config = require('./config'),
     utils = require('./utils.js');
-    dbServer=require('./microdbserver.js')('./local/data');
 
 exports.initialize = function(app) {
   // Remove the express header.
@@ -82,11 +81,6 @@ exports.initialize2 = function(app) {
   app.use('/save', function(req, res) {
     save.handleSave(req, res, app);
   });
-  
-  
-  //DB
-  app.use('/data', dbServer);
-  
 
   // Rewrite user.pencilcode.net/filename to user.pencilcode.net/user/filename,
   // and then serve the static data.
