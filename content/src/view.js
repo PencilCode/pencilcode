@@ -1529,6 +1529,7 @@ function getDefaultThumbnail(type) {
     'image/x-icon'      : 'file-image.png',
     'text/html'         : 'file-html.png',
     'text/plain'        : 'file-txt.png',
+    'text/csv'          : 'file-txt.png',
     'text/css'          : 'file-css.png',
     'text/coffeescript' : 'file-coffee.png',
     'text/javascript'   : 'file-js.png',
@@ -1593,6 +1594,7 @@ function modeForMimeType(mimeType) {
     'text/css': 'css',
     'text/javascript': 'javascript',
     'text/plain': 'text',
+    'text/csv': 'text',
     'image/svg+xml': 'xml',
     'text/xml': 'xml'
   }[mimeType];

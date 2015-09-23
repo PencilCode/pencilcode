@@ -299,6 +299,7 @@ function mimeForFilename(filename) {
     'ico'  : 'image/x-icon',
     'htm'  : 'text/html',
     'html' : 'text/html',
+    'csv'  : 'text/csv',
     'txt'  : 'text/plain',
     'text' : 'text/plain',
     'css'  : 'text/css',
