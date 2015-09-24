@@ -176,10 +176,10 @@ module.exports = {
           block: '@grow 3',
           title: 'Grow the size of the turtle'
         }, {
-          block: '@ht()',
+          block: '@hide()',
           title: 'Hide the main turtle'
         }, {
-          block: '@st()',
+          block: '@show()',
           title: 'Show the main turtle'
         }, {
           block: 'cs()',
@@ -521,10 +521,10 @@ module.exports = {
           block: '@grow(3);',
           title: 'Grow the size of the turtle'
         }, {
-          block: '@ht();',
+          block: '@hide();',
           title: 'Hide the main turtle'
         }, {
-          block: '@st();',
+          block: '@show();',
           title: 'Show the main turtle'
         }, {
           block: 'cs();',
