@@ -11,7 +11,17 @@ describe('code editor', function() {
   var _ph, _page;
   before(function(done) {
     // Create the headless webkit browser.
-    phantom.create(function(error, ph) {
+    phantom.create({
+      path: phantomjs.path,
+      parameters: {
+        // Use the test server as a proxy server, so that all requests
+        // go to this server (instead of trying real DNS lookups).
+        proxy: '127.0.0.1:8193',
+        // Set the disk storage to zero to avoid persisting localStorage
+        // between test runs.
+        'local-storage-quota': 0
+      }
+    }, function(error, ph) {
       assert.ifError(error);
       // Open a page for browsing.
       _ph = ph;
@@ -31,17 +41,6 @@ describe('code editor', function() {
           });
         });
       });
-    }, {
-      // Launch phantomjs from the phantomjs package.
-      phantomPath: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
     });
   });
   after(function() {
