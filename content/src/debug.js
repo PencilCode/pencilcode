@@ -40,8 +40,10 @@ Error.stackTraceLimit = 20;
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
-function bindframe(w) {
+function bindframe(w, p) {
   if (!targetWindow && !w || targetWindow === w) return;
+  // Do not bind to nested subframes - only an immediate child frame.
+  if (targetWindow && p !== window) return;
   targetWindow = w;
   cachedParseStack = {};
   debugRecordsByDebugId = {};
@@ -55,6 +57,7 @@ function bindframe(w) {
     moves: 0
   };
   startPollingWindow();
+  return true;
 }
 
 // Exported functions from the edit-debug module are exposed
@@ -152,7 +155,8 @@ function detectStuckProgram() {
   if (!stuckTime) {
     stuckTime = currentTime;
     targetWindow.eval(
-      'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
+      'setTimeout(function() { var w = window; w.ide && w.ide.reportEvent ' +
+      '&& ide.reportEvent("pulse"); }, 100);'
     );
   }
   var limit = stuckTrivialTime;
