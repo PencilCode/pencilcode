@@ -1414,6 +1414,38 @@ function updatePaneLinks(pane) {
     } else {
       $('<span/>', { text: list[j].name }).appendTo(figure);
     }
+    
+    (function(element,item){
+
+      var menus=[
+            {
+              name:"rename",
+              action:function(){
+                console.log("rename action "+"["+item.name+"]")
+              }
+            },
+            {
+              name:"delete",
+              action:function(){
+                console.log("delete action"+"["+item.name+"]")
+              }
+            },
+            {
+              name:"move to",
+              action:function(){
+                console.log("move action"+"["+item.name+"]")
+              },
+              options:[
+                {name:"share",action:function(){console.log("move action to share"+"["+item.name+"]")}},
+                {name:"test",action:function(){console.log("move action to test"+"["+item.name+"]")}},
+                {name:"dev",action:function(){console.log("move action to dev"+"["+item.name+"]")}}
+              ]
+            }
+          ];
+
+      element.addRightClickMenu(menus);
+    })(item,list[j]);
+    
     if (list[j].link) {
       item.data('link', list[j].link);
     }
@@ -1484,13 +1516,137 @@ function updatePaneLinks(pane) {
     }, 600);
   });
   
+  $('.thumbnail').on('click', function(){
+    clearRightClickMenus();
+  });
+  $('.caption').on('click', function(){
+    clearRightClickMenus();
+  });
+    
   setVisibilityOfSearchTextField(pane);
 }
 
-(function($) {
-    $.fn.hasScrollBar = function() {
-        return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
+function clearRightClickMenus(){
+  $('.right-click-menu').css('display','none');
+  $('.right-click-active').removeClass('right-click-active');
+}
+
+//Listeners tomanage Right CLick Menu
+(function (){
+  function clickInsideElement( e, className ) {
+    var el = e.srcElement || e.target;
+    
+    if ( el.classList.contains(className) ) {
+      return el;
+    } else {
+      while ( el = el.parentNode ) {
+        if ( el.classList && el.classList.contains(className) ) {
+          return el;
+        }
+      }
     }
+
+    return false;
+  }
+  
+  //Listens for click events.
+  (function () {
+    document.addEventListener( "click", function(e) {
+      var clickeElIsLink = clickInsideElement( e, 'right-click-menu' );
+
+      if ( !clickeElIsLink ) {
+          clearRightClickMenus();
+      }
+    });
+  })();
+
+  //Listens for keyup events.
+  (function () {
+    window.onkeyup = function(e) {
+      if ( e.keyCode === 27 ) {
+        clearRightClickMenus();
+      }
+    }
+  })();
+
+  //Window resize event listener
+  (function () {
+    window.onresize = function(e) {
+      clearRightClickMenus();
+    };
+  })();
+})();
+
+(function($) {
+    $.fn.extend({
+      hasScrollBar : function() {
+        return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
+      },
+      addRightClickMenu:function(menus){
+        this.each(function() {
+          function getMenu(menus) {
+            var menu=$('<ul/>');
+            menus.forEach(function(m) {
+              var li=$('<li/>').appendTo(menu);
+              var menuLink=$('<a/>',{text:m.name}).appendTo(li);
+              menuLink.on('click',function(e){
+                m.action(e);
+                e.preventDefault();
+              });
+              
+              if(m.options) {
+                li.append(getMenu(m.options));
+                li.append($('<a/>',{class:"more-options-icon"}).append($('<i/>',{class:"fa fa-caret-right"})));
+              }
+            });
+            return menu;
+          }
+          
+          function getRightClickMenuDiv(){
+            var rightClickMenuDiv = $('.right-click-menu');
+            if(rightClickMenuDiv.length==0){
+              rightClickMenuDiv=$('<div/>',{class:"right-click-menu"}).appendTo($('body'));
+            }
+            return rightClickMenuDiv;
+          }
+          
+          $(this).on('contextmenu', function(e) {
+            clearRightClickMenus();
+            console.log("Clicked " + e.pageX + " , " + e.pageY)
+            var left, top;
+
+            $(this).addClass('right-click-active');
+            var menu=getRightClickMenuDiv();
+            menu.html(getMenu(menus));
+
+            var clickCoordsX = e.pageX;
+            var clickCoordsY = e.pageY;
+            var menuWidth = menu.offsetWidth + 4;
+            var menuHeight = menu.offsetHeight + 4;
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+
+            if ( (windowWidth - clickCoordsX) < menuWidth) {
+              left = windowWidth - menuWidth + "px";
+            } else {
+              left = clickCoordsX + "px";
+            }
+
+            if ((windowHeight - clickCoordsY) < menuHeight) {
+              top = windowHeight - menuHeight + "px";
+            } else {
+              top = clickCoordsY + "px";
+            }
+
+            $(menu).css('display', 'block')
+              .css('left',left)
+              .css('top',top);
+
+            e.preventDefault();
+          });
+        });
+      }
+    });
 })(jQuery);
 
 function setVisibilityOfSearchTextField(pane) {

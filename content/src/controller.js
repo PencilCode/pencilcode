@@ -276,6 +276,19 @@ function updateTopControls(addHistory) {
   view.setPaneEditorReadOnly(paneatpos('left'), !model.editmode);
 }
 
+
+view.on('itemRename', function(pane, item, succssCB, errorCB) {
+  console.log("Controller - Rename "+item.name);
+});
+view.on('itemDelete', function(pane, item, succssCB, errorCB) {
+  console.log("Controller - Delete "+item.name);
+});
+view.on('itemMoveTo', function(pane, item, moveToItem, succssCB, errorCB) {
+  console.log("Controller - Move "+item.name+" to "+moveToItem.name);
+});
+
+
+
 //
 // Set up some logging event handlers.
 //
@@ -2100,7 +2113,7 @@ function updateSearchResults(pane, search, cb) {
       updateViewAndCache(results, getUpdatedLinksArray(pane), cache);
     }
   }
-  
+
   function updateViewAndCache(list, viewlist, cache) {
     view.setPaneLinks(pane, viewlist);
     cb && cb();

@@ -876,13 +876,14 @@ body#pencildoc #diigolet-csm {
       padding: 2px;
     }
   }
-  &:hover {
+  &:hover, &.right-click-active {
     text-decoration: underline;
     color: blue;
     div .thumbnail {
       padding: 0px;
       border-width: 2px;
       border-color: #1679FF;
+      /*box-shadow: 1px 1px 1px 1px rgb(168, 168, 168);*/
     }
     span:not(.caption) {
       display: table;
@@ -1402,4 +1403,53 @@ body#pencildoc #diigolet-csm {
   margin: 0px;
   list-style: none;
   display: inline-flex;
+}
+
+.right-click-menu,.directory .item div.right-click-menu{
+  display: none;
+  z-index: 50;
+  position: fixed;
+  padding: 0px;
+  ul {
+    position: relative;
+    list-style-type: none;
+    line-height: 20px;
+    margin: 0px;
+    padding: 0px;
+    width: 100px;
+    box-shadow: rgb(100, 100, 100) 1px 1px 10px 1px;
+    
+    & > li {
+      color: rgb(112, 112, 114);
+      background-color: white;
+      font-size: 12px;
+      padding-left: 5px;
+      padding-right: 5px;
+      border-left: 3px solid #FFFFFF;
+      a.more-options-icon {
+        float: right;
+        padding-left: 5px;
+      }
+      & > ul{
+        display: none;
+      }
+      &:hover{
+        background-color: #D7D6D6;
+        border-left: 3px solid #736f6f;
+        & > ul{
+          display: inline-block;
+          left: 100%;
+          position: absolute;
+        }
+      }
+      &:first-child{
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+      }
+      &:last-child{
+          border-bottom-left-radius: 2px;
+          border-bottom-right-radius: 2px;
+      }
+    }
+  }
 }
