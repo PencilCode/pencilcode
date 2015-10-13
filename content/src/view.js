@@ -2261,7 +2261,8 @@ function editorMimeType(paneState) {
 }
 
 function editorHasAnyErrors(editor) {
-  if (!editor) return false;
+  if (!editor || editor.currentlyUsingBlocks) return false;
+  if (editor.aceEditor) { editor = editor.aceEditor; }
   var annot = editor.getSession().getAnnotations();
   for (var j = 0; j < annot.length; ++j) {
     if (annot[j].type == 'error')
