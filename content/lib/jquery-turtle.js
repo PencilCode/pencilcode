@@ -7729,7 +7729,7 @@ $.fn.extend(turtlefn);
 // * Sets up a global "hatch" function to make a new turtle.
 //////////////////////////////////////////////////////////////////////////
 
-var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7"
+var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7";
 
 var eventfn = { click:1, dblclick:1, mouseup:1, mousedown:1, mousemove:1 };
 
@@ -8039,12 +8039,16 @@ var dollar_turtle_methods = {
   readnum: wrapglobalcommand('readnum',
   ["<u>readnum(html, fn)</u> Reads numeric input. Only numbers allowed: " +
       "<mark>readnum 'Amount?', (v) -> write 'Tip: ' + (0.15 * v)</mark>"],
-  doOutput, function readnum(a, b) { return prepareInput(a, b, 1); }),
+  doOutput, function readnum(a, b) { return prepareInput(a, b, 'number'); }),
   readstr: wrapglobalcommand('readstr',
   ["<u>readstr(html, fn)</u> Reads text input. Never " +
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
-  doOutput, function readstr(a, b) { return prepareInput(a, b, -1); }),
+  doOutput, function readstr(a, b) { return prepareInput(a, b, 'text'); }),
+  readvoice: wrapglobalcommand('readvoice',
+  ["<u>readvoice(html, fn)</u> Reads voice input, if the browser supports it:" +
+      "<mark>readvoice 'Say something', (v) -> write v</mark>"],
+  doOutput, function readstr(a, b) { return prepareInput(a, b, 'voice'); }),
   menu: wrapglobalcommand('menu',
   ["<u>menu(map)</u> shows a menu of choices and calls a function " +
       "based on the user's choice: " +
@@ -9425,8 +9429,8 @@ function plainBoxPrint(clr, text) {
     maxWidth: '1.2em',
     overflow: 'hidden'
   }).appendTo(getTrailingPre()), finish = function() {
-    if (clr) { elem.css({background: clr}); }
-    if (text) { elem.text(text); }
+    if (clr != null) { elem.css({background: clr}); }
+    if (text != null) { elem.text(text); }
   };
   if (!global_turtle) {
     finish();
@@ -9635,18 +9639,24 @@ function prepareButton(name, callback) {
 // for creating an input box with a label, for one-shot input
 //////////////////////////////////////////////////////////////////////////
 
+var microphoneSvg = "data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20260%20400%22><path%20d=%22M180,210c0,26-22,48-48,48h-12c-26,0-48-22-48-48v-138c0-26,22-48,48-48h12c26,0,48,22,48,48zm51,-31h-9c-5,0-9,4-9,9v8c0,50-37,91-87,91c-50,0-87-41-87-91v-8c0-5-4-9-9-9h-9c-5,0-9,4-9,9v8c0,59,40,107,96,116v37h-34c-5,0-9,4-9,9v18c0,5,4,9,9,9h105c5,0,9-4,9-9v-18c0-5-5-9-9-9h-34v-37c56-9,96-58,96-116v-8c0-5-4-9-9-9%22/></svg>"
+
 // Simplify $('body').append('<input>' + label) and onchange hookup.
-function prepareInput(name, callback, numeric) {
+// Type can be 'auto', 'number', 'text', or 'voice' for slightly
+// different interfaces.
+function prepareInput(name, callback, type) {
   if ($.isFunction(name) && !callback) {
     callback = name;
     name = null;
   }
+  if (!type) { type = 'auto'; }
   name = $.isNumeric(name) || name ? name : '&rArr;';
   var textbox = $('<input class="turtleinput">').css({margin:0, padding:0}),
       label = $('<label style="display:table">' + name + '&nbsp;' +
         '</label>').append(textbox),
       debounce = null,
-      lastseen = textbox.val();
+      lastseen = textbox.val(),
+      recognition = null;
   function dodebounce() {
     if (!debounce) {
       debounce = setTimeout(function() { debounce = null; }, 1000);
@@ -9660,15 +9670,15 @@ function prepareInput(name, callback, numeric) {
     lastseen = val;
     textbox.remove();
     label.append(val).css({display: 'table'});
-    if (numeric > 0 || (
-      numeric >= 0 && $.isNumeric(val) && ('' + parseFloat(val) == val))) {
+    if (type == 'number' || (type == 'auto' &&
+      $.isNumeric(val) && ('' + parseFloat(val) == val))) {
       val = parseFloat(val);
     }
     label.prop('value', val);
     if (callback) { setTimeout(function() {callback.call(label, val); }, 0); }
   }
   function validate() {
-    if (numeric <= 0) return true;
+    if (type != 'numeric') return true;
     var val = textbox.val(),
         nval = val.replace(/[^0-9\.]/g, '');
     if (val != nval || !$.isNumeric(nval)) {
@@ -9682,10 +9692,52 @@ function prepareInput(name, callback, numeric) {
       if (!validate()) { return false; }
       newval();
     }
-    if (numeric > 0 && (e.which >= 32 && e.which <= 127) &&
+    if (type == 'voice' && recognition) {
+      recognition.abort();
+      recognition = null;
+    }
+    if (type == 'numeric' && (e.which >= 32 && e.which <= 127) &&
         (e.which < '0'.charCodeAt(0) || e.which > '9'.charCodeAt(0)) &&
         (e.which != '.'.charCodeAt(0) || ~textbox.val().indexOf('.'))) {
       return false;
+    }
+  }
+  if (type == 'voice') {
+    var SR = global.SpeechRecognition || global.webkitSpeechRecognition;
+    if ('function' == typeof(SR)) {
+      try {
+        recognition = new SR();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        textbox.css({backgroundColor: 'lightyellow',
+          color: 'gray',
+          backgroundImage: "url(" + microphoneSvg + ")",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center'});
+        recognition.onspeechstart = function() {
+          textbox.css({background: 'lightgreen'});
+        };
+        recognition.onend = function() {
+          textbox.css({color: '', backgroundColor: '', backgroundImage: '',
+            backgroundRepeat: '', backgroundPosition: ''});
+          textbox.val(lastseen);
+          newval();
+        };
+        recognition.onresult = function(event) {
+          var text = event.results[0][0].transcript;
+          var confidence = event.results[0][0].confidence;
+          var shade = 128 - 128 * confidence;
+          if (event.results[0].isFinal) {
+            shade = 0;
+            lastseen = text;
+          }
+          textbox.css({color: componentColor('rgb', shade, shade, shade)});
+          textbox.val(text);
+        };
+        recognition.start();
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
   textbox.on('keypress keydown', key);
@@ -9694,7 +9746,7 @@ function prepareInput(name, callback, numeric) {
     result: label,
     setup: function() {
       dodebounce();
-      if (numeric < 0) {
+      if (type == 'text' || type == 'voice') {
         // Widen a "readstr" textbox to make it fill the line.
         var availwidth = label.parent().width(),
             freewidth = availwidth + label.offset().left - textbox.offset().left,

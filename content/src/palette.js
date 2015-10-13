@@ -3,6 +3,10 @@ function filterblocks(a) {
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
     a = a.filter(function(b) { return !/^@?say\b/.test(b.block); });
   }
+  // Show 'readvoice' blocks only on browsers that support speech recognition.
+  if (!window.webkitSpeechRecognition || window.SpeechRecognition) {
+    a = a.filter(function(b) { return !/\breadvoice\b/.test(b.block); });
+  }
   return a.map(function(e) {
     if (!e.id) {
       // As the id (for logging), use the first (non-puncutation) word
@@ -287,6 +291,9 @@ module.exports = {
           block: 'write \'Hello.\'',
           title: 'Write text in the document'
         }, {
+          block: 'debug x',
+          title: 'Log an object to debug'
+        }, {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
         }, {
@@ -305,14 +312,17 @@ module.exports = {
           block: "await readnum '?', defer x",
           title: "Pause for a number from the user"
         }, {
+          block: "await readvoice defer x",
+          title: "Pause for spoken words from the user"
+        }, {
           block: 'read \'?\', (x) ->\n  write x',
           title: 'Send input from the user to a function'
         }, {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'debug x',
-          title: 'Log an object to debug'
+          block: 'readvoice (x) ->\n  write x',
+          title: 'Send spoken words from the user to a function'
         }
       ])
     }, {
@@ -625,6 +635,9 @@ module.exports = {
           block: 'write(\'Hello.\');',
           title: 'Write text in the document'
         }, {
+          block: 'debug(x);',
+          title: 'Log an object to debug'
+        }, {
           block: 'type(\'zz*(-.-)*zz\');',
           title: 'Typewrite text in the document'
         }, {
@@ -643,8 +656,8 @@ module.exports = {
           block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
           title: 'Send a number from the user to a function'
         }, {
-          block: 'debug(x);',
-          title: 'Log an object to debug'
+          block: 'readvoice(function(x) {\n  write(x);\n});',
+          title: 'Send spoken words from the user to a function'
         }
       ])
     }, {
@@ -1088,6 +1101,7 @@ module.exports = {
     button: {value: true, command: true, color: 'orange'},
     read: {value: true, command: true, color: 'pink'},
     readstr: {value: true, command: true, color: 'pink'},
+    readvoice: {value: true, command: true, color: 'pink'},
     readnum: {value: true, command: true, color: 'pink'},
     write: {value: true, command: true, color: 'pink'},
     table: {value: true, command: true, color: 'yellow'},
