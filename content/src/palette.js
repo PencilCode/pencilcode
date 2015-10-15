@@ -836,10 +836,10 @@ module.exports = {
           block: "<a href=\"\"></a>",
           title: "Defines a hyperlink, which is used to link from one page to another"
         }, {
-          block: "<img src=\"\" alt=\"\">",
+          block: "<img src=\"\">",
           title: "Image"
         }, {
-          block: "<iframe></iframe>",
+          block: "<iframe src=\"\"></iframe>",
           expansion: "<iframe>\n  \n</iframe>",
           title: "Nested browsing context"
         }, {
@@ -943,7 +943,7 @@ module.exports = {
           expansion: "<textarea>\n  \n</textarea>",
           title: "Multi-line text input"
         }, {
-          block: "<label for=\"\"></label>",
+          block: "<label></label>",
           title: "Label for an input element"
         }, {
           block: "<button></button>",
