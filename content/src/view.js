@@ -1650,7 +1650,8 @@ function dropletOptionsForMimeType(mimeType) {
   } else {
     return {
       functions: palette.KNOWN_FUNCTIONS,
-      categories: palette.CATEGORIES
+      categories: palette.CATEGORIES,
+      zeroParamFunctions: true
     };
   }
 }
