@@ -986,6 +986,8 @@ module.exports = {
     '?.pause': {color: 'lightblue'},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
+    '?.show': {color: 'purple'},
+    '?.hide': {color: 'purple'},
     '?.cs': {color: 'purple'},
     '?.cg': {color: 'purple'},
     '?.ct': {color: 'purple'},
