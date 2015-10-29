@@ -3,9 +3,9 @@ function filterblocks(a) {
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
     a = a.filter(function(b) { return !/^@?say\b/.test(b.block); });
   }
-  // Show 'readvoice' blocks only on browsers that support speech recognition.
+  // Show 'listen' blocks only on browsers that support speech recognition.
   if (!window.webkitSpeechRecognition || window.SpeechRecognition) {
-    a = a.filter(function(b) { return !/\breadvoice\b/.test(b.block); });
+    a = a.filter(function(b) { return !/\blisten\b/.test(b.block); });
   }
   return a.map(function(e) {
     if (!e.id) {
@@ -177,6 +177,9 @@ module.exports = {
           block: '@wear \'/img/apple\'',
           title: 'Use an image for the turtle'
         }, {
+          block: 'img \'/img/bird\'',
+          title: 'Write an image on the screen'
+        }, {
           block: '@grow 3',
           title: 'Grow the size of the turtle'
         }, {
@@ -312,17 +315,11 @@ module.exports = {
           block: "await readnum '?', defer x",
           title: "Pause for a number from the user"
         }, {
-          block: "await readvoice defer x",
-          title: "Pause for spoken words from the user"
-        }, {
           block: 'read \'?\', (x) ->\n  write x',
           title: 'Send input from the user to a function'
         }, {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Send a number from the user to a function'
-        }, {
-          block: 'readvoice (x) ->\n  write x',
-          title: 'Send spoken words from the user to a function'
         }
       ])
     }, {
@@ -381,6 +378,12 @@ module.exports = {
         }, {
           block: '@silence()',
           title: 'Silence all notes'
+        }, {
+          block: "await listen defer x",
+          title: "Pause for spoken words from the user"
+        }, {
+          block: 'listen (x) ->\n  write x',
+          title: 'Send spoken words from the user to a function'
         }, {
           block: '@say \'hello\'',
           title: 'Speak a word'
@@ -655,9 +658,6 @@ module.exports = {
         }, {
           block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
           title: 'Send a number from the user to a function'
-        }, {
-          block: 'readvoice(function(x) {\n  write(x);\n});',
-          title: 'Send spoken words from the user to a function'
         }
       ])
     }, {
@@ -712,6 +712,9 @@ module.exports = {
         }, {
           block: '@silence();',
           title: 'Silence all notes'
+        }, {
+          block: 'listen (function(x) {\n  write(x);\n});',
+          title: 'Send spoken words from the user to a function'
         }, {
           block: '@say(\'hello\');',
           title: 'Speak a word'
@@ -979,6 +982,7 @@ module.exports = {
     '?.fill': {color: 'purple', dropdown: [colors]},
     '?.dot': {color: 'purple', dropdown: [colors, sizes]},
     '?.box': {color: 'purple', dropdown: [colors, sizes]},
+    '?.img': {color: 'purple'},
     '?.mirror': {color: 'purple'},
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
@@ -1103,9 +1107,10 @@ module.exports = {
     button: {value: true, command: true, color: 'orange'},
     read: {value: true, command: true, color: 'pink'},
     readstr: {value: true, command: true, color: 'pink'},
-    readvoice: {value: true, command: true, color: 'pink'},
     readnum: {value: true, command: true, color: 'pink'},
+    listen: {value: true, command: true, color: 'indigo'},
     write: {value: true, command: true, color: 'pink'},
+    img: {value: true, command: true, color: 'purple'},
     table: {value: true, command: true, color: 'yellow'},
     '*.splice': {value: true, command: true},
     '*.append': {value: true, command: true},

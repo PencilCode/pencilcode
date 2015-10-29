@@ -248,7 +248,7 @@ describe('wait_code', function() {
       // Click on the triangle run button.
       var seval = $('.preview iframe')[0].contentWindow.see.eval;
       seval("$('.turtleinput').val('computer, who are you?')");
-      seval("$('.turtleinput').change()");
+      seval("$('label button').click()");
     }, function() {
       try {
         // The preview frame should be showing...

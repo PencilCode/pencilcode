@@ -8046,9 +8046,9 @@ var dollar_turtle_methods = {
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
   doOutput, function readstr(a, b) { return prepareInput(a, b, 'text'); }),
-  readvoice: wrapglobalcommand('readvoice',
-  ["<u>readvoice(html, fn)</u> Reads voice input, if the browser supports it:" +
-      "<mark>readvoice 'Say something', (v) -> write v</mark>"],
+  listen: wrapglobalcommand('listen',
+  ["<u>listen(html, fn)</u> Reads voice input, if the browser supports it:" +
+      "<mark>listen 'Say something', (v) -> write v</mark>"],
   doOutput, function readstr(a, b) { return prepareInput(a, b, 'voice'); }),
   menu: wrapglobalcommand('menu',
   ["<u>menu(map)</u> shows a menu of choices and calls a function " +
@@ -9653,8 +9653,9 @@ function prepareInput(name, callback, type) {
   if (!type) { type = 'auto'; }
   name = $.isNumeric(name) || name ? name : '&rArr;';
   var textbox = $('<input class="turtleinput">').css({margin:0, padding:0}),
+      button = $('<button>Submit</button>').css({marginLeft:4}),
       label = $('<label style="display:table">' + name + '&nbsp;' +
-        '</label>').append(textbox),
+        '</label>').append(textbox).append(button),
       debounce = null,
       lastseen = textbox.val(),
       recognition = null;
@@ -9670,6 +9671,7 @@ function prepareInput(name, callback, type) {
     dodebounce();
     lastseen = val;
     textbox.remove();
+    button.remove();
     label.append(val).css({display: 'table'});
     if (type == 'number' || (type == 'auto' &&
       $.isNumeric(val) && ('' + parseFloat(val) == val))) {
@@ -9704,7 +9706,7 @@ function prepareInput(name, callback, type) {
     }
   }
   textbox.on('keypress keydown', key);
-  textbox.on('change', newval);
+  button.on('click', newval);
   return {
     result: label,
     setup: function() {
@@ -9718,7 +9720,11 @@ function prepareInput(name, callback, type) {
             marginwidth = textbox.outerWidth(true) - textbox.width();
         textbox.width(desiredwidth - marginwidth);
       }
+      if (type == 'number') {
+        textbox.attr('type', 'number');
+      }
       if (type == 'voice') {
+        button.css({display:none});
         var SR = global.SpeechRecognition || global.webkitSpeechRecognition;
         if ('function' == typeof(SR)) {
           try {
