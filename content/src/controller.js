@@ -505,6 +505,7 @@ function runAction() {
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.stopButton('flash');
+  view.publish('startExecute');
   runCodeAtPosition('right', newdata, filename, false);
   logCodeEvent('run', filename, newdata.data,
       view.getPaneEditorBlockMode(paneatpos('left')),
@@ -2100,7 +2101,7 @@ function updateSearchResults(pane, search, cb) {
       updateViewAndCache(results, getUpdatedLinksArray(pane), cache);
     }
   }
-  
+
   function updateViewAndCache(list, viewlist, cache) {
     view.setPaneLinks(pane, viewlist);
     cb && cb();

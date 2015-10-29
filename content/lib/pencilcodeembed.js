@@ -118,6 +118,7 @@
       // hook up noop event handlers
       this.on('load', function(){});
       this.on('update', function(code){});
+      this.on('startExecute', function(){});
       this.on('execute', function(){});
       this.on('error', function(error){});
     }
