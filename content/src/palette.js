@@ -218,6 +218,14 @@ module.exports = {
           title: 'Increase a variable',
           id: 'increment'
         }, {
+          block: 'f = (x) ->\n  ``',
+          title: 'Define a new function',
+          id: 'funcdef'
+        }, {
+          block: 'f(x)',
+          title: 'Use a custom function',
+          id: 'funccall'
+        }, {
           block: '`` is ``',
           title: 'Compare two values',
           id: 'is'
@@ -276,14 +284,6 @@ module.exports = {
           block: 'x.match /pattern/',
           title: 'Test if a text pattern is found in x',
           id: 'match'
-        }, {
-          block: 'f = (x) ->\n  ``',
-          title: 'Define a new function',
-          id: 'funcdef'
-        }, {
-          block: 'f(x)',
-          title: 'Use a custom function',
-          id: 'funccall'
         }
       ])
     }, {
@@ -568,6 +568,12 @@ module.exports = {
           block: 'x += 1;',
           title: 'Increase a variable',
         }, {
+          block: 'function f(x) {\n  __\n}',
+          title: 'Define a new function'
+        }, {
+          block: 'f(x)',
+          title: 'Use a custom function'
+        }, {
           block: '__ === __',
           title: 'Compare two values'
         }, {
@@ -622,12 +628,6 @@ module.exports = {
         }, {
           block: 'x.match(/pattern/)',
           title: 'Test if a text pattern is found in x'
-        }, {
-          block: 'function f(x) {\n  __\n}',
-          title: 'Define a new function'
-        }, {
-          block: 'f(x)',
-          title: 'Use a custom function'
         }
       ])
     }, {
