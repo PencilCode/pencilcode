@@ -345,8 +345,8 @@
       return this.invokeRemote('setBlockOptions', [palette, options]);
     };
 
-    proto.eval = function(code, callback) {
-      return this.invokeRemote('eval', [code], callback);
+    proto.eval = function(code, callback, raw) {
+      return this.invokeRemote('eval', [code, raw], callback);
     }
 
     return PencilCodeEmbed;

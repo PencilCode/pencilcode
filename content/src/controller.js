@@ -2346,7 +2346,7 @@ $(window).on('message', function(e) {
       }
       break;
     case 'eval':
-      evalAndPostback(data.requestid, data.args[0]);
+      evalAndPostback(data.requestid, data.args[0], data.args[1]);
       break;
     case 'beginRun':
       view.fireEvent('run', []);
@@ -2430,10 +2430,10 @@ function createParentPostMessageSink() {
 
 createParentPostMessageSink();
 
-function evalAndPostback(requestid, code) {
+function evalAndPostback(requestid, code, raw) {
   var resultanderror = null;
   if (modelatpos('right').running) {
-    resultanderror = view.evalInRunningPane(paneatpos('right'), code);
+    resultanderror = view.evalInRunningPane(paneatpos('right'), code, raw);
   } else {
     resultanderror = [null, 'error: not running'];
   }
