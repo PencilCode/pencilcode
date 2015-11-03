@@ -23,9 +23,12 @@ var thumbnail = {
     // If there is only a single turtle.
     if (typeof(framejQuery) === 'function' && framejQuery.turtle &&
         turtles.length === 1 && turtles[0].id === 'turtle') {
+      var nowarn = framejQuery.turtle.nowarn;
+      framejQuery.turtle.nowarn = true;
       var turtle = turtles[0];
       var coordinates = framejQuery(turtle).getxy();
       var direction = framejQuery(turtle).direction();
+      framejQuery.turtle.nowarn = nowarn;
       // If the turtle is at its original position and direction, ignore it.
       if (coordinates && coordinates[0] === 0 && coordinates[1] === 0 &&
           direction === 0) {
