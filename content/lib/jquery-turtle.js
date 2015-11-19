@@ -5944,15 +5944,15 @@ function wrapglobalcommand(name, helptext, fn, fnfilter) {
         this.plan(cc.resolver(j));
       });
       cc.exit();
-      if (early && early.result && early.result.constructor === jQuery) {
-        sync(animate, early.result);
-      }
     } else {
       cc = setupContinuation(null, name, arguments, argcount);
       fn.apply(early, arguments);
       cc.exit();
     }
     if (early) {
+      if (early.result && early.result.constructor === jQuery && global_turtle) {
+        sync(global_turtle, early.result);
+      }
       return early.result;
     }
   };
