@@ -174,7 +174,7 @@ module.exports = {
           block: '@fill blue',
           title: 'Fill traced shape'
         }, {
-          block: '@wear \'/img/apple\'',
+          block: '@wear \'apple\'',
           title: 'Use an image for the turtle'
         }, {
           block: 'img \'/img/bird\'',
@@ -528,7 +528,7 @@ module.exports = {
           block: '@fill(blue);',
           title: 'Fill traced shape'
         }, {
-          block: '@wear(\'/img/apple\');',
+          block: '@wear(\'apple\');',
           title: 'Use an image for the turtle'
         }, {
           block: '@grow(3);',

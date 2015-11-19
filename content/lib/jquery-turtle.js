@@ -2689,7 +2689,7 @@ function imgUrl(url) {
   if (/\//.test(url)) { return url; }
   url = '/img/' + url;
   if (isPencilHost(global.location.hostname)) { return url; }
-  return '//pencil.io' + url;
+  return '//pencilcode.net' + url;
 }
 // Retrieves the pencil code login cookie, if there is one.
 function loginCookie() {
@@ -5944,6 +5944,9 @@ function wrapglobalcommand(name, helptext, fn, fnfilter) {
         this.plan(cc.resolver(j));
       });
       cc.exit();
+      if (early && early.result && early.result.constructor === jQuery) {
+        sync(animate, early.result);
+      }
     } else {
       cc = setupContinuation(null, name, arguments, argcount);
       fn.apply(early, arguments);
@@ -6425,6 +6428,39 @@ function drawArrowLine(c, w, x0, y0, x1, y1) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// VOICE SYNTHESIS
+// Method for uttering words.
+//////////////////////////////////////////////////////////////////////////
+function utterSpeech(words, cb) {
+  var pollTimer = null;
+  function complete() {
+    if (pollTimer) { clearInterval(pollTimer); }
+    if (cb) { cb(); }
+  }
+  if (!global.speechSynthesis) {
+    console.log('No speech synthesis: ' + words);
+    complete();
+    return;
+  }
+  try {
+    var msg = new global.SpeechSynthesisUtterance(words);
+    msg.addEventListener('end', complete);
+    msg.addEventListener('error', complete);
+    msg.lang = navigator.language || 'en-GB';
+    global.speechSynthesis.speak(msg);
+    pollTimer = setInterval(function() {
+      // Chrome speech synthesis fails to deliver an 'end' event
+      // sometimes, so we also poll every 250ms.
+      if (global.speechSynthesis.pending || global.speechSynthesis.speaking) return;
+      complete();
+    }, 250);
+  } catch (e) {
+    if (global.console) { global.console.log(e); }
+    complete();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
 // TURTLE FUNCTIONS
 // Turtle methods to be registered as jquery instance methods.
 //////////////////////////////////////////////////////////////////////////
@@ -6873,35 +6909,13 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.queue(function(next) {
-        var finished = false,
-            pollTimer = null,
-            complete = function() {
-          if (finished) return;
-          clearInterval(pollTimer);
-          finished = true;
+        utterSpeech(words, function() {
           cc.resolve(j);
           next();
-        };
-        try {
-          var msg = new SpeechSynthesisUtterance(words);
-          msg.addEventListener('end', complete);
-          msg.addEventListener('error', complete);
-          msg.lang = 'en-GB';
-          speechSynthesis.speak(msg);
-          pollTimer = setInterval(function() {
-            // Chrome speech synthesis fails to deliver an 'end' event
-            // sometimes, so we also poll every 250ms.
-            if (speechSynthesis.pending || speechSynthesis.speaking) return;
-            complete();
-          }, 250);
-        } catch (e) {
-          if (global.console) { global.console.log(e); }
-          complete();
-        }
+        });
       });
     });
     return this;
-
   }),
   play: wrapcommand('play', 1,
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
@@ -7859,6 +7873,20 @@ var dollar_turtle_methods = {
       "<mark>speed Infinity</mark>"],
   function globalspeed(mps) {
     globaldefaultspeed(mps);
+  }),
+  say: wrapraw('say',
+  ["<u>say(words)</u> Say something. Use English words." +
+      "<mark>say \"Let's go!\"</mark>"],
+  function say(words) {
+    if (global_turtle) {
+      var sel = $(global_turtle);
+      sel.say.call(sel, words);
+    } else {
+      var cc = setupContinuation(null, 'say', arguments, 0);
+      cc.appear(null);
+      utterSpeech(words, function() { cc.resolve(null); });
+      cc.exit();
+    }
   }),
   play: wrapraw('play',
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
@@ -9026,7 +9054,7 @@ function nameToImg(name, defaultshape) {
     // Deal with unquoted "tan" and "dot".
     name = name.helpname || name.name;
   }
-  if (name.constructor === $) {
+  if (name.constructor === jQuery) {
     // Unwrap jquery objects.
     if (!name.length) { return null; }
     name = name.get(0);
@@ -9056,6 +9084,10 @@ function nameToImg(name, defaultshape) {
   }
   if (shape) {
     return shape(color);
+  }
+  // Default to '/img/' URLs if it doesn't match a well-known name.
+  if (!/\//.test(name)) {
+    name = imgUrl(name);
   }
   // Parse URLs.
   if (/\//.test(name)) {
