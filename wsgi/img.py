@@ -168,7 +168,10 @@ def application(env, start_response):
     else:
       redirect_url = '/proxy/' +  redirect_url
 
-    start_response('302 Redirect', [('Location', redirect_url.encode('utf-8'))])
+    start_response('302 Redirect', [
+        ('Access-Control-Allow-Origin', '*'),
+        ('Location', redirect_url.encode('utf-8'))
+    ])
   return []
 
 
