@@ -8626,6 +8626,7 @@ $.turtle = function turtle(id, options) {
 };
 
 $.extend($.turtle, dollar_turtle_methods);
+$.turtle.colors = colors;
 
 function seehelphook(text, result) {
   // Also, check the command to look for (non-CoffeeScript) help requests.
