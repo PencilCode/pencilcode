@@ -277,15 +277,54 @@ function updateTopControls(addHistory) {
 }
 
 
-view.on('itemRename', function(pane, item, succssCB, errorCB) {
+view.on('itemRename', function(pane, item, callback) {
   console.log("Controller - Rename "+item.name);
 });
-view.on('itemDelete', function(pane, item, succssCB, errorCB) {
-  console.log("Controller - Delete "+item.name);
+view.on('itemDelete', function(filename, callback) {
+  console.log("Controller - Delete "+filename);
+  deleteFile(filename, callback);
 });
-view.on('itemMoveTo', function(pane, item, moveToItem, succssCB, errorCB) {
+view.on('itemMoveTo', function(pane, item, moveToItem, callback) {
   console.log("Controller - Move "+item.name+" to "+moveToItem.name);
 });
+
+function deleteFile(filename, callback) {
+  if (model.ownername) {
+    var userValidationError = false;
+    var validateUserLoginPopupCallback;
+    executeDeleteFile();
+
+    function executeDeleteFile () {
+      storage.deleteFile(model.ownername, filename, model.passkey, function (m) {
+        if (validateUserLoginPopupCallback) {
+          validateUserLoginPopupCallback(m)
+        }
+
+        if (m.needauth) {
+          /* Open the login popup only if it has closed
+          */
+          if (!validateUserLoginPopupCallback) {
+            requireLogin("Log in to delete " + filename, null, function (state, validateUserLoginPopup) {
+              validateUserLoginPopupCallback = validateUserLoginPopup;
+              executeDeleteFile(filename, callback);
+            });
+          }
+        } else if (m.error) {
+          view.flashNotification(m.error);
+        } else {
+          view.flashNotification('Deleted ' + filename);
+          // If there is a running on the right, bring it along
+          var rp = modelatpos('right');
+          if (rp.filename == filename) {
+            //Destroy the pane
+            view.clearPane(paneatpos('right'));
+          }
+          callback(m);
+        }
+      });
+    }
+  }
+}
 
 
 
@@ -1577,31 +1616,53 @@ function logInAndMove(filename, newfilename, completeRename) {
   if (!filename || !newfilename) {
     return;
   }
+
+  requireLogin('Log in to rename.', null, function(state) {
+    state.update({info: 'Renaming....', disable: true});
+    storage.moveFile(
+        model.ownername, filename, newfilename, model.passkey, false,
+    function(m) {
+      if (m.needauth) {
+        state.update({info: 'Wrong password.', disable: false});
+        return;
+      }
+      state.update({cancel: true});
+      if (m.error) {
+        view.flashNotification(m.error);
+      } else {
+        saveLoginCookie();
+        if (!specialowner()) {
+          cookie('recent', window.location.href,
+              { expires: 7, path: '/', domain: window.pencilcode.domain });
+        }
+        completeRename();
+      }
+    });
+  });
+}
+
+function requireLogin (promptMessage, validateCB, doneCB) {
   view.showLoginDialog({
-    prompt: 'Log in to rename.',
+    prompt: promptMessage,
     username: model.ownername,
-    validate: function(state) { return {}; },
+    validate: function(state) { 
+      validateCB && validateCB();
+      return {}; 
+    },
     done: function(state) {
       model.username = model.ownername;
       model.passkey = keyFromPassword(model.username, state.password);
-      state.update({info: 'Renaming....', disable: true});
-      storage.moveFile(
-          model.ownername, filename, newfilename, model.passkey, false,
-      function(m) {
+      
+      /* second callback is used to update the login popup
+        according to the user input for the password
+      */      
+      doneCB && doneCB(state, function (m) {
         if (m.needauth) {
           state.update({info: 'Wrong password.', disable: false});
-          return;
-        }
-        state.update({cancel: true});
-        if (m.error) {
-          view.flashNotification(m.error);
+          return false;
         } else {
-          saveLoginCookie();
-          if (!specialowner()) {
-            cookie('recent', window.location.href,
-                { expires: 7, path: '/', domain: window.pencilcode.domain });
-          }
-          completeRename();
+          state.update({cancel: true});
+          return true;
         }
       });
     }

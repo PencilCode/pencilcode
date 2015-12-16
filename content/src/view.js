@@ -1415,19 +1415,30 @@ function updatePaneLinks(pane) {
       $('<span/>', { text: list[j].name }).appendTo(figure);
     }
     
-    (function(element,item){
+
+    //Add the right click menu for items and ignore the last item which is "Add New"
+    if (j != list.length-1) {
+      addRightClickMenu(item, list[j], list, j);
+    }
+
+    function addRightClickMenu (element, item, list, index){
+      var fileName = item.href.substr(6);
 
       var menus=[
             {
               name:"rename",
               action:function(){
-                console.log("rename action "+"["+item.name+"]")
+                console.log("rename action "+"["+item.name+"]");
               }
             },
             {
               name:"delete",
               action:function(){
-                console.log("delete action"+"["+item.name+"]")
+                console.log("delete action"+"["+item.name+"]");
+                fireEvent('itemDelete', [fileName, function () {
+                  list.splice(index,1);
+                  updatePaneLinks(pane);
+                }]);
               }
             },
             {
@@ -1444,7 +1455,7 @@ function updatePaneLinks(pane) {
           ];
 
       element.addRightClickMenu(menus);
-    })(item,list[j]);
+    }
     
     if (list[j].link) {
       item.data('link', list[j].link);
