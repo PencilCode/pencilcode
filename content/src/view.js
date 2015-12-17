@@ -112,6 +112,10 @@ window.pencilcode.view = {
     $('#' + pane + 'title_text').html(html);
   },
   clearPane: clearPane,
+  closePane: function (pane) {
+    clearPane(pane);
+    showMiddleButton(false);
+  },
   setPaneEditorData: setPaneEditorData,
   changePaneEditorText: function(pane, text) {
     return changeEditorText(state.pane[pane], text);
@@ -1390,6 +1394,9 @@ function updatePaneLinks(pane) {
   list = paneState.links;
   if (!list) { return; }
   
+  //Remove all right click menus if there is
+  $('.right-click-menu').remove();
+
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
 

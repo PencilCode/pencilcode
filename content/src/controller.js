@@ -317,7 +317,7 @@ function deleteFile(filename, callback) {
           var rp = modelatpos('right');
           if (rp.filename == filename) {
             //Destroy the pane
-            view.clearPane(paneatpos('right'));
+            view.closePane(paneatpos('right'));
           }
           callback(m);
         }
