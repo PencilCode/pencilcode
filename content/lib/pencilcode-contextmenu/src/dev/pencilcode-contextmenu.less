@@ -1,0 +1,58 @@
+.right-click-menu,.directory .item div.right-click-menu{
+  display: none;
+  z-index: 50;
+  position: fixed;
+  padding: 0px;
+  ul.menu-list{
+    position: relative;
+    list-style-type: none;
+    line-height: 20px;
+    margin: 0px;
+    padding: 0px;
+    width: 100px;
+    box-shadow: rgb(100, 100, 100) 1px 1px 10px 1px;
+    border-top: #D7D6D6 solid 5px;
+    border-bottom: #D7D6D6 solid 5px;
+
+    & > li.menu-item {
+
+	  & > .menu-item-content ul.menu-list{
+	    display: none;
+	  }
+	  &:hover {
+	      
+	    & > .menu-item-content ul.menu-list{
+	      display: inline-block;
+	      left: 100%;
+	      position: absolute;
+	    }
+	  }
+
+	  .menu-item-content {
+	  	padding-left: 5px;
+	  	padding-right: 5px;
+	  	color: rgb(112, 112, 114);
+	    background-color: white;
+	    font-size: 12px;
+        border-left: 3px solid white;
+
+	  	&:hover {
+	      background-color: #D7D6D6;
+          border-left: 3px solid #736f6f;
+	  	}
+
+	  	.left-icon {
+  		    padding-left: 20px;
+    		padding-right: 5px;
+	  		a.more-options-icon {
+		      float: right;
+		      padding-left: 5px;
+		    }
+	  	}
+
+	    
+	  }
+
+    }
+  }
+}
