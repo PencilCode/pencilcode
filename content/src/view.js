@@ -1393,12 +1393,35 @@ function updatePaneLinks(pane) {
   }
   list = paneState.links;
   if (!list) { return; }
-  
-  //Remove all right click menus if there is
-  $('.right-click-menu').remove();
 
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
+
+  var menus=[
+        {
+          name:"new",
+          action:function(){
+            console.log("directory new action");
+          },
+          options:[
+            {name:"file",action:function(){console.log("directory - new file action")}},
+            {name:"folder",action:function(){console.log("directory - new folder action")}}
+          ]
+        },
+        {
+          name:"download",
+          action:function(){
+            console.log("directory download action");
+          }
+        },
+        {
+          name:"upload",
+          action:function(){
+            console.log("directory upload action");
+          }
+        }
+      ];
+  directory.addRightClickMenu(menus);
 
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
@@ -1425,10 +1448,10 @@ function updatePaneLinks(pane) {
 
     //Add the right click menu for items and ignore the last item which is "Add New"
     if (j != list.length-1) {
-      addRightClickMenu(item, list[j], list, j);
+      addRightClickMenuToItems(item, list[j], list, j);
     }
 
-    function addRightClickMenu (element, item, list, index){
+    function addRightClickMenuToItems (element, item, list, index){
       var fileName = item.href.substr(6);
 
       var menus=[
@@ -1446,6 +1469,12 @@ function updatePaneLinks(pane) {
                   list.splice(index,1);
                   updatePaneLinks(pane);
                 }]);
+              }
+            },
+            {
+              name:"download",
+              action:function(){
+                console.log("download action "+"["+item.name+"]");
               }
             },
             {
@@ -1533,136 +1562,17 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
-  
-  $('.thumbnail').on('click', function(){
-    clearRightClickMenus();
-  });
-  $('.caption').on('click', function(){
-    clearRightClickMenus();
-  });
     
   setVisibilityOfSearchTextField(pane);
 }
 
-function clearRightClickMenus(){
-  $('.right-click-menu').css('display','none');
-  $('.right-click-active').removeClass('right-click-active');
-}
 
-//Listeners tomanage Right CLick Menu
-(function (){
-  function clickInsideElement( e, className ) {
-    var el = e.srcElement || e.target;
-    
-    if ( el.classList.contains(className) ) {
-      return el;
-    } else {
-      while ( el = el.parentNode ) {
-        if ( el.classList && el.classList.contains(className) ) {
-          return el;
-        }
-      }
-    }
 
-    return false;
-  }
-  
-  //Listens for click events.
-  (function () {
-    document.addEventListener( "click", function(e) {
-      var clickeElIsLink = clickInsideElement( e, 'right-click-menu' );
-
-      if ( !clickeElIsLink ) {
-          clearRightClickMenus();
-      }
-    });
-  })();
-
-  //Listens for keyup events.
-  (function () {
-    window.onkeyup = function(e) {
-      if ( e.keyCode === 27 ) {
-        clearRightClickMenus();
-      }
-    }
-  })();
-
-  //Window resize event listener
-  (function () {
-    window.onresize = function(e) {
-      clearRightClickMenus();
-    };
-  })();
-})();
 
 (function($) {
     $.fn.extend({
       hasScrollBar : function() {
         return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
-      },
-      addRightClickMenu:function(menus){
-        this.each(function() {
-          function getMenu(menus) {
-            var menu=$('<ul/>');
-            menus.forEach(function(m) {
-              var li=$('<li/>').appendTo(menu);
-              var menuLink=$('<a/>',{text:m.name}).appendTo(li);
-              menuLink.on('click',function(e){
-                m.action(e);
-                e.preventDefault();
-              });
-              
-              if(m.options) {
-                li.append(getMenu(m.options));
-                li.append($('<a/>',{class:"more-options-icon"}).append($('<i/>',{class:"fa fa-caret-right"})));
-              }
-            });
-            return menu;
-          }
-          
-          function getRightClickMenuDiv(){
-            var rightClickMenuDiv = $('.right-click-menu');
-            if(rightClickMenuDiv.length==0){
-              rightClickMenuDiv=$('<div/>',{class:"right-click-menu"}).appendTo($('body'));
-            }
-            return rightClickMenuDiv;
-          }
-          
-          $(this).on('contextmenu', function(e) {
-            clearRightClickMenus();
-            console.log("Clicked " + e.pageX + " , " + e.pageY)
-            var left, top;
-
-            $(this).addClass('right-click-active');
-            var menu=getRightClickMenuDiv();
-            menu.html(getMenu(menus));
-
-            var clickCoordsX = e.pageX;
-            var clickCoordsY = e.pageY;
-            var menuWidth = menu.offsetWidth + 4;
-            var menuHeight = menu.offsetHeight + 4;
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
-
-            if ( (windowWidth - clickCoordsX) < menuWidth) {
-              left = windowWidth - menuWidth + "px";
-            } else {
-              left = clickCoordsX + "px";
-            }
-
-            if ((windowHeight - clickCoordsY) < menuHeight) {
-              top = windowHeight - menuHeight + "px";
-            } else {
-              top = clickCoordsY + "px";
-            }
-
-            $(menu).css('display', 'block')
-              .css('left',left)
-              .css('top',top);
-
-            e.preventDefault();
-          });
-        });
       }
     });
 })(jQuery);

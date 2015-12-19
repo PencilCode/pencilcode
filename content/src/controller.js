@@ -14,7 +14,8 @@ var $                = require('jquery'),
     pencilTracer     = require('pencil-tracer'),
     icedCoffeeScript = require('iced-coffee-script'),
     drawProtractor   = require('draw-protractor'),
-    cache          = require('cache');
+    cache            = require('cache'),
+    contextMenu      = require('contextMenu');
 
 
 eval(see.scope('controller'));
