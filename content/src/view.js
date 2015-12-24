@@ -1411,7 +1411,7 @@ function updatePaneLinks(pane) {
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
       href: list[j].href
-    }).appendTo(cols.eq(j % colCount));
+    }).appendTo(cols.eq(Math.floor(j / rawCount)));
 
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
