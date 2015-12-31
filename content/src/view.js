@@ -1453,12 +1453,40 @@ function updatePaneLinks(pane) {
 
     function addRightClickMenuToItems (element, item, list, index){
       var fileName = item.href.substr(6);
+      var itemContent = $(element).find('div');
+
+      function updateItemStatus (status) {
+        itemContent.removeClass();
+        itemContent.addClass(status + ' animated bounce');
+      }
+
+      function showItemRenameField () {
+        updateItemStatus('item-status renaming');
+        itemContent.find('.caption').remove();
+        $('<input/>').attr({ type: 'text', class: 'item-rename-text-field'})
+        .on('focusout', function (evt) {
+          console.log("Focus out");
+          closeItemRenameField ()
+        })
+        .on('blur', function (evt) {
+          console.log("Focus out");
+          closeItemRenameField ()
+        })
+        .appendTo(itemContent)
+        .focus();
+      }
+
+      function closeItemRenameField () {
+        itemContent.find('.item-rename-text-field').remove();
+        itemContent.append($('<span/>', { text: item.name }));
+      }
 
       var menus=[
             {
               name:"rename",
               action:function(){
                 console.log("rename action "+"["+item.name+"]");
+                showItemRenameField();
               }
             },
             {
@@ -1536,8 +1564,13 @@ function updatePaneLinks(pane) {
     if (!e.shiftKey && !e.ctrlKey & !e.metaKey && !e.altKey) {
       var link = $(this).data('link');
       var pane = $(this).closest('.pane').attr('id');
+      var hasStatusChanged = $(this).find('.item-status').length > 0;
+
       if (link) {
-        fireEvent('link', [pane, link]);
+        if (!hasStatusChanged) {
+          fireEvent('link', [pane, link]);
+        }
+        
         return false;
       }
     }
