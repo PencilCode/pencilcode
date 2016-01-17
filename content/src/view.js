@@ -537,7 +537,7 @@ $('#filename').on('blur', function() {
   }
   if (fixedtext != state.nameText) {
     state.nameText = fixedtext;
-    fireEvent('rename', [fixedtext]);
+    fireEvent('renameOpenedFile', [fixedtext]);
   }
 });
 
@@ -1397,40 +1397,57 @@ function updatePaneLinks(pane) {
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
 
-  var menus=[
+  //TODO the right click menu of the opend directory
+  /*var menus=[
         {
-          name:"new",
-          action:function(){
+          name: "new",
+          action: function () {
+            //TODO
             console.log("directory new action");
           },
           options:[
-            {name:"file",action:function(){console.log("directory - new file action")}},
-            {name:"folder",action:function(){console.log("directory - new folder action")}}
+            {
+              name: "file",
+              action: function () {
+                console.log("directory - new file action");
+                //TODO
+              }
+            },
+            {
+              name: "folder",
+              action: function () {
+                console.log("directory - new folder action");
+                //TODO
+              }
+            }
           ]
         },
         {
-          name:"download",
-          action:function(){
+          name: "download",
+          action: function () {
             console.log("directory download action");
+            //TODO
           }
         },
         {
           name:"upload",
-          action:function(){
+          action: function () {
             console.log("directory upload action");
+            //TODO
           }
         }
       ];
-  directory.addRightClickMenu(menus);
+  directory.addRightClickMenu(menus);*/
 
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
+    var itemDiv = $('<div/>' ,{ class: "item-div" }).appendTo(col);
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
       href: list[j].href
-    }).appendTo(col);
+    }).appendTo(itemDiv);
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
@@ -1441,81 +1458,149 @@ function updatePaneLinks(pane) {
         alt: list[j].name
       }).appendTo(figure);
       $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
+
+      //Right click menu is available only in grid view
+      //Add the right click menu for items and ignore the last item which is "Add New"
+      if (j != list.length-1) {
+        addRightClickMenuToItem(item, list[j], list, j, itemDiv);
+      }
     } else {
       $('<span/>', { text: list[j].name }).appendTo(figure);
     }
     
-
-    //Add the right click menu for items and ignore the last item which is "Add New"
-    if (j != list.length-1) {
-      addRightClickMenuToItems(item, list[j], list, j);
-    }
-
-    function addRightClickMenuToItems (element, item, list, index){
-      var fileName = item.href.substr(6);
+    function addRightClickMenuToItem (element, item, list, index, itemDiv) {
       var itemContent = $(element).find('div');
 
-      function updateItemStatus (status) {
-        itemContent.removeClass();
-        itemContent.addClass(status + ' animated bounce');
-      }
-
       function showItemRenameField () {
-        updateItemStatus('item-status renaming');
         itemContent.find('.caption').remove();
-        $('<input/>').attr({ type: 'text', class: 'item-rename-text-field'})
+        $('<input/>').attr({ type: 'text', class: 'item-rename-text-field', value: item.name.replace('/', '') })
         .on('focusout', function (evt) {
-          console.log("Focus out");
-          closeItemRenameField ()
+          var newName = $(this).val();
+          var oldName = item.name;
+
+          setItemAsProcessing(true);
+          fireEvent('rename', [function (data) {
+            if (data.error) {
+              flashNotification(data.error);
+              closeItemRenameField();
+              setItemAsProcessing(false);
+            } else if (!data.processing) {
+              completeRenaming(data, function () {
+                flashNotification("Renamed to " + data.newName);
+                closeItemRenameField();
+                setItemAsProcessing(false);
+              });
+            }
+          }, newName, oldName, pane]);
+          closeItemRenameField();
         })
-        .on('blur', function (evt) {
-          console.log("Focus out");
-          closeItemRenameField ()
+        .on('keypress', function (e) {
+          if (e.which >= 20 && e.which <= 127 && !/[-\._A-Za-z0-9]/.test(
+                String.fromCharCode(e.which))) {
+            console.log('keypress : false');
+            return false;
+          }
+          console.log('keypress : true');
         })
-        .appendTo(itemContent)
-        .focus();
+        .on('keyup blur', function (e) {
+          var val = $(this).val();
+          var fixed = fixTypedFilename(val);
+          if (fixed != val) {
+            $(this).val(fixed);
+          }
+          if (e.keyCode == 13) {
+            $(this).focusout();
+          }
+        })
+        .appendTo($('<div>', { class: "pencilcode-textfield" }).appendTo(itemContent))
+        .focus().select();
+        element.closeRightClickMenu();
+
+        function completeRenaming (data, callback) {
+          var isDir = item.name.indexOf('/');
+
+          item.name = data.newName + (isDir ? '/' : '');
+          item.link = data.newName;
+          item.href = data.href;
+
+          element.attr('href', item.href);
+          element.data('link', item.link);
+
+          callback && callback();
+        }
+
+        function closeItemRenameField () {
+          itemContent.find('.caption').remove();
+          itemContent.find('.item-rename-text-field').remove();
+          itemContent.append($('<span/>', { text: item.name, class:"caption" }));
+        }
       }
 
-      function closeItemRenameField () {
-        itemContent.find('.item-rename-text-field').remove();
-        itemContent.append($('<span/>', { text: item.name }));
+      function deleteItem (item) {
+        setItemAsProcessing (true);
+        fireEvent('delete', [function (data) {
+          if (data.error) {
+            flashNotification(data.error);
+            setItemAsProcessing (false);
+          } else {
+            flashNotification('Deleted ' + item.name);
+
+            list.splice(index,1);
+            updatePaneLinks(pane);
+          }
+        }, item.name, pane]);
+      }
+
+      function setItemAsProcessing (status) {
+        console.log('setItemAsProcessing : '+status);
+        if (status) {
+          if (!element.hasClass('item-precessing')) {
+            itemDiv.addClass("item-precessing");
+          }
+          if (element.find('.item-processing-animation').length == 0) {
+            itemDiv.append('<div class="item-processing-animation"> <i class="fa fa-spinner fa-pulse fa-5x"></i>  </div>');
+          }
+        } else {
+          itemDiv.removeClass("item-precessing");
+          itemDiv.find('.item-processing-animation').remove();
+        }
       }
 
       var menus=[
             {
-              name:"rename",
-              action:function(){
+              name: "rename",
+              action:function () {
                 console.log("rename action "+"["+item.name+"]");
-                showItemRenameField();
+                showItemRenameField(item);
               }
             },
             {
-              name:"delete",
-              action:function(){
-                console.log("delete action"+"["+item.name+"]");
-                fireEvent('itemDelete', [fileName, function () {
-                  list.splice(index,1);
-                  updatePaneLinks(pane);
-                }]);
+              name: "delete",
+              action:function () {
+                console.log("delete action" + "[" + item.name + "]");
+                deleteItem(item);
               }
-            },
+            }/*,
             {
               name:"download",
               action:function(){
                 console.log("download action "+"["+item.name+"]");
+                //TODO
               }
             },
             {
               name:"move to",
               action:function(){
                 console.log("move action"+"["+item.name+"]")
+                //TODO
               },
+              //List of options TBD
               options:[
                 {name:"share",action:function(){console.log("move action to share"+"["+item.name+"]")}},
                 {name:"test",action:function(){console.log("move action to test"+"["+item.name+"]")}},
                 {name:"dev",action:function(){console.log("move action to dev"+"["+item.name+"]")}}
               ]
-            }
+            }*/
           ];
 
       element.addRightClickMenu(menus);
@@ -1525,7 +1610,7 @@ function updatePaneLinks(pane) {
       item.data('link', list[j].link);
     }
   }
-  items = directory.find('.item');
+  items = directory.find('.item-div');
   maxwidth = 0;
   for (j = 0; j < items.length; j++) {
     maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
@@ -1564,13 +1649,8 @@ function updatePaneLinks(pane) {
     if (!e.shiftKey && !e.ctrlKey & !e.metaKey && !e.altKey) {
       var link = $(this).data('link');
       var pane = $(this).closest('.pane').attr('id');
-      var hasStatusChanged = $(this).find('.item-status').length > 0;
-
       if (link) {
-        if (!hasStatusChanged) {
-          fireEvent('link', [pane, link]);
-        }
-        
+        fireEvent('link', [pane, link]);
         return false;
       }
     }
@@ -1598,9 +1678,6 @@ function updatePaneLinks(pane) {
     
   setVisibilityOfSearchTextField(pane);
 }
-
-
-
 
 (function($) {
     $.fn.extend({
