@@ -82,7 +82,10 @@
     });*/
 
     $.fn.extend({
-      addRightClickMenu:function(menus){
+      closeRightClickMenu: function () {
+        clearRightClickMenus();
+      },
+      addRightClickMenu:function (menus) {
         this.each(function() {
           function getMenu(menus) {
             var menu=$('<ul/>', {class: 'menu-list'});
