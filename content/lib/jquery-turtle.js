@@ -4,7 +4,7 @@
 jQuery-turtle
 =============
 
-version 2.0.8
+version 2.0.9
 
 jQuery-turtle is a jQuery plugin for turtle graphics.
 
@@ -261,7 +261,7 @@ the functions:
 <pre>
 eval $.turtle()  # Create the default turtle and global functions.
 
-defaultspeed Infinity
+speed Infinity
 write "Catch blue before red gets you."
 bk 100
 r = new Turtle red
@@ -772,7 +772,7 @@ function readTransformMatrix(elem) {
 // Reads out the css transformOrigin property, if present.
 function readTransformOrigin(elem, wh) {
   var hidden = ($.css(elem, 'display') === 'none'),
-      swapout, old, name, gcs, origin;
+      swapout, old, name;
   if (hidden) {
     // IE GetComputedStyle doesn't give pixel values for transformOrigin
     // unless the element is unhidden.
@@ -783,13 +783,13 @@ function readTransformOrigin(elem, wh) {
       elem.style[name] = swapout[name];
     }
   }
-  var gcs = (global.getComputedStyle ?  global.getComputedStyle(elem) : null),
-      origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
+  var gcs = (global.getComputedStyle ?  global.getComputedStyle(elem) : null);
   if (hidden) {
     for (name in swapout) {
       elem.style[name] = old[name];
     }
   }
+  var origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
   if (origin && origin.indexOf('%') < 0) {
     return $.map(origin.split(' '), parseFloat);
   }
@@ -960,7 +960,7 @@ function getTurtleOrigin(elem, inverseParent, extra) {
         { position: "absolute", visibility: "hidden", display: "block" } : {},
       substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
           $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      old = {}, name, gbcr, transformOrigin, result;
+      old = {}, name, gbcr, transformOrigin;
   for (name in swapout) {
     old[name] = elem.style[name];
     elem.style[name] = swapout[name];
@@ -1250,7 +1250,7 @@ function scrollWindowToDocumentPosition(pos, limit) {
   if (tx < ww2) { tx = ww2; }
   if (ty > dh - wh2) { ty = dh - wh2; }
   if (ty < wh2) { ty = wh2; }
-  targ = { pageX: tx, pageY: ty };
+  var targ = { pageX: tx, pageY: ty };
   if ($.isNumeric(limit)) {
     targ = limitMovement(w.origin(), targ, limit);
   }
@@ -2178,8 +2178,7 @@ function touchesPixel(elem, color) {
       h = (bb.bottom - bb.top),
       osc = getOffscreenCanvas(w, h),
       octx = osc.getContext('2d'),
-      rgba = rgbaForColor(color),
-      j = 1, k, data;
+      j = 1, k;
   if (!c || c.length < 3 || !w || !h) { return false; }
   octx.drawImage(canvas,
       bb.left, bb.top, w, h, 0, 0, w, h);
@@ -2726,7 +2725,8 @@ var stablyLoadedImages = {};
 // @param css is a dictionary of css props to set when the image is loaded.
 // @param cb is an optional callback, called after the loading is done.
 function setImageWithStableOrigin(elem, url, css, cb) {
-  var record, urlobj = absoluteUrlObject(url), url = urlobj.href;
+  var record, urlobj = absoluteUrlObject(url);
+  url = urlobj.href;
   // The data-loading attr will always reflect the last URL requested.
   elem.setAttribute('data-loading', url);
   if (url in stablyLoadedImages) {
@@ -3032,7 +3032,7 @@ var Pencil = (function(_super) {
     }
     // The pencil is a sprite that just defaults to zero size.
     var context = canvas ? canvas.parentElement : null;
-    var settings = { width: 0, height: 0, color: transparent };
+    var settings = { width: 0, height: 0, color: 'transparent' };
     Pencil.__super__.constructor.call(this, settings, context);
     // Set the pencil to hidden, infinite speed,
     // and drawing on the specifed canvas.
@@ -3072,7 +3072,7 @@ var Webcam = (function(_super) {
   function Webcam(opts, context) {
     var attrs = "", hassrc = false, hasautoplay = false, hasdims = false;
     if ($.isPlainObject(opts)) {
-      for (key in opts) {
+      for (var key in opts) {
         attrs += ' ' + key + '="' + escapeHtml(opts[key]) + '"';
       }
       hassrc = ('src' in opts);
@@ -3317,12 +3317,12 @@ var Piano = (function(_super) {
 
   // Converts a midi number to a white key position (black keys round left).
   function wcp(n) {
-    return floor((n + 7) / 12 * 7);
+    return Math.floor((n + 7) / 12 * 7);
   };
 
   // Converts from a white key position to a midi number.
   function mcp(n) {
-    return ceil(n / 7 * 12) - 7;
+    return Math.ceil(n / 7 * 12) - 7;
   };
 
   // True if midi #n is a black key.
@@ -4517,7 +4517,7 @@ var Instrument = (function() {
         if (key in given) {
           timbre[key] = given[key];
         } else {
-          timbre[key] = defaulTimbre[key];
+          timbre[key] = defaultTimbre[key];
         }
       }
     }
@@ -4709,16 +4709,13 @@ var Instrument = (function() {
     return result;
   }
 
-  var whiteNoiseBuf = null;
   function getWhiteNoiseBuf() {
-    if (whiteNoiseBuf == null) {
-      var ac = getAudioTop().ac,
-          bufferSize = 2 * ac.sampleRate,
-          whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
-          output = whiteNoiseBuf.getChannelData(0);
-      for (var i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
+    var ac = getAudioTop().ac,
+      bufferSize = 2 * ac.sampleRate,
+      whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
+      output = whiteNoiseBuf.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
     }
     return whiteNoiseBuf;
   }
@@ -5206,7 +5203,6 @@ function parseABCFile(str) {
   function syncopateStem(stem, t) {
     var j, note, stemtime = stem.time, newtime = stemtime + t;
     stem.time = newtime;
-    syncopateStem
     for (j = 0; j < stem.notes.length; ++j) {
       note = stem.notes[j];
       // Only adjust a note's duration if it matched the stem's duration.
@@ -7116,8 +7112,8 @@ var turtlefn = {
       // For defaults, copy inline styles of the turtle itself except for
       // properties in the following list (these are the properties used to
       // make the turtle look like a turtle).
-      for (var j = 0; j < currentStyles.length; ++j) {
-        var styleProperty = currentStyles[j];
+      for (var j2 = 0; j2 < currentStyles.length; ++j2) {
+        var styleProperty = currentStyles[j2];
         if (/^(?:width|height|opacity|background-image|background-size)$/.test(
           styleProperty) || /transform/.test(styleProperty)) {
           continue;
@@ -7324,7 +7320,7 @@ var turtlefn = {
       if (typeof val != 'object' ||
           !$.isNumeric(val.width) || !$.isNumeric(val.height) ||
           !($.isArray(val.data) || val.data instanceof Uint8ClampedArray ||
-            val.data instanceof Unit8Array)) {
+            val.data instanceof Uint8Array)) {
         return;
       }
       var imdat = ctx.createImageData(
@@ -7535,7 +7531,6 @@ var turtlefn = {
         callback.apply(this, arguments);
       }
     });
-    sync = null;
   }),
   plan: wrapraw('plan',
   ["<u>plan(fn)</u> Runs fn in the animation queue. For planning logic: " +
@@ -7919,7 +7914,7 @@ var dollar_turtle_methods = {
       sel.tone.apply(sel, arguments);
     } else {
       var instrument = getGlobalInstrument();
-      instrument.play.apply(instrument, args);
+      instrument.play.apply(instrument);
     }
   }),
   silence: wrapraw('silence',
@@ -7958,7 +7953,6 @@ var dollar_turtle_methods = {
         callback.apply(this, arguments);
       }
     });
-    sync = null;
   }),
   load: wrapraw('load',
   ["<u>load(url, cb)</u> Loads data from the url and passes it to cb. " +
@@ -7994,7 +7988,8 @@ var dollar_turtle_methods = {
       "<mark>save 'intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
-    var payload = { }, url = apiUrl(url, 'save'), key;
+    var payload = { }, key;
+    url = apiUrl(url, 'save');
     if (/\.json(?:$|\?|\#)/.test(url)) {
       data = JSON.stringify(data, null, 2);
     }
@@ -8254,7 +8249,7 @@ var dollar_turtle_methods = {
       return (x == 0) ? NaN : ((x > 0) ? 0 : 180);
     } else if (x == 0) {
       return (y > 0) ? Infinity : -Infinity;
-    } else if (abs(y) == abs(x)) {
+    } else if (Math.abs(y) == Math.abs(x)) {
       return (y > 0) ? ((x > 0) ? 45 : 135) :
                        ((x > 0) ? -45 : -135);
     }
@@ -8491,14 +8486,12 @@ var colors = [
 
 $.turtle = function turtle(id, options) {
   var exportedsee = false;
-  if (!arguments.length) {
-    id = 'turtle';
-  }
   if (arguments.length == 1 && typeof(id) == 'object' && id &&
       !id.hasOwnProperty('length')) {
     options = id;
     id = 'turtle';
   }
+  id = id || 'turtle';
   options = options || {};
   if ('turtle' in options) {
     id = options.turtle;
@@ -8608,12 +8601,6 @@ $.turtle = function turtle(id, options) {
       seeopt.height = options.panelheight;
     }
     see.init(seeopt);
-    if (wrotebody) {
-       /*
-       see.html('<span style="color:red">Turtle script should be inside body ' +
-                '- wrote a &lt;body&gt;</span>');
-       */
-    }
     // Return an eval loop hook string if 'see' is exported.
     if (exportedsee) {
       if (global.CoffeeScript) {
@@ -8623,6 +8610,7 @@ $.turtle = function turtle(id, options) {
       }
     }
   }
+  return $('#' + id);
 };
 
 $.extend($.turtle, dollar_turtle_methods);
@@ -9133,11 +9121,11 @@ function hatchone(name, container, defaultshape) {
 
   // Create an image element with the requested name.
   var result;
-  if (img) {
+  if (isTag) {
+    result = $(name);
+  } else if (img) {
     result = $('<canvas>');
     applyImg(result, img);
-  } else if (isTag) {
-    result = $(name);
   } else {
     result = $('<div>' + escapeHtml(name) + '</div>');
   }
@@ -9355,13 +9343,12 @@ function turtleevents(prefix) {
   if (prefix || prefix === '') {
     eventsaver = (function(e) {
       // Keep the old instance if possible.
-      var names = [prefix + e.type], j, old, name, prop;
+      var names = [prefix + e.type], j;
       if ((e.originalEvent || e) instanceof MouseEvent) {
         names.push(prefix + 'mouse');
       }
       for (j = 0; j < names.length; ++j) {
-        var name = names[j];
-        old = global[name], prop;
+        var name = names[j], old = global[name], prop;
         if (old && old.__proto__ === e.__proto__) {
           for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
           for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
@@ -9757,7 +9744,7 @@ function prepareInput(name, callback, type) {
         textbox.attr('type', 'number');
       }
       if (type == 'voice') {
-        button.css({display:none});
+        button.css({display: 'none'});
         var SR = global.SpeechRecognition || global.webkitSpeechRecognition;
         if ('function' == typeof(SR)) {
           try {
@@ -9892,39 +9879,40 @@ function componentColor(t, args) {
   return t + '(' + Array.prototype.join.call(args, ',') + ')';
 }
 
-function autoArgs(arguments, start, map) {
+function autoArgs(args, start, map) {
   var j = 0;
   var taken = [];
   var result = {};
   for (var key in map) {
     var pattern = map[key];
-    for (j = start; j < arguments.length; ++j) {
+    for (j = start; j < args.length; ++j) {
       if (~taken.indexOf(j)) continue;
       if (pattern == '*') {
         break;
-      } else if (pattern instanceof RegExp && pattern.test(arguments[j])) {
+      } else if (pattern instanceof RegExp && pattern.test(args[j])) {
         break;
-      } else if (pattern instanceof Function && pattern(arguments[j])) {
+      } else if (pattern instanceof Function && pattern(args[j])) {
         break;
-      } else if (pattern == typeof arguments[j]) {
+      } else if (pattern == typeof args[j]) {
         break;
       }
     }
-    if (j < arguments.length) {
+    if (j < args.length) {
       taken.push(j);
-      result[key] = arguments[j];
+      result[key] = args[j];
     }
   }
-  if (taken.length + start < arguments.length) {
+  if (taken.length + start < args.length) {
     var extra = [];
-    for (j = start; j < arguments.length; ++j) {
+    for (j = start; j < args.length; ++j) {
       if (~taken.indexOf(j)) continue;
-      extra.push(arguments[j]);
+      extra.push(args[j]);
     }
     result.extra = extra;
   }
   return result;
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 // DEBUGGING SUPPORT
@@ -10036,7 +10024,7 @@ debug.init();
           c = cnv.getContext('2d'),
           relative = false,
           p = lineend || e,
-          s, html, dx, dy, dd, dir, ang;
+          html, dx, dy, dd, dir, ang;
       if (linestart && 'function' == typeof(linestart.pagexy)) {
         var xy = linestart.getxy(), s = linestart.pagexy();
         s.x = xy[0];
@@ -10763,7 +10751,6 @@ function aselement(s, def) {
     default:
       return s;
   }
-  return null;
 }
 function stickscroll() {
   var stick = false, a = aselement(autoscroll, null);
