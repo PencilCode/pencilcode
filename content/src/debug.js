@@ -129,6 +129,11 @@ var debug = window.ide = {
   },
   trace: function(event, data) {
     detectStuckProgram();
+    // Discard prolific events for now, to avoid running out of memory.
+    switch(event.type) {
+      case 'enter': case 'leave': case 'before': case 'after':
+        return;
+    }
     // This receives events for the new debugger to use.
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
