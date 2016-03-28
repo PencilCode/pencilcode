@@ -240,38 +240,38 @@ describe('code debugger', function() {
   //     done();
   //   });
   // });
-  it('should be able to unhighlight lines when unhovered', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-        // Click on the triangle run button.
-        $('#run').mousedown();
-        $('#run').click();
-    }, function() {
-        try {
-          if (!$('.preview iframe').length) return;
-          if (!$('.preview iframe')[0].contentWindow.see) return;
-          if (!$('.ace_gutter-cell').length) return;
-          // Have the mouse hover over the program line.
-          window._simulate('mouseover', $('.ace_gutter-cell')[0]);
-          // Have the mouse move away from the program line.
-          window._simulate('mouseout', $('.ace_gutter-cell')[0]);
-          // Wait until mouse moves away from the program line.
-          if ($('.debugfocus').length != 0) {
-            return;
-          }
-          return {
-            debugfocus: $('.debugfocus').length,
-          };
-        }
-         catch(e) {
-          return {poll: true, error: e};
-        }
-       }, function(err, result) {
-         assert.ifError(err);
-         // A line of code should not be highlighted.
-         assert.equal(0, result.debugfocus);
-         done();
-      });
-  });
+  // it('should be able to unhighlight lines when unhovered', function(done) {
+  //   asyncTest(_page, one_step_timeout, null, function() {
+  //       // Click on the triangle run button.
+  //       $('#run').mousedown();
+  //       $('#run').click();
+  //   }, function() {
+  //       try {
+  //         if (!$('.preview iframe').length) return;
+  //         if (!$('.preview iframe')[0].contentWindow.see) return;
+  //         if (!$('.ace_gutter-cell').length) return;
+  //         // Have the mouse hover over the program line.
+  //         window._simulate('mouseover', $('.ace_gutter-cell')[0]);
+  //         // Have the mouse move away from the program line.
+  //         window._simulate('mouseout', $('.ace_gutter-cell')[0]);
+  //         // Wait until mouse moves away from the program line.
+  //         if ($('.debugfocus').length != 0) {
+  //           return;
+  //         }
+  //         return {
+  //           debugfocus: $('.debugfocus').length,
+  //         };
+  //       }
+  //        catch(e) {
+  //         return {poll: true, error: e};
+  //       }
+  //      }, function(err, result) {
+  //        assert.ifError(err);
+  //        // A line of code should not be highlighted.
+  //        assert.equal(0, result.debugfocus);
+  //        done();
+  //     });
+  // });
   // it('should not trace commands in the test panel', function(done) {
   //   asyncTest(_page, one_step_timeout, null, function() {
   //       // Click on the square stop button.
