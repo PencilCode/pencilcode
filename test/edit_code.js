@@ -35,11 +35,9 @@ describe('code editor', function() {
           assert.ifError(err);
           // Point it to a blank page to start
           page.open('about:blank', function(err, status){
-            page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
-              assert.ifError(err);
-              assert.equal(status, 'success');
-              done();
-            });
+            assert.ifError(err);
+            assert.equal(status, 'success');
+            done();
           });
         });
       });

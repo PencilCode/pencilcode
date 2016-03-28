@@ -12,11 +12,9 @@ describe('dev server', function() {
       _ph.createPage(function(err,page) {
         _page = page;
         page.open('about:blank', function(err, status){
-          page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
-            assert.ifError(err);
-            assert.equal(status,'success');
-            done();
-          });
+          assert.ifError(err);
+          assert.equal(status,'success');
+          done();
         });
       });
     });
