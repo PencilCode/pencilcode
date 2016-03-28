@@ -259,11 +259,6 @@
       this.updatedCode = code;
       return this.invokeRemote('setCode', [code]);
     };
-    // sets code into the editor
-    proto.setCode = function(code) {
-      this.updatedCode = code;
-      return this.invokeRemote('setCode', [code]);
-    };
 
     // gets code from the editor
     proto.getCode = function() {
