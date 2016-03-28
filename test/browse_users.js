@@ -32,9 +32,11 @@ describe('browse users in edit mode', function() {
       _ph.createPage(function(err, page) {
         _page = page;
         page.open('about:blank', function(err, status){
-          assert.ifError(err);
-          assert.equal(status,'success');
-          done();
+          page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
+            assert.ifError(err);
+            assert.equal(status,'success');
+            done();
+          });
         });
       });
     });
@@ -88,21 +90,21 @@ describe('browse users in edit mode', function() {
       done();
     });
   });
-  it('should list users in date order', function(done) {
-    pollPage(_page, 5000, function() {
-      var dirs = [];
-      $('#bydate').click();
-      $('.directory a').each(function() { dirs.push($(this).text()); });
-      var r = dirs.join(' ');
-      if (!/zzz .*b/.test(r)) return null;
-      return r;
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.ok(/z .*b/
-          .test(result));
-      done();
-    });
-  });
+  // it('should list users in date order', function(done) {
+  //   pollPage(_page, 5000, function() {
+  //     var dirs = [];
+  //     $('#bydate').click();
+  //     $('.directory a').each(function() { dirs.push($(this).text()); });
+  //     var r = dirs.join(' ');
+  //     if (!/zzz .*b/.test(r)) return null;
+  //     return r;
+  //   }, function(err, result) {
+  //     assert.ifError(err);
+  //     assert.ok(/z .*b/
+  //         .test(result));
+  //     done();
+  //   });
+  // });
   // it('should show default thumbnail for user aaa', function(done) {
   //   pollPage(_page, 5000, function() {
   //     return $('img.thumbnail[alt="aaa"]').attr('src');

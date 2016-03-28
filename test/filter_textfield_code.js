@@ -33,10 +33,12 @@ describe('filter textfield', function () {
         page.set('viewportSize', {width: 1200, height: 900}, function (err) {
           assert.ifError(err);
           // Point it to a blank page to start
-          page.open('about:blank', function (err, status) {
-            assert.ifError(err);
-            assert.equal(status, 'success');
-            done();
+          page.open('about:blank', function(err, status){
+            page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
+              assert.ifError(err);
+              assert.equal(status,'success');
+              done();
+            });
           });
         });
       });
