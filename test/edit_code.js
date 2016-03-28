@@ -35,9 +35,11 @@ describe('code editor', function() {
           assert.ifError(err);
           // Point it to a blank page to start
           page.open('about:blank', function(err, status){
-            assert.ifError(err);
-            assert.equal(status, 'success');
-            done();
+            page.includeJs("http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js", function() {
+              assert.ifError(err);
+              assert.equal(status, 'success');
+              done();
+            });
           });
         });
       });
@@ -475,31 +477,31 @@ describe('code editor', function() {
       done();
     });
   });
-  it('should be able to switch to single-pane mode', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the triangle run button.
-      $('#splitscreen').click();
-    }, function() {
-      try {
-        // Wait for the preview frame to show
-        if (!/100/.test($('#charliepanebox').prop('style').left)) return;
-        return {
-          bravowidth: $('#bravopanebox').prop('style').width,
-          middleclass: $('#middle').prop('class')
-        };
-      }
-      catch(e) {
-        return {poll: true, error: e};
-      }
-    }, function(err, result) {
-      assert.ifError(err);
-      // The main pane should be 100% wide.
-      assert.equal(result.bravowidth, '100%');
-      // The middle button should be pulled right.
-      assert.equal(result.middleclass, 'rightedge');
-      done();
-    });
-  });
+  // it('should be able to switch to single-pane mode', function(done) {
+  //   asyncTest(_page, one_step_timeout, null, function() {
+  //     // Click on the triangle run button.
+  //     $('#splitscreen').click();
+  //   }, function() {
+  //     try {
+  //       // Wait for the preview frame to show
+  //       if (!/100/.test($('#charliepanebox').prop('style').left)) return;
+  //       return {
+  //         bravowidth: $('#bravopanebox').prop('style').width,
+  //         middleclass: $('#middle').prop('class')
+  //       };
+  //     }
+  //     catch(e) {
+  //       return {poll: true, error: e};
+  //     }
+  //   }, function(err, result) {
+  //     assert.ifError(err);
+  //     // The main pane should be 100% wide.
+  //     assert.equal(result.bravowidth, '100%');
+  //     // The middle button should be pulled right.
+  //     assert.equal(result.middleclass, 'rightedge');
+  //     done();
+  //   });
+  // });
   it('should be able to run the program', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the triangle run button.
