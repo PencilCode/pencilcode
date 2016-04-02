@@ -36,7 +36,7 @@ describe('javascript editor', function() {
           // Point it to a blank page to start
           page.open('about:blank', function(err, status){
             assert.ifError(err);
-            assert.equal(status, 'success');
+            assert.equal(status,'success');
             done();
           });
         });
