@@ -47,9 +47,11 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
 
     Sk.configure({output:outputFunction, read:builtinRead});
     (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = canvasElement.id;
+    pyPencilCode = ajaxRequest("PyPencilCode.py");
+    payload = pyPencilCode + code;
 
     var myPromise = Sk.misceval.asyncToPromise(function() {
-      return Sk.importMainWithBody("<stdin>", false, code, true);
+      return Sk.importMainWithBody("<stdin>", false, payload, true);
     });
 
     myPromise.then(function(mod) {}, function(err) { console.log(err.toString()); });
