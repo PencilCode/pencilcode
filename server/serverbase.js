@@ -119,6 +119,7 @@ exports.initialize2 = function(app) {
   app.use('/run', userDataPrinter('run'));
   app.use('/print', userDataPrinter('print'));
   app.use('/thumb', loadThumb());
+  app.use('/log', function(req, res) { res.status(204).send(); });
 
   // Anything not matching a special top-level directory name
   if (config.dirs.staticdir) {

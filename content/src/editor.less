@@ -269,6 +269,13 @@ body.modal #overlay {
   position: relative;
 }
 
+#splitscreen > .splitscreenicon {
+  display: block;
+  height: 16px;
+  width: 19px;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMTAiIHk9IjEiIHdpZHRoPSI4IiBoZWlnaHQ9IjE0IiBzdHJva2U9IiMzMzMiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0wLDIgTDYsMiBNMCw2IEw4LDYgTTAsMTAgTDYsMTAgTTAsMTQgTDcsMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+");
+}
+
 #topright button .droparrow {
   position: absolute;
   right: 0;
@@ -291,7 +298,7 @@ body.modal #overlay {
   left: -70px;
   border: 0;
   white-space: nowrap;
-  z-index: 1;
+  z-index: 200;
   background:white;
   text-align: left;
   top: -0px;
@@ -385,7 +392,7 @@ body.modal #overlay {
   height: 28px;
   width: 100%;
   background: #1e90ff;
-  padding: 0 12px;
+  padding: 0px;
   color: #87ceeb;
   letter-spacing: 2px;
   border-left: 1px solid #fff;
@@ -507,6 +514,10 @@ body.modal #middle {
   top: 50%;
   right: 50%;
   margin-right: -28px;
+}
+
+#middle.rightedge {
+  right: 38px;
 }
 
 .framed #middle, .framed .vcenter {
@@ -805,6 +816,7 @@ body#pencildoc #diigolet-csm {
   overflow: hidden;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAABlBMVEXS8OD///9kZDOcAAAAI0lEQVR42u3OIQ4AAAzCQPj/p7EYksmRUHeuoDXcEXvwVgkB3egCQVh7Ml4AAAAASUVORK5CYII=");
   background-position: center;
+  border-left: 1px dashed gainsboro;
 }
 
 .preview iframe {
@@ -819,6 +831,11 @@ body#pencildoc #diigolet-csm {
   height: 100%;
   padding: 10px;
   overflow: auto;
+  /*transition: padding 0.3s;*/
+}
+
+.directory-searchable{
+  padding-top: 20px;
 }
 
 .directory .column {
@@ -1048,6 +1065,10 @@ body#pencildoc #diigolet-csm {
   right: 0;
   bottom: 0;
   z-index: 999999
+}
+
+#pencildoc .droplet-palette-element {
+  background-color: #fffde7;
 }
 
 #pencildoc .droplet-palette-header {
@@ -1325,4 +1346,60 @@ body#pencildoc #diigolet-csm {
 
 .droplet-palette-group-header-selected.quantumdeeporange {
   background-color: #FFAB91
+}
+
+.search-file {
+  position: relative;
+  color: #aaa;
+  font-size: 16px;
+  z-index: 3;
+}
+
+.search-results{
+    padding-top: 30px;
+}
+
+.search-file input[type="text"] {
+  display: block;
+  margin: 0;
+  width: 100%;
+  font-family: sans-serif;
+  font-size: 10px;
+  box-shadow: none;
+  border-radius: none;
+  padding: 10px;
+  border: none;
+  border-bottom: solid 2px #c9c9c9;
+  transition: border 0.3s;
+  color: rgb(169, 169, 169);
+  text-indent: 32px;
+}
+
+.search-file input[type="text"]:focus {
+  border-bottom: solid 2px dodgerblue;
+  font-size: 15px;
+  outline: none;
+  color: dodgerblue;
+  padding: 7px;
+}
+
+.search-file .fa-search { 
+  position: absolute;
+  top: 7px;
+  left: 10px;
+}
+
+.search-file input[type="text"]:focus + .fa-search {
+  color:dodgerblue;
+}
+
+.thick-bar{
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.blue-bar-icons-list{
+  margin: 0px;
+  list-style: none;
+  display: inline-flex;
 }

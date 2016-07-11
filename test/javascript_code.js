@@ -11,7 +11,17 @@ describe('javascript editor', function() {
   var _ph, _page;
   before(function(done) {
     // Create the headless webkit browser.
-    phantom.create(function(error, ph) {
+    phantom.create({
+      path: phantomjs.path,
+      parameters: {
+        // Use the test server as a proxy server, so that all requests
+        // go to this server (instead of trying real DNS lookups).
+        proxy: '127.0.0.1:8193',
+        // Set the disk storage to zero to avoid persisting localStorage
+        // between test runs.
+        'local-storage-quota': 0
+      }
+    }, function(error, ph) {
       assert.ifError(error);
       // Open a page for browsing.
       _ph = ph;
@@ -31,17 +41,6 @@ describe('javascript editor', function() {
           });
         });
       });
-    }, {
-      // Launch phantomjs from the phantomjs package.
-      phantomPath: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
     });
   });
   after(function() {
@@ -67,6 +66,33 @@ describe('javascript editor', function() {
       });
     });
   });
+
+  it('should open js palette with .js extension', function(done) {
+    //Create a new file with an extension .js
+    _page.open('http://pencilcode.net.dev/edit/test.js',
+      function(err, status) {
+        assert.ifError(err);
+        assert.equal(status, 'success');
+        asyncTest(_page, one_step_timeout, null, function() {
+          var leftlink = $('.panetitle').filter(
+              function() { return $(this).parent().position().left == 0; })
+              .find('a');
+          leftlink.click();
+        }, function() {
+          //If tooltipster test isnt' ready, wait for it
+          if (!$('.droplet-hover-div.tooltipstered')) return;
+          return {
+            //Content of first palette block
+            text: $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content')
+          }
+        }, function(errs, result) {
+          assert.ifError(err);
+          //First block must be 'Move  forward'
+          assert.equal(result.text, 'Move forward');
+          done();
+        });
+      });
+    });
 
   it('should load code', function(done) {
     // Navigate to see the editor for the program named "first".

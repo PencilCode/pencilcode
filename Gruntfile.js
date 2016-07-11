@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     bowercopy: {
       options: {
-        clean: true
+        clean: false
       },
       top: {
         options: {
@@ -27,6 +27,7 @@ module.exports = function(grunt) {
           'lib/coffee-script.js': 'coffee-script/extras/coffee-script.js',
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
           'lib/droplet.css': 'droplet/css/droplet.css',
+          'lib/html2canvas.js': 'html2canvas/dist/html2canvas.js',
           'lib/iced-coffee-script.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
@@ -34,7 +35,8 @@ module.exports = function(grunt) {
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
-          'lib/lodash.js': 'lodash/dist/lodash.js',
+          'lib/lodash.js': 'lodash/lodash.js',
+          'lib/p5.js': 'p5/index.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
           'lib/seedrandom.js': 'seedrandom/seedrandom.js',
           'lib/socket.io.js': 'socket.io-client/socket.io.js'
@@ -117,9 +119,6 @@ module.exports = function(grunt) {
           preserveComments: false,
           screwIE8: true,
           report: 'min',
-          compress: {
-            unsafe: true
-          },
           beautify: {
             beautify: false
           }

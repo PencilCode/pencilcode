@@ -1,7 +1,9 @@
 window.showangle = (x, c) ->
   turtle.plan ->
-    t = hatch """
+    t = $ """
       <code>#{abs(x).toFixed(2).replace(/\.00$/, '')}&deg;</code>"""
+    t.css position: 'absolute', display: 'inline-table'
+    t.insertAfter turtle
     t.speed Infinity
     t.ht()
     t.moveto turtle

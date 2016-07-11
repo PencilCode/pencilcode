@@ -1,9 +1,10 @@
 var path = require('path');
 var fs = require('fs-ext');
 var lb = require('binary-search-bounds').ge;
+var utils = require('./utils');
 
-// A dircache represents a cached listing of a specific large directory.
-// In Pencil Code, we use it to cache the large directory of all users.
+// A DirLoader represents a listing of a specific directory.
+// In Pencil Code, we use it to load directories.
 // It supports a few actions:
 //   rebuild(callback) - reads the directory on disk (which may take
 //       a sequence of async operations), then update the cache atomically
@@ -15,7 +16,7 @@ var lb = require('binary-search-bounds').ge;
 //       async call to "stat"), then updates that single directory
 //       entry (adding, removing, or reordering it).
 
-exports.DirCache = function DirCache(path) {
+exports.DirLoader = function DirLoader(path) {
   this.path = path;
   // List is sorted by-modification-date (newest first).
   this.list = [];
@@ -31,7 +32,7 @@ exports.DirCache = function DirCache(path) {
 
 // Encode the stat object for a file as a json record to be
 // returned from our public API.
-function encodeStat(name, statObj) {
+function encodeStat(name, statObj, itempath) {
   var modestr = '';
   if (statObj.isDirectory()) {
     modestr += 'd';
@@ -47,8 +48,11 @@ function encodeStat(name, statObj) {
   }
   var mtime = statObj.mtime.getTime();
 
+  var absthumb = utils.makeThumbPath(itempath);
+
   return {
     name: name,
+    thumbnail: fs.existsSync(absthumb),   // whether there is a thumbnail
     mode: modestr,
     size: statObj.size,
     mtime: mtime
@@ -77,7 +81,7 @@ function byMtime(a, b) {
   return 0;
 }
 
-exports.DirCache.prototype = {
+exports.DirLoader.prototype = {
   // Async rebuild.  Does the work, then refreshes atomically at the
   // end, then calls the callback.
   rebuild: function(callback) {
@@ -149,7 +153,7 @@ exports.DirCache.prototype = {
           // Errors are treated as non-existent files.
           if (!err) {
             // Accumulate the results of the stat into list and map.
-            var result = encodeStat(name, statobj);
+            var result = encodeStat(name, statobj, itempath);
             list.push(result);
             map[name] = result;
           }
@@ -193,7 +197,7 @@ exports.DirCache.prototype = {
     var itempath = path.join(this.path, name);
     var obj = null;
     try {
-      encodeStat(names[i], fs.statSync(itempath));
+      obj = encodeStat(names[i], fs.statSync(itempath), itempath);
     } catch (e) {
       // File is gone: let obj be null.
     }
@@ -207,7 +211,7 @@ exports.DirCache.prototype = {
     var self = this;
     fs.stat(itempath, function(err, statObj) {
       if (!err) {
-        obj = encodeStat(name, statObj);
+        obj = encodeStat(name, statObj, itempath);
       }
       self.updateObject(name, obj);
       callback(true);

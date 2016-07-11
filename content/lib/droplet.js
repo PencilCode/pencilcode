@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Anthony Bau.
  * MIT License.
  *
- * Date: 2015-07-10
+ * Date: 2015-10-31
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.droplet = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated from C.g4 by ANTLR 4.5
@@ -46864,12 +46864,14 @@ exports.ParseTreeWalker = Tree.ParseTreeWalker;
 },{}],55:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
 },{"dup":54}],56:[function(require,module,exports){
+(function (global){
 /*!
  * The buffer module from node.js, for the browser.
  *
  * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
  * @license  MIT
  */
+/* eslint-disable no-proto */
 
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
@@ -46890,35 +46892,43 @@ var rootParent = {}
  * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
  * Opera 11.6+, iOS 4.2+.
  *
+ * Due to various browser bugs, sometimes the Object implementation will be used even
+ * when the browser supports typed arrays.
+ *
  * Note:
  *
- * - Implementation must support adding new properties to `Uint8Array` instances.
- *   Firefox 4-29 lacked support, fixed in Firefox 30+.
- *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+ *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
  *
- *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *   - Safari 5-7 lacks support for changing the `Object.prototype.constructor` property
+ *     on objects.
  *
- *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
- *    incorrect length in some situations.
+ *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
  *
- * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they will
- * get the Object implementation, which is slower but will work correctly.
+ *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *     incorrect length in some situations.
+
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+ * get the Object implementation, which is slower but behaves correctly.
  */
-Buffer.TYPED_ARRAY_SUPPORT = (function () {
-  function Foo () {}
+Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
+  ? global.TYPED_ARRAY_SUPPORT
+  : typedArraySupport()
+
+function typedArraySupport () {
+  function Bar () {}
   try {
-    var buf = new ArrayBuffer(0)
-    var arr = new Uint8Array(buf)
+    var arr = new Uint8Array(1)
     arr.foo = function () { return 42 }
-    arr.constructor = Foo
+    arr.constructor = Bar
     return arr.foo() === 42 && // typed array instances can be augmented
-        arr.constructor === Foo && // constructor can be set
+        arr.constructor === Bar && // constructor can be set
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
     return false
   }
-})()
+}
 
 function kMaxLength () {
   return Buffer.TYPED_ARRAY_SUPPORT
@@ -46992,8 +47002,13 @@ function fromObject (that, object) {
     throw new TypeError('must start with number, buffer, array or string')
   }
 
-  if (typeof ArrayBuffer !== 'undefined' && object.buffer instanceof ArrayBuffer) {
-    return fromTypedArray(that, object)
+  if (typeof ArrayBuffer !== 'undefined') {
+    if (object.buffer instanceof ArrayBuffer) {
+      return fromTypedArray(that, object)
+    }
+    if (object instanceof ArrayBuffer) {
+      return fromArrayBuffer(that, object)
+    }
   }
 
   if (object.length) return fromArrayLike(that, object)
@@ -47030,6 +47045,18 @@ function fromTypedArray (that, array) {
   return that
 }
 
+function fromArrayBuffer (that, array) {
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    array.byteLength
+    that = Buffer._augment(new Uint8Array(array))
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that = fromTypedArray(that, new Uint8Array(array))
+  }
+  return that
+}
+
 function fromArrayLike (that, array) {
   var length = checked(array.length) | 0
   that = allocate(that, length)
@@ -47057,10 +47084,16 @@ function fromJsonObject (that, object) {
   return that
 }
 
+if (Buffer.TYPED_ARRAY_SUPPORT) {
+  Buffer.prototype.__proto__ = Uint8Array.prototype
+  Buffer.__proto__ = Uint8Array
+}
+
 function allocate (that, length) {
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     // Return an augmented `Uint8Array` instance, for best performance
     that = Buffer._augment(new Uint8Array(length))
+    that.__proto__ = Buffer.prototype
   } else {
     // Fallback: Return an object instance of the Buffer class
     that.length = length
@@ -47147,8 +47180,6 @@ Buffer.concat = function concat (list, length) {
 
   if (list.length === 0) {
     return new Buffer(0)
-  } else if (list.length === 1) {
-    return list[0]
   }
 
   var i
@@ -47323,13 +47354,13 @@ Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
   throw new TypeError('val must be string, number or Buffer')
 }
 
-// `get` will be removed in Node 0.13+
+// `get` is deprecated
 Buffer.prototype.get = function get (offset) {
   console.log('.get() is deprecated. Access using array indexes instead.')
   return this.readUInt8(offset)
 }
 
-// `set` will be removed in Node 0.13+
+// `set` is deprecated
 Buffer.prototype.set = function set (v, offset) {
   console.log('.set() is deprecated. Access using array indexes instead.')
   return this.writeUInt8(v, offset)
@@ -47470,20 +47501,99 @@ function base64Slice (buf, start, end) {
 }
 
 function utf8Slice (buf, start, end) {
-  var res = ''
-  var tmp = ''
   end = Math.min(buf.length, end)
+  var res = []
 
-  for (var i = start; i < end; i++) {
-    if (buf[i] <= 0x7F) {
-      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
-      tmp = ''
-    } else {
-      tmp += '%' + buf[i].toString(16)
+  var i = start
+  while (i < end) {
+    var firstByte = buf[i]
+    var codePoint = null
+    var bytesPerSequence = (firstByte > 0xEF) ? 4
+      : (firstByte > 0xDF) ? 3
+      : (firstByte > 0xBF) ? 2
+      : 1
+
+    if (i + bytesPerSequence <= end) {
+      var secondByte, thirdByte, fourthByte, tempCodePoint
+
+      switch (bytesPerSequence) {
+        case 1:
+          if (firstByte < 0x80) {
+            codePoint = firstByte
+          }
+          break
+        case 2:
+          secondByte = buf[i + 1]
+          if ((secondByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
+            if (tempCodePoint > 0x7F) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 3:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
+            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 4:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          fourthByte = buf[i + 3]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
+            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+              codePoint = tempCodePoint
+            }
+          }
+      }
     }
+
+    if (codePoint === null) {
+      // we did not generate a valid codePoint so insert a
+      // replacement char (U+FFFD) and advance only 1 byte
+      codePoint = 0xFFFD
+      bytesPerSequence = 1
+    } else if (codePoint > 0xFFFF) {
+      // encode to utf16 (surrogate pair dance)
+      codePoint -= 0x10000
+      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
+      codePoint = 0xDC00 | codePoint & 0x3FF
+    }
+
+    res.push(codePoint)
+    i += bytesPerSequence
   }
 
-  return res + decodeUtf8Char(tmp)
+  return decodeCodePointsArray(res)
+}
+
+// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+// the lowest limit is Chrome, with 0x10000 args.
+// We go 1 magnitude less, for safety
+var MAX_ARGUMENTS_LENGTH = 0x1000
+
+function decodeCodePointsArray (codePoints) {
+  var len = codePoints.length
+  if (len <= MAX_ARGUMENTS_LENGTH) {
+    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+  }
+
+  // Decode in chunks to avoid "call stack size exceeded".
+  var res = ''
+  var i = 0
+  while (i < len) {
+    res += String.fromCharCode.apply(
+      String,
+      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+    )
+  }
+  return res
 }
 
 function asciiSlice (buf, start, end) {
@@ -47772,7 +47882,7 @@ Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
   if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  this[offset] = value
+  this[offset] = (value & 0xff)
   return offset + 1
 }
 
@@ -47789,7 +47899,7 @@ Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
   } else {
     objectWriteUInt16(this, value, offset, true)
@@ -47803,7 +47913,7 @@ Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     this[offset] = (value >>> 8)
-    this[offset + 1] = value
+    this[offset + 1] = (value & 0xff)
   } else {
     objectWriteUInt16(this, value, offset, false)
   }
@@ -47825,7 +47935,7 @@ Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert
     this[offset + 3] = (value >>> 24)
     this[offset + 2] = (value >>> 16)
     this[offset + 1] = (value >>> 8)
-    this[offset] = value
+    this[offset] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, true)
   }
@@ -47840,7 +47950,7 @@ Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert
     this[offset] = (value >>> 24)
     this[offset + 1] = (value >>> 16)
     this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
+    this[offset + 3] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, false)
   }
@@ -47893,7 +48003,7 @@ Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
   if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
   if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
   if (value < 0) value = 0xff + value + 1
-  this[offset] = value
+  this[offset] = (value & 0xff)
   return offset + 1
 }
 
@@ -47902,7 +48012,7 @@ Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) 
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
   } else {
     objectWriteUInt16(this, value, offset, true)
@@ -47916,7 +48026,7 @@ Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) 
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     this[offset] = (value >>> 8)
-    this[offset + 1] = value
+    this[offset + 1] = (value & 0xff)
   } else {
     objectWriteUInt16(this, value, offset, false)
   }
@@ -47928,7 +48038,7 @@ Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) 
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
     this[offset + 2] = (value >>> 16)
     this[offset + 3] = (value >>> 24)
@@ -47947,7 +48057,7 @@ Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) 
     this[offset] = (value >>> 24)
     this[offset + 1] = (value >>> 16)
     this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
+    this[offset + 3] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, false)
   }
@@ -48018,9 +48128,16 @@ Buffer.prototype.copy = function copy (target, targetStart, start, end) {
   }
 
   var len = end - start
+  var i
 
-  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < len; i++) {
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; i--) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; i++) {
       target[i + targetStart] = this[i + start]
     }
   } else {
@@ -48096,7 +48213,7 @@ Buffer._augment = function _augment (arr) {
   // save reference to original Uint8Array set method before overwriting
   arr._set = arr.set
 
-  // deprecated, will be removed in node 0.13+
+  // deprecated
   arr.get = BP.get
   arr.set = BP.set
 
@@ -48152,7 +48269,7 @@ Buffer._augment = function _augment (arr) {
   return arr
 }
 
-var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
+var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
 
 function base64clean (str) {
   // Node strips out invalid characters like \n and \t from the string, base64-js does not
@@ -48182,28 +48299,15 @@ function utf8ToBytes (string, units) {
   var length = string.length
   var leadSurrogate = null
   var bytes = []
-  var i = 0
 
-  for (; i < length; i++) {
+  for (var i = 0; i < length; i++) {
     codePoint = string.charCodeAt(i)
 
     // is surrogate component
     if (codePoint > 0xD7FF && codePoint < 0xE000) {
       // last char was a lead
-      if (leadSurrogate) {
-        // 2 leads in a row
-        if (codePoint < 0xDC00) {
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          leadSurrogate = codePoint
-          continue
-        } else {
-          // valid surrogate pair
-          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
-          leadSurrogate = null
-        }
-      } else {
+      if (!leadSurrogate) {
         // no lead yet
-
         if (codePoint > 0xDBFF) {
           // unexpected trail
           if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -48212,17 +48316,29 @@ function utf8ToBytes (string, units) {
           // unpaired lead
           if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
           continue
-        } else {
-          // valid lead
-          leadSurrogate = codePoint
-          continue
         }
+
+        // valid lead
+        leadSurrogate = codePoint
+
+        continue
       }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+        leadSurrogate = codePoint
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
     } else if (leadSurrogate) {
       // valid bmp char, but last char was a lead
       if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-      leadSurrogate = null
     }
+
+    leadSurrogate = null
 
     // encode utf8
     if (codePoint < 0x80) {
@@ -48241,7 +48357,7 @@ function utf8ToBytes (string, units) {
         codePoint >> 0x6 & 0x3F | 0x80,
         codePoint & 0x3F | 0x80
       )
-    } else if (codePoint < 0x200000) {
+    } else if (codePoint < 0x110000) {
       if ((units -= 4) < 0) break
       bytes.push(
         codePoint >> 0x12 | 0xF0,
@@ -48294,14 +48410,7 @@ function blitBuffer (src, dst, offset, length) {
   return i
 }
 
-function decodeUtf8Char (str) {
-  try {
-    return decodeURIComponent(str)
-  } catch (err) {
-    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
-  }
-}
-
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"base64-js":57,"ieee754":58,"is-array":59}],57:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -48878,11 +48987,30 @@ if (typeof Object.create === 'function') {
 }
 
 },{}],62:[function(require,module,exports){
+/**
+ * Determine if an object is Buffer
+ *
+ * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * License:  MIT
+ *
+ * `npm install is-buffer`
+ */
+
+module.exports = function (obj) {
+  return !!(obj != null &&
+    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
+      (obj.constructor &&
+      typeof obj.constructor.isBuffer === 'function' &&
+      obj.constructor.isBuffer(obj))
+    ))
+}
+
+},{}],63:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -48915,7 +49043,9 @@ function drainQueue() {
         currentQueue = queue;
         queue = [];
         while (++queueIndex < len) {
-            currentQueue[queueIndex].run();
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
         }
         queueIndex = -1;
         len = queue.length;
@@ -48967,17 +49097,16 @@ process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
-// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 process.umask = function() { return 0; };
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":65}],65:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":66}],66:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -49070,7 +49199,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":67,"./_stream_writable":69,"_process":63,"core-util-is":70,"inherits":61}],66:[function(require,module,exports){
+},{"./_stream_readable":68,"./_stream_writable":70,"_process":64,"core-util-is":71,"inherits":61}],67:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -49118,7 +49247,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":68,"core-util-is":70,"inherits":61}],67:[function(require,module,exports){
+},{"./_stream_transform":69,"core-util-is":71,"inherits":61}],68:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50073,7 +50202,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":65,"_process":63,"buffer":56,"core-util-is":70,"events":60,"inherits":61,"isarray":62,"stream":75,"string_decoder/":76,"util":55}],68:[function(require,module,exports){
+},{"./_stream_duplex":66,"_process":64,"buffer":56,"core-util-is":71,"events":60,"inherits":61,"isarray":63,"stream":76,"string_decoder/":77,"util":55}],69:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -50284,7 +50413,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":65,"core-util-is":70,"inherits":61}],69:[function(require,module,exports){
+},{"./_stream_duplex":66,"core-util-is":71,"inherits":61}],70:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50765,7 +50894,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":65,"_process":63,"buffer":56,"core-util-is":70,"inherits":61,"stream":75}],70:[function(require,module,exports){
+},{"./_stream_duplex":66,"_process":64,"buffer":56,"core-util-is":71,"inherits":61,"stream":76}],71:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -50874,11 +51003,11 @@ exports.isBuffer = isBuffer;
 function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
-}).call(this,require("buffer").Buffer)
-},{"buffer":56}],71:[function(require,module,exports){
+}).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":62}],72:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":66}],72:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":67}],73:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -50887,13 +51016,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":65,"./lib/_stream_passthrough.js":66,"./lib/_stream_readable.js":67,"./lib/_stream_transform.js":68,"./lib/_stream_writable.js":69,"stream":75}],73:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":66,"./lib/_stream_passthrough.js":67,"./lib/_stream_readable.js":68,"./lib/_stream_transform.js":69,"./lib/_stream_writable.js":70,"stream":76}],74:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":68}],74:[function(require,module,exports){
+},{"./lib/_stream_transform.js":69}],75:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":69}],75:[function(require,module,exports){
+},{"./lib/_stream_writable.js":70}],76:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -51022,7 +51151,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":60,"inherits":61,"readable-stream/duplex.js":64,"readable-stream/passthrough.js":71,"readable-stream/readable.js":72,"readable-stream/transform.js":73,"readable-stream/writable.js":74}],76:[function(require,module,exports){
+},{"events":60,"inherits":61,"readable-stream/duplex.js":65,"readable-stream/passthrough.js":72,"readable-stream/readable.js":73,"readable-stream/transform.js":74,"readable-stream/writable.js":75}],77:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -51245,7 +51374,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":56}],77:[function(require,module,exports){
+},{"buffer":56}],78:[function(require,module,exports){
 'use strict';
 
 exports.Parser = require('./lib/tree_construction/parser');
@@ -51259,7 +51388,7 @@ exports.TreeAdapters = {
     htmlparser2: require('./lib/tree_adapters/htmlparser2')
 };
 
-},{"./lib/jsdom/jsdom_parser":83,"./lib/serialization/serializer":85,"./lib/simple_api/simple_api_parser":86,"./lib/tree_adapters/default":92,"./lib/tree_adapters/htmlparser2":93,"./lib/tree_construction/parser":97}],78:[function(require,module,exports){
+},{"./lib/jsdom/jsdom_parser":84,"./lib/serialization/serializer":86,"./lib/simple_api/simple_api_parser":87,"./lib/tree_adapters/default":93,"./lib/tree_adapters/htmlparser2":94,"./lib/tree_construction/parser":98}],79:[function(require,module,exports){
 'use strict';
 
 //Const
@@ -51395,7 +51524,7 @@ exports.serializeContent = function (name, publicId, systemId) {
     return str;
 };
 
-},{}],79:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -51654,7 +51783,7 @@ exports.isHtmlIntegrationPoint = function (tn, ns, attrs) {
     return ns === NS.SVG && (tn === $.FOREIGN_OBJECT || tn === $.DESC || tn === $.TITLE);
 };
 
-},{"../tokenization/tokenizer":91,"./html":80}],80:[function(require,module,exports){
+},{"../tokenization/tokenizer":92,"./html":81}],81:[function(require,module,exports){
 'use strict';
 
 var NS = exports.NAMESPACES = {
@@ -51924,7 +52053,7 @@ SPECIAL_ELEMENTS[NS.SVG][$.TITLE] = true;
 SPECIAL_ELEMENTS[NS.SVG][$.FOREIGN_OBJECT] = true;
 SPECIAL_ELEMENTS[NS.SVG][$.DESC] = true;
 
-},{}],81:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 'use strict';
 
 exports.REPLACEMENT_CHARACTER = '\uFFFD';
@@ -51974,7 +52103,7 @@ exports.CODE_POINT_SEQUENCES = {
     SYSTEM_STRING: [0x53, 0x59, 0x53, 0x54, 0x45, 0x4D] //SYSTEM
 };
 
-},{}],82:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 'use strict';
 
 exports.mergeOptions = function (defaults, options) {
@@ -51989,7 +52118,7 @@ exports.mergeOptions = function (defaults, options) {
     }, {});
 };
 
-},{}],83:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -52031,7 +52160,7 @@ exports.parseInnerHtml = function (innerHtml, contextElement, treeAdapter) {
     return parser.parseFragment(innerHtml, contextElement);
 };
 }).call(this,require('_process'))
-},{"../tree_construction/parser":97,"./parsing_unit":84,"_process":63}],84:[function(require,module,exports){
+},{"../tree_construction/parser":98,"./parsing_unit":85,"_process":64}],85:[function(require,module,exports){
 'use strict';
 
 var ParsingUnit = module.exports = function (parser) {
@@ -52086,7 +52215,7 @@ ParsingUnit.prototype.done = function (callback) {
     return this;
 };
 
-},{}],85:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 'use strict';
 
 var DefaultTreeAdapter = require('../tree_adapters/default'),
@@ -52267,7 +52396,7 @@ Serializer.prototype._serializeDocumentTypeNode = function (node) {
     this.html += '<' + Doctype.serializeContent(name, publicId, systemId) + '>';
 };
 
-},{"../common/doctype":78,"../common/html":80,"../common/utils":82,"../tree_adapters/default":92}],86:[function(require,module,exports){
+},{"../common/doctype":79,"../common/html":81,"../common/utils":83,"../tree_adapters/default":93}],87:[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -52376,7 +52505,7 @@ SimpleApiParser.prototype._emitPendingText = function () {
     }
 };
 
-},{"../common/utils":82,"../tokenization/tokenizer":91,"./tokenizer_proxy":87}],87:[function(require,module,exports){
+},{"../common/utils":83,"../tokenization/tokenizer":92,"./tokenizer_proxy":88}],88:[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -52500,7 +52629,7 @@ TokenizerProxy.prototype._handleEndTagToken = function (token) {
         this._leaveCurrentNamespace();
 };
 
-},{"../common/foreign_content":79,"../common/html":80,"../common/unicode":81,"../tokenization/tokenizer":91}],88:[function(require,module,exports){
+},{"../common/foreign_content":80,"../common/html":81,"../common/unicode":82,"../tokenization/tokenizer":92}],89:[function(require,module,exports){
 'use strict';
 
 exports.assign = function (tokenizer) {
@@ -52582,7 +52711,7 @@ exports.assign = function (tokenizer) {
         });
 };
 
-},{}],89:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 'use strict';
 
 //NOTE: this file contains auto generated trie structure that is used for named entity references consumption
@@ -52642,7 +52771,7 @@ module.exports = {
     0x5A: {l: {0x61: {l: {0x63: {l: {0x75: {l: {0x74: {l: {0x65: {l: {0x3B: {c: [377]}}}}}}}}}}}, 0x63: {l: {0x61: {l: {0x72: {l: {0x6F: {l: {0x6E: {l: {0x3B: {c: [381]}}}}}}}}}, 0x79: {l: {0x3B: {c: [1047]}}}}}, 0x64: {l: {0x6F: {l: {0x74: {l: {0x3B: {c: [379]}}}}}}}, 0x65: {l: {0x72: {l: {0x6F: {l: {0x57: {l: {0x69: {l: {0x64: {l: {0x74: {l: {0x68: {l: {0x53: {l: {0x70: {l: {0x61: {l: {0x63: {l: {0x65: {l: {0x3B: {c: [8203]}}}}}}}}}}}}}}}}}}}}}}}}}, 0x74: {l: {0x61: {l: {0x3B: {c: [918]}}}}}}}, 0x66: {l: {0x72: {l: {0x3B: {c: [8488]}}}}}, 0x48: {l: {0x63: {l: {0x79: {l: {0x3B: {c: [1046]}}}}}}}, 0x6F: {l: {0x70: {l: {0x66: {l: {0x3B: {c: [8484]}}}}}}}, 0x73: {l: {0x63: {l: {0x72: {l: {0x3B: {c: [119989]}}}}}}}}},
     0x7A: {l: {0x61: {l: {0x63: {l: {0x75: {l: {0x74: {l: {0x65: {l: {0x3B: {c: [378]}}}}}}}}}}}, 0x63: {l: {0x61: {l: {0x72: {l: {0x6F: {l: {0x6E: {l: {0x3B: {c: [382]}}}}}}}}}, 0x79: {l: {0x3B: {c: [1079]}}}}}, 0x64: {l: {0x6F: {l: {0x74: {l: {0x3B: {c: [380]}}}}}}}, 0x65: {l: {0x65: {l: {0x74: {l: {0x72: {l: {0x66: {l: {0x3B: {c: [8488]}}}}}}}}}, 0x74: {l: {0x61: {l: {0x3B: {c: [950]}}}}}}}, 0x66: {l: {0x72: {l: {0x3B: {c: [120119]}}}}}, 0x68: {l: {0x63: {l: {0x79: {l: {0x3B: {c: [1078]}}}}}}}, 0x69: {l: {0x67: {l: {0x72: {l: {0x61: {l: {0x72: {l: {0x72: {l: {0x3B: {c: [8669]}}}}}}}}}}}}}, 0x6F: {l: {0x70: {l: {0x66: {l: {0x3B: {c: [120171]}}}}}}}, 0x73: {l: {0x63: {l: {0x72: {l: {0x3B: {c: [120015]}}}}}}}, 0x77: {l: {0x6A: {l: {0x3B: {c: [8205]}}}, 0x6E: {l: {0x6A: {l: {0x3B: {c: [8204]}}}}}}}}}
 };
-},{}],90:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 'use strict';
 
 var UNICODE = require('../common/unicode');
@@ -52759,7 +52888,7 @@ Preprocessor.prototype.retreat = function () {
     this.pos--;
 };
 
-},{"../common/unicode":81}],91:[function(require,module,exports){
+},{"../common/unicode":82}],92:[function(require,module,exports){
 'use strict';
 
 var Preprocessor = require('./preprocessor'),
@@ -55078,7 +55207,7 @@ _[CDATA_SECTION_STATE] = function cdataSectionState(cp) {
     }
 };
 
-},{"../common/unicode":81,"./location_info_mixin":88,"./named_entity_trie":89,"./preprocessor":90}],92:[function(require,module,exports){
+},{"../common/unicode":82,"./location_info_mixin":89,"./named_entity_trie":90,"./preprocessor":91}],93:[function(require,module,exports){
 'use strict';
 
 //Node construction
@@ -55280,7 +55409,7 @@ exports.isElementNode = function (node) {
     return !!node.tagName;
 };
 
-},{}],93:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 'use strict';
 
 var Doctype = require('../common/doctype');
@@ -55599,7 +55728,7 @@ exports.isElementNode = function (node) {
     return !!node.attribs;
 };
 
-},{"../common/doctype":78}],94:[function(require,module,exports){
+},{"../common/doctype":79}],95:[function(require,module,exports){
 'use strict';
 
 //Const
@@ -55768,7 +55897,7 @@ FormattingElementList.prototype.getElementEntry = function (element) {
     return null;
 };
 
-},{}],95:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 'use strict';
 
 var OpenElementStack = require('./open_element_stack'),
@@ -55967,7 +56096,7 @@ exports.assign = function (parser) {
 };
 
 
-},{"../common/html":80,"../tokenization/tokenizer":91,"./open_element_stack":96}],96:[function(require,module,exports){
+},{"../common/html":81,"../tokenization/tokenizer":92,"./open_element_stack":97}],97:[function(require,module,exports){
 'use strict';
 
 var HTML = require('../common/html');
@@ -56348,7 +56477,7 @@ OpenElementStack.prototype.generateImpliedEndTagsWithExclusion = function (exclu
         this.pop();
 };
 
-},{"../common/html":80}],97:[function(require,module,exports){
+},{"../common/html":81}],98:[function(require,module,exports){
 'use strict';
 
 var Tokenizer = require('../tokenization/tokenizer'),
@@ -59177,7 +59306,7 @@ function endTagInForeignContent(p, token) {
     }
 }
 
-},{"../common/doctype":78,"../common/foreign_content":79,"../common/html":80,"../common/unicode":81,"../common/utils":82,"../tokenization/tokenizer":91,"../tree_adapters/default":92,"./formatting_element_list":94,"./location_info_mixin":95,"./open_element_stack":96}],98:[function(require,module,exports){
+},{"../common/doctype":79,"../common/foreign_content":80,"../common/html":81,"../common/unicode":82,"../common/utils":83,"../tokenization/tokenizer":92,"../tree_adapters/default":93,"./formatting_element_list":95,"./location_info_mixin":96,"./open_element_stack":97}],99:[function(require,module,exports){
 (function (Buffer){
 // wrapper for non-node envs
 ;(function (sax) {
@@ -60611,7 +60740,7 @@ if (!String.fromCodePoint) {
 })(typeof exports === "undefined" ? sax = {} : exports);
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":56,"stream":75,"string_decoder":76}],99:[function(require,module,exports){
+},{"buffer":56,"stream":76,"string_decoder":77}],100:[function(require,module,exports){
 var ANTLR_PARSER_COLLECTION, antlr4, helper, model, parser, treewalk;
 
 helper = require('./helper.coffee');
@@ -60706,8 +60835,8 @@ exports.createANTLRParser = function(name, config, root) {
 };
 
 
-},{"../antlr/CLexer":1,"../antlr/CParser":3,"../antlr/JavaLexer":4,"../antlr/JavaParser":6,"../antlr/jvmBasicLexer":7,"../antlr/jvmBasicParser":9,"./helper.coffee":102,"./model.coffee":110,"./parser.coffee":112,"./treewalk.coffee":113,"antlr4":50}],100:[function(require,module,exports){
-var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, ENTER_KEY, Editor, EditorState, FLOATING_BLOCK_ALPHA, FloatingBlockRecord, FloatingOperation, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
+},{"../antlr/CLexer":1,"../antlr/CParser":3,"../antlr/JavaLexer":4,"../antlr/JavaParser":6,"../antlr/jvmBasicLexer":7,"../antlr/jvmBasicParser":9,"./helper.coffee":103,"./model.coffee":111,"./parser.coffee":113,"./treewalk.coffee":114,"antlr4":50}],101:[function(require,module,exports){
+var ANIMATION_FRAME_RATE, BACKSPACE_KEY, CONTROL_KEYS, CURSOR_HEIGHT_DECREASE, CURSOR_UNFOCUSED_OPACITY, CURSOR_WIDTH_DECREASE, CapturePoint, CrossDocumentLocation, DEBUG_FLAG, DEFAULT_INDENT_DEPTH, DISCOURAGE_DROP_TIMEOUT, DOWN_ARROW_KEY, DROPDOWN_SCROLLBAR_PADDING, ENTER_KEY, Editor, EditorState, FloatingBlockRecord, FloatingOperation, GRAY_BLOCK_BORDER, GRAY_BLOCK_COLOR, GRAY_BLOCK_HANDLE_HEIGHT, GRAY_BLOCK_HANDLE_WIDTH, GRAY_BLOCK_MARGIN, LEFT_ARROW_KEY, MAX_DROP_DISTANCE, META_KEYS, MIN_DRAG_DISTANCE, PALETTE_LEFT_MARGIN, PALETTE_MARGIN, PALETTE_TOP_MARGIN, QUAD, RIGHT_ARROW_KEY, RememberedSocketRecord, TAB_KEY, TOUCH_SELECTION_TIMEOUT, TYPE_FROM_SEVERITY, TYPE_SEVERITY, UP_ARROW_KEY, Y_KEY, Z_KEY, binding, command_modifiers, command_pressed, containsCursor, draw, editorBindings, escapeString, getMostSevereAnnotationType, getOffsetLeft, getOffsetTop, helper, hook, isOSX, j, key, last_, len, model, modes, parseBlock, ref, ref1, touchEvents, unsortedEditorBindings, userAgent, validateLassoSelection, view,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 helper = require('./helper.coffee');
@@ -60770,7 +60899,15 @@ META_KEYS = [91, 92, 93, 223, 224];
 
 CONTROL_KEYS = [17, 162, 163];
 
-FLOATING_BLOCK_ALPHA = 0.75;
+GRAY_BLOCK_MARGIN = 5;
+
+GRAY_BLOCK_HANDLE_WIDTH = 15;
+
+GRAY_BLOCK_HANDLE_HEIGHT = 30;
+
+GRAY_BLOCK_COLOR = '#FFF';
+
+GRAY_BLOCK_BORDER = '#AAA';
 
 userAgent = '';
 
@@ -60815,10 +60952,10 @@ hook = function(event, priority, fn) {
 };
 
 exports.Editor = Editor = (function() {
-  function Editor(wrapperElement, options) {
+  function Editor(wrapperElement, options1) {
     var binding, boundListeners, dispatchKeyEvent, dispatchMouseEvent, elements, eventName, fn1, j, len, ref1, ref2, ref3, ref4, ref5, useBlockMode;
     this.wrapperElement = wrapperElement;
-    this.options = options;
+    this.options = options1;
     this.readOnly = false;
     this.paletteGroups = this.options.palette;
     this.showPaletteInTextMode = (ref1 = this.options.showPaletteInTextMode) != null ? ref1 : false;
@@ -61095,8 +61232,76 @@ Editor.prototype.resizeNubby = function() {
   return this.setTopNubbyStyle(this.nubbyHeight, this.nubbyColor);
 };
 
+Editor.prototype.drawFloatingBlock = function(record, startWidth, endWidth, rect, opts) {
+  var blockView, bottomTextPosition, oldBounds, path, rectangle, ref1, ref2, startHeight;
+  blockView = this.view.getViewNodeFor(record.block);
+  blockView.layout(record.position.x, record.position.y);
+  rectangle = new this.view.draw.Rectangle();
+  rectangle.copy(blockView.totalBounds);
+  rectangle.x -= GRAY_BLOCK_MARGIN;
+  rectangle.y -= GRAY_BLOCK_MARGIN;
+  rectangle.width += 2 * GRAY_BLOCK_MARGIN;
+  rectangle.height += 2 * GRAY_BLOCK_MARGIN;
+  bottomTextPosition = blockView.totalBounds.bottom() - blockView.distanceToBase[blockView.lineLength - 1].below - this.fontSize;
+  if ((blockView.totalBounds.width - blockView.bounds[blockView.bounds.length - 1].width) < endWidth) {
+    if (blockView.lineLength > 1) {
+      rectangle.height += this.fontSize;
+      bottomTextPosition = rectangle.bottom() - this.fontSize - 5;
+    } else {
+      rectangle.width += endWidth;
+    }
+  }
+  if (!rectangle.equals(record.grayBox)) {
+    record.grayBox = rectangle;
+    oldBounds = (ref1 = (ref2 = record.grayBoxPath) != null ? typeof ref2.bounds === "function" ? ref2.bounds() : void 0 : void 0) != null ? ref1 : new this.view.draw.NoRectangle();
+    startHeight = blockView.bounds[0].height + 10;
+    record.grayBoxPath = path = new this.view.draw.Path();
+    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.y));
+    path.push(new this.view.draw.Point(rectangle.right(), rectangle.y + 5));
+    path.push(new this.view.draw.Point(rectangle.right(), rectangle.bottom() - 5));
+    path.push(new this.view.draw.Point(rectangle.right() - 5, rectangle.bottom()));
+    if (blockView.lineLength > 1) {
+      path.push(new this.view.draw.Point(rectangle.x + 5, rectangle.bottom()));
+      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom() - 5));
+    } else {
+      path.push(new this.view.draw.Point(rectangle.x, rectangle.bottom()));
+    }
+    path.push(new this.view.draw.Point(rectangle.x, rectangle.y + startHeight));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y + startHeight));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + startHeight - 5));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth, rectangle.y + 5));
+    path.push(new this.view.draw.Point(rectangle.x - startWidth + 5, rectangle.y));
+    path.push(new this.view.draw.Point(rectangle.x, rectangle.y));
+    path.bevel = false;
+    path.noclip = true;
+    path.dotted = true;
+    path.style = {
+      fillColor: GRAY_BLOCK_COLOR,
+      strokeColor: GRAY_BLOCK_BORDER,
+      lineWidth: 4
+    };
+    if (opts.boundingRectangle != null) {
+      opts.boundingRectangle.unite(path.bounds());
+      opts.boundingRectangle.unite(oldBounds);
+      this.mainCtx.restore();
+      return this.redrawMain(opts);
+    }
+  }
+  this.mainCtx.globalAlpha *= 0.8;
+  record.grayBoxPath.draw(this.mainCtx);
+  this.mainCtx.fillStyle = '#000';
+  this.mainCtx.fillText(this.mode.startComment, blockView.totalBounds.x - startWidth, blockView.totalBounds.y + blockView.distanceToBase[0].above - this.fontSize);
+  this.mainCtx.fillText(this.mode.endComment, record.grayBox.right() - endWidth - 5, bottomTextPosition);
+  this.mainCtx.globalAlpha /= 0.8;
+  return blockView.draw(this.mainCtx, rect, {
+    grayscale: false,
+    selected: false,
+    noText: false
+  });
+};
+
 Editor.prototype.redrawMain = function(opts) {
-  var binding, j, layoutResult, len, oldScroll, ref1, ref2, ref3;
+  var binding, endWidth, j, k, layoutResult, len, len1, oldScroll, options, record, rect, ref1, ref2, ref3, ref4, startWidth;
   if (opts == null) {
     opts = {};
   }
@@ -61109,22 +61314,30 @@ Editor.prototype.redrawMain = function(opts) {
       this.mainCtx.save();
       opts.boundingRectangle.clip(this.mainCtx);
     }
-    layoutResult = this.view.getViewNodeFor(this.tree).layout(0, this.nubbyHeight);
-    this.view.getViewNodeFor(this.tree).draw(this.mainCtx, (ref1 = opts.boundingRectangle) != null ? ref1 : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
+    rect = (ref1 = opts.boundingRectangle) != null ? ref1 : new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
+    options = {
       grayscale: false,
       selected: false,
       noText: (ref2 = opts.noText) != null ? ref2 : false
-    });
-    this.redrawCursors();
-    this.redrawHighlights();
+    };
+    layoutResult = this.view.getViewNodeFor(this.tree).layout(0, this.nubbyHeight);
+    this.view.getViewNodeFor(this.tree).draw(this.mainCtx, rect, options);
+    startWidth = this.mainCtx.measureText(this.mode.startComment).width;
+    endWidth = this.mainCtx.measureText(this.mode.endComment).width;
+    ref3 = this.floatingBlocks;
+    for (j = 0, len = ref3.length; j < len; j++) {
+      record = ref3[j];
+      this.drawFloatingBlock(record, startWidth, endWidth, rect, opts);
+    }
     if (opts.boundingRectangle != null) {
       this.mainCtx.restore();
     }
     this.redrawCursors();
     this.redrawHighlights();
-    ref3 = editorBindings.redraw_main;
-    for (j = 0, len = ref3.length; j < len; j++) {
-      binding = ref3[j];
+    this.resizeGutter();
+    ref4 = editorBindings.redraw_main;
+    for (k = 0, len1 = ref4.length; k < len1; k++) {
+      binding = ref4[k];
       binding.call(this, layoutResult);
     }
     if (this.changeEventVersion !== this.tree.version) {
@@ -61146,7 +61359,7 @@ Editor.prototype.redrawHighlights = function() {
   ref1 = this.markedLines;
   for (line in ref1) {
     info = ref1[line];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
@@ -61156,7 +61369,7 @@ Editor.prototype.redrawHighlights = function() {
   ref2 = this.markedBlocks;
   for (id in ref2) {
     info = ref2[id];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
@@ -61166,17 +61379,18 @@ Editor.prototype.redrawHighlights = function() {
   ref3 = this.extraMarks;
   for (id in ref3) {
     info = ref3[id];
-    if (this.inTree(info.model)) {
+    if (this.inDisplay(info.model)) {
       path = this.getHighlightPath(info.model, info.style);
       path.draw(this.highlightCtx);
     } else {
       delete this.extraMarks[id];
     }
   }
-  if ((this.draggingBlock != null) && this.inTree(this.draggingBlock)) {
+  if ((this.draggingBlock != null) && this.inDisplay(this.draggingBlock)) {
     this.view.getViewNodeFor(this.draggingBlock).draw(this.highlightCtx, new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height), {
       grayscale: true
     });
+    this.maskFloatingPaths(this.draggingBlock.getDocument());
   }
   this.redrawCursors();
   return this.redrawLassoHighlight();
@@ -61380,6 +61594,13 @@ EditorState = (function() {
     return true;
   };
 
+  EditorState.prototype.toString = function() {
+    return JSON.stringify({
+      root: this.root,
+      floats: this.floats
+    });
+  };
+
   return EditorState;
 
 })();
@@ -61393,18 +61614,31 @@ Editor.prototype.getSerializedEditorState = function() {
   }));
 };
 
+Editor.prototype.clearUndoStack = function() {
+  this.undoStack.length = 0;
+  return this.redoStack.length = 0;
+};
+
 Editor.prototype.undo = function() {
   var currentValue, operation;
+  this.setCursor(this.cursor, (function(x) {
+    return x.type !== 'socketStart';
+  }));
   currentValue = this.getSerializedEditorState();
-  while (!(this.undoStack.length === 0 || (this.undoStack[this.undoStack.length - 1] === 'CAPTURE' && !this.getSerializedEditorState().equals(currentValue)))) {
+  while (!(this.undoStack.length === 0 || (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint && !this.getSerializedEditorState().equals(currentValue)))) {
     operation = this.popUndo();
     if (operation instanceof FloatingOperation) {
       this.performFloatingOperation(operation, 'backward');
     } else {
-      if (operation !== 'CAPTURE') {
-        this.tree.perform(operation, 'backward', [this.cursor]);
+      if (!(operation instanceof CapturePoint)) {
+        this.getDocument(operation.document).perform(operation.operation, 'backward', this.getPreserves(operation.document));
       }
     }
+  }
+  if (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint) {
+    this.rememberedSockets = this.undoStack[this.undoStack.length - 1].rememberedSockets.map(function(x) {
+      return x.clone();
+    });
   }
   this.popUndo();
   this.correctCursor();
@@ -61437,33 +61671,102 @@ Editor.prototype.popRedo = function() {
 Editor.prototype.redo = function() {
   var currentValue, operation;
   currentValue = this.getSerializedEditorState();
-  while (!(this.redoStack.length === 0 || (this.redoStack[this.redoStack.length - 1] === 'CAPTURE' && !this.getSerializedEditorState().equals(currentValue)))) {
+  while (!(this.redoStack.length === 0 || (this.redoStack[this.redoStack.length - 1] instanceof CapturePoint && !this.getSerializedEditorState().equals(currentValue)))) {
     operation = this.popRedo();
     if (operation instanceof FloatingOperation) {
       this.performFloatingOperation(operation, 'forward');
     } else {
-      if (operation !== 'CAPTURE') {
-        this.tree.perform(operation, 'forward', [this.cursor]);
+      if (!(operation instanceof CapturePoint)) {
+        this.getDocument(operation.document).perform(operation.operation, 'forward', this.getPreserves(operation.document));
       }
     }
+  }
+  if (this.undoStack[this.undoStack.length - 1] instanceof CapturePoint) {
+    this.rememberedSockets = this.undoStack[this.undoStack.length - 1].rememberedSockets.map(function(x) {
+      return x.clone();
+    });
   }
   this.popRedo();
   this.redrawMain();
 };
 
 Editor.prototype.undoCapture = function() {
-  return this.pushUndo('CAPTURE');
+  return this.pushUndo(new CapturePoint(this.rememberedSockets));
+};
+
+CapturePoint = (function() {
+  function CapturePoint(rememberedSockets) {
+    this.rememberedSockets = rememberedSockets.map(function(x) {
+      return x.clone();
+    });
+  }
+
+  return CapturePoint;
+
+})();
+
+hook('populate', 7, function() {
+  return this.rememberedSockets = [];
+});
+
+Editor.prototype.getPreserves = function(dropletDocument) {
+  var array;
+  if (dropletDocument instanceof model.Document) {
+    dropletDocument = this.documentIndex(dropletDocument);
+  }
+  array = [this.cursor];
+  array = array.concat(this.rememberedSockets.map(function(x) {
+    return x.socket;
+  }));
+  return array.filter(function(location) {
+    return location.document === dropletDocument;
+  }).map(function(location) {
+    return location.location;
+  });
 };
 
 Editor.prototype.spliceOut = function(node) {
-  var operation;
+  var dropletDocument, i, j, k, len, len1, operation, parent, record, ref1, ref2, socket;
   if (!(node instanceof model.List)) {
     node = new model.List(node, node);
   }
   operation = null;
-  if (this.inTree(node)) {
-    operation = this.tree.remove(node, [this.cursor]);
-    this.pushUndo(operation);
+  dropletDocument = node.getDocument();
+  if (dropletDocument != null) {
+    parent = node.parent;
+    operation = node.getDocument().remove(node, this.getPreserves(dropletDocument));
+    this.pushUndo({
+      operation: operation,
+      document: this.getDocuments().indexOf(dropletDocument)
+    });
+    if ((parent != null ? parent.type : void 0) === 'socket' && node.start.type === 'blockStart') {
+      ref1 = this.rememberedSockets;
+      for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+        socket = ref1[i];
+        if (this.fromCrossDocumentLocation(socket.socket) === parent) {
+          this.rememberedSockets.splice(i, 0);
+          this.populateSocket(parent, socket.text);
+          break;
+        }
+      }
+    }
+    if (dropletDocument.start.next === dropletDocument.end) {
+      ref2 = this.floatingBlocks;
+      for (i = k = 0, len1 = ref2.length; k < len1; i = ++k) {
+        record = ref2[i];
+        if (record.block === dropletDocument) {
+          this.pushUndo(new FloatingOperation(i, record.block, record.position, 'delete'));
+          if (this.cursor.document === i + 1) {
+            this.setCursor(this.tree.start);
+          }
+          if (this.cursor.document > i + 1) {
+            this.cursor.document -= 1;
+          }
+          this.floatingBlocks.splice(i, 1);
+          break;
+        }
+      }
+    }
   }
   this.prepareNode(node, null);
   this.correctCursor();
@@ -61471,40 +61774,76 @@ Editor.prototype.spliceOut = function(node) {
 };
 
 Editor.prototype.spliceIn = function(node, location) {
-  var container, operation, ref1;
+  var container, dropletDocument, operation, ref1;
   container = (ref1 = location.container) != null ? ref1 : location.parent;
   if (container.type === 'block') {
     container = container.parent;
   } else if (container.type === 'socket' && container.start.next !== container.end) {
+    this.rememberedSockets.push(new RememberedSocketRecord(this.toCrossDocumentLocation(container), container.textContent()));
     this.spliceOut(new model.List(container.start.next, container.end.prev));
   }
-  this.prepareNode(node, container);
-  operation = null;
-  operation = this.tree.insert(location, node, [this.cursor]);
-  this.pushUndo(operation);
-  this.correctCursor();
-  return operation;
+  dropletDocument = location.getDocument();
+  if (dropletDocument != null) {
+    this.prepareNode(node, container);
+    operation = dropletDocument.insert(location, node, this.getPreserves(dropletDocument));
+    this.pushUndo({
+      operation: operation,
+      document: this.getDocuments().indexOf(dropletDocument)
+    });
+    this.correctCursor();
+    return operation;
+  } else {
+    return null;
+  }
 };
 
+RememberedSocketRecord = (function() {
+  function RememberedSocketRecord(socket1, text1) {
+    this.socket = socket1;
+    this.text = text1;
+  }
+
+  RememberedSocketRecord.prototype.clone = function() {
+    return new RememberedSocketRecord(this.socket.clone(), this.text);
+  };
+
+  return RememberedSocketRecord;
+
+})();
+
 Editor.prototype.replace = function(before, after, updates) {
-  var operation;
-  operation = this.tree.replace(before, after, updates);
-  this.pushUndo(operation);
-  this.correctCursor();
-  return operation;
+  var dropletDocument, operation;
+  if (updates == null) {
+    updates = [];
+  }
+  dropletDocument = before.start.getDocument();
+  if (dropletDocument != null) {
+    operation = dropletDocument.replace(before, after, updates.concat(this.getPreserves(dropletDocument)));
+    this.pushUndo({
+      operation: operation,
+      document: this.documentIndex(dropletDocument)
+    });
+    this.correctCursor();
+    return operation;
+  } else {
+    return null;
+  }
 };
 
 Editor.prototype.correctCursor = function() {
   var cursor;
-  cursor = this.tree.getFromLocation(this.cursor);
+  cursor = this.fromCrossDocumentLocation(this.cursor);
   if (!this.validCursorPosition(cursor)) {
-    while (!(this.validCursorPosition(cursor) && cursor.type !== 'socketStart')) {
+    while (!((cursor == null) || (this.validCursorPosition(cursor) && cursor.type !== 'socketStart'))) {
       cursor = cursor.next;
     }
-    while (!(this.validCursorPosition(cursor) && cursor.type !== 'socketStart')) {
+    if (cursor == null) {
+      cursor = this.fromCrossDocumentLocation(this.cursor);
+    }
+    while (!((cursor == null) || (this.validCursorPosition(cursor) && cursor.type !== 'socketStart'))) {
       cursor = cursor.prev;
     }
-    return this.cursor = cursor.getLocation();
+    return this.cursor = this.toCrossDocumentLocation(cursor);
   }
 };
 
@@ -61560,8 +61899,39 @@ Editor.prototype.resizeDragCanvas = function() {
   return this.highlightCanvas.style.left = this.mainCanvas.offsetLeft + "px";
 };
 
+Editor.prototype.getDocuments = function() {
+  var documents, el, i, j, len, ref1;
+  documents = [this.tree];
+  ref1 = this.floatingBlocks;
+  for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+    el = ref1[i];
+    documents.push(el.block);
+  }
+  return documents;
+};
+
+Editor.prototype.getDocument = function(n) {
+  if (n === 0) {
+    return this.tree;
+  } else {
+    return this.floatingBlocks[n - 1].block;
+  }
+};
+
+Editor.prototype.documentIndex = function(block) {
+  return this.getDocuments().indexOf(block.getDocument());
+};
+
+Editor.prototype.fromCrossDocumentLocation = function(location) {
+  return this.getDocument(location.document).getFromLocation(location.location);
+};
+
+Editor.prototype.toCrossDocumentLocation = function(block) {
+  return new CrossDocumentLocation(this.documentIndex(block), block.getLocation());
+};
+
 hook('mousedown', 1, function(point, event, state) {
-  var box, hitTestResult, i, j, len, line, mainPoint, node, ref1;
+  var box, dropletDocument, hitTestResult, i, j, k, len, line, mainPoint, node, record, ref1, ref2;
   if (state.consumedHitTest) {
     return;
   }
@@ -61569,26 +61939,77 @@ hook('mousedown', 1, function(point, event, state) {
     return;
   }
   mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTest(mainPoint, this.tree);
-  if (this.debugging && event.shiftKey) {
-    line = null;
-    node = this.view.getViewNodeFor(hitTestResult);
-    ref1 = node.bounds;
-    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-      box = ref1[i];
-      if (box.contains(mainPoint)) {
-        line = i;
-        break;
+  ref1 = this.getDocuments();
+  for (i = j = ref1.length - 1; j >= 0; i = j += -1) {
+    dropletDocument = ref1[i];
+    if (this.handleTextInputClick(mainPoint, dropletDocument)) {
+      state.consumedHitTest = true;
+      return;
+    } else if (this.cursor.document === i && this.cursorAtSocket()) {
+      this.setCursor(this.cursor, (function(token) {
+        return token.type !== 'socketStart';
+      }));
+    }
+    hitTestResult = this.hitTest(mainPoint, dropletDocument);
+    if (this.debugging && event.shiftKey) {
+      line = null;
+      node = this.view.getViewNodeFor(hitTestResult);
+      ref2 = node.bounds;
+      for (i = k = 0, len = ref2.length; k < len; i = ++k) {
+        box = ref2[i];
+        if (box.contains(mainPoint)) {
+          line = i;
+          break;
+        }
+      }
+      this.dumpNodeForDebug(hitTestResult, line);
+    }
+    if (hitTestResult != null) {
+      this.clickedBlock = hitTestResult;
+      this.clickedBlockPaletteEntry = null;
+      this.setCursor(this.clickedBlock.start.next);
+      this.clickedPoint = point;
+      state.consumedHitTest = true;
+      return;
+    } else if (i > 0) {
+      record = this.floatingBlocks[i - 1];
+      if ((record.grayBoxPath != null) && record.grayBoxPath.contains(this.trackerPointToMain(point))) {
+        this.clickedBlock = new model.List(record.block.start.next, record.block.end.prev);
+        this.clickedPoint = point;
+        this.view.getViewNodeFor(this.clickedBlock).absorbCache();
+        state.consumedHitTest = true;
+        this.redrawMain();
+        return;
       }
     }
-    this.dumpNodeForDebug(hitTestResult, line);
   }
+});
+
+hook('mousedown', 4, function(point, event, state) {
+  var hitTestBlock, hitTestResult, line, mainPoint, str;
+  if (state.consumedHitTest) {
+    return;
+  }
+  if (!this.trackerPointIsInMain(point)) {
+    return;
+  }
+  mainPoint = this.trackerPointToMain(point);
+  if ((this.lassoSelection != null) && (this.hitTest(mainPoint, this.lassoSelection) != null)) {
+    return;
+  }
+  hitTestResult = this.hitTest(mainPoint, this.tree);
   if (hitTestResult != null) {
-    this.clickedBlock = hitTestResult;
-    this.clickedBlockPaletteEntry = null;
-    this.setCursor(this.clickedBlock.start.next);
-    this.clickedPoint = point;
-    return state.consumedHitTest = true;
+    hitTestBlock = this.view.getViewNodeFor(hitTestResult);
+    str = hitTestResult.stringifyInPlace();
+    if ((hitTestBlock.addButtonRect != null) && hitTestBlock.addButtonRect.contains(mainPoint)) {
+      line = this.mode.handleButton(str, 'add-button', hitTestResult.getReader());
+      this.populateBlock(hitTestResult, line);
+      return state.consumedHitTest = true;
+    } else if ((hitTestBlock.subtractButtonRect != null) && hitTestBlock.subtractButtonRect.contains(mainPoint)) {
+      line = this.mode.handleButton(str, 'subtract-button', hitTestResult.getReader());
+      this.populateBlock(hitTestResult, line);
+      return state.consumedHitTest = true;
+    }
   }
 });
 
@@ -61607,9 +62028,10 @@ Editor.prototype.wouldDelete = function(position) {
 };
 
 hook('mousemove', 1, function(point, event, state) {
-  var acceptLevel, bound, draggingBlockView, dropPoint, expansion, head, j, len, line, mainPoint, position, ref1, viewNode;
+  var acceptLevel, allowed, bound, draggingBlockView, dropPoint, dropletDocument, expansion, head, i, j, k, l, len, len1, line, mainPoint, position, record, ref1, ref2, ref3, viewNode;
   if (!state.capturedPickup && (this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
     this.draggingBlock = this.clickedBlock;
+    this.dragReplacing = false;
     if (this.clickedBlockPaletteEntry) {
       this.draggingOffset = this.paletteView.getViewNodeFor(this.draggingBlock).bounds[0].upperLeftCorner().from(this.trackerPointToPalette(this.clickedPoint));
       expansion = this.clickedBlockPaletteEntry.expansion;
@@ -61637,6 +62059,7 @@ hook('mousemove', 1, function(point, event, state) {
         this.draggingOffset = viewNode.bounds[0].upperLeftCorner().from(mainPoint);
       }
     }
+    this.dragView.clearCache();
     draggingBlockView = this.dragView.getViewNodeFor(this.draggingBlock);
     draggingBlockView.layout(1, 1);
     this.dragCanvas.width = Math.min(draggingBlockView.totalBounds.width + 10, window.screen.width);
@@ -61650,28 +62073,48 @@ hook('mousemove', 1, function(point, event, state) {
       w: this.mainCanvas.width,
       h: this.mainCanvas.height
     });
-    head = this.tree.start;
-    while (head !== this.tree.end) {
-      if (head === this.draggingBlock.start) {
-        head = this.draggingBlock.end;
+    ref2 = this.getDocuments();
+    for (k = 0, len1 = ref2.length; k < len1; k++) {
+      dropletDocument = ref2[k];
+      head = dropletDocument.start;
+      if (this.draggingBlock.start.prev === head) {
+        head = head.next;
       }
-      if (head instanceof model.StartToken) {
-        acceptLevel = this.getAcceptLevel(this.draggingBlock, head.container);
-        if (acceptLevel !== helper.FORBID) {
-          dropPoint = this.view.getViewNodeFor(head.container).dropPoint;
-          if (dropPoint != null) {
-            this.dropPointQuadTree.insert({
-              x: dropPoint.x,
-              y: dropPoint.y,
-              w: 0,
-              h: 0,
-              acceptLevel: acceptLevel,
-              _droplet_node: head.container
-            });
+      while (head !== dropletDocument.end) {
+        if (head === this.draggingBlock.start) {
+          head = this.draggingBlock.end;
+        }
+        if (head instanceof model.StartToken) {
+          acceptLevel = this.getAcceptLevel(this.draggingBlock, head.container);
+          if (acceptLevel !== helper.FORBID) {
+            dropPoint = this.view.getViewNodeFor(head.container).dropPoint;
+            if (dropPoint != null) {
+              allowed = true;
+              ref3 = this.floatingBlocks;
+              for (i = l = ref3.length - 1; l >= 0; i = l += -1) {
+                record = ref3[i];
+                if (record.block === dropletDocument) {
+                  break;
+                } else if (record.grayBoxPath.contains(dropPoint)) {
+                  allowed = false;
+                  break;
+                }
+              }
+              if (allowed) {
+                this.dropPointQuadTree.insert({
+                  x: dropPoint.x,
+                  y: dropPoint.y,
+                  w: 0,
+                  h: 0,
+                  acceptLevel: acceptLevel,
+                  _droplet_node: head.container
+                });
+              }
+            }
           }
         }
+        head = head.next;
       }
-      head = head.next;
     }
     this.dragCanvas.style.top = (position.y + getOffsetTop(this.dropletElement)) + "px";
     this.dragCanvas.style.left = (position.x + getOffsetLeft(this.dropletElement)) + "px";
@@ -61726,13 +62169,15 @@ hook('mousemove', 0, function(point, event, state) {
     while (((ref1 = head.type) === 'newline' || ref1 === 'cursor') || head.type === 'text' && head.value === '') {
       head = head.next;
     }
-    if (head === this.tree.end && (this.mainCanvas.width + this.scrollOffsets.main.x > (ref2 = mainPoint.x) && ref2 > this.scrollOffsets.main.x - this.gutter.offsetWidth) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref3 = mainPoint.y) && ref3 > this.scrollOffsets.main.y)) {
+    if (head === this.tree.end && this.floatingBlocks.length === 0 && (this.mainCanvas.width + this.scrollOffsets.main.x > (ref2 = mainPoint.x) && ref2 > this.scrollOffsets.main.x - this.gutter.offsetWidth) && (this.mainCanvas.height + this.scrollOffsets.main.y > (ref3 = mainPoint.y) && ref3 > this.scrollOffsets.main.y)) {
       this.view.getViewNodeFor(this.tree).highlightArea.draw(this.highlightCtx);
       this.lastHighlight = this.tree;
     } else {
       if (this.hitTest(mainPoint, this.draggingBlock)) {
         best = null;
+        this.dragReplacing = true;
       } else {
+        this.dragReplacing = false;
         testPoints = this.dropPointQuadTree.retrieve({
           x: mainPoint.x - MAX_DROP_DISTANCE,
           y: mainPoint.y - MAX_DROP_DISTANCE,
@@ -61757,6 +62202,7 @@ hook('mousemove', 0, function(point, event, state) {
         this.redrawHighlights();
         if (best != null) {
           this.view.getViewNodeFor(best).highlightArea.draw(this.highlightCtx);
+          this.maskFloatingPaths(best.getDocument());
         }
         this.lastHighlight = best;
       }
@@ -61781,7 +62227,10 @@ hook('mouseup', 0, function() {
 });
 
 hook('mouseup', 1, function(point, event, state) {
-  var currentIndentation, futureCursorLocation, indentation, leadingWhitespaceRegex, line, nextLine, pos, position, prefix, suffix, text;
+  var currentIndentation, el, futureCursorLocation, hadTextToken, hasTextToken, i, indentation, j, leadingWhitespaceRegex, len, line, newBeginning, newIndex, nextLine, pos, position, prefix, rememberedSocketOffsets, suffix, text;
+  if (this.dragReplacing) {
+    this.endDrag();
+  }
   if (this.draggingBlock != null) {
     if (!this.currentlyUsingBlocks) {
       position = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
@@ -61814,6 +62263,8 @@ hook('mouseup', 1, function(point, event, state) {
       }
     } else if (this.lastHighlight != null) {
       this.undoCapture();
+      rememberedSocketOffsets = this.spliceRememberedSocketOffsets(this.draggingBlock);
+      hadTextToken = this.draggingBlock.start.next.type === 'text';
       this.spliceOut(this.draggingBlock);
       this.clearHighlightCanvas();
       this.fireEvent('sound', [this.lastHighlight.type]);
@@ -61826,20 +62277,63 @@ hook('mouseup', 1, function(point, event, state) {
           this.spliceIn(this.draggingBlock, this.lastHighlight.end);
           break;
         default:
-          if (this.lastHighlight === this.tree) {
-            this.spliceIn(this.draggingBlock, this.tree.start);
+          if (this.lastHighlight.type === 'document') {
+            this.spliceIn(this.draggingBlock, this.lastHighlight.start);
           }
       }
-      futureCursorLocation = this.draggingBlock.start.getLocation();
+      hasTextToken = this.draggingBlock.start.next.type === 'text';
+      if (hadTextToken && !hasTextToken) {
+        rememberedSocketOffsets.forEach(function(x) {
+          return x.offset -= 1;
+        });
+      } else if (hasTextToken && !hadTextToken) {
+        rememberedSocketOffsets.forEach(function(x) {
+          return x.offset += 1;
+        });
+      }
+      futureCursorLocation = this.toCrossDocumentLocation(this.draggingBlock.start);
       if (this.lastHighlight.type === 'socket') {
         this.reparse(this.draggingBlock.parent.parent);
       }
-      this.setCursor(futureCursorLocation);
-      this.fireEvent('block-click');
-      return this.endDrag();
+      this.endDrag();
+      if (futureCursorLocation != null) {
+        this.setCursor(futureCursorLocation);
+      }
+      newBeginning = futureCursorLocation.location.count;
+      newIndex = futureCursorLocation.document;
+      for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
+        el = rememberedSocketOffsets[i];
+        this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(newIndex, new model.Location(el.offset + newBeginning, 'socket')), el.text));
+      }
+      return this.fireEvent('block-click');
     }
   }
 });
+
+Editor.prototype.spliceRememberedSocketOffsets = function(block) {
+  var blockBegin, el, i, j, len, newRememberedSockets, offsets, ref1;
+  if (block.getDocument() != null) {
+    blockBegin = block.start.getLocation().count;
+    offsets = [];
+    newRememberedSockets = [];
+    ref1 = this.rememberedSockets;
+    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
+      el = ref1[i];
+      if (block.contains(this.fromCrossDocumentLocation(el.socket))) {
+        offsets.push({
+          offset: el.socket.location.count - blockBegin,
+          text: el.text
+        });
+      } else {
+        newRememberedSockets.push(el);
+      }
+    }
+    this.rememberedSockets = newRememberedSockets;
+    return offsets;
+  } else {
+    return [];
+  }
+};
 
 hook('populate', 0, function() {
   return this.floatingBlocks = [];
@@ -61857,26 +62351,23 @@ FloatingBlockRecord = (function() {
 
 Editor.prototype.inTree = function(block) {
   var ref1;
-  if ((block instanceof model.List) && !(block instanceof model.Container)) {
-    block = block.start;
-  }
-  block = (ref1 = block.container) != null ? ref1 : block;
-  while (!(block === this.tree || (block == null))) {
-    block = block.parent;
-  }
-  return block === this.tree;
+  return ((ref1 = block.container) != null ? ref1 : block).getDocument() === this.tree;
+};
+
+Editor.prototype.inDisplay = function(block) {
+  var ref1, ref2;
+  return ref1 = ((ref2 = block.container) != null ? ref2 : block).getDocument(), indexOf.call(this.getDocuments(), ref1) >= 0;
 };
 
 hook('mouseup', 0, function(point, event, state) {
-  var palettePoint, ref1, ref2, ref3, ref4, renderPoint, trackPoint;
-  if ((this.draggingBlock != null) && (this.lastHighlight == null)) {
+  var el, i, j, len, newDocument, palettePoint, ref1, ref2, ref3, ref4, rememberedSocketOffsets, renderPoint, trackPoint;
+  if ((this.draggingBlock != null) && (this.lastHighlight == null) && !this.dragReplacing) {
     trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
     renderPoint = this.trackerPointToMain(trackPoint);
     palettePoint = this.trackerPointToPalette(trackPoint);
-    if (this.inTree(this.draggingBlock)) {
-      this.undoCapture();
-      this.spliceOut(this.draggingBlock);
-    }
+    this.undoCapture();
+    rememberedSocketOffsets = this.spliceRememberedSocketOffsets(this.draggingBlock);
+    this.spliceOut(this.draggingBlock);
     palettePoint = this.trackerPointToPalette(point);
     if ((0 < (ref1 = palettePoint.x - this.scrollOffsets.palette.x) && ref1 < this.paletteCanvas.width) && (0 < (ref2 = palettePoint.y - this.scrollOffsets.palette.y) && ref2 < this.paletteCanvas.height) || !((-this.gutter.offsetWidth < (ref3 = renderPoint.x - this.scrollOffsets.main.x) && ref3 < this.mainCanvas.width) && (0 < (ref4 = renderPoint.y - this.scrollOffsets.main.y) && ref4 < this.mainCanvas.height))) {
       if (this.draggingBlock === this.lassoSelection) {
@@ -61887,8 +62378,17 @@ hook('mouseup', 0, function(point, event, state) {
     } else if (renderPoint.x - this.scrollOffsets.main.x < 0) {
       renderPoint.x = this.scrollOffsets.main.x;
     }
-    this.pushUndo(new FloatingOperation(this.floatingBlocks.length, this.draggingBlock, renderPoint, 'create'));
-    this.floatingBlocks.push(new FloatingBlockRecord(this.draggingBlock, renderPoint));
+    newDocument = new model.Document({
+      roundedSingletons: true
+    });
+    newDocument.insert(newDocument.start, this.draggingBlock);
+    this.pushUndo(new FloatingOperation(this.floatingBlocks.length, newDocument, renderPoint, 'create'));
+    this.floatingBlocks.push(new FloatingBlockRecord(newDocument, renderPoint));
+    this.setCursor(this.draggingBlock.start);
+    for (i = j = 0, len = rememberedSocketOffsets.length; j < len; i = ++j) {
+      el = rememberedSocketOffsets[i];
+      this.rememberedSockets.push(new RememberedSocketRecord(new CrossDocumentLocation(this.floatingBlocks.length, new model.Location(el.offset + 1, 'socket')), el.text));
+    }
     this.draggingBlock = null;
     this.draggingOffset = null;
     this.lastHighlight = null;
@@ -61900,8 +62400,14 @@ hook('mouseup', 0, function(point, event, state) {
 
 Editor.prototype.performFloatingOperation = function(op, direction) {
   if ((op.type === 'create') === (direction === 'forward')) {
+    if (this.cursor.document > op.index) {
+      this.cursor.document += 1;
+    }
     return this.floatingBlocks.splice(op.index, 0, new FloatingBlockRecord(op.block.clone(), op.position));
   } else {
+    if (this.cursor.document === op.index + 1) {
+      this.setCursor(this.tree.start);
+    }
     return this.floatingBlocks.splice(op.index, 1);
   }
 };
@@ -61912,67 +62418,21 @@ FloatingOperation = (function() {
     this.block = block1;
     this.position = position1;
     this.type = type;
+    this.block = this.block.clone();
   }
+
+  FloatingOperation.prototype.toString = function() {
+    return JSON.stringify({
+      index: this.index,
+      block: this.block.stringify(),
+      position: this.position.toString(),
+      type: this.type
+    });
+  };
 
   return FloatingOperation;
 
 })();
-
-hook('mousedown', 5, function(point, event, state) {
-  var hitTestResult, i, j, len, record, ref1, results;
-  if (state.consumedHitTest) {
-    return;
-  }
-  if (!this.trackerPointIsInMain(point)) {
-    return;
-  }
-  ref1 = this.floatingBlocks;
-  results = [];
-  for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-    record = ref1[i];
-    hitTestResult = this.hitTest(this.trackerPointToMain(point), record.block);
-    if (hitTestResult != null) {
-      this.clickedBlock = record.block;
-      this.clickedPoint = point;
-      state.consumedHitTest = true;
-      results.push(this.redrawMain());
-    } else {
-      results.push(void 0);
-    }
-  }
-  return results;
-});
-
-hook('mousemove', 7, function(point, event, state) {
-  var i, j, len, record, ref1;
-  if ((this.clickedBlock != null) && point.from(this.clickedPoint).magnitude() > MIN_DRAG_DISTANCE) {
-    ref1 = this.floatingBlocks;
-    for (i = j = 0, len = ref1.length; j < len; i = ++j) {
-      record = ref1[i];
-      if (record.block === this.clickedBlock) {
-        this.undoCapture();
-        this.pushUndo(new FloatingOperation(i, record.block, record.position, 'delete'));
-        this.floatingBlocks.splice(i, 1);
-        this.redrawMain();
-        return;
-      }
-    }
-  }
-});
-
-hook('redraw_main', 7, function() {
-  var blockView, boundingRect, j, len, record, ref1, results;
-  boundingRect = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
-  ref1 = this.floatingBlocks;
-  results = [];
-  for (j = 0, len = ref1.length; j < len; j++) {
-    record = ref1[j];
-    blockView = this.view.getViewNodeFor(record.block);
-    blockView.layout(record.position.x, record.position.y);
-    results.push(blockView.draw(this.mainCtx, boundingRect));
-  }
-  return results;
-});
 
 hook('populate', 0, function() {
   this.paletteHeader = document.createElement('div');
@@ -62148,7 +62608,10 @@ hook('rebuild_palette', 1, function() {
     block = data.block;
     hoverDiv = document.createElement('div');
     hoverDiv.className = 'droplet-hover-div';
-    hoverDiv.title = (ref2 = data.title) != null ? ref2 : block.stringify(this.mode);
+    hoverDiv.title = (ref2 = data.title) != null ? ref2 : block.stringify();
+    if (data.id != null) {
+      hoverDiv.setAttribute('data-id', data.id);
+    }
     bounds = this.paletteView.getViewNodeFor(block).totalBounds;
     hoverDiv.style.top = bounds.y + "px";
     hoverDiv.style.left = bounds.x + "px";
@@ -62200,7 +62663,6 @@ hook('populate', 1, function() {
       return function() {
         _this.highlightFlashShow();
         if (_this.cursorAtSocket()) {
-          _this.populateSocket(_this.getCursor(), _this.hiddenInput.value);
           _this.redrawTextInput();
           if (_this.dropdownVisible) {
             return _this.formatDropdown();
@@ -62227,24 +62689,25 @@ last_ = function(array) {
 };
 
 Editor.prototype.redrawTextInput = function() {
-  var endRow, head, line, newp, oldp, rect, sameLength, startRow, textFocusView, treeView;
-  sameLength = this.getCursor().stringify(this.mode).split('\n').length === this.hiddenInput.value.split('\n').length;
+  var dropletDocument, endRow, head, line, newp, oldp, rect, sameLength, startRow, textFocusView, treeView;
+  sameLength = this.getCursor().stringify().split('\n').length === this.hiddenInput.value.split('\n').length;
+  dropletDocument = this.getCursor().getDocument();
   this.populateSocket(this.getCursor(), this.hiddenInput.value);
   textFocusView = this.view.getViewNodeFor(this.getCursor());
-  startRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
-  endRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+  startRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
+  endRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
   if (sameLength && startRow === endRow) {
     line = endRow;
     head = this.getCursor().start;
-    while (head !== this.tree.start) {
+    while (head !== dropletDocument.start) {
       head = head.prev;
       if (head.type === 'newline') {
         line++;
       }
     }
-    treeView = this.view.getViewNodeFor(this.tree);
+    treeView = this.view.getViewNodeFor(dropletDocument);
     oldp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
-    treeView.layout(0, this.nubbyHeight);
+    treeView.layout();
     newp = helper.deepCopy([treeView.glue[line - 1], treeView.glue[line], treeView.bounds[line].height]);
     if (helper.deepEquals(newp, oldp)) {
       rect = new this.draw.NoRectangle();
@@ -62276,11 +62739,11 @@ Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
     return;
   }
   textFocusView = this.view.getViewNodeFor(this.getCursor());
-  startRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
-  endRow = this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
-  lines = this.getCursor().stringify(this.mode).split('\n');
-  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
-  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify(this.mode).slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  startRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n').length - 1;
+  endRow = this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n').length - 1;
+  lines = this.getCursor().stringify().split('\n');
+  startPosition = textFocusView.bounds[startRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionStart).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
+  endPosition = textFocusView.bounds[endRow].x + this.view.opts.textPadding + this.mainCtx.measureText(last_(this.getCursor().stringify().slice(0, this.hiddenInput.selectionEnd).split('\n'))).width + (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0);
   if (this.hiddenInput.selectionStart === this.hiddenInput.selectionEnd) {
     this.cursorCtx.lineWidth = 1;
     this.cursorCtx.strokeStyle = '#000';
@@ -62292,7 +62755,7 @@ Editor.prototype.redrawTextHighlights = function(scrollIntoView) {
     if (startRow === endRow) {
       this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, endPosition - startPosition, this.view.opts.textHeight);
     } else {
-      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding + textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
+      this.cursorCtx.fillRect(startPosition, textFocusView.bounds[startRow].y + this.view.opts.textPadding, textFocusView.bounds[startRow].right() - this.view.opts.textPadding - startPosition, this.view.opts.textHeight);
       for (i = j = ref1 = startRow + 1, ref2 = endRow; ref1 <= ref2 ? j < ref2 : j > ref2; i = ref1 <= ref2 ? ++j : --j) {
         this.cursorCtx.fillRect(textFocusView.bounds[i].x, textFocusView.bounds[i].y + this.view.opts.textPadding, textFocusView.bounds[i].width, this.view.opts.textHeight);
       }
@@ -62308,21 +62771,12 @@ escapeString = function(str) {
   return str[0] + str.slice(1, -1).replace(/(\'|\"|\n)/g, '\\$1') + str[str.length - 1];
 };
 
-Editor.prototype.setTextInputFocus = function(focus, selectionStart, selectionEnd) {
-  if (selectionStart == null) {
-    selectionStart = null;
-  }
-  if (selectionEnd == null) {
-    selectionEnd = null;
-  }
-  if ((focus != null ? focus.id : void 0) in this.extraMarks) {
-    delete this.extraMarks[focus != null ? focus.id : void 0];
-  }
+hook('mousedown', 7, function() {
   return this.hideDropdown();
-};
+});
 
 Editor.prototype.reparse = function(list, recovery, updates, originalTrigger) {
-  var context, e, newList, originalText, parent, ref1;
+  var context, e, error, error1, newList, originalText, parent, ref1;
   if (updates == null) {
     updates = [];
   }
@@ -62348,15 +62802,15 @@ Editor.prototype.reparse = function(list, recovery, updates, originalTrigger) {
       wrapAtRoot: parent.type !== 'socket',
       context: context
     });
-  } catch (_error) {
-    e = _error;
+  } catch (error) {
+    e = error;
     try {
       newList = this.mode.parse(recovery(list.stringifyInPlace()), {
         wrapAtRoot: parent.type !== 'socket',
         context: context
       });
-    } catch (_error) {
-      e = _error;
+    } catch (error1) {
+      e = error1;
       while ((parent != null) && parent.type === 'socket') {
         parent = parent.parent;
       }
@@ -62421,11 +62875,28 @@ Editor.prototype.populateSocket = function(socket, string) {
       if (!(i > 0)) {
         continue;
       }
-      last = helper.connect(new model.NewlineToken(), last);
+      last = helper.connect(last, new model.NewlineToken());
       last = helper.connect(last, new model.TextToken(line));
     }
     return this.spliceIn(new model.List(first, last), socket.start);
   }
+};
+
+Editor.prototype.populateBlock = function(block, string) {
+  var location, newBlock, ref1;
+  newBlock = this.mode.parse(string, {
+    wrapAtRoot: false
+  }).start.next.container;
+  if (newBlock) {
+    location = block.start.prev;
+    while ((location != null ? location.type : void 0) === 'newline' && !(((ref1 = location.prev) != null ? ref1.type : void 0) === 'indentStart' && location.prev.container.end === block.end.next)) {
+      location = location.prev;
+    }
+    this.spliceOut(block);
+    this.spliceIn(newBlock, location);
+    return true;
+  }
+  return false;
 };
 
 Editor.prototype.hitTestTextInput = function(point, block) {
@@ -62447,7 +62918,7 @@ Editor.prototype.getTextPosition = function(point) {
   row = Math.max(row, 0);
   row = Math.min(row, textFocusView.lineLength - 1);
   column = Math.max(0, Math.round((point.x - textFocusView.bounds[row].x - this.view.opts.textPadding - (this.getCursor().hasDropdown() ? helper.DROPDOWN_ARROW_WIDTH : 0)) / this.mainCtx.measureText(' ').width));
-  lines = this.getCursor().stringify(this.mode).split('\n').slice(0, +row + 1 || 9e9);
+  lines = this.getCursor().stringify().split('\n').slice(0, +row + 1 || 9e9);
   lines[lines.length - 1] = lines[lines.length - 1].slice(0, column);
   return lines.join('\n').length;
 };
@@ -62460,8 +62931,8 @@ Editor.prototype.setTextInputAnchor = function(point) {
 Editor.prototype.selectDoubleClick = function(point) {
   var after, before, position, ref1, ref2, ref3, ref4;
   position = this.getTextPosition(point);
-  before = (ref1 = (ref2 = this.getCursor().stringify(this.mode).slice(0, position).match(/\w*$/)[0]) != null ? ref2.length : void 0) != null ? ref1 : 0;
-  after = (ref3 = (ref4 = this.getCursor().stringify(this.mode).slice(position).match(/^\w*/)[0]) != null ? ref4.length : void 0) != null ? ref3 : 0;
+  before = (ref1 = (ref2 = this.getCursor().stringify().slice(0, position).match(/\w*$/)[0]) != null ? ref2.length : void 0) != null ? ref1 : 0;
+  after = (ref3 = (ref4 = this.getCursor().stringify().slice(position).match(/^\w*/)[0]) != null ? ref4.length : void 0) != null ? ref3 : 0;
   this.textInputAnchor = position - before;
   this.textInputHead = position + after;
   return this.hiddenInput.setSelectionRange(this.textInputAnchor, this.textInputHead);
@@ -62472,13 +62943,9 @@ Editor.prototype.setTextInputHead = function(point) {
   return this.hiddenInput.setSelectionRange(Math.min(this.textInputAnchor, this.textInputHead), Math.max(this.textInputAnchor, this.textInputHead));
 };
 
-hook('mousedown', 2, function(point, event, state) {
-  var hitTestResult, mainPoint;
-  if (state.consumedHitTest) {
-    return;
-  }
-  mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+Editor.prototype.handleTextInputClick = function(mainPoint, dropletDocument) {
+  var hitTestResult;
+  hitTestResult = this.hitTestTextInput(mainPoint, dropletDocument);
   if (hitTestResult != null) {
     if (hitTestResult !== this.getCursor()) {
       if (hitTestResult.editable()) {
@@ -62499,13 +62966,11 @@ hook('mousedown', 2, function(point, event, state) {
       this.textInputSelecting = true;
     }
     this.hiddenInput.focus();
-    return state.consumedHitTest = true;
-  } else if (this.cursorAtSocket()) {
-    return this.setCursor(this.cursor, (function(token) {
-      return token.type !== 'socketStart';
-    }));
+    return true;
+  } else {
+    return false;
   }
-});
+};
 
 hook('populate', 0, function() {
   this.dropdownElement = document.createElement('div');
@@ -62525,6 +62990,32 @@ Editor.prototype.formatDropdown = function(socket) {
   return this.dropdownElement.style.minWidth = this.view.getViewNodeFor(socket).bounds[0].width;
 };
 
+Editor.prototype.getDropdownList = function(socket) {
+  var result;
+  result = socket.dropdown;
+  if (result.generate) {
+    result = result.generate;
+  }
+  if ('function' === typeof result) {
+    result = socket.dropdown();
+  } else {
+    result = socket.dropdown;
+  }
+  if (result.options) {
+    result = result.options;
+  }
+  return result.map(function(x) {
+    if ('string' === typeof x) {
+      return {
+        text: x,
+        display: x
+      };
+    } else {
+      return x;
+    }
+  });
+};
+
 Editor.prototype.showDropdown = function(socket) {
   var dropdownItems, el, fn1, i, j, len, ref1;
   if (socket == null) {
@@ -62535,7 +63026,7 @@ Editor.prototype.showDropdown = function(socket) {
   this.dropdownElement.innerHTML = '';
   this.dropdownElement.style.display = 'inline-block';
   this.formatDropdown(socket);
-  ref1 = socket.dropdown.generate();
+  ref1 = this.getDropdownList(socket);
   fn1 = (function(_this) {
     return function(el) {
       var div, setText;
@@ -62546,10 +63037,10 @@ Editor.prototype.showDropdown = function(socket) {
       div.style.paddingLeft = helper.DROPDOWN_ARROW_WIDTH;
       setText = function(text) {
         _this.undoCapture();
-        if (_this.dropdownElement.style.display === 'none') {
+        if ((!_this.cursorAtSocket()) || _this.dropdownElement.style.display === 'none') {
           return;
         }
-        _this.populateSocket(socket, text);
+        _this.populateSocket(_this.getCursor(), text);
         _this.hiddenInput.value = text;
         _this.redrawMain();
         return _this.hideDropdown();
@@ -62594,29 +63085,34 @@ Editor.prototype.hideDropdown = function() {
 };
 
 hook('dblclick', 0, function(point, event, state) {
-  var hitTestResult, mainPoint;
+  var dropletDocument, hitTestResult, j, len, mainPoint, ref1;
   if (state.consumedHitTest) {
     return;
   }
-  mainPoint = this.trackerPointToMain(point);
-  hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
-  if (hitTestResult !== this.getCursor()) {
-    if (hitTestResult.editable()) {
-      this.redrawMain();
-      hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+  ref1 = this.getDocuments();
+  for (j = 0, len = ref1.length; j < len; j++) {
+    dropletDocument = ref1[j];
+    mainPoint = this.trackerPointToMain(point);
+    hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+    if (hitTestResult !== this.getCursor()) {
+      if ((hitTestResult != null) && hitTestResult.editable()) {
+        this.redrawMain();
+        hitTestResult = this.hitTestTextInput(mainPoint, this.tree);
+      }
     }
-  }
-  if ((hitTestResult != null) && hitTestResult.editable()) {
-    this.setCursor(hitTestResult);
-    this.redrawMain();
-    setTimeout(((function(_this) {
-      return function() {
-        _this.selectDoubleClick(mainPoint);
-        _this.redrawTextInput();
-        return _this.textInputSelecting = false;
-      };
-    })(this)), 0);
-    return state.consumedHitTest = true;
+    if ((hitTestResult != null) && hitTestResult.editable()) {
+      this.setCursor(hitTestResult);
+      this.redrawMain();
+      setTimeout(((function(_this) {
+        return function() {
+          _this.selectDoubleClick(mainPoint);
+          _this.redrawTextInput();
+          return _this.textInputSelecting = false;
+        };
+      })(this)), 0);
+      state.consumedHitTest = true;
+      return;
+    }
   }
 });
 
@@ -62689,27 +63185,50 @@ hook('mousedown', 0, function(point, event, state) {
 });
 
 hook('mousemove', 0, function(point, event, state) {
-  var first, lassoRectangle, last, mainPoint, ref1;
+  var dropletDocument, findLassoSelect, j, lassoRectangle, len, mainPoint, ref1, results;
   if (this.lassoSelectAnchor != null) {
     mainPoint = this.trackerPointToMain(point);
     this.clearLassoSelectCanvas();
     lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
-    first = this.tree.start;
-    while (!((first == null) || first.type === 'blockStart' && this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
-      first = first.next;
-    }
-    last = this.tree.end;
-    while (!((last == null) || last.type === 'blockEnd' && this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
-      last = last.prev;
-    }
-    this.clearLassoSelectCanvas();
-    this.clearHighlightCanvas();
-    this.lassoSelectCtx.strokeStyle = '#00f';
-    this.lassoSelectCtx.strokeRect(lassoRectangle.x - this.scrollOffsets.main.x, lassoRectangle.y - this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
-    if (first && (last != null)) {
-      ref1 = validateLassoSelection(this.tree, first, last), first = ref1[0], last = ref1[1];
-      this.lassoSelection = new model.List(first, last);
-      return this.redrawLassoHighlight();
+    findLassoSelect = (function(_this) {
+      return function(dropletDocument) {
+        var first, last, ref1;
+        first = dropletDocument.start;
+        while (!((first == null) || first.type === 'blockStart' && _this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
+          first = first.next;
+        }
+        last = dropletDocument.end;
+        while (!((last == null) || last.type === 'blockEnd' && _this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
+          last = last.prev;
+        }
+        _this.clearLassoSelectCanvas();
+        _this.clearHighlightCanvas();
+        _this.lassoSelectCtx.strokeStyle = '#00f';
+        _this.lassoSelectCtx.strokeRect(lassoRectangle.x - _this.scrollOffsets.main.x, lassoRectangle.y - _this.scrollOffsets.main.y, lassoRectangle.width, lassoRectangle.height);
+        if (first && (last != null)) {
+          ref1 = validateLassoSelection(dropletDocument, first, last), first = ref1[0], last = ref1[1];
+          _this.lassoSelection = new model.List(first, last);
+          _this.redrawLassoHighlight();
+          return true;
+        } else {
+          _this.lassoSelection = null;
+          return false;
+        }
+      };
+    })(this);
+    if (!((this.lassoSelectionDocument != null) && findLassoSelect(this.lassoSelectionDocument))) {
+      ref1 = this.getDocuments();
+      results = [];
+      for (j = 0, len = ref1.length; j < len; j++) {
+        dropletDocument = ref1[j];
+        if (findLassoSelect(dropletDocument)) {
+          this.lassoSelectionDocument = dropletDocument;
+          break;
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
     }
   }
 });
@@ -62720,10 +63239,29 @@ Editor.prototype.redrawLassoHighlight = function() {
     mainCanvasRectangle = new this.draw.Rectangle(this.scrollOffsets.main.x, this.scrollOffsets.main.y, this.mainCanvas.width, this.mainCanvas.height);
     lassoView = this.view.getViewNodeFor(this.lassoSelection);
     lassoView.absorbCache();
-    return lassoView.draw(this.highlightCtx, mainCanvasRectangle, {
+    lassoView.draw(this.highlightCtx, mainCanvasRectangle, {
       selected: true
     });
+    return this.maskFloatingPaths(this.lassoSelection.start.getDocument());
   }
+};
+
+Editor.prototype.maskFloatingPaths = function(dropletDocument) {
+  var i, j, record, ref1, results;
+  ref1 = this.floatingBlocks;
+  results = [];
+  for (i = j = ref1.length - 1; j >= 0; i = j += -1) {
+    record = ref1[i];
+    if (record.block === dropletDocument) {
+      break;
+    } else {
+      this.highlightCtx.save();
+      record.grayBoxPath.clip(this.highlightCtx);
+      record.grayBoxPath.bounds().clearRect(this.highlightCtx);
+      results.push(this.highlightCtx.restore());
+    }
+  }
+  return results;
 };
 
 validateLassoSelection = function(tree, first, last) {
@@ -62761,28 +63299,15 @@ validateLassoSelection = function(tree, first, last) {
 };
 
 hook('mouseup', 0, function(point, event, state) {
-  var first, lassoRectangle, last, mainPoint, ref1;
   if (this.lassoSelectAnchor != null) {
-    mainPoint = this.trackerPointToMain(point);
-    lassoRectangle = new this.draw.Rectangle(Math.min(this.lassoSelectAnchor.x, mainPoint.x), Math.min(this.lassoSelectAnchor.y, mainPoint.y), Math.abs(this.lassoSelectAnchor.x - mainPoint.x), Math.abs(this.lassoSelectAnchor.y - mainPoint.y));
+    if (this.lassoSelection != null) {
+      this.setCursor(this.lassoSelection.end);
+    }
     this.lassoSelectAnchor = null;
     this.clearLassoSelectCanvas();
-    first = this.tree.start;
-    while (!((first == null) || first.type === 'blockStart' && this.view.getViewNodeFor(first.container).path.intersects(lassoRectangle))) {
-      first = first.next;
-    }
-    last = this.tree.end;
-    while (!((last == null) || last.type === 'blockEnd' && this.view.getViewNodeFor(last.container).path.intersects(lassoRectangle))) {
-      last = last.prev;
-    }
-    if (!((first != null) && (last != null))) {
-      return;
-    }
-    ref1 = validateLassoSelection(this.tree, first, last), first = ref1[0], last = ref1[1];
-    this.lassoSelection = new model.List(first, last);
-    this.setCursor(this.lassoSelection.end);
-    return this.redrawMain();
+    this.redrawMain();
   }
+  return this.lassoSelectionDocument = null;
 });
 
 hook('mousedown', 3, function(point, event, state) {
@@ -62799,8 +63324,26 @@ hook('mousedown', 3, function(point, event, state) {
 });
 
 hook('populate', 0, function() {
-  return this.cursor = new model.Location(0, 'documentStart');
+  return this.cursor = new CrossDocumentLocation(0, new model.Location(0, 'documentStart'));
 });
+
+CrossDocumentLocation = (function() {
+  function CrossDocumentLocation(document1, location1) {
+    this.document = document1;
+    this.location = location1;
+  }
+
+  CrossDocumentLocation.prototype.is = function(other) {
+    return this.location.is(other.location) && this.document === other.document;
+  };
+
+  CrossDocumentLocation.prototype.clone = function() {
+    return new CrossDocumentLocation(this.document, this.location.clone());
+  };
+
+  return CrossDocumentLocation;
+
+})();
 
 Editor.prototype.validCursorPosition = function(destination) {
   var ref1, ref2;
@@ -62808,6 +63351,7 @@ Editor.prototype.validCursorPosition = function(destination) {
 };
 
 Editor.prototype.setCursor = function(destination, validate, direction) {
+  var end, ref1, ref2, start;
   if (validate == null) {
     validate = (function() {
       return true;
@@ -62816,13 +63360,12 @@ Editor.prototype.setCursor = function(destination, validate, direction) {
   if (direction == null) {
     direction = 'after';
   }
-  if ((destination != null) && !(destination instanceof model.Location)) {
-    destination = destination.getLocation();
+  if ((destination != null) && destination instanceof CrossDocumentLocation) {
+    destination = this.fromCrossDocumentLocation(destination);
   }
-  if (destination == null) {
+  if (!((destination != null) && this.inDisplay(destination))) {
     return;
   }
-  destination = this.tree.getFromLocation(destination);
   if (destination instanceof model.Container) {
     destination = destination.start;
   }
@@ -62832,21 +63375,26 @@ Editor.prototype.setCursor = function(destination, validate, direction) {
       return;
     }
   }
-  destination = destination.getLocation();
+  destination = this.toCrossDocumentLocation(destination);
   if (this.cursorAtSocket() && !this.cursor.is(destination)) {
-    this.reparse(this.getCursor(), null, [this.cursor, destination]);
+    this.reparse(this.getCursor(), null, (destination.document === this.cursor.document ? [destination.location] : []));
     this.hiddenInput.blur();
     this.dropletElement.focus();
   }
   this.cursor = destination;
+  this.correctCursor();
   this.redrawMain();
   this.highlightFlashShow();
   this.redrawHighlights();
   if (this.cursorAtSocket()) {
+    if (((ref1 = this.getCursor()) != null ? ref1.id : void 0) in this.extraMarks) {
+      delete this.extraMarks[typeof focus !== "undefined" && focus !== null ? focus.id : void 0];
+    }
     this.undoCapture();
     this.hiddenInput.value = this.getCursor().textContent();
     this.hiddenInput.focus();
-    return this.setTextSelectionRange(0, this.hiddenInput.value.length);
+    ref2 = this.mode.getDefaultSelectionRange(this.hiddenInput.value), start = ref2.start, end = ref2.end;
+    return this.setTextSelectionRange(start, end);
   }
 };
 
@@ -62870,7 +63418,7 @@ Editor.prototype.determineCursorPosition = function() {
 
 Editor.prototype.getCursor = function() {
   var cursor;
-  cursor = this.tree.getFromLocation(this.cursor);
+  cursor = this.fromCrossDocumentLocation(this.cursor);
   if (cursor.type === 'socketStart') {
     return cursor.container;
   } else {
@@ -63002,7 +63550,7 @@ hook('keydown', 0, function(event, state) {
     return;
   }
   if (event.which === ENTER_KEY) {
-    if (!this.cursorAtSocket() && !event.shiftKey) {
+    if (!this.cursorAtSocket() && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
       newBlock = new model.Block();
       newSocket = new model.Socket(this.mode.empty, Infinity);
       newSocket.handwritten = true;
@@ -63727,7 +64275,7 @@ Editor.prototype.setTrimWhitespace = function(trimWhitespace) {
 };
 
 Editor.prototype.setValue_raw = function(value) {
-  var e, newParse, removal;
+  var e, error, newParse, removal;
   try {
     if (this.trimWhitespace) {
       value = value.trim();
@@ -63747,8 +64295,8 @@ Editor.prototype.setValue_raw = function(value) {
     return {
       success: true
     };
-  } catch (_error) {
-    e = _error;
+  } catch (error) {
+    e = error;
     return {
       success: false,
       error: e
@@ -63784,7 +64332,7 @@ Editor.prototype.addEmptyLine = function(str) {
 
 Editor.prototype.getValue = function() {
   if (this.currentlyUsingBlocks) {
-    return this.addEmptyLine(this.tree.stringify(this.mode));
+    return this.addEmptyLine(this.tree.stringify());
   } else {
     return this.getAceValue();
   }
@@ -63897,6 +64445,11 @@ hook('mousedown', 10, function() {
 });
 
 Editor.prototype.endDrag = function() {
+  if (this.cursorAtSocket()) {
+    this.setCursor(this.cursor, function(x) {
+      return x.type !== 'socketStart';
+    });
+  }
   this.draggingBlock = null;
   this.draggingOffset = null;
   this.lastHighlight = null;
@@ -64118,17 +64671,6 @@ Editor.prototype.viewOrChildrenContains = function(model, point, view) {
   return false;
 };
 
-hook('mouseup', 0.5, function(point, event) {
-  var renderPoint, trackPoint;
-  if (this.draggingBlock != null) {
-    trackPoint = new this.draw.Point(point.x + this.draggingOffset.x, point.y + this.draggingOffset.y);
-    renderPoint = this.trackerPointToMain(trackPoint);
-    if (this.inTree(this.draggingBlock) && this.viewOrChildrenContains(this.draggingBlock, renderPoint)) {
-      return this.endDrag();
-    }
-  }
-});
-
 hook('populate', 0, function() {
   this.gutter = document.createElement('div');
   this.gutter.className = 'droplet-gutter';
@@ -64216,13 +64758,12 @@ Editor.prototype.setAnnotations = function(annotations) {
 };
 
 Editor.prototype.resizeGutter = function() {
-  var ref1, ref2, ref3;
   if (this.lastGutterWidth !== this.aceEditor.renderer.$gutterLayer.gutterWidth) {
     this.lastGutterWidth = this.aceEditor.renderer.$gutterLayer.gutterWidth;
     this.gutter.style.width = this.lastGutterWidth + 'px';
     return this.resize();
   }
-  return this.gutter.style.height = (Math.max(this.dropletElement.offsetHeight, ((ref1 = (ref2 = this.view.getViewNodeFor(this.tree).totalBounds) != null ? typeof ref2.bottom === "function" ? ref2.bottom() : void 0 : void 0) != null ? ref1 : 0) + ((ref3 = this.options.extraBottomHeight) != null ? ref3 : this.fontSize))) + "px";
+  return this.gutter.style.height = (Math.max(this.dropletElement.offsetHeight, this.mainScrollerStuffing.offsetHeight)) + "px";
 };
 
 Editor.prototype.addLineNumberForLine = function(line) {
@@ -64367,32 +64908,36 @@ hook('populate', 1, function() {
   });
   return this.copyPasteInput.addEventListener('input', (function(_this) {
     return function() {
-      var blocks, e, lines, minIndent, str;
+      var blocks, e, error, lines, minIndent, str;
       if (_this.readOnly) {
         return;
       }
-      if (pressedVKey) {
+      if (pressedVKey && !_this.cursorAtSocket()) {
+        str = _this.copyPasteInput.value;
+        lines = str.split('\n');
+        minIndent = lines.map(function(line) {
+          return line.length - line.trimLeft().length;
+        }).reduce(function(a, b) {
+          return Math.min(a, b);
+        });
+        str = lines.map(function(line) {
+          return line.slice(minIndent);
+        }).join('\n');
+        str = str.replace(/^\n*|\n*$/g, '');
         try {
-          str = _this.copyPasteInput.value;
-          lines = str.split('\n');
-          minIndent = lines.map(function(x) {
-            return line.length - line.trimLeft().length;
-          }).reduce(function(a, b) {
-            return Math.min(a, b);
-          });
-          str = lines.map(function(line) {
-            return line.slice(minIndent);
-          }).join('\n');
-          str = str.replace(/^\n*|\n*$/g, '');
           blocks = _this.mode.parse(str);
           blocks = new model.List(blocks.start.next, blocks.end.prev);
-          _this.spliceIn(blocks, _this.cursor);
-          _this.setCursor(blocks.end);
-          _this.redrawMain();
-        } catch (_error) {
-          e = _error;
-          console.log(e.stack);
+        } catch (error) {
+          e = error;
+          blocks = null;
         }
+        if (blocks == null) {
+          return;
+        }
+        _this.undoCapture();
+        _this.spliceIn(blocks, _this.getCursor());
+        _this.setCursor(blocks.end);
+        _this.redrawMain();
         return _this.copyPasteInput.setSelectionRange(0, _this.copyPasteInput.value.length);
       } else if (pressedXKey && (_this.lassoSelection != null)) {
         _this.spliceOut(_this.lassoSelection);
@@ -64492,7 +65037,7 @@ for (key in unsortedEditorBindings) {
 }
 
 
-},{"../vendor/quadtree.js":117,"./draw.coffee":101,"./helper.coffee":102,"./model.coffee":110,"./modes.coffee":111,"./view.coffee":114}],101:[function(require,module,exports){
+},{"../vendor/quadtree.js":118,"./draw.coffee":102,"./helper.coffee":103,"./model.coffee":111,"./modes.coffee":112,"./view.coffee":115}],102:[function(require,module,exports){
 var Draw, _area, _intersects, avgColor, helper, max, memoizedAvgColor, min, toHex, toRGB, twoDigitHex, zeroPad,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -64682,7 +65227,10 @@ exports.Draw = Draw = (function() {
         return (this.x != null) && (this.y != null) && !((point.x < this.x) || (point.x > this.x + this.width) || (point.y < this.y) || (point.y > this.y + this.height));
       };
 
-      Rectangle.prototype.identical = function(other) {
+      Rectangle.prototype.equals = function(other) {
+        if (!(other instanceof Rectangle)) {
+          return false;
+        }
         return this.x === other.x && this.y === other.y && this.width === other.width && this.height === other.height;
       };
 
@@ -64697,6 +65245,10 @@ exports.Draw = Draw = (function() {
       Rectangle.prototype.clip = function(ctx) {
         ctx.rect(this.x, this.y, this.width, this.height);
         return ctx.clip();
+      };
+
+      Rectangle.prototype.clearRect = function(ctx) {
+        return ctx.clearRect(this.x, this.y, this.width, this.height);
       };
 
       Rectangle.prototype.clone = function() {
@@ -64797,6 +65349,7 @@ exports.Draw = Draw = (function() {
         this._cachedTranslation = new Point(0, 0);
         this._cacheFlag = false;
         this._bounds = new NoRectangle();
+        this.bevel = this.noclip = this.dotted = false;
         this.style = {
           'strokeColor': '#000',
           'lineWidth': 1,
@@ -64806,22 +65359,27 @@ exports.Draw = Draw = (function() {
 
       Path.prototype._clearCache = function() {
         var j, len1, maxX, maxY, minX, minY, point, ref;
+        this._cacheFlag = true;
         if (this._cacheFlag) {
-          minX = minY = Infinity;
-          maxX = maxY = 0;
-          ref = this._points;
-          for (j = 0, len1 = ref.length; j < len1; j++) {
-            point = ref[j];
-            minX = min(minX, point.x);
-            maxX = max(maxX, point.x);
-            minY = min(minY, point.y);
-            maxY = max(maxY, point.y);
+          if (this._points.length === 0) {
+            return this._bounds = new NoRectangle();
+          } else {
+            minX = minY = Infinity;
+            maxX = maxY = 0;
+            ref = this._points;
+            for (j = 0, len1 = ref.length; j < len1; j++) {
+              point = ref[j];
+              minX = min(minX, point.x);
+              maxX = max(maxX, point.x);
+              minY = min(minY, point.y);
+              maxY = max(maxY, point.y);
+            }
+            this._bounds.x = minX;
+            this._bounds.y = minY;
+            this._bounds.width = maxX - minX;
+            this._bounds.height = maxY - minY;
+            return this._cacheFlag = false;
           }
-          this._bounds.x = minX;
-          this._bounds.y = minY;
-          this._bounds.width = maxX - minX;
-          this._bounds.height = maxY - minY;
-          return this._cacheFlag = false;
         }
       };
 
@@ -64833,6 +65391,11 @@ exports.Draw = Draw = (function() {
       Path.prototype.unshift = function(point) {
         this._points.unshift(point);
         return this._cacheFlag = true;
+      };
+
+      Path.prototype.reverse = function() {
+        this._points.reverse();
+        return this;
       };
 
       Path.prototype.contains = function(point) {
@@ -64900,6 +65463,26 @@ exports.Draw = Draw = (function() {
       Path.prototype.translate = function(vector) {
         this._cachedTranslation.translate(vector);
         return this._cacheFlag = true;
+      };
+
+      Path.prototype.clip = function(ctx) {
+        var j, len1, point, ref;
+        this._clearCache();
+        if (this._points.length === 0) {
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(this._points[0].x, this._points[0].y);
+        ref = this._points;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          point = ref[j];
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineTo(this._points[0].x, this._points[0].y);
+        if (this._points.length > 1) {
+          ctx.lineTo(this._points[1].x, this._points[1].y);
+        }
+        return ctx.clip();
       };
 
       Path.prototype.draw = function(ctx) {
@@ -64973,6 +65556,9 @@ exports.Draw = Draw = (function() {
           ctx.strokeStyle = avgColor(this.style.fillColor, 0.7, '#FFF');
           ctx.stroke();
         } else {
+          if (this.dotted && (ctx.setLineDash != null)) {
+            ctx.setLineDash([8, 5]);
+          }
           ctx.stroke();
         }
         return ctx.restore();
@@ -65096,7 +65682,7 @@ exports.Draw = Draw = (function() {
 })();
 
 
-},{"./helper.coffee":102}],102:[function(require,module,exports){
+},{"./helper.coffee":103}],103:[function(require,module,exports){
 var deepCopy, deepEquals, fontMetrics, fontMetricsCache, sax,
   hasProp = {}.hasOwnProperty;
 
@@ -65343,7 +65929,7 @@ exports.deepEquals = deepEquals = function(a, b) {
 };
 
 
-},{"sax":98}],103:[function(require,module,exports){
+},{"sax":99}],104:[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, antlrHelper, config, parser;
 
 parser = require('../parser.coffee');
@@ -65391,7 +65977,7 @@ config = {
 module.exports = parser.wrapParser(antlrHelper.createANTLRParser('C', config));
 
 
-},{"../antlr.coffee":99,"../parser.coffee":112}],104:[function(require,module,exports){
+},{"../antlr.coffee":100,"../parser.coffee":113}],105:[function(require,module,exports){
 var ANY_DROP, BLOCK_ONLY, CATEGORIES, CoffeeScript, CoffeeScriptParser, FORBID_ALL, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, LVALUE, MOSTLY_BLOCK, MOSTLY_VALUE, NO, NODE_CATEGORY, OPERATOR_PRECEDENCES, PROPERTY_ACCESS, STATEMENT_KEYWORDS, VALUE_ONLY, YES, addEmptyBackTickLineAfter, annotateCsNodes, backTickLine, findUnmatchedLine, fixCoffeeScriptError, fixQuotedString, getClassesFor, helper, looseCUnescape, model, parser, quoteAndCEscape, spacestring,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -65649,9 +66235,9 @@ annotateCsNodes = function(tree) {
 exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   extend(CoffeeScriptParser, superClass);
 
-  function CoffeeScriptParser(text, opts) {
+  function CoffeeScriptParser(text1, opts) {
     var base, i, j, len, line, ref;
-    this.text = text;
+    this.text = text1;
     CoffeeScriptParser.__super__.constructor.apply(this, arguments);
     if ((base = this.opts).functions == null) {
       base.functions = KNOWN_FUNCTIONS;
@@ -65667,18 +66253,18 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   }
 
   CoffeeScriptParser.prototype.markRoot = function() {
-    var e, firstError, j, len, node, nodes, retries, tree;
-    this.stripComments();
+    var e, error, firstError, j, len, node, nodes, retries, tree;
     retries = Math.max(1, Math.min(5, Math.ceil(this.lines.length / 2)));
     firstError = null;
     while (true) {
       try {
+        this.stripComments();
         tree = CoffeeScript.nodes(this.text);
         annotateCsNodes(tree);
         nodes = tree.expressions;
         break;
-      } catch (_error) {
-        e = _error;
+      } catch (error) {
+        e = error;
         if (firstError == null) {
           firstError = e;
         }
@@ -65708,14 +66294,14 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   };
 
   CoffeeScriptParser.prototype.stripComments = function() {
-    var i, j, k, len, line, ref, ref1, syntaxError, token, tokens;
+    var error, i, j, k, len, line, ref, ref1, syntaxError, token, tokens;
     try {
       tokens = CoffeeScript.tokens(this.text, {
         rewrite: false,
         preserveComments: true
       });
-    } catch (_error) {
-      syntaxError = _error;
+    } catch (error) {
+      syntaxError = error;
       if (syntaxError.location) {
         syntaxError.loc = {
           line: syntaxError.location.first_line,
@@ -65810,17 +66396,44 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
   };
 
   CoffeeScriptParser.prototype.addCode = function(node, depth, indentDepth) {
-    var j, len, param, ref;
-    ref = node.params;
-    for (j = 0, len = ref.length; j < len; j++) {
-      param = ref[j];
-      this.csSocketAndMark(param, depth, 0, indentDepth, FORBID_ALL);
+    var match, nodeBoundsStart, ref, ref1;
+    if ((ref = (ref1 = node.params) != null ? ref1.length : void 0) != null ? ref : 0 > 0) {
+      this.addSocket({
+        bounds: this.boundCombine(this.getBounds(node.params[0]), this.getBounds(node.params[node.params.length - 1])),
+        depth: depth,
+        precedence: 0,
+        dropdown: null,
+        classes: ['forbid-all', '__function_param__'],
+        empty: ''
+      });
+    } else {
+      nodeBoundsStart = this.getBounds(node).start;
+      match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)\s*(-|=)>/);
+      if (match != null) {
+        this.addSocket({
+          bounds: {
+            start: {
+              line: nodeBoundsStart.line,
+              column: nodeBoundsStart.column + match[1].length
+            },
+            end: {
+              line: nodeBoundsStart.line,
+              column: nodeBoundsStart.column + match[1].length + match[2].length
+            }
+          },
+          depth: depth,
+          precedence: 0,
+          dropdown: null,
+          classes: ['forbid-all', '__function_param__'],
+          empty: ''
+        });
+      }
     }
     return this.mark(node.body, depth, 0, null, indentDepth);
   };
 
   CoffeeScriptParser.prototype.mark = function(node, depth, precedence, wrappingParen, indentDepth) {
-    var arg, bounds, childName, classes, condition, errorSocket, expr, fakeBlock, firstBounds, index, infix, j, k, known, l, last, len, len1, len2, len3, len4, len5, len6, len7, len8, len9, line, lines, namenodes, o, object, p, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, s, secondBounds, shouldBeOneLine, switchCase, t, textLine, trueIndentDepth, u, v;
+    var arg, bounds, childName, classes, condition, currentNode, end, errorSocket, expr, fakeBlock, firstBounds, hasCallParen, index, infix, j, k, known, l, last, len, len1, len2, len3, len4, len5, len6, len7, len8, len9, line, lines, namenodes, o, object, p, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref15, ref16, ref17, ref18, ref19, ref2, ref20, ref21, ref22, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, s, secondBounds, shouldBeOneLine, space, start, switchCase, t, textLine, trueIndentDepth, u, v, variableBounds;
     switch (node.nodeType()) {
       case 'Block':
         if (node.expressions.length === 0) {
@@ -65948,6 +66561,7 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
       case 'Null':
         return 0;
       case 'Call':
+        hasCallParen = false;
         if (node.variable != null) {
           namenodes = this.functionNameNodes(node);
           known = this.lookupFunctionName(namenodes);
@@ -65961,12 +66575,39 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
             classes = ANY_DROP;
           }
           this.csBlock(node, depth, 0, wrappingParen, classes);
+          variableBounds = this.getBounds(node.variable);
+          hasCallParen = this.lines[variableBounds.end.line][variableBounds.end.column] === '(';
           if (this.implicitName(namenodes)) {
 
           } else if (!known) {
             this.csSocketAndMark(node.variable, depth + 1, 0, indentDepth);
           } else if (known.anyobj && ((ref9 = node.variable.properties) != null ? ref9.length : void 0) > 0) {
             this.csSocketAndMark(node.variable.base, depth + 1, 0, indentDepth);
+          }
+          if (!known && node.args.length === 0 && !node["do"]) {
+            start = {
+              line: variableBounds.end.line,
+              column: variableBounds.end.column + 1
+            };
+            end = {
+              line: start.line,
+              column: start.column
+            };
+            space = this.lines[start.line].slice(start.column).match(/^(\s*)\)/);
+            if (space != null) {
+              end.column += space[1].length;
+            }
+            this.addSocket({
+              bounds: {
+                start: start,
+                end: end
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['mostly-value'],
+              empty: ''
+            });
           }
         } else {
           this.csBlock(node, depth, 0, wrappingParen, ANY_DROP);
@@ -65980,8 +66621,10 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
             precedence = last ? -1 : 0;
             if (last && arg.nodeType() === 'Code') {
               results2.push(this.addCode(arg, depth + 1, indentDepth));
+            } else if (!known && hasCallParen && index === 0 && node.args.length === 1) {
+              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref11 = known.fn) != null ? (ref12 = ref11.dropdown) != null ? ref12[index] : void 0 : void 0 : void 0, ''));
             } else {
-              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref11 = known.fn) != null ? (ref12 = ref11.dropdown) != null ? ref12[index] : void 0 : void 0 : void 0));
+              results2.push(this.csSocketAndMark(arg, depth + 1, precedence, indentDepth, null, known != null ? (ref13 = known.fn) != null ? (ref14 = ref13.dropdown) != null ? ref14[index] : void 0 : void 0 : void 0));
             }
           }
           return results2;
@@ -66001,16 +66644,16 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         break;
       case 'For':
         this.csBlock(node, depth, -3, wrappingParen, MOSTLY_BLOCK);
-        ref13 = ['source', 'from', 'guard', 'step'];
-        for (q = 0, len4 = ref13.length; q < len4; q++) {
-          childName = ref13[q];
+        ref15 = ['source', 'from', 'guard', 'step'];
+        for (q = 0, len4 = ref15.length; q < len4; q++) {
+          childName = ref15[q];
           if (node[childName] != null) {
             this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth);
           }
         }
-        ref14 = ['index', 'name'];
-        for (r = 0, len5 = ref14.length; r < len5; r++) {
-          childName = ref14[r];
+        ref16 = ['index', 'name'];
+        for (r = 0, len5 = ref16.length; r < len5; r++) {
+          childName = ref16[r];
           if (node[childName] != null) {
             this.csSocketAndMark(node[childName], depth + 1, 0, indentDepth, FORBID_ALL);
           }
@@ -66021,7 +66664,9 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         this.csSocketAndMark(node.from, depth, 0, indentDepth);
         return this.csSocketAndMark(node.to, depth, 0, indentDepth);
       case 'If':
-        this.csBlock(node, depth, 0, wrappingParen, MOSTLY_BLOCK);
+        this.csBlock(node, depth, 0, wrappingParen, MOSTLY_BLOCK, {
+          addButton: true
+        });
 
         /*
         bounds = @getBounds node
@@ -66034,27 +66679,39 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
          */
         this.csSocketAndMark(node.rawCondition, depth + 1, 0, indentDepth);
         this.mark(node.body, depth + 1, 0, null, indentDepth);
-        if (node.elseBody != null) {
-          this.flagLineAsMarked(node.elseToken.first_line);
-          return this.mark(node.elseBody, depth + 1, 0, null, indentDepth);
+        currentNode = node;
+        results3 = [];
+        while (currentNode != null) {
+          if (currentNode.isChain) {
+            currentNode = currentNode.elseBodyNode();
+            this.csSocketAndMark(currentNode.rawCondition, depth + 1, 0, indentDepth);
+            results3.push(this.mark(currentNode.body, depth + 1, 0, null, indentDepth));
+          } else if (currentNode.elseBody != null) {
+            this.flagLineAsMarked(currentNode.elseToken.first_line);
+            this.mark(currentNode.elseBody, depth + 1, 0, null, indentDepth);
+            results3.push(currentNode = null);
+          } else {
+            results3.push(currentNode = null);
+          }
         }
+        return results3;
         break;
       case 'Arr':
         this.csBlock(node, depth, 100, wrappingParen, VALUE_ONLY);
         if (node.objects.length > 0) {
           this.csIndentAndMark(indentDepth, node.objects, depth + 1);
         }
-        ref15 = node.objects;
-        results3 = [];
-        for (s = 0, len6 = ref15.length; s < len6; s++) {
-          object = ref15[s];
-          if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((ref16 = (ref17 = object.properties) != null ? ref17.length : void 0) === 0 || ref16 === (void 0))) {
-            results3.push(this.csBlock(object, depth + 2, 100, null, VALUE_ONLY));
+        ref17 = node.objects;
+        results4 = [];
+        for (s = 0, len6 = ref17.length; s < len6; s++) {
+          object = ref17[s];
+          if (object.nodeType() === 'Value' && object.base.nodeType() === 'Literal' && ((ref18 = (ref19 = object.properties) != null ? ref19.length : void 0) === 0 || ref18 === (void 0))) {
+            results4.push(this.csBlock(object, depth + 2, 100, null, VALUE_ONLY));
           } else {
-            results3.push(void 0);
+            results4.push(void 0);
           }
         }
-        return results3;
+        return results4;
         break;
       case 'Return':
         this.csBlock(node, depth, 0, wrappingParen, BLOCK_ONLY);
@@ -66074,13 +66731,13 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         if (node.subject != null) {
           this.csSocketAndMark(node.subject, depth + 1, 0, indentDepth);
         }
-        ref18 = node.cases;
-        for (t = 0, len7 = ref18.length; t < len7; t++) {
-          switchCase = ref18[t];
+        ref20 = node.cases;
+        for (t = 0, len7 = ref20.length; t < len7; t++) {
+          switchCase = ref20[t];
           if (switchCase[0].constructor === Array) {
-            ref19 = switchCase[0];
-            for (u = 0, len8 = ref19.length; u < len8; u++) {
-              condition = ref19[u];
+            ref21 = switchCase[0];
+            for (u = 0, len8 = ref21.length; u < len8; u++) {
+              condition = ref21[u];
               this.csSocketAndMark(condition, depth + 1, 0, indentDepth);
             }
           } else {
@@ -66106,18 +66763,18 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
         break;
       case 'Obj':
         this.csBlock(node, depth, 0, wrappingParen, VALUE_ONLY);
-        ref20 = node.properties;
-        results4 = [];
-        for (v = 0, len9 = ref20.length; v < len9; v++) {
-          property = ref20[v];
+        ref22 = node.properties;
+        results5 = [];
+        for (v = 0, len9 = ref22.length; v < len9; v++) {
+          property = ref22[v];
           if (property.nodeType() === 'Assign') {
             this.csSocketAndMark(property.variable, depth + 1, 0, indentDepth, FORBID_ALL);
-            results4.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
+            results5.push(this.csSocketAndMark(property.value, depth + 1, 0, indentDepth));
           } else {
-            results4.push(void 0);
+            results5.push(void 0);
           }
         }
-        return results4;
+        return results5;
     }
   };
 
@@ -66147,6 +66804,16 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
     } else {
       return a;
     }
+  };
+
+  CoffeeScriptParser.prototype.boundCombine = function(a, b) {
+    var end, start;
+    start = this.boundMin(a.start, b.start);
+    end = this.boundMax(a.end, b.end);
+    return {
+      start: start,
+      end: end
+    };
   };
 
   CoffeeScriptParser.prototype.getBounds = function(node) {
@@ -66264,7 +66931,7 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
     return container;
   };
 
-  CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, wrappingParen, classes) {
+  CoffeeScriptParser.prototype.csBlock = function(node, depth, precedence, wrappingParen, classes, buttons) {
     if (classes == null) {
       classes = [];
     }
@@ -66274,7 +66941,8 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
       precedence: precedence,
       color: this.getColor(node),
       classes: getClassesFor(node).concat(classes),
-      parenWrapped: wrappingParen != null
+      parenWrapped: wrappingParen != null,
+      buttons: buttons
     });
   };
 
@@ -66315,7 +66983,7 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
     return results;
   };
 
-  CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes, dropdown) {
+  CoffeeScriptParser.prototype.csSocket = function(node, depth, precedence, classes, dropdown, empty) {
     if (classes == null) {
       classes = [];
     }
@@ -66324,13 +66992,14 @@ exports.CoffeeScriptParser = CoffeeScriptParser = (function(superClass) {
       depth: depth,
       precedence: precedence,
       dropdown: dropdown,
+      empty: empty,
       classes: getClassesFor(node).concat(classes)
     });
   };
 
-  CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes, dropdown) {
+  CoffeeScriptParser.prototype.csSocketAndMark = function(node, depth, precedence, indentDepth, classes, dropdown, empty) {
     var socket;
-    socket = this.csSocket(node, depth, precedence, classes, dropdown);
+    socket = this.csSocket(node, depth, precedence, classes, dropdown, empty);
     this.mark(node, depth + 1, precedence, null, indentDepth);
     return socket;
   };
@@ -66415,13 +67084,13 @@ fixQuotedString = function(lines) {
   var line, quotechar;
   line = lines[0];
   quotechar = /^"|"$/.test(line) ? '"' : "'";
-  if (line.getCharAt(0) === quotechar) {
+  if (line.charAt(0) === quotechar) {
     line = line.substr(1);
   }
-  if (line.getCharAt(line.length - 1) === quotechar) {
-    line = line.substr(0, line.length(-1));
+  if (line.charAt(line.length - 1) === quotechar) {
+    line = line.substr(0, line.length - 1);
   }
-  return quoteAndCEscape(fixQuotedLine(line));
+  return lines[0] = quoteAndCEscape(looseCUnescape(line), quotechar);
 };
 
 looseCUnescape = function(str) {
@@ -66448,7 +67117,7 @@ quoteAndCEscape = function(str, quotechar) {
   var result;
   result = JSON.stringify(str);
   if (quotechar === "'") {
-    return quotechar + result.substr(1, result.length(-2)).replace(/\\"/g, '"').replace(/'/g, "\\'") + quotechar;
+    return quotechar + result.substr(1, result.length - 2).replace(/((?:^|[^\\])(?:\\\\)*)\\"/g, '$1"').replace(/'/g, "\\'") + quotechar;
   }
   return result;
 };
@@ -66486,6 +67155,10 @@ addEmptyBackTickLineAfter = function(lines, n) {
 CoffeeScriptParser.empty = "``";
 
 CoffeeScriptParser.emptyIndent = "``";
+
+CoffeeScriptParser.startComment = '###';
+
+CoffeeScriptParser.endComment = '###';
 
 CoffeeScriptParser.drop = function(block, context, pred) {
   var ref, ref1;
@@ -66541,11 +67214,57 @@ CoffeeScriptParser.parens = function(leading, trailing, node, context) {
   }
 };
 
+CoffeeScriptParser.getDefaultSelectionRange = function(string) {
+  var end, ref, ref1, start;
+  start = 0;
+  end = string.length;
+  if (string.length > 1 && string[0] === string[string.length - 1] && ((ref = string[0]) === '"' || ref === '\'' || ref === '/')) {
+    start += 1;
+    end -= 1;
+    if (string.length > 5 && string.slice(0, 3) === string.slice(-3) && ((ref1 = string.slice(0, 3)) === '"""' || ref1 === '\'\'\'' || ref1 === '///')) {
+      start += 2;
+      end -= 2;
+    }
+  }
+  return {
+    start: start,
+    end: end
+  };
+};
+
+CoffeeScriptParser.handleButton = function(text, button, oldBlock) {
+  var currentNode, elseLocation, lines, node;
+  if (button === 'add-button' && indexOf.call(oldBlock.classes, 'If') >= 0) {
+    node = CoffeeScript.nodes(text, {
+      locations: true,
+      line: 0,
+      allowReturnOutsideFunction: true
+    }).expressions[0];
+    lines = text.split('\n');
+    currentNode = node;
+    elseLocation = null;
+    while (currentNode.isChain) {
+      currentNode = currentNode.elseBodyNode();
+    }
+    if (currentNode.elseBody != null) {
+      lines = text.split('\n');
+      elseLocation = {
+        line: currentNode.elseToken.last_line,
+        column: currentNode.elseToken.last_column + 2
+      };
+      elseLocation = lines.slice(0, elseLocation.line).join('\n').length + elseLocation.column;
+      return text.slice(0, elseLocation).trimRight() + ' if ``' + (text.slice(elseLocation).match(/^ *\n/) != null ? '' : ' then ') + text.slice(elseLocation) + '\nelse\n  ``';
+    } else {
+      return text + '\nelse\n  ``';
+    }
+  }
+};
+
 module.exports = parser.wrapParser(CoffeeScriptParser);
 
 
-},{"../../vendor/coffee-script.js":116,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112}],105:[function(require,module,exports){
-var ATTRIBUTE_CLASSES, BLOCK_ELEMENTS, COLORS, DEFAULT_INDENT_DEPTH, EMBEDDED_CONTENT, EMPTY_ELEMENTS, FLOW_CONTENT, FLOW_ELEMENTS, HEADING_CONTENT, HTMLParser, INLINE_ELEMENTS, INTERACTIVE_CONTENT, METADATA_CONTENT, PALPABLE_CONTENT, PHRASING_CONTENT, SCRIPT_SUPPORTING, SECTIONING_CONTENT, helper, htmlParser, htmlSerializer, parse5, parser,
+},{"../../vendor/coffee-script.js":117,"../helper.coffee":103,"../model.coffee":111,"../parser.coffee":113}],106:[function(require,module,exports){
+var ATTRIBUTE_CLASSES, BLOCK_ELEMENTS, CATEGORIES, DEFAULT_INDENT_DEPTH, EMBEDDED_CONTENT, EMPTY_ELEMENTS, FLOW_CONTENT, FLOW_ELEMENTS, HEADING_CONTENT, HTMLParser, INLINE_ELEMENTS, INTERACTIVE_CONTENT, METADATA_CONTENT, PALPABLE_CONTENT, PHRASING_CONTENT, SCRIPT_SUPPORTING, SECTIONING_CONTENT, TAGS, helper, htmlParser, htmlSerializer, parse5, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -66558,42 +67277,420 @@ parse5 = require('parse5');
 
 ATTRIBUTE_CLASSES = ['#attribute'];
 
-COLORS = {
-  'Default': 'cyan',
-  '#comment': 'grey',
-  'a': 'grey',
-  'b': 'teal',
-  'body': 'return',
-  'br': 'command',
-  'button': 'yellow',
-  'center': 'red',
-  'div': 'amber',
-  'document': 'bluegrey',
-  'font': 'value',
-  'form': 'deeporange',
-  'h1': 'teal',
-  'h3': 'indigo',
-  'head': 'cyan',
-  'hr': 'lime',
-  'html': 'amber',
-  'iframe': 'green',
-  'img': 'green',
-  'input': 'brown',
-  'label': 'lightblue',
-  'li': 'pink',
-  'link': 'purple',
-  'marquee': 'command',
-  'meta': 'error',
-  'option': 'control',
-  'p': 'deeppurple',
-  'script': 'orange',
-  'select': 'indigo',
-  'strong': 'yellow',
-  'table': 'lightgreen',
-  'td': 'lightblue',
-  'title': 'green',
-  'tr': 'bluegrey',
-  'ul': 'blue'
+TAGS = {
+  '#documentType': {
+    category: 'metadata'
+  },
+  html: {
+    category: 'metadata'
+  },
+  head: {
+    category: 'metadata'
+  },
+  title: {
+    category: 'metadata'
+  },
+  link: {
+    category: 'metadata',
+    dropdown: {
+      '*': ['href=""', 'rel=""', 'type=""', 'media=""', 'title=""']
+    }
+  },
+  meta: {
+    category: 'metadata',
+    dropdown: {
+      '*': ['content=""', 'name=""', 'http-equiv=""', 'property=""']
+    }
+  },
+  style: {
+    category: 'metadata'
+  },
+  script: {
+    category: 'metadata'
+  },
+  base: {
+    category: 'metadata'
+  },
+  p: {
+    category: 'grouping'
+  },
+  hr: {
+    category: 'grouping'
+  },
+  div: {
+    category: 'grouping',
+    dropdown: {
+      '*': ['class=""', 'id=""', 'style=""']
+    }
+  },
+  ul: {
+    category: 'grouping'
+  },
+  ol: {
+    category: 'grouping'
+  },
+  li: {
+    category: 'grouping'
+  },
+  dl: {
+    category: 'grouping'
+  },
+  dt: {
+    category: 'grouping'
+  },
+  dd: {
+    category: 'grouping'
+  },
+  pre: {
+    category: 'grouping'
+  },
+  blockquote: {
+    category: 'grouping'
+  },
+  figure: {
+    category: 'grouping'
+  },
+  figcaption: {
+    category: 'grouping'
+  },
+  main: {
+    category: 'grouping'
+  },
+  dd: {
+    category: 'grouping'
+  },
+  a: {
+    category: 'content',
+    dropdown: {
+      '*': ['href=""', 'target=""', 'title=""', 'rel=""', 'onclick=""']
+    }
+  },
+  i: {
+    category: 'content'
+  },
+  b: {
+    category: 'content'
+  },
+  u: {
+    category: 'content'
+  },
+  sub: {
+    category: 'content'
+  },
+  sup: {
+    category: 'content'
+  },
+  br: {
+    category: 'content'
+  },
+  em: {
+    category: 'content'
+  },
+  strong: {
+    category: 'content'
+  },
+  small: {
+    category: 'content'
+  },
+  s: {
+    category: 'content'
+  },
+  cite: {
+    category: 'content'
+  },
+  q: {
+    category: 'content'
+  },
+  dfn: {
+    category: 'content'
+  },
+  abbr: {
+    category: 'content'
+  },
+  ruby: {
+    category: 'content'
+  },
+  rt: {
+    category: 'content'
+  },
+  rp: {
+    category: 'content'
+  },
+  data: {
+    category: 'content'
+  },
+  time: {
+    category: 'content'
+  },
+  code: {
+    category: 'content'
+  },
+  "var": {
+    category: 'content'
+  },
+  samp: {
+    category: 'content'
+  },
+  kbd: {
+    category: 'content'
+  },
+  mark: {
+    category: 'content'
+  },
+  bdi: {
+    category: 'content'
+  },
+  bdo: {
+    category: 'content'
+  },
+  span: {
+    category: 'content',
+    dropdown: {
+      '*': ['class=""', 'id=""', 'style=""']
+    }
+  },
+  wbr: {
+    category: 'content'
+  },
+  '#text': {
+    category: 'content'
+  },
+  body: {
+    category: 'sections'
+  },
+  article: {
+    category: 'sections'
+  },
+  section: {
+    category: 'sections'
+  },
+  nav: {
+    category: 'sections'
+  },
+  aside: {
+    category: 'sections'
+  },
+  h1: {
+    category: 'sections'
+  },
+  h2: {
+    category: 'sections'
+  },
+  h3: {
+    category: 'sections'
+  },
+  h4: {
+    category: 'sections'
+  },
+  h5: {
+    category: 'sections'
+  },
+  h6: {
+    category: 'sections'
+  },
+  hgroup: {
+    category: 'sections'
+  },
+  header: {
+    category: 'sections'
+  },
+  footer: {
+    category: 'sections'
+  },
+  address: {
+    category: 'sections'
+  },
+  table: {
+    category: 'table'
+  },
+  caption: {
+    category: 'table'
+  },
+  colgroup: {
+    category: 'table'
+  },
+  col: {
+    category: 'table'
+  },
+  tbody: {
+    category: 'table'
+  },
+  thead: {
+    category: 'table'
+  },
+  tfoot: {
+    category: 'table'
+  },
+  tr: {
+    category: 'table'
+  },
+  td: {
+    category: 'table'
+  },
+  th: {
+    category: 'table'
+  },
+  form: {
+    category: 'form',
+    dropdown: {
+      '*': ['action=""', 'method=""', 'name=""']
+    }
+  },
+  input: {
+    category: 'form',
+    dropdown: {
+      '*': ['type=""', 'name=""', 'value=""']
+    }
+  },
+  textarea: {
+    category: 'form',
+    content: 'optional'
+  },
+  label: {
+    category: 'form',
+    dropdown: {
+      '*': ['for=""']
+    }
+  },
+  button: {
+    category: 'form'
+  },
+  select: {
+    category: 'form'
+  },
+  option: {
+    category: 'form'
+  },
+  optgroup: {
+    category: 'form'
+  },
+  datalist: {
+    category: 'form'
+  },
+  keygen: {
+    category: 'form'
+  },
+  output: {
+    category: 'form'
+  },
+  progress: {
+    category: 'form',
+    content: 'optional'
+  },
+  meter: {
+    category: 'form',
+    content: 'optional'
+  },
+  fieldset: {
+    category: 'form'
+  },
+  legend: {
+    category: 'form'
+  },
+  img: {
+    category: 'embedded',
+    dropdown: {
+      '*': ['src=""', 'alt=""', 'width=""', 'height=""', 'border=""', 'title=""']
+    }
+  },
+  iframe: {
+    category: 'embedded',
+    content: 'optional'
+  },
+  embed: {
+    category: 'embedded'
+  },
+  object: {
+    category: 'embedded'
+  },
+  param: {
+    category: 'embedded'
+  },
+  video: {
+    category: 'embedded'
+  },
+  audio: {
+    category: 'embedded'
+  },
+  source: {
+    category: 'embedded'
+  },
+  track: {
+    category: 'embedded'
+  },
+  map: {
+    category: 'embedded'
+  },
+  area: {
+    category: 'embedded'
+  },
+  ins: {
+    category: 'other'
+  },
+  del: {
+    category: 'other'
+  },
+  details: {
+    category: 'other'
+  },
+  summary: {
+    category: 'other'
+  },
+  menu: {
+    category: 'other'
+  },
+  menuitem: {
+    category: 'other'
+  },
+  dialog: {
+    category: 'other'
+  },
+  noscript: {
+    category: 'other'
+  },
+  template: {
+    category: 'other'
+  },
+  canvas: {
+    category: 'other',
+    content: 'optional'
+  },
+  svg: {
+    category: 'other'
+  },
+  frameset: {
+    category: 'other'
+  }
+};
+
+CATEGORIES = {
+  metadata: {
+    color: 'lightblue'
+  },
+  grouping: {
+    color: 'purple'
+  },
+  content: {
+    color: 'lightgreen'
+  },
+  sections: {
+    color: 'orange'
+  },
+  table: {
+    color: 'indigo'
+  },
+  form: {
+    color: 'deeporange'
+  },
+  embedded: {
+    color: 'teal'
+  },
+  other: {
+    color: 'pink'
+  },
+  Default: {
+    color: 'yellow'
+  }
 };
 
 DEFAULT_INDENT_DEPTH = '  ';
@@ -66640,6 +67737,8 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
     this.text = text1;
     this.opts = opts != null ? opts : {};
     HTMLParser.__super__.constructor.apply(this, arguments);
+    this.opts.tags = helper.extend({}, TAGS, this.opts.tags);
+    this.opts.categories = helper.extend({}, CATEGORIES, this.opts.categories);
     this.lines = this.text.split('\n');
   }
 
@@ -66648,20 +67747,33 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.getClasses = function(node) {
-    var classes, ref;
+    var classes;
     classes = [node.nodeName];
-    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table' || ref === 'div') {
-      classes = classes.concat('add-button');
-      if (node.childNodes.length !== 0) {
-        classes = classes.concat('subtract-button');
-      }
-    }
     return classes;
   };
 
+  HTMLParser.prototype.getButtons = function(node) {
+    var buttons, ref;
+    buttons = {};
+    if ((ref = node.nodeName) === 'thead' || ref === 'tbody' || ref === 'tr' || ref === 'table') {
+      buttons.addButton = true;
+      if (node.childNodes.length !== 0) {
+        buttons.subtractButton = true;
+      }
+    }
+    return buttons;
+  };
+
   HTMLParser.prototype.getColor = function(node) {
-    var ref;
-    return (ref = COLORS[node.nodeName]) != null ? ref : COLORS['Default'];
+    if (this.opts.tags[node.nodeName]) {
+      return this.opts.categories[this.opts.tags[node.nodeName].category].color;
+    }
+    return this.opts.categories.Default.color;
+  };
+
+  HTMLParser.prototype.getDropdown = function(node) {
+    var ref, ref1, ref2;
+    return (ref = (ref1 = this.opts.tags[node.nodeName]) != null ? (ref2 = ref1.dropdown) != null ? ref2['*'] : void 0 : void 0) != null ? ref : null;
   };
 
   HTMLParser.prototype.getBounds = function(node) {
@@ -66711,7 +67823,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.setAttribs = function(node, string) {
-    var att, diff, end, k, len, offset, ref, ref1, results, start;
+    var add, att, diff, end, k, len, newStr, offset, ref, ref1, ref2, results, start;
     offset = node.__location.start;
     node.attributes = [];
     string = string.toLowerCase();
@@ -66728,9 +67840,20 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
         start = string.indexOf(att.name.toLowerCase());
         end = start + att.name.length;
         string = string.slice(end);
+        if (string.trimLeft()[0] === '=') {
+          add = 0;
+          newStr = string.trimLeft().slice(1).trimLeft();
+          add = string.length - newStr.length;
+          string = string.slice(add);
+          if (((ref1 = string[0]) === '"' || ref1 === '\'') && string[0] === string[1]) {
+            add += 2;
+            string = string.slice(2);
+          }
+          end += add;
+        }
         if (att.value.length !== 0) {
           diff = string.indexOf(att.value.toLowerCase());
-          if (((ref1 = string[diff - 1]) === '"' || ref1 === '\'') && string[diff - 1] === string[diff + att.value.length]) {
+          if (((ref2 = string[diff - 1]) === '"' || ref2 === '\'') && string[diff - 1] === string[diff + att.value.length]) {
             diff++;
           }
           diff += att.value.length;
@@ -66748,7 +67871,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.cleanTree = function(node) {
-    var i, results;
+    var child, i, k, len, ref, results;
     if (!node) {
       return;
     }
@@ -66758,6 +67881,13 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       while (i < node.childNodes.length) {
         this.cleanTree(node.childNodes[i]);
         if (!node.childNodes[i].__location) {
+          if (node.childNodes[i].childNodes != null) {
+            ref = node.childNodes[i].childNodes;
+            for (k = 0, len = ref.length; k < len; k++) {
+              child = ref[k];
+              child.parentNode = node;
+            }
+          }
           results.push(node.childNodes = node.childNodes.slice(0, i).concat(node.childNodes[i].childNodes || []).concat(node.childNodes.slice(i + 1)));
         } else {
           results.push(i++);
@@ -66768,14 +67898,14 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.fixBounds = function(node) {
-    var child, k, l, len, len1, newList, ref, ref1, ref2;
+    var child, i, k, l, len, len1, newList, ref, ref1, ref2;
     if (!node) {
       return;
     }
     if (node.childNodes != null) {
       ref = node.childNodes;
-      for (k = 0, len = ref.length; k < len; k++) {
-        child = ref[k];
+      for (i = k = 0, len = ref.length; k < len; i = ++k) {
+        child = ref[i];
         this.fixBounds(child);
       }
       newList = [];
@@ -66822,36 +67952,35 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       node.__indentLocation.end = node.__location.startTag.end;
     }
     if (!node.__location.endTag) {
-      node.__location.end = node.__indentLocation.end;
+      node.__location = {
+        start: node.__location.start,
+        end: node.__indentLocation.end
+      };
     }
     return this.setAttribs(node, this.text.slice(node.__location.start, node.__indentLocation.start));
   };
 
-  HTMLParser.prototype.makeIndentBounds = function(node) {
-    var bounds, lastLine;
-    bounds = {
-      start: this.positions[node.__indentLocation.start],
-      end: this.positions[node.__indentLocation.end]
-    };
-    if (node.__location.endTag != null) {
-      lastLine = this.positions[node.__location.endTag.start].line - 1;
-      if (lastLine > bounds.end.line || (lastLine === bounds.end.line && this.lines[lastLine].length > bounds.end.column)) {
-        bounds.end = {
-          line: lastLine,
-          column: this.lines[lastLine].length
-        };
-      } else if (node.__indentLocation.start === node.__indentLocation.end && node.__location.endTag) {
-        bounds.end = this.positions[node.__location.endTag.start];
-      }
+  HTMLParser.prototype.getEndPoint = function(node) {
+    var ind, last, parent, ref, ref1;
+    if ((ref = node.nodeName) === '#document' || ref === '#document-fragment') {
+      return this.text.length;
     }
-    return bounds;
+    last = null;
+    parent = node.parentNode;
+    ind = parent.childNodes.indexOf(node);
+    if (ind === parent.childNodes.length - 1) {
+      last = ((ref1 = parent.__location) != null ? ref1.endTag : void 0) != null ? parent.__location.endTag.start : this.getEndPoint(parent);
+    } else {
+      last = parent.childNodes[ind + 1].__location.start;
+    }
+    return last;
   };
 
   HTMLParser.prototype.trimText = function(node) {
     var i, j, leftTrimText, location, text;
-    text = node.value;
     location = node.__location;
-    text = text.split('\n');
+    location.end = Math.min(location.end, this.getEndPoint(node));
+    text = this.text.slice(location.start, location.end).split('\n');
     i = 0;
     while (text[i].trim().length === 0) {
       location.start += text[i].length + 1;
@@ -66871,6 +68000,33 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
     return node.value = text;
   };
 
+  HTMLParser.prototype.makeIndentBounds = function(node) {
+    var bounds, lastLine, trailingText;
+    bounds = {
+      start: this.positions[node.__indentLocation.start],
+      end: this.positions[node.__indentLocation.end]
+    };
+    trailingText = this.lines[bounds.start.line].slice(bounds.start.column);
+    if (trailingText.length > 0 && trailingText.trim().length === 0) {
+      bounds.start = {
+        line: bounds.start.line,
+        column: this.lines[bounds.start.line].length
+      };
+    }
+    if (node.__location.endTag != null) {
+      lastLine = this.positions[node.__location.endTag.start].line - 1;
+      if (lastLine > bounds.end.line || (lastLine === bounds.end.line && this.lines[lastLine].length > bounds.end.column)) {
+        bounds.end = {
+          line: lastLine,
+          column: this.lines[lastLine].length
+        };
+      } else if (node.__indentLocation.start === node.__indentLocation.end && node.__location.endTag) {
+        bounds.end = this.positions[node.__location.endTag.start];
+      }
+    }
+    return bounds;
+  };
+
   HTMLParser.prototype.getSocketLevel = function(node) {
     return helper.ANY_DROP;
   };
@@ -66882,16 +68038,19 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       precedence: this.getPrecedence(node),
       color: this.getColor(node),
       classes: this.getClasses(node),
-      socketLevel: this.getSocketLevel(node)
+      socketLevel: this.getSocketLevel(node),
+      parseContext: node.nodeName,
+      buttons: this.getButtons(node)
     });
   };
 
-  HTMLParser.prototype.htmlSocket = function(node, depth, precedence, bounds, classes) {
+  HTMLParser.prototype.htmlSocket = function(node, depth, precedence, bounds, classes, noDropdown) {
     return this.addSocket({
       bounds: bounds != null ? bounds : this.getBounds(node),
       depth: depth,
       precedence: precedence,
-      classes: classes != null ? classes : this.getClasses(node)
+      classes: classes != null ? classes : this.getClasses(node),
+      dropdown: noDropdown ? null : this.getDropdown(node)
     });
   };
 
@@ -66915,7 +68074,7 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
   };
 
   HTMLParser.prototype.markRoot = function() {
-    var column, i, k, len, line, ref, ref1, root, val;
+    var column, i, k, len, line, parseContext, ref, ref1, root, val;
     this.positions = [];
     line = 0;
     column = 0;
@@ -66936,7 +68095,8 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
       'line': line,
       'column': column
     };
-    if (((ref1 = this.opts.parseOptions) != null ? ref1.wrapAtRoot : void 0) === false) {
+    parseContext = (ref1 = this.opts.parseOptions) != null ? ref1.context : void 0;
+    if (parseContext && (parseContext !== 'html' && parseContext !== 'head' && parseContext !== 'body')) {
       root = htmlParser.parseFragment(this.text);
       this.cleanTree(root);
       this.fixBounds(root);
@@ -66953,71 +68113,105 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
     return this.mark(0, root, 0, null);
   };
 
-  HTMLParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-    var attrib, child, indentBounds, k, l, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, results, results1, results2;
+  HTMLParser.prototype.mark = function(indentDepth, node, depth, bounds, nomark) {
+    var attrib, child, indentBounds, k, l, lastChild, len, len1, len2, len3, m, n, prefix, ref, ref1, ref2, ref3, ref4, results, results1, results2;
+    if (nomark == null) {
+      nomark = false;
+    }
     switch (node.type) {
       case 'document':
+        lastChild = null;
         ref = node.childNodes;
         results = [];
         for (k = 0, len = ref.length; k < len; k++) {
           child = ref[k];
-          results.push(this.mark(indentDepth, child, depth + 1, null));
+          if (lastChild && lastChild.__location.end > child.__location.start) {
+            nomark = true;
+          } else {
+            nomark = false;
+          }
+          this.mark(indentDepth, child, depth + 1, null, nomark);
+          if (!nomark) {
+            results.push(lastChild = child);
+          } else {
+            results.push(void 0);
+          }
         }
         return results;
         break;
       case 'emptyTag':
-        this.htmlBlock(node, depth, bounds);
-        ref1 = node.attributes;
-        results1 = [];
-        for (l = 0, len1 = ref1.length; l < len1; l++) {
-          attrib = ref1[l];
-          if (attrib.end - attrib.start > 1) {
-            results1.push(this.htmlSocket(node, depth + 1, null, this.genBounds(attrib), ATTRIBUTE_CLASSES));
-          } else {
-            results1.push(void 0);
+        if (!nomark) {
+          this.htmlBlock(node, depth, bounds);
+          ref1 = node.attributes;
+          results1 = [];
+          for (l = 0, len1 = ref1.length; l < len1; l++) {
+            attrib = ref1[l];
+            if (attrib.end - attrib.start > 1) {
+              results1.push(this.htmlSocket(node, depth + 1, null, this.genBounds(attrib), ATTRIBUTE_CLASSES));
+            } else {
+              results1.push(void 0);
+            }
           }
+          return results1;
         }
-        return results1;
         break;
       case 'blockTag':
-        this.htmlBlock(node, depth, bounds);
-        ref2 = node.attributes;
-        for (m = 0, len2 = ref2.length; m < len2; m++) {
-          attrib = ref2[m];
-          this.htmlSocket(node, depth + 1, null, this.genBounds(attrib), ATTRIBUTE_CLASSES);
-        }
-        indentBounds = this.makeIndentBounds(node);
-        if (indentBounds.start.line !== indentBounds.end.line || indentBounds.start.column !== indentBounds.end.column) {
-          depth++;
-          prefix = this.getIndentPrefix(indentBounds, indentDepth, depth);
-          indentDepth += prefix.length;
-          this.addIndent({
-            bounds: indentBounds,
-            depth: depth,
-            prefix: prefix,
-            classes: this.getClasses(node)
-          });
-          ref3 = node.childNodes;
-          results2 = [];
-          for (n = 0, len3 = ref3.length; n < len3; n++) {
-            child = ref3[n];
-            results2.push(this.mark(indentDepth, child, depth + 1, null));
+        if (!nomark) {
+          this.htmlBlock(node, depth, bounds);
+          ref2 = node.attributes;
+          for (m = 0, len2 = ref2.length; m < len2; m++) {
+            attrib = ref2[m];
+            this.htmlSocket(node, depth + 1, null, this.genBounds(attrib), ATTRIBUTE_CLASSES);
           }
-          return results2;
-        } else {
-          if ((node.nodeName !== 'script' || !this.hasAttribute(node, 'src')) && node.__indentLocation.end !== node.__location.end) {
-            return this.htmlSocket(node, depth + 1, null, indentBounds);
+          indentBounds = this.makeIndentBounds(node);
+          if (indentBounds.start.line !== indentBounds.end.line || indentBounds.start.column !== indentBounds.end.column) {
+            depth++;
+            prefix = this.getIndentPrefix(indentBounds, indentDepth, depth);
+            indentDepth += prefix.length;
+            this.addIndent({
+              bounds: indentBounds,
+              depth: depth,
+              prefix: prefix,
+              classes: this.getClasses(node)
+            });
+            lastChild = null;
+          } else {
+            if (!(((ref3 = TAGS[node.nodeName]) != null ? ref3.content : void 0) === 'optional' || (node.nodeName === 'script' && this.hasAttribute(node, 'src')) || node.__indentLocation.end === node.__location.end)) {
+              this.htmlSocket(node, depth + 1, null, indentBounds, null, true);
+            }
           }
         }
+        ref4 = node.childNodes;
+        results2 = [];
+        for (n = 0, len3 = ref4.length; n < len3; n++) {
+          child = ref4[n];
+          if (lastChild && lastChild.__location.end > child.__location.start) {
+            nomark = true;
+          } else {
+            nomark = false;
+          }
+          this.mark(indentDepth, child, depth + 1, null, nomark);
+          if (!nomark) {
+            results2.push(lastChild = child);
+          } else {
+            results2.push(void 0);
+          }
+        }
+        return results2;
         break;
       case 'text':
-        this.htmlBlock(node, depth, bounds);
-        return this.htmlSocket(node, depth + 1, null);
+        if (!nomark) {
+          this.htmlBlock(node, depth, bounds);
+          return this.htmlSocket(node, depth + 1, null);
+        }
+        break;
       case 'comment':
-        this.htmlBlock(node, depth, bounds);
-        node.__location.start += 4;
-        node.__location.end -= 3;
-        return this.htmlSocket(node, depth + 1, null);
+        if (!nomark) {
+          this.htmlBlock(node, depth, bounds);
+          node.__location.start += 4;
+          node.__location.end -= 3;
+          return this.htmlSocket(node, depth + 1, null);
+        }
     }
   };
 
@@ -67031,6 +68225,73 @@ exports.HTMLParser = HTMLParser = (function(superClass) {
 
 HTMLParser.parens = function(leading, trailing, node, context) {
   return [leading, trailing];
+};
+
+HTMLParser.handleButton = function(text, button, oldblock) {
+  var block, classes, extra, fragment, indentPrefix, last, lines, mid, prev, ref, ref1, ref2, ref3, ref4;
+  classes = oldblock.classes;
+  fragment = htmlParser.parseFragment(text);
+  this.prototype.cleanTree(fragment);
+  block = fragment.childNodes[0];
+  prev = null;
+  if (block.nodeName === 'tr') {
+    prev = 'td';
+  } else if ((ref = block.nodeName) === 'table' || ref === 'thead' || ref === 'tbody') {
+    prev = 'tr';
+  } else if (block.nodeName === 'div') {
+    prev = 'div';
+  }
+  if (prev) {
+    last = block.childNodes.length - 1;
+    while (last >= 0) {
+      if (block.childNodes[last].nodeName === prev) {
+        break;
+      }
+      last--;
+    }
+    last++;
+    if (button === 'add-button') {
+      indentPrefix = DEFAULT_INDENT_DEPTH;
+      if (((ref1 = block.childNodes) != null ? ref1.length : void 0) === 1 && block.childNodes[0].nodeName === '#text' && block.childNodes[0].value.trim().length === 0) {
+        block.childNodes[0].value = '\n';
+      } else {
+        lines = (ref2 = block.childNodes) != null ? (ref3 = ref2[0]) != null ? (ref4 = ref3.value) != null ? ref4.split('\n') : void 0 : void 0 : void 0;
+        if ((lines != null ? lines.length : void 0) > 1) {
+          indentPrefix = lines[lines.length - 1];
+        }
+      }
+      switch (block.nodeName) {
+        case 'tr':
+          extra = htmlParser.parseFragment('\n' + indentPrefix + '<td></td>');
+          break;
+        case 'table':
+          extra = htmlParser.parseFragment('\n' + indentPrefix + '<tr>\n' + indentPrefix + '\n' + indentPrefix + '</tr>');
+          break;
+        case 'tbody':
+          extra = htmlParser.parseFragment('\n' + indentPrefix + '<tr>\n' + indentPrefix + '\n' + indentPrefix + '</tr>');
+          break;
+        case 'thead':
+          extra = htmlParser.parseFragment('\n' + indentPrefix + '<tr>\n' + indentPrefix + '\n' + indentPrefix + '</tr>');
+          break;
+        case 'div':
+          extra = htmlParser.parseFragment('\n' + indentPrefix + '<div>\n' + indentPrefix + '\n' + indentPrefix + '</div>');
+      }
+      block.childNodes = block.childNodes.slice(0, last).concat(extra.childNodes).concat(block.childNodes.slice(last));
+    } else if (button === 'subtract-button') {
+      mid = last - 2;
+      while (mid >= 0) {
+        if (block.childNodes[mid].nodeName === prev) {
+          break;
+        }
+        mid--;
+      }
+      block.childNodes = (mid >= 0 ? block.childNodes.slice(0, +mid + 1 || 9e9) : []).concat(block.childNodes.slice(last));
+      if (block.childNodes.length === 1 && block.childNodes[0].nodeName === '#text' && block.childNodes[0].value.trim().length === 0) {
+        block.childNodes[0].value = '\n  \n';
+      }
+    }
+  }
+  return htmlSerializer.serialize(fragment);
 };
 
 HTMLParser.drop = function(block, context, pred, next) {
@@ -67247,7 +68508,7 @@ HTMLParser.drop = function(block, context, pred, next) {
 module.exports = parser.wrapParser(HTMLParser);
 
 
-},{"../helper.coffee":102,"../parser.coffee":112,"parse5":77}],106:[function(require,module,exports){
+},{"../helper.coffee":103,"../parser.coffee":113,"parse5":78}],107:[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, antlrHelper, config, parser;
 
 parser = require('../parser.coffee');
@@ -67287,7 +68548,7 @@ config = {
 module.exports = parser.wrapParser(antlrHelper.createANTLRParser('Java', config));
 
 
-},{"../antlr.coffee":99,"../parser.coffee":112}],107:[function(require,module,exports){
+},{"../antlr.coffee":100,"../parser.coffee":113}],108:[function(require,module,exports){
 var CATEGORIES, CLASS_EXCEPTIONS, DEFAULT_INDENT_DEPTH, JavaScriptParser, KNOWN_FUNCTIONS, LOGICAL_OPERATORS, NEVER_PAREN, NODE_CATEGORIES, OPERATOR_PRECEDENCES, STATEMENT_NODE_TYPES, acorn, helper, isStandardForLoop, model, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -67674,7 +68935,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.getBounds = function(node) {
-    var bounds, line, ref, semicolon, semicolonLength;
+    var bounds, line, ref, ref1, semicolon, semicolonLength;
     if (node.type === 'BlockStatement') {
       bounds = {
         start: {
@@ -67686,12 +68947,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           column: node.loc.end.column - 1
         }
       };
+      bounds.start.column += ((ref = this.lines[bounds.start.line].slice(bounds.start.column).match(/^\s*/)) != null ? ref : [''])[0].length;
       if (this.lines[bounds.end.line].slice(0, bounds.end.column).trim().length === 0) {
         bounds.end.line -= 1;
         bounds.end.column = this.lines[bounds.end.line].length;
       }
       return bounds;
-    } else if (ref = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref) >= 0) {
+    } else if (ref1 = node.type, indexOf.call(STATEMENT_NODE_TYPES, ref1) >= 0) {
       line = this.lines[node.loc.end.line];
       semicolon = this.lines[node.loc.end.line].slice(node.loc.end.column - 1).indexOf(';');
       if (semicolon >= 0) {
@@ -67752,7 +69014,7 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
   };
 
   JavaScriptParser.prototype.mark = function(indentDepth, node, depth, bounds) {
-    var argument, block, currentElif, declaration, element, expression, i, j, k, known, l, len, len1, len10, len2, len3, len4, len5, len6, len7, len8, len9, m, n, o, p, param, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref13, ref14, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results10, results11, results2, results3, results4, results5, results6, results7, results8, results9, s, statement, switchCase, t;
+    var argument, block, currentElif, declaration, element, endPosition, expression, i, j, k, known, l, len, len1, len2, len3, len4, len5, len6, len7, len8, m, match, n, nodeBoundsStart, o, p, position, prefix, property, q, r, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, results1, results2, results3, results4, results5, results6, results7, results8, space, statement, string, switchCase;
     switch (node.type) {
       case 'Program':
         ref = node.body;
@@ -67780,13 +69042,41 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         this.jsBlock(node, depth, bounds);
         this.mark(indentDepth, node.body, depth + 1, null);
         this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
-        ref2 = node.params;
-        results2 = [];
-        for (l = 0, len2 = ref2.length; l < len2; l++) {
-          param = ref2[l];
-          results2.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
+        if (node.params.length > 0) {
+          return this.addSocket({
+            bounds: {
+              start: this.getBounds(node.params[0]).start,
+              end: this.getBounds(node.params[node.params.length - 1]).end
+            },
+            depth: depth + 1,
+            precedence: 0,
+            dropdown: null,
+            classes: ['no-drop'],
+            empty: ''
+          });
+        } else if (this.opts.zeroParamFunctions) {
+          nodeBoundsStart = this.getBounds(node.id).end;
+          match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
+          if (match != null) {
+            return this.addSocket({
+              bounds: {
+                start: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length
+                },
+                end: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length + match[2].length
+                }
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['forbid-all', '__function_param__'],
+              empty: ''
+            });
+          }
         }
-        return results2;
         break;
       case 'FunctionExpression':
         this.jsBlock(node, depth, bounds);
@@ -67794,13 +69084,46 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         if (node.id != null) {
           this.jsSocketAndMark(indentDepth, node.id, depth + 1, null, null, ['no-drop']);
         }
-        ref3 = node.params;
-        results3 = [];
-        for (m = 0, len3 = ref3.length; m < len3; m++) {
-          param = ref3[m];
-          results3.push(this.jsSocketAndMark(indentDepth, param, depth + 1, null, null, ['no-drop']));
+        if (node.params.length > 0) {
+          return this.addSocket({
+            bounds: {
+              start: this.getBounds(node.params[0]).start,
+              end: this.getBounds(node.params[node.params.length - 1]).end
+            },
+            depth: depth + 1,
+            precedence: 0,
+            dropdown: null,
+            classes: ['no-drop'],
+            empty: ''
+          });
+        } else if (this.opts.zeroParamFunctions) {
+          if (node.id != null) {
+            nodeBoundsStart = this.getBounds(node.id).end;
+            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*\()(\s*)\)/);
+          } else {
+            nodeBoundsStart = this.getBounds(node).start;
+            match = this.lines[nodeBoundsStart.line].slice(nodeBoundsStart.column).match(/^(\s*function\s*\()(\s*)\)/);
+          }
+          if (match != null) {
+            return position = this.addSocket({
+              bounds: {
+                start: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length
+                },
+                end: {
+                  line: nodeBoundsStart.line,
+                  column: nodeBoundsStart.column + match[1].length + match[2].length
+                }
+              },
+              depth: depth,
+              precedence: 0,
+              dropdown: null,
+              classes: ['forbid-all', '__function_param__'],
+              empty: ''
+            });
+          }
         }
-        return results3;
         break;
       case 'AssignmentExpression':
         this.jsBlock(node, depth, bounds);
@@ -67814,22 +69137,24 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         break;
       case 'IfStatement':
       case 'ConditionalExpression':
-        this.jsBlock(node, depth, bounds);
+        this.jsBlock(node, depth, bounds, {
+          addButton: true
+        });
         this.jsSocketAndMark(indentDepth, node.test, depth + 1, NEVER_PAREN);
         this.jsSocketAndMark(indentDepth, node.consequent, depth + 1, null);
         currentElif = node.alternate;
-        results4 = [];
+        results2 = [];
         while (currentElif != null) {
           if (currentElif.type === 'IfStatement') {
             this.jsSocketAndMark(indentDepth, currentElif.test, depth + 1, null);
             this.jsSocketAndMark(indentDepth, currentElif.consequent, depth + 1, null);
-            results4.push(currentElif = currentElif.alternate);
+            results2.push(currentElif = currentElif.alternate);
           } else {
             this.jsSocketAndMark(indentDepth, currentElif, depth + 1, 10);
-            results4.push(currentElif = null);
+            results2.push(currentElif = null);
           }
         }
-        return results4;
+        return results2;
         break;
       case 'ForInStatement':
         this.jsBlock(node, depth, bounds);
@@ -67850,15 +69175,6 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
       case 'ThrowStatement':
         this.jsBlock(node, depth, bounds);
         return this.jsSocketAndMark(indentDepth, node.argument, depth + 1, null);
-      case 'IfStatement':
-      case 'ConditionalExpression':
-        this.jsBlock(node, depth, bounds);
-        this.jsSocketAndMark(indentDepth, node.test, depth + 1, NEVER_PAREN);
-        this.jsSocketAndMark(indentDepth, node.consequent, depth + 1, null);
-        if (node.alternate != null) {
-          return this.jsSocketAndMark(indentDepth, node.alternate, depth + 1, 10);
-        }
-        break;
       case 'ForStatement':
         this.jsBlock(node, depth, bounds);
         if (this.opts.categories.loops.beginner && isStandardForLoop(node)) {
@@ -67883,20 +69199,20 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
           depth: depth,
           prefix: prefix
         });
-        ref4 = node.body;
-        results5 = [];
-        for (n = 0, len4 = ref4.length; n < len4; n++) {
-          statement = ref4[n];
-          results5.push(this.mark(indentDepth, statement, depth + 1, null));
+        ref2 = node.body;
+        results3 = [];
+        for (l = 0, len2 = ref2.length; l < len2; l++) {
+          statement = ref2[l];
+          results3.push(this.mark(indentDepth, statement, depth + 1, null));
         }
-        return results5;
+        return results3;
         break;
       case 'BinaryExpression':
         this.jsBlock(node, depth, bounds);
         this.jsSocketAndMark(indentDepth, node.left, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
         return this.jsSocketAndMark(indentDepth, node.right, depth + 1, OPERATOR_PRECEDENCES[node.operator]);
       case 'UnaryExpression':
-        if (!(((ref5 = node.operator) === '-' || ref5 === '+') && ((ref6 = node.argument.type) === 'Identifier' || ref6 === 'Literal'))) {
+        if (!(((ref3 = node.operator) === '-' || ref3 === '+') && ((ref4 = node.argument.type) === 'Identifier' || ref4 === 'Literal'))) {
           this.jsBlock(node, depth, bounds);
           return this.jsSocketAndMark(indentDepth, node.argument, depth + 1, this.getPrecedence(node));
         }
@@ -67918,13 +69234,38 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         } else if (known.anyobj && node.callee.type === 'MemberExpression') {
           this.jsSocketAndMark(indentDepth, node.callee.object, depth + 1, NEVER_PAREN);
         }
-        ref7 = node["arguments"];
-        results6 = [];
-        for (i = o = 0, len5 = ref7.length; o < len5; i = ++o) {
-          argument = ref7[i];
-          results6.push(this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref8 = known.fn) != null ? (ref9 = ref8.dropdown) != null ? ref9[i] : void 0 : void 0 : void 0));
+        ref5 = node["arguments"];
+        for (i = m = 0, len3 = ref5.length; m < len3; i = ++m) {
+          argument = ref5[i];
+          this.jsSocketAndMark(indentDepth, argument, depth + 1, NEVER_PAREN, null, null, known != null ? (ref6 = known.fn) != null ? (ref7 = ref6.dropdown) != null ? ref7[i] : void 0 : void 0 : void 0, (i === 0 && node["arguments"].length === 1 ? '' : void 0));
         }
-        return results6;
+        if (!known && node["arguments"].length === 0) {
+          position = {
+            line: node.callee.loc.end.line,
+            column: node.callee.loc.end.column
+          };
+          string = this.lines[position.line].slice(position.column).match(/^\s*\(/)[0];
+          position.column += string.length;
+          endPosition = {
+            line: position.line,
+            column: position.column
+          };
+          space = this.lines[position.line].slice(position.column).match(/^(\s*)\)/);
+          if (space != null) {
+            endPosition.column += space[1].length;
+          }
+          return this.addSocket({
+            bounds: {
+              start: position,
+              end: endPosition
+            },
+            depth: depth + 1,
+            precedence: NEVER_PAREN,
+            dropdown: null,
+            classes: ['mostly-value'],
+            empty: ''
+          });
+        }
         break;
       case 'MemberExpression':
         this.jsBlock(node, depth, bounds);
@@ -67935,18 +69276,18 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         return this.jsSocketAndMark(indentDepth, node.argument, depth + 1);
       case 'VariableDeclaration':
         this.jsBlock(node, depth, bounds);
-        ref10 = node.declarations;
-        results7 = [];
-        for (p = 0, len6 = ref10.length; p < len6; p++) {
-          declaration = ref10[p];
-          results7.push(this.mark(indentDepth, declaration, depth + 1));
+        ref8 = node.declarations;
+        results4 = [];
+        for (n = 0, len4 = ref8.length; n < len4; n++) {
+          declaration = ref8[n];
+          results4.push(this.mark(indentDepth, declaration, depth + 1));
         }
-        return results7;
+        return results4;
         break;
       case 'VariableDeclarator':
         this.jsSocketAndMark(indentDepth, node.id, depth);
         if (node.init != null) {
-          return this.jsSocketAndMark(indentDepth, node.init, depth);
+          return this.jsSocketAndMark(indentDepth, node.init, depth, NEVER_PAREN);
         }
         break;
       case 'LogicalExpression':
@@ -67960,25 +69301,25 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         return this.jsSocketAndMark(indentDepth, node.test, depth + 1);
       case 'ObjectExpression':
         this.jsBlock(node, depth, bounds);
-        ref11 = node.properties;
-        results8 = [];
-        for (q = 0, len7 = ref11.length; q < len7; q++) {
-          property = ref11[q];
+        ref9 = node.properties;
+        results5 = [];
+        for (o = 0, len5 = ref9.length; o < len5; o++) {
+          property = ref9[o];
           this.jsSocketAndMark(indentDepth, property.key, depth + 1);
-          results8.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
+          results5.push(this.jsSocketAndMark(indentDepth, property.value, depth + 1));
         }
-        return results8;
+        return results5;
         break;
       case 'SwitchStatement':
         this.jsBlock(node, depth, bounds);
         this.jsSocketAndMark(indentDepth, node.discriminant, depth + 1);
-        ref12 = node.cases;
-        results9 = [];
-        for (r = 0, len8 = ref12.length; r < len8; r++) {
-          switchCase = ref12[r];
-          results9.push(this.mark(indentDepth, switchCase, depth + 1, null));
+        ref10 = node.cases;
+        results6 = [];
+        for (p = 0, len6 = ref10.length; p < len6; p++) {
+          switchCase = ref10[p];
+          results6.push(this.mark(indentDepth, switchCase, depth + 1, null));
         }
-        return results9;
+        return results6;
         break;
       case 'SwitchCase':
         if (node.test != null) {
@@ -67993,13 +69334,13 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
             depth: depth + 1,
             prefix: prefix
           });
-          ref13 = node.consequent;
-          results10 = [];
-          for (s = 0, len9 = ref13.length; s < len9; s++) {
-            statement = ref13[s];
-            results10.push(this.mark(indentDepth, statement, depth + 2));
+          ref11 = node.consequent;
+          results7 = [];
+          for (q = 0, len7 = ref11.length; q < len7; q++) {
+            statement = ref11[q];
+            results7.push(this.mark(indentDepth, statement, depth + 2));
           }
-          return results10;
+          return results7;
         }
         break;
       case 'TryStatement':
@@ -68020,17 +69361,17 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
         break;
       case 'ArrayExpression':
         this.jsBlock(node, depth, bounds);
-        ref14 = node.elements;
-        results11 = [];
-        for (t = 0, len10 = ref14.length; t < len10; t++) {
-          element = ref14[t];
+        ref12 = node.elements;
+        results8 = [];
+        for (r = 0, len8 = ref12.length; r < len8; r++) {
+          element = ref12[r];
           if (element != null) {
-            results11.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
+            results8.push(this.jsSocketAndMark(indentDepth, element, depth + 1, null));
           } else {
-            results11.push(void 0);
+            results8.push(void 0);
           }
         }
-        return results11;
+        return results8;
         break;
       case 'Literal':
         return null;
@@ -68039,26 +69380,27 @@ exports.JavaScriptParser = JavaScriptParser = (function(superClass) {
     }
   };
 
-  JavaScriptParser.prototype.jsBlock = function(node, depth, bounds) {
+  JavaScriptParser.prototype.jsBlock = function(node, depth, bounds, buttons) {
     return this.addBlock({
       bounds: bounds != null ? bounds : this.getBounds(node),
       depth: depth,
       precedence: this.getPrecedence(node),
       color: this.getColor(node),
       classes: this.getClasses(node),
-      socketLevel: this.getSocketLevel(node)
+      socketLevel: this.getSocketLevel(node),
+      buttons: buttons
     });
   };
 
-  JavaScriptParser.prototype.jsSocketAndMark = function(indentDepth, node, depth, precedence, bounds, classes, dropdown) {
+  JavaScriptParser.prototype.jsSocketAndMark = function(indentDepth, node, depth, precedence, bounds, classes, dropdown, empty) {
     if (node.type !== 'BlockStatement') {
       this.addSocket({
         bounds: bounds != null ? bounds : this.getBounds(node),
         depth: depth,
         precedence: precedence,
         classes: classes != null ? classes : [],
-        accepts: this.getAcceptsRule(node),
-        dropdown: dropdown
+        dropdown: dropdown,
+        empty: empty
       });
     }
     return this.mark(indentDepth, node, depth + 1, bounds);
@@ -68142,10 +69484,64 @@ JavaScriptParser.empty = "__";
 
 JavaScriptParser.emptyIndent = "";
 
+JavaScriptParser.startComment = '/*';
+
+JavaScriptParser.endComment = '*/';
+
+JavaScriptParser.handleButton = function(text, button, oldBlock) {
+  var currentElif, elseLocation, lines, node;
+  if (button === 'add-button' && indexOf.call(oldBlock.classes, 'IfStatement') >= 0) {
+    node = acorn.parse(text, {
+      locations: true,
+      line: 0,
+      allowReturnOutsideFunction: true
+    }).body[0];
+    currentElif = node;
+    elseLocation = null;
+    while (true) {
+      if (currentElif.type === 'IfStatement') {
+        if (currentElif.alternate != null) {
+          elseLocation = {
+            line: currentElif.alternate.loc.start.line,
+            column: currentElif.alternate.loc.start.column
+          };
+          currentElif = currentElif.alternate;
+        } else {
+          elseLocation = null;
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+    if (elseLocation != null) {
+      lines = text.split('\n');
+      elseLocation = lines.slice(0, elseLocation.line).join('\n').length + elseLocation.column;
+      return text.slice(0, elseLocation).trimRight() + ' if (__) ' + text.slice(elseLocation).trimLeft() + ' else {\n  __\n}';
+    } else {
+      return text + ' else {\n  __\n}';
+    }
+  }
+};
+
+JavaScriptParser.getDefaultSelectionRange = function(string) {
+  var end, ref, start;
+  start = 0;
+  end = string.length;
+  if (string[0] === string[string.length - 1] && ((ref = string[0]) === '"' || ref === '\'' || ref === '/')) {
+    start += 1;
+    end -= 1;
+  }
+  return {
+    start: start,
+    end: end
+  };
+};
+
 module.exports = parser.wrapParser(JavaScriptParser);
 
 
-},{"../../vendor/acorn":115,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112}],108:[function(require,module,exports){
+},{"../../vendor/acorn":116,"../helper.coffee":103,"../model.coffee":111,"../parser.coffee":113}],109:[function(require,module,exports){
 var COLORS_BACKWARD, COLORS_FORWARD, INDENTS, PARENS, SKIPS, SOCKET_TOKENS, config, getBounds, helper, model, parse, parser, skulpt, transform, treewalk;
 
 helper = require('../helper.coffee');
@@ -68239,13 +69635,13 @@ config = {
 module.exports = parser.wrapParser(treewalk.createTreewalkParser(parse, config));
 
 
-},{"../../vendor/skulpt":118,"../helper.coffee":102,"../model.coffee":110,"../parser.coffee":112,"../treewalk.coffee":113}],109:[function(require,module,exports){
+},{"../../vendor/skulpt":119,"../helper.coffee":103,"../model.coffee":111,"../parser.coffee":113,"../treewalk.coffee":114}],110:[function(require,module,exports){
 module.exports = {
   Editor: require('./controller.coffee').Editor
 };
 
 
-},{"./controller.coffee":100}],110:[function(require,module,exports){
+},{"./controller.coffee":101}],111:[function(require,module,exports){
 var Block, BlockEndToken, BlockStartToken, Container, Document, DocumentEndToken, DocumentStartToken, EndToken, FORBID, Indent, IndentEndToken, IndentStartToken, List, Location, NO, NORMAL, NewlineToken, Operation, ReplaceOperation, Socket, SocketEndToken, SocketStartToken, StartToken, TextLocation, TextToken, Token, YES, _id, helper, isTreeValid, traverseOneLevel,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -68368,7 +69764,8 @@ Operation = (function() {
       location: this.location.toString(),
       list: this.list.stringify(),
       start: this.start.toString(),
-      end: this.end.toString()
+      end: this.end.toString(),
+      type: this.type
     });
   };
 
@@ -68387,6 +69784,18 @@ ReplaceOperation = (function() {
     this.type = 'replace';
   }
 
+  ReplaceOperation.prototype.toString = function() {
+    return JSON.stringify({
+      beforeStart: this.beforeStart.toString(),
+      before: this.before.stringify(),
+      beforeEnd: this.beforeEnd.toString(),
+      afterStart: this.afterStart.toString(),
+      after: this.after.stringify(),
+      afterEnd: this.afterEnd.toString(),
+      type: this.type
+    });
+  };
+
   return ReplaceOperation;
 
 })();
@@ -68400,6 +69809,9 @@ exports.List = List = (function() {
 
   List.prototype.contains = function(token) {
     var head;
+    if (token instanceof Container) {
+      token = token.start;
+    }
     head = this.start;
     while (head !== this.end) {
       if (head === token) {
@@ -68412,6 +69824,10 @@ exports.List = List = (function() {
     } else {
       return false;
     }
+  };
+
+  List.prototype.getDocument = function() {
+    return this.start.getDocument();
   };
 
   List.prototype.insert = function(token, list, updates) {
@@ -68697,7 +70113,7 @@ exports.List = List = (function() {
     str = '';
     indent = [];
     head = this.start;
-    while (head !== this.end) {
+    while (true) {
       if (head instanceof IndentStartToken) {
         indent.push(head.container.prefix);
       } else if (head instanceof IndentEndToken) {
@@ -68707,6 +70123,9 @@ exports.List = List = (function() {
         str += '\n' + ((ref = head.specialIndent) != null ? ref : indent.join(''));
       } else {
         str += head.stringify();
+      }
+      if (head === this.end) {
+        break;
       }
       head = head.next;
     }
@@ -69073,6 +70492,19 @@ exports.Token = Token = (function() {
     this.version = 0;
   }
 
+  Token.prototype.getLinesToParent = function() {
+    var head, lines;
+    head = this;
+    lines = 0;
+    while (head !== this.parent.start) {
+      if (head.type === 'newline') {
+        lines++;
+      }
+      head = head.prev;
+    }
+    return lines;
+  };
+
   Token.prototype.setParent = function(parent1) {
     this.parent = parent1;
   };
@@ -69185,18 +70617,18 @@ exports.Token = Token = (function() {
   Token.prototype.getDocument = function() {
     var head, ref;
     head = (ref = this.container) != null ? ref : this;
-    while (!(head instanceof Document)) {
+    while (!((head == null) || head instanceof Document)) {
       head = head.parent;
     }
     return head;
   };
 
   Token.prototype.getLocation = function() {
-    var count, document, head;
+    var count, dropletDocument, head;
     count = 0;
     head = this;
-    document = this.getDocument();
-    while (head !== document.start) {
+    dropletDocument = this.getDocument();
+    while (head !== dropletDocument.start) {
       head = head.prev;
       count += 1;
     }
@@ -69235,6 +70667,10 @@ exports.Location = Location = (function() {
       other = other.getLocation();
     }
     return other.count === this.count && other.type === this.type;
+  };
+
+  Location.prototype.clone = function() {
+    return new Location(this.count, this.type);
   };
 
   return Location;
@@ -69367,11 +70803,13 @@ exports.BlockEndToken = BlockEndToken = (function(superClass) {
 exports.Block = Block = (function(superClass) {
   extend(Block, superClass);
 
-  function Block(precedence, color, socketLevel, classes) {
+  function Block(precedence, color, socketLevel, classes, parseContext, buttons) {
     this.precedence = precedence != null ? precedence : 0;
     this.color = color != null ? color : 'blank';
     this.socketLevel = socketLevel != null ? socketLevel : helper.ANY_DROP;
     this.classes = classes != null ? classes : [];
+    this.parseContext = parseContext;
+    this.buttons = buttons != null ? buttons : {};
     this.start = new BlockStartToken(this);
     this.end = new BlockEndToken(this);
     this.type = 'block';
@@ -69393,7 +70831,7 @@ exports.Block = Block = (function(superClass) {
 
   Block.prototype._cloneEmpty = function() {
     var clone;
-    clone = new Block(this.precedence, this.color, this.socketLevel, this.classes);
+    clone = new Block(this.precedence, this.color, this.socketLevel, this.classes, this.parseContext, this.buttons);
     clone.currentlyParenWrapped = this.currentlyParenWrapped;
     return clone;
   };
@@ -69610,7 +71048,8 @@ exports.DocumentEndToken = DocumentEndToken = (function(superClass) {
 exports.Document = Document = (function(superClass) {
   extend(Document, superClass);
 
-  function Document() {
+  function Document(opts) {
+    this.opts = opts != null ? opts : {};
     this.start = new DocumentStartToken(this);
     this.end = new DocumentEndToken(this);
     this.classes = ['__document__'];
@@ -69619,7 +71058,7 @@ exports.Document = Document = (function(superClass) {
   }
 
   Document.prototype._cloneEmpty = function() {
-    return new Document();
+    return new Document(this.opts);
   };
 
   Document.prototype.firstChild = function() {
@@ -69712,7 +71151,7 @@ traverseOneLevel = function(head, fn, tail) {
 };
 
 
-},{"./helper.coffee":102}],111:[function(require,module,exports){
+},{"./helper.coffee":103}],112:[function(require,module,exports){
 var c, coffee, html, java, javascript, python;
 
 javascript = require('./languages/javascript.coffee');
@@ -69738,8 +71177,8 @@ module.exports = {
 };
 
 
-},{"./languages/c.coffee":103,"./languages/coffee.coffee":104,"./languages/html.coffee":105,"./languages/java.coffee":106,"./languages/javascript.coffee":107,"./languages/python.coffee":108}],112:[function(require,module,exports){
-var Parser, ParserFactory, YES, _extend, hasSomeTextAfter, helper, model, sax, stripFlaggedBlocks,
+},{"./languages/c.coffee":104,"./languages/coffee.coffee":105,"./languages/html.coffee":106,"./languages/java.coffee":107,"./languages/javascript.coffee":108,"./languages/python.coffee":109}],113:[function(require,module,exports){
+var Parser, ParserFactory, YES, _extend, getDefaultSelectionRange, hasSomeTextAfter, helper, model, sax, stripFlaggedBlocks,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
@@ -69782,49 +71221,8 @@ exports.ParserFactory = ParserFactory = (function() {
 
 exports.Parser = Parser = (function() {
   function Parser(text1, opts1) {
-    var convertFunction, fn, index, key, options, ref, ref1, val;
     this.text = text1;
     this.opts = opts1 != null ? opts1 : {};
-    convertFunction = function(x) {
-      if ((typeof x === 'string') || x instanceof String) {
-        return {
-          text: x,
-          display: x
-        };
-      } else {
-        return x;
-      }
-    };
-    ref = this.opts.functions;
-    for (key in ref) {
-      val = ref[key];
-      ref1 = val.dropdown;
-      fn = (function(_this) {
-        return function(options) {
-          var dropdownOnly;
-          dropdownOnly = false;
-          if (options.dropdownOnly != null) {
-            dropdownOnly = options.dropdownOnly;
-            options = options.options;
-          }
-          return _this.opts.functions[key].dropdown[index] = {
-            dropdownOnly: dropdownOnly,
-            options: options,
-            generate: function() {
-              if (typeof options === 'function') {
-                return options().map(convertFunction);
-              } else {
-                return options.map(convertFunction);
-              }
-            }
-          };
-        };
-      })(this);
-      for (index in ref1) {
-        options = ref1[index];
-        fn(options);
-      }
-    }
     this.originalText = this.text;
     this.markup = [];
   }
@@ -69863,14 +71261,13 @@ exports.Parser = Parser = (function() {
 
   Parser.prototype.addBlock = function(opts) {
     var block;
-    block = new model.Block(opts.precedence, opts.color, opts.socketLevel, opts.classes, false);
-    block.parseContext = opts.parseContext;
+    block = new model.Block(opts.precedence, opts.color, opts.socketLevel, opts.classes, opts.parseContext, opts.buttons);
     return this.addMarkup(block, opts.bounds, opts.depth);
   };
 
   Parser.prototype.addSocket = function(opts) {
-    var socket;
-    socket = new model.Socket(this.empty, opts.precedence, false, opts.classes, opts.dropdown);
+    var ref, socket;
+    socket = new model.Socket((ref = opts.empty) != null ? ref : this.empty, opts.precedence, false, opts.classes, opts.dropdown);
     return this.addMarkup(socket, opts.bounds, opts.depth);
   };
 
@@ -69940,7 +71337,7 @@ exports.Parser = Parser = (function() {
 
   Parser.prototype.constructHandwrittenBlock = function(text) {
     var block, socket, textToken;
-    block = new model.Block(0, 'blank', helper.ANY_DROP, false);
+    block = new model.Block(0, 'blank', helper.ANY_DROP);
     socket = new model.Socket(this.empty, 0, true);
     textToken = new model.TextToken(text);
     helper.connect(block.start, socket.start);
@@ -69950,6 +71347,8 @@ exports.Parser = Parser = (function() {
     if (this.isComment(text)) {
       block.socketLevel = helper.BLOCK_ONLY;
       block.classes = ['__comment__', 'block-only'];
+    } else {
+      block.classes = ['__handwritten__', 'block-only'];
     }
     return block;
   };
@@ -69973,7 +71372,7 @@ exports.Parser = Parser = (function() {
     for (i = k = 0, len1 = lines.length; k < len1; i = ++k) {
       line = lines[i];
       if (!(i in markupOnLines)) {
-        if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
+        if (indentDepth > line.length || line.slice(0, indentDepth).trim().length > 0) {
           head.specialIndent = ((function() {
             var l, ref1, results;
             results = [];
@@ -70001,7 +71400,7 @@ exports.Parser = Parser = (function() {
         }
         head = helper.connect(head, new model.NewlineToken());
       } else {
-        if (indentDepth >= line.length || line.slice(0, indentDepth).trim().length > 0) {
+        if (indentDepth > line.length || line.slice(0, indentDepth).trim().length > 0) {
           lastIndex = line.length - line.trimLeft().length;
           head.specialIndent = line.slice(0, lastIndex);
         } else {
@@ -70051,7 +71450,13 @@ exports.Parser = Parser = (function() {
           lastIndex = mark.location.column;
         }
         if (!(lastIndex >= line.length)) {
-          head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          if (stack.length === 0 || stack[stack.length - 1].type === 'indent') {
+            block = this.constructHandwrittenBlock(line.slice(lastIndex, line.length));
+            helper.connect(head, block.start);
+            head = block.end;
+          } else {
+            head = helper.connect(head, new model.TextToken(line.slice(lastIndex, line.length)));
+          }
         }
         head = helper.connect(head, new model.NewlineToken());
       }
@@ -70194,9 +71599,20 @@ Parser.drop = function(block, context, pred, next) {
   }
 };
 
+Parser.handleButton = function(text, command, oldblock) {
+  return text;
+};
+
 Parser.empty = '';
 
 Parser.emptyIndent = '';
+
+getDefaultSelectionRange = function(string) {
+  return {
+    start: 0,
+    end: string.length
+  };
+};
 
 exports.wrapParser = function(CustomParser) {
   var CustomParserFactory;
@@ -70204,9 +71620,13 @@ exports.wrapParser = function(CustomParser) {
     extend(CustomParserFactory, superClass);
 
     function CustomParserFactory(opts1) {
+      var ref, ref1, ref2;
       this.opts = opts1 != null ? opts1 : {};
       this.empty = CustomParser.empty;
       this.emptyIndent = CustomParser.emptyIndent;
+      this.startComment = (ref = CustomParser.startComment) != null ? ref : '/*';
+      this.endComment = (ref1 = CustomParser.endComment) != null ? ref1 : '*/';
+      this.getDefaultSelectionRange = (ref2 = CustomParser.getDefaultSelectionRange) != null ? ref2 : getDefaultSelectionRange;
     }
 
     CustomParserFactory.prototype.createParser = function(text) {
@@ -70253,13 +71673,17 @@ exports.wrapParser = function(CustomParser) {
       return CustomParser.drop(block, context, pred, next);
     };
 
+    CustomParserFactory.prototype.handleButton = function(text, command, oldblock) {
+      return CustomParser.handleButton(text, command, oldblock);
+    };
+
     return CustomParserFactory;
 
   })(ParserFactory);
 };
 
 
-},{"./helper.coffee":102,"./model.coffee":110,"sax":98}],113:[function(require,module,exports){
+},{"./helper.coffee":103,"./model.coffee":111,"sax":99}],114:[function(require,module,exports){
 var helper, model, parser,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -70530,7 +71954,7 @@ exports.createTreewalkParser = function(parse, config, root) {
 };
 
 
-},{"./helper.coffee":102,"./model.coffee":110,"./parser.coffee":112}],114:[function(require,module,exports){
+},{"./helper.coffee":103,"./model.coffee":111,"./parser.coffee":113}],115:[function(require,module,exports){
 var ANY_DROP, BLOCK_ONLY, CARRIAGE_ARROW_INDENT, CARRIAGE_ARROW_NONE, CARRIAGE_ARROW_SIDEALONG, CARRIAGE_GROW_DOWN, DEFAULT_OPTIONS, DROPDOWN_ARROW_HEIGHT, DROP_TRIANGLE_COLOR, MOSTLY_BLOCK, MOSTLY_VALUE, MULTILINE_END, MULTILINE_END_START, MULTILINE_MIDDLE, MULTILINE_START, NO, NO_MULTILINE, VALUE_ONLY, View, YES, arrayEq, avgColor, draw, helper, model, toHex, toRGB, twoDigitHex, zeroPad,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -70576,6 +72000,9 @@ DROPDOWN_ARROW_HEIGHT = 8;
 DROP_TRIANGLE_COLOR = '#555';
 
 DEFAULT_OPTIONS = {
+  buttonWidth: 15,
+  buttonHeight: 15,
+  buttonPadding: 6,
   showDropdowns: true,
   padding: 5,
   indentWidth: 10,
@@ -70587,6 +72014,7 @@ DEFAULT_OPTIONS = {
   dropAreaHeight: 20,
   indentDropAreaMinWidth: 50,
   minSocketWidth: 10,
+  invisibleSocketWidth: 5,
   textHeight: 15,
   textPadding: 1,
   emptyLineWidth: 50,
@@ -70713,6 +72141,7 @@ exports.View = View = (function() {
       this.model = model1;
       this.view = view1;
       this.view.map[this.model.id] = this;
+      this.lastCoordinate = new this.view.draw.Point(0, 0);
       this.invalidate = false;
       this.lineLength = 0;
       this.children = [];
@@ -71301,7 +72730,7 @@ exports.View = View = (function() {
     };
 
     ListViewNode.prototype.computeMinDimensions = function() {
-      var bottomMargin, childNode, childObject, desiredLine, j, l, len1, len2, len3, len4, len5, len6, line, lineChild, lineChildView, linesToExtend, m, margins, minDimension, minDimensions, minDistanceToBase, o, p, preIndentLines, q, ref, ref1, ref2, size;
+      var bottomMargin, childNode, childObject, desiredLine, j, l, len1, len2, len3, len4, len5, len6, line, lineChild, lineChildView, linesToExtend, m, margins, minDimension, minDimensions, minDistanceToBase, o, p, preIndentLines, q, ref, ref1, ref2, ref3, ref4, size;
       if (this.computedVersion === this.model.version) {
         return null;
       }
@@ -71330,12 +72759,12 @@ exports.View = View = (function() {
             bottomMargin = margins.bottom;
           }
           this.minDistanceToBase[desiredLine].above = Math.max(this.minDistanceToBase[desiredLine].above, minDistanceToBase[line].above + margins.top);
-          this.minDistanceToBase[desiredLine].below = Math.max(this.minDistanceToBase[desiredLine].below, minDistanceToBase[line].below + bottomMargin);
+          this.minDistanceToBase[desiredLine].below = Math.max(this.minDistanceToBase[desiredLine].below, minDistanceToBase[line].below + Math.max(bottomMargin, ((((ref1 = this.model.buttons) != null ? ref1.addButton : void 0) || ((ref2 = this.model.buttons) != null ? ref2.subtractButton : void 0)) && desiredLine === this.lineLength - 1 && this.multilineChildrenData[line] === MULTILINE_END && this.lineChildren[line].length === 1 ? this.view.opts.buttonPadding + this.view.opts.buttonHeight : 0)));
         }
       }
-      ref1 = this.minDimensions;
-      for (line = m = 0, len3 = ref1.length; m < len3; line = ++m) {
-        minDimension = ref1[line];
+      ref3 = this.minDimensions;
+      for (line = m = 0, len3 = ref3.length; m < len3; line = ++m) {
+        minDimension = ref3[line];
         if (this.lineChildren[line].length === 0) {
           if (this.model.type === 'socket') {
             this.minDistanceToBase[line].above = this.view.opts.textHeight * this.view.opts.textPadding;
@@ -71355,9 +72784,9 @@ exports.View = View = (function() {
         line = preIndentLines[p];
         this.minDimensions[line].width = Math.max(this.minDimensions[line].width, this.view.opts.indentWidth + this.view.opts.tabWidth + this.view.opts.tabOffset + this.view.opts.bevelClip);
       }
-      ref2 = this.lineChildren[this.lineLength - 1];
-      for (q = 0, len6 = ref2.length; q < len6; q++) {
-        lineChild = ref2[q];
+      ref4 = this.lineChildren[this.lineLength - 1];
+      for (q = 0, len6 = ref4.length; q < len6; q++) {
+        lineChild = ref4[q];
         lineChildView = this.view.getViewNodeFor(lineChild.child);
         if (lineChildView.carriageArrow !== CARRIAGE_ARROW_NONE) {
           this.minDistanceToBase[this.lineLength - 1].below += this.view.opts.padding;
@@ -71424,11 +72853,12 @@ exports.View = View = (function() {
     ListViewNode.prototype.layout = function(left, top) {
       var changedBoundingBox;
       if (left == null) {
-        left = 0;
+        left = this.lastCoordinate.x;
       }
       if (top == null) {
-        top = 0;
+        top = this.lastCoordinate.y;
       }
+      this.lastCoordinate = new this.view.draw.Point(left, top);
       this.computeChildren();
       this.computeCarriageArrow(true);
       this.computeMargins();
@@ -71855,21 +73285,89 @@ exports.View = View = (function() {
         return null;
       }
       BlockViewNode.__super__.computeMinDimensions.apply(this, arguments);
+      this.extraWidth = 0;
+      if (this.model.buttons.addButton) {
+        this.extraWidth += this.view.opts.buttonWidth + this.view.opts.buttonPadding;
+      }
+      if (this.model.buttons.subtractButton) {
+        this.extraWidth += this.view.opts.buttonWidth + this.view.opts.buttonPadding;
+      }
       ref = this.minDimensions;
       for (i = j = 0, len1 = ref.length; j < len1; i = ++j) {
         size = ref[i];
         size.width = Math.max(size.width, this.view.opts.tabWidth + this.view.opts.tabOffset);
       }
+      this.minDimensions[this.minDimensions.length - 1].width += this.extraWidth;
       return null;
     };
 
+    BlockViewNode.prototype.drawSelf = function(ctx, style) {
+      var drawButton;
+      BlockViewNode.__super__.drawSelf.apply(this, arguments);
+      drawButton = (function(_this) {
+        return function(text, rect, ctx) {
+          var dx, dy, path, textElement;
+          path = rect.toPath().reverse();
+          path.style.fillColor = _this.path.style.fillColor;
+          if (style.grayscale) {
+            path.style.fillColor = avgColor(_this.path.style.fillColor, 0.5, '#888');
+          }
+          if (style.selected) {
+            path.style.fillColor = avgColor(_this.path.style.fillColor, 0.7, '#00F');
+          }
+          path.bevel = true;
+          path.draw(ctx);
+          textElement = new _this.view.draw.Text(new _this.view.draw.Point(0, 0), text);
+          dx = rect.width - textElement.bounds().width;
+          dy = rect.height - _this.view.opts.textHeight;
+          textElement.translate({
+            x: rect.x + Math.ceil(dx / 2),
+            y: rect.y + Math.ceil(dy)
+          });
+          return textElement.draw(ctx);
+        };
+      })(this);
+      if (this.model.buttons.addButton) {
+        drawButton('+', this.addButtonRect, ctx);
+      }
+      if (this.model.buttons.subtractButton) {
+        return drawButton('-', this.subtractButtonRect, ctx);
+      }
+    };
+
     BlockViewNode.prototype.shouldAddTab = function() {
-      var parent;
-      if (this.model.parent != null) {
-        parent = this.model.parent;
-        return (parent != null ? parent.type : void 0) !== 'socket';
+      var ref;
+      if ((this.model.parent != null) && this.view.hasViewNodeFor(this.model.parent) && !(this.model.parent.type === 'document' && this.model.parent.opts.roundedSingletons && this.model.start.prev === this.model.parent.start && this.model.end.next === this.model.parent.end)) {
+        return ((ref = this.model.parent) != null ? ref.type : void 0) !== 'socket';
       } else {
         return !(indexOf.call(this.model.classes, 'mostly-value') >= 0 || indexOf.call(this.model.classes, 'value-only') >= 0);
+      }
+    };
+
+    BlockViewNode.prototype.computePath = function() {
+      var height, lastLine, lastRect, multilineBounds, multilineChild, start, top;
+      BlockViewNode.__super__.computePath.apply(this, arguments);
+      lastLine = this.bounds.length - 1;
+      lastRect = this.bounds[lastLine];
+      start = lastRect.x + lastRect.width - this.extraWidth;
+      top = lastRect.y + lastRect.height / 2 - this.view.opts.buttonHeight / 2;
+      if (this.multilineChildrenData[lastLine] === MULTILINE_END) {
+        multilineChild = this.lineChildren[lastLine][0];
+        multilineBounds = this.view.getViewNodeFor(multilineChild.child).bounds[lastLine - multilineChild.startLine];
+        if (this.lineChildren[lastLine].length > 1) {
+          height = multilineBounds.bottom() - lastRect.y;
+          top = lastRect.y + height / 2 - this.view.opts.buttonHeight / 2;
+        } else {
+          height = lastRect.bottom() - multilineBounds.bottom();
+          top = multilineBounds.bottom() + height / 2 - this.view.opts.buttonHeight / 2;
+        }
+      }
+      if (this.model.buttons.addButton) {
+        this.addButtonRect = new this.view.draw.Rectangle(start, top, this.view.opts.buttonWidth, this.view.opts.buttonHeight);
+        start += this.view.opts.buttonWidth + this.view.opts.buttonPadding;
+      }
+      if (this.model.buttons.subtractButton) {
+        return this.subtractButtonRect = new this.view.draw.Rectangle(start, top, this.view.opts.buttonWidth, this.view.opts.buttonHeight);
       }
     };
 
@@ -71934,6 +73432,11 @@ exports.View = View = (function() {
 
     SocketViewNode.prototype.shouldAddTab = NO;
 
+    SocketViewNode.prototype.isInvisibleSocket = function() {
+      var ref;
+      return '' === this.model.emptyString && ((ref = this.model.start) != null ? ref.next : void 0) === this.model.end;
+    };
+
     SocketViewNode.prototype.computeMinDimensions = function() {
       var dimension, j, len1, ref;
       if (this.computedVersion === this.model.version) {
@@ -71946,7 +73449,7 @@ exports.View = View = (function() {
       ref = this.minDimensions;
       for (j = 0, len1 = ref.length; j < len1; j++) {
         dimension = ref[j];
-        dimension.width = Math.max(dimension.width, this.view.opts.minSocketWidth);
+        dimension.width = Math.max(dimension.width, this.isInvisibleSocket() ? this.view.opts.invisibleSocketWidth : this.view.opts.minSocketWidth);
         if (this.model.hasDropdown() && this.view.opts.showDropdowns) {
           dimension.width += helper.DROPDOWN_ARROW_WIDTH;
         }
@@ -71972,7 +73475,7 @@ exports.View = View = (function() {
     };
 
     SocketViewNode.prototype.computeOwnPath = function() {
-      var view;
+      var ref, view;
       if (this.computedVersion === this.model.version && !this.changedBoundingBox) {
         return this.path;
       }
@@ -71982,8 +73485,11 @@ exports.View = View = (function() {
       } else {
         SocketViewNode.__super__.computeOwnPath.apply(this, arguments);
       }
-      this.path.style.fillColor = '#FFF';
-      this.path.style.strokeColor = '#FFF';
+      if ('' === this.model.emptyString && ((ref = this.model.start) != null ? ref.next : void 0) === this.model.end) {
+        this.path.style.fillColor = this.path.style.strokeColor = 'rgba(0,0,0,0)';
+      } else {
+        this.path.style.fillColor = this.path.style.strokeColor = '#FFF';
+      }
       return this.path;
     };
 
@@ -72303,7 +73809,7 @@ avgColor = function(a, factor, b) {
 };
 
 
-},{"./draw.coffee":101,"./helper.coffee":102,"./model.coffee":110}],115:[function(require,module,exports){
+},{"./draw.coffee":102,"./helper.coffee":103,"./model.coffee":111}],116:[function(require,module,exports){
 // Acorn is a tiny, fast JavaScript parser written in JavaScript.
 //
 // Acorn was written by Marijn Haverbeke and various contributors and
@@ -74837,7 +76343,7 @@ avgColor = function(a, factor, b) {
 
 });
 
-},{}],116:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 /**
  * CoffeeScript Compiler v1.7.1
  * http://coffeescript.org
@@ -74851,7 +76357,7 @@ this.trace(e)},parse:function(e){function t(){var e;return e=n.lexer.lex()||p,"n
 if(i=this.variable instanceof Z){if(this.variable.isArray()||this.variable.isObject())return this.compilePatternMatch(e);if(this.variable.isSplice())return this.compileSplice(e);if("||="===(h=this.context)||"&&="===h||"?="===h)return this.compileConditional(e);if("**="===(u=this.context)||"//="===u||"%%="===u)return this.compileSpecialMath(e)}return n=this.variable.compileToFragments(e,L),o=at(n),this.context||(a=this.variable.unwrapAll(),a.isAssignable()||this.variable.error('"'+this.variable.compile(e)+'" cannot be assigned'),("function"==typeof a.hasProperties?a.hasProperties():void 0)||(this.param?e.scope.add(o,"var"):e.scope.find(o))),this.value instanceof c&&(r=S.exec(o))&&(r[2]&&(this.value.klass=r[1]),this.value.name=null!=(l=null!=(p=r[3])?p:r[4])?l:r[5]),s=this.value.compileToFragments(e,L),"object"===this.context?n.concat(this.makeCode(": "),s):(t=n.concat(this.makeCode(" "+(this.context||"=")+" "),s),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compilePatternMatch=function(e){var i,r,o,s,a,c,h,u,l,d,f,m,b,g,k,v,w,C,F,E,S,R,A,I,_,$,O,B;if(v=e.level===x,C=this.value,m=this.variable.base.objects,!(b=m.length))return o=C.compileToFragments(e),e.level>=N?this.wrapInBraces(o):o;if(u=this.variable.isObject(),v&&1===b&&!((f=m[0])instanceof G))return f instanceof n?(A=f,I=A.variable,h=I.base,f=A.value):h=u?f["this"]?f.properties[0].name:f:new D(0),i=y.test(h.unwrap().value||0),C=new Z(C),C.properties.push(new(i?t:T)(h)),_=f.unwrap().value,Ft.call(M,_)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),new n(f,C,null,{param:this.param}).compileToFragments(e,x);for(F=C.compileToFragments(e,L),E=at(F),r=[],s=!1,(!y.test(E)||this.variable.assigns(E))&&(r.push([this.makeCode(""+(g=e.scope.freeVariable("ref"))+" = ")].concat(Lt.call(F))),F=[this.makeCode(g)],E=g),c=S=0,R=m.length;R>S;c=++S){if(f=m[c],h=c,u&&(f instanceof n?($=f,O=$.variable,h=O.base,f=$.value):f.base instanceof j?(B=new Z(f.unwrapAll()).cacheReference(e),f=B[0],h=B[1]):h=f["this"]?f.properties[0].name:f),!s&&f instanceof G)d=f.name.unwrap().value,f=f.unwrap(),w=""+b+" <= "+E+".length ? "+kt("slice")+".call("+E+", "+c,(k=b-c-1)?(l=e.scope.freeVariable("i"),w+=", "+l+" = "+E+".length - "+k+") : ("+l+" = "+c+", [])"):w+=") : []",w=new D(w),s=""+l+"++";else{if(!s&&f instanceof p){(k=b-c-1)&&(1===k?s=""+E+".length - 1":(l=e.scope.freeVariable("i"),w=new D(""+l+" = "+E+".length - "+k),s=""+l+"++",r.push(w.compileToFragments(e,L))));continue}d=f.unwrap().value,(f instanceof G||f instanceof p)&&f.error("multiple splats/expansions are disallowed in an assignment"),"number"==typeof h?(h=new D(s||h),i=!1):i=u&&y.test(h.unwrap().value||0),w=new Z(new D(E),[new(i?t:T)(h)])}null!=d&&Ft.call(M,d)>=0&&f.error("assignment to a reserved word: "+f.compile(e)),r.push(new n(f,w,null,{param:this.param,subpattern:!0}).compileToFragments(e,L))}return v||this.subpattern||r.push(F),a=this.joinFragmentArrays(r,", "),L>e.level?a:this.wrapInBraces(a)},n.prototype.compileConditional=function(e){var t,i,r,o;return o=this.variable.cacheReference(e),i=o[0],r=o[1],!i.properties.length&&i.base instanceof D&&"this"!==i.base.value&&!e.scope.check(i.base.value)&&this.variable.error('the variable "'+i.base.value+"\" can't be assigned with "+this.context+" because it has not been declared before"),Ft.call(this.context,"?")>=0?(e.isExistentialEquals=!0,new v(new l(i),r,{type:"if"}).addElse(new n(r,this.value,"=")).compileToFragments(e)):(t=new $(this.context.slice(0,-1),i,new n(r,this.value,"=")).compileToFragments(e),L>=e.level?t:this.wrapInBraces(t))},n.prototype.compileSpecialMath=function(e){var t,i,r;return r=this.variable.cacheReference(e),t=r[0],i=r[1],new n(t,new $(this.context.slice(0,-1),i,this.value)).compileToFragments(e)},n.prototype.compileSplice=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;return u=this.variable.properties.pop().range,i=u.from,a=u.to,n=u.exclusive,s=this.variable.compile(e),i?(l=this.cacheToCodeFragments(i.cache(e,N)),r=l[0],o=l[1]):r=o="0",a?i instanceof Z&&i.isSimpleNumber()&&a instanceof Z&&a.isSimpleNumber()?(a=a.compile(e)-o,n||(a+=1)):(a=a.compile(e,C)+" - "+o,n||(a+=" + 1")):a="9e9",p=this.value.cache(e,L),c=p[0],h=p[1],t=[].concat(this.makeCode("[].splice.apply("+s+", ["+r+", "+a+"].concat("),c,this.makeCode(")), "),h),e.level>x?this.wrapInBraces(t):t},n}(r),e.Code=c=function(e){function t(e,t,n){this.params=e||[],this.body=t||new o,this.bound="boundfunc"===n}return Ct(t,e),t.prototype.nodeType=function(){return"Code"},t.prototype.children=["params","body"],t.prototype.isStatement=function(){return!!this.ctor},t.prototype.jumps=A,t.prototype.makeScope=function(e){return new H(e,this.body,this)},t.prototype.compileNode=function(e){var r,a,c,h,u,l,d,f,m,y,b,g,k,w,T,F,L,N,E,x,S,R,A,I,_,j,M,B,V,P,U,H,q;if(this.bound&&(null!=(B=e.scope.method)?B.bound:void 0)&&(this.context=e.scope.method.context),this.bound&&!this.context)return this.context="_this",T=new t([new O(new D(this.context))],new o([this])),a=new s(T,[new D("this")]),a.updateLocationDataIfMissing(this.locationData),a.compileNode(e);for(e.scope=it(e,"classScope")||this.makeScope(e.scope),e.scope.shared=it(e,"sharedScope"),e.indent+=X,delete e.bare,delete e.isExistentialEquals,m=[],h=[],V=this.params,F=0,x=V.length;x>F;F++)f=V[F],f instanceof p||e.scope.parameter(f.asReference(e));for(P=this.params,L=0,S=P.length;S>L;L++)if(f=P[L],f.splat||f instanceof p){for(U=this.params,N=0,R=U.length;R>N;N++)d=U[N].name,f instanceof p||(d["this"]&&(d=d.properties[0].name),d.value&&e.scope.add(d.value,"var",!0));b=new i(new Z(new n(function(){var t,n,i,r;for(i=this.params,r=[],t=0,n=i.length;n>t;t++)d=i[t],r.push(d.asReference(e));return r}.call(this))),new Z(new D("arguments")));break}for(H=this.params,E=0,A=H.length;A>E;E++)f=H[E],f.isComplex()?(k=y=f.asReference(e),f.value&&(k=new $("?",y,f.value)),h.push(new i(new Z(f.name),k,"=",{param:!0}))):(y=f,f.value&&(l=new D(y.name.value+" == null"),k=new i(new Z(f.name),f.value,"="),h.push(new v(l,k)))),b||m.push(y);for(w=this.body.isEmpty(),b&&h.unshift(b),h.length&&(q=this.body.expressions).unshift.apply(q,h),u=j=0,I=m.length;I>j;u=++j)d=m[u],m[u]=d.compileToFragments(e),e.scope.parameter(at(m[u]));for(g=[],this.eachParamName(function(e,t){return Ft.call(g,e)>=0&&t.error("multiple parameters named '"+e+"'"),g.push(e)}),w||this.noReturn||this.body.makeReturn(),c="function",this.ctor&&(c+=" "+this.name),c+="(",r=[this.makeCode(c)],u=M=0,_=m.length;_>M;u=++M)d=m[u],u&&r.push(this.makeCode(", ")),r.push.apply(r,d);return r.push(this.makeCode(") {")),this.body.isEmpty()||(r=r.concat(this.makeCode("\n"),this.body.compileWithDeclarations(e),this.makeCode("\n"+this.tab))),r.push(this.makeCode("}")),this.ctor?[this.makeCode(this.tab)].concat(Lt.call(r)):this.front||e.level>=C?this.wrapInBraces(r):r},t.prototype.eachParamName=function(e){var t,n,i,r,o;for(r=this.params,o=[],n=0,i=r.length;i>n;n++)t=r[n],o.push(t.eachName(e));return o},t.prototype.traverseChildren=function(e,n){return e?t.__super__.traverseChildren.call(this,e,n):void 0},t}(r),e.Param=O=function(e){function t(e,t,n){var i;this.name=e,this.value=t,this.splat=n,i=e=this.name.unwrapAll().value,Ft.call(U,i)>=0&&this.name.error('parameter name "'+e+'" is not allowed')}return Ct(t,e),t.prototype.nodeType=function(){return"Param"},t.prototype.children=["name","value"],t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e,L)},t.prototype.asReference=function(e){var t;return this.reference?this.reference:(t=this.name,t["this"]?(t=t.properties[0].name,t.value.reserved&&(t=new D(e.scope.freeVariable(t.value)))):t.isComplex()&&(t=new D(e.scope.freeVariable("arg"))),t=new Z(t),this.splat&&(t=new G(t)),t.updateLocationDataIfMissing(this.locationData),this.reference=t)},t.prototype.isComplex=function(){return this.name.isComplex()},t.prototype.eachName=function(e,t){var n,r,o,s,a,c;if(null==t&&(t=this.name),n=function(t){var n;return n=t.properties[0].name,n.value.reserved?void 0:e(n.value,n)},t instanceof D)return e(t.value,t);if(t instanceof Z)return n(t);for(c=t.objects,s=0,a=c.length;a>s;s++)o=c[s],o instanceof i?this.eachName(e,o.value.unwrap()):o instanceof G?(r=o.name.unwrap(),e(r.value,r)):o instanceof Z?o.isArray()||o.isObject()?this.eachName(e,o.base):o["this"]?n(o):e(o.base.value,o.base):o instanceof p||o.error("illegal parameter "+o.compile())},t}(r),e.Splat=G=function(e){function t(e){this.name=e.compile?e:new D(e)}return Ct(t,e),t.prototype.nodeType=function(){return"Splat"},t.prototype.children=["name"],t.prototype.isAssignable=et,t.prototype.assigns=function(e){return this.name.assigns(e)},t.prototype.compileToFragments=function(e){return this.name.compileToFragments(e)},t.prototype.unwrap=function(){return this.name},t.compileSplattedArray=function(e,n,i){var r,o,s,a,c,h,u,l,p,d;for(u=-1;(l=n[++u])&&!(l instanceof t););if(u>=n.length)return[];if(1===n.length)return l=n[0],c=l.compileToFragments(e,L),i?c:[].concat(l.makeCode(""+kt("slice")+".call("),c,l.makeCode(")"));for(r=n.slice(u),h=p=0,d=r.length;d>p;h=++p)l=r[h],s=l.compileToFragments(e,L),r[h]=l instanceof t?[].concat(l.makeCode(""+kt("slice")+".call("),s,l.makeCode(")")):[].concat(l.makeCode("["),s,l.makeCode("]"));return 0===u?(l=n[0],a=l.joinFragmentArrays(r.slice(1),", "),r[0].concat(l.makeCode(".concat("),a,l.makeCode(")"))):(o=function(){var t,i,r,o;for(r=n.slice(0,u),o=[],t=0,i=r.length;i>t;t++)l=r[t],o.push(l.compileToFragments(e,L));return o}(),o=n[0].joinFragmentArrays(o,", "),a=n[u].joinFragmentArrays(r,", "),[].concat(n[0].makeCode("["),o,n[u].makeCode("].concat("),a,ut(n).makeCode(")")))},t}(r),e.Expansion=p=function(e){function t(){return t.__super__.constructor.apply(this,arguments)}return Ct(t,e),t.prototype.nodeType=function(){return"Expansion"},t.prototype.isComplex=A,t.prototype.compileNode=function(){return this.error("Expansion must be used inside a destructuring assignment or parameter list")},t.prototype.asReference=function(){return this},t.prototype.eachName=function(){},t}(r),e.While=Q=function(e){function t(e,t){this.rawCondition=e,this.condition=(null!=t?t.invert:void 0)?e.invert():e,this.guard=null!=t?t.guard:void 0}return Ct(t,e),t.prototype.nodeType=function(){return"While"},t.prototype.children=["condition","guard","body"],t.prototype.isStatement=et,t.prototype.makeReturn=function(e){return e?t.__super__.makeReturn.apply(this,arguments):(this.returns=!this.jumps({loop:!0}),this)},t.prototype.addBody=function(e){return this.body=e,this},t.prototype.jumps=function(){var e,t,n,i,r;if(e=this.body.expressions,!e.length)return!1;for(i=0,r=e.length;r>i;i++)if(n=e[i],t=n.jumps({loop:!0}))return t;return!1},t.prototype.compileNode=function(e){var t,n,i,r;return e.indent+=X,r="",n=this.body,n.isEmpty()?n=this.makeCode(""):(this.returns&&(n.makeReturn(i=e.scope.freeVariable("results")),r=""+this.tab+i+" = [];\n"),this.guard&&(n.expressions.length>1?n.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(n=o.wrap([new v(this.guard,n)]))),n=[].concat(this.makeCode("\n"),n.compileToFragments(e,x),this.makeCode("\n"+this.tab))),t=[].concat(this.makeCode(r+this.tab+"while ("),this.condition.compileToFragments(e,E),this.makeCode(") {"),n,this.makeCode("}")),this.returns&&t.push(this.makeCode("\n"+this.tab+"return "+i+";")),t},t}(r),e.Op=$=function(e){function n(e,t,n,i){if("in"===e)return new w(t,n);if("do"===e)return this.generateDo(t);if("new"===e){if(t instanceof s&&!t["do"]&&!t.isNew)return t.locationData=void 0,t.newInstance();(t instanceof c&&t.bound||t["do"])&&(t=new j(t))}return this.operator=r[e]||e,this.first=t,this.second=n,this.flip=!!i,this}var r,o;return Ct(n,e),n.prototype.nodeType=function(){return"Op"},r={"==":"===","!=":"!==",of:"in"},o={"!==":"===","===":"!=="},n.prototype.children=["first","second"],n.prototype.isSimpleNumber=A,n.prototype.isUnary=function(){return!this.second},n.prototype.isComplex=function(){var e;return!(this.isUnary()&&("+"===(e=this.operator)||"-"===e))||this.first.isComplex()},n.prototype.isChainable=function(){var e;return"<"===(e=this.operator)||">"===e||">="===e||"<="===e||"==="===e||"!=="===e},n.prototype.invert=function(){var e,t,i,r,s;if(this.isChainable()&&this.first.isChainable()){for(e=!0,t=this;t&&t.operator;)e&&(e=t.operator in o),t=t.first;if(!e)return new j(this).invert();for(t=this;t&&t.operator;)t.invert=!t.invert,t.operator=o[t.operator],t=t.first;return this}return(r=o[this.operator])?(this.operator=r,this.first.unwrap()instanceof n&&this.first.invert(),this):this.second?new j(this).invert():"!"===this.operator&&(i=this.first.unwrap())instanceof n&&("!"===(s=i.operator)||"in"===s||"instanceof"===s)?i:new n("!",this)},n.prototype.unfoldSoak=function(e){var t;return("++"===(t=this.operator)||"--"===t||"delete"===t)&&gt(e,this,"first")},n.prototype.generateDo=function(e){var t,n,r,o,a,h,u,l;for(o=[],n=e instanceof i&&(a=e.value.unwrap())instanceof c?a:e,l=n.params||[],h=0,u=l.length;u>h;h++)r=l[h],r.value?(o.push(r.value),delete r.value):o.push(r);return t=new s(e,o),t["do"]=!0,t},n.prototype.compileNode=function(e){var t,n,i,r,o,s;if(n=this.isChainable()&&this.first.isChainable(),n||(this.first.front=this.front),"delete"===this.operator&&e.scope.check(this.first.unwrapAll().value)&&this.error("delete operand may not be argument or var"),("--"===(o=this.operator)||"++"===o)&&(s=this.first.unwrapAll().value,Ft.call(U,s)>=0)&&this.error('cannot increment/decrement "'+this.first.unwrapAll().value+'"'),this.isUnary())return this.compileUnary(e);if(n)return this.compileChain(e);switch(this.operator){case"?":return this.compileExistence(e);case"**":return this.compilePower(e);case"//":return this.compileFloorDivision(e);case"%%":return this.compileModulo(e);default:return i=this.first.compileToFragments(e,N),r=this.second.compileToFragments(e,N),t=[].concat(i,this.makeCode(" "+this.operator+" "),r),N>=e.level?t:this.wrapInBraces(t)}},n.prototype.compileChain=function(e){var t,n,i,r;return r=this.first.second.cache(e),this.first.second=r[0],i=r[1],n=this.first.compileToFragments(e,N),t=n.concat(this.makeCode(" "+(this.invert?"&&":"||")+" "),i.compileToFragments(e),this.makeCode(" "+this.operator+" "),this.second.compileToFragments(e,N)),this.wrapInBraces(t)},n.prototype.compileExistence=function(e){var t,n;return this.first.isComplex()?(n=new D(e.scope.freeVariable("ref")),t=new j(new i(n,this.first))):(t=this.first,n=t),new v(new l(t),n,{type:"if"}).addElse(this.second).compileToFragments(e)},n.prototype.compileUnary=function(e){var t,i,r;return i=[],t=this.operator,i.push([this.makeCode(t)]),"!"===t&&this.first instanceof l?(this.first.negated=!this.first.negated,this.first.compileToFragments(e)):e.level>=C?new j(this).compileToFragments(e):(r="+"===t||"-"===t,("new"===t||"typeof"===t||"delete"===t||r&&this.first instanceof n&&this.first.operator===t)&&i.push([this.makeCode(" ")]),(r&&this.first instanceof n||"new"===t&&this.first.isStatement(e))&&(this.first=new j(this.first)),i.push(this.first.compileToFragments(e,N)),this.flip&&i.reverse(),this.joinFragmentArrays(i,""))},n.prototype.compilePower=function(e){var n;return n=new Z(new D("Math"),[new t(new D("pow"))]),new s(n,[this.first,this.second]).compileToFragments(e)},n.prototype.compileFloorDivision=function(e){var i,r;return r=new Z(new D("Math"),[new t(new D("floor"))]),i=new n("/",this.first,this.second),new s(r,[i]).compileToFragments(e)},n.prototype.compileModulo=function(e){var t;return t=new Z(new D(kt("modulo"))),new s(t,[this.first,this.second]).compileToFragments(e)},n.prototype.toString=function(e){return n.__super__.toString.call(this,e,this.constructor.name+" "+this.operator)},n}(r),e.In=w=function(e){function t(e,t){this.object=e,this.array=t}return Ct(t,e),t.prototype.nodeType=function(){return"In"},t.prototype.children=["object","array"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r,o;if(this.array instanceof Z&&this.array.isArray()&&this.array.base.objects.length){for(o=this.array.base.objects,i=0,r=o.length;r>i;i++)if(n=o[i],n instanceof G){t=!0;break}if(!t)return this.compileOrTest(e)}return this.compileLoopTest(e)},t.prototype.compileOrTest=function(e){var t,n,i,r,o,s,a,c,h,u,l,p;for(u=this.object.cache(e,N),s=u[0],o=u[1],l=this.negated?[" !== "," && "]:[" === "," || "],t=l[0],n=l[1],a=[],p=this.array.base.objects,i=c=0,h=p.length;h>c;i=++c)r=p[i],i&&a.push(this.makeCode(n)),a=a.concat(i?o:s,this.makeCode(t),r.compileToFragments(e,C));return N>e.level?a:this.wrapInBraces(a)},t.prototype.compileLoopTest=function(e){var t,n,i,r;return r=this.object.cache(e,L),i=r[0],n=r[1],t=[].concat(this.makeCode(kt("indexOf")+".call("),this.array.compileToFragments(e,L),this.makeCode(", "),n,this.makeCode(") "+(this.negated?"< 0":">= 0"))),at(i)===at(n)?t:(t=i.concat(this.makeCode(", "),t),L>e.level?t:this.wrapInBraces(t))},t.prototype.toString=function(e){return t.__super__.toString.call(this,e,this.constructor.name+(this.negated?"!":""))},t}(r),e.Try=K=function(e){function t(e,t,n,i){this.attempt=e,this.errorVariable=t,this.recovery=n,this.ensure=i}return Ct(t,e),t.prototype.nodeType=function(){return"Try"},t.prototype.children=["attempt","recovery","ensure"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t;return this.attempt.jumps(e)||(null!=(t=this.recovery)?t.jumps(e):void 0)},t.prototype.makeReturn=function(e){return this.attempt&&(this.attempt=this.attempt.makeReturn(e)),this.recovery&&(this.recovery=this.recovery.makeReturn(e)),this},t.prototype.compileNode=function(e){var t,n,r,o;return e.indent+=X,o=this.attempt.compileToFragments(e,x),t=this.recovery?(r=new D("_error"),this.errorVariable?this.recovery.unshift(new i(this.errorVariable,r)):void 0,[].concat(this.makeCode(" catch ("),r.compileToFragments(e),this.makeCode(") {\n"),this.recovery.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}"))):this.ensure||this.recovery?[]:[this.makeCode(" catch (_error) {}")],n=this.ensure?[].concat(this.makeCode(" finally {\n"),this.ensure.compileToFragments(e,x),this.makeCode("\n"+this.tab+"}")):[],[].concat(this.makeCode(""+this.tab+"try {\n"),o,this.makeCode("\n"+this.tab+"}"),t,n)},t}(r),e.Throw=z=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Throw"},t.prototype.children=["expression"],t.prototype.isStatement=et,t.prototype.jumps=A,t.prototype.makeReturn=Y,t.prototype.compileNode=function(e){return[].concat(this.makeCode(this.tab+"throw "),this.expression.compileToFragments(e),this.makeCode(";"))},t}(r),e.Existence=l=function(e){function t(e){this.expression=e}return Ct(t,e),t.prototype.nodeType=function(){return"Existence"},t.prototype.children=["expression"],t.prototype.invert=R,t.prototype.compileNode=function(e){var t,n,i,r;return this.expression.front=this.front,i=this.expression.compile(e,N),y.test(i)&&!e.scope.check(i)?(r=this.negated?["===","||"]:["!==","&&"],t=r[0],n=r[1],i="typeof "+i+" "+t+' "undefined" '+n+" "+i+" "+t+" null"):i=""+i+" "+(this.negated?"==":"!=")+" null",[this.makeCode(F>=e.level?i:"("+i+")")]},t}(r),e.Parens=j=function(e){function t(e){this.body=e}return Ct(t,e),t.prototype.nodeType=function(){return"Parens"},t.prototype.children=["body"],t.prototype.unwrap=function(){return this.body},t.prototype.isComplex=function(){return this.body.isComplex()},t.prototype.compileNode=function(e){var t,n,i;return n=this.body.unwrap(),n instanceof Z&&n.isAtomic()?(n.front=this.front,n.compileToFragments(e)):(i=n.compileToFragments(e,E),t=N>e.level&&(n instanceof $||n instanceof s||n instanceof f&&n.returns),t?i:this.wrapInBraces(i))},t}(r),e.For=f=function(e){function t(e,t){var n;this.source=t.source,this.guard=t.guard,this.step=t.step,this.name=t.name,this.index=t.index,this.body=o.wrap([e]),this.own=!!t.own,this.object=!!t.object,this.object&&(n=[this.index,this.name],this.name=n[0],this.index=n[1]),this.index instanceof Z&&this.index.error("index cannot be a pattern matching expression"),this.range=this.source instanceof Z&&this.source.base instanceof B&&!this.source.properties.length,this.pattern=this.name instanceof Z,this.range&&this.index&&this.index.error("indexes do not apply to range loops"),this.range&&this.pattern&&this.name.error("cannot pattern match over range loops"),this.own&&!this.object&&this.name.error("cannot use own with for-in"),this.returns=!1}return Ct(t,e),t.prototype.nodeType=function(){return"For"},t.prototype.children=["body","source","guard","step"],t.prototype.compileNode=function(e){var t,n,r,s,a,c,h,u,l,p,d,f,m,b,g,k,w,T,C,F,N,E,S,R,A,_,$,O,M,B,P,U,H,q;return t=o.wrap([this.body]),T=null!=(H=ut(t.expressions))?H.jumps():void 0,T&&T instanceof V&&(this.returns=!1),$=this.range?this.source.base:this.source,_=e.scope,this.pattern||(F=this.name&&this.name.compile(e,L)),b=this.index&&this.index.compile(e,L),F&&!this.pattern&&_.find(F),b&&_.find(b),this.returns&&(A=_.freeVariable("results")),g=this.object&&b||_.freeVariable("i"),k=this.range&&F||b||g,w=k!==g?""+k+" = ":"",this.step&&!this.range&&(q=this.cacheToCodeFragments(this.step.cache(e,L)),O=q[0],B=q[1],M=B.match(I)),this.pattern&&(F=g),U="",d="",h="",f=this.tab+X,this.range?p=$.compileToFragments(pt(e,{index:g,name:F,step:this.step})):(P=this.source.compile(e,L),!F&&!this.own||y.test(P)||(h+=""+this.tab+(E=_.freeVariable("ref"))+" = "+P+";\n",P=E),F&&!this.pattern&&(N=""+F+" = "+P+"["+k+"]"),this.object||(O!==B&&(h+=""+this.tab+O+";\n"),this.step&&M&&(l=0>ft(M[0]))||(C=_.freeVariable("len")),a=""+w+g+" = 0, "+C+" = "+P+".length",c=""+w+g+" = "+P+".length - 1",r=""+g+" < "+C,s=""+g+" >= 0",this.step?(M?l&&(r=s,a=c):(r=""+B+" > 0 ? "+r+" : "+s,a="("+B+" > 0 ? ("+a+") : "+c+")"),m=""+g+" += "+B):m=""+(k!==g?"++"+g:""+g+"++"),p=[this.makeCode(""+a+"; "+r+"; "+w+m)])),this.returns&&(S=""+this.tab+A+" = [];\n",R="\n"+this.tab+"return "+A+";",t.makeReturn(A)),this.guard&&(t.expressions.length>1?t.expressions.unshift(new v(new j(this.guard).invert(),new D("continue"))):this.guard&&(t=o.wrap([new v(this.guard,t)]))),this.pattern&&t.expressions.unshift(new i(this.name,new D(""+P+"["+k+"]"))),u=[].concat(this.makeCode(h),this.pluckDirectCall(e,t)),N&&(U="\n"+f+N+";"),this.object&&(p=[this.makeCode(""+k+" in "+P)],this.own&&(d="\n"+f+"if (!"+kt("hasProp")+".call("+P+", "+k+")) continue;")),n=t.compileToFragments(pt(e,{indent:f}),x),n&&n.length>0&&(n=[].concat(this.makeCode("\n"),n,this.makeCode("\n"))),[].concat(u,this.makeCode(""+(S||"")+this.tab+"for ("),p,this.makeCode(") {"+d+U),n,this.makeCode(""+this.tab+"}"+(R||"")))},t.prototype.pluckDirectCall=function(e,t){var n,r,o,a,h,u,l,p,d,f,m,y,b,g,k,v;for(r=[],f=t.expressions,h=p=0,d=f.length;d>p;h=++p)o=f[h],o=o.unwrapAll(),o instanceof s&&(l=null!=(m=o.variable)?m.unwrapAll():void 0,(l instanceof c||l instanceof Z&&(null!=(y=l.base)?y.unwrapAll():void 0)instanceof c&&1===l.properties.length&&("call"===(b=null!=(g=l.properties[0].name)?g.value:void 0)||"apply"===b))&&(a=(null!=(k=l.base)?k.unwrapAll():void 0)||l,u=new D(e.scope.freeVariable("fn")),n=new Z(u),l.base&&(v=[n,l],l.base=v[0],n=v[1]),t.expressions[h]=new s(n,o.args),r=r.concat(this.makeCode(this.tab),new i(u,a).compileToFragments(e,x),this.makeCode(";\n"))));return r},t}(Q),e.Switch=W=function(e){function t(e,t,n){this.subject=e,this.cases=t,this.otherwise=n}return Ct(t,e),t.prototype.nodeType=function(){return"Switch"},t.prototype.children=["subject","cases","otherwise"],t.prototype.isStatement=et,t.prototype.jumps=function(e){var t,n,i,r,o,s,a,c;for(null==e&&(e={block:!0}),s=this.cases,r=0,o=s.length;o>r;r++)if(a=s[r],n=a[0],t=a[1],i=t.jumps(e))return i;return null!=(c=this.otherwise)?c.jumps(e):void 0},t.prototype.makeReturn=function(e){var t,n,i,r,s;for(r=this.cases,n=0,i=r.length;i>n;n++)t=r[n],t[1].makeReturn(e);return e&&(this.otherwise||(this.otherwise=new o([new D("void 0")]))),null!=(s=this.otherwise)&&s.makeReturn(e),this},t.prototype.compileNode=function(e){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y;for(c=e.indent+X,h=e.indent=c+X,s=[].concat(this.makeCode(this.tab+"switch ("),this.subject?this.subject.compileToFragments(e,E):this.makeCode("false"),this.makeCode(") {\n")),f=this.cases,a=u=0,p=f.length;p>u;a=++u){for(m=f[a],r=m[0],t=m[1],y=st([r]),l=0,d=y.length;d>l;l++)i=y[l],this.subject||(i=i.invert()),s=s.concat(this.makeCode(c+"case "),i.compileToFragments(e,E),this.makeCode(":\n"));if((n=t.compileToFragments(e,x)).length>0&&(s=s.concat(n,this.makeCode("\n"))),a===this.cases.length-1&&!this.otherwise)break;o=this.lastNonComment(t.expressions),o instanceof V||o instanceof D&&o.jumps()&&"debugger"!==o.value||s.push(i.makeCode(h+"break;\n"))}return this.otherwise&&this.otherwise.expressions.length&&s.push.apply(s,[this.makeCode(c+"default:\n")].concat(Lt.call(this.otherwise.compileToFragments(e,x)),[this.makeCode("\n")])),s.push(this.makeCode(this.tab+"}")),s},t}(r),e.If=v=function(e){function t(e,t,n){this.body=t,null==n&&(n={}),this.rawCondition=e,this.condition="unless"===n.type?e.invert():e,this.elseBody=null,this.elseToken=null,this.isChain=!1,this.soak=n.soak}return Ct(t,e),t.prototype.nodeType=function(){return"If"},t.prototype.children=["condition","body","elseBody"],t.prototype.bodyNode=function(){var e;return null!=(e=this.body)?e.unwrap():void 0},t.prototype.elseBodyNode=function(){var e;return null!=(e=this.elseBody)?e.unwrap():void 0},t.prototype.addElse=function(e,n){return this.isChain?this.elseBodyNode().addElse(e,n):(this.isChain=e instanceof t,this.elseBody=this.ensureBlock(e),this.elseBody.updateLocationDataIfMissing(e.locationData),this.elseToken=n),this},t.prototype.isStatement=function(e){var t;return(null!=e?e.level:void 0)===x||this.bodyNode().isStatement(e)||(null!=(t=this.elseBodyNode())?t.isStatement(e):void 0)},t.prototype.jumps=function(e){var t;return this.body.jumps(e)||(null!=(t=this.elseBody)?t.jumps(e):void 0)},t.prototype.compileNode=function(e){return this.isStatement(e)?this.compileStatement(e):this.compileExpression(e)},t.prototype.makeReturn=function(e){return e&&(this.elseBody||(this.elseBody=new o([new D("void 0")]))),this.body&&(this.body=new o([this.body.makeReturn(e)])),this.elseBody&&(this.elseBody=new o([this.elseBody.makeReturn(e)])),this},t.prototype.ensureBlock=function(e){return e instanceof o?e:new o([e])},t.prototype.compileStatement=function(e){var n,i,r,o,s,a,c;return r=it(e,"chainChild"),(s=it(e,"isExistentialEquals"))?new t(this.condition.invert(),this.elseBodyNode(),{type:"if"}).compileToFragments(e):(c=e.indent+X,o=this.condition.compileToFragments(e,E),i=this.ensureBlock(this.body).compileToFragments(pt(e,{indent:c})),a=[].concat(this.makeCode("if ("),o,this.makeCode(") {\n"),i,this.makeCode("\n"+this.tab+"}")),r||a.unshift(this.makeCode(this.tab)),this.elseBody?(n=a.concat(this.makeCode(" else ")),this.isChain?(e.chainChild=!0,n=n.concat(this.elseBody.unwrap().compileToFragments(e,x))):n=n.concat(this.makeCode("{\n"),this.elseBody.compileToFragments(pt(e,{indent:c}),x),this.makeCode("\n"+this.tab+"}")),n):a)},t.prototype.compileExpression=function(e){var t,n,i,r;return i=this.condition.compileToFragments(e,F),n=this.bodyNode().compileToFragments(e,L),t=this.elseBodyNode()?this.elseBodyNode().compileToFragments(e,L):[this.makeCode("void 0")],r=i.concat(this.makeCode(" ? "),n,this.makeCode(" : "),t),e.level>=F?this.wrapInBraces(r):r},t.prototype.unfoldSoak=function(){return this.soak&&this},t}(r),J={"extends":function(){return"function(child, parent) { for (var key in parent) { if ("+kt("hasProp")+".call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; }"},bind:function(){return"function(fn, me){ return function(){ return fn.apply(me, arguments); }; }"},indexOf:function(){return"[].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; }"},modulo:function(){return"function(a, b) { return (+a % (b = +b) + b) % b; }"},hasProp:function(){return"{}.hasOwnProperty"},slice:function(){return"[].slice"}},x=1,E=2,L=3,F=4,N=5,C=6,X="  ",b="[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*",y=RegExp("^"+b+"$"),P=/^[+-]?\d+$/,m=/^[+-]?0x[\da-f]+/i,I=/^[+-]?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)$/i,S=RegExp("^("+b+")(\\.prototype)?(?:\\.("+b+")|\\[(\"(?:[^\\\\\"\\r\\n]|\\\\.)*\"|'(?:[^\\\\'\\r\\n]|\\\\.)*')\\]|\\[(0x[\\da-fA-F]+|\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\])$"),k=/^['"]/,g=/^\//,kt=function(e){var t;return t="__"+e,H.root.assign(t,J[e]()),t},dt=function(e,t){return e=e.replace(/\n/g,"$&"+t),e.replace(/\s+$/,"")},ft=function(e){return null==e?0:e.match(m)?parseInt(e,16):parseFloat(e)},ct=function(e){return e instanceof D&&"arguments"===e.value&&!e.asKey},ht=function(e){return e instanceof D&&"this"===e.value&&!e.asKey||e instanceof c&&e.bound||e instanceof s&&e.isSuper},gt=function(e,t,n){var i;if(i=t[n].unfoldSoak(e))return t[n]=i.body,i.body=new Z(t),i}}.call(this),t.exports}(),require["./sourcemap"]=function(){var e={},t={exports:e};return function(){var e,n;e=function(){function e(e){this.line=e,this.columns=[]}return e.prototype.add=function(e,t,n){var i,r;return r=t[0],i=t[1],null==n&&(n={}),this.columns[e]&&n.noReplace?void 0:this.columns[e]={line:this.line,column:e,sourceLine:r,sourceColumn:i}},e.prototype.sourceLocation=function(e){for(var t;!((t=this.columns[e])||0>=e);)e--;return t&&[t.sourceLine,t.sourceColumn]},e}(),n=function(){function t(){this.lines=[]}var n,i,r,o;return t.prototype.add=function(t,n,i){var r,o,s,a;return null==i&&(i={}),o=n[0],r=n[1],s=(a=this.lines)[o]||(a[o]=new e(o)),s.add(r,t,i)},t.prototype.sourceLocation=function(e){var t,n,i;for(n=e[0],t=e[1];!((i=this.lines[n])||0>=n);)n--;return i&&i.sourceLocation(t)},t.prototype.generate=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b;for(null==e&&(e={}),null==t&&(t=null),l=0,i=0,o=0,r=0,h=!1,n="",y=this.lines,a=p=0,f=y.length;f>p;a=++p)if(s=y[a])for(b=s.columns,d=0,m=b.length;m>d;d++)if(c=b[d]){for(;c.line>l;)i=0,h=!1,n+=";",l++;h&&(n+=",",h=!1),n+=this.encodeVlq(c.column-i),i=c.column,n+=this.encodeVlq(0),n+=this.encodeVlq(c.sourceLine-o),o=c.sourceLine,n+=this.encodeVlq(c.sourceColumn-r),r=c.sourceColumn,h=!0}return u={version:3,file:e.generatedFile||"",sourceRoot:e.sourceRoot||"",sources:e.sourceFiles||[""],names:[],mappings:n},e.inline&&(u.sourcesContent=[t]),JSON.stringify(u,null,2)},r=5,i=1<<r,o=i-1,t.prototype.encodeVlq=function(e){var t,n,s,a;for(t="",s=0>e?1:0,a=(Math.abs(e)<<1)+s;a||!t;)n=a&o,a>>=r,a&&(n|=i),t+=this.encodeBase64(n);return t},n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",t.prototype.encodeBase64=function(e){return n[e]||function(){throw Error("Cannot Base64 encode value: "+e)}()},t}(),t.exports=n}.call(this),t.exports}(),require["./coffee-script"]=function(){var e={},t={exports:e};return function(){var t,n,i,r,o,s,a,c,h,u,l,p,d,f,m,y,b,g,k={}.hasOwnProperty,v=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};if(s=require("fs"),d=require("vm"),l=require("path"),t=require("./lexer").Lexer,u=require("./parser").parser,c=require("./helpers"),n=require("./sourcemap"),e.VERSION="1.7.1",e.FILE_EXTENSIONS=[".coffee",".litcoffee",".coffee.md"],e.helpers=c,f=function(e){return function(t,n){var i;null==n&&(n={});try{return e.call(this,t,n)}catch(r){throw i=r,c.updateSyntaxError(i,t,n.filename)}}},e.compile=i=f(function(e,t){var i,r,o,s,a,l,p,d,f,m,y,b,g;for(m=c.merge,s=c.extend,t=s({},t),t.sourceMap&&(f=new n),l=u.parse(h.tokenize(e,t)).compileToFragments(t),o=0,t.header&&(o+=1),t.shiftLine&&(o+=1),r=0,d="",b=0,g=l.length;g>b;b++)a=l[b],t.sourceMap&&(a.locationData&&f.add([a.locationData.first_line,a.locationData.first_column],[o,r],{noReplace:!0}),y=c.count(a.code,"\n"),o+=y,y?r=a.code.length-(a.code.lastIndexOf("\n")+1):r+=a.code.length),d+=a.code;return t.header&&(p="Generated by CoffeeScript "+this.VERSION,d="// "+p+"\n"+d),t.sourceMap?(i={js:d},i.sourceMap=f,i.v3SourceMap=f.generate(t,e),i):d
 }),e.tokens=f(function(e,t){return h.tokenize(e,t)}),e.nodes=f(function(e,t){return"string"==typeof e?u.parse(h.tokenize(e,t)):u.parse(e)}),e.run=function(e,t){var n,r,o,a;return null==t&&(t={}),o=require.main,o.filename=process.argv[1]=t.filename?s.realpathSync(t.filename):".",o.moduleCache&&(o.moduleCache={}),r=t.filename?l.dirname(s.realpathSync(t.filename)):s.realpathSync("."),o.paths=require("module")._nodeModulePaths(r),(!c.isCoffee(o.filename)||require.extensions)&&(n=i(e,t),e=null!=(a=n.js)?a:n),o._compile(e,o.filename)},e.eval=function(e,t){var n,r,o,s,a,c,h,u,p,f,m,y,b,g;if(null==t&&(t={}),e=e.trim()){if(r=d.Script){if(null!=t.sandbox){if(t.sandbox instanceof r.createContext().constructor)h=t.sandbox;else{h=r.createContext(),y=t.sandbox;for(s in y)k.call(y,s)&&(u=y[s],h[s]=u)}h.global=h.root=h.GLOBAL=h}else h=global;if(h.__filename=t.filename||"eval",h.__dirname=l.dirname(h.__filename),h===global&&!h.module&&!h.require){for(n=require("module"),h.module=m=new n(t.modulename||"eval"),h.require=g=function(e){return n._load(e,m,!0)},m.filename=h.__filename,b=Object.getOwnPropertyNames(require),p=0,f=b.length;f>p;p++)c=b[p],"paths"!==c&&(g[c]=require[c]);g.paths=m.paths=n._nodeModulePaths(process.cwd()),g.resolve=function(e){return n._resolveFilename(e,m)}}}a={};for(s in t)k.call(t,s)&&(u=t[s],a[s]=u);return a.bare=!0,o=i(e,a),h===global?d.runInThisContext(o):d.runInContext(o,h)}},e.register=function(){return require("./register")},require.extensions)for(g=this.FILE_EXTENSIONS,y=0,b=g.length;b>y;y++)r=g[y],null==(m=require.extensions)[r]&&(m[r]=function(){throw Error("Use CoffeeScript.register() or require the coffee-script/register module to require "+r+" files.")});e._compileFile=function(e,t){var n,r,o,a;null==t&&(t=!1),o=s.readFileSync(e,"utf8"),a=65279===o.charCodeAt(0)?o.substring(1):o;try{n=i(a,{filename:e,sourceMap:t,literate:c.isLiterate(e)})}catch(h){throw r=h,c.updateSyntaxError(r,a,e)}return n},h=new t,u.lexer={lex:function(){var e,t;return t=this.tokens[this.pos++],t?(e=t[0],this.yytext=t[1],this.yylloc=t[2],this.errorToken=t.origin||t,this.yylineno=this.yylloc.first_line):e="",e},setInput:function(e){return this.tokens=e,this.pos=0},upcomingInput:function(){return""}},u.yy=require("./nodes"),u.yy.parseError=function(e,t){var n,i,r,o,s,a,h;return s=t.token,h=u.lexer,o=h.errorToken,a=h.tokens,i=o[0],r=o[1],n=o[2],r=o===a[a.length-1]?"end of input":"INDENT"===i||"OUTDENT"===i?"indentation":c.nameWhitespaceCharacter(r),c.throwSyntaxError("unexpected "+r,n)},o=function(e,t){var n,i,r,o,s,a,c,h,u,l,p,d;return o=void 0,r="",e.isNative()?r="native":(e.isEval()?(o=e.getScriptNameOrSourceURL(),o||(r=""+e.getEvalOrigin()+", ")):o=e.getFileName(),o||(o="<anonymous>"),h=e.getLineNumber(),i=e.getColumnNumber(),l=t(o,h,i),r=l?""+o+":"+l[0]+":"+l[1]:""+o+":"+h+":"+i),s=e.getFunctionName(),a=e.isConstructor(),c=!(e.isToplevel()||a),c?(u=e.getMethodName(),d=e.getTypeName(),s?(p=n="",d&&s.indexOf(d)&&(p=""+d+"."),u&&s.indexOf("."+u)!==s.length-u.length-1&&(n=" [as "+u+"]"),""+p+s+n+" ("+r+")"):""+d+"."+(u||"<anonymous>")+" ("+r+")"):a?"new "+(s||"<anonymous>")+" ("+r+")":s?""+s+" ("+r+")":r},p={},a=function(t){var n,i;if(p[t])return p[t];if(i=null!=l?l.extname(t):void 0,!(0>v.call(e.FILE_EXTENSIONS,i)))return n=e._compileFile(t,!0),p[t]=n.sourceMap},Error.prepareStackTrace=function(t,n){var i,r,s;return s=function(e,t,n){var i,r;return r=a(e),r&&(i=r.sourceLocation([t-1,n-1])),i?[i[0]+1,i[1]+1]:null},r=function(){var t,r,a;for(a=[],t=0,r=n.length;r>t&&(i=n[t],i.getFunction()!==e.run);t++)a.push("  at "+o(i,s));return a}(),""+(""+t)+"\n"+r.join("\n")+"\n"}}.call(this),t.exports}(),require["./browser"]=function(){var exports={},module={exports:exports};return function(){var CoffeeScript,compile,runScripts,__indexOf=[].indexOf||function(e){for(var t=0,n=this.length;n>t;t++)if(t in this&&this[t]===e)return t;return-1};CoffeeScript=require("./coffee-script"),CoffeeScript.require=require,compile=CoffeeScript.compile,CoffeeScript.eval=function(code,options){return null==options&&(options={}),null==options.bare&&(options.bare=!0),eval(compile(code,options))},CoffeeScript.run=function(e,t){return null==t&&(t={}),t.bare=!0,t.shiftLine=!0,Function(compile(e,t))()},"undefined"!=typeof window&&null!==window&&("undefined"!=typeof btoa&&null!==btoa&&"undefined"!=typeof JSON&&null!==JSON&&"undefined"!=typeof unescape&&null!==unescape&&"undefined"!=typeof encodeURIComponent&&null!==encodeURIComponent&&(compile=function(e,t){var n,i,r;return null==t&&(t={}),t.sourceMap=!0,t.inline=!0,r=CoffeeScript.compile(e,t),n=r.js,i=r.v3SourceMap,""+n+"\n//# sourceMappingURL=data:application/json;base64,"+btoa(unescape(encodeURIComponent(i)))+"\n//# sourceURL=coffeescript"}),CoffeeScript.load=function(e,t,n,i){var r;return null==n&&(n={}),null==i&&(i=!1),n.sourceFiles=[e],r=window.ActiveXObject?new window.ActiveXObject("Microsoft.XMLHTTP"):new window.XMLHttpRequest,r.open("GET",e,!0),"overrideMimeType"in r&&r.overrideMimeType("text/plain"),r.onreadystatechange=function(){var o,s;if(4===r.readyState){if(0!==(s=r.status)&&200!==s)throw Error("Could not load "+e);if(o=[r.responseText,n],i||CoffeeScript.run.apply(CoffeeScript,o),t)return t(o)}},r.send(null)},runScripts=function(){var e,t,n,i,r,o,s,a,c,h,u;for(a=window.document.getElementsByTagName("script"),t=["text/coffeescript","text/literate-coffeescript"],e=function(){var e,n,i,r;for(r=[],e=0,n=a.length;n>e;e++)o=a[e],i=o.type,__indexOf.call(t,i)>=0&&r.push(o);return r}(),r=0,n=function(){var t;return t=e[r],t instanceof Array?(CoffeeScript.run.apply(CoffeeScript,t),r++,n()):void 0},c=function(i,r){var o;return o={literate:i.type===t[1]},i.src?CoffeeScript.load(i.src,function(t){return e[r]=t,n()},o,!0):(o.sourceFiles=["embedded"],e[r]=[i.innerHTML,o])},i=h=0,u=e.length;u>h;i=++h)s=e[i],c(s,i);return n()},window.addEventListener?window.addEventListener("DOMContentLoaded",runScripts,!1):window.attachEvent("onload",runScripts))}.call(this),module.exports}(),require["./coffee-script"]}();"function"==typeof define&&define.amd?define(function(){return CoffeeScript}):root.CoffeeScript=CoffeeScript})(this);
 
-},{}],117:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 (function (global){
 ; var __browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
 /*
@@ -75109,7 +76615,7 @@ QUAD.init = function (args) {
 }).call(global, undefined, undefined, undefined, undefined, function defineExport(ex) { module.exports = ex; });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],118:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.skulptparser = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // generated by pgen/main.py
 var Tokenizer = require('../src/tokenize');
@@ -78705,5 +80211,5 @@ module.exports.tokenNames = {
 
 },{}]},{},[3])(3)
 });
-},{}]},{},[109])(109)
+},{}]},{},[110])(110)
 });

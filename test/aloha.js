@@ -6,7 +6,7 @@ var phantom = require('node-phantom-simple'),
 describe('dev server', function() {
   var _ph, _page;
   before(function(done) {
-    phantom.create(function(error,ph) {
+    phantom.create({ path: phantomjs.path }, function(error, ph) {
       assert.ifError(error);
       _ph = ph;
       _ph.createPage(function(err,page) {
@@ -17,7 +17,7 @@ describe('dev server', function() {
           done();
         });
       });
-    }, { phantomPath: phantomjs.path });
+    });
   });
   after(function() {
     _ph.exit();

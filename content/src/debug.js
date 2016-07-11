@@ -4,6 +4,7 @@
 
 var $         = require('jquery'),
     view      = require('view'),
+    advisor   = require('advisor'),
     see       = require('see'),
     sourcemap = require('source-map');
 
@@ -21,7 +22,15 @@ var stopButtonShown = 0;      // 0 = not shown; 1 = shown; 2 = stopped.
 var currentSourceMap = null;  // v3 source map for currently-running instrumented code.
 var traceEvents = [];         // list of event location objects created by tracing events
 var stuckTime = null;         // timestmp to detect stuck programs
-var stuckTimeLimit = 3000;    // milliseconds to allow a program to be stuck
+// verification of complexity of stuck loop
+var stuckComplexity = {
+  lines: 0,
+  calls: 0,
+  moves: 0
+};
+var stuckTrivialTime = 4000;   // stuck time in a loop with no library calls
+var stuckCallingTime = 8000;   // stuck time in a loop making library calls
+var stuckMovingTime = 15000;   // stuck time in a loop moving elements
 
 
 Error.stackTraceLimit = 20;
@@ -31,8 +40,10 @@ Error.stackTraceLimit = 20;
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
-function bindframe(w) {
+function bindframe(w, p) {
   if (!targetWindow && !w || targetWindow === w) return;
+  // Do not bind to nested subframes - only an immediate child frame.
+  if (targetWindow && p !== window) return;
   targetWindow = w;
   cachedParseStack = {};
   debugRecordsByDebugId = {};
@@ -40,7 +51,13 @@ function bindframe(w) {
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
   stuckTime = null;
+  stuckComplexity = {
+    lines: 0,
+    calls: 0,
+    moves: 0
+  };
   startPollingWindow();
+  return true;
 }
 
 // Exported functions from the edit-debug module are exposed
@@ -66,6 +83,8 @@ var debug = window.ide = {
     if (name === "pulse") { stuckTime = null; }
 
     if (name === "seeeval") { reportSeeeval.apply(null, data); }
+
+    if (name === "enter") { stuckComplexity.calls += 1; }
 
     if (name === "appear") { reportAppear.apply(null, data); }
 
@@ -110,6 +129,11 @@ var debug = window.ide = {
   },
   trace: function(event, data) {
     detectStuckProgram();
+    // Discard prolific events for now, to avoid running out of memory.
+    switch(event.type) {
+      case 'enter': case 'leave': case 'before': case 'after':
+        return;
+    }
     // This receives events for the new debugger to use.
     currentDebugId += 1;
     var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
@@ -130,30 +154,38 @@ var debug = window.ide = {
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
 function detectStuckProgram() {
+  stuckComplexity.lines += 1;
+  if (stuckComplexity.lines % 100 != 1) return;
   var currentTime = +(new Date);
   if (!stuckTime) {
     stuckTime = currentTime;
     targetWindow.eval(
-      'setTimeout(function() { ide.reportEvent("pulse"); }, 100);'
+      'setTimeout(function() { var w = window; w.ide && w.ide.reportEvent ' +
+      '&& ide.reportEvent("pulse"); }, 100);'
     );
   }
-  if (currentTime - stuckTime > stuckTimeLimit) {
-    if ('function' == typeof targetWindow.$.turtle.interrupt) {
+  var limit = stuckTrivialTime;
+  if (stuckComplexity.moves / stuckComplexity.lines > 0.01) {
+    limit = stuckMovingTime;
+  } else if (stuckComplexity.calls / stuckComplexity.lines > 0.01) {
+    limit = stuckCallingTime;
+  }
+  if (currentTime - stuckTime > limit) {
+    var inTurtle = false;
+    try {
+      inTurtle = ('function' == typeof targetWindow.$.turtle.interrupt);
+    } catch(e) { }
+    if (inTurtle) {
       targetWindow.$.turtle.interrupt('hung');
+    } else {
+      targetWindow.eval('throw new Error("Stuck program interrupted")');
     }
-    targetWindow.eval('throw new Exception("Stuck program interrupted")');
   }
 }
 
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
 //////////////////////////////////////////////////////////////////////
-function getTextOnLine(text, line) {
-  var lines = text.split('\n'), index = line - 1;
-  if (index >= 0 && index < lines.length) return lines[index];
-  return '';
-}
-
 var showPopupErrorMessage = function (msg) {
   var center = document.getElementById('error-advice') ||
       document.createElement('center');
@@ -179,6 +211,7 @@ function reportSeeeval(method, debugId, length, coordId, elem, args){
 }
 
 function reportAppear(method, debugId, length, coordId, elem, args){
+  stuckComplexity.moves += 1;
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
     if (!recordD.seeeval) {
@@ -212,100 +245,15 @@ function reportResolve(method, debugId, length, coordId, elem, args){
   }
 }
 
-function errorAdvice(msg, text) {
-  var advice, m, msg;
-  advice = '<p>Oops, the computer got confused.';
-  if (msg) {
-    msg = msg.replace(/^Uncaught [a-z]*Error: /i, '');
-    if (msg !== "Cannot read property '0' of null") {
-      advice += '<p>It says: "' + msg + '"';
-    }
-  }
-  m = /(\w+) is not defined/.exec(msg);
-  if (m) {
-    if (/^[a-z]{2,}[0-9]+$/i.test(m[1])) {
-      advice += "<p>Is there a missing space in '<b>" + m[1] + "</b>'?";
-    } else if (/[A-Z]/.test(m[1]) && (m[1].toLowerCase() in {
-        'dot':1, 'pen':1, 'fd':1, 'bk':1, 'lt':1, 'rt':1, 'write':1,
-        'type':1, 'menu':1, 'play':1, 'speed':1, 'ht':1, 'st':1,
-        'cs':1, 'cg':1, 'ct':1, 'fill':1, 'rgb':1, 'rgba':1, 'hsl':1,
-        'hsla':1, 'red':1, 'blue':1, 'black':1, 'green':1, 'gray':1,
-        'orange':1, 'purple':1, 'pink':1, 'yellow':1, 'gold':1,
-        'aqua':1, 'tan':1, 'white':1, 'violet':1, 'snow':1, 'true':1,
-        'false':1, 'null':1, 'for':1, 'if':1, 'else':1, 'do':1, 'in':1,
-        'return':1})) {
-      advice += ("<p>Did you mean '<b>" + (m[1].toLowerCase()) + "</b>' ") +
-                ("instead of '<b>" + m[1] + "</b>'?");
-    } else if (m[1].toLowerCase().substring(0, 3) === "inf") {
-      advice += "<p><b>Infinity</b> is spelled like this with a capital I.";
-    } else {
-      if (m[1].length > 3) {
-        advice += "<p>Is <b>" + m[1] + "</b> spelled right?";
-      } else {
-        advice += ("<p>Is '<b>" + m[1] + " = </b><em>something</em>' ") +
-                  "needed first?";
-      }
-      advice += "<p>Or are quotes needed around <b>\"" + m[1] + "\"</b>?";
-    }
-  } else if (/object is not a function/.test(msg)) {
-    advice += "<p>Is there missing punctuation like a dot?";
-  } else if (/undefined is not a function/.test(msg)) {
-    advice += "<p>Is a command misspelled here?";
-  } else if (/indentation/.test(msg)) {
-    advice += "<p>Is the code lined up neatly?";
-    advice += "<p>Or is something unfinished before this?";
-  } else if (/not a function/.test(msg)) {
-    advice += "<p>Is there a missing comma?";
-  } else if (/octal literal/.test(msg)) {
-    advice += "<p>Avoid extra 0 digits before a number.";
-  } else if (/unexpected when/.test(msg)) {
-    advice += "<p>Is the 'when' indented correctly?";
-  } else if (/unexpected newline/.test(msg)) {
-    advice += "<p>Is something missing on the previous line?";
-  } else if (/unexpected ,/.test(msg)) {
-    m = /^.*?\b(\w+)\s+\((?:[^()]|\((?:[^()]|\([^()]*\))*\))+,.+\)/.exec(text);
-    if (m) {
-      advice += '<p>You might need to remove the space after ' +
-                '<b>' + m[1] + '</b>.';
-    } else if (/(^[^'"]*,\s*['"])|(['"],[^'"]*$)/.test(text)) {
-      advice += '<p>You might want to use <b>+</b> instead of <b>,</b> ' +
-                'to combine strings.';
-    } else {
-      advice += "<p>You might not need a comma here.";
-    }
-  } else if (/unexpected ->/.test(msg)) {
-    advice += "<p>Is a comma or '=' missing before the arrow?";
-  } else if (/unexpected end of input/.test(msg)) {
-    advice += "<p>Is there some unfinished code around here?";
-  } else if ((m = /unexpected (\S+)/.exec(msg))) {
-    advice += "<p>Is something missing before " + m[1] + "?";
-  } else if (/missing ["']/.test(msg) ||
-      (msg === "Cannot read property '0' of null")) {
-    advice += "<p>Is there a string with an unmatched quote?";
-    advice += "<p>It might be on an higher line.";
-  } else if (/missing [\])}]/.test(msg)) {
-    advice += "<p>It might be missing on an higher line.";
-  } else if ((m = /unexpected (\w+)$/.exec(msg))) {
-    advice += "<p>You might try removing '" + m[1] + "'";
-  } else if (/interrupt\('hung'\)/.test(msg)) {
-    advice = '<p>Oops, the computer got stuck in calculations.' +
-             '<p>The program was stopped so you can edit it.' +
-             '<p>Maybe reduce the number of repeats?';
-  }
-  return advice;
-}
-
-
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
 function reportError(err) {
   var line = editorLineNumberForError(err);
-  view.markPaneEditorLine(view.paneid('left'), line, 'debugerror');
   var m = view.getPaneEditorData(view.paneid('left'));
-  var text = getTextOnLine(m && m.data || '', line);
-  var advice = errorAdvice(err.message, text);
-  showDebugMessage(advice);
+  var advice = advisor.errorAdvice(err.message, line, m.data);
+  view.markPaneEditorLine(view.paneid('left'), advice.line, 'debugerror');
+  showDebugMessage(advice.message);
 }
 
 function showDebugMessage(m) {

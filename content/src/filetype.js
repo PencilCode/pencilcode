@@ -66,10 +66,10 @@ function scanHtmlTop(html) {
 }
 
 // The job of this function is to take: HTML, CSS, and script content,
-// and merge them into one HTML file.
+// and merge them into one HTML file. (Changed signature to allow generalization of languages)
 function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Construct the HTML for running a program.
-  var meta = effectiveMeta(doc.meta);
+  var meta = effectiveMeta(doc);
   var html = meta.html || '';
   // pragmasOnly should never run dangerous script, so do not run
   // meta.html if the HTML has script.
@@ -124,10 +124,12 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Add the default scripts.
   var j, scripts = [], src, text = doc.data;
   for (j = 0; j < meta.libs.length; ++j) {
-    src = meta.libs[j].src;
+    addScriptSrc(meta.libs[j].src, null, meta.libs[j].attrs);
+  }
+  function addScriptSrc(src, type, attrdict) {
     var attrs = '';
-    if (meta.libs[j].attrs) {
-      for (var att in meta.libs[j].attrs) {
+    if (attrdict) {
+      for (var att in attrdict) {
         attrs += ' ' + att + '="' + escapeHtml(meta.libs[j].attrs[att]) + '"';
       }
     }
@@ -139,20 +141,20 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
       scripts.push(
         '<script src="' + src + '" crossorigin="anonymous"' +
+        ' type="' + (type || inferScriptType(src)) + '"' +
         attrs + '><\057script>');
     } else {
       scripts.push(
-        '<script src="' + src + '"' + attrs + '><\057script>');
+        '<script src="' + src + '"' +
+        ' type="' + (type || inferScriptType(src)) + '"' +
+        attrs + '><\057script>');
     }
   }
   // Then add any setupScript supplied.
   if (setupScript) {
     for (j = 0; j < setupScript.length; ++j) {
       if (setupScript[j].src) {
-        scripts.push(
-          '<script src="' + setupScript[j].url + '" type="' +
-          (setupScript[j].type || inferScriptType(setupScript[j].url)) +
-          '">\n<\057script>');
+        addScriptSrc(setupScript[j].src, setupScript[j].type, null);
       } else if (setupScript[j].code) {
         scripts.push(
           '<script' +
@@ -163,19 +165,27 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       }
     }
   }
-  // Finally assemble the main script.
-  var maintype = 'text/coffeescript';
-  if (doc.meta && doc.meta.type) {
-    maintype = doc.meta.type;
-  }
-  var seeline = '\n\n';
+
+    // Finally assemble the main script.
+  var maintype = null;
   var originalLanguage = null;
-  if (/javascript/i.test(maintype)) {
-    seeline = 'eval(this._start_ide_js_);\n\n';
-    originalLanguage = 'javascript';
-  } else if (/coffeescript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_cs_);\n\n';
-    originalLanguage = 'coffeescript';
+  var seeline = '\n\n';
+  if (meta.type == "text/x-python") {
+    maintype = "text/x-python"
+    originalLanguage = 'python'
+  }
+  else {
+    maintype = 'text/coffeescript';
+    if (doc.meta && doc.meta.type) {
+      maintype = doc.meta.type;
+    }
+    if (/javascript/i.test(maintype)) {
+      seeline = 'eval(this._start_ide_js_);\n\n';
+      originalLanguage = 'javascript';
+    } else if (/coffeescript/.test(maintype)) {
+      seeline = 'eval(this._start_ide_cs_);\n\n';
+      originalLanguage = 'coffeescript';
+    }
   }
   var instrumented = false;
   if (instrumenter) {
@@ -219,6 +229,9 @@ function modifyForPreview(doc, domain,
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
+  } else if (mimeType && /^text\/x-python/.test(mimeType)) {
+    text = wrapTurtle(doc, domain, pragmasOnly, null, null);
+    mimeType = mimeType.replace(/\/x-python/, '/html');
   } else if (pragmasOnly) {
     var safe = false;
     if (mimeType && /^text\/html/.test(mimeType) &&
@@ -298,6 +311,7 @@ function mimeForFilename(filename) {
     'py'   : 'text/x-python',
     'htm'  : 'text/html',
     'html' : 'text/html',
+    'csv'  : 'text/csv',
     'txt'  : 'text/plain',
     'text' : 'text/plain',
     'css'  : 'text/css',
@@ -315,12 +329,41 @@ function mimeForFilename(filename) {
   return result;
 }
 
-function effectiveMeta(meta) {
+function effectiveMeta(input) {
+  var doc;
+  var meta;
+
+  if (input && input.meta !== undefined)
+  {
+    doc = input;
+    meta = input.meta;
+  }
+  else
+  {
+    doc = null;
+    meta = input;
+  }
+
   if (meta && meta.type && meta.lib) { return meta; }
   meta = (meta && 'object' == typeof meta) ?
     JSON.parse(JSON.stringify(meta)) : {};
   if (!meta.type) {
-    meta.type = 'text/coffeescript';
+    // If there's a doc here, we can try to pull a mimetype from it.
+    if (doc && doc.mime) {
+      if (doc.mime.lastIndexOf('text/x-python', 0) === 0) {
+        meta.type = 'text/x-python';
+        meta.libs = [{name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
+                     {name: 'skulpt-stdlib', src: '//{site}/lib/skulpt-stdlib.js'},
+                     {name: 'turtle-python', src: '//{site}/turtle-python.js'}
+        ];
+      }
+      else {
+        meta.type = 'text/coffeescript';
+      }
+    }
+    else {
+      meta.type = 'text/coffeescript';
+    }
   }
   if (!meta.libs) {
     meta.libs = [

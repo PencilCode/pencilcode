@@ -33,7 +33,7 @@ just apt-get install the packages.  Get and build the latest `node` and
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-wget -N http://nodejs.org/dist/node-latest.tar.gz
+wget -N http://nodejs.org/dist/v0.12.7/node-v0.12.7.tar.gz # http://nodejs.org/dist/node-latest.tar.gz
 tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
@@ -47,8 +47,8 @@ Zsh users should change `bashrc` to `zshrc` in the above code.
 
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-curl http://nodejs.org/dist/node-latest.tar.gz > node-latest.tar.gz
-tar xzvf node-latest.tar.gz && cd `ls -rd node-v*`
+curl http://nodejs.org/dist/v0.12.7/node-v0.12.7.tar.gz > node-latest.tar.gz
+tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
 echo 'export PATH=$HOME/local/bin:$PATH' &gt;&gt; ~/.profile
