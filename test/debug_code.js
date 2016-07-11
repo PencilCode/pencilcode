@@ -110,6 +110,14 @@ describe('code debugger', function() {
       done();
     });
   });
+  /*
+   * CURRENTLY THE DEBUGGER IS BROKEN - tests commented for now.
+   * Much of the debugging functionality was disabled in order to
+   * improve execution speed, so that students can work with recursion
+   * without timing out.
+   * TODO(davidbau): ressurect the debugger.
+   *
+
   it('should be able to stop the program', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the square stop button.
@@ -303,6 +311,7 @@ describe('code debugger', function() {
          done();
     });
   });
+ */
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Final cleanup: delete local storage and the cookie.
