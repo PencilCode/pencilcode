@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # An init.d script for running the Node.js pencilcode service.
 #
@@ -30,6 +30,7 @@
 # https://www.exratione.com/2011/07/running-a-nodejs-server-as-a-service-using-forever/
 
 NAME="Pencil Service"
+FOREVER_DIR="/usr/local/bin"
 NODE_BIN_DIR="/usr/local/node/bin"
 NODE_PATH="/usr/local/lib/node_modules"
 APPLICATION_PATH="/srv/site/root/server/server.js"
@@ -45,7 +46,7 @@ NODE_ENV="production"
 PORT=8816
 
 # Add node to the path for situations in which the environment is passed.
-PATH=$NODE_BIN_DIR:$PATH
+PATH=$NODE_BIN_DIR:$FOREVER_DIR:$PATH
 # Export all environment variables that must be visible for the Node.js
 # application process forked by Forever. It will not see any of the other
 # variables defined in this script.
@@ -89,15 +90,15 @@ start() {
       start $APPLICATION_PATH 2>&1 > /dev/null &
     RETVAL=$?
 
-    # Give 5 seconds for the port to start listening
-    REMAINING=50
+    # Give 10 seconds for the port to start listening
+    REMAINING=100
     nc -w30 -z localhost $PORT
-    while [[ $? -ne 0 && $REMAINING -gt 0 ]]; do
+    while [ $? -ne 0 ] && [ $REMAINING -gt 0 ]; do
       sleep 0.1
-      REMAINING=$[$REMAINING - 1]
+      REMAINING=$((REMAINING - 1))
       nc -w30 -z localhost $PORT
     done
-    if [[ $? -ne 0 ]]; then
+    if [ $? -ne 0 ]; then
       echo 'Did not start.'
     fi
 }

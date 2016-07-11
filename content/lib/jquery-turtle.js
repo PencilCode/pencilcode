@@ -4,7 +4,7 @@
 jQuery-turtle
 =============
 
-version 2.0.8
+version 2.0.9
 
 jQuery-turtle is a jQuery plugin for turtle graphics.
 
@@ -43,7 +43,7 @@ for color in [red, gold, green, blue]
       lt 360 / sides
     pen null
     fd 40
-  move 40, -160
+  slide 40, -160
 </pre>
 
 [Try an interactive demo (CoffeeScript syntax) here.](
@@ -62,8 +62,8 @@ $(q).fd(100)      // Forward relative motion in local coordinates.
 $(q).bk(50)       // Back.
 $(q).rt(90)       // Right turn.  Optional second arg is turning radius.
 $(q).lt(45)       // Left turn.  Optional second arg is turning radius.
-$(q).move(x, y)   // Move right by x while moving forward by y.
-$(q).jump(x, y)   // Like move, but without drawing.
+$(q).slide(x, y)  // Move right by x while moving forward by y.
+$(q).leap(x, y)   // Like slide, but without drawing.
 $(q).moveto({pageX:x,pageY:y} | [x,y])  // Absolute motion on page.
 $(q).jumpto({pageX:x,pageY:y} | [x,y])  // Like moveto, without drawing.
 $(q).turnto(direction || position)      // Absolute direction adjustment.
@@ -261,7 +261,7 @@ the functions:
 <pre>
 eval $.turtle()  # Create the default turtle and global functions.
 
-defaultspeed Infinity
+speed Infinity
 write "Catch blue before red gets you."
 bk 100
 r = new Turtle red
@@ -772,7 +772,7 @@ function readTransformMatrix(elem) {
 // Reads out the css transformOrigin property, if present.
 function readTransformOrigin(elem, wh) {
   var hidden = ($.css(elem, 'display') === 'none'),
-      swapout, old, name, gcs, origin;
+      swapout, old, name;
   if (hidden) {
     // IE GetComputedStyle doesn't give pixel values for transformOrigin
     // unless the element is unhidden.
@@ -783,13 +783,13 @@ function readTransformOrigin(elem, wh) {
       elem.style[name] = swapout[name];
     }
   }
-  var gcs = (global.getComputedStyle ?  global.getComputedStyle(elem) : null),
-      origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
+  var gcs = (global.getComputedStyle ?  global.getComputedStyle(elem) : null);
   if (hidden) {
     for (name in swapout) {
       elem.style[name] = old[name];
     }
   }
+  var origin = (gcs && gcs[transformOrigin] || $.css(elem, 'transformOrigin'));
   if (origin && origin.indexOf('%') < 0) {
     return $.map(origin.split(' '), parseFloat);
   }
@@ -951,7 +951,8 @@ function cleanedStyle(trans) {
 // center of rotation when no transforms are applied) in page coordinates.
 function getTurtleOrigin(elem, inverseParent, extra) {
   var state = $.data(elem, 'turtleData');
-  if (state && state.quickhomeorigin && state.down && state.style && !extra) {
+  if (state && state.quickhomeorigin && state.down && state.style && !extra
+      && elem.classList && elem.classList.contains('turtle')) {
     return state.quickhomeorigin;
   }
   var hidden = ($.css(elem, 'display') === 'none'),
@@ -959,7 +960,7 @@ function getTurtleOrigin(elem, inverseParent, extra) {
         { position: "absolute", visibility: "hidden", display: "block" } : {},
       substTransform = swapout[transform] = (inverseParent ? 'matrix(' +
           $.map(inverseParent, cssNum).join(', ') + ', 0, 0)' : 'none'),
-      old = {}, name, gbcr, transformOrigin, result;
+      old = {}, name, gbcr, transformOrigin;
   for (name in swapout) {
     old[name] = elem.style[name];
     elem.style[name] = swapout[name];
@@ -1089,8 +1090,7 @@ function computeTargetAsTurtlePosition(elem, target, limit, localx, localy) {
   localTarget = matrixVectorProduct(inverseParent,
       subtractVector([target.pageX, target.pageY], origin));
   if (localx || localy) {
-    var ts = readTurtleTransform(elem, true),
-        sy = ts ? ts.sy : 1;
+    var sy = elemOldScale(elem);
     localTarget[0] += localx * sy;
     localTarget[1] -= localy * sy;
   }
@@ -1118,7 +1118,7 @@ function computePositionAsLocalOffset(elem, home) {
       ts = readTurtleTransform(elem, true),
       localHome = inverseParent && matrixVectorProduct(inverseParent,
           subtractVector([home.pageX, home.pageY], origin)),
-      isy = ts && 1 / ts.sy;
+      isy = 1 / elemOldScale(elem);
   if (!inverseParent) { return; }
   return [(ts.tx - localHome[0]) * isy, (localHome[1] - ts.ty) * isy];
 }
@@ -1127,11 +1127,12 @@ function convertLocalXyToPageCoordinates(elem, localxy) {
   var totalParentTransform = totalTransform2x2(elem.parentElement),
       ts = readTurtleTransform(elem, true),
       center = $(homeContainer(elem)).pagexy(),
+      sy = elemOldScale(elem),
       result = [],
       pageOffset, j;
   for (j = 0; j < localxy.length; j++) {
     pageOffset = matrixVectorProduct(
-        totalParentTransform, [localxy[j][0] * ts.sy, -localxy[j][1] * ts.sy]);
+        totalParentTransform, [localxy[j][0] * sy, -localxy[j][1] * sy]);
     result.push({ pageX: center.pageX + pageOffset[0],
                   pageY: center.pageY + pageOffset[1] });
   }
@@ -1161,10 +1162,26 @@ function getCenterInPageCoordinates(elem) {
       origin = getTurtleOrigin(elem, inverseParent),
       pos = addVector(matrixVectorProduct(totalParentTransform, tr), origin),
       result = { pageX: pos[0], pageY: pos[1] };
-  if (state && simple && state.down && state.style) {
+  if (state && simple && state.down && state.style && elem.classList &&
+      elem.classList.contains('turtle')) {
     state.quickpagexy = result;
   }
   return result;
+}
+
+// The quickpagexy variable is an optimization that assumes
+// parent coordinates do not change.  This function will clear
+// the cache, and is used when we have a container that is moving.
+function clearChildQuickLocations(elem) {
+  if (elem.tagName != 'CANVAS' && elem.tagName != 'IMG') {
+    $(elem).find('.turtle').each(function(j, e) {
+      var s = $.data(e, 'turtleData');
+      if (s) {
+        s.quickpagexy = null;
+        s.quickhomeorigin = null;
+      }
+    });
+  }
 }
 
 function polyToVectorsOffset(poly, offset) {
@@ -1233,7 +1250,7 @@ function scrollWindowToDocumentPosition(pos, limit) {
   if (tx < ww2) { tx = ww2; }
   if (ty > dh - wh2) { ty = dh - wh2; }
   if (ty < wh2) { ty = wh2; }
-  targ = { pageX: tx, pageY: ty };
+  var targ = { pageX: tx, pageY: ty };
   if ($.isNumeric(limit)) {
     targ = limitMovement(w.origin(), targ, limit);
   }
@@ -1487,6 +1504,8 @@ function writeTurtleTransform(ts) {
   return result.join(' ');
 }
 
+function modulo(n, m) { return (+n % (m = +m) + m) % m; }
+
 function radiansToDegrees(r) {
   var d = r * 180 / Math.PI;
   if (d > 180) { d -= 360; }
@@ -1494,7 +1513,7 @@ function radiansToDegrees(r) {
 }
 
 function convertToRadians(d) {
-  return d * Math.PI / 180;
+  return d / 180 * Math.PI;
 }
 
 function normalizeRotation(x) {
@@ -1569,7 +1588,7 @@ function createSurfaceAndField() {
       pointerEvents: 'none',
       overflow: 'hidden'
     }).addClass('turtlefield');
-  $(field).attr('id', 'field')
+  $(field).attr('id', 'origin')
     .css({
       position: 'absolute',
       display: 'inline-block',
@@ -1580,7 +1599,10 @@ function createSurfaceAndField() {
       // fixes a "center" point in page coordinates that
       // will not change even if the document resizes.
       transformOrigin: "0px 0px",
-      pointerEvents: 'all'
+      pointerEvents: 'all',
+      // Setting turtleSpeed to Infinity by default allows
+      // moving the origin instantly without sync.
+      turtleSpeed: Infinity
     }).appendTo(surface);
   globalDrawing.surface = surface;
   globalDrawing.field = field;
@@ -1776,6 +1798,7 @@ function getTurtleData(elem) {
       drawOnCanvas: null,
       quickpagexy: null,
       quickhomeorigin: null,
+      oldscale: 1,
       instrument: null,
       stream: null
     });
@@ -2019,6 +2042,7 @@ function addToPathList(pathList, point) {
 }
 
 function flushPenState(elem, state, corner) {
+  clearChildQuickLocations(elem);
   if (!state) {
     // Default is no pen and no path, so nothing to do.
     return;
@@ -2056,22 +2080,22 @@ function flushPenState(elem, state, corner) {
     addToPathList(corners[0], center);
   }
   if (style.savePath) return;
-  // Add to tracing path, and trace it righ away.
+  // Add to tracing path, and trace it right away.
   addToPathList(path[0], center);
-  var ts = readTurtleTransform(elem, true);
+  var scale = drawingScale(elem);
   // Last argument 2 means that the last two points are saved, which
   // allows us to draw corner miters and also avoid 'butt' lineCap gaps.
-  drawAndClearPath(getDrawOnCanvas(state), state.path, style, ts.sx, 2);
+  drawAndClearPath(getDrawOnCanvas(state), state.path, style, scale, 2);
 }
 
 function endAndFillPenPath(elem, style) {
-  var ts = readTurtleTransform(elem, true),
-      state = getTurtleData(elem);
+  var state = getTurtleData(elem);
   if (state.style) {
     // Apply a default style.
     style = $.extend({}, state.style, style);
   }
-  drawAndClearPath(getDrawOnCanvas(state), state.corners, style, ts.sx, 1);
+  var scale = drawingScale(elem);
+  drawAndClearPath(getDrawOnCanvas(state), state.corners, style, scale, 1);
 }
 
 function clearField(arg) {
@@ -2154,8 +2178,7 @@ function touchesPixel(elem, color) {
       h = (bb.bottom - bb.top),
       osc = getOffscreenCanvas(w, h),
       octx = osc.getContext('2d'),
-      rgba = rgbaForColor(color),
-      j = 1, k, data;
+      j = 1, k;
   if (!c || c.length < 3 || !w || !h) { return false; }
   octx.drawImage(canvas,
       bb.left, bb.top, w, h, 0, 0, w, h);
@@ -2237,8 +2260,9 @@ function applyImg(sel, img, cb) {
 function doQuickMove(elem, distance, sideways) {
   var ts = readTurtleTransform(elem, true),
       r = ts && convertToRadians(ts.rot),
-      scaledDistance = ts && (distance * ts.sy),
-      scaledSideways = ts && ((sideways || 0) * ts.sy),
+      sy = elemOldScale(elem),
+      scaledDistance = ts && (distance * sy),
+      scaledSideways = ts && ((sideways || 0) * sy),
       dy = -Math.cos(r) * scaledDistance,
       dx = Math.sin(r) * scaledDistance,
       state = $.data(elem, 'turtleData'),
@@ -2285,13 +2309,14 @@ function doQuickRotate(elem, degrees) {
 }
 
 function displacedPosition(elem, distance, sideways) {
-  var ts = readTurtleTransform(elem, true),
-      r = ts && convertToRadians(ts.rot),
-      scaledDistance = ts && (distance * ts.sy),
-      scaledSideways = ts && ((sideways || 0) * ts.sy),
+  var ts = readTurtleTransform(elem, true);
+  if (!ts) { return; }
+  var s = elemOldScale(elem),
+      r = convertToRadians(ts.rot),
+      scaledDistance = distance * s,
+      scaledSideways = (sideways || 0) * s,
       dy = -Math.cos(r) * scaledDistance,
       dx = Math.sin(r) * scaledDistance;
-  if (!ts) { return; }
   if (scaledSideways) {
     dy += Math.sin(r) * scaledSideways;
     dx += Math.cos(r) * scaledSideways;
@@ -2362,16 +2387,18 @@ function makeTurtleForwardHook() {
       if (ts) {
         var r = convertToRadians(ts.rot),
             c = Math.cos(r),
-            s = Math.sin(r);
+            s = Math.sin(r),
+            sy = elemOldScale(elem);
         return cssNum(((ts.tx + middle[0]) * s - (ts.ty + middle[1]) * c)
-            / ts.sy) + 'px';
+            / sy) + 'px';
       }
     },
     set: function(elem, value) {
       var ts = readTurtleTransform(elem, true) ||
               {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0},
           middle = readTransformOrigin(elem),
-          v = parseFloat(value) * ts.sy,
+          sy = elemOldScale(elem),
+          v = parseFloat(value) * sy,
           r = convertToRadians(ts.rot),
           c = Math.cos(r),
           s = Math.sin(r),
@@ -2417,6 +2444,8 @@ function makeTurtleHook(prop, normalize, unit, displace) {
           };
         }
         flushPenState(elem, state);
+      } else {
+        clearChildQuickLocations(elem);
       }
     }
   };
@@ -2519,7 +2548,8 @@ function maybeArcRotation(end, elem, ts, opt) {
     return tradius === 0 ? normalizeRotation(end) : end;
   }
   var tracing = (state && state.style && state.down),
-      turnradius = tradius * ts.sy, a;
+      sy = (state && state.oldscale) ? ts.sy : 1,
+      turnradius = tradius * sy, a;
   if (tracing) {
     a = addArcBezierPaths(
       state.path[0],                            // path to add to
@@ -2609,6 +2639,8 @@ function makeTurtleXYHook(publicname, propx, propy, displace) {
           };
         }
         flushPenState(elem, state);
+      } else {
+        clearChildQuickLocations(elem);
       }
     }
   };
@@ -2656,7 +2688,7 @@ function imgUrl(url) {
   if (/\//.test(url)) { return url; }
   url = '/img/' + url;
   if (isPencilHost(global.location.hostname)) { return url; }
-  return '//pencil.io' + url;
+  return '//pencilcode.net' + url;
 }
 // Retrieves the pencil code login cookie, if there is one.
 function loginCookie() {
@@ -2693,7 +2725,8 @@ var stablyLoadedImages = {};
 // @param css is a dictionary of css props to set when the image is loaded.
 // @param cb is an optional callback, called after the loading is done.
 function setImageWithStableOrigin(elem, url, css, cb) {
-  var record, urlobj = absoluteUrlObject(url), url = urlobj.href;
+  var record, urlobj = absoluteUrlObject(url);
+  url = urlobj.href;
   // The data-loading attr will always reflect the last URL requested.
   elem.setAttribute('data-loading', url);
   if (url in stablyLoadedImages) {
@@ -2999,7 +3032,7 @@ var Pencil = (function(_super) {
     }
     // The pencil is a sprite that just defaults to zero size.
     var context = canvas ? canvas.parentElement : null;
-    var settings = { width: 0, height: 0, color: transparent };
+    var settings = { width: 0, height: 0, color: 'transparent' };
     Pencil.__super__.constructor.call(this, settings, context);
     // Set the pencil to hidden, infinite speed,
     // and drawing on the specifed canvas.
@@ -3039,7 +3072,7 @@ var Webcam = (function(_super) {
   function Webcam(opts, context) {
     var attrs = "", hassrc = false, hasautoplay = false, hasdims = false;
     if ($.isPlainObject(opts)) {
-      for (key in opts) {
+      for (var key in opts) {
         attrs += ' ' + key + '="' + escapeHtml(opts[key]) + '"';
       }
       hassrc = ('src' in opts);
@@ -3284,12 +3317,12 @@ var Piano = (function(_super) {
 
   // Converts a midi number to a white key position (black keys round left).
   function wcp(n) {
-    return floor((n + 7) / 12 * 7);
+    return Math.floor((n + 7) / 12 * 7);
   };
 
   // Converts from a white key position to a midi number.
   function mcp(n) {
-    return ceil(n / 7 * 12) - 7;
+    return Math.ceil(n / 7 * 12) - 7;
   };
 
   // True if midi #n is a black key.
@@ -3695,7 +3728,7 @@ function forwardBodyMouseEventsIfNeeded() {
           var warn = $.turtle.nowarn;
           $.turtle.nowarn = true;
           var sel = $(globalDrawing.surface)
-              .find('.turtle').within('touch', e).eq(0);
+              .find('.turtle,.turtlelabel').within('touch', e).eq(0);
           $.turtle.nowarn = warn;
           if (sel.length === 1) {
             // Erase portions of the event that are wrong for the turtle.
@@ -3866,11 +3899,16 @@ function resetAudio() {
       atop.out = null;
       atop.currentStart = null;
     }
-    var dcn = atop.ac.createDynamicsCompressor();
-    dcn.ratio = 16;
-    dcn.attack = 0.0005;
-    dcn.connect(atop.ac.destination);
-    atop.out = dcn;
+    // If resetting due to interrupt after AudioContext closed, this can fail.
+    try {
+      var dcn = atop.ac.createDynamicsCompressor();
+      dcn.ratio = 16;
+      dcn.attack = 0.0005;
+      dcn.connect(atop.ac.destination);
+      atop.out = dcn;
+    } catch (e) {
+      getAudioTop.audioTop = null;
+    }
   }
 }
 
@@ -4207,7 +4245,8 @@ var Instrument = (function() {
         } else if (releasetime <= attacktime) {
           // Release before attack is done?  Interrupt ramp up.
           g.gain.linearRampToValueAtTime(
-            amp * (releasetime - starttime) / (attacktime - starttime));
+            amp * (releasetime - starttime) / (attacktime - starttime),
+            releasetime);
         } else {
           // Release during decay?  Interrupt decay down.
           g.gain.setValueAtTime(amp * (timbre.sustain + (1 - timbre.sustain) *
@@ -4479,7 +4518,7 @@ var Instrument = (function() {
         if (key in given) {
           timbre[key] = given[key];
         } else {
-          timbre[key] = defaulTimbre[key];
+          timbre[key] = defaultTimbre[key];
         }
       }
     }
@@ -4671,16 +4710,13 @@ var Instrument = (function() {
     return result;
   }
 
-  var whiteNoiseBuf = null;
   function getWhiteNoiseBuf() {
-    if (whiteNoiseBuf == null) {
-      var ac = getAudioTop().ac,
-          bufferSize = 2 * ac.sampleRate,
-          whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
-          output = whiteNoiseBuf.getChannelData(0);
-      for (var i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
+    var ac = getAudioTop().ac,
+      bufferSize = 2 * ac.sampleRate,
+      whiteNoiseBuf = ac.createBuffer(1, bufferSize, ac.sampleRate),
+      output = whiteNoiseBuf.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
     }
     return whiteNoiseBuf;
   }
@@ -5168,7 +5204,6 @@ function parseABCFile(str) {
   function syncopateStem(stem, t) {
     var j, note, stemtime = stem.time, newtime = stemtime + t;
     stem.time = newtime;
-    syncopateStem
     for (j = 0; j < stem.notes.length; ++j) {
       note = stem.notes[j];
       // Only adjust a note's duration if it matched the stem's duration.
@@ -5728,6 +5763,7 @@ function canElementMoveInstantly(elem) {
   // moving at speed Infinity.
   var atime;
   return (elem && $.queue(elem).length == 0 &&
+      (!elem.parentElement || !elem.parentElement.style.transform) &&
       ((atime = animTime(elem)) === 0 || $.fx.speeds[atime] === 0));
 }
 
@@ -5911,6 +5947,9 @@ function wrapglobalcommand(name, helptext, fn, fnfilter) {
       cc.exit();
     }
     if (early) {
+      if (early.result && early.result.constructor === jQuery && global_turtle) {
+        sync(global_turtle, early.result);
+      }
       return early.result;
     }
   };
@@ -6000,7 +6039,7 @@ function rtlt(cc, degrees, radius) {
               oldPos,
               oldTs.rot,
               oldTs.rot + (left ? -degrees : degrees),
-              newRadius * oldTs.sy,
+              newRadius * (state.oldscale ? oldTs.sy : 1),
               oldTransform);
           });
         })();
@@ -6045,7 +6084,7 @@ function fdbk(cc, amount) {
 // CARTESIAN MOVEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////
 
-function move(cc, x, y) {
+function slide(cc, x, y) {
   if ($.isArray(x)) {
     y = x[1];
     x = x[0];
@@ -6151,9 +6190,58 @@ function makejump(move) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// SCALING FUNCTIONS
+// Support for old-fashioned scaling and new.
+//////////////////////////////////////////////////////////////////////////
+
+function elemOldScale(elem) {
+  var state = $.data(elem, 'turtleData');
+  return state && (state.oldscale != null) ? state.oldscale : 1;
+}
+
+function scaleCmd(cc, valx, valy) {
+  growImpl.call(this, true, cc, valx, valy);
+}
+
+function grow(cc, valx, valy) {
+  growImpl.call(this, false, cc, valx, valy);
+}
+
+function growImpl(oldscale, cc, valx, valy) {
+  if (valy === undefined) { valy = valx; }
+  // Disallow scaling to zero using this method.
+  if (!valx || !valy) { valx = valy = 1; }
+  var intick = insidetick;
+  this.plan(function(j, elem) {
+    if (oldscale) {
+      getTurtleData(elem).oldscale *= valy;
+    }
+    cc.appear(j);
+    if ($.isWindow(elem) || elem.nodeType === 9) {
+      cc.resolve(j);
+      return;
+    }
+    var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
+    if (c.length === 1) { c.push(c[0]); }
+    c[0] *= valx;
+    c[1] *= valy;
+    this.animate({turtleScale: $.map(c, cssNum).join(' ')},
+          animTime(elem, intick), animEasing(elem), cc.resolver(j));
+  });
+  return this;
+}
+
+//////////////////////////////////////////////////////////////////////////
 // DOT AND BOX FUNCTIONS
 // Support for animated drawing of dots and boxes.
 //////////////////////////////////////////////////////////////////////////
+
+function drawingScale(elem, oldscale) {
+  var totalParentTransform = totalTransform2x2(elem.parentElement),
+      simple = isone2x2(totalParentTransform),
+      scale = simple ? 1 : decomposeSVD(totalParentTransform)[1];
+  return scale * elemOldScale(elem);
+}
 
 function animatedDotCommand(fillShape) {
   var intick = insidetick;
@@ -6178,8 +6266,8 @@ function animatedDotCommand(fillShape) {
           ts = readTurtleTransform(elem, true),
           ps = parsePenStyle(style, 'fillStyle'),
           drawOnCanvas = getDrawOnCanvas(state),
-          // Scale by sx.  (TODO: consider parent transforms.)
-          targetDiam = diameter * ts.sx,
+          sx = drawingScale(elem),
+          targetDiam = diameter * sx,
           animDiam = Math.max(0, targetDiam - 2),
           finalDiam = targetDiam + (ps.eraseMode ? 2 : 0),
           hasAlpha = /rgba|hsla/.test(ps.fillStyle);
@@ -6337,6 +6425,39 @@ function drawArrowLine(c, w, x0, y0, x1, y1) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// VOICE SYNTHESIS
+// Method for uttering words.
+//////////////////////////////////////////////////////////////////////////
+function utterSpeech(words, cb) {
+  var pollTimer = null;
+  function complete() {
+    if (pollTimer) { clearInterval(pollTimer); }
+    if (cb) { cb(); }
+  }
+  if (!global.speechSynthesis) {
+    console.log('No speech synthesis: ' + words);
+    complete();
+    return;
+  }
+  try {
+    var msg = new global.SpeechSynthesisUtterance(words);
+    msg.addEventListener('end', complete);
+    msg.addEventListener('error', complete);
+    msg.lang = navigator.language || 'en-GB';
+    global.speechSynthesis.speak(msg);
+    pollTimer = setInterval(function() {
+      // Chrome speech synthesis fails to deliver an 'end' event
+      // sometimes, so we also poll every 250ms.
+      if (global.speechSynthesis.pending || global.speechSynthesis.speaking) return;
+      complete();
+    }, 250);
+  } catch (e) {
+    if (global.console) { global.console.log(e); }
+    complete();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
 // TURTLE FUNCTIONS
 // Turtle methods to be registered as jquery instance methods.
 //////////////////////////////////////////////////////////////////////////
@@ -6358,9 +6479,9 @@ var turtlefn = {
   bk: wrapcommand('bk', 1,
   ["<u>bk(pixels)</u> Back. Moves in reverse by some pixels: " +
       "<mark>bk 100</mark>"], fdbk),
-  move: wrapcommand('move', 1,
+  slide: wrapcommand('slide', 1,
   ["<u>move(x, y)</u> Slides right x and forward y pixels without turning: " +
-      "<mark>move 50, 100</mark>"], move),
+      "<mark>slide 50, 100</mark>"], slide),
   movexy: wrapcommand('movexy', 1,
   ["<u>movexy(x, y)</u> Changes graphing coordinates by x and y: " +
       "<mark>movexy 50, 100</mark>"], movexy),
@@ -6371,8 +6492,8 @@ var turtlefn = {
       "or an object on the page (see <u>pagexy</u>): " +
       "<mark>moveto lastmousemove</mark>"], moveto),
   jump: wrapcommand('jump', 1,
-  ["<u>jump(x, y)</u> Move without drawing (compare to <u>move</u>): " +
-      "<mark>jump 0, 50</mark>"], makejump(move)),
+  ["<u>jump(x, y)</u> Move without drawing (compare to <u>slide</u>): " +
+      "<mark>jump 0, 50</mark>"], makejump(slide)),
   jumpxy: wrapcommand('jumpxy', 1,
   ["<u>jumpxy(x, y)</u> Move without drawing (compare to <u>movexy</u>): " +
       "<mark>jump 0, 50</mark>"], makejump(movexy)),
@@ -6677,27 +6798,10 @@ var turtlefn = {
   }),
   scale: wrapcommand('scale', 1,
   ["<u>scale(factor)</u> Scales all motion up or down by a factor. " +
-      "To double all drawing: <mark>scale(2)</mark>"],
-  function scale(cc, valx, valy) {
-    if (valy === undefined) { valy = valx; }
-    // Disallow scaling to zero using this method.
-    if (!valx || !valy) { valx = valy = 1; }
-    var intick = insidetick;
-    this.plan(function(j, elem) {
-      cc.appear(j);
-      if ($.isWindow(elem) || elem.nodeType === 9) {
-        cc.resolve(j);
-        return;
-      }
-      var c = $.map($.css(elem, 'turtleScale').split(' '), parseFloat);
-      if (c.length === 1) { c.push(c[0]); }
-      c[0] *= valx;
-      c[1] *= valy;
-      this.animate({turtleScale: $.map(c, cssNum).join(' ')},
-            animTime(elem, intick), animEasing(elem), cc.resolver(j));
-    });
-    return this;
-  }),
+      "To double all drawing: <mark>scale(2)</mark>"], scaleCmd),
+  grow: wrapcommand('grow', 1,
+  ["<u>grow(factor)</u> Changes the size of the element by a factor. " +
+      "To double the size: <mark>grow(2)</mark>"], grow),
   pause: wrapcommand('pause', 1,
   ["<u>pause(seconds)</u> Pauses some seconds before proceeding. " +
       "<mark>fd 100; pause 2.5; bk 100</mark>",
@@ -6802,34 +6906,13 @@ var turtlefn = {
     this.plan(function(j, elem) {
       cc.appear(j);
       this.queue(function(next) {
-        var finished = false,
-            pollTimer = null,
-            complete = function() {
-          if (finished) return;
-          clearInterval(pollTimer);
-          finished = true;
+        utterSpeech(words, function() {
           cc.resolve(j);
           next();
-        };
-        try {
-          var msg = new SpeechSynthesisUtterance(words);
-          msg.addEventListener('end', complete);
-          msg.addEventListener('error', complete);
-          speechSynthesis.speak(msg);
-          pollTimer = setInterval(function() {
-            // Chrome speech synthesis fails to deliver an 'end' event
-            // sometimes, so we also poll every 250ms.
-            if (speechSynthesis.pending || speechSynthesis.speaking) return;
-            complete();
-          }, 250);
-        } catch (e) {
-          if (global.console) { global.console.log(e); }
-          complete();
-        }
+        });
       });
     });
     return this;
-
   }),
   play: wrapcommand('play', 1,
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
@@ -7025,13 +7108,13 @@ var turtlefn = {
     var intick = insidetick;
     return this.plan(function(j, elem) {
       cc.appear(j);
-      var applyStyles = {padding: 8},
+      var applyStyles = {},
           currentStyles = this.prop('style');
       // For defaults, copy inline styles of the turtle itself except for
       // properties in the following list (these are the properties used to
       // make the turtle look like a turtle).
-      for (var j = 0; j < currentStyles.length; ++j) {
-        var styleProperty = currentStyles[j];
+      for (var j2 = 0; j2 < currentStyles.length; ++j2) {
+        var styleProperty = currentStyles[j2];
         if (/^(?:width|height|opacity|background-image|background-size)$/.test(
           styleProperty) || /transform/.test(styleProperty)) {
           continue;
@@ -7050,6 +7133,10 @@ var turtlefn = {
       // Place the label on the screen using the figured styles.
       var out = prepareOutput(html, 'label').result.css(applyStyles)
           .addClass('turtlelabel').appendTo(getTurtleField());
+      // If the output has a turtleinput, then forward mouse events.
+      if (out.hasClass('turtleinput') || out.find('.turtleinput').length) {
+        mouseSetupHook.apply(out.get(0));
+      }
       if (styles && 'id' in styles) {
         out.attr('id', styles.id);
       }
@@ -7234,7 +7321,7 @@ var turtlefn = {
       if (typeof val != 'object' ||
           !$.isNumeric(val.width) || !$.isNumeric(val.height) ||
           !($.isArray(val.data) || val.data instanceof Uint8ClampedArray ||
-            val.data instanceof Unit8Array)) {
+            val.data instanceof Uint8Array)) {
         return;
       }
       var imdat = ctx.createImageData(
@@ -7445,7 +7532,6 @@ var turtlefn = {
         callback.apply(this, arguments);
       }
     });
-    sync = null;
   }),
   plan: wrapraw('plan',
   ["<u>plan(fn)</u> Runs fn in the animation queue. For planning logic: " +
@@ -7501,6 +7587,33 @@ var turtlefn = {
   })
 };
 
+//////////////////////////////////////////////////////////////////////////
+// QUEUING SUPPORT
+//////////////////////////////////////////////////////////////////////////
+
+function queueShowHideToggle() {
+  $.each(['toggle', 'show', 'hide'], function(i, name) {
+
+
+    var builtInFn = $.fn[name];
+    // Change show/hide/toggle to queue their behavior by default.
+    // Since animating show/hide will call the zero-argument
+    // form synchronously at the end of animation, we avoid
+    // infinite recursion by examining jQuery's internal fxshow
+    // state and avoiding the recursion if the animation is calling
+    // show/hide.
+    $.fn[name] = function(speed, easing, callback) {
+      var a = arguments;
+      // TODO: file a bug in jQuery to allow solving this without _data.
+      if (!a.length && this.hasClass('turtle') &&
+          (this.length > 1 || !$._data(this[0], 'fxshow'))) {
+        a = [0];
+      }
+      builtInFn.apply(this, a);
+    }
+  });
+}
+
 // If the queue for an image is empty, starts by queuing a wait-for-load.
 function queueWaitIfLoadingImg(img, qname) {
   if (!qname) qname = 'fx';
@@ -7514,6 +7627,10 @@ function queueWaitIfLoadingImg(img, qname) {
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////////
+// HUNG LOOP DETECTION
+//////////////////////////////////////////////////////////////////////////
 
 var warning_shown = {},
     loopCounter = 0,
@@ -7542,7 +7659,7 @@ function checkForHungLoop(fname) {
     }, 0);
     return;
   }
-  // Timeout after which we interrupt the program: 6 seconds.
+  // Timeout after which we interrupt the program.
   if (now - hangStartTime > $.turtle.hangtime) {
     if (see.visible()) {
       see.html('<span style="color:red">Oops: program ' +
@@ -7603,7 +7720,7 @@ function deprecate(map, oldname, newname) {
     __extends(map[oldname], map[newname]);
   }
 }
-deprecate(turtlefn, 'slide', 'move');
+deprecate(turtlefn, 'move', 'slide');
 deprecate(turtlefn, 'direct', 'plan');
 deprecate(turtlefn, 'enclosedby', 'inside');
 deprecate(turtlefn, 'bearing', 'direction');
@@ -7623,7 +7740,7 @@ $.fn.extend(turtlefn);
 // * Sets up a global "hatch" function to make a new turtle.
 //////////////////////////////////////////////////////////////////////////
 
-var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7"
+var turtleGIFUrl = "data:image/gif;base64,R0lGODlhKAAwAPIFAAAAAAFsOACSRTCuSICAgP///wAAAAAAACH5BAlkAAYAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAKAAwAAAD72i6zATEgBCAebHpzUnxhDAMAvhxKOoV3ziuZyo3RO26dTbvgXj/gsCO9ysOhENZz+gKJmcUkmA6PSKfSqrWieVtuU+KGNXbXofLEZgR/VHCgdua4isGz9mbmM6U7/94BmlyfUZ1fhqDhYuGgYqMkCOBgo+RfWsNlZZ3ewIpcZaIYaF6XaCkR6aokqqrk0qrqVinpK+fsbZkuK2ouRy0ob4bwJbCibthh6GYebGcY7/EsWqTbdNG1dd9jnXPyk2d38y0Z9Yub2yA6AvWPYk+zEnkv6xdCoPuw/X2gLqy9vJIGAN4b8pAgpQOIlzI8EkCACH5BAlkAAYALAAAAAAoADAAAAPuaLrMBMSAEIB5senNSfGEMAwC+HEo6hXfOK5nKjdE7bp1Nu+BeP+CwI73Kw6EQ1nP6AomZxSSYDo9Ip9KqtaJ5W25Xej3qqGYsdEfZbMcgZXtYpActzLMeLOP6c7f3nVNfEZ7TXSFg4lyZAYBio+LZYiQfHMbc3iTlG9ilGpdjp4ujESiI6RQpqegqkesqqhKrbEpoaa0KLaiuBy6nrxss6+3w7tomo+cDXmBnsoLza2nsb7SN2tl1nyozVOZTJhxysxnd9XYCrrAtT7KQaPruavBo2HQ8xrvffaN+GV5/JbE45fOG8Ek5Q4qXHgwAQA7";
 
 var eventfn = { click:1, dblclick:1, mouseup:1, mousedown:1, mousemove:1 };
 
@@ -7753,6 +7870,20 @@ var dollar_turtle_methods = {
   function globalspeed(mps) {
     globaldefaultspeed(mps);
   }),
+  say: wrapraw('say',
+  ["<u>say(words)</u> Say something. Use English words." +
+      "<mark>say \"Let's go!\"</mark>"],
+  function say(words) {
+    if (global_turtle) {
+      var sel = $(global_turtle);
+      sel.say.call(sel, words);
+    } else {
+      var cc = setupContinuation(null, 'say', arguments, 0);
+      cc.appear(null);
+      utterSpeech(words, function() { cc.resolve(null); });
+      cc.exit();
+    }
+  }),
   play: wrapraw('play',
   ["<u>play(notes)</u> Play notes. Notes are specified in " +
       "<a href=\"http://abcnotation.com/\" target=\"_blank\">" +
@@ -7784,7 +7915,7 @@ var dollar_turtle_methods = {
       sel.tone.apply(sel, arguments);
     } else {
       var instrument = getGlobalInstrument();
-      instrument.play.apply(instrument, args);
+      instrument.play.apply(instrument);
     }
   }),
   silence: wrapraw('silence',
@@ -7823,7 +7954,6 @@ var dollar_turtle_methods = {
         callback.apply(this, arguments);
       }
     });
-    sync = null;
   }),
   load: wrapraw('load',
   ["<u>load(url, cb)</u> Loads data from the url and passes it to cb. " +
@@ -7859,7 +7989,8 @@ var dollar_turtle_methods = {
       "<mark>save 'intro', 'pen gold, 20\\nfd 100\\n'</mark>"],
   function(url, data, cb) {
     if (!url) throw new Error('Missing url for save');
-    var payload = { }, url = apiUrl(url, 'save'), key;
+    var payload = { }, key;
+    url = apiUrl(url, 'save');
     if (/\.json(?:$|\?|\#)/.test(url)) {
       data = JSON.stringify(data, null, 2);
     }
@@ -7907,6 +8038,17 @@ var dollar_turtle_methods = {
   type: wrapglobalcommand('type',
   ["<u>type(text)</u> Types preformatted text like a typewriter. " +
       "<mark>type 'Hello!\n'</mark>"], plainTextPrint),
+  typebox: wrapglobalcommand('typebox',
+  ["<u>typebox(clr)</u> Draws a colored box as typewriter output. " +
+      "<mark>typebox red</mark>"], function(c, t) {
+    if (t == null && c != null && !isCSSColor(c)) { t = c; c = null; }
+    plainBoxPrint(c, t);
+  }),
+  typeline: wrapglobalcommand('typebox',
+  ["<u>typeline()</u> Same as type '\\n'. " +
+      "<mark>typeline()</mark>"], function(t) {
+    plainTextPrint((t || '') + '\n');
+  }),
   write: wrapglobalcommand('write',
   ["<u>write(html)</u> Writes a line of text. Arbitrary HTML may be written: " +
       "<mark>write 'Hello, world!'</mark>"], doOutput, function() {
@@ -7922,12 +8064,16 @@ var dollar_turtle_methods = {
   readnum: wrapglobalcommand('readnum',
   ["<u>readnum(html, fn)</u> Reads numeric input. Only numbers allowed: " +
       "<mark>readnum 'Amount?', (v) -> write 'Tip: ' + (0.15 * v)</mark>"],
-  doOutput, function readnum(a, b) { return prepareInput(a, b, 1); }),
+  doOutput, function readnum(a, b) { return prepareInput(a, b, 'number'); }),
   readstr: wrapglobalcommand('readstr',
   ["<u>readstr(html, fn)</u> Reads text input. Never " +
       "converts input to a number: " +
       "<mark>readstr 'Enter code', (v) -> write v.length + ' long'</mark>"],
-  doOutput, function readstr(a, b) { return prepareInput(a, b, -1); }),
+  doOutput, function readstr(a, b) { return prepareInput(a, b, 'text'); }),
+  listen: wrapglobalcommand('listen',
+  ["<u>listen(html, fn)</u> Reads voice input, if the browser supports it:" +
+      "<mark>listen 'Say something', (v) -> write v</mark>"],
+  doOutput, function readstr(a, b) { return prepareInput(a, b, 'voice'); }),
   menu: wrapglobalcommand('menu',
   ["<u>menu(map)</u> shows a menu of choices and calls a function " +
       "based on the user's choice: " +
@@ -8044,41 +8190,129 @@ var dollar_turtle_methods = {
   ["<u>abs(x)</u> The absolute value of x. " +
       "<mark>see abs -5</mark>"], Math.abs),
   acos: wrapraw('acos',
-  ["<u>acos(degreees)</u> Trigonometric arccosine, in degrees. " +
-      "<mark>see acos 0.5</mark>"],
-  function acos(x) { return roundEpsilon(Math.acos(x) * 180 / Math.PI); }
-  ),
+  ["<u>acos(x)</u> Trigonometric arccosine, in radians. " +
+      "<mark>see acos 0.5</mark>"], Math.acos),
   asin: wrapraw('asin',
-  ["<u>asin(degreees)</u> Trigonometric arcsine, in degrees. " +
-      "<mark>see asin 0.5</mark>"],
-  function asin(x) { return roundEpsilon(Math.asin(x) * 180 / Math.PI); }
-  ),
+  ["<u>asin(y)</u> Trigonometric arcsine, in radians. " +
+      "<mark>see asin 0.5</mark>"], Math.asin),
   atan: wrapraw('atan',
-  ["<u>atan(degreees)</u> Trigonometric arctangent, in degrees. " +
+  ["<u>atan(y, x = 1)</u> Trigonometric arctangent, in radians. " +
       "<mark>see atan 0.5</mark>"],
-  function atan(x) { return roundEpsilon(Math.atan(x) * 180 / Math.PI); }
+  function atan(y, x) { return Math.atan2(y, (x == undefined) ? 1 : x); }
   ),
-  atan2: wrapraw('atan2',
-  ["<u>atan2(degreees)</u> Trigonometric two-argument arctangent, " +
-      "in degrees. <mark>see atan -1, 0</mark>"],
-  function atan2(x, y) {
-    return roundEpsilon(Math.atan2(x, y) * 180 / Math.PI);
-  }),
   cos: wrapraw('cos',
-  ["<u>cos(degreees)</u> Trigonometric cosine, in degrees. " +
-      "<mark>see cos 45</mark>"],
-  function cos(x) { return roundEpsilon(Math.cos((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>cos(radians)</u> Trigonometric cosine, in radians. " +
+      "<mark>see cos 0</mark>"], Math.cos),
   sin: wrapraw('sin',
-  ["<u>sin(degreees)</u> Trigonometric sine, in degrees. " +
-      "<mark>see sin 45</mark>"],
-  function sin(x) { return roundEpsilon(Math.sin((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>sin(radians)</u> Trigonometric sine, in radians. " +
+      "<mark>see sin 0</mark>"], Math.sin),
   tan: wrapraw('tan',
-  ["<u>tan(degreees)</u> Trigonometric tangent, in degrees. " +
-      "<mark>see tan 45</mark>"],
-  function tan(x) { return roundEpsilon(Math.tan((x % 360) * Math.PI / 180)); }
-  ),
+  ["<u>tan(radians)</u> Trigonometric tangent, in radians. " +
+      "<mark>see tan 0</mark>"], Math.tan),
+
+  // For degree versions of trig functions, make sure we return exact
+  // results when possible. The set of values we have to consider is
+  // fortunately very limited. See "Rational Values of Trigonometric
+  // Functions." http://www.jstor.org/stable/2304540
+
+  acosd: wrapraw('acosd',
+  ["<u>acosd(x)</u> Trigonometric arccosine, in degrees. " +
+      "<mark>see acosd 0.5</mark>"],
+   function acosd(x) {
+     switch (x) {
+       case   1: return   0;
+       case  .5: return  60;
+       case   0: return  90;
+       case -.5: return 120;
+       case  -1: return 180;
+     }
+     return Math.acos(x) * 180 / Math.PI;
+  }),
+  asind: wrapraw('asind',
+  ["<u>asind(x)</u> Trigonometric arcsine, in degrees. " +
+      "<mark>see asind 0.5</mark>"],
+  function asind(x) {
+    switch (x) {
+      case   1: return  90;
+      case  .5: return  30;
+      case   0: return   0;
+      case -.5: return -30;
+      case  -1: return -90;
+    }
+    return Math.asin(x) * 180 / Math.PI;
+  }),
+  atand: wrapraw('atand',
+  ["<u>atand(y, x = 1)</u> Trigonometric arctangent, " +
+      "in degrees. <mark>see atand -1, 0/mark>"],
+  function atand(y, x) {
+    if (x == undefined) { x = 1; }
+    if (y == 0) {
+      return (x == 0) ? NaN : ((x > 0) ? 0 : 180);
+    } else if (x == 0) {
+      return (y > 0) ? Infinity : -Infinity;
+    } else if (Math.abs(y) == Math.abs(x)) {
+      return (y > 0) ? ((x > 0) ? 45 : 135) :
+                       ((x > 0) ? -45 : -135);
+    }
+    return Math.atan2(y, x) * 180 / Math.PI;
+  }),
+  cosd: wrapraw('cosd',
+  ["<u>cosd(degrees)</u> Trigonometric cosine, in degrees. " +
+      "<mark>see cosd 45</mark>"],
+  function cosd(x) {
+    x = modulo(x, 360);
+    if (x % 30 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return   1;
+        case  60: return  .5;
+        case  90: return   0;
+        case 120: return -.5;
+        case 180: return  -1;
+        case 240: return -.5;
+        case 270: return   0;
+        case 300: return  .5;
+      }
+    }
+    return Math.cos(x / 180 * Math.PI);
+  }),
+  sind: wrapraw('sind',
+  ["<u>sind(degrees)</u> Trigonometric sine, in degrees. " +
+      "<mark>see sind 45</mark>"],
+  function sind(x) {
+    x = modulo(x, 360);
+    if (x % 30 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return   0;
+        case  30: return  .5;
+        case  90: return   1;
+        case 150: return  .5;
+        case 180: return   0;
+        case 210: return -.5;
+        case 270: return  -1;
+        case 330: return -.5;
+      }
+    }
+    return Math.sin(x / 180 * Math.PI);
+  }),
+  tand: wrapraw('tand',
+  ["<u>tand(degrees)</u> Trigonometric tangent, in degrees. " +
+      "<mark>see tand 45</mark>"],
+  function tand(x) {
+    x = modulo(x, 360);
+    if (x % 45 === 0) {
+      switch ((x < 0) ? x + 360 : x) {
+        case   0: return 0;
+        case  45: return 1;
+        case  90: return Infinity;
+        case 135: return -1;
+        case 180: return 0;
+        case 225: return 1;
+        case 270: return -Infinity;
+        case 315: return -1
+      }
+    }
+    return Math.tan(x / 180 * Math.PI);
+  }),
   ceil: wrapraw('ceil',
   ["<u>ceil(x)</u> Round up. " +
       "<mark>see ceil 1.9</mark>"], Math.ceil),
@@ -8183,6 +8417,8 @@ function pollSendRecv(name) {
 
 deprecate(dollar_turtle_methods, 'defaultspeed', 'speed');
 
+dollar_turtle_methods.save.loginCookie = loginCookie;
+
 var helpok = {};
 
 var colors = [
@@ -8251,14 +8487,12 @@ var colors = [
 
 $.turtle = function turtle(id, options) {
   var exportedsee = false;
-  if (!arguments.length) {
-    id = 'turtle';
-  }
   if (arguments.length == 1 && typeof(id) == 'object' && id &&
       !id.hasOwnProperty('length')) {
     options = id;
     id = 'turtle';
   }
+  id = id || 'turtle';
   options = options || {};
   if ('turtle' in options) {
     id = options.turtle;
@@ -8276,20 +8510,20 @@ $.turtle = function turtle(id, options) {
   if (!globalDrawing.ctx && ('subpixel' in options)) {
     globalDrawing.subpixel = parseInt(options.subpixel);
   }
-  // Set up hung-browser timeout, default 10 seconds.
+  // Set up hung-browser timeout, default 20 seconds.
   $.turtle.hangtime = ('hangtime' in options) ?
-      parseFloat(options.hangtime) : 10000;
+      parseFloat(options.hangtime) : 20000;
 
   // Set up global events.
-  if (!('events' in options) || options.events) {
+  if (options.events !== false) {
     turtleevents(options.eventprefix);
   }
-  if (!('pressed' in options) || options.pressed) {
+  if (options.pressed !== false) {
     addKeyEventHooks();
     pressedKey.enable(true);
   }
   // Set up global log function.
-  if (!('see' in options) || options.see) {
+  if (options.see !== false) {
     exportsee();
     exportedsee = true;
     if (global.addEventListener) {
@@ -8298,10 +8532,16 @@ $.turtle = function turtle(id, options) {
       global.onerror = see;
     }
     // Set up an alias.
-    global.log = see;
+    global.debug = see;
+    // 'debug' should be used now instead of log
+    deprecate(global, 'log', 'debug');
   }
+  if (options.queuehide !== false) {
+    queueShowHideToggle();
+  }
+
   // Copy $.turtle.* functions into global namespace.
-  if (!('functions' in options) || options.functions) {
+  if (options.functions !== false) {
     global.printpage = global.print;
     $.extend(global, dollar_turtle_methods);
   }
@@ -8328,11 +8568,11 @@ $.turtle = function turtle(id, options) {
   }
   if (selector && !selector.length) { selector = null; }
   // Globalize selected jQuery methods of a singleton turtle.
-  if (selector && selector.length === 1 &&
-      (!('global' in options) || options.global)) {
+  if (selector && selector.length === 1 && (options.global !== false)) {
     var extraturtlefn = {
       css:1, fadeIn:1, fadeOut:1, fadeTo:1, fadeToggle:1,
-      animate:1, toggle:1, finish:1, promise:1, direct:1 };
+      animate:1, toggle:1, finish:1, promise:1, direct:1,
+      show:1, hide:1 };
     var globalfn = $.extend({}, turtlefn, extraturtlefn);
     global_turtle_methods.push.apply(global_turtle_methods,
        globalizeMethods(selector, globalfn));
@@ -8341,14 +8581,14 @@ $.turtle = function turtle(id, options) {
     selector.css({zIndex: 1});
   }
   // Set up global objects by id.
-  if (!('ids' in options) || options.ids) {
+  if (options.ids !== false) {
     turtleids(options.idprefix);
     if (selector && id) {
       global[id] = selector;
     }
   }
   // Set up test console.
-  if (!('panel' in options) || options.panel) {
+  if (options.panel !== false) {
     var seeopt = {
       title: 'test panel (type help for help)',
       abbreviate: [undefined, helpok],
@@ -8362,12 +8602,6 @@ $.turtle = function turtle(id, options) {
       seeopt.height = options.panelheight;
     }
     see.init(seeopt);
-    if (wrotebody) {
-       /*
-       see.html('<span style="color:red">Turtle script should be inside body ' +
-                '- wrote a &lt;body&gt;</span>');
-       */
-    }
     // Return an eval loop hook string if 'see' is exported.
     if (exportedsee) {
       if (global.CoffeeScript) {
@@ -8377,9 +8611,11 @@ $.turtle = function turtle(id, options) {
       }
     }
   }
+  return $('#' + id);
 };
 
 $.extend($.turtle, dollar_turtle_methods);
+$.turtle.colors = colors;
 
 function seehelphook(text, result) {
   // Also, check the command to look for (non-CoffeeScript) help requests.
@@ -8808,7 +9044,7 @@ function nameToImg(name, defaultshape) {
     // Deal with unquoted "tan" and "dot".
     name = name.helpname || name.name;
   }
-  if (name.constructor === $) {
+  if (name.constructor === jQuery) {
     // Unwrap jquery objects.
     if (!name.length) { return null; }
     name = name.get(0);
@@ -8838,6 +9074,10 @@ function nameToImg(name, defaultshape) {
   }
   if (shape) {
     return shape(color);
+  }
+  // Default to '/img/' URLs if it doesn't match a well-known name.
+  if (!/\//.test(name)) {
+    name = imgUrl(name);
   }
   // Parse URLs.
   if (/\//.test(name)) {
@@ -8882,11 +9122,11 @@ function hatchone(name, container, defaultshape) {
 
   // Create an image element with the requested name.
   var result;
-  if (img) {
+  if (isTag) {
+    result = $(name);
+  } else if (img) {
     result = $('<canvas>');
     applyImg(result, img);
-  } else if (isTag) {
-    result = $(name);
   } else {
     result = $('<div>' + escapeHtml(name) + '</div>');
   }
@@ -8948,7 +9188,7 @@ function random(arg, arg2) {
     }
     return Math.floor(Math.random() * arg);
   }
-  if (typeof(arg) == 'object' && arg.length && arg.slice) {
+  if (typeof(arg) == 'object' && arg && arg.length && arg.slice) {
     return arg[Math.floor(Math.random() * arg.length)];
   }
   if (arg == 'normal') {
@@ -8974,6 +9214,9 @@ function random(arg, arg2) {
   }
   if (arg == 'gray') {
     return 'hsl(0,0,' + Math.floor(Math.random() * 100) + '%)';
+  }
+  if (arg === true) {
+    return Math.random() >= 0.5;
   }
   return Math.random();
 }
@@ -9101,13 +9344,12 @@ function turtleevents(prefix) {
   if (prefix || prefix === '') {
     eventsaver = (function(e) {
       // Keep the old instance if possible.
-      var names = [prefix + e.type], j, old, name, prop;
+      var names = [prefix + e.type], j;
       if ((e.originalEvent || e) instanceof MouseEvent) {
         names.push(prefix + 'mouse');
       }
       for (j = 0; j < names.length; ++j) {
-        var name = names[j];
-        old = global[name], prop;
+        var name = names[j], old = global[name], prop;
         if (old && old.__proto__ === e.__proto__) {
           for (prop in old) { if (old.hasOwnProperty(prop)) delete old[prop]; }
           for (prop in e) { if (e.hasOwnProperty(prop)) old[prop] = e[prop]; }
@@ -9180,18 +9422,45 @@ function undoScrollAfter(f) {
 //////////////////////////////////////////////////////////////////////////
 
 // Simplify output of preformatted text inside a <pre>.
+function getTrailingPre() {
+  var pre = document.body.lastChild;
+  if (!pre || pre.tagName != 'PRE') {
+    pre = document.createElement('pre');
+    document.body.appendChild(pre);
+  }
+  return pre;
+}
+
 function plainTextPrint() {
   var args = arguments;
   autoScrollAfter(function() {
-    var pre = document.body.lastChild;
-    if (!pre || pre.tagName != 'PRE') {
-      pre = document.createElement('pre');
-      document.body.appendChild(pre);
-    }
+    var pre = getTrailingPre();
     for (var j = 0; j < args.length; j++) {
       pre.appendChild(document.createTextNode(String(args[j])));
     }
   });
+}
+
+function plainBoxPrint(clr, text) {
+  var elem = $("<div>").css({
+    display: 'inline-block',
+    verticalAlign: 'top',
+    textAlign: 'center',
+    height: '1.2em',
+    width: '1.2em',
+    maxWidth: '1.2em',
+    overflow: 'hidden'
+  }).appendTo(getTrailingPre()), finish = function() {
+    if (clr != null) { elem.css({background: clr}); }
+    if (text != null) { elem.text(text); }
+  };
+  if (!global_turtle) {
+    finish();
+  } else {
+    var turtle = $(global_turtle);
+    moveto.call(turtle, null, elem);
+    turtle.eq(0).plan(finish);
+  }
 }
 
 // Put this output on the screen.  Called some time after prepareOutput
@@ -9213,6 +9482,8 @@ function prepareOutput(html, tag) {
   if (html === undefined || html === null) {
     // Make empty line when no arguments.
     return {result: $(prefix + '<br>' + suffix)};
+  } else if (html.jquery || (html instanceof Element && (html = $(html)))) {
+    return {result: html};
   } else {
     var wrapped = false, result = null;
     html = '' + html;
@@ -9390,18 +9661,25 @@ function prepareButton(name, callback) {
 // for creating an input box with a label, for one-shot input
 //////////////////////////////////////////////////////////////////////////
 
+var microphoneSvg = "data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20260%20400%22><path%20d=%22M180,210c0,26-22,48-48,48h-12c-26,0-48-22-48-48v-138c0-26,22-48,48-48h12c26,0,48,22,48,48zm51,-31h-9c-5,0-9,4-9,9v8c0,50-37,91-87,91c-50,0-87-41-87-91v-8c0-5-4-9-9-9h-9c-5,0-9,4-9,9v8c0,59,40,107,96,116v37h-34c-5,0-9,4-9,9v18c0,5,4,9,9,9h105c5,0,9-4,9-9v-18c0-5-5-9-9-9h-34v-37c56-9,96-58,96-116v-8c0-5-4-9-9-9%22/></svg>"
+
 // Simplify $('body').append('<input>' + label) and onchange hookup.
-function prepareInput(name, callback, numeric) {
+// Type can be 'auto', 'number', 'text', or 'voice' for slightly
+// different interfaces.
+function prepareInput(name, callback, type) {
   if ($.isFunction(name) && !callback) {
     callback = name;
     name = null;
   }
+  if (!type) { type = 'auto'; }
   name = $.isNumeric(name) || name ? name : '&rArr;';
   var textbox = $('<input class="turtleinput">').css({margin:0, padding:0}),
+      button = $('<button>Submit</button>').css({marginLeft:4}),
       label = $('<label style="display:table">' + name + '&nbsp;' +
-        '</label>').append(textbox),
+        '</label>').append(textbox).append(button),
       debounce = null,
-      lastseen = textbox.val();
+      lastseen = textbox.val(),
+      recognition = null;
   function dodebounce() {
     if (!debounce) {
       debounce = setTimeout(function() { debounce = null; }, 1000);
@@ -9414,16 +9692,17 @@ function prepareInput(name, callback, numeric) {
     dodebounce();
     lastseen = val;
     textbox.remove();
+    button.remove();
     label.append(val).css({display: 'table'});
-    if (numeric > 0 || (
-      numeric >= 0 && $.isNumeric(val) && ('' + parseFloat(val) == val))) {
+    if (type == 'number' || (type == 'auto' &&
+      $.isNumeric(val) && ('' + parseFloat(val) == val))) {
       val = parseFloat(val);
     }
     label.prop('value', val);
     if (callback) { setTimeout(function() {callback.call(label, val); }, 0); }
   }
   function validate() {
-    if (numeric <= 0) return true;
+    if (type != 'numeric') return true;
     var val = textbox.val(),
         nval = val.replace(/[^0-9\.]/g, '');
     if (val != nval || !$.isNumeric(nval)) {
@@ -9437,19 +9716,23 @@ function prepareInput(name, callback, numeric) {
       if (!validate()) { return false; }
       newval();
     }
-    if (numeric > 0 && (e.which >= 32 && e.which <= 127) &&
+    if (type == 'voice' && recognition) {
+      recognition.abort();
+      recognition = null;
+    }
+    if (type == 'numeric' && (e.which >= 32 && e.which <= 127) &&
         (e.which < '0'.charCodeAt(0) || e.which > '9'.charCodeAt(0)) &&
         (e.which != '.'.charCodeAt(0) || ~textbox.val().indexOf('.'))) {
       return false;
     }
   }
   textbox.on('keypress keydown', key);
-  textbox.on('change', newval);
+  button.on('click', newval);
   return {
     result: label,
     setup: function() {
       dodebounce();
-      if (numeric < 0) {
+      if (type == 'text' || type == 'voice') {
         // Widen a "readstr" textbox to make it fill the line.
         var availwidth = label.parent().width(),
             freewidth = availwidth + label.offset().left - textbox.offset().left,
@@ -9457,6 +9740,48 @@ function prepareInput(name, callback, numeric) {
             desiredwidth = freewidth < bigwidth ? availwidth : freewidth,
             marginwidth = textbox.outerWidth(true) - textbox.width();
         textbox.width(desiredwidth - marginwidth);
+      }
+      if (type == 'number') {
+        textbox.attr('type', 'number');
+      }
+      if (type == 'voice') {
+        button.css({display: 'none'});
+        var SR = global.SpeechRecognition || global.webkitSpeechRecognition;
+        if ('function' == typeof(SR)) {
+          try {
+            recognition = new SR();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            textbox.css({backgroundColor: 'lightyellow',
+              color: 'gray',
+              backgroundImage: "url(" + microphoneSvg + ")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center'});
+            recognition.onspeechstart = function() {
+              textbox.css({background: 'lightgreen'});
+            };
+            recognition.onend = function() {
+              textbox.css({color: '', backgroundColor: '', backgroundImage: '',
+                backgroundRepeat: '', backgroundPosition: ''});
+              textbox.val(lastseen);
+              newval();
+            };
+            recognition.onresult = function(event) {
+              var text = event.results[0][0].transcript;
+              var confidence = event.results[0][0].confidence;
+              var shade = 128 - 128 * confidence;
+              if (event.results[0].isFinal) {
+                shade = 0;
+                lastseen = text;
+              }
+              textbox.css({color: componentColor('rgb', shade, shade, shade)});
+              textbox.val(text);
+            };
+            recognition.start();
+          } catch (e) {
+            console.log(e);
+          }
+        }
       }
       // Focus, but don't cause autoscroll to occur due to focus.
       undoScrollAfter(function() { textbox.focus(); });
@@ -9555,55 +9880,54 @@ function componentColor(t, args) {
   return t + '(' + Array.prototype.join.call(args, ',') + ')';
 }
 
-function autoArgs(arguments, start, map) {
+function autoArgs(args, start, map) {
   var j = 0;
   var taken = [];
   var result = {};
   for (var key in map) {
     var pattern = map[key];
-    for (j = start; j < arguments.length; ++j) {
+    for (j = start; j < args.length; ++j) {
       if (~taken.indexOf(j)) continue;
       if (pattern == '*') {
         break;
-      } else if (pattern instanceof RegExp && pattern.test(arguments[j])) {
+      } else if (pattern instanceof RegExp && pattern.test(args[j])) {
         break;
-      } else if (pattern instanceof Function && pattern(arguments[j])) {
+      } else if (pattern instanceof Function && pattern(args[j])) {
         break;
-      } else if (pattern == typeof arguments[j]) {
+      } else if (pattern == typeof args[j]) {
         break;
       }
     }
-    if (j < arguments.length) {
+    if (j < args.length) {
       taken.push(j);
-      result[key] = arguments[j];
+      result[key] = args[j];
     }
   }
-  if (taken.length + start < arguments.length) {
+  if (taken.length + start < args.length) {
     var extra = [];
-    for (j = start; j < arguments.length; ++j) {
+    for (j = start; j < args.length; ++j) {
       if (~taken.indexOf(j)) continue;
-      extra.push(arguments[j]);
+      extra.push(args[j]);
     }
     result.extra = extra;
   }
   return result;
 }
 
+
 //////////////////////////////////////////////////////////////////////////
 // DEBUGGING SUPPORT
 //////////////////////////////////////////////////////////////////////////
 var debug = {
   init: function initdebug() {
+    if (this.ide) return;  // Don't re-initialize debug.
     try {
-      if (parent && parent.ide) {
+      if (parent && parent.ide && parent.ide.bindframe &&
+          parent.ide.bindframe(global, parent)) {
         this.ide = parent.ide;
-        this.ide.bindframe(global);
         this.attached = true;
       }
-    } catch(e) {
-      this.ide = null;
-      this.attached = false;
-    }
+    } catch(e) { }
     if (this.attached) {
       if (global.addEventListener) {
         global.addEventListener('error', function(event) {
@@ -9701,7 +10025,7 @@ debug.init();
           c = cnv.getContext('2d'),
           relative = false,
           p = lineend || e,
-          s, html, dx, dy, dd, dir, ang;
+          html, dx, dy, dd, dir, ang;
       if (linestart && 'function' == typeof(linestart.pagexy)) {
         var xy = linestart.getxy(), s = linestart.pagexy();
         s.x = xy[0];
@@ -9730,7 +10054,7 @@ debug.init();
       ang = Math.atan2(dx, dy) / Math.PI * 180;
       if (linestart) {
         c.save();
-        c.clearRect(xa - 10, ya - 10, xb + 10, yb + 10);
+        c.clearRect(xa - 10, ya - 10, xb - xa + 20, yb - ya + 20);
         xa = xb = s.pageX;
         ya = yb = s.pageY;
         // Draw a dot
@@ -10089,7 +10413,8 @@ function isprimitive(vt) {
 }
 
 function isdom(obj) {
-  return (obj.nodeType && obj.nodeName && typeof(obj.cloneNode) == 'function');
+  return (obj && obj.nodeType && obj.nodeName &&
+          typeof(obj.cloneNode) == 'function');
 }
 
 function midtruncate(s, maxlen) {
@@ -10427,7 +10752,6 @@ function aselement(s, def) {
     default:
       return s;
   }
-  return null;
 }
 function stickscroll() {
   var stick = false, a = aselement(autoscroll, null);
@@ -10443,7 +10767,7 @@ function stickscroll() {
   }
 }
 function flushqueue() {
-  var elt = aselement(logelement, null);
+  var elt = aselement(logelement, null), child;
   if (elt && elt.appendChild && queue.length) {
     initlogcss();
     var temp = global.document.createElement('samp');
@@ -10459,7 +10783,7 @@ function flushqueue() {
     if (panel == 'auto') {
       startinitpanel();
     }
-    retrying = setTimeout(function() { timer = null; flushqueue(); }, 100);
+    retrying = setTimeout(function() { retrying = null; flushqueue(); }, 100);
   } else if (retrying && !queue.length) {
     clearTimeout(retrying);
     retrying = null;
@@ -10556,8 +10880,13 @@ function initconsolelog() {
     if (consolelog && global.console && !global.console._log &&
         'function' == typeof global.console.log) {
       var _log = global.console._log = global.console.log;
-      global_.console.log = function log() {
+      global.console.log = function log() {
         _log.apply(this, arguments);
+        see.apply(this, arguments);
+      }
+      var _debug = global.console._debug = global.console.debug;
+      global.console.debug = function debug() {
+        _debug.apply(this, arguments);
         see.apply(this, arguments);
       }
     }

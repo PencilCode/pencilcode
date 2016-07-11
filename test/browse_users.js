@@ -23,7 +23,10 @@ function pollPage(page, timeout, predicate, callback) {
 describe('browse users in edit mode', function() {
   var _ph, _page;
   before(function(done) {
-    phantom.create(function(error, ph) {
+    phantom.create({
+      path: phantomjs.path,
+      parameters: {proxy: '127.0.0.1:8193', 'local-storage-quota': 0}
+    }, function(error, ph) {
       assert.ifError(error);
       _ph = ph;
       _ph.createPage(function(err, page) {
@@ -34,9 +37,6 @@ describe('browse users in edit mode', function() {
           done();
         });
       });
-    }, {
-      phantomPath: phantomjs.path,
-      parameters: {proxy: '127.0.0.1:8193', 'local-storage-quota': 0}
     });
   });
   after(function() {

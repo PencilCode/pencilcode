@@ -55,6 +55,8 @@
     "watchify": "latest"
   },
   "browser": {
+    "advisor": "./content/src/advisor.js",
+    "cache": "./content/src/cache.js",
     "codescan": "./content/src/codescan.js",
     "controller": "./content/src/controller.js",
     "debug": "./content/src/debug.js",
@@ -64,6 +66,7 @@
     "filetype": "./content/src/filetype.js",
     "gadget": "./content/src/gadget.js",
     "guide": "./content/src/guide.js",
+    "html2canvas": "./content/lib/html2canvas.js",
     "iced-coffee-script": "./content/lib/iced-coffee-script.js",
     "jquery": "./content/lib/jquery.js",
     "palette": "./content/src/palette.js",
@@ -79,6 +82,9 @@
     "transform": [ "browserify-shim" ]
   },
   "browserify-shim": {
+    "html2canvas": {
+      "exports": "html2canvas"
+    },
     "jquery": {
       "exports": "$"
     },

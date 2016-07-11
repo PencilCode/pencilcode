@@ -118,6 +118,7 @@
       // hook up noop event handlers
       this.on('load', function(){});
       this.on('update', function(code){});
+      this.on('startExecute', function(){});
       this.on('execute', function(){});
       this.on('error', function(error){});
     }
@@ -344,8 +345,8 @@
       return this.invokeRemote('setBlockOptions', [palette, options]);
     };
 
-    proto.eval = function(code, callback) {
-      return this.invokeRemote('eval', [code], callback);
+    proto.eval = function(code, callback, raw) {
+      return this.invokeRemote('eval', [code, raw], callback);
     }
 
     return PencilCodeEmbed;

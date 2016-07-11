@@ -3,9 +3,17 @@ function filterblocks(a) {
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
     a = a.filter(function(b) { return !/^@?say\b/.test(b.block); });
   }
+  // Show 'listen' blocks only on browsers that support speech recognition.
+  if (!window.webkitSpeechRecognition || window.SpeechRecognition) {
+    a = a.filter(function(b) { return !/\blisten\b/.test(b.block); });
+  }
   return a.map(function(e) {
     if (!e.id) {
-      e.id = e.block.replace(/\W..*$/, '');
+      // As the id (for logging), use the first (non-puncutation) word
+      e.id = e.block.replace(/^\W*/, '').
+             replace(/^new /, '').replace(/\W.*$/, '');
+      // If that doesn't turn into anything, use the whole block text.
+      if (!e.id) { e.id = e.block; }
     }
     return e;
   });
@@ -52,16 +60,16 @@ var distances = ['25', '50', '100', '200'],
     sdistances = ['100', '50', '-50', '-100'],
     angles = ['30', '45', '60', '90', '135', '144'],
     sangles = ['0', '90', '180', '270'],
+    turntoarg = ['0', '90', '180', '270', 'lastclick', 'lastmouse'],
     sizes = ['10', '25', '50', '100'],
     scales = ['0.5', '2.0', '3.0'],
+    randarg = ['100', '[true, false]', 'normal', 'position', 'color'],
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'black'];
 
 module.exports = {
 
   expand: expand,
 
-  // The following palette description
-  // is copied from compiled CoffeeScript.
   COFFEESCRIPT_PALETTE: [
     {
       name: 'Move',
@@ -98,9 +106,6 @@ module.exports = {
           block: '@turnto 270',
           title: 'Turn to an absolute direction'
         }, {
-          block: '@turnto lastclick',
-          title: 'Turn toward a located object'
-        }, {
           block: '@moveto 100, 50',
           title: 'Move to coordinates'
         }, {
@@ -112,6 +117,9 @@ module.exports = {
         }, {
           block: '@jumpxy 30, 20',
           title: 'Jump changing x and y without drawing'
+        }, {
+          block: '@pause 5',
+          title: 'Do not move for five seconds'
         }
       ])
     }, {
@@ -122,7 +130,10 @@ module.exports = {
           block: 'for [1..3]\n  ``',
           title: 'Do something multiple times'
         }, {
-          block: 'while ``\n  ``',
+          block: 'for x in [0...10]\n  ``',
+          title: 'Repeat something while counting up x'
+        }, {
+          block: 'while `` < ``\n  ``',
           title: '  Repeat while a condition is true'
         }, {
           block: 'if `` is ``\n  ``',
@@ -163,16 +174,19 @@ module.exports = {
           block: '@fill blue',
           title: 'Fill traced shape'
         }, {
-          block: '@wear \'/img/apple\'',
+          block: '@wear \'apple\'',
           title: 'Use an image for the turtle'
         }, {
-          block: '@scale 3',
-          title: 'Scale turtle drawing'
+          block: 'img \'/img/bird\'',
+          title: 'Write an image on the screen'
         }, {
-          block: '@ht()',
+          block: '@grow 3',
+          title: 'Grow the size of the turtle'
+        }, {
+          block: '@hide()',
           title: 'Hide the main turtle'
         }, {
-          block: '@st()',
+          block: '@show()',
           title: 'Show the main turtle'
         }, {
           block: 'cs()',
@@ -196,18 +210,33 @@ module.exports = {
       color: 'lightgreen',
       blocks: filterblocks([
         {
-          block: 'x = ``',
+          block: 'x = 0',
           title: 'Set a variable',
           id: 'assign'
         }, {
+          block: 'x += 1',
+          title: 'Increase a variable',
+          id: 'increment'
+        }, {
+          block: 'f = (x) ->\n  ``',
+          title: 'Define a new function',
+          id: 'funcdef'
+        }, {
+          block: 'f(x)',
+          title: 'Use a custom function',
+          id: 'funccall'
+        }, {
           block: '`` is ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'is'
         }, {
           block: '`` < ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'lessthan'
         }, {
           block: '`` > ``',
-          title: 'Compare two values'
+          title: 'Compare two values',
+          id: 'greaterthan'
         }, {
           block: '`` + ``',
           title: 'Add two numbers',
@@ -225,6 +254,18 @@ module.exports = {
           title: 'Divide two numbers',
           id: 'divide'
         }, {
+          block: '`` and ``',
+          title: 'True if both are true',
+          id: 'and'
+        }, {
+          block: '`` or ``',
+          title: 'True if either is true',
+          id: 'or'
+        }, {
+          block: 'not ``',
+          title: 'True if input is false',
+          id: 'not'
+        }, {
           block: 'random 6',
           title: 'Get a random number less than n'
         }, {
@@ -241,13 +282,8 @@ module.exports = {
           title: 'Get the smaller on two numbers'
         }, {
           block: 'x.match /pattern/',
-          title: 'Test if a text pattern is found in x'
-        }, {
-          block: 'f = (x) ->\n  ``',
-          title: 'Define a new function'
-        }, {
-          block: 'f(x)',
-          title: 'Use a custom function'
+          title: 'Test if a text pattern is found in x',
+          id: 'match'
         }
       ])
     }, {
@@ -258,8 +294,17 @@ module.exports = {
           block: 'write \'Hello.\'',
           title: 'Write text in the document'
         }, {
+          block: 'debug x',
+          title: 'Log an object to debug'
+        }, {
           block: 'type \'zz*(-.-)*zz\'',
           title: 'Typewrite text in the document'
+        }, {
+          block: 'typebox yellow',
+          title: 'Type out a colored square'
+        }, {
+          block: 'typeline()',
+          title: 'Type in a new line'
         }, {
           block: '@label \'spot\'',
           title: 'Write text at the turtle'
@@ -275,9 +320,6 @@ module.exports = {
         }, {
           block: 'readnum \'?\', (x) ->\n  write x',
           title: 'Send a number from the user to a function'
-        }, {
-          block: 'log [1..10]',
-          title: 'Log an object to debug'
         }
       ])
     }, {
@@ -319,22 +361,36 @@ module.exports = {
           title: 'Play notes in a chord'
         }, {
           block: '@tone \'B\', 2, 1',
-          title: 'Sound a note immediately'
+          title: 'Sound a note immediately',
+          id: 'toneNote'
         }, {
           block: '@tone \'B\', 0',
-          title: 'Silence a note immediately'
+          title: 'Silence a note immediately',
+          id: 'toneNote0'
         }, {
           block: '@tone 440, 2, 1',
-          title: 'Sound a frequency immediately'
+          title: 'Sound a frequency immediately',
+          id: 'toneHz'
         }, {
           block: '@tone 440, 0',
-          title: 'Silence a frequency immediately'
+          title: 'Silence a frequency immediately',
+          id: 'toneHz0'
         }, {
           block: '@silence()',
           title: 'Silence all notes'
         }, {
+          block: "await listen defer x",
+          title: "Pause for spoken words from the user"
+        }, {
+          block: 'listen (x) ->\n  write x',
+          title: 'Send spoken words from the user to a function'
+        }, {
           block: '@say \'hello\'',
           title: 'Speak a word'
+        }, {
+          block: 'new Audio(url).play()',
+          expansion: '(new Audio(\'https://upload.wikimedia.org/wikipedia/commons/1/11/06_-_Vivaldi_Summer_mvt_3_Presto_-_John_Harrison_violin.ogg\')).play()',
+          title: 'Play an audio file'
         }
       ])
     }, {
@@ -343,25 +399,32 @@ module.exports = {
       blocks: filterblocks([
         {
           block: "forever 10, ->\n  turnto lastmouse\n  fd 2",
-          title: 'Continually move towards the last mouse position'
+          title: 'Continually move towards the last mouse position',
+          id: "foreverFollowMouse"
         }, {
           block: "forever 10, ->\n  if pressed 'W'\n    fd 2",
-          title: 'Poll a key and move while it is depressed'
+          title: 'Poll a key and move while it is depressed',
+          id: "foreverPollKey"
         }, {
           block: "forever 1, ->\n  fd 25\n  if not inside window\n    stop()",
-          title: 'Move once per second until not inside window'
+          title: 'Move once per second until not inside window',
+          id: "foreverInsideWindow"
         }, {
           block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
+          title: 'Move to a location when document is clicked',
+          id: "foreverMovetoClick"
         }, {
           block: "button \'Click\', ->\n  write 'clicked'",
-          title: 'Make a button and do something when clicked'
+          title: 'Make a button and do something when clicked',
+          id: "buttonWrite"
         }, {
           block: "keydown \'X\', ->\n  write 'x pressed'",
-          title: 'Do something when a keyboard key is pressed'
+          title: 'Do something when a keyboard key is pressed',
+          id: "keydownWrite"
         }, {
           block: "click (e) ->\n  moveto e",
-          title: 'Move to a location when document is clicked'
+          title: 'Move to a location when document is clicked',
+          id: "clickMove"
         }
       ])
     }
@@ -369,126 +432,187 @@ module.exports = {
 
   JAVASCRIPT_PALETTE: [
     {
-      name: 'Draw',
-      color: 'blue',
-      blocks: [
+      name: 'Move',
+      color: 'lightblue',
+      blocks: filterblocks([
         {
-          block: 'pen(red);',
-          title: 'Set the pen color'
-        }, {
-          block: 'fd(100);',
+          block: '@fd(100);',
           title: 'Move forward'
         }, {
-          block: 'rt(90);',
+          block: '@rt(90);',
           title: 'Turn right'
         }, {
-          block: 'lt(90);',
+          block: '@lt(90);',
           title: 'Turn left'
         }, {
-          block: 'bk(100);',
+          block: '@bk(100);',
           title: 'Move backward'
         }, {
-          block: 'speed(10);',
+          block: '@rt(180, 100);',
+          title: 'Make a wide right arc'
+        }, {
+          block: '@lt(180, 100);',
+          title: 'Make a wide left arc'
+        }, {
+          block: '@speed(10);',
           title: 'Set the speed of the turtle'
         }, {
-          block: 'dot(blue, 50);',
-          title: 'Make a dot'
+          block: '@speed(Infinity);',
+          title: 'Use infinite speed'
         }, {
-          block: 'box(green, 50);',
-          title: 'Make a square'
+          block: '@home();',
+          title: 'Jump to the origin, turned up'
         }, {
-          block: 'write(\'hello\');',
-          title: 'Write text on the screen'
+          block: '@turnto(270);',
+          title: 'Turn to an absolute direction'
         }, {
-          block: 'label(\'hello\');',
-          title: 'Write text at the turtle'
+          block: '@moveto(100, 50);',
+          title: 'Move to coordinates'
         }, {
-          block: 'ht();',
-          title: 'Hide the turtle'
+          block: '@movexy(30, 20);',
+          title: 'Move by changing x and y'
         }, {
-          block: 'st();',
-          title: 'Show the turtle'
+          block: '@jumpto(100, 50);',
+          title: 'Jump to coordinates without drawing'
         }, {
-          block: 'pu();',
-          title: 'Pick the pen up'
-        }, {
-          block: 'pd();',
-          title: 'Put the pen down'
-        }, {
-          block: 'pen(purple, 10);',
-          title: 'Set the pen color and thickness'
-        }, {
-          block: 'rt(180, 100);',
-          title: 'Make a wide right turn'
-        }, {
-          block: 'lt(180, 100);',
-          title: 'Make a wide left turn'
-        }, {
-          block: 'slide(100, 20);',
-          title: 'Slide sideways or diagonally'
-        }, {
-          block: 'jump(100, 20);',
-          title: 'Jump without drawing'
-        }, {
-          block: 'play(\'GEC\');',
-          title: 'Play music notes'
-        }, {
-          block: 'wear(\'/img/cat-icon\');',
-          title: 'Change the turtle image'
+          block: '@jumpxy(30, 20);',
+          title: 'Jump changing x and y without drawing'
         }
-      ]
+      ])
     }, {
       name: 'Control',
       color: 'orange',
-      blocks: [
+      blocks: filterblocks([
         {
-          block: 'for (var i = 0; i < 4; i++) {\n  __;\n}',
+          block: 'for (var j = 0; j < 3; ++j) {\n  __\n}',
           title: 'Do something multiple times'
         }, {
-          block: 'if (__) {\n  __;\n}',
+          block: 'while (__ < __) {\n  __\n}',
+          title: '  Repeat while a condition is true'
+        }, {
+          block: 'if (__ === __) {\n  __\n}',
           title: 'Do something only if a condition is true'
         }, {
-          block: 'if (__) {\n  __;\n} else {\n  __;\n}',
-          title: 'Do something if a condition is true, otherwise do something else'
+          block: 'if (__ === __) {\n  __\n} else {\n  __\n}',
+          title:
+              'Do something if a condition is true, otherwise something else',
+          id: 'ifelse'
         }, {
-          block: 'while (__) {\n  __;\n}',
-          title: 'Repeat something while a condition is true'
+          block: "forever(1, function() {\n  __\n})",
+          title: 'Repeat something forever at qually-spaced times'
+        }, {
+          block: "button(\'Click\', function() {\n  __\n});",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown(\'X\', function() {\n  __\n});",
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click(function(e) {\n  __\n});",
+          title: 'Do something when the mouse is clicked'
         }
-      ]
+      ])
     }, {
-      name: 'Math',
-      color: 'green',
-      blocks: [
+      name: 'Art',
+      color: 'purple',
+      blocks: filterblocks([
+         {
+          block: '@pen(purple, 10);',
+          title: 'Set pen color and size'
+        }, {
+          block: '@dot(green, 50);',
+          title: 'Make a dot'
+        }, {
+          block: '@box(yellow, 50);',
+          title: 'Make a square'
+        }, {
+          block: '@fill(blue);',
+          title: 'Fill traced shape'
+        }, {
+          block: '@wear(\'apple\');',
+          title: 'Use an image for the turtle'
+        }, {
+          block: '@grow(3);',
+          title: 'Grow the size of the turtle'
+        }, {
+          block: '@hide();',
+          title: 'Hide the main turtle'
+        }, {
+          block: '@show();',
+          title: 'Show the main turtle'
+        }, {
+          block: 'cs();',
+          title: 'Clear screen'
+        }, {
+          block: '@pu();',
+          title: 'Lift the pen up'
+        }, {
+          block: '@pd();',
+          title: 'Put the pen down'
+        }, {
+          block: '@drawon(s);',
+          title: 'Draw on sprite s'
+        }, {
+          block: '@drawon(document);',
+          title: 'Draw on the document'
+        }
+      ])
+    }, {
+      name: 'Operators',
+      color: 'lightgreen',
+      blocks: filterblocks([
         {
-          block: 'var x = __;',
-          title: 'Create a variable for the first time'
+          block: 'x = 0;',
+          title: 'Set a variable',
+          id: 'assign'
         }, {
-          block: 'x = __;',
-          title: 'Reassign a variable'
+          block: 'x += 1;',
+          title: 'Increase a variable',
         }, {
-          block: '__ + __',
-          title: 'Add two numbers'
+          block: 'function f(x) {\n  __\n}',
+          title: 'Define a new function'
         }, {
-          block: '__ - __',
-          title: 'Subtract two numbers'
-        }, {
-          block: '__ * __',
-          title: 'Multiply two numbers'
-        }, {
-          block: '__ / __',
-          title: 'Divide two numbers'
+          block: 'f(x)',
+          title: 'Use a custom function'
         }, {
           block: '__ === __',
-          title: 'Compare two numbers'
-        }, {
-          block: '__ > __',
-          title: 'Compare two numbers'
+          title: 'Compare two values'
         }, {
           block: '__ < __',
-          title: 'Compare two numbers'
+          title: 'Compare two values'
         }, {
-          block: 'random(1, 100)',
-          title: 'Get a random number in a range'
+          block: '__ > __',
+          title: 'Compare two values'
+        }, {
+          block: '__ + __',
+          title: 'Add two numbers',
+          id: 'add'
+        }, {
+          block: '__ - __',
+          title: 'Subtract two numbers',
+          id: 'subtract'
+        }, {
+          block: '__ * __',
+          title: 'Multiply two numbers',
+          id: 'multiply'
+        }, {
+          block: '__ / __',
+          title: 'Divide two numbers',
+          id: 'divide'
+        }, {
+          block: '__ && __',
+          title: 'True if both are true',
+          id: 'and'
+        }, {
+          block: '__ || __',
+          title: 'True if either is true',
+          id: 'or'
+        }, {
+          block: '!__',
+          title: 'True if input is false',
+          id: 'not'
+        }, {
+          block: 'random(6)',
+          title: 'Get a random number less than n'
         }, {
           block: 'round(__)',
           title: 'Round to the nearest integer'
@@ -497,33 +621,141 @@ module.exports = {
           title: 'Absolute value'
         }, {
           block: 'max(__, __)',
-          title: 'Absolute value'
+          title: 'Get the larger of two numbers'
         }, {
           block: 'min(__, __)',
-          title: 'Absolute value'
+          title: 'Get the smaller on two numbers'
+        }, {
+          block: 'x.match(/pattern/)',
+          title: 'Test if a text pattern is found in x'
         }
-      ]
+      ])
     }, {
-      name: 'Functions',
-      color: 'violet',
-      blocks: [
+      name: 'Text',
+      color: 'pink',
+      blocks: filterblocks([
         {
-          block: 'function myFunction() {\n  __;\n}',
-          title: 'Create a function without an argument'
+          block: 'write(\'Hello.\');',
+          title: 'Write text in the document'
         }, {
-          block: 'function myFunction(n) {\n  __;\n}',
-          title: 'Create a function with an argument'
+          block: 'debug(x);',
+          title: 'Log an object to debug'
         }, {
-          block: 'myFunction()',
-          title: 'Use a function without an argument'
+          block: 'type(\'zz*(-.-)*zz\');',
+          title: 'Typewrite text in the document'
         }, {
-          block: 'myFunction(n)',
-          title: 'Use a function with argument'
+          block: 'typebox(yellow);',
+          title: 'Type out a colored square'
+        }, {
+          block: 'typeline();',
+          title: 'Type in a new line'
+        }, {
+          block: '@label(\'spot\');',
+          title: 'Write text at the turtle'
+        }, {
+          block: 'read(\'?\', function(x) {\n  write(x);\n});',
+          title: 'Send input from the user to a function'
+        }, {
+          block: 'readnum(\'?\', function(x) {\n  write(x);\n});',
+          title: 'Send a number from the user to a function'
         }
-      ]
+      ])
+    }, {
+      name: 'Sprites',
+      color: 'teal',
+      blocks: filterblocks([
+        {
+          block: 'var t = new Turtle(red);',
+          title: 'Make a new turtle',
+          id: 'newturtle'
+        }, {
+          block: 'var s = new Sprite();',
+          title: 'Make a blank sprite',
+          id: 'newsprite'
+        }, {
+          block: 'var p = new Piano();',
+          title: 'Make a visible instrument',
+          id: 'newpiano'
+        }, {
+          block: 'var q = new Pencil();',
+          title: 'Make an invisible and fast drawing sprite'
+        }, {
+          block: 'if (@touches(x)) {\n  __\n}',
+          title: 'Do something only if touching the object x'
+        }, {
+          block: 'if (@inside(window)) {\n  __\n}',
+          title: 'Do something only if inside the window'
+        }
+      ])
+    }, {
+      name: 'Sound',
+      color: 'indigo',
+      blocks: filterblocks([
+        {
+          block: '@play(\'c G/G/ AG z\');',
+          title: 'Play music notes in sequence'
+        }, {
+          block: '@play(\'[fA] [ecG]2\');',
+          title: 'Play notes in a chord'
+        }, {
+          block: '@tone(\'B\', 2, 1);',
+          title: 'Sound a note immediately'
+        }, {
+          block: '@tone(\'B\', 0);',
+          title: 'Silence a note immediately'
+        }, {
+          block: '@tone(440, 2, 1);',
+          title: 'Sound a frequency immediately'
+        }, {
+          block: '@tone(440, 0);',
+          title: 'Silence a frequency immediately'
+        }, {
+          block: '@silence();',
+          title: 'Silence all notes'
+        }, {
+          block: 'listen (function(x) {\n  write(x);\n});',
+          title: 'Send spoken words from the user to a function'
+        }, {
+          block: '@say(\'hello\');',
+          title: 'Speak a word'
+        }, {
+          block: 'new Audio(url).play();',
+          expansion: '(new Audio(\'https://upload.wikimedia.org/wikipedia/commons/1/11/06_-_Vivaldi_Summer_mvt_3_Presto_-_John_Harrison_violin.ogg\')).play();',
+          title: 'Play an audio file'
+        }
+      ])
+    }, {
+      name: 'Snippets',
+      color: 'deeporange',
+      blocks: filterblocks([
+        {
+          block:
+              "forever(10, function() {\n  turnto(lastmouse);\n  fd(2);\n});",
+          title: 'Continually move towards the last mouse position'
+        }, {
+          block: "forever(10, function() {\n  if (pressed('W')) {\n" +
+                 "    fd(2);\n  }\n});",
+          title: 'Poll a key and move while it is depressed'
+        }, {
+          block: "forever(1, function() {\n  fd(25);\n" +
+                 "  if (!inside(window)) {\n    stop();\n  }\n});",
+          title: 'Move once per second until not inside window'
+        }, {
+          block: "click(function(e) {\n  moveto(e);\n});",
+          title: 'Move to a location when document is clicked'
+        }, {
+          block: "button(\'Click\', function() {\n  write('clicked');\n});",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown(\'X\', function() {\n  write('x pressed');\n});",
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click(function(e) {\n  moveto(e);\n});",
+          title: 'Move to a location when document is clicked'
+        }
+      ])
     }
   ],
-
   HTML_PALETTE: [
     {
       name: "Metadata",
@@ -533,65 +765,30 @@ module.exports = {
           block: "<!DOCTYPE html>",
           title: "Defines document type"
         }, {
-          block: "<html>\n  \n</html>",
+          block: "<html></html>",
+          expansion: "<html>\n  <head>\n    \n  </head>\n  <body>\n    \n  </body>\n</html>",
           title: "Root of an HTML document"
         }, {
-          block: "<head>\n  \n</head>",
+          block: "<head></head>",
+          expansion: "<head>\n  \n</head>",
           title: "Represents a collection of metadata"
         }, {
           block: "<title></title>",
           title: "Document's title or name"
         }, {
-          block: "<base href=\"\" />",
-          title: "Base URL/target for all relative URLs in a document"
-        }, {
-          block: "<link rel=\"\" href=\"\" />",
+          block: "<link rel=\"\" href=\"\">",
           title: "Link between a document and an external resource"
         }, {
-          block: "<meta charset=\"\" />",
+          block: "<meta charset=\"\">",
           title: "Metadata about the HTML document"
         }, {
-          block: "<style>\n  \n</style>",
+          block: "<style></style>",
+          expansion: "<style>\n  \n</style>",
           title: "Define style information"
         }, {
-          block: "<script>\n  \n</script>",
+          block: "<script></script>",
+          expansion: "<script>\n  \n</script>",
           title: "Define a client-side script, such as a JavaScript"
-        }
-      ]
-    }, {
-      name: "Sections",
-      color: "orange",
-      blocks: [
-        {
-          block: "<body>\n  \n</body>",
-          title: "Main content of the document"
-        }, {
-          block: "<article>\n  \n</article>",
-          title: "Independent, self-contained content"
-        }, {
-          block: "<section>\n  \n</section>",
-          title: "Generic section of a document or application"
-        }, {
-          block: "<nav>\n  \n</nav>",
-          title: "Set of navigation links"
-        }, {
-          block: "<aside>\n  \n</aside>",
-          title: "Content aside from the content it is placed in"
-        }, {
-          block: "<h1></h1>",
-          title: "Heading for its section - Can use h1..h6 for different sizes"
-        }, {
-          block: "<hgroup>\n  \n</hgroup>",
-          title: "Group of headings h1-h6"
-        }, {
-          block: "<header>\n  \n</header>",
-          title: "Group of introductory or navigational aids"
-        }, {
-          block: "<footer>\n  \n</footer>",
-          title: "Footer for a document or section"
-        }, {
-          block: "<address>\n  \n</address>",
-          title: "Contact information for the author/owner"
         }
       ]
     }, {
@@ -599,28 +796,32 @@ module.exports = {
       color: "purple",
       blocks: [
         {
-          block: "<p>\n  \n</p>",
+          block: "<p></p>",
+          expansion: "<p>\n  \n</p>",
           title: "Represents a paragraph"
         }, {
-          block: "<hr />",
+          block: "<hr>",
           title: "Paragraph-level thematic break"
         }, {
-          block: "<pre>\n  \n</pre>",
-          title: "Block of preformatted text"
+          block: "<div></div>",
+          expansion: "<div>\n  \n</div>",
+          title: "Defines a division"
         }, {
-          block: "<blockquote>\n  \n</blockquote>",
-          title: "Section that is quoted from another source"
+          block: "<span></span>",
+          title: "Group inline-elements"
         }, {
-          block: "<ol>\n  \n</ol>",
-          title: "Ordered list"
+          block: "<center></center>",
+          title: "Defines a centered group"
         }, {
-          block: "<ul>\n  \n</ul>",
-          title: "Unordered list"
+          block: "<ul></ul>",
+          expansion: "<ul>\n  \n</ul>",
+          title: "Unordered list - Use 'ol' for ordered list"
         }, {
           block: "<li></li>",
           title: "List item"
         }, {
-          block: "<dl>\n  \n</dl>",
+          block: "<dl></dl>",
+          expansion: "<dl>\n  \n</dl>",
           title: "Description list"
         }, {
           block: "<dt></dt>",
@@ -628,84 +829,28 @@ module.exports = {
         }, {
           block: "<dd></dd>",
           title: "Description of a term"
-        }, {
-          block: "<figure>\n  \n</figure>",
-          title: "Self-contained content, like illustrations, diagrams, photos, code listings, etc"
-        }, {
-          block: "<figcaption></figcaption>",
-          title: "Defines a caption for a <figure> element"
-        }, {
-          block: "<main>\n  \n</main>",
-          title: "Container for the dominant contents of another element"
-        }, {
-          block: "<div>\n  \n</div>",
-          title: "Defines a division"
         }
       ]
     }, {
-      name: "Text",
+      name: "Content",
       color: "lightgreen",
       blocks: [
         {
           block: "<a href=\"\"></a>",
           title: "Defines a hyperlink, which is used to link from one page to another"
         }, {
-          block: "<em></em>",
-          title: "Stress emphasis of its contents"
+          block: "<img src=\"\">",
+          title: "Image"
+        }, {
+          block: "<iframe src=\"\"></iframe>",
+          expansion: "<iframe>\n  \n</iframe>",
+          title: "Nested browsing context"
         }, {
           block: "<strong></strong>",
           title: "Strong importance, seriousness, or urgency for its contents"
         }, {
-          block: "<small></small>",
-          title: "Side comments such as small print"
-        }, {
-          block: "<s></s>",
-          title: "Contents that are no longer accurate/relevant"
-        }, {
-          block: "<cite></cite>",
-          title: "Title of a work"
-        }, {
-          block: "<q></q>",
-          title: "Short quotation"
-        }, {
-          block: "<dfn></dfn>",
-          title: "Defining instance of a term"
-        }, {
-          block: "<abbr title=\"\"></abbr>",
-          title: "Abbreviation or acronym, optionally with its expansion"
-        }, {
-          block: "<ruby>\n  \n</ruby>",
-          title: "Ruby annotation(small extra text, attached to the main text to indicate the pronunciation or meaning of the corresponding characters)"
-        }, {
-          block: "<rt></rt>",
-          title: "Marks the ruby text component of a ruby annotation"
-        }, {
-          block: "<rp></rp>",
-          title: "Provide parentheses or other content around a ruby text"
-        }, {
-          block: "<data value=\"\"></data>",
-          title: "Represents its contents, along with a machine-readable form of those contents in the value attribute"
-        }, {
-          block: "<time datetime=\"\"></time>",
-          title: "Human-readable date/time"
-        }, {
-          block: "<code></code>",
-          title: "Fragment of computer code"
-        }, {
-          block: "<var></var>",
-          title: "Variable"
-        }, {
-          block: "<samp></samp>",
-          title: "Sample or quoted output from another program"
-        }, {
-          block: "<kbd></kbd>",
-          title: "User input (typically keyboard input)"
-        }, {
-          block: "<sub></sub>",
-          title: "Subscript"
-        }, {
-          block: "<sup></sup>",
-          title: "Superscript"
+          block: "<em></em>",
+          title: "Stress emphasis of its contents"
         }, {
           block: "<i></i>",
           title: "Italic"
@@ -716,107 +861,53 @@ module.exports = {
           block: "<u></u>",
           title: "Underline"
         }, {
-          block: "<mark></mark>",
-          title: "Marked text"
+          block: "<sub></sub>",
+          title: "Subscript"
         }, {
-          block: "<bdi></bdi>",
-          title: "Bi-directional Isolation"
+          block: "<sup></sup>",
+          title: "Superscript"
         }, {
-          block: "<bdo dir=\"\">\n  \n</bdo>",
-          title: "Bi-Directional Override"
-        }, {
-          block: "<span></span>",
-          title: "Group inline-elements"
-        }, {
-          block: "<br />",
+          block: "<br>",
           title: "Line break"
-        }, {
-          block: "<wbr />",
-          title: "Line break opportunity"
-        }, {
-          block: "text",
-          title: "Text content"
         }
       ]
     }, {
-      name: "Other",
-      color: "pink",
+      name: "Sections",
+      color: "orange",
       blocks: [
         {
-          block: "<ins></ins>",
-          title: "Addition to the document"
+          block: "<body></body>",
+          expansion: "<body>\n  \n</body>",
+          title: "Main content of the document"
         }, {
-          block: "<del></del>",
-          title: "Removal from a document"
+          block: "<h1></h1>",
+          title: "Heading for its section"
         }, {
-          block: "<details>\n  \n</details>",
-          title: "Additional details that the user can view or hide on demand"
+          block: "<h2></h2>",
+          title: "Heading for its section"
         }, {
-          block: "<summary></summary>",
-          title: "Visible Heading of a <details> element"
+          block: "<h3></h3>",
+          title: "Heading for its section"
         }, {
-          block: "<menu>\n  \n</menu>",
-          title: "List/menu of commands"
+          block: "<article></article>",
+          expansion: "<article>\n  \n</article>",
+          title: "Independent, self-contained content"
         }, {
-          block: "<menuitem></menuitem>",
-          title: "Command/menuitem inside a menu"
+          block: "<section></section>",
+          expansion: "<section>\n  \n</section>",
+          title: "Generic section of a document or application"
         }, {
-          block: "<dialog open></dialog>",
-          title: "Dialog box or window"
+          block: "<nav></nav>",
+          expansion: "<nav>\n  \n</nav>",
+          title: "Set of navigation links"
         }, {
-          block: "<noscript></noscript>",
-          title: "Alternate content for users that have disabled scripts"
+          block: "<header></header>",
+          expansion: "<header>\n  \n</header>",
+          title: "Group of introductory or navigational aids"
         }, {
-          block: "<template>\n  \n</template>",
-          title: "Declare fragments of HTML that can be cloned and inserted in the document by script"
-        }, {
-          block: "<canvas></canvas>",
-          title: "Draw graphics, on the fly, via scripting"
-        }, {
-          block: "<svg>\n  \n</svg>",
-          title: "Define graphics for the Web"
-        }, {
-          block: "<frameset cols=\"\">\n  \n</frameset>",
-          title: "Holds one or more <frame> elements each of which contains a separate document"
-        }
-      ]
-    }, {
-      name: "Embedded",
-      color: "teal",
-      blocks: [
-        {
-          block: "<img src=\"\" alt=\"\" />",
-          title: "Image"
-        }, {
-          block: "<iframe>\n  \n</iframe>",
-          title: "Nested browsing context"
-        }, {
-          block: "<embed src=\"\" />",
-          title: "Integration point for an external (typically non-HTML) application or interactive content"
-        }, {
-          block: "<object data=\"\">\n  \n</object>",
-          title: "Embedded object within an HTML document"
-        }, {
-          block: "<param name=\"\" value=\"\" />",
-          title: "Parameters for plugins invoked by <object> elements"
-        }, {
-          block: "<video width=\"\" height=\"\" controls>\n  \n</video>",
-          title: "Playing videos or movies, and audio files with captions"
-        }, {
-          block: "<audio controls>\n  \n</audio>",
-          title: "Sound or audio stream"
-        }, {
-          block: "<source src=\"\" type=\"\" />",
-          title: "Specify multiple alternative media resources for media elements"
-        }, {
-          block: "<track src=\"\" />",
-          title: "Explicit external timed text tracks for media elements"
-        }, {
-          block: "<map name=\"\">\n  \n</map>",
-          title: "Define a client-side image-map(image with clickable areas)"
-        }, {
-          block: "<area shape=\"\" href=\"\" />",
-          title: "Area inside an image-map"
+          block: "<footer></footer>",
+          expansion: "<footer>\n  \n</footer>",
+          title: "Footer for a document or section"
         }
       ]
     }, {
@@ -824,28 +915,12 @@ module.exports = {
       color: "indigo",
       blocks: [
         {
-          block: "<table>\n  \n</table>",
+          block: "<table></table>",
+          expansion: "<table>\n  \n</table>",
           title: "Defines a table"
         }, {
-          block: "<caption></caption>",
-          title: "Table Caption"
-        }, {
-          block: "<colgroup>\n  \n</colgroup>",
-          title: "Group of 1 or more columns"
-        }, {
-          block: "<col style=\"\"/>",
-          title: "Column properties for a single column"
-        }, {
-          block: "<tbody>\n  \n</tbody>",
-          title: "Body of a table"
-        }, {
-          block: "<thead>\n  \n</thead>",
-          title: "Table header"
-        }, {
-          block: "<tfoot>\n  \n</tfoot>",
-          title: "Table footer"
-        }, {
-          block: "<tr>\n  \n</tr>",
+          block: "<tr></tr>",
+          expansion: "<tr>\n  \n</tr>",
           title: "Row in a table"
         }, {
           block: "<td></td>",
@@ -860,50 +935,30 @@ module.exports = {
       color: "deeporange",
       blocks: [
         {
-          block: "<form action=\"\">\n  \n</form>",
+          block: "<form action=\"\"></form>",
+          expansion: "<form action=\"\">\n  \n</form>",
           title: "Create an HTML form"
         }, {
-          block: "<input type=\"\" />",
+          block: "<input type=\"\">",
           title: "Input field where user can enter data"
         }, {
-          block: "<label for=\"\"></label>",
-          title: "Label for an <input> element"
+          block: "<textarea></textarea>",
+          expansion: "<textarea>\n  \n</textarea>",
+          title: "Multi-line text input"
+        }, {
+          block: "<label></label>",
+          title: "Label for an input element"
         }, {
           block: "<button></button>",
           title: "Clickable button"
         }, {
-          block: "<select>\n  \n</select>",
+          block: "<select></select>",
+          expansion: "<select>\n  \n</select>",
           title: "Drop-down list"
         }, {
-          block: "<option value=\"\"></option>",
+          block: "<option></option>",
+          expansion: "<option value=\"\"></option>",
           title: "Option in a <select> list"
-        }, {
-          block: "<optgroup>\n  \n</optgroup>",
-          title: "Group related options in a <select> list"
-        }, {
-          block: "<datalist>\n  \n</datalist>",
-          title: "Pre-defined list of inputs for <input> element with autocomplete"
-        }, {
-          block: "<textarea>\n  \n</textarea>",
-          title: "Multi-line text input"
-        }, {
-          block: "<keygen />",
-          title: "Key-pair generator field"
-        }, {
-          block: "<output for=\"\"></output>",
-          title: "Results of a calculation"
-        }, {
-          block: "<progress value=\"\" max=\"\"></progress>",
-          title: "Progress of a task"
-        }, {
-          block: "<meter value=\"\"></meter>",
-          title: "Scalar measurement within a known range, or a fractional value"
-        }, {
-          block: "<fieldset>\n  \n</fieldset>",
-          title: "Group related items in a form"
-        }, {
-          block: "<legend></legend>",
-          title: "Caption for a <fieldset> element"
         }
       ]
     }
@@ -921,18 +976,22 @@ module.exports = {
     '?.jump': {color: 'lightblue', dropdown: [sdistances, sdistances]},
     '?.jumpxy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
     '?.jumpto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.turnto': {color: 'lightblue', dropdown: [sangles]},
+    '?.turnto': {color: 'lightblue', dropdown: [turntoarg]},
     '?.home': {color: 'lightblue'},
     '?.pen': {color: 'purple', dropdown: [colors]},
     '?.fill': {color: 'purple', dropdown: [colors]},
     '?.dot': {color: 'purple', dropdown: [colors, sizes]},
     '?.box': {color: 'purple', dropdown: [colors, sizes]},
+    '?.img': {color: 'purple'},
     '?.mirror': {color: 'purple'},
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
-    '?.pause': {},
+    '?.grow': {color: 'purple', dropdown: [scales]},
+    '?.pause': {color: 'lightblue'},
     '?.st': {color: 'purple'},
     '?.ht': {color: 'purple'},
+    '?.show': {color: 'purple'},
+    '?.hide': {color: 'purple'},
     '?.cs': {color: 'purple'},
     '?.cg': {color: 'purple'},
     '?.ct': {color: 'purple'},
@@ -949,6 +1008,7 @@ module.exports = {
     '?.drawon': {color:'purple'},
     '?.label': {color: 'pink'},
     '?.reload': {},
+    remove: {color: 'pink'},
     see: {},
     sync: {},
     send: {},
@@ -969,16 +1029,23 @@ module.exports = {
     await: {color: 'orange'},
     defer: {color: 'orange'},
     type: {color: 'pink'},
+    typebox: {color: 'pink', dropdown: [colors]},
+    typeline: {color: 'pink'},
     '*.sort': {},
-    log: {color: 'pink'},
+    debug: {color: 'pink'},
     abs: {value: true, color: 'lightgreen'},
     acos: {value: true, color: 'lightgreen'},
     asin: {value: true, color: 'lightgreen'},
     atan: {value: true, color: 'lightgreen'},
-    atan2: {value: true, color: 'lightgreen'},
     cos: {value: true, color: 'lightgreen'},
     sin: {value: true, color: 'lightgreen'},
     tan: {value: true, color: 'lightgreen'},
+    acosd: {value: true, color: 'lightgreen'},
+    asind: {value: true, color: 'lightgreen'},
+    atand: {value: true, color: 'lightgreen'},
+    cosd: {value: true, color: 'lightgreen'},
+    sind: {value: true, color: 'lightgreen'},
+    tand: {value: true, color: 'lightgreen'},
     ceil: {value: true, color: 'lightgreen'},
     floor: {value: true, color: 'lightgreen'},
     round: {value: true, color: 'lightgreen'},
@@ -989,7 +1056,7 @@ module.exports = {
     sqrt: {value: true, color: 'lightgreen'},
     max: {value: true, color: 'lightgreen'},
     min: {value: true, color: 'lightgreen'},
-    random: {value: true, color: 'lightgreen'},
+    random: {value: true, color: 'lightgreen', dropdown: [randarg]},
     'Math.abs': {value: true, color: 'lightgreen'},
     'Math.acos': {value: true, color: 'lightgreen'},
     'Math.asin': {value: true, color: 'lightgreen'},
@@ -1041,13 +1108,17 @@ module.exports = {
     read: {value: true, command: true, color: 'pink'},
     readstr: {value: true, command: true, color: 'pink'},
     readnum: {value: true, command: true, color: 'pink'},
+    listen: {value: true, command: true, color: 'indigo'},
     write: {value: true, command: true, color: 'pink'},
+    img: {value: true, command: true, color: 'purple'},
     table: {value: true, command: true, color: 'yellow'},
     '*.splice': {value: true, command: true},
     '*.append': {value: true, command: true},
     '*.finish': {value: true, command: true},
     '*.text': {value: true, command: true, color: 'pink'},
     loadscript: {value: true, command: true},
+    Date: {value: true, color: 'lightgreen'},
+    Audio: {value: true, color: 'indigo'},
     Turtle: {value: true, color: 'teal'},
     Sprite: {value: true, color: 'teal'},
     Piano: {value: true, color: 'teal'},
@@ -1067,5 +1138,14 @@ module.exports = {
     value: {color: 'lightgreen'},
     command: {color: 'lightgreen'},
     errors: {color: '#f00'}
+  },
+
+  // Overrides to make the palette colors match
+  KNOWN_HTML_TAGS: {
+    img: {category: 'content'},
+    iframe: {category: 'content'},
+    span: {category: 'grouping'},
+    // Add center even though deprecated by WHATWG.
+    center: {category: 'grouping'}
   }
 };

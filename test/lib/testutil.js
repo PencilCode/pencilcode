@@ -61,7 +61,7 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
       rt_args, ac_args;
 
   function handletry(err, result) {
-    if (err || (result != null && !result.poll)) {
+    if (err || (!!result && !result.poll)) {
       callback(err, result);
     } else if (evalTime - startTime > timeout) {
       // Note that timeout is measured not from the time
@@ -95,4 +95,70 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
     retry();
   }
 }
+
+// Mouse event simluation function.
+// defineSimulate injects a global function "simulate"
+// into the page.
+exports.defineSimulate = function(page) {
+  page.evaluate(function() {
+    window.simulate = function(type, target, options) {
+      if ('string' == typeof(target)) {
+        target = $(target).get(0);
+      }
+      options = options || {};
+      var pageX = pageY = clientX = clientY = dx = dy = 0;
+      var location = options.location || target;
+      if (location) {
+        if ('string' == typeof(location)) {
+          location = $(location).get(0);
+        }
+        var gbcr = location.getBoundingClientRect();
+            clientX = gbcr.left,
+            clientY = gbcr.top,
+            pageX = clientX + window.pageXOffset
+            pageY = clientY + window.pageYOffset
+            dx = Math.floor((gbcr.right - gbcr.left) / 2)
+            dy = Math.floor((gbcr.bottom - gbcr.top) / 2)
+      }
+      if ('dx' in options) { dx = options.dx; }
+      if ('dy' in options) { dy = options.dy; }
+      pageX = (options.pageX == null ? pageX : options.pageX) + dx;
+      pageY = (options.pageY == null ? pageY : options.pageY) + dy;
+      clientX = pageX - window.pageXOffset;
+      clientY = pageY - window.pageYOffset;
+      var opts = {
+          bubbles: options.bubbles || true,
+          cancelable: options.cancelable || true,
+          view: options.view || target.ownerDocument.defaultView,
+          detail: options.detail || 1,
+          pageX: pageX,
+          pageY: pageY,
+          clientX: clientX,
+          clientY: clientY,
+          screenX: clientX + window.screenLeft,
+          screenY: clientY + window.screenTop,
+          ctrlKey: options.ctrlKey || false,
+          altKey: options.altKey || false,
+          shiftKey: options.shiftKey || false,
+          metaKey: options.metaKey || false,
+          button: options.button || 0,
+          which: options.which || 1,
+          relatedTarget: options.relatedTarget || null,
+      }
+      var evt;
+      try {
+        // Modern API supported by IE9+
+        evt = new MouseEvent(type, opts);
+      } catch (e) {
+        // Old API still required by PhantomJS.
+        evt = target.ownerDocument.createEvent('MouseEvents');
+        evt.initMouseEvent(type, opts.bubbles, opts.cancelable, opts.view,
+          opts.detail, opts.screenX, opts.screenY, opts.clientX, opts.clientY,
+          opts.ctrlKey, opts.altKey, opts.shiftKey, opts.metaKey, opts.button,
+          opts.relatedTarget);
+      }
+      target.dispatchEvent(evt);
+    };
+  });
+};
 

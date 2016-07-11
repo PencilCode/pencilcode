@@ -13,7 +13,8 @@ var $                = require('jquery'),
     see              = require('see'),
     pencilTracer     = require('pencil-tracer'),
     icedCoffeeScript = require('iced-coffee-script'),
-    drawProtractor   = require('draw-protractor');
+    drawProtractor   = require('draw-protractor'),
+    cache          = require('cache');
 
 
 eval(see.scope('controller'));
@@ -30,6 +31,7 @@ var model = window.pencilcode.model = {
   // Url used for starting the guide.
   guideUrl: null,
   // Contents of the three panes.
+  tempThumbnail: null,
   pane: {
     alpha: {
       filename: null,
@@ -131,6 +133,11 @@ function nosaveowner() {
   return model.ownername === 'frame';
 }
 
+function cansave() {
+  return specialowner() || !model.username || model.tempThumbnail ||
+      view.isPaneEditorDirty(paneatpos('left'));
+}
+
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
   // Update visible URL and main title name.
@@ -156,15 +163,20 @@ function updateTopControls(addHistory) {
       //
       // If so, then insert save button
       //
-      var cansave = specialowner() || !model.username ||
-                    view.isPaneEditorDirty(paneatpos('left'));
       buttons.push(
-        { id: 'save', title: 'Save program (Ctrl+S)', label: 'Save',
+        {
+          id: 'save',
+          title: 'Save program (Ctrl+S)',
+          label: 'Save',
           menu: [
             { id: 'save2', label: 'Save' },
             { id: 'saveas', label: 'Copy and Save As...' }
           ],
-          disabled: !cansave,
+          disabled: !cansave(),
+        }, {
+          id: 'screenshot',
+          title: 'Take screenshot',
+          label: '<i class="fa fa-camera"></i>'
         });
 
       // Also insert share button
@@ -179,6 +191,7 @@ function updateTopControls(addHistory) {
     //
 
     if (!specialowner()) {
+
       // Applies to both files and dirs: a simple "new file" button.
       buttons.push({
         id: 'new', title: 'Make a new program', label: 'New'});
@@ -222,6 +235,20 @@ function updateTopControls(addHistory) {
         id: 'guide', label: '<span class=helplink>Guide</span>',
         title: 'Open online guide'});
     }
+
+    //
+    // If this directory has an owner (i.e., not the root owner),
+    // enable splitscreen toggle.
+    //
+
+    if (model.ownername || m.filename) {
+      buttons.push({
+          id: 'splitscreen',
+          title: 'Toggle split screen',
+          label: '<i class="splitscreenicon"></i>'
+      });
+    }
+
   }
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
@@ -332,27 +359,34 @@ view.on('share', function() {
       console.log("Nothing to share.");
       return;
     } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-      var iframe = document.getElementById('output-frame');
-      thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
+      if (model.tempThumbnail) {
+        postThumbnailGeneration(model.tempThumbnail);
+      } else {
+        var iframe = document.getElementById('output-frame');
+        // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+        thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
+      }
     }
-    var data = $.extend({
-      thumbnail: thumbnailDataUrl
-    }, modelatpos('left').data, doc);
-    storage.saveFile('share', sharename, data, true, 828, false, function(m) {
-      var opts = { title: shortfilename };
-      if (!m.error && !m.deleted) {
-        opts.shareStageURL = "//share." + window.pencilcode.domain +
-            "/home/" + sharename;
-      }
-      if (model.ownername) {
-        // Share the run URL unless there is no owner (e.g., for /first).
-        opts.shareRunURL = "//" + document.domain + '/home/' +
-            modelatpos('left').filename;
-      }
-      opts.shareEditURL = window.location.href;
-      // Now bring up share dialog
-      view.showShareDialog(opts);
-    });
+    function postThumbnailGeneration(thumbnailDataUrl) {
+      var data = $.extend({
+        thumbnail: thumbnailDataUrl
+      }, modelatpos('left').data, doc);
+      storage.saveFile('share', sharename, data, true, 828, false, function(m) {
+        var opts = { title: shortfilename };
+        if (!m.error && !m.deleted) {
+          opts.shareStageURL = "//share." + window.pencilcode.domain +
+              "/home/" + sharename;
+        }
+        if (model.ownername) {
+          // Share the run URL unless there is no owner (e.g., for /first).
+          opts.shareRunURL = "//" + document.domain + '/home/' +
+              modelatpos('left').filename;
+        }
+        opts.shareEditURL = window.location.href;
+        // Now bring up share dialog
+        view.showShareDialog(opts);
+      });
+    }
   }
 });
 
@@ -384,24 +418,28 @@ view.on('fullscreen', function(pane) {
 view.on('bydate', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = true;
-    setDefaultDirSortingByDate(true);
-    renderDirectory('left');
+    var pane = paneatpos('left');
+    updateSortResults(pane);
   }
 });
 
 view.on('byname', function() {
   if (modelatpos('left').isdir) {
     modelatpos('left').bydate = false;
-    setDefaultDirSortingByDate(false);
-    renderDirectory('left');
+    var pane = paneatpos('left');
+    updateSortResults(pane);
   }
+});
+
+
+view.on('search', function(pane, search, cb) {
+  updateSearchResults(pane, search, cb);
 });
 
 view.on('dirty', function(pane) {
   if (posofpane(pane) == 'left') {
-    var cansave = specialowner() || view.isPaneEditorDirty(pane);
-    view.enableButton('save', cansave);
-    view.enableButton('save2', cansave);
+    view.enableButton('save', cansave());
+    view.enableButton('save2', cansave());
     // Toggle button between triangle and refresh.
     view.showMiddleButton('run');
   }
@@ -445,6 +483,9 @@ function runAction() {
     cancelAndClearPosition('back');
     rotateModelLeft(true);
   }
+  if (!view.getPreviewMode()) {
+    view.setPreviewMode(true, true /* no animation */);
+  }
   // Hide the guide, if any
   if (guide.isVisible()) {
     guide.show(false);
@@ -464,6 +505,7 @@ function runAction() {
   }
   // Provide instant (momentary) feedback that the program is now running.
   debug.stopButton('flash');
+  view.publish('startExecute');
   runCodeAtPosition('right', newdata, filename, false);
   logCodeEvent('run', filename, newdata.data,
       view.getPaneEditorBlockMode(paneatpos('left')),
@@ -571,6 +613,16 @@ view.on('setpass', function() {
         view.flashNotification('Changed password for ' + model.username + '.');
       });
     }
+  });
+});
+
+view.on('screenshot', function() {
+  var iframe = document.getElementById('output-frame');
+  // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+  thumbnail.generateThumbnailDataUrl(iframe, function(thumbnailDataUrl) {
+    model.tempThumbnail = thumbnailDataUrl;
+    updateTopControls();
+    view.flashThumbnail(thumbnailDataUrl);
   });
 });
 
@@ -722,6 +774,10 @@ view.on('toggleblocks', function(p, useblocks) {
       view.getPaneEditorLanguage(p));
 });
 
+view.on('splitscreen', function() {
+  view.setPreviewMode(!view.getPreviewMode());
+});
+
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
     return;
@@ -741,59 +797,70 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
     return;
-  } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
-    var iframe = document.getElementById('output-frame');
-    thumbnailDataUrl = thumbnail.generateThumbnailDataUrl(iframe);
-  }
-  // Remember meta in a cookie.
-  saveDefaultMeta(doc.meta);
-  var newdata = $.extend({
-    thumbnail: thumbnailDataUrl
-  }, modelatpos('left').data, doc);
-  // After a successful save, mark the file as clean and update mtime.
-  function noteclean(mtime) {
-    view.flashNotification('Saved.');
-    view.notePaneEditorCleanData(paneatpos('left'), newdata);
-    logCodeEvent('save', filename, newdata.data,
-        view.getPaneEditorBlockMode(paneatpos('left')),
-        view.getPaneEditorLanguage(paneatpos('left')));
-    if (modelatpos('left').filename == filename) {
-      var oldmtime = modelatpos('left').data.mtime || 0;
-      if (mtime) {
-        modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
-      }
-    }
-    updateTopControls();
-    // Flash the thumbnail after the control are updated.
-    view.flashThumbnail(thumbnailDataUrl);
-  }
-  if (newdata.auth && model.ownername != model.username) {
-    // If we know auth is required and the user isn't logged in,
-    // prompt for a login.
-    logInAndSave(filename, newdata, forceOverwrite,
-                 noteclean, loginPrompt, doneCallback);
-    return;
-  }
-  // Attempt to save.
-  view.flashNotification('', true);
-  storage.saveFile(
-      model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
-  function(status) {
-    if (status.needauth) {
-      logInAndSave(filename, newdata, forceOverwrite, noteclean,
-                   loginPrompt, doneCallback);
+  } else if (doc.data !== '') { // If program is not empty, generate thumbnail
+    if (model.tempThumbnail) {
+      postThumbnailGeneration(model.tempThumbnail);
     } else {
-      if (!model.username) {
-        // If not yet logged in but we have saved (e.g., no password needed),
-        // then log us in.
-        model.username = model.ownername;
-      }
-      handleSaveStatus(status, filename, noteclean);
-      if (doneCallback) {
-        doneCallback();
-      }
+      var iframe = document.getElementById('output-frame');
+      // `thumbnail.generateThumbnailDataUrl` second parameter is a callback.
+      thumbnail.generateThumbnailDataUrl(iframe, postThumbnailGeneration);
     }
-  });
+  } else {  // Empty content, file delete, no need for thumbnail.
+    postThumbnailGeneration('');
+  }
+  function postThumbnailGeneration(thumbnailDataUrl) {
+    // Remember meta in a cookie.
+    saveDefaultMeta(doc.meta);
+    var newdata = $.extend({
+      thumbnail: thumbnailDataUrl
+    }, modelatpos('left').data, doc);
+    if (newdata.auth && model.ownername != model.username) {
+      // If we know auth is required and the user isn't logged in,
+      // prompt for a login.
+      logInAndSave(filename, newdata, forceOverwrite,
+                   noteclean, loginPrompt, doneCallback);
+      return;
+    }
+    // Attempt to save.
+    view.flashNotification('', true);
+    storage.saveFile(
+        model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
+    function(status) {
+      if (status.needauth) {
+        logInAndSave(filename, newdata, forceOverwrite, noteclean,
+                     loginPrompt, doneCallback);
+      } else {
+        if (!model.username) {
+          // If not yet logged in but we have saved (e.g., no password needed),
+          // then log us in.
+          model.username = model.ownername;
+        }
+        handleSaveStatus(status, filename, noteclean);
+        if (doneCallback) {
+          doneCallback();
+        }
+      }
+    });
+    // After a successful save, mark the file as clean and update mtime.
+    function noteclean(mtime) {
+      view.flashNotification('Saved.');
+      view.notePaneEditorCleanData(paneatpos('left'), newdata);
+      logCodeEvent('save', filename, newdata.data,
+          view.getPaneEditorBlockMode(paneatpos('left')),
+          view.getPaneEditorLanguage(paneatpos('left')));
+      if (modelatpos('left').filename == filename) {
+        var oldmtime = modelatpos('left').data.mtime || 0;
+        if (mtime) {
+          modelatpos('left').data.mtime = Math.max(mtime, oldmtime);
+        }
+      }
+      // Delete the pre-saved thumbnail from the model.
+      model.tempThumbnail = null;
+      updateTopControls();
+      // Flash the thumbnail after the control are updated.
+      view.flashThumbnail(thumbnailDataUrl);
+    }
+  }
 }
 
 function keyFromPassword(username, p) {
@@ -1384,11 +1451,14 @@ function doneWithFile(filename) {
       '//' + window.pencilcode.domain + '/edit/') {
       window.location.href = '//' + window.pencilcode.domain + '/';
     } else {
-      window.location.href = '//' + window.pencilcode.domain + '/edit/';
+      // Do nothing when clicking the folder icon when at the root
+      // of a user's directory.
     }
   } else {
     if (filename.indexOf('/') >= 0) {
-      filename = filename.replace(/\/[^\/]+\/?$/, '');
+      // `history.state.previous` is like '/edit/demo/', so we should
+      // strip the filename after '/' and keep the '/'.
+      filename = filename.replace(/[^\/]+\/?$/, '');
     } else {
       filename = '';
     }
@@ -1399,6 +1469,8 @@ function doneWithFile(filename) {
         history.state.previous == newUrl) {
       history.back();
     } else {
+      // Strip any trailing / from the filename before using it for loading.
+      filename = filename.replace(/\/$/, '');
       loadFileIntoPosition('back', filename, true, true);
       rotateModelRight(true);
     }
@@ -1607,13 +1679,21 @@ function readNewUrl(undo) {
   // Login from cookie.
       cookielogin = null;
   // Give the user a chance to abort navigation.
-  if (undo && view.isPaneEditorDirty(paneatpos('left')) && !nosaveowner()) {
-    view.flashButton('save');
-    if (!window.confirm(
-      "There are unsaved changes.\n\n" +
+  if (undo && !nosaveowner()) {
+    var type = null;
+    if (view.isPaneEditorDirty(paneatpos('left'))) {
+      type = 'changes';
+    } else if (model.tempThumbnail) {
+      type = 'thumbnail';
+    }
+    if (type && !window.confirm(
+      "There are unsaved " + type + ".\n\n" +
       "Are you sure you want to leave this page?")) {
+      view.flashButton('save');
       undo();
       return;
+    } else {
+      model.tempThumbnail = null;
     }
   }
   if (!login) {
@@ -1780,26 +1860,34 @@ function cancelAndClearPosition(pos) {
 }
 
 function instrumentCode(code, language) {
-  if (language === 'javascript') {
-    // TODO: support javascript
-  } else if (language === 'coffeescript') {
-    try {
+  try {
+    if (language === 'javascript') {
       options = {
         traceFunc: 'ide.trace',
+        includeArgsStrings: true,
+        sourceMap: true
+      };
+      result = pencilTracer.instrumentJs(code, options);
+      debug.setSourceMap(result.map);
+      code = result.code;
+    } else if (language === 'coffeescript') {
+      options = {
+        traceFunc: 'ide.trace',
+        includeArgsStrings: true,
         sourceMap: true,
         bare: true
       };
-      result = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
-      debug.setSourceMap(result.v3SourceMap);
-      code = result.js;
-    } catch (err) {
-      // An error here means that either the user's code has a syntax error, or
-      // pencil-tracer has a bug. Returning false here means the user's code
-      // will run directly, without the debugger, and then if there's a syntax
-      // error it will be displayed to them, and if it's a pencil-tracer bug,
-      // their code will still run but with the debugger disabled.
-      return false;
+      result = pencilTracer.instrumentCoffee(code, icedCoffeeScript, options);
+      debug.setSourceMap(result.map);
+      code = result.code;
     }
+  } catch (err) {
+    // An error here means that either the user's code has a syntax error, or
+    // pencil-tracer has a bug. Returning false here means the user's code
+    // will run directly, without the debugger, and then if there's a syntax
+    // error it will be displayed to them, and if it's a pencil-tracer bug,
+    // their code will still run but with the debugger disabled.
+    return false;
   }
   return code;
 }
@@ -1816,9 +1904,11 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
       '//' + (model.ownername ? model.ownername + '.' : '') +
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
+  var setupScript = (model.setupScript || []).concat(
+      [{ src: "//{site}/lib/start-ide.js" }]);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
-      emptyOnly, model.setupScript, instrumentCode);
+      emptyOnly, setupScript, instrumentCode);
   // Delay allows the run program to grab focus _after_ the ace editor
   // grabs focus.  TODO: investigate editor.focus() within on('run') and
   // remove this setTimeout if we can make editor.focus() work without delay.
@@ -1949,17 +2039,80 @@ function sortByDate(a, b) {
 }
 
 function sortByName(a, b) {
-  if (a.name < b.name) {
+  var aName = a.name.toLowerCase();
+  var bName = b.name.toLowerCase();
+  if (aName == bName) {
+     return  a < b ? -1 : a > b ? 1 : 0;
+  } else if (aName < bName) {
     return -1;
-  }
-  if (a.name > b.name) {
+  } else if (aName > bName) {
     return 1;
   }
   return 0;
 }
 
 function renderDirectory(position) {
+  cache.clear();
   var pane = paneatpos(position);
+  var mpp = model.pane[pane];
+  mpp.bydate = defaultDirSortingByDate();
+  var filename = mpp.filename;
+  view.setPaneLinkText(pane, getUpdatedLinksArray(pane), filename, model.ownername);
+  updateTopControls(false);
+}
+
+
+function updateSortResults(pane) {
+  view.setPaneLinks(pane,getUpdatedLinksArray(pane));
+  updateTopControls(false);
+}
+
+function updateSearchResults(pane, search, cb) {
+  search = search ? search.toLowerCase() : '';
+  var mpp = model.pane[pane];
+  var searchCacheName = 'search-keys-' + (!model.ownername ? '' : model.ownername);
+  var searchCacheKey= mpp.filename+"-"+search;
+  var cacheResults = cache.get(searchCacheName, searchCacheKey);
+  if (cacheResults) {
+    mpp.data.list=cacheResults.list;
+    updateViewAndCache(cacheResults.list, cacheResults.view);
+  } else {
+    if (!model.ownername) {
+      storage.loadFile(model.ownername, mpp.filename+"?prefix="+search, true, function(m) {
+        if(m.list) {
+          mpp.data=m
+          updateViewAndCache(m.list, getUpdatedLinksArray(pane), cache);
+        }
+      });
+    } else {
+      if (!mpp.data.allLinks) {
+        mpp.data.allLinks=mpp.data.list;
+      }
+
+      var results = [];
+      var list = mpp.data.allLinks;
+
+      for (j = 0; j < list.length; j++) {
+        if (list[j].name.toLowerCase().indexOf(search) == 0) {
+          results.push(list[j]);
+        }
+      }
+      mpp.data.list = results;
+      updateViewAndCache(results, getUpdatedLinksArray(pane), cache);
+    }
+  }
+
+  function updateViewAndCache(list, viewlist, cache) {
+    view.setPaneLinks(pane, viewlist);
+    cb && cb();
+    cache && cache.put(searchCacheName, searchCacheKey, {
+      list: list,
+      view: viewlist
+    });
+  }
+}
+
+function getUpdatedLinksArray(pane) {
   var mpp = model.pane[pane];
   var m = mpp.data;
   var filename = mpp.filename;
@@ -1997,7 +2150,7 @@ function renderDirectory(position) {
         } else {
           type = filetype.mimeForFilename(name).replace(/;.*$/, '');
         }
-        var href = '/home/' + filenameslash + name;
+        var href = '/edit/' + filenameslash + name;
         links.push({
             name: name,
             link: name,
@@ -2021,8 +2174,7 @@ function renderDirectory(position) {
       });
     }
   }
-  view.setPaneLinkText(pane, links, filename, model.ownername);
-  updateTopControls(false);
+  return links;
 }
 
 // True if the doc contains nothing, or nothing but spaces.
@@ -2194,7 +2346,7 @@ $(window).on('message', function(e) {
       }
       break;
     case 'eval':
-      evalAndPostback(data.requestid, data.args[0]);
+      evalAndPostback(data.requestid, data.args[0], data.args[1]);
       break;
     case 'beginRun':
       view.fireEvent('run', []);
@@ -2278,10 +2430,10 @@ function createParentPostMessageSink() {
 
 createParentPostMessageSink();
 
-function evalAndPostback(requestid, code) {
+function evalAndPostback(requestid, code, raw) {
   var resultanderror = null;
   if (modelatpos('right').running) {
-    resultanderror = view.evalInRunningPane(paneatpos('right'), code);
+    resultanderror = view.evalInRunningPane(paneatpos('right'), code, raw);
   } else {
     resultanderror = [null, 'error: not running'];
   }

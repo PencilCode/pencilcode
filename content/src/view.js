@@ -88,7 +88,12 @@ ZeroClipboard.config({
 
 window.pencilcode.view = {
   // Listens to events
-  on: function(tag, cb) { state.callbacks[tag] = cb; },
+  on: function(tag, cb) {
+    if (state.callbacks[tag] == null){
+      state.callbacks[tag] = []
+    }
+    state.callbacks[tag].push(cb);
+ },
 
   // Simulate firing of an event
   fireEvent: function(event, args) { fireEvent(event, args); },
@@ -126,6 +131,7 @@ window.pencilcode.view = {
   isPaneEditorEmpty: isPaneEditorEmpty,
   isPaneEditorDirty: isPaneEditorDirty,
   setPaneLinkText: setPaneLinkText,
+  setPaneLinks: setPaneLinks,
   setPaneRunHtml: setPaneRunHtml,
   evalInRunningPane: evalInRunningPane,
   showProtractor: showProtractor,
@@ -233,14 +239,22 @@ function initialPaneState() {
 }
 
 function setOnCallback(tag, cb) {
-  state.callbacks[tag] = cb;
+  if (state.callbacks[tag] == null) {
+    state.callbacks[tag] = [];
+  }
+  state.callbacks[tag].push(cb);
 }
 
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
-    var cb = state.callbacks[tag];
-    if (cb) {
-      cb.apply(null, args);
+    var cbs = state.callbacks[tag].slice();
+    //take a copy of the array in case other
+    //events are fired while you're indexing it.
+    for (j=0; j < cbs.length; j++) {
+      var cb = cbs[j];
+      if (cb) {
+        cb.apply(null, args);
+      }
     }
   }
 }
@@ -722,15 +736,19 @@ function showMiddleButton(which) {
 // Show thumbnail under the save button.
 function flashThumbnail(imageDataUrl) {
   if (!imageDataUrl) { return; }
-  var tooltip = $('#save').tooltipster({
+  // Destroy the original title tooltip once there is a thumbnail.
+  $('#screenshot').tooltipster('destroy');
+  $('#screenshot').tooltipster({
     content: $('<img src=' + imageDataUrl + ' alt="thumbnail">'),
-    multiple: true,
     position: 'bottom',
     theme: 'tooltipster-shadow',
-    timer: 3000,
-    trigger: 'custom'
-  })[0];
-  tooltip.show();
+    interactive: true,
+    timer: 3000
+  });
+  // Flash the thumbnail for 3 seconds, then disable the timer,
+  // so that activation via hovering will not last for only 3 seconds.
+  $('#screenshot').tooltipster('show');
+  $('#screenshot').tooltipster('option', 'timer', 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1070,19 +1088,27 @@ function showLoginDialog(opts) {
 // PANE MANAGEMENT
 ///////////////////////////////////////////////////////////////////////////
 
-function setPreviewMode(shown, instant) {
-  var duration = instant ? 0 : 400;
+function setPreviewMode(shown, noanimation) {
+  var change = (shown != state.previewMode);
+  var delay = (noanimation || !change) ? 0 : 400;
   if (shown) {
-    $('#middle').show();
-    $('.right').css({left: '50%', width: '50%'});
-    $('.left').css({width: '50%'});
+    $('#middle').removeClass('rightedge');
+    $('.right').animate({left: '50%', width: '50%'}, delay);
+    $('.left').animate({width: '50%'}, delay, finished);
     $('.back').css({left: '-50%', width: '50%'});
   } else {
-    $('#middle').hide();
-    $('.right').css({left: '100%', width: '100%'});
-    $('.left').css({width: '100%'});
+    $('#middle').addClass('rightedge');
+    $('.right').animate({left: '100%', width: '100%'}, delay);
+    $('.left').animate({width: '100%'}, delay, finished);
     $('.back').css({left: '-100%', width: '100%'});
-    clearPane(paneid('right'));
+    // clearPane(paneid('right'));
+  }
+  function finished() {
+    if (change) {
+      // Tell all editors and directory listings to resize.
+      $(window).trigger('resize.editor');
+      $(window).trigger('resize.listing');
+    }
   }
   state.previewMode = shown;
 }
@@ -1098,7 +1124,10 @@ function rotateLeft() {
   $('.back').finish().css({left:'100%'});
   $('.left').finish().animate({left: '-50%'});
   $('.right').finish().animate({left: 0});
-  $('.back').animate({left: '50%'});
+  $('.back').animate({left: '50%'}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('right');
   $(panelParts(idr)).removeClass('right').addClass('left');
   $(panelParts(idl)).removeClass('left').addClass('back');
@@ -1112,7 +1141,10 @@ function rotateRight() {
   $('.back').finish().css({left:'-50%'});
   $('.right').finish().animate({left: '100%'});
   $('.left').finish().animate({left: '50%'});
-  $('.back').animate({left: 0});
+  $('.back').animate({left: 0}, function() {
+    // Pin this div - chrome can sometimes scroll it even with overflow:hidden
+    $('#overflow').scrollLeft(0);
+  });
   $(panelParts(idb)).removeClass('back').addClass('left');
   $(panelParts(idr)).removeClass('right').addClass('back');
   $(panelParts(idl)).removeClass('left').addClass('right');
@@ -1320,10 +1352,17 @@ function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
   paneState.path = ownername + '/' + filename;
-  paneState.links = links;
   paneState.filename = filename;
-  updatePaneLinks(pane);
+  setPaneLinks(pane, links);
   updatePaneTitle(pane);
+  setVisibilityOfSearchTextField(pane);
+}
+
+function setPaneLinks(pane, links) {
+  var paneState = state.pane[pane];
+  paneState.links = links;
+  updatePaneLinks(pane);
+  setVisibilityOfSearchTextField(pane);
 }
 
 $(window).on('resize.listing', function() {
@@ -1350,8 +1389,10 @@ function updatePaneLinks(pane) {
   }
   list = paneState.links;
   if (!list) { return; }
+  
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
+
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
@@ -1442,6 +1483,37 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
+  
+  setVisibilityOfSearchTextField(pane);
+}
+
+(function($) {
+    $.fn.hasScrollBar = function() {
+        return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
+    }
+})(jQuery);
+
+function setVisibilityOfSearchTextField(pane) {
+  var directory = $('#'+pane).find('.directory');
+  var panetitle = directory.parent().parent().find('.panetitle');
+  
+  if(directory.hasScrollBar()) {
+    if(panetitle.find('.search-file').length == 0) {
+      //Adding the search text field
+      panetitle.find('.thick-bar').after('<div class="search-file"><input type="text" class="search-toggle" placeholder="Filter"><span class="fa fa-search"></span></div>');
+    }
+  } else if(panetitle.find('.search-file') && !panetitle.find('.search-toggle').val()) {
+    //Remove the search text field
+    panetitle.find('.search-file').remove();
+  }
+  
+  if(panetitle.find('.search-file').length != 0) {
+    //Make the directory a searchable-directory 
+    directory.addClass('directory-searchable');
+  } else {
+    //Make the directory a non searchable-directory 
+    directory.removeClass('directory-searchable');
+  }
 }
 
 function getDefaultThumbnail(type) {
@@ -1457,6 +1529,7 @@ function getDefaultThumbnail(type) {
     'image/x-icon'      : 'file-image.png',
     'text/html'         : 'file-html.png',
     'text/plain'        : 'file-txt.png',
+    'text/csv'          : 'file-txt.png',
     'text/css'          : 'file-css.png',
     'text/coffeescript' : 'file-coffee.png',
     'text/javascript'   : 'file-js.png',
@@ -1523,6 +1596,7 @@ function modeForMimeType(mimeType) {
     'text/javascript': 'javascript',
     'text/x-python': 'python',
     'text/plain': 'text',
+    'text/csv': 'text',
     'image/svg+xml': 'xml',
     'text/xml': 'xml'
   }[mimeType];
@@ -1552,7 +1626,7 @@ function dropletModeForMimeType(mimeType) {
 }
 
 function paletteForPane(paneState, selfname) {
-  var mimeType = editorMimeType(paneState),
+  var mimeType = editorMimeType(paneState).replace(/;.*$/, ''),
       basePalette = paneState.palette;
   if (!basePalette) {
     if (mimeType == 'text/x-pencilcode' || mimeType == 'text/coffeescript') {
@@ -1562,7 +1636,7 @@ function paletteForPane(paneState, selfname) {
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
     }
-    if (mimeType.replace(/;.*$/, '') == 'text/html') {
+    if (mimeType == 'text/html') {
       basePalette = palette.HTML_PALETTE;
     }
   }
@@ -1573,10 +1647,17 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
-  return {
-    functions: palette.KNOWN_FUNCTIONS,
-    categories: palette.CATEGORIES
-  };
+  if (mimeType.match(/^text\/html\b/)) {
+    return {
+      tags: palette.KNOWN_HTML_TAGS
+    };
+  } else {
+    return {
+      functions: palette.KNOWN_FUNCTIONS,
+      categories: palette.CATEGORIES,
+      zeroParamFunctions: true
+    };
+  }
 }
 
 function uniqueId(name) {
@@ -1649,8 +1730,13 @@ function updatePaneTitle(pane) {
       label = 'output';
     }
   }
+  
+  label='<div class="thick-bar">' + label + '</div>';
+  
   $('#' + pane + 'title_text').html(label);
   $('#' + pane).toggleClass('textonly', textonly);
+  
+  setVisibilityOfSearchTextField(pane);
 }
 
 function getShowThumb() {
@@ -1757,6 +1843,15 @@ $('.panetitle').on('click', '.thumb-toggle', function(e) {
   updatePaneTitle(pane);
 });
 
+$('.panetitle').on('keyup', '.search-toggle', function(e) {
+  var pane = $(this).closest('.panetitle').prop('id').replace('title', '');
+  var search = $(this).closest('.panetitle').find('.search-toggle').val();
+  e.preventDefault();
+  fireEvent('search',[pane,search,function() {
+      //TODO after search events
+  }]);
+});
+
 $('.pane').on('mousedown', '.blockmenu', function(e) {
   // Do nothing if menu already showing.
   if ($(this).find('.blockmenupopup').length) return;
@@ -1817,13 +1912,13 @@ $('.pane').on('mousedown', '.blockmenu', function(e) {
 $('.pane').on('click', '.texttoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
-  setPaneEditorBlockMode(pane, false);
+  setPaneEditorBlockMode(pane, false, $(this).attr('droplet-editor'));
 });
 
 $('.pane').on('click', '.blocktoggle', function(e) {
   var pane = $(this).closest('.pane').prop('id');
   e.preventDefault();
-  setPaneEditorBlockMode(pane, true);
+  setPaneEditorBlockMode(pane, true,$(this).attr('droplet-editor'));
 });
 
 function showPaneEditorLanguagesDialog(pane) {
@@ -1837,10 +1932,12 @@ function showPaneEditorLanguagesDialog(pane) {
   var emptyHtml = !(meta && meta.html && meta.html.trim());
   var emptyCss = !(meta && meta.css && meta.css.trim());
   var turtlebits = findLibrary(meta, 'turtle');
+  var p5js = findLibrary(meta, 'p5js');
   var hasBits = turtlebits != null;
   var hasTurtle = turtlebits && (!turtlebits.attrs ||
       turtlebits.attrs.turtle == null ||
       turtlebits.attrs.turtle != 'false');
+  var hasP5js = p5js != null;
 
   var opts = {leftopts: 1};
   opts.content =
@@ -1864,8 +1961,10 @@ function showPaneEditorLanguagesDialog(pane) {
       '<div style="padding:8px 5px 15px">' +
       '<label title="Include jQuery, LoDash, and jQ-Turtle">' +
       '<input type="checkbox" class="bits"> Common Library</label><br>' +
-      '<label title="Start with a turtle">' +
+      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label title="Start with a turtle">' +
       '<input type="checkbox" class="turtle"> Main Turtle</label><br>' +
+      '<label title="p5.js from The Processing Foundation">' +
+      '<input type="checkbox" class="p5js"> Processing p5.js</label><br>' +
       '</div>' +
       '<center>' +
       '<button class="ok">OK</button>' +
@@ -1896,6 +1995,9 @@ function showPaneEditorLanguagesDialog(pane) {
         dialog.find('.turtle').prop('checked', true);
       }
     }
+    if (hasP5js) {
+      dialog.find('.p5js').prop('checked', true);
+    }
   }
 
   opts.retrieveState = function(dialog) {
@@ -1904,7 +2006,8 @@ function showPaneEditorLanguagesDialog(pane) {
       html: dialog.find('.html').prop('checked'),
       css: dialog.find('.css').prop('checked'),
       turtle: dialog.find('.turtle').prop('checked'),
-      bits: dialog.find('.bits').prop('checked')
+      bits: dialog.find('.bits').prop('checked'),
+      p5js: dialog.find('.p5js').prop('checked')
     };
   }
 
@@ -1934,6 +2037,12 @@ function showPaneEditorLanguagesDialog(pane) {
       toggleLibrary(paneState.meta, lib, state.bits);
       change = true;
     }
+    if (state.p5js != hasP5js) {
+      var lib = { name: 'p5js', src: '//{site}/lib/p5.js' };
+      if (!paneState.meta) { paneState.meta = {}; }
+      toggleLibrary(paneState.meta, lib, state.p5js);
+      change = true;
+    }
     var wantCoffeeScript = false;
     if (change && paneState.meta && /coffeescript/.test(state.lang) &&
         !findLibrary(paneState.meta, 'turtle')) {
@@ -1951,7 +2060,7 @@ function showPaneEditorLanguagesDialog(pane) {
     if (box.length) {
       if (state.html != hasHtml) {
         if (state.html) {
-          setupSubEditor(box, pane, paneState, '', 'html');
+          setupDropletSubEditor(box, pane, paneState, '', 'html', null, true);
         } else {
           tearDownSubEditor(box, pane, paneState, 'html');
         }
@@ -2157,7 +2266,8 @@ function editorMimeType(paneState) {
 }
 
 function editorHasAnyErrors(editor) {
-  if (!editor) return false;
+  if (!editor || editor.currentlyUsingBlocks) return false;
+  if (editor.aceEditor) { editor = editor.aceEditor; }
   var annot = editor.getSession().getAnnotations();
   for (var j = 0; j < annot.length; ++j) {
     if (annot[j].type == 'error')
@@ -2283,10 +2393,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
         dropletEditor.paletteWrapper);
   }
 
-  $('<div class="texttoggle">' +
+  $('<div class="texttoggle" droplet-editor="dropletEditor">' +
     '<div class="slide"><div class="info"></div></div></div>').appendTo(
       dropletEditor.paletteWrapper);
-  $('<div class="blocktoggle">' +
+  $('<div class="blocktoggle" droplet-editor="dropletEditor">' +
     '<div class="slide"><div class="info"></div></div></div>').appendTo(
       $(dropletEditor.wrapperElement).find('.ace_editor'));
 
@@ -2351,7 +2461,7 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   paneState.handleHtmlCssChange = handleHtmlCssChange;
 
   if (box.find('.htmlmark').is(':visible')) {
-    setupSubEditor(box, pane, paneState, meta.html, 'html');
+    setupDropletSubEditor(box, pane, paneState, meta.html, 'html', null, useblocks);
   }
 
   if (box.find('.cssmark').is(':visible')) {
@@ -2360,6 +2470,10 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
 
   paneState.settingUp = null;
   updatePaneTitle(pane);
+
+  // Work around undesired scrolling bug -
+  // repro: turn off split pane view, and linger over a file to force preload.
+  $('#overflow').scrollLeft(0);
 }
 
 function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
@@ -2374,9 +2488,64 @@ function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   setupResizeHandler(container.parent(), editor);
 }
 
+function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, useblocks) {
+  var id = uniqueId(htmlorcss + 'edit');
+  box.find('.' + htmlorcss + 'mark').html(
+     '<div id="' + id + '" class="editor"></div>').css('display', 'block');
+  var container = $('#' + id);
+  var editor = paneState[htmlorcss + 'Editor'] =
+      new droplet.Editor(
+          document.getElementById(id),
+          {
+            mode: htmlorcss,
+            palette: htmlorcss == 'html' ? palette.HTML_PALETTE : palette.CSS_PALETTE,
+            modeOptions: dropletOptionsForMimeType('text/' + htmlorcss)
+          });
+  editor.setPaletteWidth(250);
+  if (!/^frame\./.test(window.location.hostname)) {
+    // Blue nubby when inside pencilcode.
+    editor.setTopNubbyStyle(0, '#1e90ff');
+  } else {
+    // Gray nubby when framed.
+    editor.setTopNubbyStyle(0, '#dddddd');
+  }
+  editor.setEditorState(useblocks);
+  editor.setValue(text);
+
+  editor.on('changepalette', function() {
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+  });
+
+  editor.on('selectpalette', function(p) {
+    fireEvent('selectpalette', [pane, p]);
+  });
+
+  editor.on('pickblock', function(p) {
+    fireEvent('pickblock', [pane, p]);
+  });
+
+  editor.on('toggledone', function() {
+    $('.droplet-hover-div').tooltipster({position: 'right', interactive: true});
+  });
+
+  setupResizeHandler(container.parent(), editor);
+
+  $('<div class="texttoggle" droplet-editor="' + htmlorcss + 'Editor">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      editor.paletteWrapper);
+  $('<div class="blocktoggle" droplet-editor="' + htmlorcss + 'Editor">' +
+    '<div class="slide"><div class="info"></div></div></div>').appendTo(
+      $(editor.wrapperElement).find('.ace_editor'));
+
+  aceEditor = editor.aceEditor;
+  aceEditor.on('change', paneState.handleHtmlCssChange);
+  setupAceEditor(pane, container, aceEditor, "ace/mode/" + htmlorcss, text);
+}
+
 function tearDownSubEditor(box, pane, paneState, htmlorcss) {
   if (paneState[htmlorcss + 'Editor']) {
-    paneState[htmlorcss + 'Editor'].destroy();
+    if (paneState[htmlorcss + 'Editor'].destroy)
+      paneState[htmlorcss + 'Editor'].destroy();
     paneState[htmlorcss + 'Editor'] = null;
   }
   box.find('.' + htmlorcss + 'mark').html('').css('display', 'none');
@@ -2597,17 +2766,34 @@ function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   }
 }
 
-function setPaneEditorBlockMode(pane, useblocks) {
+function setPaneEditorBlockMode(pane, useblocks, editor) {
+  function setMainEditorBlockMode(editor, useblocks) {
+    if (editor.currentlyUsingBlocks == useblocks) return false;
+    var visibleMimeType = editorMimeType(paneState);
+    if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
+    var togglingSucceeded = editor.toggleBlocks();
+    if (!togglingSucceeded) return false;
+    fireEvent('toggleblocks', [pane, editor.currentlyUsingBlocks]);
+    return true;
+  }
+  function setSubEditorBlockMode(editor, useblocks) {
+    if (!editor) return false;
+    if (editor.currentlyUsingBlocks == useblocks) return false;
+    return editor.toggleBlocks();
+  }
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
   useblocks = !!useblocks;
-  if (paneState.dropletEditor.currentlyUsingBlocks == useblocks) return false;
-  var visibleMimeType = editorMimeType(paneState);
-  if (useblocks && !mimeTypeSupportsBlocks(visibleMimeType)) return false;
-  var togglingSucceeded = paneState.dropletEditor.toggleBlocks();
-  if (!togglingSucceeded) return false;
-  fireEvent('toggleblocks', [pane, paneState.dropletEditor.currentlyUsingBlocks]);
-  return true;
+  if (editor) {
+    if (editor == "dropletEditor") {
+      return setMainEditorBlockMode(paneState.dropletEditor, useblocks);
+    }
+    return setSubEditorBlockMode(paneState[editor], useblocks);
+  }
+  var result = setMainEditorBlockMode(paneState.dropletEditor, useblocks);
+  setSubEditorBlockMode(paneState.htmlEditor, useblocks);
+  setSubEditorBlockMode(paneState.cssEditor, useblocks);
+  return result;
 }
 
 function getPaneEditorBlockMode(pane) {
@@ -2671,6 +2857,9 @@ function setPaneEditorReadOnly(pane, ro) {
   var containers = [];
   if (!paneState.editor) { return; }
   paneState.editor.setReadOnly(ro);
+  if (paneState.dropletEditor) {
+    paneState.dropletEditor.setReadOnly(ro);
+  }
   containers.push(paneState.editor.container);
   if (paneState.htmlEditor) {
     paneState.htmlEditor.setReadOnly(ro);
@@ -2912,6 +3101,7 @@ function noteNewFilename(pane, filename) {
     paneState.dropletEditor.setMode(
         dropletModeForMimeType(visibleMimeType),
         dropletOptionsForMimeType(visibleMimeType));
+    paneState.dropletEditor.setPalette(paletteForPane(paneState));
     paneState.editor.getSession().setMode(modeForMimeType(visibleMimeType));
     if (!mimeTypeSupportsBlocks(visibleMimeType)) {
       setPaneEditorBlockMode(pane, false);

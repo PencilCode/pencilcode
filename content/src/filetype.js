@@ -124,10 +124,12 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Add the default scripts.
   var j, scripts = [], src, text = doc.data;
   for (j = 0; j < meta.libs.length; ++j) {
-    src = meta.libs[j].src;
+    addScriptSrc(meta.libs[j].src, null, meta.libs[j].attrs);
+  }
+  function addScriptSrc(src, type, attrdict) {
     var attrs = '';
-    if (meta.libs[j].attrs) {
-      for (var att in meta.libs[j].attrs) {
+    if (attrdict) {
+      for (var att in attrdict) {
         attrs += ' ' + att + '="' + escapeHtml(meta.libs[j].attrs[att]) + '"';
       }
     }
@@ -139,20 +141,20 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       // http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
       scripts.push(
         '<script src="' + src + '" crossorigin="anonymous"' +
+        ' type="' + (type || inferScriptType(src)) + '"' +
         attrs + '><\057script>');
     } else {
       scripts.push(
-        '<script src="' + src + '"' + attrs + '><\057script>');
+        '<script src="' + src + '"' +
+        ' type="' + (type || inferScriptType(src)) + '"' +
+        attrs + '><\057script>');
     }
   }
   // Then add any setupScript supplied.
   if (setupScript) {
     for (j = 0; j < setupScript.length; ++j) {
       if (setupScript[j].src) {
-        scripts.push(
-          '<script src="' + setupScript[j].url + '" type="' +
-          (setupScript[j].type || inferScriptType(setupScript[j].url)) +
-          '">\n<\057script>');
+        addScriptSrc(setupScript[j].src, setupScript[j].type, null);
       } else if (setupScript[j].code) {
         scripts.push(
           '<script' +
@@ -309,6 +311,7 @@ function mimeForFilename(filename) {
     'py'   : 'text/x-python',
     'htm'  : 'text/html',
     'html' : 'text/html',
+    'csv'  : 'text/csv',
     'txt'  : 'text/plain',
     'text' : 'text/plain',
     'css'  : 'text/css',

@@ -9,7 +9,17 @@ describe('html editor', function() {
   var _ph, _page;
   before(function(done) {
     // Create the headless webkit browser.
-    phantom.create(function(error, ph) {
+    phantom.create({
+      path: phantomjs.path,
+      parameters: {
+        // Use the test server as a proxy server, so that all requests
+        // go to this server (instead of trying real DNS lookups).
+        proxy: '127.0.0.1:8193',
+        // Set the disk storage to zero to avoid persisting localStorage
+        // between test runs.
+        'local-storage-quota': 0
+      }
+    }, function(error, ph) {
       assert.ifError(error);
       // Open a page for browsing.
       _ph = ph;
@@ -29,17 +39,6 @@ describe('html editor', function() {
           });
         });
       });
-    }, {
-      // Launch phantomjs from the phantomjs package.
-      phantomPath: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
     });
   });
   after(function() {
@@ -118,6 +117,25 @@ describe('html editor', function() {
       assert.ok(/blocks/.test(result.title));
       // The save button is enabled, because it's a new file.
       assert.equal(result.saved, false);
+      done();
+    });
+  });
+  //Rename to a .coffee file
+  var name = 'test' + ('' + Math.random()).substring(2) + '.coffee';
+  it('should switch palette on filetype change', function(done) {
+    asyncTest(_page, one_step_timeout, [name], function(name) {
+      // Alter the editable filename and give up focus.
+      $('#filename').text(name).focus().blur();
+    }, function() {
+      if (!$('.droplet-hover-div.tooltipstered')) return;
+      return {
+        //Content of first block in new mode
+        text: $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content')
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      //First block should be that of coffeescript
+      assert.equal(result.text, 'Move forward');
       done();
     });
   });
