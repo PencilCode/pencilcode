@@ -1,13 +1,37 @@
 import turtle
 import time
 
+# TODO
 myTurtle = turtle.Turtle()
+myTurtle.speed(0)
+myTurtle.resizemode("user")
+myTurtle.setheading(90)
 myTurtle.penup()
-myTurtle.speed(5)
-
+myTurtle.pensize(2)
+myTurtle.pencolor("red")
+myTurtle.speed(1.25)
 ###################
 ## Move Commands ##
 ###################
+
+def __getStateAndHide():
+    result = (myTurtle.isvisible(), myTurtle.pen(), myTurtle.pos(), myTurtle.heading())
+    myTurtle.hideturtle()
+    myTurtle.penup()
+    myTurtle.speed(0)
+    return result
+
+def __restoreStateAndShow(isvisible, penInfo, position, heading):
+    if (position != None):
+        myTurtle.setpos(position)
+    if (heading != None):
+        myTurtle.setheading(heading)
+    if (penInfo != None):
+        myTurtle.pen(penInfo)
+    if (isvisible):
+        myTurtle.showturtle()
+    else:
+        myTurtle.hideturtle()
 
 def fd(value):
     myTurtle.fd(value)
@@ -28,10 +52,12 @@ def la(angle, radius):
     myTurtle.circle(radius, angle)
 
 def speed(value):
-    myTurtle.speed(value)
+    myTurtle.speed(value * 1.25)
 
 def home():
+    isVisible, penInfo, _, _ = __getStateAndHide()
     myTurtle.home()
+    __restoreStateAndShow(isVisible, penInfo, None, 90)
 
 def turnto(value):
     myTurtle.setheading(value)
@@ -43,13 +69,8 @@ def movexy(x, y):
     moveto(myTurtle.xcor() + x, myTurtle.ycor() + y)
 
 def jumpto(x, y):
-    penDown = myTurtle.isdown()
-    mySpeed = myTurtle.speed()
-    myTurtle.penup()
-    myTurtle.speed(0)
-    myTurtle.goto(x, y)
-    myTurtle.speed(mySpeed)
-    if (penDown): myTurtle.pendown()
+    isVisible, penInfo, _, _ = __getStateAndHide()
+    __restoreStateAndShow(isVisible, penInfo, [x, y], None)
 
 def jumpxy(x, y):
     jumpto(myTurtle.xcor() + x, myTurtle.ycor() + y)
@@ -76,39 +97,45 @@ def pu():
 def pd():
     myTurtle.pendown()
 
-def pen(color, size):
+def pen(color, size=None):
     myTurtle.pencolor(color)
-    myTurtle.pensize(size)
-#    myTurtle.pen(pencolor=color, pensize=size)
+    if (size != None):
+        myTurtle.pensize(size)
     myTurtle.pendown()
 
 def dot(color, size):
     myTurtle.dot(size, color)
 
-def box(color, size):
-    print "**box(color,size) not implemented**\n"
-    # TODO
+def begin_fill(color):
+    myTurtle.fillcolor(color)
+    myTurtle.begin_fill()
 
-def fill(color):
-    print "**fill(color) not implemented**\n"
-    # TODO
-    pass
+def end_fill():
+    myTurtle.end_fill()
+
+def begin_poly():
+    myTurtle.begin_poly()
+
+def end_poly():
+    myTurtle.end_poly()
+
+def get_poly():
+    return myTurtle.get_poly()
+
+def make_shape(name, polygon, fillcolor, outlineColor):
+    s = turtle.Shape(name)
+    s.addcomponent(polygon, fillcolor, outlineColor)
 
 def wear(name):
-    print "**wear(name) not implemented**\n"
-    # TODO
+    myTurtle.shape(name)
+
+def grow(factor):
+    width, length, scale = myTurtle.shapesize()
+    myTurtle.shapesize(width * factor, length * factor, scale * factor)
 
 def img(path):
     print "**img(path) not implemented**\n"
     # TODO
-
-def grow(value):
-    print "**grow(value) not implemented**\n"
-    # TODO
-
-def drawon(sprite):
-    print "**drawon(sprite) not implemented**\n"
-    # TODO - one option is document?
 
 ##################
 ## Art Commands ##
@@ -154,4 +181,5 @@ def readnum(prompt):
 ## Sound Commands ##
 ####################
 
-# TODO
+
+
