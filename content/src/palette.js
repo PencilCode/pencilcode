@@ -756,6 +756,106 @@ module.exports = {
       ])
     }
   ],
+  PYTHON_PALETTE: [
+    {
+      name: 'Move',
+      color: 'lightblue',
+      blocks: filterblocks([
+        {
+          block: 'fd(100)',
+          title: 'Move forward'
+        }, {
+          block: 'rt(90)',
+          title: 'Turn right'
+        }, {
+          block: 'lt(90)',
+          title: 'Turn left'
+        }, {
+          block: 'bk(100)',
+          title: 'Move backward'
+        }, {
+          block: 'ra(180, 100)',
+          title: 'Make a wide right arc'
+        }, {
+          block: 'la(180, 100)',
+          title: 'Make a wide left arc'
+        }, {
+          block: 'speed(10)',
+          title: 'Set the speed of the turtle'
+        }, {
+          block: 'speed(0)',
+          title: 'Use infinite speed'
+        }, {
+          block: 'home()',
+          title: 'Jump to the origin, turned up'
+        }, {
+          block: 'turnto(270)',
+          title: 'Turn to an absolute direction'
+        }, {
+//          block: '@turnto lastclick',
+//          title: 'Turn toward a located object'
+//        }, {
+          block: 'moveto(100, 50)',
+          title: 'Move to coordinates'
+        }, {
+          block: 'movexy(30, 20)',
+          title: 'Move by changing x and y'
+        }, {
+          block: 'jumpto(100, 50)',
+          title: 'Jump to coordinates without drawing'
+        }, {
+          block: 'jumpxy(30, 20)',
+          title: 'Jump changing x and y without drawing'
+        }
+      ])
+    }, {
+      name: 'Art',
+      color: 'purple',
+      blocks: filterblocks([
+         {
+          block: 'pen(purple, 10)',
+          title: 'Set pen color and size'
+        }, {
+          block: 'dot(green, 50)',
+          title: 'Make a dot'
+        }, {
+//          block: 'box(yellow, 50)',
+//          title: 'Make a square'
+//        }, {
+//          block: '@fill blue',
+//          title: 'Fill traced shape'
+//        }, {
+//          block: '@wear \'/img/apple\'',
+//          title: 'Use an image for the turtle'
+//        }, {
+//          block: '@scale 3',
+//          title: 'Scale turtle drawing'
+//        }, {
+          block: 'ht()',
+          title: 'Hide the main turtle'
+        }, {
+          block: 'st()',
+          title: 'Show the main turtle'
+        }, {
+          block: 'cs()',
+          title: 'Clear screen'
+        }, {
+          block: 'pu()',
+          title: 'Lift the pen up'
+        }, {
+          block: 'pd()',
+          title: 'Put the pen down'
+//        }, {
+//          block: 'drawon s',
+//          title: 'Draw on sprite s'
+//        }, {
+//          block: '@drawon document',
+//          title: 'Draw on the document'
+        }
+      ])
+    }
+  ],
+
   HTML_PALETTE: [
     {
       name: "Metadata",
@@ -1124,8 +1224,167 @@ module.exports = {
     Piano: {value: true, color: 'teal'},
     Pencil: {value: true, color: 'teal'}
   },
+  KNOWN_PYTHON_FUNCTIONS: {
+    fd: {color: 'lightblue', dropdown: [distances]},
+    '?.bk': {color: 'lightblue', dropdown: [distances]},
+    '?.rt': {color: 'lightblue', dropdown: [angles]},
+    '?.lt': {color: 'lightblue', dropdown: [angles]},
+    '?.slide': {color: 'lightblue', dropdown: [sdistances]},
+    '?.move': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.movexy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.moveto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.jump': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.jumpxy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.jumpto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
+    '?.turnto': {color: 'lightblue', dropdown: [sangles]},
+    '?.home': {color: 'lightblue'},
+    '?.pen': {color: 'purple', dropdown: [colors]},
+    '?.fill': {color: 'purple', dropdown: [colors]},
+    '?.dot': {color: 'purple', dropdown: [colors, sizes]},
+    '?.box': {color: 'purple', dropdown: [colors, sizes]},
+    '?.mirror': {color: 'purple'},
+    '?.twist': {color: 'purple', dropdown: [sangles]},
+    '?.scale': {color: 'purple', dropdown: [scales]},
+    '?.pause': {},
+    '?.st': {color: 'purple'},
+    '?.ht': {color: 'purple'},
+    '?.cs': {color: 'purple'},
+    '?.cg': {color: 'purple'},
+    '?.ct': {color: 'purple'},
+    '?.pu': {color: 'purple'},
+    '?.pd': {color: 'purple'},
+    '?.pe': {},
+    '?.pf': {},
+    '?.say': {color: 'indigo'},
+    '?.play': {color: 'indigo'},
+    '?.tone': {color: 'indigo'},
+    '?.silence': {color: 'indigo'},
+    '?.speed': {color:'lightblue'},
+    '?.wear': {color:'purple'},
+    '?.drawon': {color:'purple'},
+    '?.label': {color: 'pink'},
+    '?.reload': {},
+    see: {},
+    sync: {},
+    send: {},
+    recv: {},
+    '?.click': {color: 'orange'},
+    '?.mousemove': {color: 'orange'},
+    '?.mouseup': {color: 'orange'},
+    '?.mousedown': {color: 'orange'},
+    '?.keyup': {color: 'orange'},
+    '?.keydown': {color: 'orange'},
+    '?.keypress': {color: 'orange'},
+    alert: {},
+    prompt: {},
+    '?.done': {},
+    tick: {color: 'orange'},
+    forever: {color: 'orange'},
+    stop: {color: 'orange'},
+    await: {color: 'orange'},
+    defer: {color: 'orange'},
+    type: {color: 'pink'},
+    '*.sort': {},
+    log: {color: 'pink'},
+    abs: {value: true, color: 'lightgreen'},
+    acos: {value: true, color: 'lightgreen'},
+    asin: {value: true, color: 'lightgreen'},
+    atan: {value: true, color: 'lightgreen'},
+    atan2: {value: true, color: 'lightgreen'},
+    cos: {value: true, color: 'lightgreen'},
+    sin: {value: true, color: 'lightgreen'},
+    tan: {value: true, color: 'lightgreen'},
+    ceil: {value: true, color: 'lightgreen'},
+    floor: {value: true, color: 'lightgreen'},
+    round: {value: true, color: 'lightgreen'},
+    exp: {value: true, color: 'lightgreen'},
+    ln: {value: true, color: 'lightgreen'},
+    log10: {value: true, color: 'lightgreen'},
+    pow: {value: true, color: 'lightgreen'},
+    sqrt: {value: true, color: 'lightgreen'},
+    max: {value: true, color: 'lightgreen'},
+    min: {value: true, color: 'lightgreen'},
+    random: {value: true, color: 'lightgreen'},
+    'Math.abs': {value: true, color: 'lightgreen'},
+    'Math.acos': {value: true, color: 'lightgreen'},
+    'Math.asin': {value: true, color: 'lightgreen'},
+    'Math.atan': {value: true, color: 'lightgreen'},
+    'Math.atan2': {value: true, color: 'lightgreen'},
+    'Math.cos': {value: true, color: 'lightgreen'},
+    'Math.sin': {value: true, color: 'lightgreen'},
+    'Math.tan': {value: true, color: 'lightgreen'},
+    'Math.ceil': {value: true, color: 'lightgreen'},
+    'Math.floor': {value: true, color: 'lightgreen'},
+    'Math.round': {value: true, color: 'lightgreen'},
+    'Math.exp': {value: true, color: 'lightgreen'},
+    'Math.log10': {value: true, color: 'lightgreen'},
+    'Math.log2': {value: true, color: 'lightgreen'},
+    'Math.log': {value: true, color: 'lightgreen'},
+    'Math.pow': {value: true, color: 'lightgreen'},
+    'Math.sqrt': {value: true, color: 'lightgreen'},
+    'Math.max': {value: true, color: 'lightgreen'},
+    'Math.min': {value: true, color: 'lightgreen'},
+    'Math.random': {value: true, color: 'lightgreen'},
+    '?.pagexy': {value: true},
+    '?.getxy': {value: true, color:'lightblue'},
+    '?.direction': {value: true, color:'lightblue'},
+    '?.distance': {value: true, color:'lightblue'},
+    '?.shown': {value: true, color:'lightgreen'},
+    '?.hidden': {value: true, color:'lightgreen'},
+    '?.inside': {value: true, color:'lightgreen'},
+    '?.touches': {value: true, color:'lightgreen'},
+    '?.within': {value: true, color:'lightgreen'},
+    '?.notwithin': {value: true, color:'lightgreen'},
+    '?.nearest': {value: true},
+    '?.pressed': {value: true, color:'lightgreen'},
+    '?.canvas': {value: true},
+    hsl: {value: true},
+    hsla: {value: true},
+    rgb: {value: true},
+    rgba: {value: true},
+    '*.cell': {value: true},
+    '$': {value: true},
+    '*.match': {value: true, color:'lightgreen'},
+    '*.toString': {value: true},
+    '*.charCodeAt': {value: true},
+    '*.fromCharCode': {value: true},
+    '*.exec': {value: true},
+    '*.test': {value: true},
+    '*.split': {value: true},
+    '*.join': {value: true},
+    button: {value: true, command: true, color: 'orange'},
+    read: {value: true, command: true, color: 'pink'},
+    readstr: {value: true, command: true, color: 'pink'},
+    readnum: {value: true, command: true, color: 'pink'},
+    write: {value: true, command: true, color: 'pink'},
+    table: {value: true, command: true, color: 'yellow'},
+    '*.splice': {value: true, command: true},
+    '*.append': {value: true, command: true},
+    '*.finish': {value: true, command: true},
+    '*.text': {value: true, command: true, color: 'pink'},
+    loadscript: {value: true, command: true},
+    Turtle: {value: true, color: 'teal'},
+    Sprite: {value: true, color: 'teal'},
+    Piano: {value: true, color: 'teal'},
+    Pencil: {value: true, color: 'teal'}
+  },
 
   CATEGORIES: {
+    functions: {color: 'lightgreen'},
+    returns: {color: 'yellow'},
+    comments: {color: 'gray'},
+    arithmetic: {color: 'lightgreen'},
+    logic: {color: 'lightgreen'},
+    containers: {color: 'teal'},
+    assignments: {color: 'lightgreen'},
+    loops: {color: 'orange'},
+    conditionals: {color: 'orange'},
+    value: {color: 'lightgreen'},
+    command: {color: 'lightgreen'},
+    errors: {color: '#f00'}
+  },
+
+  PYTHON_CATEGORIES: {
     functions: {color: 'lightgreen'},
     returns: {color: 'yellow'},
     comments: {color: 'gray'},
