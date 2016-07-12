@@ -42,13 +42,14 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
     return Sk.builtinFiles["files"][x];
   }
 
-  function executePython(code, outputElement, canvasElement) {
+  function executePython(payload, outputElement, canvasElement) {
     function outputFunction(text) { outputElement.innerHTML += text; }
 
     Sk.configure({output:outputFunction, read:builtinRead});
     (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = canvasElement.id;
-    pyPencilCode = ajaxRequest("/lib/PyPencilCode.py");
-    payload = pyPencilCode + code;
+    pyPencilCode = ajaxRequest("/lib/pencilcode.py");
+    payload = pyPencilCode + payload;
+    console.log(payload);
 
     var myPromise = Sk.misceval.asyncToPromise(function() {
       return Sk.importMainWithBody("<stdin>", false, payload, true);
