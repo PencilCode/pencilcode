@@ -1652,8 +1652,8 @@ function paletteForPane(paneState, selfname) {
 function dropletOptionsForMimeType(mimeType) {
   if (/x-python/.test(mimeType)) {
     return {
-      functions: palette.KNOWN_PYTHON_FUNCTIONS,
-      categories: palette.PYTHON_CATEGORIES
+      functions: palette.PYTHON_FUNCTIONS//,
+//      categories: palette.PYTHON_CATEGORIES
     };
   }
   if (mimeType.match(/^text\/html\b/)) {

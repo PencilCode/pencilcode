@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
     (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = canvasElement.id;
     pyPencilCode = ajaxRequest("/lib/pencilcode.py");
     payload = pyPencilCode + payload;
-    console.log(payload);
 
     var myPromise = Sk.misceval.asyncToPromise(function() {
       return Sk.importMainWithBody("<stdin>", false, payload, true);

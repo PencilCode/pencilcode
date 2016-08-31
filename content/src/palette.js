@@ -66,6 +66,19 @@ var distances = ['25', '50', '100', '200'],
     randarg = ['100', '[true, false]', 'normal', 'position', 'color'],
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'black'];
 
+var py_types = {
+    distances: ['25', '50', '100', '200'],
+    sdistances: ['100', '50', '-50', '-100'],
+    angles: ['30', '45', '60', '90', '135', '144'],
+    sangles: ['0', '90', '180', '270'],
+    turntoarg: ['0', '90', '180', '270'],//, 'lastclick', 'lastmouse'],
+    sizes: ['10', '25', '50', '100'],
+    scales: ['0.5', '2.0', '3.0'],
+    speeds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'],
+//    randarg: ['100', '[true, false]', 'normal', 'position', 'color'],
+    colors: ['\'red\'', '\'orange\'', '\'yellow\'', '\'green\'', '\'blue\'', '\'purple\'', '\'black\'']
+};
+
 module.exports = {
 
   expand: expand,
@@ -765,14 +778,14 @@ module.exports = {
           block: 'fd(100)',
           title: 'Move forward'
         }, {
+          block: 'bk(100)',
+          title: 'Move backward'
+        }, {
           block: 'rt(90)',
           title: 'Turn right'
         }, {
           block: 'lt(90)',
           title: 'Turn left'
-        }, {
-          block: 'bk(100)',
-          title: 'Move backward'
         }, {
           block: 'ra(180, 100)',
           title: 'Make a wide right arc'
@@ -813,10 +826,10 @@ module.exports = {
       color: 'purple',
       blocks: filterblocks([
          {
-          block: 'pen(purple, 10)',
+          block: 'pen(\'purple\', 10)',
           title: 'Set pen color and size'
         }, {
-          block: 'dot(green, 50)',
+          block: 'dot(\'green\', 50)',
           title: 'Make a dot'
         }, {
 //          block: 'box(yellow, 50)',
@@ -1224,35 +1237,41 @@ module.exports = {
     Piano: {value: true, color: 'teal'},
     Pencil: {value: true, color: 'teal'}
   },
-  KNOWN_PYTHON_FUNCTIONS: {
-    fd: {color: 'lightblue', dropdown: [distances]},
-    '?.bk': {color: 'lightblue', dropdown: [distances]},
-    '?.rt': {color: 'lightblue', dropdown: [angles]},
-    '?.lt': {color: 'lightblue', dropdown: [angles]},
+  PYTHON_FUNCTIONS: {
+//    '*.fd': {color: 'purple'}
+//    '?.fd': {color: 'purple'}
+    'fd': {color: 'lightblue', dropdown: [py_types.distances]},
+    'bk': {color: 'lightblue', dropdown: [py_types.distances]},
+    'rt': {color: 'lightblue', dropdown: [py_types.angles]},
+    'lt': {color: 'lightblue', dropdown: [py_types.angles]},
+    'ra': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'la': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'speed': {color: 'lightblue', drown: [py_types.speeds]},
+    'home': {color: 'lightblue'},
+    'turnto': {color: 'lightblue', dropdown: [py_types.angles]},
+    'moveto': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
+    'movexy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
+    'jumpto': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
+    'jumpxy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
+
+    'pen': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
+    'dot': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
+    'st': {color: 'purple'},
+    'ht': {color: 'purple'},
+    'cs': {color: 'purple'},
+    'pu': {color: 'purple'},
+    'pd': {color: 'purple'},
+
+ /*
     '?.slide': {color: 'lightblue', dropdown: [sdistances]},
-    '?.move': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.movexy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.moveto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.jump': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.jumpxy': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.jumpto': {color: 'lightblue', dropdown: [sdistances, sdistances]},
-    '?.turnto': {color: 'lightblue', dropdown: [sangles]},
-    '?.home': {color: 'lightblue'},
-    '?.pen': {color: 'purple', dropdown: [colors]},
     '?.fill': {color: 'purple', dropdown: [colors]},
-    '?.dot': {color: 'purple', dropdown: [colors, sizes]},
     '?.box': {color: 'purple', dropdown: [colors, sizes]},
     '?.mirror': {color: 'purple'},
     '?.twist': {color: 'purple', dropdown: [sangles]},
     '?.scale': {color: 'purple', dropdown: [scales]},
     '?.pause': {},
-    '?.st': {color: 'purple'},
-    '?.ht': {color: 'purple'},
-    '?.cs': {color: 'purple'},
     '?.cg': {color: 'purple'},
     '?.ct': {color: 'purple'},
-    '?.pu': {color: 'purple'},
-    '?.pd': {color: 'purple'},
     '?.pe': {},
     '?.pf': {},
     '?.say': {color: 'indigo'},
@@ -1366,7 +1385,7 @@ module.exports = {
     Turtle: {value: true, color: 'teal'},
     Sprite: {value: true, color: 'teal'},
     Piano: {value: true, color: 'teal'},
-    Pencil: {value: true, color: 'teal'}
+    Pencil: {value: true, color: 'teal'}*/
   },
 
   CATEGORIES: {
@@ -1384,20 +1403,20 @@ module.exports = {
     errors: {color: '#f00'}
   },
 
-  PYTHON_CATEGORIES: {
-    functions: {color: 'lightgreen'},
-    returns: {color: 'yellow'},
-    comments: {color: 'gray'},
-    arithmetic: {color: 'lightgreen'},
-    logic: {color: 'lightgreen'},
-    containers: {color: 'teal'},
-    assignments: {color: 'lightgreen'},
-    loops: {color: 'orange'},
-    conditionals: {color: 'orange'},
-    value: {color: 'lightgreen'},
-    command: {color: 'lightgreen'},
-    errors: {color: '#f00'}
-  },
+//  PYTHON_CATEGORIES: {
+//    functions: {color: 'lightgreen'},
+//    returns: {color: 'yellow'},
+//    comments: {color: 'gray'},
+//    arithmetic: {color: 'lightgreen'},
+//    logic: {color: 'lightgreen'},
+//    containers: {color: 'teal'},
+//    assignments: {color: 'lightgreen'},
+//    loops: {color: 'orange'},
+//    conditionals: {color: 'orange'},
+//    value: {color: 'lightgreen'},
+//    command: {color: 'lightgreen'},
+//    errors: {color: '#f00'}
+//  },
 
   // Overrides to make the palette colors match
   KNOWN_HTML_TAGS: {
