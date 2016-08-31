@@ -1,37 +1,45 @@
 import turtle
 import time
 
-# TODO
-myTurtle = turtle.Turtle()
-myTurtle.speed(0)
-myTurtle.resizemode("user")
-myTurtle.setheading(90)
-myTurtle.penup()
-myTurtle.pensize(2)
-myTurtle.pencolor("red")
-myTurtle.speed(1.25)
 ###################
 ## Move Commands ##
 ###################
 
+def __getPenDictionary():
+    return { "shown": myTurtle.isvisible(), "pendown": myTurtle.isdown(), "pencolor": myTurtle.pencolor(),
+             "fillcolor": myTurtle.fillcolor, "pensize": myTurtle.pensize(), "speed": myTurtle.speed() }
+
+def __setPenState(penstate):
+    myTurtle.pencolor(penstate["pencolor"])
+    myTurtle.fillcolor(penstate["fillcolor"])
+    myTurtle.pensize(penstate["pensize"])
+    myTurtle.speed(penstate["speed"])
+
+    if penstate["shown"]:
+        myTurtle.showturtle()
+    else:
+        myTurtle.hideturtle()
+
+    if penstate["pendown"]:
+        myTurtle.pendown()
+    else:
+        myTurtle.penup()
+
+
 def __getStateAndHide():
-    result = (myTurtle.isvisible(), myTurtle.pen(), myTurtle.pos(), myTurtle.heading())
+    result = (__getPenDictionary(), myTurtle.pos(), myTurtle.heading())
     myTurtle.hideturtle()
     myTurtle.penup()
     myTurtle.speed(0)
     return result
 
-def __restoreStateAndShow(isvisible, penInfo, position, heading):
+def __restoreStateAndShow(penInfo, position, heading):
     if (position != None):
         myTurtle.setpos(position)
     if (heading != None):
         myTurtle.setheading(heading)
     if (penInfo != None):
-        myTurtle.pen(penInfo)
-    if (isvisible):
-        myTurtle.showturtle()
-    else:
-        myTurtle.hideturtle()
+        __setPenState(penInfo)
 
 def fd(value):
     myTurtle.fd(value)
@@ -55,9 +63,9 @@ def speed(value):
     myTurtle.speed(value * 1.25)
 
 def home():
-    isVisible, penInfo, _, _ = __getStateAndHide()
+    penInfo, _, _ = __getStateAndHide()
     myTurtle.home()
-    __restoreStateAndShow(isVisible, penInfo, None, 90)
+    __restoreStateAndShow(penInfo, None, 90)
 
 def turnto(value):
     myTurtle.setheading(value)
@@ -69,8 +77,8 @@ def movexy(x, y):
     moveto(myTurtle.xcor() + x, myTurtle.ycor() + y)
 
 def jumpto(x, y):
-    isVisible, penInfo, _, _ = __getStateAndHide()
-    __restoreStateAndShow(isVisible, penInfo, [x, y], None)
+    penInfo, _, _ = __getStateAndHide()
+    __restoreStateAndShow(penInfo, [x, y], None)
 
 def jumpxy(x, y):
     jumpto(myTurtle.xcor() + x, myTurtle.ycor() + y)
@@ -129,17 +137,13 @@ def make_shape(name, polygon, fillcolor, outlineColor):
 def wear(name):
     myTurtle.shape(name)
 
-def grow(factor):
-    width, length, scale = myTurtle.shapesize()
-    myTurtle.shapesize(width * factor, length * factor, scale * factor)
-
 def img(path):
     print "**img(path) not implemented**\n"
     # TODO
 
-##################
-## Art Commands ##
-##################
+###################
+## Text Commands ##
+###################
 
 def write(message):
     # TODO
@@ -181,5 +185,10 @@ def readnum(prompt):
 ## Sound Commands ##
 ####################
 
-
-
+myTurtle = turtle.Turtle()
+myTurtle.speed(0)
+myTurtle.setheading(90)
+myTurtle.penup()
+myTurtle.pensize(2)
+myTurtle.pencolor("red")
+myTurtle.speed(1.25)
