@@ -826,34 +826,31 @@ module.exports = {
       color: 'orange',
       blocks: filterblocks([
         {
-          block: 'for range(0,3):\n  ``',
-          title: 'Do something multiple times'
-        }, {
-          block: 'for x in range([0,10):\n  ``',
+          block: "for x in range(0, 10):\n  pass",
           title: 'Repeat something while counting up x'
         }, {
-          block: 'while `` < ``:\n  ``',
+          block: 'while 0 < 10:\n  pass',
           title: '  Repeat while a condition is true'
         }, {
-          block: 'if `` == ``:\n  ``',
+          block: 'if 0 == 0:\n  pass',
           title: 'Do something only if a condition is true'
         }, {
-          block: 'if `` == ``:\n  ``\nelse:\n  ``',
+          block: 'if 0 == 0:\n  pass\nelse:\n  pass',
           title:
               'Do something if a condition is true, otherwise something else',
           id: 'ifelse'
-//        }, {
-//          block: "forever 1, ->\n  ``",
-//          title: 'Repeat something forever at qually-spaced times'
-//        }, {
-//          block: "button \'Click\', ->\n  ``",
-//          title: 'Make a button and do something when clicked'
-//        }, {
-//          block: "keydown \'X\', ->\n  ``",
-//          title: 'Do something when a keyboard key is pressed'
-//        }, {
-//          block: "click (e) ->\n  ``",
-//          title: 'Do something when the mouse is clicked'
+/*        }, {
+          block: "forever 1, ->\n  ``",
+          title: 'Repeat something forever at qually-spaced times'
+        }, {
+          block: "button \'Click\', ->\n  ``",
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: "keydown \'X\', ->\n  ``",
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: "click (e) ->\n  ``",
+          title: 'Do something when the mouse is clicked'*/
         }
       ])
     }, {
