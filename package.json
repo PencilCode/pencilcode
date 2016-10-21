@@ -22,7 +22,7 @@
     "debug": "latest",
     "dynamic.io": "latest",
     "express": "latest",
-    "fs-ext": "^0.4.4",
+    "fs-ext": "^0.5.0",
     "fs-extra": "latest",
     "http-proxy": "latest",
     "log-timestamp": "latest",
@@ -51,7 +51,7 @@
     "grunt-node-inspector": "latest",
     "grunt-sed": "latest",
     "node-phantom-simple": "latest",
-    "phantomjs": "latest",
+    "phantomjs-prebuilt": "latest",
     "watchify": "latest"
   },
   "browser": {
