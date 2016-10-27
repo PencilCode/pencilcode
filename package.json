@@ -35,7 +35,7 @@
     "browserify": "latest",
     "browserify-shim": "latest",
     "chai": "latest",
-    "grunt": "latest",
+    "grunt": ">=0.4.5 <1.0.0",
     "mocha": "latest",
     "grunt-browserify": "latest",
     "grunt-bowercopy": "latest",
