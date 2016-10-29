@@ -1,5 +1,6 @@
 import turtle
 import time
+import pencilcode_internal
 
 ###################
 ## Move Commands ##
@@ -42,7 +43,7 @@ def __restoreStateAndShow(penInfo, position, heading):
         __setPenState(penInfo)
 
 def fd(value):
-    myTurtle.fd(value)
+    pencilcode_internal.fd(value)
 
 def bk(value):
     myTurtle.back(value)

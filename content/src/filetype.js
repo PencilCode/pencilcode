@@ -356,7 +356,7 @@ function effectiveMeta(input) {
         meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
                      {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
                      {name: 'skulpt-stdlib', src: '//{site}/lib/skulpt-stdlib.js'},
-                     {name: 'python-script', src: '//{site}/python-script.js'}
+                     {name: 'python-script', src: '//{site}/lib/python-script.js'}
         ];
       }
       else {
