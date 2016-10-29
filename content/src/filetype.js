@@ -172,6 +172,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   var seeline = '\n\n';
   if (meta.type == "text/x-python") {
     maintype = "text/x-python"
+    seeline = '# Initialization / clearing goes here\n\n';
     originalLanguage = 'python'
   }
   else {
@@ -352,9 +353,10 @@ function effectiveMeta(input) {
     if (doc && doc.mime) {
       if (doc.mime.lastIndexOf('text/x-python', 0) === 0) {
         meta.type = 'text/x-python';
-        meta.libs = [{name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
+        meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
+                     {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
                      {name: 'skulpt-stdlib', src: '//{site}/lib/skulpt-stdlib.js'},
-                     {name: 'turtle-python', src: '//{site}/turtle-python.js'}
+                     {name: 'python-script', src: '//{site}/python-script.js'}
         ];
       }
       else {
