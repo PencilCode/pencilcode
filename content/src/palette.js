@@ -876,18 +876,18 @@ module.exports = {
           block: 'dot(\'green\', 50)',
           title: 'Make a dot'
         }, {
-//          block: 'box(yellow, 50)',
-//          title: 'Make a square'
-//        }, {
-//          block: '@fill blue',
-//          title: 'Fill traced shape'
-//        }, {
-//          block: '@wear \'/img/apple\'',
-//          title: 'Use an image for the turtle'
-//        }, {
-//          block: '@scale 3',
-//          title: 'Scale turtle drawing'
-//        }, {
+          block: 'box(yellow, 50)',
+          title: 'Make a square'
+        }, {
+          block: 'fill(blue)',
+          title: 'Fill traced shape'
+        }, {
+          block: 'wear(\'apple\')',
+          title: 'Use an image for the turtle'
+        }, {
+          block: 'grow(3)',
+          title: 'Grow the size of the turtle'
+        }, {
           block: 'ht()',
           title: 'Hide the main turtle'
         }, {
@@ -902,12 +902,12 @@ module.exports = {
         }, {
           block: 'pd()',
           title: 'Put the pen down'
-//        }, {
-//          block: 'drawon s',
-//          title: 'Draw on sprite s'
-//        }, {
-//          block: '@drawon document',
-//          title: 'Draw on the document'
+        }, {
+          block: 'drawon(s)',
+          title: 'Draw on sprite s'
+        }, {
+          block: 'drawon(document)',
+          title: 'Draw on the document'
         }
       ])
     }, {
@@ -921,13 +921,13 @@ module.exports = {
           block: 'play(\'[fA] [ecG]2\')',
           title: 'Play notes in a chord'
         }, {
-          block: 'tone(\'B\', 2)',
+          block: 'tone(\'B\', 2, 1)',
           title: 'Sound a note immediately'
         }, {
           block: 'tone(\'B\', 0)',
           title: 'Silence a note immediately'
         }, {
-          block: 'tone(440, 2)',
+          block: 'tone(440, 2, 1)',
           title: 'Sound a frequency immediately'
         }, {
           block: 'tone(440, 0)',
@@ -1033,23 +1033,14 @@ module.exports = {
         {
           block: 'write(\'Hello.\')',
           title: 'Write text in the document'
-        }, {
-			block: 'print \'Hello\'',
-			title: 'Print text to the document'
-		}, {
-			block: 'x = input(\'Enter text\')',
-			title: 'Input word'
-		},{
-			block: 'print input(\'Enter text\')',
-			title: 'Take in word and then print'
-		},{
+        },{
 			block: 'typeline()',
 			title: 'Type a new line'
 		},{
 			block: 'debug(x)',
 			title: 'Debug a value'
 		},{
-			block: 'typebox(yellow)',
+			block: 'typebox(\'yellow\')',
 			title: 'Type out a colored square'
 		},{
 			block: 'type(\'Hello\')',
@@ -1057,13 +1048,19 @@ module.exports = {
 		},{
 			block: 'label(\'Spot\')',
 			title: 'Prints label at turtle position'
-		},{ 
-			block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    break', 
-			title: 'Read numbers only'
 		},{
-			block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    print x\n    break',
-			title: 'Read number and then print it'
-		}
+           block: 'read(\'TextToBeRead\')',
+           title: 'Type a new line to the document'
+        },{
+           block: 'readnum(\'2016\')',
+           title: 'Type a new line to the document'
+        }//,{ 
+		//	block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    break', 
+		//	title: 'Read numbers only'
+		//},{
+		//	block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    print x\n    break',
+		//	title: 'Read number and then print it'
+		//}
       ])
 	}, {
       name: 'Imports',
@@ -1464,11 +1461,16 @@ module.exports = {
 
     'pen': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
     'dot': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
+	'box': {color: 'purple'},
+	'fill': {color: 'purple'},
+	'wear': {color: 'purple'},
+	'grow': {color: 'purple'},
     'st': {color: 'purple'},
     'ht': {color: 'purple'},
     'cs': {color: 'purple'},
     'pu': {color: 'purple'},
     'pd': {color: 'purple'},
+	'drawon': {color: 'purple'},
 	//Sound
 	'play': {color: 'indigo'},
 	'tone': {color: 'indigo'},
@@ -1494,7 +1496,10 @@ module.exports = {
 	'typeline' : {color: 'pink'},
 	'debug' : {color: 'pink'},
 	'typebox' : {color: 'pink'},
+	'type' : {color: 'pink'},
 	'label' : {color: 'pink'},
+	'read': { color: 'pink' },
+    'readnum': { color: 'pink' },
 
  /*
     '?.slide': {color: 'lightblue', dropdown: [sdistances]},

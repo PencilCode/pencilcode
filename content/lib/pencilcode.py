@@ -95,95 +95,73 @@ def pause(value):
 ##################
 
 def hide():
-    myTurtle.hideturtle()
+    pencilcode_internal.hide()
 
 def show():
-    myTurtle.showturtle()
+    pencilcode_internal.show()
 
 def cs():
-    myTurtle.clear()
+    pencilcode_internal.cs()
 
 def pu():
-    myTurtle.penup()
+    pencilcode_internal.pu()
 
 def pd():
-    myTurtle.pendown()
+    pencilcode_internal.pd()
+	
+def box(a, b):
+	pencilcode_internal.box(a,b)
 
-def pen(color, size=None):
-    myTurtle.pencolor(color)
-    if (size != None):
-        myTurtle.pensize(size)
-    myTurtle.pendown()
+def grow(a):
+	pencilcode_internal.grow(a)
+
+def pen(color, size):
+	pencilcode_internal.pen(color, size)
 
 def dot(color, size):
-    myTurtle.dot(size, color)
+    pencilcode_internal.dot(color, size)
 
-def begin_fill(color):
-    myTurtle.fillcolor(color)
-    myTurtle.begin_fill()
-
-def end_fill():
-    myTurtle.end_fill()
-
-def begin_poly():
-    myTurtle.begin_poly()
-
-def end_poly():
-    myTurtle.end_poly()
-
-def get_poly():
-    return myTurtle.get_poly()
-
-def make_shape(name, polygon, fillcolor, outlineColor):
-    s = turtle.Shape(name)
-    s.addcomponent(polygon, fillcolor, outlineColor)
+def fill(color):
+	pencilcode_internal.fill(color)
 
 def wear(name):
-    myTurtle.shape(name)
+    pencilcode_internal.wear(name)
 
-def img(path):
-    print "**img(path) not implemented**\n"
-    # TODO
+def drawon(path):
+	pencilcode_internal.drawon(path)
+	
 
 ###################
 ## Text Commands ##
 ###################
 
 def write(message):
-    # TODO
-    pass
+    pencilcode_internal.write(message)
 
 def debug(object):
-    # TODO
-    pass
+    pencilcode_internal.debug(object)
 
 def type(message):
-    # TODO - typewrites on document
-    pass
+    pencilcode_internal.type(message)
 
 def typebox(color):
-    # TODO
-    pass
+    pencilcode_internal.typebox(color)
 
 def typeline():
-    # TODO - type a newline
-    pass
+    pencilcode_internal.typeline()
 
 def label(name):
-    # TODO
-    pass
+    pencilcode_internal.label(name)
 
 def await(lamda_exp):
     # TODO - this might be tricky
     pass
 
 def read(prompt):
-    # TODO - this might be tricky
-    pass
+    pencilcode_internal.read(prompt)
 
 def readnum(prompt):
-    # TODO - this might be tricky
-    pass
+    pencilcode_internal.readnum(prompt)
 
 ####################
 ## Sound Commands ##
@@ -191,12 +169,9 @@ def readnum(prompt):
 
 def play(tone):
     pencilcode_internal.play(tone)
-
-def tone(a, b):
-	pencilcode_internal.tone(a, b)
 	
-#def tone(a, s):
-#	pencilcode_internal.tone(a, s)
+def tone(a, b, c = None):
+	pencilcode_internal.tone(a, b, c)
 	
 def silence():
 	pencilcode_internal.silence()
@@ -223,16 +198,16 @@ def click(click):
 ######################
 
 def Turtle(a):
-	pass
+	pass#pencilcode_internal.Turtle(a)
 	
 def Sprite():
-	pass
+	pass#pencilcode_internal.Sprite()
 	
 def Piano():
-	pass
+	pass#pencilcode_internal.Piano()
 	
 def Pencil():
-	pass
+	pass#pencilcode_internal.Pencil()
 	
 ######################
 ## 	   Operators	##
@@ -241,40 +216,6 @@ def Pencil():
 def random(a):
 	pass
 	
-###################
-## Text Commands ##
-###################
-
-def write(message):
-    # TODO
-    pass
-
-def debug(object):
-    myTurtle.debug(object)
-
-def type(message):
-    myTurtle.write(message)
-
-def typebox(color):
-	myTurtle.typebox(color)
-	
-def typeline():
-    print('\n')
-
-def label(name):
-    myTurtle.write(name)
-
-def await(lamda_exp):
-    # TODO - this might be tricky
-    pass
-
-def read(prompt):
-    # TODO - this might be tricky
-    pass
-
-def readnum(prompt):
-    # TODO - this might be tricky
-    pass
 
 myTurtle = turtle.Turtle()
 myTurtle.speed(0)
