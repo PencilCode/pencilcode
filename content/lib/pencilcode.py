@@ -209,8 +209,8 @@ def say(a):
 ######################
 
 
-def button(buttonClick):
-	pencilcode_internal.button(buttonClick)
+def button(buttonClick, callee):
+	pencilcode_internal.button(buttonClick, callee)
 
 def keydown(key):
 	pencilcode_internal.keydown(key)

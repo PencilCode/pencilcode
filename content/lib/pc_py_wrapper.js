@@ -98,9 +98,9 @@ var $builtinmodule = function (name) {
 	
 	//Control
 	
-	mod.button = new Sk.builtin.func(function (buttonclick) {
-       Sk.builtin.pyCheckArgs("button", arguments, 1, 2);
-       return button(buttonclick.v);
+	mod.button = new Sk.builtin.func(function (buttonclick, callee) {
+       Sk.builtin.pyCheckArgs("button", arguments, 2, 2);
+       return button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
     });
 	
 	mod.click = new Sk.builtin.func(function (click) {
