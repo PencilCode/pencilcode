@@ -118,20 +118,20 @@ var $builtinmodule = function (name) {
        return keyup(key.v);
     });
 	
-	//Sound
+	//Sound/////////////
 	mod.play = new Sk.builtin.func(function (note) {
        Sk.builtin.pyCheckArgs("play", arguments, 1, 1);
        return play(note.v);
     });
 	
-	//mod.tone = new Sk.builtin.func(function (a) {
-    //   Sk.builtin.pyCheckArgs("tone", arguments, 1, 3);
-    //   return tone(a.v);
+	//mod.tone3 = new Sk.builtin.func(function (a, b, c) {
+    //   Sk.builtin.pyCheckArgs("tone", arguments, 3, 3);
+    //   return tone(a.v, b.v, c.v);
     //});
 	
-	mod.tone = new Sk.builtin.func(function (a, b) {
-       Sk.builtin.pyCheckArgs("tone", arguments, 2, 2);
-       return tone(a.v, b.v);
+	mod.tone = new Sk.builtin.func(function (a, b, c) {
+       Sk.builtin.pyCheckArgs("tone", arguments, 2, 3);
+       return tone(a.v, b.v, c.v);
     });
 	
 	mod.silence = new Sk.builtin.func(function () {
@@ -144,10 +144,140 @@ var $builtinmodule = function (name) {
        return say(a.v);
     });
 	
+	 // TEXT METHODS /////////////////////////////////////////////////////////
+    mod.write = new Sk.builtin.func(function (message) {
+        Sk.builtin.pyCheckArgs("write", arguments, 1, 1);
+        return write(message.v);
+    });
+
+    mod.debug = new Sk.builtin.func(function (object) {
+        Sk.builtin.pyCheckArgs("debug", arguments, 1, 1);
+        return debug(object.v);
+    });
+
+    mod.type = new Sk.builtin.func(function (message) {
+        Sk.builtin.pyCheckArgs("type", arguments, 1, 1);
+        return type(message.v);
+    });
+
+    mod.typebox = new Sk.builtin.func(function (color) {
+        Sk.builtin.pyCheckArgs("typebox", arguments, 1, 1);
+        return typebox(color.v);
+    });
+
+    mod.typeline = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("typeline", arguments, 0, 0);
+        return typeline();
+    });
+
+    mod.label = new Sk.builtin.func(function (name) {
+        Sk.builtin.pyCheckArgs("label", arguments, 1, 1);
+        return label(name.v);
+    });
+
+    /*mod.await = new Sk.builtin.func(function (lambda_expression) {
+        Sk.builtin.pyCheckArgs("await", arguments, 1, 1);
+        return await(lambda_expression.v);
+    });*/
+        
+    mod.read = new Sk.builtin.func(function (prompt) {
+        Sk.builtin.pyCheckArgs("read", arguments, 1, 1);
+        return read(prompt.v);
+    });
+
+    mod.readnum = new Sk.builtin.func(function (prompt) {
+        Sk.builtin.pyCheckArgs("readnum", arguments, 1, 1);
+        return readnum(prompt.v);
+    });
+	
 	/*mod.Piano = new Sk.builtin.func(function () {
        Sk.builtin.pyCheckArgs("Piano", 1, 1);
        return Piano();
     });*/
+	
+	//SPRITES/////////////////
+	
+	//mod.Turtle = new Sk.builtin.func(function (value) {
+    //   Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
+    //   return Turtle(value.v);
+    //});
+	
+	//mod.Sprite = new Sk.builtin.func(function () {
+    //   Sk.builtin.pyCheckArgs("Sprite", arguments, 0, 0);
+    //   return Sprite();
+    //});
+	
+	//mod.Piano = new Sk.builtin.func(function () {
+    //   Sk.builtin.pyCheckArgs("Piano", arguments, 0, 0);
+    //   return Piano();
+    //});
+	
+	//mod.Pencil = new Sk.builtin.func(function () {
+    //   Sk.builtin.pyCheckArgs("Pencil", arguments, 0, 0);
+    //   return Pencil();
+    //});
+	
+	//ART//////
+	
+	mod.hide = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("ht", arguments, 0, 0);
+        return ht();
+    });
+	
+	mod.show = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("st", arguments, 0, 0);
+        return st();
+    });
+	
+	mod.cs = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("cs", arguments, 0, 0);
+        return cs();
+    });
+	
+	mod.pu = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("pu", arguments, 0, 0);
+        return pu();
+    });
+	
+	mod.pd = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("pd", arguments, 0, 0);
+        return pd();
+    });
+	
+	mod.pen = new Sk.builtin.func(function (color, size) {
+        Sk.builtin.pyCheckArgs("pen", arguments, 2, 2);
+        return pen(color.v, size.v);
+    });
+	
+	mod.dot = new Sk.builtin.func(function (color, dia) {
+        Sk.builtin.pyCheckArgs("dot", arguments, 2, 2);
+        return dot(color.v, dia.v);
+    });
+	
+	mod.box = new Sk.builtin.func(function (color, size) {
+        Sk.builtin.pyCheckArgs("box", arguments, 2, 2);
+        return box(color.v, size.v);
+    });
+	
+	mod.fill = new Sk.builtin.func(function (color) {
+        Sk.builtin.pyCheckArgs("dot", arguments, 1, 1);
+        return fill(color.v);
+    });
+	
+	mod.wear = new Sk.builtin.func(function (color) {
+        Sk.builtin.pyCheckArgs("wear", arguments, 1, 1);
+        return wear(color.v);
+    });
+	
+	mod.grow = new Sk.builtin.func(function (size) {
+        Sk.builtin.pyCheckArgs("grow", arguments, 1, 1);
+        return grow(size.v);
+    });
+	
+	mod.drawon = new Sk.builtin.func(function (canvas) {
+        Sk.builtin.pyCheckArgs("drawon", arguments, 1, 1);
+        return drawon(canvas.v);
+    });
 
     return mod;
 };
