@@ -851,7 +851,19 @@ module.exports = {
         }, {
           block: "click (e) ->\n  ``",
           title: 'Do something when the mouse is clicked'*/
-        }
+        }, {
+		block: 'while True:\n pass',
+		title: 'Repeat something forever at equally-spaced times'	
+		}, {	
+		block: 'button(\'Click\')',
+		title: 'Make a button and do something when clicked'
+		}, {	
+		block: 'keydown(\'X\')',
+		title: 'Do something when a keyboard key is pressed'	
+		}, {
+		block: 'click()',
+		title: 'Do something when the mouse is clicked'	
+		}
       ])
     }, {
       name: 'Art',
@@ -898,7 +910,171 @@ module.exports = {
 //          title: 'Draw on the document'
         }
       ])
-    }
+    }, {
+      name: 'Sound',
+      color: 'indigo',
+      blocks: filterblocks([
+        {
+          block: 'play(\'c G/G/ AG z\')',
+          title: 'Play music notes in sequence'
+        }, {
+          block: 'play(\'[fA] [ecG]2\')',
+          title: 'Play notes in a chord'
+        }, {
+          block: 'tone(\'B\', 2)',
+          title: 'Sound a note immediately'
+        }, {
+          block: 'tone(\'B\', 0)',
+          title: 'Silence a note immediately'
+        }, {
+          block: 'tone(440, 2)',
+          title: 'Sound a frequency immediately'
+        }, {
+          block: 'tone(440, 0)',
+          title: 'Silence a frequency immediately'
+        }, {
+          block: 'silence()',
+          title: 'Silence all notes'
+        }, {
+          block: 'say(\'hello\')',
+          title: 'Speak a word'
+        }
+      ])
+    }, {
+     name: 'Operators',
+     color: 'lightgreen',
+     blocks: filterblocks([
+       {
+           block: 'x = 0;',
+           title: 'Set a variable',
+           id: 'assign'
+       }, {
+           block: 'x += 1;',
+           title: 'Increase a variable',
+       //}, {
+       //    block: 'function f(x) {\n  __\n}',
+       //    title: 'Define a new function'
+       //}, {
+       //    block: 'f(x)',
+       //    title: 'Use a custom function'
+       }, {
+           block: '__ == __',
+           title: 'Compare two values'
+       }, {
+           block: '__ < __',
+           title: 'Compare two values'
+       }, {
+           block: '__ > __',
+           title: 'Compare two values'
+       }, {
+           block: '__ + __',
+           title: 'Add two numbers',
+           id: 'add'
+       }, {
+           block: '__ - __',
+           title: 'Subtract two numbers',
+           id: 'subtract'
+       }, {
+           block: '__ * __',
+           title: 'Multiply two numbers',
+           id: 'multiply'
+       }, {
+           block: '__ / __',
+           title: 'Divide two numbers',
+           id: 'divide'
+       }, {
+           block: '__ and __',
+           title: 'True if both are true',
+           id: 'and'
+       }, {
+           block: '__ or __',
+           title: 'True if either is true',
+           id: 'or'
+       }, {
+           block: 'not __',
+           title: 'True if input is false',
+           id: 'not'
+       }, {
+           block: 'random(6)',
+           title: 'Get a random number less than n'
+       }
+     ])
+    }, {
+      name: 'Sprites',
+      color: 'teal',
+      blocks: filterblocks([
+	  {
+		  block: 't = Turtle(\'red\')',
+		  title: 'Create new turtle',
+		  id: 'newturtle'
+	  },{
+          block: 's = Sprite()',
+          title: 'Make a blank sprite',
+		  id: 'newsprite'
+        }, {
+          block: 'p = Piano()',
+          title: 'Make a visible instrument',
+		  id: 'newpiano'
+        }, {
+          block: 'q = Pencil()',
+          title: 'Make an invisible and fast drawing sprite'
+        }//, {
+         // block: 'if @touches x:\n  ``',
+         // title: 'Do something only if touching the object x'
+       // }, {
+       //   block: 'if @inside window:\n  ``',
+       //   title: 'Do something only if inside the window'
+        //}
+	  ])
+	}, {
+      name: 'Text',
+      color: 'pink',
+      blocks: filterblocks([
+        {
+          block: 'write(\'Hello.\')',
+          title: 'Write text in the document'
+        }, {
+			block: 'print \'Hello\'',
+			title: 'Print text to the document'
+		}, {
+			block: 'x = input(\'Enter text\')',
+			title: 'Input word'
+		},{
+			block: 'print input(\'Enter text\')',
+			title: 'Take in word and then print'
+		},{
+			block: 'typeline()',
+			title: 'Type a new line'
+		},{
+			block: 'debug(x)',
+			title: 'Debug a value'
+		},{
+			block: 'typebox(yellow)',
+			title: 'Type out a colored square'
+		},{
+			block: 'type(\'Hello\')',
+			title: 'Print text like a typewriter'
+		},{
+			block: 'label(\'Spot\')',
+			title: 'Prints label at turtle position'
+		},{ 
+			block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    break', 
+			title: 'Read numbers only'
+		},{
+			block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    print x\n    break',
+			title: 'Read number and then print it'
+		}
+      ])
+	}, {
+      name: 'Imports',
+      color: 'brown',
+      blocks: filterblocks([
+	  {
+		  block: 'from pencilcode import *',
+		  title: 'Import Functions on the pencilcode file'
+	  }
+	  ])
+	}
   ],
 
   HTML_PALETTE: [
@@ -1293,6 +1469,32 @@ module.exports = {
     'cs': {color: 'purple'},
     'pu': {color: 'purple'},
     'pd': {color: 'purple'},
+	//Sound
+	'play': {color: 'indigo'},
+	'tone': {color: 'indigo'},
+	'silence': {color: 'indigo'},
+	'say': {color: 'indigo'},
+	//Control
+	'ht': {color: 'purple'},
+    'cs': {color: 'purple'},
+    'pu': {color: 'purple'},
+    'pd': {color: 'purple'},
+	'random': {color:'lightgreen'},
+	//opertor
+	'button': {color: 'orange'},
+	'keydown': {color: 'orange'},
+	'click': { color: 'orange' },
+	//Sprites
+	'Sprite' : {color:'teal'},
+	'Piano' : {color:'teal'},
+	'Pencil' : {color:'teal'},
+	'Turtle' : {color:'teal'},
+	//Text
+	'write' : {color: 'pink'},
+	'typeline' : {color: 'pink'},
+	'debug' : {color: 'pink'},
+	'typebox' : {color: 'pink'},
+	'label' : {color: 'pink'},
 
  /*
     '?.slide': {color: 'lightblue', dropdown: [sdistances]},

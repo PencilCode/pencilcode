@@ -46,46 +46,49 @@ def fd(value):
     pencilcode_internal.fd(value)
 
 def bk(value):
-    myTurtle.back(value)
+    pencilcode_internal.bk(value)
 
 def rt(value):
-    myTurtle.right(value)
+    pencilcode_internal.rt(value)
 
 def lt(value):
-    myTurtle.left(value)
+    pencilcode_internal.lt(value)
 
 def ra(angle, radius):
-    myTurtle.circle(-radius, angle)
+    pencilcode_internal.ra(-radius, angle)
 
 def la(angle, radius):
-    myTurtle.circle(radius, angle)
+    pencilcode_internal.la(radius, angle)
 
 def speed(value):
-    myTurtle.speed(value * 1.25)
+    pencilcode_internal.speed(value * 1.25)
 
 def home():
-    penInfo, _, _ = __getStateAndHide()
-    myTurtle.home()
-    __restoreStateAndShow(penInfo, None, 90)
+    #penInfo, _, _ = __getStateAndHide()
+    #myTurtle.home()
+    #__restoreStateAndShow(penInfo, None, 90)
+	pencilcode_internal.home()
 
 def turnto(value):
-    myTurtle.setheading(value)
+    #myTurtle.setheading(value)
+	pencilcode_internal.turnto(value)
 
 def moveto(x, y):
-    myTurtle.goto(x, y)
+   pencilcode_internal.moveto(x, y)
 
 def movexy(x, y):
-    moveto(myTurtle.xcor() + x, myTurtle.ycor() + y)
+    pencilcode_internal.moveto(myTurtle.xcor() + x, myTurtle.ycor() + y)
 
 def jumpto(x, y):
-    penInfo, _, _ = __getStateAndHide()
-    __restoreStateAndShow(penInfo, [x, y], None)
+    #penInfo, _, _ = __getStateAndHide()
+    #__restoreStateAndShow(penInfo, [x, y], None)
+	pencilcode_internal.jumpto(x,y)
 
 def jumpxy(x, y):
-    jumpto(myTurtle.xcor() + x, myTurtle.ycor() + y)
+    pencilcode_internal.jumpto(myTurtle.xcor() + x, myTurtle.ycor() + y)
 
 def pause(value):
-    time.sleep(value)
+    pencilcode_internal.sleep(value)
 
 ##################
 ## Art Commands ##
@@ -185,6 +188,93 @@ def readnum(prompt):
 ####################
 ## Sound Commands ##
 ####################
+
+def play(tone):
+    pencilcode_internal.play(tone)
+
+def tone(a, b):
+	pencilcode_internal.tone(a, b)
+	
+#def tone(a, s):
+#	pencilcode_internal.tone(a, s)
+	
+def silence():
+	pencilcode_internal.silence()
+	
+def say(a):
+	pencilcode_internal.say(a)
+	
+######################
+## Control Commands ##
+######################
+
+
+def button(buttonClick):
+	pencilcode_internal.button(buttonClick)
+
+def keydown(key):
+	pencilcode_internal.keydown(key)
+
+def click(click):
+	pencilcode_internal.click(click)
+	
+######################
+## 		Sprites	    ##
+######################
+
+def Turtle(a):
+	pass
+	
+def Sprite():
+	pass
+	
+def Piano():
+	pass
+	
+def Pencil():
+	pass
+	
+######################
+## 	   Operators	##
+######################
+
+def random(a):
+	pass
+	
+###################
+## Text Commands ##
+###################
+
+def write(message):
+    # TODO
+    pass
+
+def debug(object):
+    myTurtle.debug(object)
+
+def type(message):
+    myTurtle.write(message)
+
+def typebox(color):
+	myTurtle.typebox(color)
+	
+def typeline():
+    print('\n')
+
+def label(name):
+    myTurtle.write(name)
+
+def await(lamda_exp):
+    # TODO - this might be tricky
+    pass
+
+def read(prompt):
+    # TODO - this might be tricky
+    pass
+
+def readnum(prompt):
+    # TODO - this might be tricky
+    pass
 
 myTurtle = turtle.Turtle()
 myTurtle.speed(0)
