@@ -1096,10 +1096,10 @@ module.exports = {
         }, { */
 /*           block: 'button(\'Click\', lambda:\n  write(\'Button clicked\'))',
           title: 'Make a button and do something when clicked'
-        }, {
-          block: 'keydown(lambda:\n  write(\'Key pressed\'))',
-          title: 'Do something when a keyboard key is pressed'
         }, { */
+          block: 'keydown(lambda:\n write(\'Key pressed\'))',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
           block: 'click(lambda:\n fd(100))',
           title: 'Move to a location when document is clicked'
         }
