@@ -771,6 +771,15 @@ module.exports = {
   ],
   PYTHON_PALETTE: [
     {
+      name: 'Imports',
+      color: 'brown',
+      blocks: filterblocks([
+	  {
+		  block: 'from pencilcode import *',
+		  title: 'Import Functions on the pencilcode file'
+	  }
+	  ])
+	}, {
       name: 'Move',
       color: 'lightblue',
       blocks: filterblocks([
@@ -876,10 +885,10 @@ module.exports = {
           block: 'dot(\'green\', 50)',
           title: 'Make a dot'
         }, {
-          block: 'box(yellow, 50)',
+          block: 'box(\'yellow\', 50)',
           title: 'Make a square'
         }, {
-          block: 'fill(blue)',
+          block: 'fill(\'blue\')',
           title: 'Fill traced shape'
         }, {
           block: 'wear(\'apple\')',
@@ -1066,15 +1075,6 @@ module.exports = {
 		//}
       ])
 	}, {
-      name: 'Imports',
-      color: 'brown',
-      blocks: filterblocks([
-	  {
-		  block: 'from pencilcode import *',
-		  title: 'Import Functions on the pencilcode file'
-	  }
-	  ])
-	}, {
       name: 'Snippets',
       color: 'deeporange',
       blocks: filterblocks([
@@ -1094,9 +1094,9 @@ module.exports = {
           block: "click(function(e) {\n  moveto(e);\n});",
           title: 'Move to a location when document is clicked'
         }, { */
-/*           block: 'button(\'Click\', lambda:\n  write(\'Button clicked\'))',
+		  block: 'button(\'Click\', lambda:\n write(\'Button clicked\'))',
           title: 'Make a button and do something when clicked'
-        }, { */
+        }, {
           block: 'keydown(lambda:\n write(\'Key pressed\'))',
           title: 'Do something when a keyboard key is pressed'
         }, {
