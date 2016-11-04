@@ -198,10 +198,10 @@ def click(t):
 ######################
 
 def Turtle(a):
-	pass#pencilcode_internal.Turtle(a)
+	pencilcode_internal.Turtle(a)
 	
 def Sprite():
-	pass#pencilcode_internal.Sprite()
+	pencilcode_internal.Sprite()
 	
 def Piano():
 	pass#pencilcode_internal.Piano()

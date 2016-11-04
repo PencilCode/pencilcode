@@ -197,15 +197,15 @@ var $builtinmodule = function (name) {
 	
 	//SPRITES/////////////////
 	
-	//mod.Turtle = new Sk.builtin.func(function (value) {
-    //   Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
-    //   return Turtle(value.v);
-    //});
+	mod.Turtle = new Sk.builtin.func(function (value) {
+       Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
+       return Turtle(value.v);
+    });
 	
-	//mod.Sprite = new Sk.builtin.func(function () {
-    //   Sk.builtin.pyCheckArgs("Sprite", arguments, 0, 0);
-    //   return Sprite();
-    //});
+	mod.Sprite = new Sk.builtin.func(function () {
+       Sk.builtin.pyCheckArgs("Sprite", arguments, 0, 0);
+       return Sprite();
+    });
 	
 	//mod.Piano = new Sk.builtin.func(function () {
     //   Sk.builtin.pyCheckArgs("Piano", arguments, 0, 0);
