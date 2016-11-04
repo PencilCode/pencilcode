@@ -204,7 +204,7 @@ def Sprite():
 	pencilcode_internal.Sprite()
 	
 def Piano():
-	pencilcode_internal.Piano(8)
+	pass#pencilcode_internal.Piano(8)
 	
 def Pencil():
 	pass#pencilcode_internal.Pencil()
