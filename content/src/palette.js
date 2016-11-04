@@ -855,13 +855,13 @@ module.exports = {
 		block: 'while True:\n pass',
 		title: 'Repeat something forever at equally-spaced times'	
 		}, {	
-		block: 'button(\'Click\')',
+		block: 'button(\'Click\', lambda: fd(100))',
 		title: 'Make a button and do something when clicked'
 		}, {	
-		block: 'keydown(\'X\')',
+		block: 'keydown(lambda: fd(100))',
 		title: 'Do something when a keyboard key is pressed'	
 		}, {
-		block: 'click()',
+		block: 'click(lambda: fd(100))',
 		title: 'Do something when the mouse is clicked'	
 		}
       ])
@@ -951,53 +951,56 @@ module.exports = {
        }, {
            block: 'x += 1;',
            title: 'Increase a variable',
-       //}, {
-       //    block: 'function f(x) {\n  __\n}',
-       //    title: 'Define a new function'
-       //}, {
-       //    block: 'f(x)',
-       //    title: 'Use a custom function'
        }, {
-           block: '__ == __',
+           block: '_ == _',
            title: 'Compare two values'
        }, {
-           block: '__ < __',
+           block: '_ < _',
            title: 'Compare two values'
        }, {
-           block: '__ > __',
+           block: '_ > _',
            title: 'Compare two values'
        }, {
-           block: '__ + __',
+           block: '_ + _',
            title: 'Add two numbers',
            id: 'add'
        }, {
-           block: '__ - __',
+           block: '_ - _',
            title: 'Subtract two numbers',
            id: 'subtract'
        }, {
-           block: '__ * __',
+           block: '_ * _',
            title: 'Multiply two numbers',
            id: 'multiply'
        }, {
-           block: '__ / __',
+           block: '_ / _',
            title: 'Divide two numbers',
            id: 'divide'
        }, {
-           block: '__ and __',
+           block: '_ and _',
            title: 'True if both are true',
            id: 'and'
        }, {
-           block: '__ or __',
+           block: '_ or _',
            title: 'True if either is true',
            id: 'or'
        }, {
-           block: 'not __',
+           block: 'not _',
            title: 'True if input is false',
            id: 'not'
        }, {
+           block: 'newfunction(200)',
+           title: 'Use a custom function'
+       }, {
+           block: 'def newfunction(x):\n fd(x)\n rt(90)',
+           title: 'Define a new function'
+       }, {
            block: 'random(6)',
            title: 'Get a random number less than n'
-       }
+       }, {
+          block: 'min(_,_)',
+          title: 'Get the smaller on two numbers'
+        }
      ])
     }, {
       name: 'Sprites',

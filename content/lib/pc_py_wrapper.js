@@ -103,14 +103,14 @@ var $builtinmodule = function (name) {
        return button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
     });
 	
-	mod.click = new Sk.builtin.func(function (click) {
+	mod.click = new Sk.builtin.func(function (fn) {
        Sk.builtin.pyCheckArgs("click", arguments, 1, 1);
-       return click(click.v);
+       return click( function () { Sk.misceval.callsim(fn); } );
     });
 	
 	mod.keydown = new Sk.builtin.func(function (key) {
        Sk.builtin.pyCheckArgs("keydown", arguments, 1, 1);
-       return keydown(key.v);
+       return keydown(function () { Sk.misceval.callsim(key); });
     });
 	
 	mod.keyup = new Sk.builtin.func(function (key) {
@@ -277,6 +277,17 @@ var $builtinmodule = function (name) {
 	mod.drawon = new Sk.builtin.func(function (canvas) {
         Sk.builtin.pyCheckArgs("drawon", arguments, 1, 1);
         return drawon(canvas.v);
+    });
+	
+	//Operators
+	mod.min = new Sk.builtin.func(function (value1, value2) {
+        Sk.builtin.pyCheckArgs("min", arguments, 1, 2);
+        return min(value1.v, value2.v);
+    });
+	
+	mod.random = new Sk.builtin.func(function (value) {
+        Sk.builtin.pyCheckArgs("random", arguments, 1, 1);
+        return random(value.v);
     });
 
     return mod;
