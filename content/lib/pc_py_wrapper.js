@@ -190,11 +190,6 @@ var $builtinmodule = function (name) {
         return readnum(prompt.v);
     });
 	
-	/*mod.Piano = new Sk.builtin.func(function () {
-       Sk.builtin.pyCheckArgs("Piano", 1, 1);
-       return Piano();
-    });*/
-	
 	//SPRITES/////////////////
 	
 	mod.Turtle = new Sk.builtin.func(function (value) {
@@ -207,10 +202,10 @@ var $builtinmodule = function (name) {
        return Sprite();
     });
 	
-	//mod.Piano = new Sk.builtin.func(function () {
-    //   Sk.builtin.pyCheckArgs("Piano", arguments, 0, 0);
-    //   return Piano();
-    //});
+	mod.Piano = new Sk.builtin.func(function (keys) {
+       Sk.builtin.pyCheckArgs("Piano", arguments, 1, 1);
+       return Piano(keys.v);
+    });
 	
 	//mod.Pencil = new Sk.builtin.func(function () {
     //   Sk.builtin.pyCheckArgs("Pencil", arguments, 0, 0);
