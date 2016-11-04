@@ -19,41 +19,53 @@ var $builtinmodule = function (name) {
 
     // Sk.builtin.func creates a Python function out of a JS function
     mod.addalemon = new Sk.builtin.func(function (data) {
-       // Check arguments: func name, arguments passed, min number, max number
-       Sk.builtin.pyCheckArgs("dumps", arguments, 1, 1);
-       return data.v + " with a lemon"; // Data comes in as a Python string; we have to use the value (v) in JS
+        // Check arguments: func name, arguments passed, min number, max number
+        Sk.builtin.pyCheckArgs("dumps", arguments, 1, 1);
+        return data.v + " with a lemon"; // Data comes in as a Python string; we have to use the value (v) in JS
     });
 
 	//MOVE
     // Wrapper for functions in jquery-turtle.js; See for more options!
-    mod.fd = new Sk.builtin.func(function (distance) {
-       Sk.builtin.pyCheckArgs("fd", arguments, 1, 1);
-       return fd(distance.v);
+    mod.fd = new Sk.builtin.func(function (sprite, distance) {
+        Sk.builtin.pyCheckArgs("fd", arguments, 2, 2);
+        if (turtle === Sk.builtin.none.none$) {
+            return fd(distance.v);
+        }
+        return sprite.fd(distance.v);
     });
 	
-	mod.bk = new Sk.builtin.func(function (distance) {
-       Sk.builtin.pyCheckArgs("bk", arguments, 1, 1);
-       return bk(distance.v);
+    mod.bk = new Sk.builtin.func(function (sprite, distance) {
+        Sk.builtin.pyCheckArgs("bk", arguments, 2, 2);
+        if (turtle === Sk.builtin.none.none$) {
+            return bk(distance.v);
+        }
+        return sprite.bk(distance.v);
     });
 	
-	mod.rt = new Sk.builtin.func(function (angle) {
-       Sk.builtin.pyCheckArgs("rt", arguments, 1, 1);
-       return rt(angle.v);
+    mod.rt = new Sk.builtin.func(function (sprite, angle) {
+        Sk.builtin.pyCheckArgs("rt", arguments, 2, 2);
+        if (turtle === Sk.builtin.none.none$) {
+            return rt(angle.v);
+        }
+        return sprite.rt(angle.v);
+    });
+	
+    mod.lt = new Sk.builtin.func(function (sprite, angle) {
+        Sk.builtin.pyCheckArgs("lt", arguments, 2, 2);
+        if (turtle === Sk.builtin.none.none$) {
+            return lt(angle.v);
+        }
+        return sprite.lt(angle.v);
     });
 	
 	mod.ra = new Sk.builtin.func(function (radius, angle) {
        Sk.builtin.pyCheckArgs("rt", arguments, 1, 2);
-       return rt((-radius).v, angle.v);
-    });
-	
-	mod.lt = new Sk.builtin.func(function (angle) {
-       Sk.builtin.pyCheckArgs("lt", arguments, 1, 1);
-       return lk(angle.v);
+       return rt((radius).v, angle.v);
     });
 	
 	mod.la = new Sk.builtin.func(function (radius, angle) {
        Sk.builtin.pyCheckArgs("lt", arguments, 1, 2);
-       return lt((-radius).v, angle.v);
+       return lt((radius).v, angle.v);
     });
 	
 	mod.speed = new Sk.builtin.func(function (value) {
@@ -194,23 +206,27 @@ var $builtinmodule = function (name) {
 	
 	mod.Turtle = new Sk.builtin.func(function (value) {
        Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
-       return Turtle(value.v);
+       return new Turtle(value.v);
     });
 	
 	mod.Sprite = new Sk.builtin.func(function () {
        Sk.builtin.pyCheckArgs("Sprite", arguments, 0, 0);
-       return Sprite();
+       return new Sprite();
     });
 	
-	mod.Piano = new Sk.builtin.func(function (keys) {
-       Sk.builtin.pyCheckArgs("Piano", arguments, 1, 1);
-       return Piano(keys.v);
+//	mod.Piano = new Sk.builtin.func(function (keys) {
+//       Sk.builtin.pyCheckArgs("Piano", arguments, 1, 1);
+//       return new Piano(keys.v);
+//    });
+	mod.Piano = new Sk.builtin.func(function () {
+       Sk.builtin.pyCheckArgs("Piano", arguments, 0, 0);
+       return new Piano();
     });
 	
-	//mod.Pencil = new Sk.builtin.func(function () {
-    //   Sk.builtin.pyCheckArgs("Pencil", arguments, 0, 0);
-    //   return Pencil();
-    //});
+    mod.Pencil = new Sk.builtin.func(function () {
+       Sk.builtin.pyCheckArgs("Pencil", arguments, 0, 0);
+       return new Pencil();
+    });
 	
 	//ART//////
 	
