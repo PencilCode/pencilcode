@@ -1,91 +1,75 @@
-import turtle
-import time
 import pencilcode_internal
+
+# The SpriteObject class wraps a jQuery-turtle object so it can be used in Python.
+# This includes Turtle, Sprite, Piano, and Pencil objects.
+class SpriteObject():
+    def __init__(self, jsSpriteObject):
+        self.jsSpriteObject = jsSpriteObject
+
+    ###################
+    ## Move Commands ##
+    ###################
+
+    def fd(self, distance):
+        pencilcode_internal.fd(self.jsSpriteObject, distance)
+
+    def bk(self, distance):
+        pencilcode_internal.bk(self.jsSpriteObject, distance)
+
+    def rt(self, angle):
+        pencilcode_internal.rt(self.jsSpriteObject, angle)
+
+    def lt(self, angle):
+        pencilcode_internal.lt(self.jsSpriteObject, angle)
+
+    # Other functions go here
+
+
+# These commands act on the default turtle object (which is not wrapped.).
 
 ###################
 ## Move Commands ##
 ###################
 
-def __getPenDictionary():
-    return { "shown": myTurtle.isvisible(), "pendown": myTurtle.isdown(), "pencolor": myTurtle.pencolor(),
-             "fillcolor": myTurtle.fillcolor, "pensize": myTurtle.pensize(), "speed": myTurtle.speed() }
-
-def __setPenState(penstate):
-    myTurtle.pencolor(penstate["pencolor"])
-    myTurtle.fillcolor(penstate["fillcolor"])
-    myTurtle.pensize(penstate["pensize"])
-    myTurtle.speed(penstate["speed"])
-
-    if penstate["shown"]:
-        myTurtle.showturtle()
-    else:
-        myTurtle.hideturtle()
-
-    if penstate["pendown"]:
-        myTurtle.pendown()
-    else:
-        myTurtle.penup()
-
-
-def __getStateAndHide():
-    result = (__getPenDictionary(), myTurtle.pos(), myTurtle.heading())
-    myTurtle.hideturtle()
-    myTurtle.penup()
-    myTurtle.speed(0)
-    return result
-
-def __restoreStateAndShow(penInfo, position, heading):
-    if (position != None):
-        myTurtle.setpos(position)
-    if (heading != None):
-        myTurtle.setheading(heading)
-    if (penInfo != None):
-        __setPenState(penInfo)
-
 def fd(value):
-    pencilcode_internal.fd(value)
+    pencilcode_internal.fd(None, value)
 
 def bk(value):
-    pencilcode_internal.bk(value)
+    pencilcode_internal.bk(None, value)
 
 def rt(value):
-    pencilcode_internal.rt(value)
+    pencilcode_internal.rt(None, value)
 
 def lt(value):
-    pencilcode_internal.lt(value)
+    pencilcode_internal.lt(None, value)
 
-def ra(angle, radius):
-    pencilcode_internal.ra(-radius, angle)
+# Fix the rest, Stevie! ;)
+def ra(radius, angle):
+    pencilcode_internal.ra(radius, angle)
 
-def la(angle, radius):
+def la(radius, angle):
     pencilcode_internal.la(radius, angle)
 
 def speed(value):
-    pencilcode_internal.speed(value * 1.25)
+    pencilcode_internal.speed(value)
 
 def home():
-    #penInfo, _, _ = __getStateAndHide()
-    #myTurtle.home()
-    #__restoreStateAndShow(penInfo, None, 90)
-	pencilcode_internal.home()
+    pencilcode_internal.home()
 
 def turnto(value):
-    #myTurtle.setheading(value)
-	pencilcode_internal.turnto(value)
+    pencilcode_internal.turnto(value)
 
 def moveto(x, y):
-   pencilcode_internal.moveto(x, y)
+    pencilcode_internal.moveto(x, y)
 
 def movexy(x, y):
-    pencilcode_internal.moveto(myTurtle.xcor() + x, myTurtle.ycor() + y)
+    pencilcode_internal.movexy(x, y)
 
 def jumpto(x, y):
-    #penInfo, _, _ = __getStateAndHide()
-    #__restoreStateAndShow(penInfo, [x, y], None)
-	pencilcode_internal.jumpto(x,y)
+    pencilcode_internal.jumpto(x,y)
 
 def jumpxy(x, y):
-    pencilcode_internal.jumpto(myTurtle.xcor() + x, myTurtle.ycor() + y)
+    pencilcode_internal.jumpxy(x, y)
 
 def pause(value):
     pencilcode_internal.sleep(value)
@@ -129,7 +113,6 @@ def wear(name):
 
 def drawon(path):
 	pencilcode_internal.drawon(path)
-	
 
 ###################
 ## Text Commands ##
@@ -196,19 +179,18 @@ def click(t):
 ######################
 ## 		Sprites	    ##
 ######################
+def Turtle(color):
+    return SpriteObject(pencilcode_internal.Turtle(color))
 
-def Turtle(a):
-	pencilcode_internal.Turtle(a)
-	
 def Sprite():
-	pencilcode_internal.Sprite()
+    return SpriteObject(pencilcode_internal.Sprite())
 	
 def Piano():
-	pass#pencilcode_internal.Piano(8)
+    return SpriteObject(pencilcode_internal.Piano())
 	
 def Pencil():
-	pass#pencilcode_internal.Pencil()
-	
+    return SpriteObject(pencilcode_internal.Pencil())
+
 ######################
 ## 	   Operators	##
 ######################
@@ -219,11 +201,3 @@ def random(a):
 def min(a, b = None):
 	return pencilcode_internal.min(a,b)
 	
-
-myTurtle = turtle.Turtle()
-myTurtle.speed(0)
-myTurtle.setheading(90)
-myTurtle.penup()
-myTurtle.pensize(2)
-myTurtle.pencolor("red")
-myTurtle.speed(1.25)
