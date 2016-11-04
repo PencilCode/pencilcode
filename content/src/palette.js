@@ -1074,7 +1074,37 @@ module.exports = {
 		  title: 'Import Functions on the pencilcode file'
 	  }
 	  ])
-	}
+	}, {
+      name: 'Snippets',
+      color: 'deeporange',
+      blocks: filterblocks([
+        {
+/*           block:
+              "forever(10, function() {\n  turnto(lastmouse);\n  fd(2);\n});",
+          title: 'Continually move towards the last mouse position'
+        }, {
+          block: "forever(10, function() {\n  if (pressed('W')) {\n" +
+                 "    fd(2);\n  }\n});",
+          title: 'Poll a key and move while it is depressed'
+        }, {
+          block: "forever(1, function() {\n  fd(25);\n" +
+                 "  if (!inside(window)) {\n    stop();\n  }\n});",
+          title: 'Move once per second until not inside window'
+        }, {
+          block: "click(function(e) {\n  moveto(e);\n});",
+          title: 'Move to a location when document is clicked'
+        }, { */
+/*           block: 'button(\'Click\', lambda:\n  write(\'Button clicked\'))',
+          title: 'Make a button and do something when clicked'
+        }, {
+          block: 'keydown(lambda:\n  write(\'Key pressed\'))',
+          title: 'Do something when a keyboard key is pressed'
+        }, { */
+          block: 'click(lambda:\n fd(100))',
+          title: 'Move to a location when document is clicked'
+        }
+      ])
+    }
   ],
 
   HTML_PALETTE: [
