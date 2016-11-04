@@ -190,8 +190,8 @@ def button(buttonClick, callee):
 def keydown(key):
 	pencilcode_internal.keydown(key)
 
-def click(click):
-	pencilcode_internal.click(click)
+def click(t):
+	pencilcode_internal.click(t)
 	
 ######################
 ## 		Sprites	    ##
@@ -214,7 +214,10 @@ def Pencil():
 ######################
 
 def random(a):
-	pass
+	return pencilcode_internal.random(a)
+	
+def min(a, b = None):
+	return pencilcode_internal.min(a,b)
 	
 
 myTurtle = turtle.Turtle()
