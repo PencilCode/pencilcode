@@ -109,6 +109,22 @@ class SpriteObject():
     
     def drawon(self, path):
         pencilcode_internal.drawon(self.jsSpriteObject,path)
+		
+    ####################
+    ## Sound Commands ##
+    ####################
+    
+    def play(self, tone):
+        pencilcode_internal.play(self.jsSpriteObject, tone)
+    	
+    def tone(self, a, b, c = None):
+        pencilcode_internal.tone(self.jsSpriteObject, a, b, c)
+    	
+    def silence(self):
+        pencilcode_internal.silence(self.jsSpriteObject)
+    	
+    def say(self, a):
+        pencilcode_internal.say(self.jsSpriteObject, a)
 
 
 # These commands act on the default turtle object (which is not wrapped.).
@@ -243,16 +259,16 @@ def readnum(prompt):
 ####################
 
 def play(tone):
-    pencilcode_internal.play(tone)
+    pencilcode_internal.play(None, tone)
 	
 def tone(a, b, c = None):
-	pencilcode_internal.tone(a, b, c)
+	pencilcode_internal.tone(None, a, b, c)
 	
 def silence():
-	pencilcode_internal.silence()
+	pencilcode_internal.silence(None)
 	
 def say(a):
-	pencilcode_internal.say(a)
+	pencilcode_internal.say(None, a)
 	
 ######################
 ## Control Commands ##
