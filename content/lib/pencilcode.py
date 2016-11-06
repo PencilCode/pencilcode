@@ -21,8 +21,36 @@ class SpriteObject():
 
     def lt(self, angle):
         pencilcode_internal.lt(self.jsSpriteObject, angle)
-
-    # Other functions go here
+	
+    def ra(self, radius, angle):
+        pencilcode_internal.ra(self.jsSpriteObject, radius, angle)
+    
+    def la(self, radius, angle):
+        pencilcode_internal.la(self.jsSpriteObject, radius, angle)
+    
+    def speed(self, value):
+        pencilcode_internal.speed(self.jsSpriteObject, value)
+    
+    def home(self):
+        pencilcode_internal.home(self.jsSpriteObject)
+    
+    def turnto(self, value):
+        pencilcode_internal.turnto(self.jsSpriteObject, value)
+    
+    def moveto(self, x, y):
+        pencilcode_internal.moveto(self.jsSpriteObject, x, y)
+    
+    def movexy(self, x, y):
+        pencilcode_internal.movexy(self.jsSpriteObject, x, y)
+    
+    def jumpto(self, x, y):
+        pencilcode_internal.jumpto(self.jsSpriteObject, x,y)
+    
+    def jumpxy(self, x, y):
+        pencilcode_internal.jumpxy(self.jsSpriteObject, x, y)
+    
+    def pause(self, value):
+        pencilcode_internal.sleep(self.jsSpriteObject, value)
 
 
 # These commands act on the default turtle object (which is not wrapped.).
@@ -45,34 +73,34 @@ def lt(value):
 
 # Fix the rest, Stevie! ;)
 def ra(radius, angle):
-    pencilcode_internal.ra(radius, angle)
+    pencilcode_internal.ra(None, radius, angle)
 
 def la(radius, angle):
-    pencilcode_internal.la(radius, angle)
+    pencilcode_internal.la(None, radius, angle)
 
 def speed(value):
-    pencilcode_internal.speed(value)
+    pencilcode_internal.speed(None, value)
 
 def home():
-    pencilcode_internal.home()
+    pencilcode_internal.home(None)
 
 def turnto(value):
-    pencilcode_internal.turnto(value)
+    pencilcode_internal.turnto(None, value)
 
 def moveto(x, y):
-    pencilcode_internal.moveto(x, y)
+    pencilcode_internal.moveto(None, x, y)
 
 def movexy(x, y):
-    pencilcode_internal.movexy(x, y)
+    pencilcode_internal.movexy(None, x, y)
 
 def jumpto(x, y):
-    pencilcode_internal.jumpto(x,y)
+    pencilcode_internal.jumpto(None, x,y)
 
 def jumpxy(x, y):
-    pencilcode_internal.jumpxy(x, y)
+    pencilcode_internal.jumpxy(None, x, y)
 
 def pause(value):
-    pencilcode_internal.sleep(value)
+    pencilcode_internal.sleep(None, value)
 
 ##################
 ## Art Commands ##
