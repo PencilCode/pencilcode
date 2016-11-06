@@ -138,26 +138,40 @@ var $builtinmodule = function (name) {
        return sprite.pause(value);
     });
 	
-	//Control
+    //Control
+    //Cannot find control functions for new sprites!!! Possible Fix Needed
 	
-	mod.button = new Sk.builtin.func(function (buttonclick, callee) {
-       Sk.builtin.pyCheckArgs("button", arguments, 2, 2);
-       return button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
+	mod.button = new Sk.builtin.func(function (sprite, buttonclick, callee) {
+       Sk.builtin.pyCheckArgs("button", arguments, 3, 3);
+	   if (sprite === Sk.builtin.none.none$) {
+            return button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
+        }
+       //return sprite.button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
+
     });
 	
-	mod.click = new Sk.builtin.func(function (fn) {
-       Sk.builtin.pyCheckArgs("click", arguments, 1, 1);
-       return click( function () { Sk.misceval.callsim(fn); } );
+	mod.click = new Sk.builtin.func(function (sprite, fn) {
+       Sk.builtin.pyCheckArgs("click", arguments, 2, 2);
+	   if (sprite === Sk.builtin.none.none$) {
+            return click( function () { Sk.misceval.callsim(fn); } );
+        }
+       //return sprite.click( function () { Sk.misceval.callsim(fn); } );
     });
 	
-	mod.keydown = new Sk.builtin.func(function (key) {
-       Sk.builtin.pyCheckArgs("keydown", arguments, 1, 1);
-       return keydown(function () { Sk.misceval.callsim(key); });
+	mod.keydown = new Sk.builtin.func(function (sprite, key) {
+       Sk.builtin.pyCheckArgs("keydown", arguments, 2, 2);
+	   if (sprite === Sk.builtin.none.none$) {
+            return keydown(function () { Sk.misceval.callsim(key); });
+        }
+       //return sprite.keydown(function () { Sk.misceval.callsim(key); });
     });
 	
-	mod.keyup = new Sk.builtin.func(function (key) {
-       Sk.builtin.pyCheckArgs("keyup", arguments, 1, 1);
-       return keyup(key.v);
+	mod.keyup = new Sk.builtin.func(function (sprite, key) {
+       Sk.builtin.pyCheckArgs("keyup", arguments, 2, 2);
+	   if (sprite === Sk.builtin.none.none$) {
+            return keyup(function () { Sk.misceval.callsim(key); });
+        }
+       //return sprite.keyup(function () { Sk.misceval.callsim(key); });
     });
 	
 	//Sound/////////////
@@ -260,64 +274,116 @@ var $builtinmodule = function (name) {
 	
 	//ART//////
 	
-	mod.hide = new Sk.builtin.func(function () {
-        Sk.builtin.pyCheckArgs("ht", arguments, 0, 0);
-        return ht();
+	mod.hide = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("ht", arguments, 1, 1);
+		if (sprite === Sk.builtin.none.none$) {
+            return ht();
+        }
+       return sprite.ht();
     });
 	
-	mod.show = new Sk.builtin.func(function () {
-        Sk.builtin.pyCheckArgs("st", arguments, 0, 0);
-        return st();
+	mod.show = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("st", arguments, 1, 1);
+		if (sprite === Sk.builtin.none.none$) {
+            return st();
+        }
+       return sprite.st();
     });
 	
-	mod.cs = new Sk.builtin.func(function () {
-        Sk.builtin.pyCheckArgs("cs", arguments, 0, 0);
-        return cs();
+	mod.cs = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("cs", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return cs();
+        }
+       return sprite.cs();
     });
 	
-	mod.pu = new Sk.builtin.func(function () {
-        Sk.builtin.pyCheckArgs("pu", arguments, 0, 0);
-        return pu();
+	mod.st = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("st", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return st();
+        }
+       return sprite.st();
     });
 	
-	mod.pd = new Sk.builtin.func(function () {
-        Sk.builtin.pyCheckArgs("pd", arguments, 0, 0);
-        return pd();
+	mod.ht = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("ht", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return ht();
+        }
+       return sprite.ht();
     });
 	
-	mod.pen = new Sk.builtin.func(function (color, size) {
-        Sk.builtin.pyCheckArgs("pen", arguments, 2, 2);
-        return pen(color.v, size.v);
+	mod.pu = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("pu", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return pu();
+        }
+       return sprite.pu();
     });
 	
-	mod.dot = new Sk.builtin.func(function (color, dia) {
+	mod.pd = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("pd", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return pd();
+        }
+       return sprite.pd();
+    });
+	
+	mod.pen = new Sk.builtin.func(function (sprite, color, size) {
+        Sk.builtin.pyCheckArgs("pen", arguments, 3, 3);
+        if (sprite === Sk.builtin.none.none$) {
+            return pen(color.v, size.v);
+        }
+       return sprite.pen(color.v, size.v);
+    });
+	
+	mod.dot = new Sk.builtin.func(function (sprite, color, dia) {
+        Sk.builtin.pyCheckArgs("dot", arguments, 3, 3);
+        if (sprite === Sk.builtin.none.none$) {
+            return dot(color.v, dia.v);
+        }
+       return sprite.dot(color.v, dia.v);
+    });
+	
+	mod.box = new Sk.builtin.func(function (sprite, color, size) {
+        Sk.builtin.pyCheckArgs("box", arguments, 3, 3);
+		if (sprite === Sk.builtin.none.none$) {
+            return box(color.v, size.v);
+        }
+       return sprite.box(color.v, size.v);
+    });
+	
+	mod.fill = new Sk.builtin.func(function (sprite, color) {
         Sk.builtin.pyCheckArgs("dot", arguments, 2, 2);
-        return dot(color.v, dia.v);
+		if (sprite === Sk.builtin.none.none$) {
+            return fill(color.v);
+        }
+       return sprite.fill(color.v);
     });
 	
-	mod.box = new Sk.builtin.func(function (color, size) {
-        Sk.builtin.pyCheckArgs("box", arguments, 2, 2);
-        return box(color.v, size.v);
+	mod.wear = new Sk.builtin.func(function (sprite, color) {
+        Sk.builtin.pyCheckArgs("wear", arguments, 2, 2);
+		if (sprite === Sk.builtin.none.none$) {
+            return wear(color.v);
+        }
+       return sprite.wear(color.v);
     });
 	
-	mod.fill = new Sk.builtin.func(function (color) {
-        Sk.builtin.pyCheckArgs("dot", arguments, 1, 1);
-        return fill(color.v);
+	mod.grow = new Sk.builtin.func(function (sprite, size) {
+        Sk.builtin.pyCheckArgs("grow", arguments, 2, 2);
+		if (sprite === Sk.builtin.none.none$) {
+            return grow(size.v);
+        }
+       return sprite.grow(size.v);
     });
 	
-	mod.wear = new Sk.builtin.func(function (color) {
-        Sk.builtin.pyCheckArgs("wear", arguments, 1, 1);
-        return wear(color.v);
-    });
-	
-	mod.grow = new Sk.builtin.func(function (size) {
-        Sk.builtin.pyCheckArgs("grow", arguments, 1, 1);
-        return grow(size.v);
-    });
-	
-	mod.drawon = new Sk.builtin.func(function (canvas) {
-        Sk.builtin.pyCheckArgs("drawon", arguments, 1, 1);
-        return drawon(canvas.v);
+	mod.drawon = new Sk.builtin.func(function (sprite, canvas) {
+        Sk.builtin.pyCheckArgs("drawon", arguments, 2, 2);
+		if (sprite === Sk.builtin.none.none$) {
+            return drawon(canvas.v);
+        }
+       return sprite.drawon(canvas.v);
     });
 	
 	//Operators

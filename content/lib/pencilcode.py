@@ -51,6 +51,64 @@ class SpriteObject():
     
     def pause(self, value):
         pencilcode_internal.sleep(self.jsSpriteObject, value)
+		
+    ######################
+    ## Control Commands ##
+    ######################
+    def button(self, buttonClick, callee):
+        pass#pencilcode_internal.button(self.jsSpriteObject, buttonClick, callee)
+    
+    def keydown(self, key):
+        pass#pencilcode_internal.keydown(self.jsSpriteObject, key)
+    
+    def click(self, t):
+        pass#pencilcode_internal.click(self.jsSpriteObject, t)
+		
+    ##################
+    ## Art Commands ##
+    ##################
+    
+    def hide(self):
+        pencilcode_internal.hide(self.jsSpriteObject)
+    
+    def show(self):
+        pencilcode_internal.show(self.jsSpriteObject)
+    
+    def cs(self):
+        pass#pencilcode_internal.cs(self.jsSpriteObject)
+		
+    def ht(self):
+        pencilcode_internal.ht(self.jsSpriteObject)
+		
+    def st(self):
+        pencilcode_internal.st(self.jsSpriteObject)
+    
+    def pu(self):
+        pencilcode_internal.pu(self.jsSpriteObject)
+    
+    def pd(self):
+        pencilcode_internal.pd(self.jsSpriteObject)
+    	
+    def box(self, a, b):
+        pencilcode_internal.box(self.jsSpriteObject,a,b)
+    
+    def grow(self, a):
+        pencilcode_internal.grow(self.jsSpriteObject,a)
+    
+    def pen(self, color, size):
+        pencilcode_internal.pen(self.jsSpriteObject,color, size)
+    
+    def dot(self, color, size):
+        pencilcode_internal.dot(self.jsSpriteObject,color, size)
+    
+    def fill(self, color):
+        pencilcode_internal.fill(self.jsSpriteObject,color)
+    
+    def wear(self, name):
+        pencilcode_internal.wear(self.jsSpriteObject,name)
+    
+    def drawon(self, path):
+        pencilcode_internal.drawon(self.jsSpriteObject,path)
 
 
 # These commands act on the default turtle object (which is not wrapped.).
@@ -71,7 +129,7 @@ def rt(value):
 def lt(value):
     pencilcode_internal.lt(None, value)
 
-# Fix the rest, Stevie! ;)
+# Fix the rest, Stevie! ;)# All Done Jem! :)
 def ra(radius, angle):
     pencilcode_internal.ra(None, radius, angle)
 
@@ -107,40 +165,46 @@ def pause(value):
 ##################
 
 def hide():
-    pencilcode_internal.hide()
+    pencilcode_internal.hide(None)
 
 def show():
-    pencilcode_internal.show()
+    pencilcode_internal.show(None)
 
 def cs():
-    pencilcode_internal.cs()
+    pencilcode_internal.cs(None)
+	
+def ht():
+    pencilcode_internal.ht(None)
+	
+def st():
+    pencilcode_internal.st(None)
 
 def pu():
-    pencilcode_internal.pu()
+    pencilcode_internal.pu(None)
 
 def pd():
-    pencilcode_internal.pd()
+    pencilcode_internal.pd(None)
 	
 def box(a, b):
-	pencilcode_internal.box(a,b)
+	pencilcode_internal.box(None,a,b)
 
 def grow(a):
-	pencilcode_internal.grow(a)
+	pencilcode_internal.grow(None,a)
 
 def pen(color, size):
-	pencilcode_internal.pen(color, size)
+	pencilcode_internal.pen(None,color, size)
 
 def dot(color, size):
-    pencilcode_internal.dot(color, size)
+    pencilcode_internal.dot(None,color, size)
 
 def fill(color):
-	pencilcode_internal.fill(color)
+	pencilcode_internal.fill(None,color)
 
 def wear(name):
-    pencilcode_internal.wear(name)
+    pencilcode_internal.wear(None,name)
 
 def drawon(path):
-	pencilcode_internal.drawon(path)
+	pencilcode_internal.drawon(None,path)
 
 ###################
 ## Text Commands ##
@@ -196,13 +260,13 @@ def say(a):
 
 
 def button(buttonClick, callee):
-	pencilcode_internal.button(buttonClick, callee)
+	pencilcode_internal.button(None, buttonClick, callee)
 
 def keydown(key):
-	pencilcode_internal.keydown(key)
+	pencilcode_internal.keydown(None, key)
 
 def click(t):
-	pencilcode_internal.click(t)
+	pencilcode_internal.click(None, t)
 	
 ######################
 ## 		Sprites	    ##
