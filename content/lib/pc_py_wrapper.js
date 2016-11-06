@@ -28,7 +28,7 @@ var $builtinmodule = function (name) {
     // Wrapper for functions in jquery-turtle.js; See for more options!
     mod.fd = new Sk.builtin.func(function (sprite, distance) {
         Sk.builtin.pyCheckArgs("fd", arguments, 2, 2);
-        if (turtle === Sk.builtin.none.none$) {
+        if (sprite/* turtle */ === Sk.builtin.none.none$) {
             return fd(distance.v);
         }
         return sprite.fd(distance.v);
@@ -36,7 +36,7 @@ var $builtinmodule = function (name) {
 	
     mod.bk = new Sk.builtin.func(function (sprite, distance) {
         Sk.builtin.pyCheckArgs("bk", arguments, 2, 2);
-        if (turtle === Sk.builtin.none.none$) {
+        if (sprite === Sk.builtin.none.none$) {
             return bk(distance.v);
         }
         return sprite.bk(distance.v);
@@ -44,7 +44,7 @@ var $builtinmodule = function (name) {
 	
     mod.rt = new Sk.builtin.func(function (sprite, angle) {
         Sk.builtin.pyCheckArgs("rt", arguments, 2, 2);
-        if (turtle === Sk.builtin.none.none$) {
+        if (sprite === Sk.builtin.none.none$) {
             return rt(angle.v);
         }
         return sprite.rt(angle.v);
@@ -52,60 +52,90 @@ var $builtinmodule = function (name) {
 	
     mod.lt = new Sk.builtin.func(function (sprite, angle) {
         Sk.builtin.pyCheckArgs("lt", arguments, 2, 2);
-        if (turtle === Sk.builtin.none.none$) {
+        if (sprite === Sk.builtin.none.none$) {
             return lt(angle.v);
         }
         return sprite.lt(angle.v);
     });
 	
-	mod.ra = new Sk.builtin.func(function (radius, angle) {
-       Sk.builtin.pyCheckArgs("rt", arguments, 1, 2);
-       return rt((radius).v, angle.v);
+	mod.ra = new Sk.builtin.func(function (sprite, radius, angle) {
+       Sk.builtin.pyCheckArgs("rt", arguments, 2, 3);
+	   if (sprite === Sk.builtin.none.none$) {
+            return rt((radius).v, angle.v);
+        }
+        return sprite.rt((radius).v, angle.v);
     });
 	
-	mod.la = new Sk.builtin.func(function (radius, angle) {
-       Sk.builtin.pyCheckArgs("lt", arguments, 1, 2);
-       return lt((radius).v, angle.v);
+	mod.la = new Sk.builtin.func(function (sprite, radius, angle) {
+       Sk.builtin.pyCheckArgs("lt", arguments, 2, 3);
+        if (sprite === Sk.builtin.none.none$) {
+            return lt((radius).v, angle.v);
+        }
+        return sprite.lt((radius).v, angle.v);
     });
 	
-	mod.speed = new Sk.builtin.func(function (value) {
-       Sk.builtin.pyCheckArgs("speed", arguments, 1, 1);
-       return speed(value.v);
+	mod.speed = new Sk.builtin.func(function (sprite, value) {
+       Sk.builtin.pyCheckArgs("speed", arguments, 2, 2);
+       if (sprite === Sk.builtin.none.none$) {
+            return speed(value.v);
+        }
+       return sprite.speed(value.v);
     });
 	
-	mod.home = new Sk.builtin.func(function () {
-       Sk.builtin.pyCheckArgs("home", arguments, 0, 0);
-       return home();
+	mod.home = new Sk.builtin.func(function (sprite) {
+       Sk.builtin.pyCheckArgs("home", arguments, 1, 1);
+       if (sprite === Sk.builtin.none.none$) {
+            return home();
+        }
+       return sprite.home();
     });
 	
-	mod.turnto = new Sk.builtin.func(function (value) {
-       Sk.builtin.pyCheckArgs("turnto", arguments, 1, 2);
-       return turnto(value.v);
+	mod.turnto = new Sk.builtin.func(function (sprite, value) {
+       Sk.builtin.pyCheckArgs("turnto", arguments, 2, 3);
+       if (sprite === Sk.builtin.none.none$) {
+            return turnto(value.v);
+        }
+       return sprite.turnto(value.v);
     });
 	
-	mod.moveto = new Sk.builtin.func(function (value1, value2) {
-       Sk.builtin.pyCheckArgs("moveto", arguments, 1, 2);
-       return moveto(value1.v, value2.v);
+	mod.moveto = new Sk.builtin.func(function (sprite, value1, value2) {
+       Sk.builtin.pyCheckArgs("moveto", arguments, 3, 3);
+       if (sprite === Sk.builtin.none.none$) {
+            return moveto(value1.v, value2.v);
+        }
+       return sprite.moveto(value1.v, value2.v);
     });
 	
-	mod.movexy = new Sk.builtin.func(function (value1, value2) {
-       Sk.builtin.pyCheckArgs("movexy", arguments, 2, 2);
-       return movexy(value1.v, value2.v);
+	mod.movexy = new Sk.builtin.func(function (sprite, value1, value2) {
+       Sk.builtin.pyCheckArgs("movexy", arguments, 3, 3);
+       if (sprite === Sk.builtin.none.none$) {
+            return movexy(value1.v, value2.v);
+        }
+       return sprite.movexy(value1.v, value2.v);
     });
 	
-	mod.jumpto = new Sk.builtin.func(function (value1, value2) {
-       Sk.builtin.pyCheckArgs("jumpto", arguments, 2, 2);
-       return jumpto(value1.v, value2.v);
+	mod.jumpto = new Sk.builtin.func(function (sprite, value1, value2) {
+       Sk.builtin.pyCheckArgs("jumpto", arguments, 3, 3);
+        if (sprite === Sk.builtin.none.none$) {
+            return jumpto(value1.v, value2.v);
+        }
+       return sprite.jumpto(value1.v, value2.v);
     });
 	
-	mod.jumpxy = new Sk.builtin.func(function (value1, value2) {
-       Sk.builtin.pyCheckArgs("jumpxy", arguments, 2, 2);
-       return jumpxy(value1.v, value2.v);
+	mod.jumpxy = new Sk.builtin.func(function (sprite, value1, value2) {
+       Sk.builtin.pyCheckArgs("jumpxy", arguments, 3, 3);
+        if (sprite === Sk.builtin.none.none$) {
+            return jumpxy(value1.v, value2.v);
+        }
+       return sprite.jumpxy(value1.v, value2.v);
     });
 	
-	mod.pause = new Sk.builtin.func(function (value) {
-       Sk.builtin.pyCheckArgs("pause", arguments, 1, 1);
-       return pause(value);
+	mod.pause = new Sk.builtin.func(function (sprite, value) {
+       Sk.builtin.pyCheckArgs("pause", arguments, 2, 2);
+       if (sprite === Sk.builtin.none.none$) {
+            return pause(value);
+        }
+       return sprite.pause(value);
     });
 	
 	//Control
