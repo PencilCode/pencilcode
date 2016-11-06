@@ -175,9 +175,12 @@ var $builtinmodule = function (name) {
     });
 	
 	//Sound/////////////
-	mod.play = new Sk.builtin.func(function (note) {
-       Sk.builtin.pyCheckArgs("play", arguments, 1, 1);
-       return play(note.v);
+	mod.play = new Sk.builtin.func(function (sprite, note) {
+       Sk.builtin.pyCheckArgs("play", arguments, 2, 2);
+       if (sprite === Sk.builtin.none.none$) {
+            return play(note.v);
+        }
+       return sprite.play(note.v);
     });
 	
 	//mod.tone3 = new Sk.builtin.func(function (a, b, c) {
@@ -185,19 +188,28 @@ var $builtinmodule = function (name) {
     //   return tone(a.v, b.v, c.v);
     //});
 	
-	mod.tone = new Sk.builtin.func(function (a, b, c) {
-       Sk.builtin.pyCheckArgs("tone", arguments, 2, 3);
-       return tone(a.v, b.v, c.v);
+	mod.tone = new Sk.builtin.func(function (sprite, a, b, c) {
+       Sk.builtin.pyCheckArgs("tone", arguments, 3, 4);
+	   if (sprite === Sk.builtin.none.none$) {
+            return tone(a.v, b.v, c.v);
+        }
+       return sprite.tone(a.v, b.v, c.v);
     });
 	
-	mod.silence = new Sk.builtin.func(function () {
-       Sk.builtin.pyCheckArgs("silence", arguments, 0, 0);
-       return silence();
+	mod.silence = new Sk.builtin.func(function (sprite) {
+       Sk.builtin.pyCheckArgs("silence", arguments, 1, 1);
+	   if (sprite === Sk.builtin.none.none$) {
+            return silence();
+        }
+       return sprite.silence();
     });
 	
-	mod.say = new Sk.builtin.func(function (a) {
-       Sk.builtin.pyCheckArgs("say", arguments, 1, 1);
-       return say(a.v);
+	mod.say = new Sk.builtin.func(function (sprite, a) {
+       Sk.builtin.pyCheckArgs("say", arguments, 2, 2);
+	   if (sprite === Sk.builtin.none.none$) {
+            return say(a.v);
+        }
+       return sprite.say(a.v);
     });
 	
 	 // TEXT METHODS /////////////////////////////////////////////////////////
