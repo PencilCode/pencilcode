@@ -1,6 +1,7 @@
 {
   "name": "pencilcode",
   "version": "0.0.1",
+  "main": "main.js",
   "description": "Website code and config for pencilcode.net.",
   "scripts": {
     "test": "grunt",

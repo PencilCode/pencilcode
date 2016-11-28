@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Meta -->
+  <meta charset="utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Use the .htaccess and remove these lines to avoid edge case issues.
+     More info: h5bp.com/i/378 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+  <!-- Our site title and description -->
+  <title>Draw | Pencil Code Gym</title>
+  <meta name="description" content="An interactive sandbox for learning how to code on the web." />
+  <meta name="keywords" content="education, code, computer science, coffeescript, turtle, music, animation, interactive fiction" />
+  <meta name="author" content="Pencil Code" />
+
+  <!-- Output DocPad produced meta elements -->
+  <meta name="generator" content="DocPad v6.78.1" />
+
+  <!-- Mobile viewport optimized: h5bp.com/viewport -->
+  <meta name="viewport" content="width=device-width" />
+
+  <!-- Fonts -->
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:400&subset=latin">
+
+  <!-- Icons -->
+    <link rel="shortcut icon" href="images/icons/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/icons/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/icons/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/icons/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="images/icons/apple-touch-icon-57-precomposed.png">
+
+  <!-- Shims: IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+    <script async src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <!-- Styles -->
+  <link  rel="stylesheet" href="/styles/twitter-bootstrap.css" /><link  rel="stylesheet" href="/styles/style.css" />
+</head>
+<body>
+  <!-- Menu -->
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-flex">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand large-pencil-icon transbutton" href="//pencilcode.net/">&nbsp;</a>
+        <a class="navbar-brand" href="/">Pencil Code Gym</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          
+            <li
+              typeof="sioc:Page"
+              about="/draw/index.html"
+              class="active"
+            >
+              <a href="/draw/" property="dc:title">
+                Draw
+              </a>
+            </li>
+          
+            <li
+              typeof="sioc:Page"
+              about="/jam/index.html"
+              class=""
+            >
+              <a href="/jam/" property="dc:title">
+                Jam
+              </a>
+            </li>
+          
+            <li
+              typeof="sioc:Page"
+              about="/imagine/index.html"
+              class=""
+            >
+              <a href="/imagine/" property="dc:title">
+                Imagine
+              </a>
+            </li>
+          
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          
+            <li
+              typeof="sioc:Page"
+              about="/reset/index.html"
+              class=""
+            >
+              <a href="/reset/" property="dc:title">
+                Reset
+              </a>
+            </li>
+          
+            <li
+              typeof="sioc:Page"
+              about="/ref/index.html"
+              class=""
+            >
+              <a href="/ref/" property="dc:title">
+                Reference
+              </a>
+            </li>
+          
+        </ul>
+      </div><!--/.navbar-collapse -->
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script  src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script  src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script><script  src="/vendor/twitter-bootstrap/dist/js/bootstrap.min.js"></script><script  src="/scripts/script.js"></script>
+
+  <div id="leftnav">
+<div class="container">
+  
+  
+    
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/first.html">
+        <span><img src="/images/thumbs/dot.png"></span>
+        <span>First Dot</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/snowman.html">
+        <span><img src="/images/thumbs/snowman.png"></span>
+        <span>Draw a Snowkid</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/line.html">
+        <span><img src="/images/thumbs/redangle.png"></span>
+        <span>Line Techniques</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/sailboat.html">
+        <span><img src="/images/thumbs/sailboat.png"></span>
+        <span>Straight Line Shapes</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/curves.html">
+        <span><img src="/images/thumbs/lineturtle.png"></span>
+        <span>Curved Shapes</span></a>
+      
+    
+  
+    
+    <hr>
+    
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/symmetry.html">
+        <span><img src="/images/thumbs/shirt.png"></span>
+        <span>Symmetric Drawings</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/remote.html">
+        <span><img src="/images/thumbs/remote.png"></span>
+        <span>Remote Control</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/smiley.html">
+        <span><img src="/images/thumbs/smiley.png"></span>
+        <span>Making Commands</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/filled.html">
+        <span><img src="/images/thumbs/moon.png"></span>
+        <span>Filled Shapes</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/loops.html">
+        <span><img src="/images/thumbs/hexbracelet.png"></span>
+        <span>Repeated Patterns</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/nested.html">
+        <span><img src="/images/thumbs/nesting.png"></span>
+        <span>Complex Repetitions</span></a>
+      
+    
+  
+    
+    <hr>
+    
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/star.html">
+        <span><img src="/images/thumbs/star8.png"></span>
+        <span>Custom Star</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/tree.html">
+        <span><img src="/images/thumbs/bluetree.png"></span>
+        <span>Tree</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/fireworks.html">
+        <span><img src="/images/thumbs/fireworks.png"></span>
+        <span>Fireworks</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/ant.html">
+        <span><img src="/images/thumbs/ant.png"></span>
+        <span>Ant Art</span></a>
+      
+    
+      
+      
+        
+        <a class="indextile" target="workarea" href="/draw/blank.html">
+        <span><img src="/images/thumbs/question.png"></span>
+        <span>Make Your Own</span></a>
+      
+    
+  
+</div>
+</div>
+
+
+<div id="rightpane">
+<iframe id="workframe" name="workarea" width=100% height=100% style="border:0">
+</iframe>
+</div>
+
+<div id="overlay">
+<div class="overlay-box-50">
+<iframe id="refframe" name="reference" class="heavyframe"></iframe>
+<div class="closebox glyphicon glyphicon-remove-circle"></div>
+</div>
+</div>
+
+<script>
+function storageName() {
+  return 'gym:' + location.pathname.replace(/index\.html$/, '');
+}
+
+function loadStorage() {
+  try {
+    return localStorage.getItem(storageName()) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveStorage(c) {
+  try {
+    localStorage.setItem(storageName(), c);
+  } catch (e) { }
+}
+
+var initurl = location.hash.substr(1) || loadStorage() || "/draw/first.html";
+
+$('#workframe').attr('src', initurl);
+selecturl(initurl, true);
+
+$('#refframe').on('load', function() {
+  try {
+    // Do nothing if there is nothing to show.
+    if (this.contentWindow.location.href == 'about:blank') { return; }
+  } catch (e) { }
+  if (!$('#overlay').is(':visible')) {
+    var height = $('#overlay .overlay-box-50').height();
+    $('#overlay .overlay-box-50').css({height: 0});
+    $('#overlay').show();
+    $('#overlay .overlay-box-50').animate({height: height});
+  }
+});
+
+function selecturl(url, quick) {
+  var selectedtile = null;
+  $('a.indextile').removeClass('active');
+  $('a.indextile').each(function() {
+    var href = $(this).attr('href');
+    if (url.substr(url.length - href.length) == href) {
+      selectedtile = this;
+      saveStorage(href);
+      document.location.hash = '#' + href;
+    }
+  });
+  if (selectedtile) {
+    function getOffset() {
+      return $(selectedtile).position().top -
+             $(selectedtile).parent().position().top;
+    }
+    if (quick) {
+      setTimeout(function() {
+        $('#leftnav').scrollTop(getOffset() - 50);
+      }, 0);
+      $('#leftnav').scrollTop(getOffset() - 50);
+    } else {
+      var dest = getOffset() - 50;
+      $('#leftnav').animate({scrollTop: dest}, 500);
+    }
+    $(selectedtile).addClass('active');
+  }
+}
+
+$('#workframe').on('load', function() {
+  try {
+    selecturl(this.contentWindow.location.href);
+  } catch(e) { }
+});
+
+$('#overlay .closebox, #overlay').on('click', function() {
+  $('#overlay .overlay-box-50').animate({'height': 0})
+  .queue(function(next) {
+    $('#overlay').hide();
+    $('#overlay .overlay-box-50').css({height: ''});
+    $('#refframe').each(function() {
+      this.contentWindow.location.href = 'about:blank';
+    });
+    next();
+  });
+});
+
+</script>
+
+<script>
+// Force https.
+var loc = window.location.href + '';
+if (loc.indexOf('http://') == 0){
+  window.location.href = loc.replace('http://', 'https://');
+}
+</script>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-45359764-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

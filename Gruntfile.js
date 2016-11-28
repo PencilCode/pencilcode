@@ -23,7 +23,7 @@ module.exports = function(grunt) {
   });
 
   grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
+    pkg: grunt.file.readJSON('package.json'), // had to rename so that I can have package.json for both electron and grunt
     bowercopy: {
       options: {
         clean: false
