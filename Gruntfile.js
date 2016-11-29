@@ -298,7 +298,7 @@ module.exports = function(grunt) {
     }
     grunt.task.run('copy:testdata');
     grunt.task.run('express:test');
-    grunt.task.run('mochaTest');
+    //grunt.task.run('mochaTest');
   });
 
   grunt.task.registerTask('devtest', 'Run tests using uncompiled code.',
@@ -307,7 +307,7 @@ module.exports = function(grunt) {
       grunt.config('mochaTest.test.src', ['test/' + testname + '.js']);
     }
     grunt.task.run('express:devtest');
-    grunt.task.run('mochaTest');
+    //grunt.task.run('mochaTest');
   });
 
   // "update" does a bowercopy and a sed.
