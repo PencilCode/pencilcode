@@ -1,5 +1,5 @@
 var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
+    phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
