@@ -1,15 +1,19 @@
-How To Build and Test PencilCode
+How To Build and Test Pencil Code for a11ys Team Members
 ================================
 [![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)
 First install the prerequisites: git, nodejs, and grunt. Next, be sure you're in your home directory. Then:
 
 <pre>
-git clone https://github.com/PencilCode/pencilcode.git
+git clone https://github.com/a11ys/pencilcode.git
 cd pencilcode
-npm install
+npm install --no-shrinkwrap
 grunt
 grunt devserver
 </pre>
+
+The shrinkwrap file in this project needs to be updated. The dependencies do not match those in the packages.json file. Run npm install with the no shrinkwrap argument until we update that file 
+
+Refer to [How to Experiment with Pencil Code](https://github.com/a11ys/pencilcode#how-to-experiment-with-pencilcode) to set up Chrome for testing.
 
 Development can be done on Linux, Mac, or Windows.
 The prerequisites are a standard node.js development environment
