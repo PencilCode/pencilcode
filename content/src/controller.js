@@ -139,129 +139,38 @@ function cansave() {
 }
 
 function updateTopControls(addHistory) {
-  var m = modelatpos('left');
-  // Update visible URL and main title name.
-  view.setNameText(m.filename);
-  var slashed = m.filename;
-  if (m.isdir && slashed.length) { slashed += '/'; }
-  updateVisibleUrl('/edit/' + slashed, model.guideUrl, addHistory)
-  // Update top buttons.
-  var buttons = [];
-
-  //
-  // If we're not in edit-mode, then push button to enter edit mode
-  //
-
-  if (!model.editmode) {
-    buttons.push({id: 'editmode', label: 'Edit'});
-  } else {
-    //
-    // Otherwise check if we have a data file
-    //
-
-    if (m.data && m.data.file) {
-      //
-      // If so, then insert save button
-      //
-      buttons.push(
-        {
-          id: 'save',
-          title: 'Save program (Ctrl+S)',
-          label: 'Save',
-          menu: [
-            { id: 'save2', label: 'Save' },
-            { id: 'saveas', label: 'Copy and Save As...' }
-          ],
-          disabled: !cansave(),
-        }, {
-          id: 'screenshot',
-          title: 'Take screenshot',
-          label: '<i class="fa fa-camera"></i>'
-        });
-
-      // Also insert share button
-      if (!specialowner() || !model.ownername) {
-        buttons.push({
-          id: 'share', title: 'Share links to this program', label: 'Share'});
-      }
-    }
-
-    //
-    // If this directory is owned by some person (i.e. not specialowner)
-    //
-
-    if (!specialowner()) {
-
-      // Applies to both files and dirs: a simple "new file" button.
-      buttons.push({
-        id: 'new', title: 'Make a new program', label: 'New'});
-
-      //
-      // Then insert logout/login buttons depending on if someone
-      // is already logged in
-      //
-      if (model.username) {
-        buttons.push({
-          id: 'logout', label: 'Log out',
-          title: 'Log out from ' + model.username});
-      } else {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Enter password for ' + model.ownername});
-      }
-    } else {
-      // We're either in some file or directory
-      if (m.isdir) {
-        //
-        // If it's a directory then allow browsing by date
-        // or by alphabetical
-        //
-
-        if (m.bydate) {
-          buttons.push({id: 'byname', label: 'Alphabetize'});
-        } else {
-          buttons.push({id: 'bydate', label: 'Sort by Date'});
-        }
-      } else if (!nosaveowner()) {
-        buttons.push({
-          id: 'login', label: 'Log in',
-          title: 'Log in and save'});
-      }
-    }
-    buttons.push(
-        {id: 'help', label: '<span class=helplink>?</span>' });
-    if (m.data && m.data.file) {
-      buttons.push({
-        id: 'guide', label: '<span class=helplink>Guide</span>',
-        title: 'Open online guide'});
-    }
-
-    //
-    // If this directory has an owner (i.e., not the root owner),
-    // enable splitscreen toggle.
-    //
-
-    if (model.ownername || m.filename) {
-      buttons.push({
-          id: 'splitscreen',
-          title: 'Toggle split screen',
-          label: '<i class="splitscreenicon"></i>'
-      });
-    }
-
-  }
+	var m = modelatpos('left');
+	// Update visible URL and main title name.
+	view.setNameText("Pencil Code Editor");
+	var slashed = m.filename;
+	console.log(m.filename);
+	// code stops editor from working, not sure why yet
+	if (m.isdir && slashed.length) { slashed += '/'; }
+		updateVisibleUrl(slashed, model.guideUrl, addHistory)
+	// Update top buttons.
+	var buttons = [];
+	
+	//
+	// If we're not in edit-mode, then push button to enter edit mode
+	//
+	model.editmode = true;
+    buttons.push({
+        id: 'splitscreen',
+        title: 'Toggle split screen',
+        label: '<i class="splitscreenicon"></i>'
+    });
   // buttons.push({id: 'done', label: 'Done', title: 'tooltip text'});
   view.showButtons(buttons);
   // Update middle button.
   if (m.data && m.data.file ||
       (modelatpos('right').data && modelatpos('right').data.file)) {
-    view.showMiddleButton('run');
+  view.showMiddleButton('run');
   } else {
     view.showMiddleButton('');
   }
   // Also if we're runnable, show an empty runner in the right.
   // Is this helpful or confusing?
-  if (m.data && m.data.file) {
+  if (m.data && m.data.file && doc) {
     if (!modelatpos('right').running) {
       var doc = view.getPaneEditorData(paneatpos('left'));
       // The last flag here means: run the supporting scripts
@@ -269,6 +178,8 @@ function updateTopControls(addHistory) {
       runCodeAtPosition('right', doc, m.filename, true);
     }
   }
+  
+  runCodeAtPosition('right', doc, m.filename, true);
   // Update editability.
   view.setNameTextReadOnly(!model.editmode);
   view.setPaneEditorReadOnly(paneatpos('right'), true);

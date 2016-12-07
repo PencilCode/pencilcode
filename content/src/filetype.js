@@ -224,79 +224,42 @@ function escapeHtml(s) {
                  .replace(/>/g, '&gt;').replace(/\&/g, '&amp;');
 }
 
-function modifyForPreview(doc, domain,
-       filename, targetUrl, pragmasOnly, sScript, instrumenter) {
-  var mimeType = mimeForFilename(filename), text = doc.data;
-  if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
-    mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
-  } else if (mimeType && /^text\/x-python/.test(mimeType)) {
-    text = wrapTurtle(doc, domain, pragmasOnly, null, null);
-    mimeType = mimeType.replace(/\/x-python/, '/html');
-  } else if (pragmasOnly) {
-    var safe = false;
-    if (mimeType && /^text\/html/.test(mimeType) &&
-        !text.match(/<script|<i?frame|<object/i)) {
-      // Only preview HTML if there is no script.
-      safe = true;
+function modifyForPreview(doc, domain, filename, targetUrl, pragmasOnly, sScript, instrumenter) {
+	if (doc){
+		console.log(doc.data)
+	var mimeType = mimeForFilename(filename), text = doc.data;
+	
+    if (mimeType && /^text\/x-pencilcode/.test(mimeType)) text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter), 
+    mimeType = mimeType.replace(/\/x-pencilcode/, "/html"); else if (mimeType && /^text\/x-python/.test(mimeType)) text = wrapTurtle(doc, domain, pragmasOnly, null, null), 
+    mimeType = mimeType.replace(/\/x-python/, "/html"); else if (pragmasOnly) {
+        var safe = !1;
+        // For now, we don't support inserting startup script in anything
+        // other than the types above.
+        if (mimeType && /^text\/html/.test(mimeType) && !text.match(/<script|<i?frame|<object/i) && (// Only preview HTML if there is no script.
+        safe = !0), mimeType && /^image\/svg/.test(mimeType) && (// SVG preview is useful.
+        safe = !0), !safe) return "";
     }
-    if (mimeType && /^image\/svg/.test(mimeType)) {
-      // SVG preview is useful.
-      safe = true;
+    if (!text) return "";
+    if (mimeType && /image\/svg/.test(mimeType) && !/<(?:[\w]+:)?svg[^>]+xmlns/.test(text)) // Special case svg-without-namespace support.
+    return text + '<pre>To use this svg as an image, add xmlns:\n&lt;svg <mark>xmlns="http://www.w3.org/2000/svg"</mark>&gt;</pre>';
+    if (mimeType && /^image\//.test(mimeType)) {
+        // For other image types, generate a document with nothing
+        // but an image tag.
+        var result = [ "<!doctype html>", '<html style="min-height:100%">', "<body>", '<img src="data:' + mimeType.replace(/\s/g, "") + ";base64," + btoa(text) + '" style="position:absolute;top:0;bottom:0;left:0;right:0;margin:auto;background:url(/image/checker.png)">', "</body>", "</html>" ];
+        return result.join("\n");
     }
-    // For now, we don't support inserting startup script in anything
-    // other than the types above.
-    if (!safe) {
-      return '';
+    if (mimeType && !/^text\/html/.test(mimeType)) return "<PLAINTEXT>" + text;
+    if (targetUrl && !/<base/i.exec(text)) {
+        // Insert a <base href="target_url" /> in a good location.
+        var j, match, firstLink = text.match(/(?:<link|<script|<style|<body|<img|<iframe|<frame|<meta|<a)\b/i), insertLocation = [ text.match(/<head\b[^>]*>\n?/i), text.match(/<html\b[^>]*>\n?/i), text.match(/<\!doctype\b[^>]*>\n?/i) ], insertAt = 0;
+        for (j = 0; j < insertLocation.length; ++j) if (match = insertLocation[j], match && (!firstLink || match.index < firstLink.index)) {
+            insertAt = match.index + match[0].length;
+            break;
+        }
+        return text.substring(0, insertAt) + '<base href="' + targetUrl + '" />\n' + text.substring(insertAt);
     }
-  }
-  if (!text) return '';
-  if (mimeType && /image\/svg/.test(mimeType) &&
-        !/<(?:[\w]+:)?svg[^>]+xmlns/.test(text)) {
-    // Special case svg-without-namespace support.
-    return text +
-      '<pre>To use this svg as an image, add xmlns:\n' +
-      '&lt;svg <mark>xmlns="http://www.w3.org/2000/svg"</mark>&gt;</pre>';
-  }
-  if (mimeType && /^image\//.test(mimeType)) {
-    // For other image types, generate a document with nothing
-    // but an image tag.
-    var result = [
-      '<!doctype html>',
-      '<html style="min-height:100%">',
-      '<body>',
-      '<img src="data:' + mimeType.replace(/\s/g, '') + ';base64,' +
-         btoa(text) + '" style="position:absolute;top:0;bottom:0;left:0;right:0;margin:auto;background:url(/image/checker.png)">',
-      '</body>',
-      '</html>'
-    ];
-    return result.join('\n');;
-  }
-  if (mimeType && !/^text\/html/.test(mimeType)) {
-    return '<PLAINTEXT>' + text;
-  }
-  if (targetUrl && !/<base/i.exec(text)) {
-    // Insert a <base href="target_url" /> in a good location.
-    var firstLink = text.match(
-          /(?:<link|<script|<style|<body|<img|<iframe|<frame|<meta|<a)\b/i),
-        insertLocation = [
-          text.match(/<head\b[^>]*>\n?/i),
-          text.match(/<html\b[^>]*>\n?/i),
-          text.match(/<\!doctype\b[^>]*>\n?/i)
-        ],
-        insertAt = 0, j, match;
-    for (j = 0; j < insertLocation.length; ++j) {
-      match = insertLocation[j];
-      if (match && (!firstLink || match.index < firstLink.index)) {
-        insertAt = match.index + match[0].length;
-        break;
-      }
-    }
-    return text.substring(0, insertAt) +
-             '<base href="' + targetUrl + '" />\n' +
-             text.substring(insertAt);
-  }
-  return text;
+    return text;
+	}
 }
 
 
