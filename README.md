@@ -74,6 +74,14 @@ grunt
 grunt devserver
 </pre>
 
+__How To Run Standalone__
+From home directory:
+
+<pre>
+npm install electron
+./node_modules/.bin/electron .
+</pre>
+
 
 How To Experiment with PencilCode
 =================================
