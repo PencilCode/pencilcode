@@ -184,7 +184,7 @@ window.pencilcode.view = {
     $('#filename').text(s);
     var title = s.replace(/\/$/, '').replace(/^.*\//, '');
     var domain = window.location.hostname.replace(/\..*$/, '');
-    if (!title) { title = domain; } else { title += ' (' + domain + ')'; }
+    //if (!title) { title = domain; } else { title += ' (' + domain + ')'; }
     if (!title) title = 'Pencil Code Editor';
     document.title = title;
   },
