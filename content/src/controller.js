@@ -65,22 +65,36 @@ var model = window.pencilcode.model = {
 };
 
 function logEvent(name, data) {
-  $.get('/log/' + name, data);
+  $.get(name, data);
+			  // adding new logging system
+			  var fs = require('fs');
+			  fs.open('LogFile', 'wx', (err, fd) => {
+               // if (err) {
+					// throw err;
+			// }
+				var outdata = "";
+				//fs.appendFile('LogFile', 'data to append', 'utf8', callback);
+				if (name === "~pickblock"){
+					outdata = data.id;				}else{
+				outdata = data.name;
+			}fs.appendFile('LogFile', new Date().toLocaleString() + " " + name + " " + outdata + "\n", (err) => {
+					if (err) throw err;
+				console.log('The "data to append" was appended to file!');
+					});
+				});
+			  //
 }
 
 // Log events interesting for academic study: how often code is
 // run, which code it is, and which mode the editor is in.
 function logCodeEvent(action, filename, code, mode, lang) {
-  var c = encodeURIComponent(code.substring(0, 1024)).
-          replace(/%20/g, '+').replace(/%0A/g, '|').replace(/%2C/g, ','),
-      m = mode ? 'b' : 't', l = lang ? lang : 'n';
-  if (l == 'javascript') {
-    l = 'js';
-  } else if (l == 'coffeescript') {
-    l = 'cs';
-  }
-  $.get('/log/' + filename + '?' +
-      action + '&mode=' + m + '&lang=' + l + '&code=' + c);
+    var c = encodeURIComponent(code.substring(0, 1024)).replace(/%20/g, "+").replace(/%0A/g, "|").replace(/%2C/g, ","), m = mode ? "b" : "t", l = lang ? lang : "n";
+            "javascript" == l ? l = "js" : "coffeescript" == l && (l = "cs"), $.get(filename + "?" + action + "&mode=" + m + "&lang=" + l + "&code=" + c);
+			var fs = require('fs');
+			fs.appendFile('LogFile', new Date().toLocaleString() + " " + c + "\n", (err) => {
+					if (err) throw err;
+				console.log('The "data to append" was appended to file!');
+					});
 }
 
 //
