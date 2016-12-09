@@ -1816,7 +1816,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
       window.pencilcode.domain + '/home/' + filename);
   var pane = paneatpos(position);
   var setupScript = (model.setupScript || []).concat(
-      [{ src: "//{site}/lib/start-ide.js" }]);
+      [{ src: "./lib/start-ide.js" }]);
   var html = filetype.modifyForPreview(
       doc, window.pencilcode.domain, filename, baseUrl,
       emptyOnly, setupScript, instrumentCode);

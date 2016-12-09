@@ -316,10 +316,10 @@ function effectiveMeta(input) {
     if (doc && doc.mime) {
       if (doc.mime.lastIndexOf('text/x-python', 0) === 0) {
         meta.type = 'text/x-python';
-        meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
-                     {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
-                     {name: 'skulpt-stdlib', src: '//{site}/lib/skulpt-stdlib.js'},
-                     {name: 'python-script', src: '//{site}/lib/python-script.js'}
+        meta.libs = [{name: 'turtle', src: './turtlebits.js'},
+                     {name: 'skulpt.min', src: './lib/skulpt.min.js'},
+                     {name: 'skulpt-stdlib', src: './lib/skulpt-stdlib.js'},
+                     {name: 'python-script', src: './lib/python-script.js'}
         ];
       }
       else {
@@ -332,7 +332,7 @@ function effectiveMeta(input) {
   }
   if (!meta.libs) {
     meta.libs = [
-      {name: 'turtle', src: '//{site}/turtlebits.js'}
+      {name: 'turtle', src: './turtlebits.js'}
     ];
   }
   return meta;
@@ -342,7 +342,7 @@ function isDefaultMeta(meta) {
   if (meta == null) return true;
   if (JSON.stringify(effectiveMeta(meta)) ==
       '{"type":"text/coffeescript","libs":' +
-      '[{"name":"turtle","src":"//{site}/turtlebits.js"}]}') return true;
+      '[{"name":"turtle","src":"./turtlebits.js"}]}') return true;
   return false;
 }
 
