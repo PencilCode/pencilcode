@@ -838,9 +838,15 @@ module.exports = {
           block: "for x in range(0, 10):\n  pass",
           title: 'Repeat something while counting up x'
         }, {
+          block: "for i in x:\n  pass",
+          title: 'Repeat something in a list called x'
+        }, {
           block: 'while 0 < 10:\n  pass',
           title: '  Repeat while a condition is true'
         }, {
+		  block: 'while True:\n pass',
+		  title: 'Repeat something forever at equally-spaced times'	
+		}, {
           block: 'if 0 == 0:\n  pass',
           title: 'Do something only if a condition is true'
         }, {
@@ -861,24 +867,18 @@ module.exports = {
           block: "click (e) ->\n  ``",
           title: 'Do something when the mouse is clicked'*/
         }, {
-		block: 'while True:\n pass',
-		title: 'Repeat something forever at equally-spaced times'	
-		}, {	
-		block: 'button(\'Click\', lambda: fd(100))',
-		title: 'Make a button and do something when clicked'
-		}, {	
-		block: 'keydown(lambda: fd(100))',
-		title: 'Do something when a keyboard key is pressed'	
-		}, {
-		block: 'click(lambda: fd(100))',
-		title: 'Do something when the mouse is clicked'	
-		}
+        block: 'def newfunction(x):\n fd(x)\n rt(90)',
+        title: 'Define a new function'
+        }, {
+        block: 'newfunction(200)',
+        title: 'Use a custom function'
+        }
       ])
     }, {
       name: 'Art',
       color: 'purple',
       blocks: filterblocks([
-         {
+        {
           block: 'pen(\'purple\', 10)',
           title: 'Set pen color and size'
         }, {
@@ -958,8 +958,14 @@ module.exports = {
            title: 'Set a variable',
            id: 'assign'
        }, {
-           block: 'x += 1;',
+           block: 'x += 1',
            title: 'Increase a variable',
+       }, {
+           block: 'x = [ 1, 2, 3]',
+           title: 'Set a List',
+       }, {
+           block: 'len(x)',
+           title: 'Find the size of the variable'
        }, {
            block: '_ == _',
            title: 'Compare two values'
@@ -997,12 +1003,6 @@ module.exports = {
            block: 'not _',
            title: 'True if input is false',
            id: 'not'
-       }, {
-           block: 'newfunction(200)',
-           title: 'Use a custom function'
-       }, {
-           block: 'def newfunction(x):\n fd(x)\n rt(90)',
-           title: 'Define a new function'
        }, {
            block: 'random(6)',
            title: 'Get a random number less than n'
@@ -1079,6 +1079,12 @@ module.exports = {
       color: 'deeporange',
       blocks: filterblocks([
         {
+          block: 'def buttonFunction():\n write(\'Button clicked\')',
+          title: 'Define a new function'
+        }, {
+          block: 'button(\'Write\', buttonFunction)',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
 /*           block:
               "forever(10, function() {\n  turnto(lastmouse);\n  fd(2);\n});",
           title: 'Continually move towards the last mouse position'
@@ -1094,10 +1100,22 @@ module.exports = {
           block: "click(function(e) {\n  moveto(e);\n});",
           title: 'Move to a location when document is clicked'
         }, { */
-		  block: 'button(\'Click\', lambda:\n write(\'Button clicked\'))',
+		  block: 'button(\'Write\', lambda:\n write(\'Button clicked\'))',
           title: 'Make a button and do something when clicked'
         }, {
+          block: 'def keydownFunction():\n write(\'Key pressed\')',
+          title: 'Define a new function'
+        }, {
+          block: 'keydown(keydownFunction)',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
           block: 'keydown(lambda:\n write(\'Key pressed\'))',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: 'def clickFunction():\n fd(100)',
+          title: 'Define a new function'
+        }, {
+          block: 'click(clickFunction)',
           title: 'Do something when a keyboard key is pressed'
         }, {
           block: 'click(lambda:\n fd(100))',
