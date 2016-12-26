@@ -84,10 +84,12 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
     retry();
   }
 
-  rt_args = [ predicate, handletry ];
-  ac_args = [ action, handleact ];
+  rt_args = [ predicate ];
   rt_args.push.apply(rt_args, params);
+  rt_args.push(handletry);
+  ac_args = [ action ];
   ac_args.push.apply(ac_args, params);
+  ac_args.push(handleact);
 
   if (action) {
     page.evaluate.apply(page, ac_args);
