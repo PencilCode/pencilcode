@@ -61,7 +61,9 @@ describe('code editor', function() {
         localStorage.clear();
       }, function(err) {
         assert.ifError(err);
-        done();
+        // Add a short delay before reloading new page, or else phantomjs
+        // often gets lost.
+        setTimeout(done, 100);
       });
     });
   });
