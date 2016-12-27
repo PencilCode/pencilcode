@@ -28,7 +28,7 @@ module.exports = function(grunt) {
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
           'lib/droplet.css': 'droplet/css/droplet.css',
           'lib/html2canvas.js': 'html2canvas/dist/html2canvas.js',
-          'lib/iced-coffee-script.js':
+          'lib/iced-coffee-script-orig.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
           'lib/jquery.autocomplete.min.js':
@@ -204,12 +204,20 @@ module.exports = function(grunt) {
         }
       }
     },
-    sed: {
+    'string-replace': {
       iced: {
-        pattern: '\n\\(function\\(root\\)',
-        replacement: '\nthis.CoffeeScript||(function(root)',
-        path: 'content/lib/iced-coffee-script.js',
-        recursive: false
+        files: {
+          'content/lib/iced-coffee-script.js':
+                  'content/lib/iced-coffee-script-orig.js'
+        },
+        options: {
+          replacements: [
+            {
+              pattern: '\n\\(function\\(root\\)',
+              replacement: '\nthis.CoffeeScript||(function(root)'
+            }
+          ]
+        }
       }
     },
     watch: {
@@ -247,9 +255,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    'node-inspector': {
-      dev: { }
-    }
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
@@ -265,8 +270,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-node-inspector');
-  grunt.loadNpmTasks('grunt-sed');
+  grunt.loadNpmTasks('grunt-string-replace');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
@@ -311,7 +315,7 @@ module.exports = function(grunt) {
   });
 
   // "update" does a bowercopy and a sed.
-  grunt.registerTask('update', ['bowercopy', 'sed']);
+  grunt.registerTask('update', ['bowercopy', 'string-replace']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
       ['proxymessage', 'express:dev', 'browserify:server', 'watch']);
