@@ -152,10 +152,12 @@ exports.handleLoad = function(req, res, app, format) {
           filename[filename.length - 1] != '/' &&
           isValidNewFile(absfile, app)) {
         res.set('Cache-Control', 'must-revalidate');
-        res.jsonp({'error': 'could not read file ' + filename,
-                   'newfile': true,
-                   'auth': haskey,
-                   'info': absfile});
+        res.jsonp({error: 'could not read file ' + filename,
+                   data: '',
+                   newfile: true,
+                   file: '/' + filename,
+                   auth: haskey,
+                   info: absfile});
         return;
       }
 
