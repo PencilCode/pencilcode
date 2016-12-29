@@ -66,10 +66,10 @@ function scanHtmlTop(html) {
 }
 
 // The job of this function is to take: HTML, CSS, and script content,
-// and merge them into one HTML file.
+// and merge them into one HTML file. (Changed signature to allow generalization of languages)
 function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Construct the HTML for running a program.
-  var meta = effectiveMeta(doc.meta);
+  var meta = effectiveMeta(doc);
   var html = meta.html || '';
   // pragmasOnly should never run dangerous script, so do not run
   // meta.html if the HTML has script.
@@ -165,19 +165,28 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       }
     }
   }
-  // Finally assemble the main script.
-  var maintype = 'text/coffeescript';
-  if (doc.meta && doc.meta.type) {
-    maintype = doc.meta.type;
-  }
-  var seeline = '\n\n';
+
+    // Finally assemble the main script.
+  var maintype = null;
   var originalLanguage = null;
-  if (/javascript/i.test(maintype)) {
-    seeline = 'eval(this._start_ide_js_);\n\n';
-    originalLanguage = 'javascript';
-  } else if (/coffeescript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_cs_);\n\n';
-    originalLanguage = 'coffeescript';
+  var seeline = '\n\n';
+  if (meta.type == "text/x-python") {
+    maintype = "text/x-python"
+    seeline = '# Initialization / clearing goes here\n\n';
+    originalLanguage = 'python'
+  }
+  else {
+    maintype = 'text/coffeescript';
+    if (doc.meta && doc.meta.type) {
+      maintype = doc.meta.type;
+    }
+    if (/javascript/i.test(maintype)) {
+      seeline = 'eval(this._start_ide_js_);\n\n';
+      originalLanguage = 'javascript';
+    } else if (/coffeescript/.test(maintype)) {
+      seeline = 'eval(this._start_ide_cs_);\n\n';
+      originalLanguage = 'coffeescript';
+    }
   }
   var instrumented = false;
   if (instrumenter) {
@@ -221,6 +230,9 @@ function modifyForPreview(doc, domain,
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
     text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
+  } else if (mimeType && /^text\/x-python/.test(mimeType)) {
+    text = wrapTurtle(doc, domain, pragmasOnly, null, null);
+    mimeType = mimeType.replace(/\/x-python/, '/html');
   } else if (pragmasOnly) {
     var safe = false;
     if (mimeType && /^text\/html/.test(mimeType) &&
@@ -297,6 +309,7 @@ function mimeForFilename(filename) {
     'svg'  : 'image/svg+xml',
     'bmp'  : 'image/x-ms-bmp',
     'ico'  : 'image/x-icon',
+    'py'   : 'text/x-python',
     'htm'  : 'text/html',
     'html' : 'text/html',
     'csv'  : 'text/csv',
@@ -317,12 +330,42 @@ function mimeForFilename(filename) {
   return result;
 }
 
-function effectiveMeta(meta) {
+function effectiveMeta(input) {
+  var doc;
+  var meta;
+
+  if (input && input.meta !== undefined)
+  {
+    doc = input;
+    meta = input.meta;
+  }
+  else
+  {
+    doc = null;
+    meta = input;
+  }
+
   if (meta && meta.type && meta.lib) { return meta; }
   meta = (meta && 'object' == typeof meta) ?
     JSON.parse(JSON.stringify(meta)) : {};
   if (!meta.type) {
-    meta.type = 'text/coffeescript';
+    // If there's a doc here, we can try to pull a mimetype from it.
+    if (doc && doc.mime) {
+      if (doc.mime.lastIndexOf('text/x-python', 0) === 0) {
+        meta.type = 'text/x-python';
+        meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
+                     {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
+                     {name: 'skulpt-stdlib', src: '//{site}/lib/skulpt-stdlib.js'},
+                     {name: 'python-script', src: '//{site}/lib/python-script.js'}
+        ];
+      }
+      else {
+        meta.type = 'text/coffeescript';
+      }
+    }
+    else {
+      meta.type = 'text/coffeescript';
+    }
   }
   if (!meta.libs) {
     meta.libs = [

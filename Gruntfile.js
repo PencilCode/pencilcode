@@ -1,4 +1,14 @@
 var os=require('os');
+var fs = require('fs');
+
+// Determine if this is being built on Windows Subsystem for Linux; if so, we avoid direct device access.
+var isWSL = false;
+
+if (os.platform() === 'linux') {
+  if (fs.readFileSync("/proc/version", 'utf8').indexOf("Microsoft") > -1) {
+      isWSL = true;
+  }
+}
 
 module.exports = function(grunt) {
   'use strict';
@@ -274,18 +284,24 @@ module.exports = function(grunt) {
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
-    var ifaces = os.networkInterfaces();
     grunt.log.writeln(
       'Point your browser proxy autoconfig to one of these (or download\n' +
       'a local copy of one of these proxy.pacs).  Then the dev server\n' +
       'can be used at http://pencilcode.net.dev/');
-    for (var dev in ifaces) {
-      ifaces[dev].forEach(function(details) {
-        if (details.family == 'IPv4') {
-          grunt.log.writeln(
-            'http://' + details.address + ':' + port + '/proxy.pac');
-        }
-      });
+
+    if (isWSL) {
+      grunt.log.writeln('http://127.0.0.1:' + port + '/proxy.pac');
+    }
+
+    else {
+      var ifaces = os.networkInterfaces();
+      for (var dev in ifaces) {
+        ifaces[dev].forEach(function(details) {
+          if (details.family == 'IPv4') {
+            grunt.log.writeln('http://' + details.address + ':' + port + '/proxy.pac');
+          }
+        });
+      }
     }
   });
 

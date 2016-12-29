@@ -1533,6 +1533,7 @@ function getDefaultThumbnail(type) {
     'text/css'          : 'file-css.png',
     'text/coffeescript' : 'file-coffee.png',
     'text/javascript'   : 'file-js.png',
+    'text/x-python'     : 'file-image.png',
     'text/xml'          : 'file-xml.png',
     'text/json'         : 'file-json.png',
     'text/x-pencilcode' : 'file-pencil.png'
@@ -1593,6 +1594,7 @@ function modeForMimeType(mimeType) {
     'text/html': 'html',
     'text/css': 'css',
     'text/javascript': 'javascript',
+    'text/x-python': 'python',
     'text/plain': 'text',
     'text/csv': 'text',
     'image/svg+xml': 'xml',
@@ -1613,6 +1615,7 @@ function dropletModeForMimeType(mimeType) {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
+    'text/x-python': 'python',
     'text/html': 'html',
   }[mimeType];
   if (!result) {
@@ -1632,7 +1635,11 @@ function paletteForPane(paneState, selfname) {
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
     }
-    if (mimeType == 'text/html') {
+    if (/x-python/.test(mimeType)) {
+        basePalette = palette.PYTHON_PALETTE;
+    }
+
+    if (mimeType.replace(/;.*$/, '') == 'text/html') {
       basePalette = palette.HTML_PALETTE;
     }
   }
@@ -1643,17 +1650,22 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
+  if (/x-python/.test(mimeType)) {
+    return {
+      functions: palette.PYTHON_FUNCTIONS//,
+//      categories: palette.PYTHON_CATEGORIES
+    };
+  }
   if (mimeType.match(/^text\/html\b/)) {
     return {
       tags: palette.KNOWN_HTML_TAGS
     };
-  } else {
-    return {
-      functions: palette.KNOWN_FUNCTIONS,
-      categories: palette.CATEGORIES,
-      zeroParamFunctions: true
-    };
   }
+  return {
+    functions: palette.KNOWN_FUNCTIONS,
+    categories: palette.CATEGORIES,
+    zeroParamFunctions: true
+  };
 }
 
 function uniqueId(name) {
@@ -2729,7 +2741,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|x-python|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {
