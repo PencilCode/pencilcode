@@ -279,8 +279,45 @@ $('#newaccount').on('click', function() {
 });
 //login button is clicked
 $('#showlogin').on('click', function() {
-  if ($(this).css('opacity') == 0) return; 
-  $('#overlay,.loginblock').show(); //modal overlay is shown
+  if ($(this).css('opacity') == 0) return;
+  $('#overlay,.loginblock').show();
+
+  var loginBlock = document.querySelector('.loginblock');
+  loginBlock.addEventListener('keydown', trapTabKey);
+
+  //$('.loginblock').bind('keydown', trapTabKey(event));
+
+  var focusableElements = [$('#user'), $('#pass'), $('#login')];
+  console.log(focusableElements);
+  var firstEl = focusableElements[0][0];
+  var lastEl = focusableElements[focusableElements.length - 2][0]; //offset because the login button starts off disabled
+
+  function trapTabKey(event) {    
+    //check for tab key
+    if(event.keyCode == 9) {
+      //SHIFT + TAB 
+      if(event.shiftKey) {
+        console.log(firstEl);        
+        console.log(document.activeElement);
+        if(document.activeElement == firstEl) {
+          event.preventDefault();
+          lastEl.focus();
+        }
+      //just TAB key
+      } else {        
+        if(document.activeElement == lastEl) {
+          event.preventDefault();
+          firstEl.focus();
+        }
+      }      
+    }
+    //ESC key
+    if(event.keyCode == 27) {
+      closeoverlay();
+    }
+  }
+
+
   var ofs = $('#showlogin').offset();
   $('.loginblock').css({
     top: ofs.top - 8 + 1,
