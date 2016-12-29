@@ -292,6 +292,8 @@ $('#showlogin').on('click', function() {
   var firstEl = focusableElements[0][0];
   var lastEl = focusableElements[focusableElements.length - 2][0]; //offset because the login button starts off disabled
 
+  firstEl.focus();
+
   function trapTabKey(event) {    
     //check for tab key
     if(event.keyCode == 9) {
