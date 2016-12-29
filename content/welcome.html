@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en-US">
 <head>
 <title>Pencil Code</title>
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
@@ -277,13 +277,14 @@ window.addEventListener('touchstart', motion);
 $('#newaccount').on('click', function() {
   window.location = '/edit/intro#new';
 });
+//login button is clicked
 $('#showlogin').on('click', function() {
-  if ($(this).css('opacity') == 0) return;
-  $('#overlay,.loginblock').show();
+  if ($(this).css('opacity') == 0) return; 
+  $('#overlay,.loginblock').show(); //modal overlay is shown
   var ofs = $('#showlogin').offset();
   $('.loginblock').css({
     top: ofs.top - 8 + 1,
-    right: $(document).width() - (ofs.left + $('#showlogin').outerWidth()) - 8
+    right: $(document).width() - (ofs.left + $('#showlogin').outerWidth())
   });
   $('#user').focus();
 });
