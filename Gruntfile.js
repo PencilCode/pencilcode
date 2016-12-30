@@ -66,8 +66,8 @@ module.exports = function(grunt) {
           destPrefix: 'content/lib/tooltipster'
         },
         files: {
-          'js': 'tooltipster/js',
-          'css': 'tooltipster/css'
+          'js': 'tooltipster/dist/js',
+          'css': 'tooltipster/dist/css'
         }
       },
       lib: {
