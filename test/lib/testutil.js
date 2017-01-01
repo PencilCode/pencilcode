@@ -1,5 +1,22 @@
 var assert = require('assert');
 
+// pollScript constructs a 100ms-repeating function in the selenium-based
+// browser.  As long as the predicate returns false, the polling continues;
+// when the predicate returns somthing non-false, the polling ends.
+exports.pollScript =
+function pollScript(driver, result) {
+  var s =
+    'var ps_done = arguments[arguments.length - 1];' +
+    'var ps_retry = (function() {' +
+    ' var ps_result = (' + result + ')' +
+    (result instanceof Function ? '();' : ';') +
+    ' if (ps_result && ps_result.poll) { ps_result = null; }' +
+    ' if (!ps_result) { setTimeout(ps_retry, 100); } ' +
+    ' else { ps_done(ps_result); } ' +
+    '}); window.ps_retry = ps_retry; ps_retry();'
+  return driver.executeAsyncScript(s);
+}
+
 exports.refreshThen =
 function refreshThen(page, callback) {
   page.reload(function(err) {
