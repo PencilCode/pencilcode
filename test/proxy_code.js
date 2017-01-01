@@ -9,7 +9,7 @@ chai.use(require('chai-as-promised'));
 describe('proxy program', function() {
   var _driver;
   before(function() {
-    return _driver = startChrome();
+    _driver = startChrome();
   });
   after(function() {
     _driver.quit();
