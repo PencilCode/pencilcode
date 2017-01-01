@@ -15,7 +15,6 @@ args = [
   '--no-default-browser-check',
   '--no-first-run',
   '--disable-default-apps',
-  '--no-startup-window',
   '--host-resolver-rules=MAP *pencilcode.net.dev localhost:8193',
   '--allow-running-insecure-content',
   '--ignore-certificate-errors=http://pencilcode.net.dev/'
