@@ -1,4 +1,28 @@
-var assert = require('assert');
+var chromedriver = require('chromedriver'),
+    selenium = require('selenium-webdriver');
+
+var one_step_timeout = 8000;
+
+var chromeOpts = [
+  '--test-type',
+  '--no-default-browser-check',
+  '--no-first-run',
+  '--disable-default-apps',
+  '--host-resolver-rules=MAP *pencilcode.net.dev localhost:8193',
+  '--allow-running-insecure-content',
+  '--ignore-certificate-errors=http://pencilcode.net.dev/'
+];
+
+exports.startChrome = function() {
+  var capabilities = selenium.Capabilities.chrome();
+  capabilities.set('chromeOptions', {args: chromeOpts});
+  var driver = new selenium.Builder().
+      withCapabilities(capabilities).
+      build();
+  driver.getWindowHandle()
+  driver.manage().timeouts().setScriptTimeout(one_step_timeout);
+  return driver;
+}
 
 // pollScript constructs a 100ms-repeating function in the selenium-based
 // browser.  As long as the predicate returns false, the polling continues;

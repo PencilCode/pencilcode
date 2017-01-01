@@ -1,35 +1,15 @@
-var chromedriver = require('chromedriver'),
-    selenium = require('selenium-webdriver'),
-    chai = require('chai'),
+var chai = require('chai'),
     expect = chai.expect,
     assert = chai.assert,
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
-    extended_timeout = 30000,
-    refreshThen = testutil.refreshThen,
+    startChrome = testutil.startChrome,
     pollScript = testutil.pollScript;
 chai.use(require('chai-as-promised'));
-
-args = [
-  '--test-type',
-  '--no-default-browser-check',
-  '--no-first-run',
-  '--disable-default-apps',
-  '--host-resolver-rules=MAP *pencilcode.net.dev localhost:8193',
-  '--allow-running-insecure-content',
-  '--ignore-certificate-errors=http://pencilcode.net.dev/'
-];
 
 describe('javascript editor', function() {
   var _driver;
   before(function() {
-    capabilities = selenium.Capabilities.chrome();
-    capabilities.set('chromeOptions', {args: args});
-    _driver = new selenium.Builder().
-      withCapabilities(capabilities).
-      build();
-    _driver.getWindowHandle()
-    _driver.manage().timeouts().setScriptTimeout(one_step_timeout);
+    _driver = startChrome();
   });
   after(function() {
     _driver.quit();
@@ -114,5 +94,6 @@ describe('javascript editor', function() {
     }).then(function(result) {
       assert(!/login=/.test(result.cookie));
     });
+    return _driver;
   });
 });
