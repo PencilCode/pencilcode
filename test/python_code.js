@@ -1,150 +1,103 @@
-var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs-prebuilt'),
-    assert = require('assert'),
+var chai = require('chai'),
+    expect = chai.expect,
+    assert = chai.assert,
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
-    extended_timeout = 30000,
-    refreshThen = testutil.refreshThen,
-    asyncTest = testutil.asyncTest;
+    startChrome = testutil.startChrome,
+    pollScript = testutil.pollScript;
+chai.use(require('chai-as-promised'));
 
 describe('python editor', function() {
-  var _ph, _page;
-  before(function(done) {
-    // Create the headless webkit browser.
-    phantom.create({
-      path: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
-    }, function(error, ph) {
-      assert.ifError(error);
-      // Open a page for browsing.
-      _ph = ph;
-      _ph.createPage(function(err, page) {
-        _page = page;
-        page.onConsoleMessage = function(msg) {
-          console.log(msg);
-        }
-        // Set the size to a modern laptop size.
-        page.set('viewportSize', { width: 1200, height: 900 }, function(err) {
-          assert.ifError(err);
-          // Point it to a blank page to start
-          page.open('about:blank', function(err, status){
-            assert.ifError(err);
-            assert.equal(status, 'success');
-            done();
-          });
-        });
-      });
-    });
+  var _driver;
+  before(function() {
+    _driver = startChrome();
   });
   after(function() {
-    // Be sure to kill the browser when the test is done, or else
-    // we can leave orphan processes.
-    _ph.exit();
+    _driver.quit();
   });
 
-  it('should serve static editor HTML', function(done) {
-    // Visit the website of the user "livetest."
-    _page.open('http://aaa.pencilcode.net.dev/edit',
-        function(err, status) {
-      assert.ifError(err);
-      assert.equal(status, 'success');
-      _page.evaluate(function() {
-        // Inject a script that clears the login cookie for a clean start.
-        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        // And also clear localStorage for this site.
-        localStorage.clear();
-      }, function(err) {
-        assert.ifError(err);
-        done();
-      });
+  it('should serve static editor HTML', function() {
+    // Visit the website of the user "aaa."
+    _driver.get('http://aaa.pencilcode.net.dev/edit/');
+    expect(_driver.getTitle()).to.eventually.equal('aaa');
+    return _driver.executeScript(function() {
+      // Inject a script that clears the login cookie for a clean start.
+      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      // And also clear localStorage for this site.
+      localStorage.clear();
     });
   });
 
-  it('should open js palette with .py extension', function(done) {
-    // Create a new file with an extension .js
-    _page.open('http://pencilcode.net.dev/edit/test.py',
-      function(err, status) {
-        assert.ifError(err);
-        assert.equal(status, 'success');
-        asyncTest(_page, one_step_timeout, null, function() {
-          var leftlink = $('.panetitle').filter(
-              function() { return $(this).parent().position().left == 0; })
-              .find('a');
-          leftlink.click();
-        }, function() {
-          // If tooltipster test isnt' ready, wait for it
-          if (!$('.droplet-hover-div.tooltipstered')) return;
-          return {
-            // Content of first palette block
-            text: $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content')
-          }
-        }, function(errs, result) {
-          assert.ifError(err);
-          assert.equal(result.text, 'Import Functions on the pencilcode file');
-          done();
-        });
+  it('should open py palette with .py extension', function() {
+    // Create a new file with an extension .py
+    _driver.get('http://pencilcode.net.dev/edit/test.py');
+    _driver.executeScript(function() {
+      var leftlink = $('.panetitle').filter(
+          function() { return $(this).parent().position().left == 0; })
+          .find('a');
+      leftlink.click();
+     });
+     pollScript(_driver, function() {
+       // If tooltipster test isnt' ready, wait for it
+       if (!$('.droplet-hover-div.tooltipstered')) return;
+       return {
+         // Content of first palette block
+         text: $('.droplet-hover-div.tooltipstered').eq(0)
+               .tooltipster('content')
+        }
+      }).then(function(result) {
+        assert.equal(result.text, 'Import Functions on the pencilcode file');
       });
+      return _driver;
     });
 
-/**
-  it('should be able to run the program in python mode', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to enter a python program', function() {
+    _driver.executeScript(function() {
+      // Modify the text in the editor.
+      var ace_editor = ace.edit($('.droplet-ace')[0]);
+      $('.editor').mousedown();
+      ace_editor.getSession().setValue(
+        "from pencilcode import *\n" +
+        "speed(100)\n" +
+        "pen('purple', 10)\n" +
+        "fd(100)\n"
+      );
+    });
+  });
+
+  it('should be able to run a python program', function() {
+    _driver.executeScript(function() {
       // Click on the triangle run button.
       $('#run').mousedown();
       $('#run').click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
         if (!$('.preview iframe')[0].contentWindow.see) return;
-        // Evaluate some expression in the javascript evaluation window.
+        // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
-        seval('interrupt("reset")');
-        // Wait for the turtle to start turning, then stop moving.
-        if (seval('turtle.queue().length')) return;
-        seval('jump(0,0)');
-        seval('fd(100)');
-        if(seval('getxy()')[1] < 99){
+        // And also wait for the turtle to start turning, then stop moving.
+        if (!seval) return;
+        if (seval('getxy()')[1] < 99) {
           return;
         }
         return {
           getxy: seval('getxy()'),
-          touchesred: seval('touches(red)')
+          touchesred: seval("touches('red')"),
+          touchespurple: seval("touches('purple')")
         };
       }
       catch(e) {
         return {poll: true, error: e};
       }
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
-      assert.ok(result.getxy[1] >= 100);
-      assert.ok(result.touchesred);
-      done();
+    }).then(function(result) {
+      // Verify dimensions can be read.
+      assert(Math.abs(result.getxy[0] - 0) < 1e-6);
+      assert(result.getxy[1] >= 99);
+      assert(!result.touchesred);
+      assert(result.touchespurple);
     });
-  });
-**/
-
-  it('is done', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-      // Final cleanup: delete local storage and the cookie.
-      localStorage.clear();
-      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-    }, function() {
-      return {
-        cookie: document.cookie
-      };
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.ok(!/login=/.test(result.cookie));
-      done();
-    });
+    return _driver;
   });
 });
