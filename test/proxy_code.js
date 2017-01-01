@@ -124,7 +124,7 @@ describe('proxy program', function() {
           "  im.src = proxy url\n" +
           "window.d = null\n" +
           "await loadImageData " +
-            "'http://davidbau.com/images/art/enigma.jpg', defer window.d\n"
+            "'http://davidbau.com/mandelbrot/mandelzoom.gif', defer window.d\n"
       );
     });
     pollScript(_driver, function() {
@@ -140,7 +140,7 @@ describe('proxy program', function() {
       // Filename is still shown and unchanged.
       assert(/^untitled/.test(result.filename));
       // Editor text has the new code.
-      assert(/enigma/.test(result.text));
+      assert(/mandelzoom/.test(result.text));
       // Preview is still shown.
       assert.equal(1, result.preview);
       // The save button is no longer disabled, because the doc is dirty.
@@ -177,11 +177,11 @@ describe('proxy program', function() {
       }
     }).then(function(result) {
       // Verify dimensions can be read.
-      assert.equal(result.height, 316);
-      assert.equal(result.width, 298);
-      assert.equal(result.datalen, 298 * 316 * 4);
+      assert.equal(result.height, 180);
+      assert.equal(result.width, 177);
+      assert.equal(result.datalen, 177 * 180 * 4);
       // Verify that an arbitrary byte can be read from the image.
-      assert.equal(result.data10000, 61);
+      assert.equal(result.data10000, 187);
     });
     return _driver;
   });
