@@ -1614,7 +1614,6 @@ function dropletModeForMimeType(mimeType) {
   var result = {
     'text/x-pencilcode': 'coffee',
     'text/coffeescript': 'coffee',
-    'text/coffeescript': 'coffee',
     'text/javascript': 'javascript',
     'text/x-python': 'python',
     'text/html': 'html',
@@ -1636,7 +1635,11 @@ function paletteForPane(paneState, selfname) {
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
     }
-    if (mimeType == 'text/html') {
+    if (/x-python/.test(mimeType)) {
+        basePalette = palette.PYTHON_PALETTE;
+    }
+
+    if (mimeType.replace(/;.*$/, '') == 'text/html') {
       basePalette = palette.HTML_PALETTE;
     }
   }
@@ -1647,17 +1650,22 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
+  if (/x-python/.test(mimeType)) {
+    return {
+      functions: palette.PYTHON_FUNCTIONS//,
+//      categories: palette.PYTHON_CATEGORIES
+    };
+  }
   if (mimeType.match(/^text\/html\b/)) {
     return {
       tags: palette.KNOWN_HTML_TAGS
     };
-  } else {
-    return {
-      functions: palette.KNOWN_FUNCTIONS,
-      categories: palette.CATEGORIES,
-      zeroParamFunctions: true
-    };
   }
+  return {
+    functions: palette.KNOWN_FUNCTIONS,
+    categories: palette.CATEGORIES,
+    zeroParamFunctions: true
+  };
 }
 
 function uniqueId(name) {
@@ -2733,7 +2741,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|x-python|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {

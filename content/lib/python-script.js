@@ -8,6 +8,19 @@
 document.addEventListener('DOMContentLoaded', function($myInstance){
 (function($myInstance) {
 
+  Sk.externalLibraries = {
+    pencilcode_internal : {
+      path : '/lib/pc_py_wrapper.js',
+      dependencies : [
+      ]
+    },
+    pencilcode : {
+      path : '/lib/pencilcode.py',
+      dependencies : [
+      ]
+    }
+  };
+
   function ajaxRequest(url) {
     var data;
 
@@ -42,13 +55,13 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
     return Sk.builtinFiles["files"][x];
   }
 
-  function executePython(code, outputElement, canvasElement) {
+  function executePython(payload, outputElement, canvasElement) {
     function outputFunction(text) { outputElement.innerHTML += text; }
 
     Sk.configure({output:outputFunction, read:builtinRead});
     (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = canvasElement.id;
-    pyPencilCode = ajaxRequest("/lib/PyPencilCode.py");
-    payload = pyPencilCode + code;
+//    pyPencilCode = ajaxRequest("/lib/pencilcode.py");
+//    payload = pyPencilCode + payload;
 
     var myPromise = Sk.misceval.asyncToPromise(function() {
       return Sk.importMainWithBody("<stdin>", false, payload, true);
@@ -87,15 +100,3 @@ document.addEventListener('DOMContentLoaded', function($myInstance){
 
 })(___MINIMAL_TEST___);
 });
-
-
-// Brython code for deriving path of source file (potentially useful)
-//                    $B.$py_module_path[module_name]=$elt.src
-//                    var $src_elts = $elt.src.split('/')
-//                    $src_elts.pop()
-//                    var $src_path = $src_elts.join('/')
-//                    if ($B.path.indexOf($src_path) == -1) {
-//                        // insert in first position : folder /Lib with built-in modules
-//                        // should be the last used when importing scripts
-//                        $B.path.splice(0,0,$src_path)
-//                    }
