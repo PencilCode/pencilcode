@@ -21,7 +21,6 @@ sudo apt-get install npm git
 sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 sudo npm install -g grunt-cli
 </pre>
-
 If you are not sure, it is recommended you get and build the latest `node`, `npm`, and `grunt` binaries as follows:
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
