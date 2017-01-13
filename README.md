@@ -8,7 +8,7 @@ Prerequisites
 -------------
 There are three prerequisites: git, node.js, and grunt. Instructions are noted by operating system.
 
-(For Linux:)
+__Linux:__
 
 1. Git -
 `sudo apt-get install git` on Debian/Ubuntu
@@ -34,7 +34,7 @@ npm install -g grunt-cli
 </pre>
 Zsh users should change `bashrc` to `zshrc` in the above code.
 
-(For Mac:)
+__Mac:__
 
 1. On the Mac, git comes from Apple (you can get it as part of the
 [Command line tools for XCode](https://developer.apple.com/downloads/index.action?q=xcode#)),
@@ -56,7 +56,7 @@ npm install -g grunt-cli
 
 The above drops all the built binaries into `~/local/bin` so you don't need root.
 
-(For Windows:)
+__Windows:__
 
 1. Git can be installed from here: http://git-scm.com/download/win
 
