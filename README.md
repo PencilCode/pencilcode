@@ -1,49 +1,30 @@
+
 How To Build and Test PencilCode
 ================================
 [![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)
 First install the prerequisites: git, nodejs, and grunt. Next, be sure you're in your home directory. Then:
 
-<pre>
-git clone https://github.com/PencilCode/pencilcode.git
-cd pencilcode
-npm install
-grunt
-grunt devserver
-</pre>
-
-On Windows Subsystem for Linux (WSL) *only*:
-
-<pre>
-git clone https://github.com/cacticouncil/pencilcode.git
-cd pencilcode
-npm install --no-shrinkwrap
-grunt
-grunt devserver
-</pre>
-
-Development can be done on Linux, Mac, or Windows.
-The prerequisites are a standard node.js development environment
-which is very widely used, plus grunt (you'll need to
-`npm install -g grunt-cli`).
-
 Prerequisites
 -------------
-
-First, you need git, which is easy.  On Linux,
-just `sudo apt-get install git` or `sudo yum install git-core`
-if you don't have it.
-
-Second, you need node.js (which is the `node` and `npm` binaries)
-and `grunt` (which is the build tool popular in the node.js community).
-The Ubuntu and Debian packages for node.js are pretty old, so don't
-just apt-get install the packages.  Get and build the latest `node` and
-`npm` and `grunt` binaries as follows:
+There are three prerequisites: git, node.js, and grunt. Instructions are noted by operating system.
 
 (For Linux:)
+1. Git -
+`sudo apt-get install git` on Debian/Ubuntu
+`sudo yum install git-core` on CentOS / Redhat / Fedora
 
+2. Node.js -
+Some modern systems have recent enough tools to install node.js via the package manager. Here is how you'd do so on Ubuntu (native or under WSL):
+<pre>
+sudo apt-get install npm git
+sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+sudo npm install -g grunt-cli
+</pre>
+
+If you are not sure, it is recommended you get and build the latest `node`, `npm`, and `grunt` binaries as follows:
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-wget -N http://nodejs.org/dist/v0.12.7/node-v0.12.7.tar.gz # http://nodejs.org/dist/node-latest.tar.gz
+wget -N http://nodejs.org/dist/v7.4.0/node-v7.4.0.tar.gz # http://nodejs.org/dist/node-latest.tar.gz
 tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
@@ -53,19 +34,18 @@ npm install -g grunt-cli
 </pre>
 Zsh users should change `bashrc` to `zshrc` in the above code.
 
-(For Windows Subsystem for Linux:)
-
-<pre>
-sudo apt-get install npm git
-sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
-sudo npm install -g grunt-cli
-</pre>
-
 (For Mac:)
 
+1. On the Mac, git comes from Apple (you can get it as part of the
+[Command line tools for XCode](https://developer.apple.com/downloads/index.action?q=xcode#)),
+and if you'd rather not build it, node.js can be installed from
+http://nodejs.org/download/.
+You will still need to `sudo npm install -g grunt-cli`.
+
+2. You'll need to install node.js as well:
 <pre>
 mkdir -p /tmp/nodejs && cd /tmp/nodejs
-curl http://nodejs.org/dist/v0.12.7/node-v0.12.7.tar.gz > node-latest.tar.gz
+curl http://nodejs.org/dist/v7.4.0/node-v7.4.0.tar.gz > node-latest.tar.gz
 tar xzvf node-*.tar.gz && cd `ls -d node-v*`
 ./configure --prefix=$HOME/local
 make install
@@ -74,23 +54,24 @@ source ~/.profile
 npm install -g grunt-cli
 </pre>
 
-The above drops all the built binaries into `~/local/bin` so you
-don't need root.
+The above drops all the built binaries into `~/local/bin` so you don't need root.
 
-On the Mac, git comes from Apple (you can get it as part of the
-[Command line tools for XCode](https://developer.apple.com/downloads/index.action?q=xcode#)),
-and if you'd rather not build it, node.js can be installed from
-http://nodejs.org/download/.
-You will still need to `sudo npm install -g grunt-cli`.
+(For Windows:)
 
-On Windows, git can be installed from here:
-http://git-scm.com/download/win and node.js can be installed
-from here: http://nodejs.org/download/.  Windows development
-is untested, but if you try it, let me know.
+1. Git can be installed from here: http://git-scm.com/download/win
+2. Node.js v7.x can be installed from here: http://nodejs.org/download/
 
-Because node.js does not work on cygwin, when I work with node.js
-on a Windows box, I just run it with debian under a vbox instance
-https://www.virtualbox.org/.
+
+Building and Running
+---------------------
+To clone the repository, build, and run, execute these commands:
+<pre>
+git clone https://github.com/PencilCode/pencilcode.git
+cd pencilcode
+npm install
+grunt
+grunt devserver
+</pre>
 
 
 How To Experiment with PencilCode
