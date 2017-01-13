@@ -9,6 +9,7 @@ Prerequisites
 There are three prerequisites: git, node.js, and grunt. Instructions are noted by operating system.
 
 (For Linux:)
+
 1. Git -
 `sudo apt-get install git` on Debian/Ubuntu
 `sudo yum install git-core` on CentOS / Redhat / Fedora
@@ -59,6 +60,7 @@ The above drops all the built binaries into `~/local/bin` so you don't need root
 (For Windows:)
 
 1. Git can be installed from here: http://git-scm.com/download/win
+
 2. Node.js v7.x can be installed from here: http://nodejs.org/download/
 
 
