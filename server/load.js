@@ -1,5 +1,5 @@
 var path = require('path');
-var fs = require('fs-ext');
+var fs = require('fs');
 var fsExtra = require('fs-extra');
 var utils = require('./utils');
 var filetype = require('../content/src/filetype');
