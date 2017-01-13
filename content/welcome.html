@@ -268,6 +268,34 @@ function advance() {
      "//promo.pencilcode.net/home/promo" + (index++);
   if (index >= count) { index = 0; }
 }
+function trapTabKey(focusableElements) {    
+  var firstEl = focusableElements[0][0];  
+  var lastEl = focusableElements[focusableElements.length - 1][0];
+  if(lastEl.disabled) {
+    lastEl = focusableElements[focusableElements.length - 2][0];
+  }
+
+  //check for tab key
+  if(event.keyCode == 9) {
+    //SHIFT + TAB 
+    if(event.shiftKey) {
+      if(document.activeElement == firstEl) {
+        event.preventDefault();
+        lastEl.focus();
+      }
+    //just TAB key
+    } else {
+      if(document.activeElement == lastEl) {
+        event.preventDefault();
+        firstEl.focus();
+      }
+    }      
+  }
+  //ESC key
+  if(event.keyCode == 27) {
+    closeoverlay();
+  }
+}
 // Now start the animation and things.
 advance();
 setInterval(advance, 26000);
@@ -279,46 +307,13 @@ $('#newaccount').on('click', function() {
 });
 //login button is clicked
 $('#showlogin').on('click', function() {
+  var focusableElements = [$('#user'), $('#pass'), $('#login')]; //list of elements that should receive focus     
+  var loginBlock = document.querySelector('.loginblock');
+
   if ($(this).css('opacity') == 0) return;
   $('#overlay,.loginblock').show();
-
-  var loginBlock = document.querySelector('.loginblock');
-  loginBlock.addEventListener('keydown', trapTabKey);
-
-  //$('.loginblock').bind('keydown', trapTabKey(event));
-
-  var focusableElements = [$('#user'), $('#pass'), $('#login')];
-  console.log(focusableElements);
-  var firstEl = focusableElements[0][0];
-  var lastEl = focusableElements[focusableElements.length - 2][0]; //offset because the login button starts off disabled
-
-  firstEl.focus();
-
-  function trapTabKey(event) {    
-    //check for tab key
-    if(event.keyCode == 9) {
-      //SHIFT + TAB 
-      if(event.shiftKey) {
-        console.log(firstEl);        
-        console.log(document.activeElement);
-        if(document.activeElement == firstEl) {
-          event.preventDefault();
-          lastEl.focus();
-        }
-      //just TAB key
-      } else {        
-        if(document.activeElement == lastEl) {
-          event.preventDefault();
-          firstEl.focus();
-        }
-      }      
-    }
-    //ESC key
-    if(event.keyCode == 27) {
-      closeoverlay();
-    }
-  }
-
+  
+  loginBlock.addEventListener('keydown', function() {trapTabKey(focusableElements)} );
 
   var ofs = $('#showlogin').offset();
   $('.loginblock').css({
