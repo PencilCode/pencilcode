@@ -1,103 +1,71 @@
-var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
-    assert = require('assert'),
+var chai = require('chai'),
+    expect = chai.expect,
+    assert = chai.assert,
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
-    extended_timeout = 30000,
-    refreshThen = testutil.refreshThen,
-    asyncTest = testutil.asyncTest;
+    startChrome = testutil.startChrome,
+    pollScript = testutil.pollScript;
+chai.use(require('chai-as-promised'));
 
 describe('wait_code', function() {
-  var _ph, _page;
-  before(function(done) {
-    // Create the headless webkit browser.
-    phantom.create({
-      path: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
-    }, function(error, ph) {
-      assert.ifError(error);
-      // Open a page for browsing.
-      _ph = ph;
-      _ph.createPage(function(err, page) {
-        _page = page;
-        page.onConsoleMessage = function(msg) {
-          console.log(msg);
-        }
-        // Set the size to a modern laptop size.
-        page.set('viewportSize', { width: 1200, height: 900 }, function(err) {
-          assert.ifError(err);
-          // Point it to a blank page to start
-          page.open('about:blank', function(err, status){
-            assert.ifError(err);
-            assert.equal(status, 'success');
-            done();
-          });
-        });
-      });
-    });
+  var _driver;
+  before(function() {
+    _driver = startChrome();
   });
   after(function() {
-    // Be sure to kill the browser when the test is done, or else
-    // we can leave orphan processes.
-    _ph.exit();
+    _driver.quit();
   });
-  it('should load code', function(done) {
-    // Navigate to the directory of the 'livetest' user.
-    _page.open('http://livetest.pencilcode.net.dev/edit/',
-        function(err, status) {
-      assert.ifError(err);
-      assert.equal(status, 'success');
-      asyncTest(_page, one_step_timeout, null, function() {
-        addEventListener('error', function(e) { window.lasterrorevent = e; });
-      }, function() {
-        var lefttitle = $('.panetitle').filter(
-            function() {
-              return $(this).parent().position().left == 0;
-            }).find('.panetitle-text');
-        if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
-        // Wait for both the directory div and the create link to appear.
-        if (!$('.directory').length) return {poll:true, step:1,
-          msg: window.lasterrorevent && window.lasterrorevent.message,
-          fn: window.lasterrorevent && window.lasterrorevent.filename,
-          line: window.lasterrorevent && window.lasterrorevent.lineno
-        };
-        if (!$('.create').length) return {poll:true, step:2,
-          msg: window.lasterrorevent && window.lasterrorevent.message,
-          fn: window.lasterrorevent && window.lasterrorevent.filename,
-          line: window.lasterrorevent && window.lasterrorevent.lineno
-        };
-        // Race condition: also wait for 'first' to vanish from filename
-        if (/first/.test($('#filename').text())) return {
-          poll: true, step:3,
-          filename: $('#filename').text(),
-          msg: window.lasterrorevent && window.lasterrorevent.message,
-          fn: window.lasterrorevent && window.lasterrorevent.filename,
-          line: window.lasterrorevent && window.lasterrorevent.lineno
-        };
-        // Return an array of all the link text within the directory listing.
-        var dirs = []
-        $('.directory a').each(function() { dirs.push($(this).text()); });
-        return dirs;
-      }, function(err, result) {
-        assert.ifError(err);
-        // Verity that the name "first" appears within the listing.
-        assert.ok(result.indexOf('first') >= 0);
-        done();
-      });
+
+  it('should load code', function() {
+    // Visit the website of the user "aaa."
+    _driver.get('http://livetest.pencilcode.net.dev/edit/');
+    expect(_driver.getTitle()).to.eventually.equal('livetest');
+    _driver.executeScript(function() {
+      // Inject a script that clears the login cookie for a clean start.
+      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      // And also clear localStorage for this site.
+      localStorage.clear();
     });
+    pollScript(_driver, function() {
+      var lefttitle = $('.panetitle').filter(
+          function() {
+            return $(this).parent().position().left == 0;
+          }).find('.panetitle-text');
+      if (!lefttitle.length || !/dir/.test(lefttitle.text())) return;
+      // Wait for both the directory div and the create link to appear.
+      if (!$('.directory').length) return {poll:true, step:1,
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
+      if (!$('.create').length) return {poll:true, step:2,
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
+      // Race condition: also wait for 'first' to vanish from filename
+      if (/first/.test($('#filename').text())) return {
+        poll: true, step:3,
+        filename: $('#filename').text(),
+        msg: window.lasterrorevent && window.lasterrorevent.message,
+        fn: window.lasterrorevent && window.lasterrorevent.filename,
+        line: window.lasterrorevent && window.lasterrorevent.lineno
+      };
+      // Return an array of all the link text within the directory listing.
+      var dirs = []
+      $('.directory a').each(function() { dirs.push($(this).text()); });
+      return dirs;
+    }).then(function(result) {
+      // Verity that the name "first" appears within the listing.
+      assert.isOk(result.indexOf('first') >= 0);
+    });
+    return _driver;
   });
-  it('should be able to start a new file', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to start a new file', function() {
+    _driver.executeScript(function() {
       // Click on the "Create new program" link.
       $('.create').click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       // TODO: debug - not sure why we need to wait until here for first
       // to vanish from filename field.
       // if (/first/.test($('#filename').text())) return;
@@ -123,10 +91,9 @@ describe('wait_code', function() {
         login: $('#login').length,
         logout: $('#logout').length
       }
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function (result) {
       // The filename chosen should start with the word "untitled"
-      assert.ok(/^untitled/.test(result.filename), result.filename);
+      assert.isOk(/^untitled/.test(result.filename), result.filename);
       // The title should say blocks
       assert.equal(result.title, 'blocks');
       // The program text should be empty.
@@ -136,22 +103,23 @@ describe('wait_code', function() {
       // There should be a visible preview div.
       assert.equal(result.preview, 1);
       // There sould be a login button.
-      assert.ok(result.login);
+      assert.isOk(result.login);
       // There sould be no logout button.
-      assert.ok(!result.logout);
+      assert.isOk(!result.logout);
       // The "save" button should be enabled only if not logged in.
       assert.equal(result.logout, result.saved);
-      done();
     });
+    return _driver;
   });
-  it('should flip into code mode', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should flip into code mode', function() {
+    _driver.executeScript(function() {
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
           .find('a');
       leftlink.click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
           .find('.panetitle-text');
@@ -161,19 +129,18 @@ describe('wait_code', function() {
         title: lefttitle.text().trim(),
         saved: $('#save').prop('disabled')
       };
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function (result) {
       // Filename is still shown and unchanged.
-      assert.ok(/^untitled/.test(result.filename));
+      assert.isOk(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
       assert.equal(result.title, 'code');
       // The save button is still enabled, because the user isn't logged in.
       assert.equal(result.saved, false);
-      done();
     });
+    return _driver;
   });
-  it('should be able to enter a program with await', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to enter a program with await', function() {
+    _driver.executeScript(function() {
       // Modify the text in the editor.
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       $('.editor').mousedown();
@@ -182,7 +149,8 @@ describe('wait_code', function() {
           "  await read 'your question?', defer x\n" +
           "  if (x.match /who/)\n" +
           "    write 'Fred is my name.'\n");
-    }, function() {
+    });
+    pollScript(_driver, function() {
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       return {
         filename: $('#filename').text(),
@@ -191,10 +159,9 @@ describe('wait_code', function() {
         preview: $('.preview').length,
         saved: $('#save').prop('disabled')
       };
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function(result) {
       // Filename is still shown and unchanged.
-      assert.ok(/^untitled/.test(result.filename));
+      assert.isOk(/^untitled/.test(result.filename));
       // Intentional: trim the added extra empty line at the bottom.
       assert.equal(result.text.replace(/\n$/, ''),
           "while true\n" +
@@ -205,15 +172,16 @@ describe('wait_code', function() {
       assert.equal(result.preview, 1);
       // The save button is no longer disabled, because the doc is dirty.
       assert.equal(result.saved, false);
-      done();
     });
+    return _driver;
   });
-  it('should be able to run a program with await', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to run a program with await', function() {
+    _driver.executeScript(function() {
       // Click on the triangle run button.
       $('#run').mousedown();
       $('#run').click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
@@ -231,25 +199,25 @@ describe('wait_code', function() {
       catch(e) {
         return {poll: true, error: e};
       }
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function (result) {
       // There should be a question on the screen
-      assert.ok(/question/.test(result.label));
+      assert.isOk(/question/.test(result.label));
       // The turtle should be near the point (0, 0).
-      assert.ok(Math.abs(result.getxy[0]) < 1e-6);
-      assert.ok(Math.abs(result.getxy[1]) < 1e-6);
+      assert.isOk(Math.abs(result.getxy[0]) < 1e-6);
+      assert.isOk(Math.abs(result.getxy[1]) < 1e-6);
       // There should be no further animations on the turtle queue.
       assert.equal(result.queuelen, 0);
-      done();
     });
+    return _driver;
   });
-  it('should be able to interact with text input', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to interact with text input', function() {
+    _driver.executeScript(function() {
       // Click on the triangle run button.
       var seval = $('.preview iframe')[0].contentWindow.see.eval;
       seval("$('.turtleinput').val('computer, who are you?')");
       seval("$('label button').click()");
-    }, function() {
+    });
+    pollScript(_driver, function() {
       try {
         // The preview frame should be showing...
         if (!$('.preview iframe')[0].contentWindow.see) return;
@@ -269,8 +237,7 @@ describe('wait_code', function() {
       catch(e) {
         return {poll: true, error: e};
       }
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function(result) {
       // We should have the answer showing.
       assert.equal('Fred is my name.', result.divtext);
       // The question should be inside the first label
@@ -278,28 +245,28 @@ describe('wait_code', function() {
           result.firstlabel);
       // There should be a question in the second label
       assert.equal(result.labellen, 2);
-      assert.ok(/question/.test(result.lastlabel));
-      assert.ok(!/who/.test(result.lastlabel));
+      assert.isOk(/question/.test(result.lastlabel));
+      assert.isOk(!/who/.test(result.lastlabel));
       // There should be an input on the screen.
       assert.equal(result.inputlen, 1);
       // There should be no further animations on the turtle queue.
       assert.equal(result.queuelen, 0);
-      done();
     });
+    return _driver;
   });
-  it('is done', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('is done', function() {
+    _driver.executeScript(function() {
       // Final cleanup: delete local storage and the cookie.
       localStorage.clear();
       document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-    }, function() {
+    });
+    pollScript(_driver, function() {
       return {
         cookie: document.cookie
       };
-    }, function(err, result) {
-      assert.ifError(err);
-      assert.ok(!/login=/.test(result.cookie));
-      done();
+    }).then(function(result) {
+      assert.isOk(!/login=/.test(result.cookie));
     });
+    return _driver;
   });
 });

@@ -1,5 +1,5 @@
 var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
+    phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert');
 
 

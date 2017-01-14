@@ -1,77 +1,42 @@
-var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
-    assert = require('assert'),
+var chai = require('chai'),
+    expect = chai.expect,
+    assert = chai.assert,
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
-    refreshThen = testutil.refreshThen,
-    asyncTest = testutil.asyncTest;
+    startChrome = testutil.startChrome,
+    pollScript = testutil.pollScript;
+chai.use(require('chai-as-promised'));
 
 describe('proxy program', function() {
-  var _ph, _page;
-  before(function(done) {
-    // Create the headless webkit browser.
-    phantom.create({
-      path: phantomjs.path,
-      parameters: {
-        // Use the test server as a proxy server, so that all requests
-        // go to this server (instead of trying real DNS lookups).
-        proxy: '127.0.0.1:8193',
-        // Set the disk storage to zero to avoid persisting localStorage
-        // between test runs.
-        'local-storage-quota': 0
-      }
-    }, function(error, ph) {
-      assert.ifError(error);
-      // Open a page for browsing.
-      _ph = ph;
-      _ph.createPage(function(err, page) {
-        _page = page;
-        // Set the size to a modern laptop size.
-        page.set('viewportSize', { width: 1200, height: 900 }, function(err) {
-          assert.ifError(err);
-          // Point it to a blank page to start
-          page.open('about:blank', function(err, status){
-            assert.ifError(err);
-            assert.equal(status, 'success');
-            done();
-          });
-        });
-      });
-    });
+  var _driver;
+  before(function() {
+    _driver = startChrome();
   });
   after(function() {
-    // Be sure to kill the browser when the test is done, or else
-    // we can leave orphan processes.
-    _ph.exit();
+    _driver.quit();
   });
-  it('should show create button when loading dir', function(done) {
-    // Navigate to see the top level directory for livetest.
-    _page.open('http://livetest.pencilcode.net.dev/edit/',
-        function(err, status) {
-      assert.ifError(err);
-      assert.equal(status, 'success');
-      asyncTest(_page, one_step_timeout, null, null, function() {
-        // Poll until the element with class="create" appears on the page.
-        if (!$('.create').length) return;
-        return {
-          bt: $('#bravotitle').text()
-        };
-      }, function(err, result) {
-        assert.ifError(err);
-        assert.ok(/irectory/.test(result.bt));
-        done();
-      });
+  it('should show create button when loading dir', function() {
+    _driver.get('http://livetest.pencilcode.net.dev/edit/');
+    pollScript(_driver, function() {
+      if (!$('.create').length) return;
+      return {
+        bt: $('#bravotitle').text()
+      };
+    }).then(function(result) {
+     assert(/irectory/.test(result.bt));
     });
+    return _driver;
   });
-  it('should be able to start a new file', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to start a new file', function() {
+    _driver.executeScript(function() {
       // Click on the "Create new program" link.
       $('.create').click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       // The panes will scroll horizontally.  Look for a panetitle that
       // is up against the left edge.
       var lefttitle = $('.panetitle').filter(
-          function() { return $(this).parent().position().left == 0; }).find('.panetitle-text');
+          function() { return $(this).parent().position().left == 0; }).
+          find('.panetitle-text');
       // Wait for this title to say "blocks" in it.
       if (!lefttitle.length || !/blocks/.test(lefttitle.text())) return;
       // And wait for an editor to be rendered.
@@ -88,10 +53,9 @@ describe('proxy program', function() {
         login: $('#login').length,
         logout: $('#logout').length
       }
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function(result) {
       // The filename chosen should start with the word "untitled"
-      assert.ok(/^untitled/.test(result.filename));
+      assert(/^untitled/.test(result.filename));
       // The title should say blocks
       assert.equal('blocks', result.title);
       // The program text should be empty.
@@ -101,22 +65,23 @@ describe('proxy program', function() {
       // There should be a visible preview div.
       assert.equal(1, result.preview);
       // There sould be a login button.
-      assert.ok(result.login);
+      assert(result.login);
       // There sould be no logout button.
-      assert.ok(!result.logout);
+      assert(!result.logout);
       // The "save" button should be enabled only if not logged in.
       assert.equal(result.logout, result.saved);
-      done();
     });
+    return _driver;
   });
-  it('should flip out of blocks mode', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should flip out of blocks mode', function() {
+    _driver.executeScript(function() {
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
           .find('a');
       leftlink.click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
           .find('.panetitle-text');
@@ -127,19 +92,18 @@ describe('proxy program', function() {
         saved: $('#save').prop('disabled'),
         logout: $('#logout').length
       };
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function(result) {
       // Filename is still shown and unchanged.
-      assert.ok(/^untitled/.test(result.filename));
+      assert(/^untitled/.test(result.filename));
       // Intentional: we should always add an extra empty line at the bottom.
       assert.equal('code', result.title);
       // The "save" button should be enabled only if not logged in.
       assert.equal(result.logout, result.saved);
-      done();
     });
+    return _driver;
   });
-  it('should be able to enter a program that uses the proxy', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to enter a program that uses the proxy', function() {
+    _driver.executeScript(function() {
       // Modify the text in the editor.
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       $('.editor').mousedown();
@@ -160,9 +124,10 @@ describe('proxy program', function() {
           "  im.src = proxy url\n" +
           "window.d = null\n" +
           "await loadImageData " +
-            "'http://davidbau.com/images/art/enigma.jpg', defer window.d\n"
+            "'http://davidbau.com/mandelbrot/mandelzoom.gif', defer window.d\n"
       );
-    }, function() {
+    });
+    pollScript(_driver, function() {
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       return {
         filename: $('#filename').text(),
@@ -171,25 +136,25 @@ describe('proxy program', function() {
         preview: $('.preview').length,
         saved: $('#save').prop('disabled')
       };
-    }, function(err, result) {
-      assert.ifError(err);
+    }).then(function(result) {
       // Filename is still shown and unchanged.
-      assert.ok(/^untitled/.test(result.filename));
+      assert(/^untitled/.test(result.filename));
       // Editor text has the new code.
-      assert.ok(/enigma/.test(result.text));
+      assert(/mandelzoom/.test(result.text));
       // Preview is still shown.
       assert.equal(1, result.preview);
       // The save button is no longer disabled, because the doc is dirty.
       assert.equal(false, result.saved);
-      done();
     });
+    return _driver;
   });
-  it('should be able to access off-domain image bits', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
+  it('should be able to access off-domain image bits', function() {
+    _driver.executeScript(function() {
       // Click on the triangle run button.
       $('#run').mousedown();
       $('#run').click();
-    }, function() {
+    });
+    pollScript(_driver, function() {
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;
@@ -210,14 +175,14 @@ describe('proxy program', function() {
       catch(e) {
         return {poll: true, error: e};
       }
-    }, function(err, result) {
+    }).then(function(result) {
       // Verify dimensions can be read.
-      assert.equal(result.height, 316);
-      assert.equal(result.width, 298);
-      assert.equal(result.datalen, 298 * 316 * 4);
+      assert.equal(result.height, 180);
+      assert.equal(result.width, 177);
+      assert.equal(result.datalen, 177 * 180 * 4);
       // Verify that an arbitrary byte can be read from the image.
-      assert.equal(result.data10000, 57);
-      done();
+      assert.equal(result.data10000, 187);
     });
+    return _driver;
   });
 });

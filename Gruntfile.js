@@ -1,4 +1,14 @@
 var os=require('os');
+var fs = require('fs');
+
+// Determine if this is being built on Windows Subsystem for Linux; if so, we avoid direct device access.
+var isWSL = false;
+
+if (os.platform() === 'linux') {
+  if (fs.readFileSync("/proc/version", 'utf8').indexOf("Microsoft") > -1) {
+      isWSL = true;
+  }
+}
 
 module.exports = function(grunt) {
   'use strict';
@@ -28,7 +38,7 @@ module.exports = function(grunt) {
           'lib/droplet.js': 'droplet/dist/droplet-full.js',
           'lib/droplet.css': 'droplet/css/droplet.css',
           'lib/html2canvas.js': 'html2canvas/dist/html2canvas.js',
-          'lib/iced-coffee-script.js':
+          'lib/iced-coffee-script-orig.js':
              'iced-coffee-script/extras/iced-coffee-script-1.8.0-c.js',
           'lib/jquery.js' : 'jquery/dist/jquery.js',
           'lib/jquery.autocomplete.min.js':
@@ -56,8 +66,8 @@ module.exports = function(grunt) {
           destPrefix: 'content/lib/tooltipster'
         },
         files: {
-          'js': 'tooltipster/js',
-          'css': 'tooltipster/css'
+          'js': 'tooltipster/dist/js',
+          'css': 'tooltipster/dist/css'
         }
       },
       lib: {
@@ -204,12 +214,20 @@ module.exports = function(grunt) {
         }
       }
     },
-    sed: {
+    'string-replace': {
       iced: {
-        pattern: '\n\\(function\\(root\\)',
-        replacement: '\nthis.CoffeeScript||(function(root)',
-        path: 'content/lib/iced-coffee-script.js',
-        recursive: false
+        files: {
+          'content/lib/iced-coffee-script.js':
+                  'content/lib/iced-coffee-script-orig.js'
+        },
+        options: {
+          replacements: [
+            {
+              pattern: '\n\\(function\\(root\\)',
+              replacement: '\nthis.CoffeeScript||(function(root)'
+            }
+          ]
+        }
       }
     },
     watch: {
@@ -247,9 +265,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    'node-inspector': {
-      dev: { }
-    }
   });
 
   grunt.loadNpmTasks('grunt-bowercopy');
@@ -265,23 +280,28 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-node-inspector');
-  grunt.loadNpmTasks('grunt-sed');
+  grunt.loadNpmTasks('grunt-string-replace');
 
   grunt.registerTask('proxymessage', 'Show proxy instructions', function() {
     var port = grunt.option('port');
-    var ifaces = os.networkInterfaces();
     grunt.log.writeln(
       'Point your browser proxy autoconfig to one of these (or download\n' +
       'a local copy of one of these proxy.pacs).  Then the dev server\n' +
       'can be used at http://pencilcode.net.dev/');
-    for (var dev in ifaces) {
-      ifaces[dev].forEach(function(details) {
-        if (details.family == 'IPv4') {
-          grunt.log.writeln(
-            'http://' + details.address + ':' + port + '/proxy.pac');
-        }
-      });
+
+    if (isWSL) {
+      grunt.log.writeln('http://127.0.0.1:' + port + '/proxy.pac');
+    }
+
+    else {
+      var ifaces = os.networkInterfaces();
+      for (var dev in ifaces) {
+        ifaces[dev].forEach(function(details) {
+          if (details.family == 'IPv4') {
+            grunt.log.writeln('http://' + details.address + ':' + port + '/proxy.pac');
+          }
+        });
+      }
     }
   });
 
@@ -311,7 +331,7 @@ module.exports = function(grunt) {
   });
 
   // "update" does a bowercopy and a sed.
-  grunt.registerTask('update', ['bowercopy', 'sed']);
+  grunt.registerTask('update', ['bowercopy', 'string-replace']);
   // "devserver" serves editor code directly from the src directory.
   grunt.registerTask('devserver',
       ['proxymessage', 'express:dev', 'browserify:server', 'watch']);

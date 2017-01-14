@@ -1,4 +1,45 @@
-var assert = require('assert');
+var chromedriver = require('chromedriver'),
+    selenium = require('selenium-webdriver');
+
+var one_step_timeout = 8000;
+
+var chromeOpts = [
+  '--test-type',
+  '--no-default-browser-check',
+  '--no-first-run',
+  '--disable-default-apps',
+  '--host-resolver-rules=MAP *pencilcode.net.dev localhost:8193',
+  '--allow-running-insecure-content',
+  '--ignore-certificate-errors=http://pencilcode.net.dev/'
+];
+
+exports.startChrome = function() {
+  var capabilities = selenium.Capabilities.chrome();
+  capabilities.set('chromeOptions', {args: chromeOpts});
+  var driver = new selenium.Builder().
+      withCapabilities(capabilities).
+      build();
+  driver.getWindowHandle()
+  driver.manage().timeouts().setScriptTimeout(one_step_timeout);
+  return driver;
+}
+
+// pollScript constructs a 100ms-repeating function in the selenium-based
+// browser.  As long as the predicate returns false, the polling continues;
+// when the predicate returns somthing non-false, the polling ends.
+exports.pollScript =
+function pollScript(driver, result) {
+  var s =
+    'var ps_done = arguments[arguments.length - 1];' +
+    'var ps_retry = (function() {' +
+    ' var ps_result = (' + result + ')' +
+    (result instanceof Function ? '();' : ';') +
+    ' if (ps_result && ps_result.poll) { ps_result = null; }' +
+    ' if (!ps_result) { setTimeout(ps_retry, 100); } ' +
+    ' else { ps_done(ps_result); } ' +
+    '}); window.ps_retry = ps_retry; ps_retry();'
+  return driver.executeAsyncScript(s);
+}
 
 exports.refreshThen =
 function refreshThen(page, callback) {
@@ -84,10 +125,12 @@ function asyncTest(page, timeout, params, action, predicate, callback) {
     retry();
   }
 
-  rt_args = [ predicate, handletry ];
-  ac_args = [ action, handleact ];
+  rt_args = [ predicate ];
   rt_args.push.apply(rt_args, params);
+  rt_args.push(handletry);
+  ac_args = [ action ];
   ac_args.push.apply(ac_args, params);
+  ac_args.push(handleact);
 
   if (action) {
     page.evaluate.apply(page, ac_args);

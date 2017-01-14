@@ -1,5 +1,5 @@
 var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
+    phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
@@ -61,7 +61,9 @@ describe('code editor', function() {
         localStorage.clear();
       }, function(err) {
         assert.ifError(err);
-        done();
+        // Add a short delay before reloading new page, or else phantomjs
+        // often gets lost.
+        setTimeout(done, 100);
       });
     });
   });
@@ -183,6 +185,7 @@ describe('code editor', function() {
     asyncTest(_page, one_step_timeout, null, function() {
       $('a[href="/edit/shapes/"]').click();
     }, function() {
+      if ($('#filename').text().indexOf('shapes') < 0) return;
       if (!$('a[href="/edit/shapes/test"]').is(':visible')) return;
       return {
         showThumb: window.localStorage.showThumb,
@@ -199,6 +202,7 @@ describe('code editor', function() {
       $('.thumb-toggle:eq(1)').click();
     }, function() {
       if (!$('.thumbnail[alt="test"]').is(':visible')) return;
+      if ($('#filename').text().indexOf('shapes') < 0) return;
       return {
         showThumb: window.localStorage.showThumb,
         changedIcon: $('.thumb-toggle:eq(1)').find('.fa').hasClass('fa-th-large')
@@ -215,6 +219,11 @@ describe('code editor', function() {
       // Click on the folder icon.
       $('#folder').click();
     }, function() {
+      if ($('#filename').text().indexOf('shapes') >= 0) {
+        // Flaky test - unknown why we need to retry this click.
+        $('#folder').click();
+        return;
+      }
       return {
         showThumb: window.localStorage.showThumb,
         leftIconCorrent: $('.thumb-toggle:eq(0)').find('.fa').hasClass('fa-align-left'),

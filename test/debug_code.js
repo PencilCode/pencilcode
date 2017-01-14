@@ -1,5 +1,5 @@
 var phantom = require('node-phantom-simple'),
-    phantomjs = require('phantomjs'),
+    phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
     one_step_timeout = 8000,
@@ -45,7 +45,7 @@ describe('code debugger', function() {
     _ph.exit();
   });
   it('should show run button when loading code', function(done) {
-    // Navigate to see the editor for the program named "first".
+    // Navigate to see the editor for the program named "hi".
     _page.open('http://livetest.pencilcode.net.dev/edit/hi',
         function(err, status) {
       assert.ifError(err);
