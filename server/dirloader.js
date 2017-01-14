@@ -1,5 +1,5 @@
 var path = require('path');
-var fs = require('fs-ext');
+var fs = require('fs');
 var lb = require('binary-search-bounds').ge;
 var utils = require('./utils');
 

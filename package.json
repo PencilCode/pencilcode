@@ -22,7 +22,6 @@
     "debug": "latest",
     "dynamic.io": "latest",
     "express": "latest",
-    "fs-ext": "latest",
     "fs-extra": "latest",
     "http-proxy": "latest",
     "log-timestamp": "latest",
