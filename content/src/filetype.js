@@ -198,7 +198,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       instrumented = true;
     }
   }
-  var mainscript = "//# sourceURL=mainscript-virtual.js`;\n" + seeline;
+  var mainscript = "//# sourceURL=mainscript-virtual.js\n" + seeline;
   if (!pragmasOnly) {
     mainscript += text;
   }
