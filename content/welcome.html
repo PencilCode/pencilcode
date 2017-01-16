@@ -87,7 +87,7 @@ Contribute to the development of Pencil Code at
 <div class="row">
 <div class="col-xs-6 vpadding">
 <!-- branding -->
-<a class="pclogo pull-left aboutlink" href="#about"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
+<a class="pclogo pull-left aboutlink" aria-label="About the Pencil Code project" href="#about"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
 </div>
 <!--<div class="col-xs-6 vpadding">-->
 <!-- login bar -->
@@ -280,13 +280,15 @@ function trapTabKey(focusableElements) {
     focusableElements[focusableElements.length - 1][0]: focusableElements[focusableElements.length - 1];
 
   // handle the instance in which the login button is disabled before the user
-  // enters a name into the username field
-  if(lastEl instanceof jQuery) {
-    if(lastEl.disabled) {
+  // enters a name into the username field  
+    if((lastEl instanceof HTMLButtonElement) && lastEl.disabled) {
+      console.log("element disabled");
       lastEl = focusableElements[focusableElements.length - 2][0];
-    }    
-  }
+    }
 
+  console.log("firstEl" + firstEl);
+  console.log("lastEl" + lastEl);
+  console.log(focusableElements);
   //check for tab key
   if(event.keyCode == 9) {
     //SHIFT + TAB 
