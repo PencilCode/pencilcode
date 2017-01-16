@@ -13,7 +13,7 @@
 </style>
 <body>
 <div id="overlay">
-<div class="about" id="intro">
+<div class="about" id="intro" tabindex="0">
 <h1 style="margin-top:0">About Pencil Code</h1>
 <p>Pencil Code is a collaborative programming site for drawing
 art, playing music, and creating games.  It is also
@@ -268,11 +268,23 @@ function advance() {
      "//promo.pencilcode.net/home/promo" + (index++);
   if (index >= count) { index = 0; }
 }
-function trapTabKey(focusableElements) {    
-  var firstEl = focusableElements[0][0];  
-  var lastEl = focusableElements[focusableElements.length - 1][0];
-  if(lastEl.disabled) {
-    lastEl = focusableElements[focusableElements.length - 2][0];
+
+// Function makes sure the tab order remains within a modal-like element
+// this prevents the user from accessing elements behind the modal
+// Although keybord-traps are not recommended in the WCAG 2.0 specifications, 
+// it is widely accepted as an appropriate method for conveying modals to users who primarily use the keyboard for page navigation
+// https://developers.google.com/web/fundamentals/accessibility/focus/using-tabindex#modals_and_keyboard_traps 
+function trapTabKey(focusableElements) {     
+  var firstEl = focusableElements[0] instanceof jQuery? focusableElements[0][0]: focusableElements[0];  
+  var lastEl = focusableElements[focusableElements.length - 1] instanceof jQuery? 
+    focusableElements[focusableElements.length - 1][0]: focusableElements[focusableElements.length - 1];
+
+  // handle the instance in which the login button is disabled before the user
+  // enters a name into the username field
+  if(lastEl instanceof jQuery) {
+    if(lastEl.disabled) {
+      lastEl = focusableElements[focusableElements.length - 2][0];
+    }    
   }
 
   //check for tab key
@@ -293,6 +305,7 @@ function trapTabKey(focusableElements) {
   }
   //ESC key
   if(event.keyCode == 27) {
+    console.log('closing overlay');
     closeoverlay();
   }
 }
@@ -325,6 +338,10 @@ $('#showlogin').on('click', function() {
 $('a.aboutlink').click(function() {
   location.hash = '#about';
   $('#overlay,.about').show();
+  var aboutContainer = document.querySelector('.about');
+  var focusableElements = $('.about').find("a");
+  aboutContainer.focus();  
+  aboutContainer.addEventListener('keydown', function() {trapTabKey(focusableElements)} );
   return false;
 });
 function closeoverlay() {
