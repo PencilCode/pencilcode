@@ -45,6 +45,7 @@ module.exports = function(grunt) {
               'devbridge-autocomplete/dist/jquery.autocomplete.min.js',
           'lib/jquery-deparam.js' : 'jquery-deparam/jquery-deparam.js',
           'lib/jquery-turtle.js': 'jquery-turtle/jquery-turtle.js',
+          'lib/js2coffee.js': 'js2coffee/dist/js2coffee.js',
           'lib/lodash.js': 'lodash/lodash.js',
           'lib/p5.js': 'p5/index.js',
           'lib/pencil-tracer.js': 'pencil-tracer/pencil-tracer.js',
@@ -115,11 +116,13 @@ module.exports = function(grunt) {
             'content/lib/iced-coffee-script.js',
             'content/lib/jquery.js',
             'content/lib/jquery-turtle.js',
+            'content/lib/js2coffee.js',
             'content/lib/lodash.js',
             'content/lib/seedrandom.js',
             'content/lib/socket.io.js',
             'content/lib/recolor.js',
-            'content/src/showturtle.js'
+            'content/src/showturtle.js',
+            'node_modules/PencilcodeMicroDatabase/client/js/pencilcode-micro-db.js',
           ],
           'content/editor.js': [
             'content/editor.js'
@@ -164,11 +167,13 @@ module.exports = function(grunt) {
           'content/lib/iced-coffee-script.js',
           'content/lib/jquery.js',
           'content/lib/jquery-turtle.js',
+          'content/lib/js2coffee.js',
           'content/lib/lodash.js',
           'content/lib/seedrandom.js',
           'content/lib/socket.io.js',
           'content/lib/recolor.js',
-          'content/src/showturtle.js'
+          'content/src/showturtle.js',
+          'node_modules/PencilcodeMicroDatabase/client/js/pencilcode-micro-db.js',
         ],
         dest: 'content/turtlebits.js'
       },
