@@ -8,7 +8,11 @@ imgdirname = os.path.join(config.cachedir, 'img')
 
 scrapeagent = 'Mozilla/5.0 (Linux x86_64) Gecko/20100101 Firefox/31.0'
 scrapeurl = 'https://www.google.com/search?tbm=isch&sa=X&biw=1440&bih=828'
-scraper = re.compile(r'href="(?:[^"/]*//[^"/]*)?/imgres?[^"]*imgurl=([^&"]*)')
+# old format uses imgres urls
+# scraper = re.compile(r'href="(?:[^"/]*//[^"/]*)?/imgres?[^"]*imgurl=([^&"]*)'
+# new format is json formatted
+scraper = re.compile(r'"ou":"(http[^"]*)"')
+
 
 class HeadRequest(urllib2.Request):
   def get_method(self):
