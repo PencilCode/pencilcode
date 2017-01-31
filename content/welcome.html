@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en-US">
 <head>
 <title>Pencil Code</title>
 <meta name="description" content="Pencil is a collaborative programming site for drawing art, playing music, and creating games. Pencil is also a place to experiment with mathematical functions, geometry, graphing, webpages, simulations, and algorithms. Programs are open for all to see and copy.">
@@ -13,7 +13,7 @@
 </style>
 <body>
 <div id="overlay">
-<div class="about" id="intro">
+<div class="about" id="intro" tabindex="0">
 <h1 style="margin-top:0">About Pencil Code</h1>
 <p>Pencil Code is a collaborative programming site for drawing
 art, playing music, and creating games.  It is also
@@ -87,17 +87,17 @@ Contribute to the development of Pencil Code at
 <div class="row">
 <div class="col-xs-6 vpadding">
 <!-- branding -->
-<a class="pclogo pull-left aboutlink" href="#about"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
+<a class="pclogo pull-left aboutlink" aria-label="About the Pencil Code project" href="#about"><div class="pctext"><div class="pcline1">Pencil</div><div class="pcline2">Code</div></div><img src="/image/vpencil-20-64.png"></a>
 </div>
-<div class="col-xs-6 vpadding">
+<!--<div class="col-xs-6 vpadding">-->
 <!-- login bar -->
-<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><i class="fa fa-star newicon"></i> New Account<li class="btn btn-clear" style="opacity:0" id="showlogin"><i class="fa fa-sign-in loginicon"></i> Login</ul>
-</div>
+<!--<ul class="pull-right list-inline"><li class="btn btn-clear" id="newaccount"><i class="fa fa-star newicon"></i> New Account<li class="btn btn-clear" style="opacity:0" id="showlogin"><i class="fa fa-sign-in loginicon"></i> Login</ul>-->
+<!--</div>-->
 
 <!--new account creation and login buttons-->
-<div class="login-container">
-  <button id="new-account" class="btn btn-clear"><i class="fa fa-star newicon"></i> New Account</button>
-  <button id="reveal-login" class="btn btn-clear"><i class="fa fa-sign-in loginicon"></i> Login</button>
+<div class="login-container col-xs-6 vpadding">
+  <button id="newaccount" class="btn btn-clear"><i class="fa fa-star newicon"></i> New Account</button>  
+  <button id="showlogin" class="btn btn-clear"><i class="fa fa-sign-in loginicon"></i> Login</button>
 </div>
 
 </div>
@@ -113,27 +113,27 @@ invent a program that will change the world.
 <p style="text-align:center"><a class="btn btn-primary" style="font-size:133%" href="/edit/first">Let's play!</a>
 </div>
 <div class="col-sm-6 vpadding">
-<iframe id="demo" style="min-height:300px;height:100%;width:100%;border:0"></iframe>
+<iframe id="demo" style="min-height:300px;height:100%;width:100%;border:0" tabindex="-1"></iframe>
 </div>
 </div>
 <div class="row topline">
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h3><a href="//gym.pencilcode.net/draw/" class="nofeedback"><img src="/image/art.png" style="height:74px"><br>Draw</a></h3>
+<h3><a href="//gym.pencilcode.net/draw/" class="nofeedback" tabindex="-1"><img src="/image/art.png" style="height:74px"><br>Draw</a></h3>
 <p><a href="//gym.pencilcode.net/draw/" class="btn btn-default" style="white-space:normal">Create art</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h3><a href="//gym.pencilcode.net/jam/" class="nofeedback"><img src="/image/music.png" style="height:74px"
+<h3><a href="//gym.pencilcode.net/jam/" class="nofeedback" tabindex="-1"><img src="/image/music.png" style="height:74px"
 title="Image credit: http://www.clker.com/clipart-334772.html"><br>Jam</a></h3>
 <p><a href="//gym.pencilcode.net/jam/" class="btn btn-default" style="white-space:normal">Make music</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h3><a href="//gym.pencilcode.net/imagine/" class="nofeedback"><img src="/image/adventure.png" style="height:74px"
+<h3><a href="//gym.pencilcode.net/imagine/" class="nofeedback" tabindex="-1"><img src="/image/adventure.png" style="height:74px"
 title="Image credit: http://jumpfer-stock.deviantart.com/art/Steam-Dragon-01-PNG-Stock-415712374"
 ><br>Imagine</a></h3>
 <p><a href="//gym.pencilcode.net/imagine/" class="btn btn-default" style="white-space:normal">Code an adventure</a>
 </div>
 <div class="col-sm-3 col-xs-6 vpadding text-center">
-<h2 style="padding:20px 0 0"><a class="nofeedback" title="Start from a blank program" href="/edit/myprogram">Get Creative</a></h2>
+<h2 style="padding:20px 0 0"><a class="nofeedback" title="Start from a blank program" href="/edit/myprogram" tabindex="-1">Get Creative</a></h2>
 <p>Get some ideas for <a href="//gym.pencilcode.net/draw/">art</a>,
 <a href="//gym.pencilcode.net/jam/">music</a>, or
 <a href="//gym.pencilcode.net/imagine/">games</a>.  Or to code
@@ -268,6 +268,49 @@ function advance() {
      "//promo.pencilcode.net/home/promo" + (index++);
   if (index >= count) { index = 0; }
 }
+
+// Function makes sure the tab order remains within a modal-like element
+// this prevents the user from accessing elements behind the modal
+// Although keybord-traps are not recommended in the WCAG 2.0 specifications, 
+// it is widely accepted as an appropriate method for conveying modals to users who primarily use the keyboard for page navigation
+// https://developers.google.com/web/fundamentals/accessibility/focus/using-tabindex#modals_and_keyboard_traps 
+function trapTabKey(focusableElements) {     
+  var firstEl = focusableElements[0] instanceof jQuery? focusableElements[0][0]: focusableElements[0];  
+  var lastEl = focusableElements[focusableElements.length - 1] instanceof jQuery? 
+    focusableElements[focusableElements.length - 1][0]: focusableElements[focusableElements.length - 1];
+
+  // handle the instance in which the login button is disabled before the user
+  // enters a name into the username field  
+    if((lastEl instanceof HTMLButtonElement) && lastEl.disabled) {
+      console.log("element disabled");
+      lastEl = focusableElements[focusableElements.length - 2][0];
+    }
+
+  console.log("firstEl" + firstEl);
+  console.log("lastEl" + lastEl);
+  console.log(focusableElements);
+  //check for tab key
+  if(event.keyCode == 9) {
+    //SHIFT + TAB 
+    if(event.shiftKey) {
+      if(document.activeElement == firstEl) {
+        event.preventDefault();
+        lastEl.focus();
+      }
+    //just TAB key
+    } else {
+      if(document.activeElement == lastEl) {
+        event.preventDefault();
+        firstEl.focus();
+      }
+    }      
+  }
+  //ESC key
+  if(event.keyCode == 27) {
+    console.log('closing overlay');
+    closeoverlay();
+  }
+}
 // Now start the animation and things.
 advance();
 setInterval(advance, 26000);
@@ -277,19 +320,30 @@ window.addEventListener('touchstart', motion);
 $('#newaccount').on('click', function() {
   window.location = '/edit/intro#new';
 });
+//login button is clicked
 $('#showlogin').on('click', function() {
+  var focusableElements = [$('#user'), $('#pass'), $('#login')]; //list of elements that should receive focus     
+  var loginBlock = document.querySelector('.loginblock');
+
   if ($(this).css('opacity') == 0) return;
   $('#overlay,.loginblock').show();
+  
+  loginBlock.addEventListener('keydown', function() {trapTabKey(focusableElements)} );
+
   var ofs = $('#showlogin').offset();
   $('.loginblock').css({
     top: ofs.top - 8 + 1,
-    right: $(document).width() - (ofs.left + $('#showlogin').outerWidth()) - 8
+    right: $(document).width() - (ofs.left + $('#showlogin').outerWidth())
   });
   $('#user').focus();
 });
 $('a.aboutlink').click(function() {
   location.hash = '#about';
   $('#overlay,.about').show();
+  var aboutContainer = document.querySelector('.about');
+  var focusableElements = $('.about').find("a");
+  aboutContainer.focus();  
+  aboutContainer.addEventListener('keydown', function() {trapTabKey(focusableElements)} );
   return false;
 });
 function closeoverlay() {
