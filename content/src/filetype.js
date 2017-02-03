@@ -187,6 +187,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       seeline = 'eval(this._start_ide_cs_);\n\n';
       originalLanguage = 'coffeescript';
     }
+    seeline = "//# sourceURL=mainscript-virtual.js\n" + seeline;
   }
   var instrumented = false;
   if (instrumenter) {
@@ -198,7 +199,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
       instrumented = true;
     }
   }
-  var mainscript = "//# sourceURL=mainscript-virtual.js\n" + seeline;
+  var mainscript = seeline;
   if (!pragmasOnly) {
     mainscript += text;
   }
