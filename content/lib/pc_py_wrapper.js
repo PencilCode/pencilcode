@@ -283,7 +283,22 @@ var $builtinmodule = function (name) {
        Sk.builtin.pyCheckArgs("Pencil", arguments, 0, 0);
        return new Pencil();
     });
+    
+    mod.copy = new Sk.builtin.func(function () {
+        Sk.builtin.pyCheckArgs("copy", arguments, 0, 0);
+        return new copy();
+    });
+    
+    mod.table = new Sk.builtin.func(function (rows, columns) {
+       Sk.builtin.pyCheckArgs("table", arguments, 2, 2);
+       return new table(rows.v, columns.v);
+    });
 	
+    mod.cell = new Sk.builtin.func(function (sprite, rows, columns) {
+        Sk.builtin.pyCheckArgs("cell", arguments, 3, 3);
+        return new sprite.cell(rows.v, columns.v);
+    });
+    
 	//ART//////
 	
 	mod.hide = new Sk.builtin.func(function (sprite) {
@@ -397,7 +412,50 @@ var $builtinmodule = function (name) {
         }
        return sprite.drawon(canvas.v);
     });
-	
+    
+    mod.arrow = new Sk.builtin.func(function (sprite, color, size) {
+        Sk.builtin.pyCheckArgs("arrow", arguments, 3, 3);
+		if (sprite === Sk.builtin.none.none$) {
+            return arrow(color.v, size.v);
+        }
+       return sprite.arrow(color.v, size.v);
+    });
+    
+    mod.shown = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("shown", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return shown();
+        }
+       return sprite.shown();
+    });
+    
+    mod.hidden = new Sk.builtin.func(function (sprite) {
+        Sk.builtin.pyCheckArgs("hidden", arguments, 1, 1);
+        if (sprite === Sk.builtin.none.none$) {
+            return hidden();
+        }
+       return sprite.hidden();
+    });
+    
+    //mod.touches = new Sk.builtin.func(function (sprite, obj) {
+    //    Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
+    //    if (sprite === Sk.builtin.none.none$) {
+    //        return touches(obj.v);
+    //    }
+    //   return sprite.touches(obj.v);
+    //});
+    //
+    //mod.inside = new Sk.builtin.func(function (sprite, obj) {
+    //    Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
+    //    if (sprite === Sk.builtin.none.none$) {
+    //        return inside(obj.v);
+    //    }
+    //   return sprite.inside(obj.v);
+    //});
+    
+    
+    
+    
 	//Operators
 	mod.min = new Sk.builtin.func(function (value1, value2) {
         Sk.builtin.pyCheckArgs("min", arguments, 1, 2);

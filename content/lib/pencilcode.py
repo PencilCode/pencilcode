@@ -100,6 +100,9 @@ class SpriteObject():
     
     def dot(self, color, size):
         pencilcode_internal.dot(self.jsSpriteObject,color, size)
+        
+    def arrow(self, color, size):
+        pencilcode_internal.arrow(self.jsSpriteObject, color, size)	    
     
     def fill(self, color):
         pencilcode_internal.fill(self.jsSpriteObject,color)
@@ -109,7 +112,23 @@ class SpriteObject():
     
     def drawon(self, path):
         pencilcode_internal.drawon(self.jsSpriteObject,path)
-		
+        
+    #def cell(self, rows, columns):
+    #    pencilcode_internal.cell(self.jsSpriteObject, rows, columns)
+	
+    def shown(self):
+        return pencilcode_internal.shown(self.jsSpriteObject)
+        
+    def hidden(self):
+        return pencilcode_internal.hidden(self.jsSpriteObject)
+        
+    def touches(self):
+        return pencilcode_internal.touches(self.jsSpriteObject, obj)
+        
+    def inside(self):
+        return pencilcode_internal.inside(self.jsSpriteObject, obj)
+
+        
     ####################
     ## Sound Commands ##
     ####################
@@ -212,6 +231,9 @@ def pen(color, size):
 
 def dot(color, size):
     pencilcode_internal.dot(None,color, size)
+    
+def arrow(color, size):
+    pencilcode_internal.arrow(None, color, size)
 
 def fill(color):
 	pencilcode_internal.fill(None,color)
@@ -221,7 +243,19 @@ def wear(name):
 
 def drawon(path):
 	pencilcode_internal.drawon(None,path)
-
+	
+def shown():
+    return pencilcode_internal.shown(None)
+    
+def hidden():
+    return pencilcode_internal.hidden(None)
+    
+def touches(obj):
+    return pencilcode_internal.touches(None, obj)
+    
+def inside(obj):
+    return pencilcode_internal.touches(None, obj)
+    
 ###################
 ## Text Commands ##
 ###################
@@ -298,7 +332,13 @@ def Piano():
 	
 def Pencil():
     return SpriteObject(pencilcode_internal.Pencil())
-
+    
+def copy():
+    return SpriteObject(pencilcode_internal.copy())
+    
+def table(rows, columns):
+    return SpriteObject(pencilcode_internal.table(rows, columns))
+    
 ######################
 ## 	   Operators	##
 ######################

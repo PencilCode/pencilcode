@@ -828,6 +828,9 @@ module.exports = {
         }, {
           block: 'jumpxy(30, 20)',
           title: 'Jump changing x and y without drawing'
+        }, {
+          block: 'pagexy()',
+          title: 'Page (topleft-y-down {pageX:x, pageY:y}) coordinates'
         }
       ])
     }, {
@@ -882,6 +885,9 @@ module.exports = {
           block: 'pen(\'purple\', 10)',
           title: 'Set pen color and size'
         }, {
+          block: 'arrow(\'blue\', 200)',
+          title: 'Creates an arrow for a set color and length'
+        }, {
           block: 'dot(\'green\', 50)',
           title: 'Make a dot'
         }, {
@@ -897,6 +903,12 @@ module.exports = {
           block: 'grow(3)',
           title: 'Grow the size of the turtle'
         }, {
+          block: 'shown()',
+          title: 'Returns true if turtle is visible'
+        }, {
+          block: 'hidden()',
+          title: 'Returns true if turtle is not visible'
+        }, {
           block: 'ht()',
           title: 'Hide the main turtle'
         }, {
@@ -911,6 +923,9 @@ module.exports = {
         }, {
           block: 'pd()',
           title: 'Put the pen down'
+        }, {
+          block: 'inside(t)',
+          title: 'True if the turtle is encircled by obj'
         }, {
           block: 'drawon(s)',
           title: 'Draw on sprite s'
@@ -1030,6 +1045,12 @@ module.exports = {
         }, {
           block: 'q = Pencil()',
           title: 'Make an invisible and fast drawing sprite'
+        }, {
+          block: 'r = copy()',
+          title: 'Copy turtle'
+        }, {
+          block: 'f = table(5, 5)',
+          title: 'Outputs a table with m rows and n columns'
         }//, {
          // block: 'if @touches x:\n  ``',
          // title: 'Do something only if touching the object x'
@@ -1504,12 +1525,13 @@ module.exports = {
     'la': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
     'speed': {color: 'lightblue', drown: [py_types.speeds]},
     'home': {color: 'lightblue'},
+	'pagexy': {color: 'lightblue'},
     'turnto': {color: 'lightblue', dropdown: [py_types.angles]},
     'moveto': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
     'movexy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
     'jumpto': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
     'jumpxy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
-
+	
     'pen': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
     'dot': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
 	'box': {color: 'purple'},
@@ -1522,6 +1544,10 @@ module.exports = {
     'pu': {color: 'purple'},
     'pd': {color: 'purple'},
 	'drawon': {color: 'purple'},
+	'arrow': {color: 'purple'},
+	'shown': {color: 'purple'},
+	'hidden': {color: 'purple'},
+	'inside': {color: 'purple'},
 	//Sound
 	'play': {color: 'indigo'},
 	'tone': {color: 'indigo'},
@@ -1542,6 +1568,8 @@ module.exports = {
 	'Piano' : {color:'teal'},
 	'Pencil' : {color:'teal'},
 	'Turtle' : {color:'teal'},
+	'copy' : {color:'teal'},
+	'table': {color: 'teal'},
 	//Text
 	'write' : {color: 'pink'},
 	'typeline' : {color: 'pink'},
