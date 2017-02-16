@@ -51,6 +51,9 @@ class SpriteObject():
     
     def pause(self, value):
         pencilcode_internal.sleep(self.jsSpriteObject, value)
+	
+    def getxy(self):
+        return pencilcode_internal.getxy(self.jsSpriteObject)
 		
     ######################
     ## Control Commands ##
@@ -192,6 +195,9 @@ def jumpto(x, y):
 def jumpxy(x, y):
     pencilcode_internal.jumpxy(None, x, y)
 
+def getxy():
+    return pencilcode_internal.getxy(None)
+	
 def pause(value):
     pencilcode_internal.sleep(None, value)
 

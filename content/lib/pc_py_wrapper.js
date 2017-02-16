@@ -138,6 +138,14 @@ var $builtinmodule = function (name) {
        return sprite.pause(value);
     });
 	
+	mod.getxy = new Sk.builtin.func(function (sprite) {
+       Sk.builtin.pyCheckArgs("getxy", arguments, 1, 1);
+       if (sprite === Sk.builtin.none.none$) {
+            return getxy();
+        }
+       return sprite.getxy();
+    });
+	
     //Control
     //Cannot find control functions for new sprites!!! Possible Fix Needed
 	
