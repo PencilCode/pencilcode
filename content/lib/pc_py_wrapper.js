@@ -133,17 +133,17 @@ var $builtinmodule = function (name) {
 	mod.pause = new Sk.builtin.func(function (sprite, value) {
        Sk.builtin.pyCheckArgs("pause", arguments, 2, 2);
        if (sprite === Sk.builtin.none.none$) {
-            return pause(value);
+            return pause(value.v);
         }
-       return sprite.pause(value);
+       return sprite.pause(value.v);
     });
 	
 	mod.getxy = new Sk.builtin.func(function (sprite) {
        Sk.builtin.pyCheckArgs("getxy", arguments, 1, 1);
        if (sprite === Sk.builtin.none.none$) {
-            return getxy();
+            return new getxy();
         }
-       return sprite.getxy();
+       return new sprite.getxy();
     });
 	
     //Control
@@ -432,9 +432,9 @@ var $builtinmodule = function (name) {
     mod.shown = new Sk.builtin.func(function (sprite) {
         Sk.builtin.pyCheckArgs("shown", arguments, 1, 1);
         if (sprite === Sk.builtin.none.none$) {
-            return shown();
+            return new shown();
         }
-       return sprite.shown();
+       return new sprite.shown();
     });
     
     mod.hidden = new Sk.builtin.func(function (sprite) {

@@ -196,7 +196,7 @@ def jumpxy(x, y):
     pencilcode_internal.jumpxy(None, x, y)
 
 def getxy():
-    return pencilcode_internal.getxy(None)
+	return pencilcode_internal.getxy(None)
 	
 def pause(value):
     pencilcode_internal.sleep(None, value)

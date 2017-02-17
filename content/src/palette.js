@@ -923,10 +923,10 @@ module.exports = {
         }, {
           block: 'pd()',
           title: 'Put the pen down'
-        }, {
+        }/* , {
           block: 'inside(t)',
           title: 'True if the turtle is encircled by obj'
-        }, {
+        } */, {
           block: 'drawon(s)',
           title: 'Draw on sprite s'
         }, {
