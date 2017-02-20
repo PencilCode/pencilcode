@@ -828,10 +828,10 @@ module.exports = {
         }, {
           block: 'jumpxy(30, 20)',
           title: 'Jump changing x and y without drawing'
-        }, {
+        }/* , {
           block: 'pagexy()',
           title: 'Page (topleft-y-down {pageX:x, pageY:y}) coordinates'
-        }
+        } */
       ])
     }, {
       name: 'Control',
@@ -902,13 +902,13 @@ module.exports = {
         }, {
           block: 'grow(3)',
           title: 'Grow the size of the turtle'
-        }, {
+        }/* , {
           block: 'shown()',
           title: 'Returns true if turtle is visible'
         }, {
           block: 'hidden()',
           title: 'Returns true if turtle is not visible'
-        }, {
+        } */, {
           block: 'ht()',
           title: 'Hide the main turtle'
         }, {
