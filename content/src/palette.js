@@ -894,6 +894,9 @@ module.exports = {
           block: 'box(\'yellow\', 50)',
           title: 'Make a square'
         }, {
+          block: 'img (\'/img/bird\')',
+          title: 'Write an image on the screen'
+        }, {
           block: 'fill(\'blue\')',
           title: 'Fill traced shape'
         }, {
@@ -927,10 +930,10 @@ module.exports = {
           block: 'inside(t)',
           title: 'True if the turtle is encircled by obj'
         } */, {
-          block: 'drawon(s)',
+          block: 'drawon(\'s\')',
           title: 'Draw on sprite s'
         }, {
-          block: 'drawon(document)',
+          block: 'drawon(\'document\')',
           title: 'Draw on the document'
         }
       ])
@@ -1543,6 +1546,7 @@ module.exports = {
     'cs': {color: 'purple'},
     'pu': {color: 'purple'},
     'pd': {color: 'purple'},
+	'img': {color: 'purple'},
 	'drawon': {color: 'purple'},
 	'arrow': {color: 'purple'},
 	'shown': {color: 'purple'},

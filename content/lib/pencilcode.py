@@ -231,6 +231,9 @@ def box(a, b):
 
 def grow(a):
 	pencilcode_internal.grow(None,a)
+	
+def img(pic):
+	pencilcode_internal.img(None,pic)
 
 def pen(color, size):
 	pencilcode_internal.pen(None,color, size)

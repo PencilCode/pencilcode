@@ -397,6 +397,14 @@ var $builtinmodule = function (name) {
        return sprite.fill(color.v);
     });
 	
+	mod.img = new Sk.builtin.func(function (sprite, pic) {
+        Sk.builtin.pyCheckArgs("img", arguments, 2, 2);
+		if (sprite === Sk.builtin.none.none$) {
+            return img(pic.v);
+        }
+       return sprite.img(pic.v);
+    });
+	
 	mod.wear = new Sk.builtin.func(function (sprite, color) {
         Sk.builtin.pyCheckArgs("wear", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
@@ -445,21 +453,21 @@ var $builtinmodule = function (name) {
        return sprite.hidden();
     });
     
-    //mod.touches = new Sk.builtin.func(function (sprite, obj) {
-    //    Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
-    //    if (sprite === Sk.builtin.none.none$) {
-    //        return touches(obj.v);
-    //    }
-    //   return sprite.touches(obj.v);
-    //});
-    //
-    //mod.inside = new Sk.builtin.func(function (sprite, obj) {
-    //    Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
-    //    if (sprite === Sk.builtin.none.none$) {
-    //        return inside(obj.v);
-    //    }
-    //   return sprite.inside(obj.v);
-    //});
+    mod.touches = new Sk.builtin.bool(function (sprite, obj) {
+        Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
+        if (sprite === Sk.builtin.none.none$) {
+            return touches(obj.v);
+        }
+       return sprite.touches(obj.v);
+    });
+    
+    mod.inside = new Sk.builtin.bool(function (sprite, obj) {
+        Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
+        if (sprite === Sk.builtin.none.none$) {
+            return inside(obj.v);
+        }
+       return sprite.inside(obj.v);
+    });
     
     
     
