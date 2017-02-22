@@ -453,7 +453,7 @@ var $builtinmodule = function (name) {
        return sprite.hidden();
     });
     
-    mod.touches = new Sk.builtin.bool(function (sprite, obj) {
+    mod.touches = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
             return touches(obj.v);
@@ -461,16 +461,13 @@ var $builtinmodule = function (name) {
        return sprite.touches(obj.v);
     });
     
-    mod.inside = new Sk.builtin.bool(function (sprite, obj) {
+    mod.inside = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
             return inside(obj.v);
         }
        return sprite.inside(obj.v);
-    });
-    
-    
-    
+    });    
     
 	//Operators
 	mod.min = new Sk.builtin.func(function (value1, value2) {
