@@ -98,12 +98,22 @@ class SpriteObject():
     def grow(self, a):
         pencilcode_internal.grow(self.jsSpriteObject,a)
     
-    def pen(self, color, size):
-        pencilcode_internal.pen(self.jsSpriteObject,color, size)
-    
-    def dot(self, color, size):
-        pencilcode_internal.dot(self.jsSpriteObject,color, size)
-        
+    def pen(self, color=None, size=None):
+        if color is None:
+            pencilcode_internal.pen(self.jsSpriteObject,'black',1)
+        elif size is None:
+            pencilcode_internal.pen(self.jsSpriteObject,color,1)
+        else:
+            pencilcode_internal.pen(self.jsSpriteObject,color, size)
+
+    def dot(self, color=None, size=None):
+        if color is None:
+            pencilcode_internal.dot(self.jsSpriteObject,'black',9)
+        elif size is None:
+            pencilcode_internal.dot(self.jsSpriteObject,color,9)
+        else:
+            pencilcode_internal.dot(self.jsSpriteObject,color,size)
+
     def arrow(self, color, size):
         pencilcode_internal.arrow(self.jsSpriteObject, color, size)	    
     
@@ -269,13 +279,27 @@ def inside(obj):
 ## Text Commands ##
 ###################
 
-def write(message):
+def write(*args):
+    x = 0
+    message = ''
+    for arg in args:
+        message = message + arg + ' '
+        x += 1
+    if x == 0:
+        raise AssertionError('Too few arguments passed in to write()')
     pencilcode_internal.write(message)
 
 def debug(object):
     pencilcode_internal.debug(object)
 
-def type(message):
+def type(*args):
+    x = 0
+    message = ''
+    for arg in args:
+        message = message + arg
+        x += 1
+    if x == 0:
+        raise AssertionError('Too few arguments passed in to type()')
     pencilcode_internal.type(message)
 
 def typebox(color):
