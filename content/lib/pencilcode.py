@@ -66,9 +66,6 @@ class SpriteObject():
     
     def click(self, t):
         pass#pencilcode_internal.click(self.jsSpriteObject, t)
-
-    def forever(self, func):
-        pencilcode_internal.forever(self.jsSpriteObject, func)
 		
     ##################
     ## Art Commands ##
@@ -248,11 +245,21 @@ def grow(a):
 def img(pic):
 	pencilcode_internal.img(None,pic)
 
-def pen(color, size):
-	pencilcode_internal.pen(None,color, size)
+def pen(color=None, size=None):
+	if color is None:
+		pencilcode_internal.pen(None,'black',1)
+	elif size is None:
+		pencilcode_internal.pen(None,color,1)
+	else:
+		pencilcode_internal.pen(None,color, size)
 
-def dot(color, size):
-    pencilcode_internal.dot(None,color, size)
+def dot(color=None, size=None):
+	if color is None:
+		pencilcode_internal.dot(None,'black',9)
+	elif size is None:
+		pencilcode_internal.dot(None,color,9)
+	else:
+		pencilcode_internal.dot(None,color,size)
     
 def arrow(color, size):
     pencilcode_internal.arrow(None, color, size)
@@ -353,6 +360,9 @@ def keydown(key):
 
 def click(t):
 	pencilcode_internal.click(None, t)
+	
+def forever(func):
+	pencilcode_internal.forever(None, func)
 	
 ######################
 ## 		Sprites	    ##

@@ -1144,7 +1144,10 @@ module.exports = {
         }, {
           block: 'click(lambda:\n fd(100))',
           title: 'Move to a location when document is clicked'
-        }
+        }, {
+			block: 'forever(lambda:\n fd(100))',
+			title: 'Move forward forever'
+		}
       ])
     }
   ],
@@ -1567,6 +1570,7 @@ module.exports = {
 	'button': {color: 'orange'},
 	'keydown': {color: 'orange'},
 	'click': { color: 'orange' },
+	'forever': { color: 'orange'},
 	//Sprites
 	'Sprite' : {color:'teal'},
 	'Piano' : {color:'teal'},

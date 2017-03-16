@@ -168,10 +168,7 @@ var $builtinmodule = function (name) {
 	
 	mod.forever = new Sk.builtin.func(function (sprite, func) {
 		Sk.builtin.pyCheckArgs("forever", arguments, 2, 2);
-		if(sprite === Sk.builtin.non.none$) {
-			return forever(function(){ Sk.misceval.callsim(func); } );
-		}
-		return sprite.forever(function(){ Sk.misceval.calls(func); } );
+		return forever(function(){ Sk.misceval.callsim(func); } );
 	});
 	
 	mod.keydown = new Sk.builtin.func(function (sprite, key) {
