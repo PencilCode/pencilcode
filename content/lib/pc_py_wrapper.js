@@ -166,6 +166,14 @@ var $builtinmodule = function (name) {
        //return sprite.click( function () { Sk.misceval.callsim(fn); } );
     });
 	
+	mod.forever = new Sk.builtin.func(function (sprite, func) {
+		Sk.builtin.pyCheckArgs("forever", arguments, 2, 2);
+		if(sprite === Sk.builtin.non.none$) {
+			return forever(function(){ Sk.misceval.callsim(func); } );
+		}
+		return sprite.forever(function(){ Sk.misceval.calls(func); } );
+	});
+	
 	mod.keydown = new Sk.builtin.func(function (sprite, key) {
        Sk.builtin.pyCheckArgs("keydown", arguments, 2, 2);
 	   if (sprite === Sk.builtin.none.none$) {

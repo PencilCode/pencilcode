@@ -66,6 +66,9 @@ class SpriteObject():
     
     def click(self, t):
         pass#pencilcode_internal.click(self.jsSpriteObject, t)
+
+    def forever(self, func):
+        pencilcode_internal.forever(self.jsSpriteObject, func)
 		
     ##################
     ## Art Commands ##
