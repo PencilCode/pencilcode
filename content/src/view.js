@@ -2928,10 +2928,9 @@ function isPaneEditorEmpty(pane) {
 }
 
 function updateMeta(paneState) {
-  if (!paneState.meta) {
-    if (paneState.htmlEditor || paneState.cssEditor) {
-      paneState.meta = filetype.effectiveMeta(null);
-    }
+  if (!paneState.htmlEditor && !paneState.cssEditor) {
+    paneState.meta = null;
+    paneState.meta = filetype.effectiveMeta(paneState);
   }
   // Grab the html and the CSS from the editors.
   if (paneState.htmlEditor) {

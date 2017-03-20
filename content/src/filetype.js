@@ -351,8 +351,8 @@ function effectiveMeta(input) {
     JSON.parse(JSON.stringify(meta)) : {};
   if (!meta.type) {
     // If there's a doc here, we can try to pull a mimetype from it.
-    if (doc && doc.mime) {
-      if (doc.mime.lastIndexOf('text/x-python', 0) === 0) {
+    if (doc && doc.mimeType) {
+      if (doc.mimeType.lastIndexOf('text/x-python', 0) === 0) {
         meta.type = 'text/x-python';
         meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
                      {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},

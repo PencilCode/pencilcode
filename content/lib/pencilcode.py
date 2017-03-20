@@ -362,7 +362,7 @@ def click(t):
 	pencilcode_internal.click(None, t)
 	
 def forever(func):
-	pencilcode_internal.forever(None, func)
+	pencilcode_internal.forever(func)
 	
 ######################
 ## 		Sprites	    ##
@@ -394,4 +394,6 @@ def random(a):
 	
 def min(a, b = None):
 	return pencilcode_internal.min(a,b)
+	
+	
 	

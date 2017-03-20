@@ -138,6 +138,9 @@ var $builtinmodule = function (name) {
        return sprite.pause(value.v);
     });
 	
+	//func needs to be changed to something, I have no idea what - Ben
+	//The return from getxy is a JS array, So it seems like a tuple would be best
+	//However, it seems that there is more than just that small change that needs to happen
 	mod.getxy = new Sk.builtin.func(function (sprite) {
        Sk.builtin.pyCheckArgs("getxy", arguments, 1, 1);
        if (sprite === Sk.builtin.none.none$) {
@@ -166,8 +169,8 @@ var $builtinmodule = function (name) {
        //return sprite.click( function () { Sk.misceval.callsim(fn); } );
     });
 	
-	mod.forever = new Sk.builtin.func(function (sprite, func) {
-		Sk.builtin.pyCheckArgs("forever", arguments, 2, 2);
+	mod.forever = new Sk.builtin.func(function (func) {
+		Sk.builtin.pyCheckArgs("forever", arguments, 1, 1);
 		return forever(function(){ Sk.misceval.callsim(func); } );
 	});
 	
@@ -309,6 +312,9 @@ var $builtinmodule = function (name) {
 	
     mod.cell = new Sk.builtin.func(function (sprite, rows, columns) {
         Sk.builtin.pyCheckArgs("cell", arguments, 3, 3);
+		if(sprite === Sk.builtin.none.none$){
+			return cell(rows.v, columns.v)
+		}
         return new sprite.cell(rows.v, columns.v);
     });
     
