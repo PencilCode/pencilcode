@@ -384,6 +384,9 @@ def copy():
     
 def table(rows, columns):
     return SpriteObject(pencilcode_internal.table(rows, columns))
+	
+def cell(rows, columns):
+	return SpriteObject(pencilcode_internal.cell(None, rows, columns))
     
 ######################
 ## 	   Operators	##

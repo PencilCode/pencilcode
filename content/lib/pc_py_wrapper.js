@@ -31,55 +31,55 @@ var $builtinmodule = function (name) {
         if (sprite/* turtle */ === Sk.builtin.none.none$) {
             return fd(distance.v);
         }
-        return sprite.fd(distance.v);
+        return sprite.fd(Sk.ffi.remapToJs(distance));
     });
 	
     mod.bk = new Sk.builtin.func(function (sprite, distance) {
         Sk.builtin.pyCheckArgs("bk", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return bk(distance.v);
+            return bk(Sk.ffi.remapToJs(distance));
         }
-        return sprite.bk(distance.v);
+        return sprite.bk(Sk.ffi.remapToJs(distance));
     });
 	
     mod.rt = new Sk.builtin.func(function (sprite, angle) {
         Sk.builtin.pyCheckArgs("rt", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return rt(angle.v);
+            return rt(Sk.ffi.remapToJs(angle));
         }
-        return sprite.rt(angle.v);
+        return sprite.rt(Sk.ffi.remapToJs(angle));
     });
 	
     mod.lt = new Sk.builtin.func(function (sprite, angle) {
         Sk.builtin.pyCheckArgs("lt", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return lt(angle.v);
+            return lt(Sk.ffi.remapToJs(angle));
         }
-        return sprite.lt(angle.v);
+        return sprite.lt(Sk.ffi.remapToJs(angle));
     });
 	
 	mod.ra = new Sk.builtin.func(function (sprite, radius, angle) {
        Sk.builtin.pyCheckArgs("rt", arguments, 2, 3);
 	   if (sprite === Sk.builtin.none.none$) {
-            return rt((radius).v, angle.v);
+            return rt(Sk.ffi.remapToJs(radius), Sk.ffi.remapToJs(angle));
         }
-        return sprite.rt((radius).v, angle.v);
+        return sprite.rt(Sk.ffi.remapToJs(radius), Sk.ffi.remapToJs(angle));
     });
 	
 	mod.la = new Sk.builtin.func(function (sprite, radius, angle) {
        Sk.builtin.pyCheckArgs("lt", arguments, 2, 3);
         if (sprite === Sk.builtin.none.none$) {
-            return lt((radius).v, angle.v);
+            return lt(Sk.ffi.remapToJs(radius), Sk.ffi.remapToJs(angle));
         }
-        return sprite.lt((radius).v, angle.v);
+        return sprite.lt(Sk.ffi.remapToJs(radius), Sk.ffi.remapToJs(angle));
     });
 	
 	mod.speed = new Sk.builtin.func(function (sprite, value) {
        Sk.builtin.pyCheckArgs("speed", arguments, 2, 2);
        if (sprite === Sk.builtin.none.none$) {
-            return speed(value.v);
+            return speed(Sk.ffi.remapToJs(value));
         }
-       return sprite.speed(value.v);
+       return sprite.speed(Sk.ffi.remapToJs(value));
     });
 	
 	mod.home = new Sk.builtin.func(function (sprite) {
@@ -93,60 +93,57 @@ var $builtinmodule = function (name) {
 	mod.turnto = new Sk.builtin.func(function (sprite, value) {
        Sk.builtin.pyCheckArgs("turnto", arguments, 2, 3);
        if (sprite === Sk.builtin.none.none$) {
-            return turnto(value.v);
+            return turnto(Sk.ffi.remapToJs(value));
         }
-       return sprite.turnto(value.v);
+       return sprite.turnto(Sk.ffi.remapToJs(value));
     });
 	
 	mod.moveto = new Sk.builtin.func(function (sprite, value1, value2) {
        Sk.builtin.pyCheckArgs("moveto", arguments, 3, 3);
        if (sprite === Sk.builtin.none.none$) {
-            return moveto(value1.v, value2.v);
+            return moveto(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
         }
-       return sprite.moveto(value1.v, value2.v);
+       return sprite.moveto(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
     });
 	
 	mod.movexy = new Sk.builtin.func(function (sprite, value1, value2) {
        Sk.builtin.pyCheckArgs("movexy", arguments, 3, 3);
        if (sprite === Sk.builtin.none.none$) {
-            return movexy(value1.v, value2.v);
+            return movexy(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
         }
-       return sprite.movexy(value1.v, value2.v);
+       return sprite.movexy(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
     });
 	
 	mod.jumpto = new Sk.builtin.func(function (sprite, value1, value2) {
        Sk.builtin.pyCheckArgs("jumpto", arguments, 3, 3);
         if (sprite === Sk.builtin.none.none$) {
-            return jumpto(value1.v, value2.v);
+            return jumpto(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
         }
-       return sprite.jumpto(value1.v, value2.v);
+       return sprite.jumpto(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
     });
 	
 	mod.jumpxy = new Sk.builtin.func(function (sprite, value1, value2) {
        Sk.builtin.pyCheckArgs("jumpxy", arguments, 3, 3);
         if (sprite === Sk.builtin.none.none$) {
-            return jumpxy(value1.v, value2.v);
+            return jumpxy(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
         }
-       return sprite.jumpxy(value1.v, value2.v);
+       return sprite.jumpxy(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
     });
 	
 	mod.pause = new Sk.builtin.func(function (sprite, value) {
        Sk.builtin.pyCheckArgs("pause", arguments, 2, 2);
        if (sprite === Sk.builtin.none.none$) {
-            return pause(value.v);
+            return pause(Sk.ffi.remapToJs(value));
         }
-       return sprite.pause(value.v);
+       return sprite.pause(Sk.ffi.remapToJs(value));
     });
 	
-	//func needs to be changed to something, I have no idea what - Ben
-	//The return from getxy is a JS array, So it seems like a tuple would be best
-	//However, it seems that there is more than just that small change that needs to happen
 	mod.getxy = new Sk.builtin.func(function (sprite) {
        Sk.builtin.pyCheckArgs("getxy", arguments, 1, 1);
        if (sprite === Sk.builtin.none.none$) {
-            return new getxy();
+            return new Sk.ffi.remapToPy(getxy());
         }
-       return new sprite.getxy();
+       return new Sk.ffi.remapToPy(sprite.getxy());
     });
 	
     //Control
@@ -155,9 +152,9 @@ var $builtinmodule = function (name) {
 	mod.button = new Sk.builtin.func(function (sprite, buttonclick, callee) {
        Sk.builtin.pyCheckArgs("button", arguments, 3, 3);
 	   if (sprite === Sk.builtin.none.none$) {
-            return button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
+            return button(Sk.ffi.remapToJs(buttonclick), function () { Sk.misceval.callsim(callee); } );
         }
-       //return sprite.button(buttonclick.v, function () { Sk.misceval.callsim(callee); } );
+       //return sprite.button(Sk.ffi.remapToJs(buttonclick), function () { Sk.misceval.callsim(callee); } );
 
     });
 	
@@ -194,22 +191,22 @@ var $builtinmodule = function (name) {
 	mod.play = new Sk.builtin.func(function (sprite, note) {
        Sk.builtin.pyCheckArgs("play", arguments, 2, 2);
        if (sprite === Sk.builtin.none.none$) {
-            return play(note.v);
+            return play(Sk.ffi.remapToJs(note));
         }
-       return sprite.play(note.v);
+       return sprite.play(Sk.ffi.remapToJs(note));
     });
 	
 	//mod.tone3 = new Sk.builtin.func(function (a, b, c) {
     //   Sk.builtin.pyCheckArgs("tone", arguments, 3, 3);
-    //   return tone(a.v, b.v, c.v);
+    //   return tone(Sk.ffi.remapToJs(a), Sk.ffi.remapToJs(b), Sk.ffi.remapToJs(c));
     //});
 	
 	mod.tone = new Sk.builtin.func(function (sprite, a, b, c) {
        Sk.builtin.pyCheckArgs("tone", arguments, 3, 4);
 	   if (sprite === Sk.builtin.none.none$) {
-            return tone(a.v, b.v, c.v);
+            return tone(Sk.ffi.remapToJs(a), Sk.ffi.remapToJs(b), Sk.ffi.remapToJs(c));
         }
-       return sprite.tone(a.v, b.v, c.v);
+       return sprite.tone(Sk.ffi.remapToJs(a), Sk.ffi.remapToJs(b), Sk.ffi.remapToJs(c));
     });
 	
 	mod.silence = new Sk.builtin.func(function (sprite) {
@@ -223,30 +220,30 @@ var $builtinmodule = function (name) {
 	mod.say = new Sk.builtin.func(function (sprite, a) {
        Sk.builtin.pyCheckArgs("say", arguments, 2, 2);
 	   if (sprite === Sk.builtin.none.none$) {
-            return say(a.v);
+            return say(Sk.ffi.remapToJs(a));
         }
-       return sprite.say(a.v);
+       return sprite.say(Sk.ffi.remapToJs(a));
     });
 	
 	 // TEXT METHODS /////////////////////////////////////////////////////////
     mod.write = new Sk.builtin.func(function (message) {
         Sk.builtin.pyCheckArgs("write", arguments, 1, 1);
-        return write(message.v);
+        return write(Sk.ffi.remapToJs(message));
     });
 
     mod.debug = new Sk.builtin.func(function (object) {
         Sk.builtin.pyCheckArgs("debug", arguments, 1, 1);
-        return debug(object.v);
+        return debug(Sk.ffi.remapToJs(object));
     });
 
     mod.type = new Sk.builtin.func(function (message) {
         Sk.builtin.pyCheckArgs("type", arguments, 1, 1);
-        return type(message.v);
+        return type(Sk.ffi.remapToJs(message));
     });
 
     mod.typebox = new Sk.builtin.func(function (color) {
         Sk.builtin.pyCheckArgs("typebox", arguments, 1, 1);
-        return typebox(color.v);
+        return typebox(Sk.ffi.remapToJs(color));
     });
 
     mod.typeline = new Sk.builtin.func(function () {
@@ -256,7 +253,7 @@ var $builtinmodule = function (name) {
 
     mod.label = new Sk.builtin.func(function (name) {
         Sk.builtin.pyCheckArgs("label", arguments, 1, 1);
-        return label(name.v);
+        return label(Sk.ffi.remapToJs(name));
     });
 
     /*mod.await = new Sk.builtin.func(function (lambda_expression) {
@@ -266,19 +263,19 @@ var $builtinmodule = function (name) {
         
     mod.read = new Sk.builtin.func(function (prompt) {
         Sk.builtin.pyCheckArgs("read", arguments, 1, 1);
-        return read(prompt.v);
+        return read(Sk.ffi.remapToJs(prompt));
     });
 
     mod.readnum = new Sk.builtin.func(function (prompt) {
         Sk.builtin.pyCheckArgs("readnum", arguments, 1, 1);
-        return readnum(prompt.v);
+        return readnum(Sk.ffi.remapToJs(prompt));
     });
 	
 	//SPRITES/////////////////
 	
 	mod.Turtle = new Sk.builtin.func(function (value) {
        Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
-       return new Turtle(value.v);
+       return new Turtle(Sk.ffi.remapToJs(value));
     });
 	
 	mod.Sprite = new Sk.builtin.func(function () {
@@ -288,7 +285,7 @@ var $builtinmodule = function (name) {
 	
 //	mod.Piano = new Sk.builtin.func(function (keys) {
 //       Sk.builtin.pyCheckArgs("Piano", arguments, 1, 1);
-//       return new Piano(keys.v);
+//       return new Piano(Sk.ffi.remapToJs(keys));
 //    });
 	mod.Piano = new Sk.builtin.func(function () {
        Sk.builtin.pyCheckArgs("Piano", arguments, 0, 0);
@@ -307,15 +304,15 @@ var $builtinmodule = function (name) {
     
     mod.table = new Sk.builtin.func(function (rows, columns) {
        Sk.builtin.pyCheckArgs("table", arguments, 2, 2);
-       return new table(rows.v, columns.v);
+       return new table(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns));
     });
 	
     mod.cell = new Sk.builtin.func(function (sprite, rows, columns) {
         Sk.builtin.pyCheckArgs("cell", arguments, 3, 3);
 		if(sprite === Sk.builtin.none.none$){
-			return cell(rows.v, columns.v)
+			return Sk.ffi.remapToPy(cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns)));
 		}
-        return new sprite.cell(rows.v, columns.v);
+        return new Sk.ffi.remapToPy(sprite.cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns)));
     });
     
 	//ART//////
@@ -379,116 +376,116 @@ var $builtinmodule = function (name) {
 	mod.pen = new Sk.builtin.func(function (sprite, color, size) {
         Sk.builtin.pyCheckArgs("pen", arguments, 3, 3);
         if (sprite === Sk.builtin.none.none$) {
-            return pen(color.v, size.v);
+            return pen(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
         }
-       return sprite.pen(color.v, size.v);
+       return sprite.pen(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
     });
 	
 	mod.dot = new Sk.builtin.func(function (sprite, color, dia) {
         Sk.builtin.pyCheckArgs("dot", arguments, 3, 3);
         if (sprite === Sk.builtin.none.none$) {
-            return dot(color.v, dia.v);
+            return dot(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(dia));
         }
-       return sprite.dot(color.v, dia.v);
+       return sprite.dot(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(dia));
     });
 	
 	mod.box = new Sk.builtin.func(function (sprite, color, size) {
         Sk.builtin.pyCheckArgs("box", arguments, 3, 3);
 		if (sprite === Sk.builtin.none.none$) {
-            return box(color.v, size.v);
+            return box(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
         }
-       return sprite.box(color.v, size.v);
+       return sprite.box(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
     });
 	
 	mod.fill = new Sk.builtin.func(function (sprite, color) {
         Sk.builtin.pyCheckArgs("dot", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return fill(color.v);
+            return fill(Sk.ffi.remapToJs(color));
         }
-       return sprite.fill(color.v);
+       return sprite.fill(Sk.ffi.remapToJs(color));
     });
 	
 	mod.img = new Sk.builtin.func(function (sprite, pic) {
         Sk.builtin.pyCheckArgs("img", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return img(pic.v);
+            return img(Sk.ffi.remapToJs(pic));
         }
-       return sprite.img(pic.v);
+       return sprite.img(Sk.ffi.remapToJs(pic));
     });
 	
 	mod.wear = new Sk.builtin.func(function (sprite, color) {
         Sk.builtin.pyCheckArgs("wear", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return wear(color.v);
+            return wear(Sk.ffi.remapToJs(color));
         }
-       return sprite.wear(color.v);
+       return sprite.wear(Sk.ffi.remapToJs(color));
     });
 	
 	mod.grow = new Sk.builtin.func(function (sprite, size) {
         Sk.builtin.pyCheckArgs("grow", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return grow(size.v);
+            return grow(Sk.ffi.remapToJs(size));
         }
-       return sprite.grow(size.v);
+       return sprite.grow(Sk.ffi.remapToJs(size));
     });
 	
 	mod.drawon = new Sk.builtin.func(function (sprite, canvas) {
         Sk.builtin.pyCheckArgs("drawon", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return drawon(canvas.v);
+            return drawon(Sk.ffi.remapToJs(canvas));
         }
-       return sprite.drawon(canvas.v);
+       return sprite.drawon(Sk.ffi.remapToJs(canvas));
     });
     
     mod.arrow = new Sk.builtin.func(function (sprite, color, size) {
         Sk.builtin.pyCheckArgs("arrow", arguments, 3, 3);
 		if (sprite === Sk.builtin.none.none$) {
-            return arrow(color.v, size.v);
+            return arrow(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
         }
-       return sprite.arrow(color.v, size.v);
+       return sprite.arrow(Sk.ffi.remapToJs(color), Sk.ffi.remapToJs(size));
     });
     
     mod.shown = new Sk.builtin.func(function (sprite) {
         Sk.builtin.pyCheckArgs("shown", arguments, 1, 1);
-        if (sprite === Sk.builtin.none.none$) {
-            return new shown();
+        if (sprite === Sk.builtin.none.none$) {	
+            return Sk.ffi.remapToPy(shown());
         }
-       return new sprite.shown();
+		return Sk.ffi.remapToPy(shown());
     });
     
     mod.hidden = new Sk.builtin.func(function (sprite) {
         Sk.builtin.pyCheckArgs("hidden", arguments, 1, 1);
         if (sprite === Sk.builtin.none.none$) {
-            return hidden();
+            return Sk.ffi.remapToPy(hidden());
         }
-       return sprite.hidden();
+		return Sk.ffi.remapToPy(hidden());
     });
     
     mod.touches = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return touches(obj.v);
+            return Sk.ffi.remap.Py(touches(Sk.ffi.remapToJs(obj)));
         }
-       return sprite.touches(obj.v);
+       return Sk.ffi.remap.Py(sprite.touches(Sk.ffi.remapToJs(obj)));
     });
     
     mod.inside = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return inside(obj.v);
+            return Sk.ffi.remap.Py(inside(Sk.ffi.remapToJs(obj)));
         }
-       return sprite.inside(obj.v);
+       return Sk.ffi.remap.Py(sprite.inside(Sk.ffi.remapToJs(obj)));
     });    
     
 	//Operators
 	mod.min = new Sk.builtin.func(function (value1, value2) {
         Sk.builtin.pyCheckArgs("min", arguments, 1, 2);
-        return min(value1.v, value2.v);
+        return min(Sk.ffi.remapToJs(value1), Sk.ffi.remapToJs(value2));
     });
 	
 	mod.random = new Sk.builtin.func(function (value) {
         Sk.builtin.pyCheckArgs("random", arguments, 1, 1);
-        return random(value.v);
+        return random(Sk.ffi.remapToJs(value));
     });
 
     return mod;
