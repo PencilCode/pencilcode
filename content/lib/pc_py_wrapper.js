@@ -310,9 +310,9 @@ var $builtinmodule = function (name) {
     mod.cell = new Sk.builtin.func(function (sprite, rows, columns) {
         Sk.builtin.pyCheckArgs("cell", arguments, 3, 3);
 		if(sprite === Sk.builtin.none.none$){
-			return Sk.ffi.remapToPy(cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns)));
+			return cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns));
 		}
-        return new Sk.ffi.remapToPy(sprite.cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns)));
+        return new sprite.cell(Sk.ffi.remapToJs(rows), Sk.ffi.remapToJs(columns));
     });
     
 	//ART//////
