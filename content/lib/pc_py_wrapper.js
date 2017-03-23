@@ -42,22 +42,6 @@ var $builtinmodule = function (name) {
         return sprite.bk(Sk.ffi.remapToJs(distance));
     });
 	
-    mod.rt = new Sk.builtin.func(function (sprite, angle) {
-        Sk.builtin.pyCheckArgs("rt", arguments, 2, 2);
-        if (sprite === Sk.builtin.none.none$) {
-            return rt(Sk.ffi.remapToJs(angle));
-        }
-        return sprite.rt(Sk.ffi.remapToJs(angle));
-    });
-	
-    mod.lt = new Sk.builtin.func(function (sprite, angle) {
-        Sk.builtin.pyCheckArgs("lt", arguments, 2, 2);
-        if (sprite === Sk.builtin.none.none$) {
-            return lt(Sk.ffi.remapToJs(angle));
-        }
-        return sprite.lt(Sk.ffi.remapToJs(angle));
-    });
-	
 	mod.ra = new Sk.builtin.func(function (sprite, radius, angle) {
        Sk.builtin.pyCheckArgs("rt", arguments, 2, 3);
 	   if (sprite === Sk.builtin.none.none$) {
@@ -158,10 +142,12 @@ var $builtinmodule = function (name) {
 
     });
 	
-	mod.click = new Sk.builtin.func(function (sprite, fn) {
+	mod.click = new Sk.builtin.func(function (sprite, func) {
        Sk.builtin.pyCheckArgs("click", arguments, 2, 2);
 	   if (sprite === Sk.builtin.none.none$) {
-            return click( function () { Sk.misceval.callsim(fn); } );
+            return click(function(eventData){
+				var data = [eventData.x, eventData.y];
+				Sk.misceval.callsim(func, Sk.ffi.remapToPy(data)); } );
         }
        //return sprite.click( function () { Sk.misceval.callsim(fn); } );
     });
@@ -171,18 +157,18 @@ var $builtinmodule = function (name) {
 		return forever(function(){ Sk.misceval.callsim(func); } );
 	});
 	
-	mod.keydown = new Sk.builtin.func(function (sprite, key) {
-       Sk.builtin.pyCheckArgs("keydown", arguments, 2, 2);
+	mod.keydown = new Sk.builtin.func(function (sprite, key, func) {
+       Sk.builtin.pyCheckArgs("keydown", arguments, 3, 3);
 	   if (sprite === Sk.builtin.none.none$) {
-            return keydown(function () { Sk.misceval.callsim(key); });
+            return keydown(Sk.ffi.remapToJs(key), Sk.misceval.callsim(func));
         }
        //return sprite.keydown(function () { Sk.misceval.callsim(key); });
     });
 	
-	mod.keyup = new Sk.builtin.func(function (sprite, key) {
+	mod.keyup = new Sk.builtin.func(function (sprite, key, func) {
        Sk.builtin.pyCheckArgs("keyup", arguments, 2, 2);
 	   if (sprite === Sk.builtin.none.none$) {
-            return keyup(function () { Sk.misceval.callsim(key); });
+            return keyup(Sk.ffi.remapToJs(key), function () { Sk.misceval.callsim(func); });
         }
        //return sprite.keyup(function () { Sk.misceval.callsim(key); });
     });

@@ -16,17 +16,11 @@ class SpriteObject():
     def bk(self, distance):
         pencilcode_internal.bk(self.jsSpriteObject, distance)
 
-    def rt(self, angle):
-        pencilcode_internal.rt(self.jsSpriteObject, angle)
+    def rt(self, angle, radius = 0):
+        pencilcode_internal.ra(self.jsSpriteObject, angle, radius)
 
-    def lt(self, angle):
-        pencilcode_internal.lt(self.jsSpriteObject, angle)
-	
-    def ra(self, radius, angle):
-        pencilcode_internal.ra(self.jsSpriteObject, radius, angle)
-    
-    def la(self, radius, angle):
-        pencilcode_internal.la(self.jsSpriteObject, radius, angle)
+    def lt(self, angle, radius = 0):
+        pencilcode_internal.la(self.jsSpriteObject, angle, radius)
     
     def speed(self, value):
         pencilcode_internal.speed(self.jsSpriteObject, value)
@@ -37,7 +31,7 @@ class SpriteObject():
     def turnto(self, value):
         pencilcode_internal.turnto(self.jsSpriteObject, value)
     
-    def moveto(self, x, y):
+    def moveto(self, x, y = None):
         pencilcode_internal.moveto(self.jsSpriteObject, x, y)
     
     def movexy(self, x, y):
@@ -61,7 +55,7 @@ class SpriteObject():
     def button(self, buttonClick, callee):
         pass#pencilcode_internal.button(self.jsSpriteObject, buttonClick, callee)
     
-    def keydown(self, key):
+    def keydown(self, func, key = None):
         pass#pencilcode_internal.keydown(self.jsSpriteObject, key)
     
     def click(self, t):
@@ -171,18 +165,13 @@ def fd(value):
 def bk(value):
     pencilcode_internal.bk(None, value)
 
-def rt(value):
-    pencilcode_internal.rt(None, value)
+def rt(angle, radius = 0):
+    pencilcode_internal.ra(None, angle, radius)
 
-def lt(value):
-    pencilcode_internal.lt(None, value)
+def lt(angle, radius = 0):
+    pencilcode_internal.la(None, angle, radius)
 
 # Fix the rest, Stevie! ;)# All Done Jem! :)
-def ra(radius, angle):
-    pencilcode_internal.ra(None, radius, angle)
-
-def la(radius, angle):
-    pencilcode_internal.la(None, radius, angle)
 
 def speed(value):
     pencilcode_internal.speed(None, value)
@@ -193,7 +182,7 @@ def home():
 def turnto(value):
     pencilcode_internal.turnto(None, value)
 
-def moveto(x, y):
+def moveto(x, y = None):
     pencilcode_internal.moveto(None, x, y)
 
 def movexy(x, y):
@@ -355,8 +344,8 @@ def say(a):
 def button(buttonClick, callee):
 	pencilcode_internal.button(None, buttonClick, callee)
 
-def keydown(key):
-	pencilcode_internal.keydown(None, key)
+def keydown(func, key = None):
+	pencilcode_internal.keydown(None, key, func)
 
 def click(t):
 	pencilcode_internal.click(None, t)

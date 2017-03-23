@@ -796,10 +796,10 @@ module.exports = {
           block: 'lt(90)',
           title: 'Turn left'
         }, {
-          block: 'ra(180, 100)',
+          block: 'rt(180, 100)',
           title: 'Make a wide right arc'
         }, {
-          block: 'la(180, 100)',
+          block: 'lt(180, 100)',
           title: 'Make a wide left arc'
         }, {
           block: 'speed(10)',
@@ -844,12 +844,9 @@ module.exports = {
           block: "for i in x:\n  pass",
           title: 'Repeat something in a list called x'
         }, {
-          block: 'while 0 < 10:\n  pass',
-          title: '  Repeat while a condition is true'
+          block: 'while x < 10:\n  x+=1',
+          title: 'Repeat while a condition is true'
         }, {
-		  block: 'while True:\n pass',
-		  title: 'Repeat something forever at equally-spaced times'	
-		}, {
           block: 'if 0 == 0:\n  pass',
           title: 'Do something only if a condition is true'
         }, {
@@ -1130,7 +1127,7 @@ module.exports = {
           block: 'def keydownFunction():\n write(\'Key pressed\')',
           title: 'Define a new function'
         }, {
-          block: 'keydown(keydownFunction)',
+          block: 'keydown(keydownFunction, \'b\')',
           title: 'Do something when a keyboard key is pressed'
         }, {
           block: 'keydown(lambda:\n write(\'Key pressed\'))',
@@ -1525,10 +1522,8 @@ module.exports = {
 //    '?.fd': {color: 'purple'}
     'fd': {color: 'lightblue', dropdown: [py_types.distances]},
     'bk': {color: 'lightblue', dropdown: [py_types.distances]},
-    'rt': {color: 'lightblue', dropdown: [py_types.angles]},
-    'lt': {color: 'lightblue', dropdown: [py_types.angles]},
-    'ra': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
-    'la': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'rt': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'lt': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
     'speed': {color: 'lightblue', drown: [py_types.speeds]},
     'home': {color: 'lightblue'},
 	'pagexy': {color: 'lightblue'},
