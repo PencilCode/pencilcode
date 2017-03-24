@@ -1,6 +1,6 @@
 How To Build and Test Pencil Code for a11ys Team Members
 ================================
-[![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)
+<!--[![Build Status](https://travis-ci.org/PencilCode/pencilcode.png?branch=master)](https://travis-ci.org/PencilCode/pencilcode)-->
 First install the prerequisites: git, nodejs, and grunt. Next, be sure you're in your home directory. Then:
 
 <pre>
