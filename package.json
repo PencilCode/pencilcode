@@ -76,7 +76,8 @@
     "thumbnail": "./content/src/thumbnail.js",
     "tooltipster": "./content/lib/tooltipster/js/jquery.tooltipster.js",
     "view": "./content/src/view.js",
-    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
+    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js",
+    "a11yLib": "./content/lib/a11yLib.js"
   },
   "browserify": {
     "transform": [ "browserify-shim" ]

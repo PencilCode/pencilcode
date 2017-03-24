@@ -11,7 +11,8 @@ var $              = require('jquery'),
     codescan       = require('codescan'),
     drawProtractor = require('draw-protractor'),
     ZeroClipboard  = require('ZeroClipboard'),
-    FontLoader     = require('FontLoader');
+    FontLoader     = require('FontLoader'),
+    a11yLib        = require('a11yLib');
 
 
 function htmlEscape(s) {
