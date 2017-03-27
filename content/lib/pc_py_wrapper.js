@@ -21,7 +21,7 @@ var $builtinmodule = function (name) {
     mod.addalemon = new Sk.builtin.func(function (data) {
         // Check arguments: func name, arguments passed, min number, max number
         Sk.builtin.pyCheckArgs("dumps", arguments, 1, 1);
-        return data.v + " with a lemon"; // Data comes in as a Python string; we have to use the value (v) in JS
+        return Sk.ffi.remapToJs(data) + " with a lemon";
     });
 
 	//MOVE
@@ -29,7 +29,7 @@ var $builtinmodule = function (name) {
     mod.fd = new Sk.builtin.func(function (sprite, distance) {
         Sk.builtin.pyCheckArgs("fd", arguments, 2, 2);
         if (sprite/* turtle */ === Sk.builtin.none.none$) {
-            return fd(distance.v);
+            return fd(Sk.ffi.remapToJs(distance));
         }
         return sprite.fd(Sk.ffi.remapToJs(distance));
     });
@@ -396,7 +396,7 @@ var $builtinmodule = function (name) {
 		if (sprite === Sk.builtin.none.none$) {
             return img(Sk.ffi.remapToJs(pic));
         }
-       return sprite.img(Sk.ffi.remapToJs(pic));
+       return new sprite.img(Sk.ffi.remapToJs(pic));
     });
 	
 	mod.wear = new Sk.builtin.func(function (sprite, color) {

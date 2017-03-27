@@ -16,10 +16,16 @@ class SpriteObject():
     def bk(self, distance):
         pencilcode_internal.bk(self.jsSpriteObject, distance)
 
-    def rt(self, angle, radius = 0):
+    def rt(self, angle, radius=0):
         pencilcode_internal.ra(self.jsSpriteObject, angle, radius)
 
-    def lt(self, angle, radius = 0):
+    def lt(self, angle, radius=0):
+        pencilcode_internal.la(self.jsSpriteObject, angle, radius)
+
+    def ra(self, angle, radius=0):
+        pencilcode_internal.ra(self.jsSpriteObject, angle, radius)
+
+    def la(self, angle, radius=0):
         pencilcode_internal.la(self.jsSpriteObject, angle, radius)
     
     def speed(self, value):
@@ -171,6 +177,12 @@ def rt(angle, radius = 0):
 def lt(angle, radius = 0):
     pencilcode_internal.la(None, angle, radius)
 
+def ra(angle, radius=0):
+    pencilcode_internal.ra(None, angle, radius)
+
+def la(angle, radius=0):
+    pencilcode_internal.la(None, angle, radius)
+
 # Fix the rest, Stevie! ;)# All Done Jem! :)
 
 def speed(value):
@@ -232,7 +244,9 @@ def grow(a):
 	pencilcode_internal.grow(None,a)
 	
 def img(pic):
-	pencilcode_internal.img(None,pic)
+	x = Sprite()
+	x.wear(pic)
+	return x
 
 def pen(color=None, size=None):
 	if color is None:
