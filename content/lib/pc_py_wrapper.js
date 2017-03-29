@@ -249,12 +249,12 @@ var $builtinmodule = function (name) {
         
     mod.read = new Sk.builtin.func(function (prompt) {
         Sk.builtin.pyCheckArgs("read", arguments, 1, 1);
-        return read(Sk.ffi.remapToJs(prompt));
+        return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt)));
     });
 
     mod.readnum = new Sk.builtin.func(function (prompt) {
         Sk.builtin.pyCheckArgs("readnum", arguments, 1, 1);
-        return readnum(Sk.ffi.remapToJs(prompt));
+        return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt)));
     });
 	
 	//SPRITES/////////////////
@@ -471,7 +471,7 @@ var $builtinmodule = function (name) {
 	
 	mod.random = new Sk.builtin.func(function (value) {
         Sk.builtin.pyCheckArgs("random", arguments, 1, 1);
-        return random(Sk.ffi.remapToJs(value));
+        return Sk.ffi.remapToPy(random(Sk.ffi.remapToJs(value)));
     });
 
     return mod;

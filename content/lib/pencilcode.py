@@ -1,7 +1,17 @@
 import pencilcode_internal
 
+normal = 'normal'
+uniform = 'uniform'
+position = 'position'
+color = 'color'
+colour = 'color'
+gray = 'gray'
+grey = 'gray'
+
 # The SpriteObject class wraps a jQuery-turtle object so it can be used in Python.
 # This includes Turtle, Sprite, Piano, and Pencil objects.
+
+
 class SpriteObject():
     def __init__(self, jsSpriteObject):
         self.jsSpriteObject = jsSpriteObject
@@ -329,10 +339,10 @@ def await(lamda_exp):
     pass
 
 def read(prompt):
-    pencilcode_internal.read(prompt)
+    return pencilcode_internal.read(prompt)
 
 def readnum(prompt):
-    pencilcode_internal.readnum(prompt)
+    return pencilcode_internal.readnum(prompt)
 
 ####################
 ## Sound Commands ##
