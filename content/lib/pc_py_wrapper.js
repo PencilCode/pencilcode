@@ -261,9 +261,7 @@ var $builtinmodule = function (name) {
 	
 	mod.Turtle = new Sk.builtin.func(function (value) {
        Sk.builtin.pyCheckArgs("Turtle", arguments, 1, 1);
-	   x = new Turtle(Sk.ffi.remapToJs(value));
-	   console.log(x);
-       return x;
+       return new Turtle(Sk.ffi.remapToJs(value));
     });
 	
 	mod.Sprite = new Sk.builtin.func(function () {
