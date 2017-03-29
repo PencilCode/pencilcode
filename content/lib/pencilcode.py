@@ -254,9 +254,7 @@ def grow(a):
 	pencilcode_internal.grow(None,a)
 	
 def img(pic):
-	x = Sprite()
-	x.wear(pic)
-	return x
+	return SpriteObject(pencilcode_internal.img(None, pic))
 
 def pen(color=None, size=None):
 	if color is None:

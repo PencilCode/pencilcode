@@ -75,7 +75,7 @@ var py_types = {
     sizes: ['10', '25', '50', '100'],
     scales: ['0.5', '2.0', '3.0'],
     speeds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'],
-//    randarg: ['100', '[true, false]', 'normal', 'position', 'color'],
+   randarg: ['100', '[true, false]', 'normal', 'position', 'color'],
     colors: ['\'red\'', '\'orange\'', '\'yellow\'', '\'green\'', '\'blue\'', '\'purple\'', '\'black\'']
 };
 
@@ -1560,7 +1560,7 @@ module.exports = {
     'cs': {color: 'purple'},
     'pu': {color: 'purple'},
     'pd': {color: 'purple'},
-	'random': {color:'lightgreen'},
+	'random': {color:'lightgreen', dropdown: [py_types.randarg]},
 	//opertor
 	'button': {color: 'orange'},
 	'keydown': {color: 'orange'},
