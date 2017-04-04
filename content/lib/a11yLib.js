@@ -1,10 +1,44 @@
 function _init() {
-    document.activeElement.blur(); //set focus to body of view
+    document.activeElement.blur(); //set focus to body of view    
     
-    document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");    
+    document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");
+    // document.querySelector(".skip").setAttribute("tabindex", 0);
     
-    const primaryNavSections = setupPrimaryNav() //load primary nav sections
-    console.log(primaryNavSections) 
+    //load primary nav sections
+    const primaryNavSections = setupPrimaryNav();
+
+    //remove iframes from tab index
+    var iframes = document.querySelectorAll('iframe');    
+    iframes.forEach(function(element) {        
+        element.setAttribute("tabindex", -1);
+    }, this);
+    
+    //remove tab index from primary navigation so we can handle this manually
+    primaryNavSections.forEach(function(element) {
+        element.setAttribute("tabindex", -1);
+    })
+
+    //intercept keyboard events
+    document.addEventListener('keydown', function (event) {tabController(event)});
+}
+
+function tabController(event) {    
+    if(event.keyCode == 9) {
+        //SHIFT + TAB 
+        if(event.shiftKey) {            
+            //event.preventDefault();
+        } else {
+            if(document.activeElement == document.body) {
+                event.preventDefault();
+                document.querySelector(".skip").focus();
+            }
+        }      
+    }
+    //ESC key
+    if(event.keyCode == 27) {
+        console.log('closing overlay');
+        closeoverlay();
+    }
 }
 
 //create an array of primary navigation sections on the site
