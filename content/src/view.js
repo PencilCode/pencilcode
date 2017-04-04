@@ -356,14 +356,16 @@ function forwardCommandToEditor(keydown_event) {
 // NOTIFICATIONS
 ///////////////////////////////////////////////////////////////////////////
 
-$('#notification').on('click', 'a', function(e) {
-  if (e.target.id) {
-    fireEvent(e.target.id, []);
-    $(e.target).css('outline', '3px dotted blue');
-    $('body').off('.flashNotification');
-    $('#notification').delay(200).fadeOut();
-    return false;
-  }
+$('#notification').on('click', 'a', function(e)
+{
+    if (e.target.id)
+    {
+      fireEvent(e.target.id, []);
+      $(e.target).css('outline', '3px dotted blue');
+      $('body').off('.flashNotification');
+      $('#notification').delay(200).fadeOut();
+      return false;
+    }
 });
 
 function flashNotification(text, loading) {
@@ -371,7 +373,7 @@ function flashNotification(text, loading) {
   var hidefunc = function(e) {
     if ($('#notification').data('marker') == marker) {
       dismissNotification();
-    }
+    } 
   };
   // Centering with script.
   if (loading) {
