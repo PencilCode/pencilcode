@@ -60971,6 +60971,7 @@ exports.Editor = Editor = (function() {
     this.debugging = true;
     this.dropletElement = document.createElement('div');
     this.dropletElement.className = 'droplet-wrapper-div';
+    this.dropletElement.id = 'maincontent';
     this.dropletElement.tabIndex = 0;
     this.wrapperElement.appendChild(this.dropletElement);
     this.wrapperElement.style.backgroundColor = '#FFF';
