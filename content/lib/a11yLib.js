@@ -1,9 +1,9 @@
-function _init() {        
-    console.log('future home of a11y enhancements!')
+function _init() {
+    document.activeElement.blur(); //set focus to body of view
     
-    document.body.focus(); //ensure focus is within the page
+    document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");    
     
-    const primaryNavSections = setupPrimaryNav()      
+    const primaryNavSections = setupPrimaryNav() //load primary nav sections
     console.log(primaryNavSections) 
 }
 
@@ -30,6 +30,8 @@ function setupPrimaryNav() {
     return primaryNavSections;
 }
 
-
-
-window.addEventListener('load', () => _init())
+//bootstrap a11y enhancements after window loads
+window.addEventListener('load', function load(event){
+    window.removeEventListener('load', load, false);
+    _init();
+})
