@@ -3,4 +3,7 @@ function _init() {
     document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");
 }
 
-window.addEventListener('load', () => _init())
+window.addEventListener('load', function load(event){
+    window.removeEventListener('load', load, false);
+    _init();
+})
