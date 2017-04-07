@@ -336,11 +336,14 @@ def await(lamda_exp):
     # TODO - this might be tricky
     pass
 
-def read(prompt):
-    return pencilcode_internal.read(prompt)
+def read(prompt, func = None):
+    return pencilcode_internal.read(prompt, func)
 
-def readnum(prompt):
-    return pencilcode_internal.readnum(prompt)
+def readnum(prompt, func = None):
+    return pencilcode_internal.readnum(prompt, func)
+	
+def readstr(prompt, func = None):
+	return pencilcode_internal.readstr(prompt, func)
 
 ####################
 ## Sound Commands ##

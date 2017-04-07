@@ -247,14 +247,19 @@ var $builtinmodule = function (name) {
         return await(lambda_expression.v);
     });*/
         
-    mod.read = new Sk.builtin.func(function (prompt) {
-        Sk.builtin.pyCheckArgs("read", arguments, 1, 1);
-        return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt)));
+    mod.read = new Sk.builtin.func(function (prompt, func) {
+        Sk.builtin.pyCheckArgs("read", arguments, 2, 2);
+        return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
     });
 
-    mod.readnum = new Sk.builtin.func(function (prompt) {
-        Sk.builtin.pyCheckArgs("readnum", arguments, 1, 1);
-        return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt)));
+    mod.readnum = new Sk.builtin.func(function (prompt, func) {
+        Sk.builtin.pyCheckArgs("readnum", arguments, 2, 2);
+        return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
+    });
+	
+	mod.readstr = new Sk.builtin.func(function (prompt, func) {
+	Sk.builtin.pyCheckArgs("readstr", arguments, 2, 2);
+		return Sk.ffi.remapToPy(readstr(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
     });
 	
 	//SPRITES/////////////////
