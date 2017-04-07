@@ -249,17 +249,29 @@ var $builtinmodule = function (name) {
         
     mod.read = new Sk.builtin.func(function (prompt, func) {
         Sk.builtin.pyCheckArgs("read", arguments, 2, 2);
-        return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
+		if(func == Sk.builtin.none.none$)
+		{
+			return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt)));
+		}
+        return Sk.ffi.remapToPy(read(Sk.ffi.remapToJs(prompt), function (w) { Sk.misceval.callsim(func, Sk.ffi.remapToPy(w)); }));
     });
 
     mod.readnum = new Sk.builtin.func(function (prompt, func) {
         Sk.builtin.pyCheckArgs("readnum", arguments, 2, 2);
-        return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
+		if(func == Sk.builtin.none.none$)
+		{
+			return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt)));
+		}
+        return Sk.ffi.remapToPy(readnum(Sk.ffi.remapToJs(prompt), function (w) { Sk.misceval.callsim(func, Sk.ffi.remapToPy(w)); }));
     });
 	
 	mod.readstr = new Sk.builtin.func(function (prompt, func) {
 	Sk.builtin.pyCheckArgs("readstr", arguments, 2, 2);
-		return Sk.ffi.remapToPy(readstr(Sk.ffi.remapToJs(prompt), function () { Sk.misceval.callsim(func); }));
+		if(func == Sk.builtin.none.none$)
+		{
+			return Sk.ffi.remapToPy(readstr(Sk.ffi.remapToJs(prompt)));
+		}
+		return Sk.ffi.remapToPy(readstr(Sk.ffi.remapToJs(prompt), function (w) { Sk.misceval.callsim(func, Sk.ffi.remapToPy(w)); }));
     });
 	
 	//SPRITES/////////////////
