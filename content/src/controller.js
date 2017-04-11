@@ -778,6 +778,8 @@ view.on('splitscreen', function() {
   view.setPreviewMode(!view.getPreviewMode());
 });
 
+var warned = false;
+
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
     return;
@@ -791,7 +793,17 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     return;
   }
   var doc = view.getPaneEditorData(paneatpos('left'));
-  var filename = modelatpos('left').filename;
+  var filename = modelatpos('left').filename
+  view.flashNotification("Saving may take some time, please wait");
+  checkFileOverrideOnSave(function(OverwriteFile){
+	if(OverwriteFile && !warned){
+		  //Check to see if user still wants to save without renaming
+		view.flashNotification("This will overwrite a previously made file, press save again to overwrite");
+		warned = true;
+		setTimeout(function(){warned=false;},30000);
+		return;
+	  }
+  warned=false;
   var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
@@ -861,6 +873,8 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       view.flashThumbnail(thumbnailDataUrl);
     }
   }
+  });
+  
 }
 
 function keyFromPassword(username, p) {
@@ -1249,6 +1263,18 @@ function logInAndSave(filename, newdata, forceOverwrite,
   });
 }
 
+function checkFileOverrideOnSave(callback){
+	var model = modelatpos("left");
+	storage.loadFile(model.ownername, "", true, function(m){
+	for (var j = 0; j < m.list.length; ++j) {
+		if(m.list[j].name === model.filename){
+			return callback(true);
+		}
+	};
+	return callback(false);
+	});
+}
+
 function handleSaveStatus(status, filename, noteclean) {
   if (status.newer) {
     view.flashNotification('Newer copy on network. ' +
@@ -1550,6 +1576,7 @@ view.on('rename', function(newname) {
         } else {
           completeRename();
         }
+		warned = false;
       });
     }
   } else {
