@@ -779,6 +779,7 @@ view.on('splitscreen', function() {
 });
 
 var warned = false;
+var expectOverwrite = false;
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
@@ -796,7 +797,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   var filename = modelatpos('left').filename
   view.flashNotification("Saving may take some time, please wait");
   checkFileOverrideOnSave(function(OverwriteFile){
-	if(OverwriteFile && !warned){
+	if(OverwriteFile && !warned && !expectOverwrite){
 		  //Check to see if user still wants to save without renaming
 		view.flashNotification("This will overwrite a previously made file, press save again to overwrite");
 		warned = true;
@@ -804,6 +805,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
 		return;
 	  }
   warned=false;
+  expectOverwrite = true;
   var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
@@ -1218,6 +1220,7 @@ function saveAs() {
         view.notePaneEditorCleanData(pp, doc);
         updateTopControls(false);
         view.flashNotification('Saved as ' + newFilename);
+		expectOverwrite = false;
         view.setPrimaryFocus();
         logCodeEvent('save', newFilename, doc.data,
             view.getPaneEditorBlockMode(pp),
@@ -1265,6 +1268,9 @@ function logInAndSave(filename, newdata, forceOverwrite,
 
 function checkFileOverrideOnSave(callback){
 	var model = modelatpos("left");
+	if(expectOverwrite){
+		return callback(true);
+	}
 	storage.loadFile(model.ownername, "", true, function(m){
 	for (var j = 0; j < m.list.length; ++j) {
 		if(m.list[j].name === model.filename){
@@ -1577,6 +1583,7 @@ view.on('rename', function(newname) {
           completeRename();
         }
 		warned = false;
+		expectOverwrite = false;
       });
     }
   } else {
