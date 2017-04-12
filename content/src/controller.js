@@ -796,17 +796,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   var doc = view.getPaneEditorData(paneatpos('left'));
   var filename = modelatpos('left').filename
   view.flashNotification("Saving may take some time, please wait");
-  checkFileOverrideOnSave(function(OverwriteFile){
-	if(OverwriteFile && !warned && !expectOverwrite){
-		  //Check to see if user still wants to save without renaming
-		view.flashNotification("This will overwrite a previously made file, press save again to overwrite");
-		warned = true;
-		setTimeout(function(){warned=false;},30000);
-		return;
-	  }
-  warned=false;
-  expectOverwrite = true;
-  var thumbnailDataUrl = '';
+ var thumbnailDataUrl = '';
   if (!doc) {
     // There is no editor on the left (or it is misbehaving) - do nothing.
     console.log("Nothing to save.");
@@ -840,6 +830,54 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     storage.saveFile(
         model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
     function(status) {
+	  if(status.overwrite){
+		  //Let user know continuing with this save will overwrite a file
+		  //Give the the option to overwrite or not, maybe add ability to rename here?
+		  
+		    var opts = { };
+
+			opts.content =
+				'<div class="content">' +
+				'<div> If you continue with this action it will overwrite a pre existing file </div>' +
+				'</div><br>' +
+				'<button class="ok">Overwrite</button>' +
+				'<button class="cancel">Cancel</button>';
+			opts.init = function(dialog) {
+				dialog.find('.ok').on('click', function(e){
+					storage.saveFile(model.ownername, filename, newdata, forceOverwrite, model.passkey, false, function(status) {
+						if (status.needauth) {
+							logInAndSave(filename, newdata, forceOverwrite, noteclean,
+								loginPrompt, doneCallback);
+						} else {
+							if (!model.username) {
+								// If not yet logged in but we have saved (e.g., no password needed),
+								// then log us in.
+								model.username = model.ownername;
+							}
+							handleSaveStatus(status, filename, noteclean);
+							if (doneCallback) {
+								doneCallback();
+							}
+						}
+					}, false);
+					dialog.close();
+				});
+				dialog.find('.cancel').on('click', function(e){
+					view.flashNotification('Failed to Save');
+					dialog.close();
+				});
+			}
+			opts.onkeydown = function(e, dialog, state) {
+			}
+			opts.onclick = function(e, dialog, state) {
+			}
+			opts.retrieveState = function(dialog) {
+			}
+
+			view.showDialog(opts);
+			return;
+	  }
+	  return;
       if (status.needauth) {
         logInAndSave(filename, newdata, forceOverwrite, noteclean,
                      loginPrompt, doneCallback);
@@ -875,7 +913,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       view.flashThumbnail(thumbnailDataUrl);
     }
   }
-  });
   
 }
 
@@ -1264,21 +1301,6 @@ function logInAndSave(filename, newdata, forceOverwrite,
       });
     }
   });
-}
-
-function checkFileOverrideOnSave(callback){
-	var model = modelatpos("left");
-	if(expectOverwrite){
-		return callback(true);
-	}
-	storage.loadFile(model.ownername, "", true, function(m){
-	for (var j = 0; j < m.list.length; ++j) {
-		if(m.list[j].name === model.filename){
-			return callback(true);
-		}
-	};
-	return callback(false);
-	});
 }
 
 function handleSaveStatus(status, filename, noteclean) {

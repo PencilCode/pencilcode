@@ -235,7 +235,7 @@ window.pencilcode.storage = {
   // 4. If the network save succeeded, the file is saved as a backup (without
   //    unsaved set) and success:true, mtime:mtime is the status.
   saveFile: function(ownername,
-      filename, data, force, key, backupOnly, callback) {
+      filename, data, force, key, backupOnly, callback, overwriteProtection = true) {
     // Always stick the data in the backup immediately, marked as unsaved.
     var msg = $.extend({}, data), now = +(new Date);
     if (!/pencil/.test(filetype.mimeForFilename(filename)) ||
@@ -268,7 +268,88 @@ window.pencilcode.storage = {
         backupOnly ? {backup:true} : {offline:true}); }, 0);
       return;
     }
-    // Attempt the network save: pack up any metadata, and set up
+	if(overwriteProtection){
+		//If we are protecting the user from overwriting, ask the server for the directory, then check to see 
+		//if the file that we are currently working in's name will overwrite a pre-existing file
+		this.loadFile(ownername, "", false, function(m){
+			if(m.list === null){
+				callback(m);
+				return;
+			}
+			for(var i = 0; i < m.list.length; i++){
+				if(m.list[i].name === filename){
+					callback({
+						overwrite: true
+					});
+					return;
+				}
+			}
+		});
+	// Attempt the network save: pack up any metadata, and set up
+    // the conditional argument and the weak authentication key.
+    var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
+    if (msg.thumbnail) {  // Send thumbnail data to server if it exists.
+      payload.thumbnail = msg.thumbnail;
+    }
+    if (msg.mtime && !force) {
+      payload.conditional = msg.mtime;
+    }
+    if (key) {
+      payload.key = key;
+    }
+    var payloadsize = payload.data.length + payload.meta.length;
+
+    // Do the network save.
+    var domain = (ownername ? ownername + '.' : '') + window.pencilcode.domain;
+    var crossdomain = (window.location.hostname != domain);
+    $.ajax({
+      url: (ownername ? '//' + domain : '') +
+          '/save/' + filename,
+      data: payload,
+      dataType: 'json',
+      // Use a GET if crossdomain and the payload is short.  Note that
+      // a longer payload will fail on IE, and anecdotally a crossdomain
+      // POST (even with CORS) will fail on mobile browsers.
+      type: (crossdomain && payloadsize < 1024) ? 'GET' : 'POST',
+      success: function(m) {
+        var check;
+        if (m.error) {
+          // Pass errors on to calback.  Backup already done.
+          console.log('got error ' + m.error);
+        } else if (m.deleted) {
+          // On a successful delete, also delete the backup
+          // (if nothing new has since been entered in backup).
+          check = loadBackup(filename);
+          if (check && check.data === msg.data) {
+            deleteBackup(filename);
+          }
+        } else {
+          // On a successful save, re-commit the backup with the new
+          // mtime and without the unsaved bit (if nothing new has since
+          // been entered in the backup).
+          check = loadBackup(filename);
+          if (check && check.data === msg.data) {
+            // Commit backup without 'unsaved' if it is still unchanged.
+            delete msg.unsaved;
+            delete msg.needsave;
+            delete msg.btime;
+            delete msg.offline;
+            if (m.mtime) { msg.mtime = m.mtime; }
+            saveBackup(filename, msg);
+          }
+        }
+        callback && callback(m);
+      }
+    }).error(function() {
+      console.log('got error ' + domain);
+      callback && callback({
+        error: networkErrorMessage(domain),
+        offline:true
+      });
+    });
+		return;
+	}
+	// Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
     var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
     if (msg.thumbnail) {  // Send thumbnail data to server if it exists.
