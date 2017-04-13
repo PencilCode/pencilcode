@@ -779,7 +779,7 @@ view.on('splitscreen', function() {
   view.setPreviewMode(!view.getPreviewMode());
 });
 
-var overwriteProtected = false;
+var overwriteProtected = true;
 
 function showOverwriteDialog(opts, yes, no){
 			if(opts === { }){
@@ -851,6 +851,10 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     }
     // Attempt to save.
     view.flashNotification('', true);
+	if(newdata.data === "" || newdata.data === "\n"){
+		view.flashNotification("Cannot save empty file");
+		return;
+	}
     storage.saveFile(
         model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
     function(status) {
@@ -1162,7 +1166,7 @@ function signUpAndSave(options) {
 				validate: function(state) { return this.close; }
 				};
 			var ok = function(e){
-				storage.saveFile(username, rename, $.exted({}, doc), forceOverwrite, key, false, function(status){
+				storage.saveFile(username, rename, $.extend({}, doc), forceOverwrite, key, false, function(status){
 							  if (status.needauth) {
             state.update({
               disable: false,
