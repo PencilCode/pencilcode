@@ -325,6 +325,7 @@ view.on('new', function() {
       directoryname = '';
     }
     window.location.href = '/edit/' + directoryname + untitled;
+	overwriteProtected = true;
   });
 });
 
@@ -778,7 +779,7 @@ view.on('splitscreen', function() {
   view.setPreviewMode(!view.getPreviewMode());
 });
 
-var overwriteProtected = true;
+var overwriteProtected = false;
 
 function showOverwriteDialog(opts, yes, no){
 			if(opts === { }){
@@ -853,6 +854,43 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     storage.saveFile(
         model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
     function(status) {
+	  if(status.overwrite){
+		  //Let user know continuing with this save will overwrite a file
+		  //Give the the option to overwrite or not, maybe add ability to rename here?
+		    var opts = {
+				close: { },
+				validate: function(state) { return this.close; }
+				};
+			var ok =  function(e){
+					if(!opts.close.cancel)
+					{
+					storage.saveFile(model.ownername, filename, newdata, forceOverwrite, model.passkey, false, function(status) {
+						if (status.needauth) {
+							logInAndSave(filename, newdata, forceOverwrite, noteclean,
+								loginPrompt, doneCallback);
+						} else {
+							if (!model.username) {
+								// If not yet logged in but we have saved (e.g., no password needed),
+								// then log us in.
+								model.username = model.ownername;
+							}
+							handleSaveStatus(status, filename, noteclean);
+							if (doneCallback) {
+								doneCallback();
+							}
+						}
+					}, false);
+					opts.close = {cancel: true};
+					var x = document.getElementsByClassName("ok");
+					x[0].click();
+					}
+				}
+			var cancel = function(e){
+					view.flashNotification('Failed to Save');
+				}
+			showOverwriteDialog(opts, ok, cancel);
+			return;
+			}
       if (status.needauth) {
         logInAndSave(filename, newdata, forceOverwrite, noteclean,
                      loginPrompt, doneCallback);
@@ -870,6 +908,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     }, overwriteProtected);
     // After a successful save, mark the file as clean and update mtime.
     function noteclean(mtime) {
+		overwriteProtected = false;
       view.flashNotification('Saved.');
       view.notePaneEditorCleanData(paneatpos('left'), newdata);
       logCodeEvent('save', filename, newdata.data,
@@ -888,6 +927,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       view.flashThumbnail(thumbnailDataUrl);
     }
   }
+  
 }
 
 function keyFromPassword(username, p) {
@@ -1122,7 +1162,7 @@ function signUpAndSave(options) {
 				validate: function(state) { return this.close; }
 				};
 			var ok = function(e){
-				storage.saveFile(username, rename, $.extend({}, doc), forceOverwrite, key, false, function(status){
+				storage.saveFile(username, rename, $.exted({}, doc), forceOverwrite, key, false, function(status){
 							  if (status.needauth) {
             state.update({
               disable: false,
@@ -1232,7 +1272,7 @@ function signUpAndSave(options) {
               window.location.href = newurl;
             }
           }
-        }, true);
+        });
       }
       if (key && shouldCreateAccount) {
         storage.setPassKey(username, key, null, function(m) {
@@ -1348,7 +1388,7 @@ function saveAs() {
         if (m.mtime) {
           mp.data.mtime = Math.max(m.mtime, oldmtime);
         }
-      }, true);
+      });
     }
   });
 }
@@ -1404,7 +1444,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
         if (doneCallback) {
           doneCallback();
         }
-      }, true);
+      });
     }
   });
 }
