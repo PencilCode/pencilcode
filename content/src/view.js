@@ -1002,7 +1002,7 @@ function showDialog(opts) {
 function showLoginDialog(opts) {
   if (!opts)
     opts = { };
-
+ 
   opts.content =
     '<div class="content">' +
     '<div class="field">Name:<div style="display:inline-table">'+

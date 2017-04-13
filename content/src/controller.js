@@ -778,8 +778,31 @@ view.on('splitscreen', function() {
   view.setPreviewMode(!view.getPreviewMode());
 });
 
-var warned = false;
-var expectOverwrite = false;
+var overwriteProtected = true;
+
+function showOverwriteDialog(opts, yes, no){
+			if(opts === { }){
+		    var opts = {
+				close: { },
+				validate: function(state) { return this.close; }
+				};
+			}
+
+			opts.content =
+				'<div class="content">' +
+				'<div> If you continue with this action it will overwrite a pre existing file </div>' +
+				'</div><br>' +
+				'<button class="ok">Overwrite</button>' +
+				'<button class="cancel">Cancel</button>';
+			opts.init = function(dialog) {
+				dialog.find('.ok').on('click', yes);
+				dialog.find('.cancel').on('click', no);
+			}
+			opts.retrieveState = function(){
+				return this.done;
+			}
+			view.showDialog(opts);
+}
 
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
@@ -830,54 +853,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
     storage.saveFile(
         model.ownername, filename, newdata, forceOverwrite, model.passkey, false,
     function(status) {
-	  if(status.overwrite){
-		  //Let user know continuing with this save will overwrite a file
-		  //Give the the option to overwrite or not, maybe add ability to rename here?
-		  
-		    var opts = { };
-
-			opts.content =
-				'<div class="content">' +
-				'<div> If you continue with this action it will overwrite a pre existing file </div>' +
-				'</div><br>' +
-				'<button class="ok">Overwrite</button>' +
-				'<button class="cancel">Cancel</button>';
-			opts.init = function(dialog) {
-				dialog.find('.ok').on('click', function(e){
-					storage.saveFile(model.ownername, filename, newdata, forceOverwrite, model.passkey, false, function(status) {
-						if (status.needauth) {
-							logInAndSave(filename, newdata, forceOverwrite, noteclean,
-								loginPrompt, doneCallback);
-						} else {
-							if (!model.username) {
-								// If not yet logged in but we have saved (e.g., no password needed),
-								// then log us in.
-								model.username = model.ownername;
-							}
-							handleSaveStatus(status, filename, noteclean);
-							if (doneCallback) {
-								doneCallback();
-							}
-						}
-					}, false);
-					dialog.close();
-				});
-				dialog.find('.cancel').on('click', function(e){
-					view.flashNotification('Failed to Save');
-					dialog.close();
-				});
-			}
-			opts.onkeydown = function(e, dialog, state) {
-			}
-			opts.onclick = function(e, dialog, state) {
-			}
-			opts.retrieveState = function(dialog) {
-			}
-
-			view.showDialog(opts);
-			return;
-	  }
-	  return;
       if (status.needauth) {
         logInAndSave(filename, newdata, forceOverwrite, noteclean,
                      loginPrompt, doneCallback);
@@ -892,7 +867,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
           doneCallback();
         }
       }
-    });
+    }, overwriteProtected);
     // After a successful save, mark the file as clean and update mtime.
     function noteclean(mtime) {
       view.flashNotification('Saved.');
@@ -913,7 +888,6 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
       view.flashThumbnail(thumbnailDataUrl);
     }
   }
-  
 }
 
 function keyFromPassword(username, p) {
@@ -1142,7 +1116,14 @@ function signUpAndSave(options) {
             username, rename, $.extend({}, doc),
             forceOverwrite, key, false,
             function(status) {
-          if (status.needauth) {
+          if (status.overwrite){
+			var opts = {
+				close: { },
+				validate: function(state) { return this.close; }
+				};
+			var ok = function(e){
+				storage.saveFile(username, rename, $.extend({}, doc), forceOverwrite, key, false, function(status){
+							  if (status.needauth) {
             state.update({
               disable: false,
               info: 'Wrong password.'
@@ -1192,7 +1173,66 @@ function signUpAndSave(options) {
               window.location.href = newurl;
             }
           }
-        });
+        
+				}, false);
+			}
+			var cancel = function(e){
+					view.flashNotification('Failed to Save');
+			}
+			showOverwriteDialog(opts, ok, cancel);
+			return;
+		  }
+		  if (status.needauth) {
+            state.update({
+              disable: false,
+              info: 'Wrong password.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.newer) {
+            state.update({
+              disable: false,
+              info: 'Did not overwrite newer file.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.transient) {
+            state.update({
+              disable: false,
+              info: 'Network down.'
+            });
+            view.clearPane(paneatpos('right'));
+          } else if (status.error) {
+            state.update({
+              disable: false,
+              info: status.error
+            });
+            view.clearPane(paneatpos('right'));
+          } else {
+            view.notePaneEditorCleanData(paneatpos('left'), doc);
+            storage.deleteBackup(mp.filename);
+            storage.deleteBackup(rename);
+            view.flashNotification('Saved.');
+            var hostpath = username + '.' + window.pencilcode.domain +
+                  '/edit/' + rename,
+                newurl = '//' + hostpath +
+                  '#login=' + username + ':' + (key ? key : '');
+            if (model.guideUrl) {
+              var guideurl = model.guideUrl;
+              newurl += '&guide=' + (/[&#%]/.test(guideurl) ?
+                encodeURIComponent(guideurl) : encodeURI(guideurl));
+            }
+            if (location.host + location.pathname == hostpath) {
+              // If there is no change in URL, be careful to close the dialog.
+              // We don't do this always, because the 'new user' flow
+              // will do a 'history.back' when closing the dialog.
+              state.update({cancel: true});
+            }
+            if (options.nohistory) {
+              window.location.replace(newurl);
+            } else {
+              window.location.href = newurl;
+            }
+          }
+        }, true);
       }
       if (key && shouldCreateAccount) {
         storage.setPassKey(username, key, null, function(m) {
@@ -1240,6 +1280,14 @@ function saveAs() {
           model.username, newFilename, doc, true,
           model.passkey, false,
       function(m) {
+		if (m.overwrite){
+		    var opts = {
+				close: { },
+				validate: function(state) { return this.close; }
+				};
+				
+			var ok = function(e){
+				storage.saveFile(model.username, newFilename, doc, true, model.passkey, false, function(m){
         if (m.needauth) {
           signUpAndSave();
           return;
@@ -1257,7 +1305,6 @@ function saveAs() {
         view.notePaneEditorCleanData(pp, doc);
         updateTopControls(false);
         view.flashNotification('Saved as ' + newFilename);
-		expectOverwrite = false;
         view.setPrimaryFocus();
         logCodeEvent('save', newFilename, doc.data,
             view.getPaneEditorBlockMode(pp),
@@ -1266,7 +1313,42 @@ function saveAs() {
         if (m.mtime) {
           mp.data.mtime = Math.max(m.mtime, oldmtime);
         }
-      });
+      
+				}, false);
+			}
+			var cancel = function(e){
+					view.flashNotification('Failed to Save');
+			}
+				
+			showOverwriteDialog(opts, ok, cancel);
+			return;
+		}
+        if (m.needauth) {
+          signUpAndSave();
+          return;
+        }
+        if (m.error) {
+          state.update({info: m.error, disable: true});
+          return;
+        }
+        if (oldFilename != newFilename) {
+          storage.deleteBackup(oldFilename);
+        }
+        state.update({cancel: true});
+        mp.filename = newFilename;
+        view.noteNewFilename(pp, newFilename);
+        view.notePaneEditorCleanData(pp, doc);
+        updateTopControls(false);
+        view.flashNotification('Saved as ' + newFilename);
+        view.setPrimaryFocus();
+        logCodeEvent('save', newFilename, doc.data,
+            view.getPaneEditorBlockMode(pp),
+            view.getPaneEditorLanguage(pp));
+        var oldmtime = mp.data.mtime || 0;
+        if (m.mtime) {
+          mp.data.mtime = Math.max(m.mtime, oldmtime);
+        }
+      }, true);
     }
   });
 }
@@ -1289,6 +1371,30 @@ function logInAndSave(filename, newdata, forceOverwrite,
           model.username, filename, newdata, forceOverwrite,
           model.passkey, false,
       function(m) {
+		if (m.overwrite){
+			var opts = {
+				close: { },
+				validate: function(state) { return this.close; }
+				};
+			var ok = function(e){
+				storage.saveFile(model.username, filename, newdata, forceOverwrite, model.passkey, false, function(m){
+					if (m.needauth) {
+						state.update({info: 'Wrong password.', disable: false});
+						return;
+					}
+					state.update({cancel: true});
+					handleSaveStatus(m, filename, noteclean);
+					if (doneCallback) {
+						doneCallback();
+					}
+				}, false);
+			}
+			var cancel = function(e){
+				view.flashNotification('Failed to Save');
+			}
+			showOverwriteDialog(opts, ok, cancel);
+			return;
+		}
         if (m.needauth) {
           state.update({info: 'Wrong password.', disable: false});
           return;
@@ -1298,7 +1404,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
         if (doneCallback) {
           doneCallback();
         }
-      });
+      }, true);
     }
   });
 }
@@ -1604,8 +1710,6 @@ view.on('rename', function(newname) {
         } else {
           completeRename();
         }
-		warned = false;
-		expectOverwrite = false;
       });
     }
   } else {

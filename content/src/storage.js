@@ -284,7 +284,7 @@ window.pencilcode.storage = {
 					return;
 				}
 			}
-		});
+			console.log("New File");
 	// Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
     var payload = { data: msg.data, meta: JSON.stringify(msg.meta) };
@@ -348,6 +348,8 @@ window.pencilcode.storage = {
       });
     });
 		return;
+	});
+	return;
 	}
 	// Attempt the network save: pack up any metadata, and set up
     // the conditional argument and the weak authentication key.
