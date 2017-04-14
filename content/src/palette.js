@@ -893,7 +893,7 @@ module.exports = {
         }
       ])
     }, {
-      name: 'Art',
+      name: 'Art', 
       color: 'purple',
       blocks: filterblocks([
         {
