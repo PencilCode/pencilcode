@@ -178,12 +178,21 @@ module.exports = {
           block: '@pen purple, 10',
           title: 'Set pen color and size'
         }, {
+		  block: '@pen purple',
+		  title: 'Set pen color with a default size'
+		}, {
           block: '@dot green, 50',
           title: 'Make a dot'
         }, {
+		  block: '@dot green',
+		  title: 'Make a dot with a default size'
+		}, {
           block: '@box yellow, 50',
           title: 'Make a square'
         }, {
+		  block: '@box yellow',
+		  title: 'Make a square with a default size'
+		}, {
           block: '@fill blue',
           title: 'Fill traced shape'
         }, {
@@ -532,12 +541,21 @@ module.exports = {
           block: '@pen(purple, 10);',
           title: 'Set pen color and size'
         }, {
+		  block: '@pen(purple);',
+		  title: 'Set pen color with a default size'
+		}, {
           block: '@dot(green, 50);',
           title: 'Make a dot'
         }, {
+		  block: '@dot(green);',
+		  title: 'Make a dot with a default size'
+		}, {
           block: '@box(yellow, 50);',
           title: 'Make a square'
         }, {
+		  block: '@box(yellow);',
+		  title: 'Make a square with a default size'
+		}, {
           block: '@fill(blue);',
           title: 'Fill traced shape'
         }, {
@@ -882,15 +900,24 @@ module.exports = {
           block: 'pen(\'purple\', 10)',
           title: 'Set pen color and size'
         }, {
+		  block: 'pen(\'purple\')',
+		  title: 'Set pen color with a default size'
+		}, {
           block: 'arrow(\'blue\', 200)',
           title: 'Creates an arrow for a set color and length'
         }, {
           block: 'dot(\'green\', 50)',
           title: 'Make a dot'
         }, {
+		  block: 'dot(\'green\')',
+		  title: 'Make a dot with a default size'
+		}, {
           block: 'box(\'yellow\', 50)',
           title: 'Make a square'
         }, {
+		  block: 'box(\'yellow\')',
+		  title: 'Make a square with a default size'
+		}, {
           block: 'img (\'/img/bird\')',
           title: 'Write an image on the screen'
         }, {
