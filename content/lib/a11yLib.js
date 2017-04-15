@@ -1,6 +1,15 @@
 function a11yController() {
-    //this.primaryNavSections = this.setupPrimaryNav();
     this.init();
+    this.addARIAlabels();
+}
+
+a11yController.prototype.addARIAlabels = function () {
+    //add labels to banner buttons
+    var bannerBtnContainer = document.querySelector('#topright')
+    var bannerBtns = bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")
+    bannerBtns.forEach(function(element) {
+        element.setAttribute('aria-label', element.id);
+    }, this);
 }
 
 a11yController.prototype.init = function () {
