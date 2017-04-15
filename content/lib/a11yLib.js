@@ -1,15 +1,30 @@
 function a11yController() {
     this.init();
-    this.addARIAlabels();
+    this.addARIAattributes(); 
 }
 
-a11yController.prototype.addARIAlabels = function () {
+a11yController.prototype.addARIAattributes = function () {
+    //run button label
+    var runButton = document.querySelector('#run')
+    runButton.setAttribute('aria-label', 'run program')
+    
     //add labels to banner buttons
+    var banner = document.getElementById('top')
+    banner.setAttribute('role', 'banner')
     var bannerBtnContainer = document.querySelector('#topright')
     var bannerBtns = bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")
     bannerBtns.forEach(function(element) {
         element.setAttribute('aria-label', element.id);
     }, this);
+
+    //block palette 
+    var blockPalette = document.querySelector('.droplet-palette-element')
+    blockPalette.setAttribute('role', 'region')
+    blockPalette.setAttribute('aria-label', 'block palette')
+
+    var blockEditor = document.querySelector('.droplet-main-scroller')
+    blockEditor.setAttribute('role', 'region')
+    blockPalette.setAttribute('aria-label', 'block editor')
 }
 
 a11yController.prototype.init = function () {
@@ -21,8 +36,16 @@ a11yController.prototype.init = function () {
     
     document.querySelector('.droplet-main-canvas').setAttribute('id', 'code-editor-canvas')
     document.querySelector('.droplet-main-canvas').setAttribute('tabindex', 0)
+    document.querySelector('.droplet-hidden-input').setAttribute('tabindex', -1)
+    var textInput = document.querySelector('.ace_text-input')
+    textInput.addEventListener("focus", function() {
+        console.log('focused');
+        document.querySelector('#run').focus()
+    });
 
-    document.activeElement.blur(); //set focus to body of view
+    console.log(textInput)
+    textInput.blur();
+    textInput.focus();
 }
 
 a11yController.prototype.tabController = function (event) {
