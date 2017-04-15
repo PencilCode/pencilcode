@@ -49,7 +49,8 @@ a11yController.prototype.init = function () {
 
     function initFocus() {
         console.log('focused');
-        document.querySelector('#run').focus()
+        console.log(document.getElementById('focus-guide'))
+        document.getElementById('focus-guide').focus()
         textInput.removeEventListener("focus", initFocus)
     }
 }
