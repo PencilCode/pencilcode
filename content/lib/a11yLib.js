@@ -25,6 +25,11 @@ a11yController.prototype.addARIAattributes = function () {
     var blockEditor = document.querySelector('.droplet-main-scroller')
     blockEditor.setAttribute('role', 'region')
     blockPalette.setAttribute('aria-label', 'block editor')
+
+    var blockToggle = document.querySelector('.blocktoggle')
+    var textToggle = document.querySelector('.texttoggle')
+    blockToggle.setAttribute('role', 'button')
+    textToggle.setAttribute('role', 'button')
 }
 
 a11yController.prototype.init = function () {
@@ -38,14 +43,15 @@ a11yController.prototype.init = function () {
     document.querySelector('.droplet-main-canvas').setAttribute('tabindex', 0)
     document.querySelector('.droplet-hidden-input').setAttribute('tabindex', -1)
     var textInput = document.querySelector('.ace_text-input')
-    textInput.addEventListener("focus", function() {
-        console.log('focused');
-        document.querySelector('#run').focus()
-    });
-
-    console.log(textInput)
+    textInput.addEventListener("focus", initFocus);
     textInput.blur();
     textInput.focus();
+
+    function initFocus() {
+        console.log('focused');
+        document.querySelector('#run').focus()
+        textInput.removeEventListener("focus", initFocus)
+    }
 }
 
 a11yController.prototype.tabController = function (event) {
