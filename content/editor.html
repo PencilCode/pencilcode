@@ -16,8 +16,8 @@
 <link rel="stylesheet" type="text/css" href="//<!--#echo var="site"-->/lib/tooltipster/css/tooltipster.css">
 </head>
 <body id="pencildoc">
-<a href="#maincontent" class="skip">Skip to code editor</a>
 <div id="overflow">
+<a href="#code-editor-canvas" aria-label="skip to programming workspace" class="skip">Skip to programming workspace</a>
 <div id="overlay"></div>
 <div id="notification"><div><div></div></div></div>
 <div id="middle"><div></div></div>
@@ -43,13 +43,13 @@ window.preload = function(data) {
 function htmlEscape(s){return s.replace(
   /[<>&]/g,function(c){return c=='<'?'&lt;':c =='>'?'&gt;':'&amp;';});}
 document.write([
-'<a href="/edit/"><span id="owner" title="Top directory">',
+'<a href="/edit/"><span id="owner" title="Top directory" aria-label="Top directory">',
 pencilcode.owner,
-'</span></a><a href="../"><img id="folder" title="Parent directory" src="//',
+'</span></a><a href="../"><img aria-label="Parent directory" id="folder" title="Parent directory" src="//',
 pencilcode.domain,
 '/image/folder_32.png',
 '" height="32" width="32"></a>',
-'<span id="filename" title="Edit to move or rename" style="user-select:text;-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text">',
+'<span role="textbox" id="filename" aria-label="Edit to move or rename" title="Edit to move or rename" style="user-select:text;-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text">',
 htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 '</span>'].join(''));
 })();

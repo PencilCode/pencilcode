@@ -1,22 +1,19 @@
 function a11yController() {
-    this.primaryNavSections = this.setupPrimaryNav();
+    //this.primaryNavSections = this.setupPrimaryNav();
     this.init();
 }
 
 a11yController.prototype.init = function () {
-    document.activeElement.blur(); //set focus to body of view     
-    
-    //set target for skip link
-    document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");
-    
     //remove iframes from tab index
     var iframes = document.querySelectorAll('iframe');    
     iframes.forEach(function(element) {        
         element.setAttribute("tabindex", -1);
-    }, this);        
+    }, this);
+    
+    document.querySelector('.droplet-main-canvas').setAttribute('id', 'code-editor-canvas')
+    document.querySelector('.droplet-main-canvas').setAttribute('tabindex', 0)
 
-    //intercept keyboard events
-    document.addEventListener('keydown', this.tabController);
+    document.activeElement.blur(); //set focus to body of view
 }
 
 a11yController.prototype.tabController = function (event) {
