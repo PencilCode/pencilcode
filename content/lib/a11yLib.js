@@ -14,6 +14,9 @@ function a11yController() {
 
 //give elements the proper aria attributes
 a11yController.prototype.addARIAattributes = function () {
+    //top bar
+    this.banner.setAttribute('role', 'banner')
+    
     //run button label
     this.runButton.setAttribute('aria-label', 'run program') //TODO: bug where run button is recreated on toggle
 
