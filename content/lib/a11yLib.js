@@ -1,24 +1,69 @@
 function a11yController() {
-    this.primaryNavSections = this.setupPrimaryNav();
+    this.runButton = document.querySelector('#run')
+    this.banner = document.getElementById('top')
+    this.blockPalette = document.querySelector('.droplet-palette-wrapper')
+    this.bannerBtnContainer = document.querySelector('#topright')
+    this.bannerBtns = this.bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")    
+    this.blockEditor = document.querySelector('.droplet-wrapper-div')
+    this.blockToggle = document.querySelector('.blocktoggle')
+    this.textToggle = document.querySelector('.texttoggle')
+    
     this.init();
+    this.addARIAattributes(); 
 }
 
+//give elements the proper aria attributes
+a11yController.prototype.addARIAattributes = function () {
+    //top bar
+    this.banner.setAttribute('role', 'banner')
+    
+    //run button label
+    this.runButton.setAttribute('aria-label', 'run program') //TODO: bug where run button is recreated on toggle
+
+    //add labels to banner buttons
+    this.bannerBtns.forEach(function(element) {
+        element.setAttribute('aria-label', element.id);
+    }, this);
+
+    //block palette
+    this.blockPalette.setAttribute('role', 'region')
+    this.blockPalette.setAttribute('aria-label', 'block palette')
+
+    //block editor
+    this.blockEditor.setAttribute('role', 'region')
+    this.blockEditor.setAttribute('aria-label', 'block editor')
+
+    //editor mode toggle (they made two of them for some reason)
+    this.blockToggle.setAttribute('role', 'button')
+    this.textToggle.setAttribute('role', 'button')
+}
+
+//remove focus from elements that shouldn't have focus
 a11yController.prototype.init = function () {
-    document.activeElement.blur(); //set focus to body of view     
-    
-    //set target for skip link
-    document.getElementsByClassName("droplet-wrapper-div")[0].setAttribute("id", "maincontent");
-    
     //remove iframes from tab index
     var iframes = document.querySelectorAll('iframe');    
     iframes.forEach(function(element) {        
         element.setAttribute("tabindex", -1);
-    }, this);        
-
-    //intercept keyboard events
-    document.addEventListener('keydown', this.tabController);
+    }, this);
+    
+    //an attemp to remove focus from the text editor on load
+    //this allows the user to reach the skip to editor link after hitting tab once
+    document.querySelector('.droplet-main-canvas').setAttribute('id', 'code-editor-canvas')
+    document.querySelector('.droplet-main-canvas').setAttribute('tabindex', 0)
+    document.querySelector('.droplet-hidden-input').setAttribute('tabindex', -1)
+    var textInput = document.querySelector('.ace_text-input')
+    textInput.addEventListener("focus", initFocus);
+    textInput.blur();
+    textInput.focus();
+    function initFocus() {
+        console.log('focused');
+        console.log(document.getElementById('focus-guide'))
+        document.getElementById('focus-guide').focus()
+        textInput.removeEventListener("focus", initFocus)
+    }
 }
 
+//old code left for reference
 a11yController.prototype.tabController = function (event) {
     if(event.keyCode == 9) {
         //SHIFT + TAB 
@@ -37,6 +82,7 @@ a11yController.prototype.tabController = function (event) {
     }
 }
 
+//old code left for reference
 a11yController.prototype.setupPrimaryNav = function () {
     //main ui sections
     var blockEditor = document.querySelector('.droplet-main-scroller')
