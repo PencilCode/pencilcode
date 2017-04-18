@@ -1,37 +1,41 @@
 function a11yController() {
+    this.runButton = document.querySelector('#run')
+    this.banner = document.getElementById('top')
+    this.blockPalette = document.querySelector('.droplet-palette-wrapper')
+    this.bannerBtnContainer = document.querySelector('#topright')
+    this.bannerBtns = this.bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")    
+    this.blockEditor = document.querySelector('.droplet-wrapper-div')
+    this.blockToggle = document.querySelector('.blocktoggle')
+    this.textToggle = document.querySelector('.texttoggle')
+    
     this.init();
     this.addARIAattributes(); 
 }
 
+//give elements the proper aria attributes
 a11yController.prototype.addARIAattributes = function () {
     //run button label
-    var runButton = document.querySelector('#run')
-    runButton.setAttribute('aria-label', 'run program')
-    
+    this.runButton.setAttribute('aria-label', 'run program') //TODO: bug where run button is recreated on toggle
+
     //add labels to banner buttons
-    var banner = document.getElementById('top')
-    banner.setAttribute('role', 'banner')
-    var bannerBtnContainer = document.querySelector('#topright')
-    var bannerBtns = bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")
-    bannerBtns.forEach(function(element) {
+    this.bannerBtns.forEach(function(element) {
         element.setAttribute('aria-label', element.id);
     }, this);
 
-    //block palette 
-    var blockPalette = document.querySelector('.droplet-palette-element')
-    blockPalette.setAttribute('role', 'region')
-    blockPalette.setAttribute('aria-label', 'block palette')
+    //block palette
+    this.blockPalette.setAttribute('role', 'region')
+    this.blockPalette.setAttribute('aria-label', 'block palette')
 
-    var blockEditor = document.querySelector('.droplet-main-scroller')
-    blockEditor.setAttribute('role', 'region')
-    blockPalette.setAttribute('aria-label', 'block editor')
+    //block editor
+    this.blockEditor.setAttribute('role', 'region')
+    this.blockEditor.setAttribute('aria-label', 'block editor')
 
-    var blockToggle = document.querySelector('.blocktoggle')
-    var textToggle = document.querySelector('.texttoggle')
-    blockToggle.setAttribute('role', 'button')
-    textToggle.setAttribute('role', 'button')
+    //editor mode toggle (they made two of them for some reason)
+    this.blockToggle.setAttribute('role', 'button')
+    this.textToggle.setAttribute('role', 'button')
 }
 
+//remove focus from elements that shouldn't have focus
 a11yController.prototype.init = function () {
     //remove iframes from tab index
     var iframes = document.querySelectorAll('iframe');    
@@ -39,6 +43,8 @@ a11yController.prototype.init = function () {
         element.setAttribute("tabindex", -1);
     }, this);
     
+    //an attemp to remove focus from the text editor on load
+    //this allows the user to reach the skip to editor link after hitting tab once
     document.querySelector('.droplet-main-canvas').setAttribute('id', 'code-editor-canvas')
     document.querySelector('.droplet-main-canvas').setAttribute('tabindex', 0)
     document.querySelector('.droplet-hidden-input').setAttribute('tabindex', -1)
@@ -46,7 +52,6 @@ a11yController.prototype.init = function () {
     textInput.addEventListener("focus", initFocus);
     textInput.blur();
     textInput.focus();
-
     function initFocus() {
         console.log('focused');
         console.log(document.getElementById('focus-guide'))
@@ -55,6 +60,7 @@ a11yController.prototype.init = function () {
     }
 }
 
+//old code left for reference
 a11yController.prototype.tabController = function (event) {
     if(event.keyCode == 9) {
         //SHIFT + TAB 
@@ -73,6 +79,7 @@ a11yController.prototype.tabController = function (event) {
     }
 }
 
+//old code left for reference
 a11yController.prototype.setupPrimaryNav = function () {
     //main ui sections
     var blockEditor = document.querySelector('.droplet-main-scroller')
