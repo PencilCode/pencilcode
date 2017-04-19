@@ -36,6 +36,12 @@ a11yController.prototype.addARIAattributes = function () {
     //editor mode toggle (they made two of them for some reason)
     this.blockToggle.setAttribute('role', 'button')
     this.textToggle.setAttribute('role', 'button')
+
+    //presentation area
+    var outputFrame = document.querySelector('#output-frame')
+    var outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document
+    outputDocument.body.getElementsByClassName('turtlefield')[1].setAttribute('role', 'presentation');
+
 }
 
 //remove focus from elements that shouldn't have focus
