@@ -3,20 +3,20 @@ function a11yController() {
     this.banner = document.getElementById('top')
     this.blockPalette = document.querySelector('.droplet-palette-wrapper')
     this.bannerBtnContainer = document.querySelector('#topright')
-    this.bannerBtns = this.bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")    
+    this.bannerBtns = this.bannerBtnContainer.querySelectorAll("#save, #screenshot, #share, #login, #help, #guide, #splitscreen")
     this.blockEditor = document.querySelector('.droplet-wrapper-div')
     this.blockToggle = document.querySelector('.blocktoggle')
     this.textToggle = document.querySelector('.texttoggle')
-    
+
     this.init();
-    this.addARIAattributes(); 
+    this.addARIAattributes();
 }
 
 //give elements the proper aria attributes
 a11yController.prototype.addARIAattributes = function () {
     //top bar
     this.banner.setAttribute('role', 'banner')
-    
+
     //run button label
     this.runButton.setAttribute('aria-label', 'run program') //TODO: bug where run button is recreated on toggle
 
@@ -42,16 +42,22 @@ a11yController.prototype.addARIAattributes = function () {
     var outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document
     outputDocument.body.getElementsByClassName('turtlefield')[1].setAttribute('role', 'presentation');
 
+    //console area
+    outputFrame = document.querySelector('#output-frame')
+    outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document
+    outputDocument.body.getElementsByClassName('turtlefield')[0].setAttribute('role', 'console');
+    outputDocument.body.getElementsByClassName('turtlefield')[0].setAttribute('aria-label', 'test input');
+
 }
 
 //remove focus from elements that shouldn't have focus
 a11yController.prototype.init = function () {
     //remove iframes from tab index
-    var iframes = document.querySelectorAll('iframe');    
-    iframes.forEach(function(element) {        
+    var iframes = document.querySelectorAll('iframe');
+    iframes.forEach(function(element) {
         element.setAttribute("tabindex", -1);
     }, this);
-    
+
     //an attemp to remove focus from the text editor on load
     //this allows the user to reach the skip to editor link after hitting tab once
     document.querySelector('.droplet-main-canvas').setAttribute('id', 'code-editor-canvas')
@@ -72,15 +78,15 @@ a11yController.prototype.init = function () {
 //old code left for reference
 a11yController.prototype.tabController = function (event) {
     if(event.keyCode == 9) {
-        //SHIFT + TAB 
-        if(event.shiftKey) {            
+        //SHIFT + TAB
+        if(event.shiftKey) {
             //event.preventDefault();
         } else {
             if(document.activeElement == document.body) {
                 event.preventDefault();
                 document.querySelector(".skip").focus();
             }
-        }      
+        }
     }
     //ESC key
     if(event.keyCode == 27) {
@@ -92,12 +98,12 @@ a11yController.prototype.tabController = function (event) {
 a11yController.prototype.setupPrimaryNav = function () {
     //main ui sections
     var blockEditor = document.querySelector('.droplet-main-scroller')
-    var blockCategory = document.querySelector('.droplet-palette-header')    
+    var blockCategory = document.querySelector('.droplet-palette-header')
     var runButton = document.querySelector('#run')
 
     //console exists in seperate iframe, so get the scope of the iframe to select it
     var outputFrame = document.querySelector('#output-frame')
-    var outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document    
+    var outputDocument = outputFrame.contentDocument || outputFrame.contentWindow.document
     var consoleInput = outputDocument.querySelector('._log #_testinput') //select console
 
     //listed in navigation order
@@ -118,6 +124,6 @@ a11yController.prototype.setupPrimaryNav = function () {
 
 //bootstrap a11y enhancements after window loads
 window.addEventListener('load', function load(event){
-    window.removeEventListener('load', load, false);    
+    window.removeEventListener('load', load, false);
     var a11yEnhancement = new a11yController();
 })
