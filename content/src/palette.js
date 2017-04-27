@@ -306,7 +306,11 @@ module.exports = {
           block: 'x.match /pattern/',
           title: 'Test if a text pattern is found in x',
           id: 'match'
-        }
+        }, {
+		  block: 't._',
+		  title: 'Run a function from iside of an object',
+		  id: 'dot'
+		}
       ])
     }, {
       name: 'Text',
@@ -659,7 +663,11 @@ module.exports = {
         }, {
           block: 'x.match(/pattern/)',
           title: 'Test if a text pattern is found in x'
-        }
+        }, {
+		  block: '__.__',
+		  title: 'Run a function from inside of an object',
+		  id: 'dot'
+		}
       ])
     }, {
       name: 'Text',
@@ -1051,7 +1059,11 @@ module.exports = {
        }, {
           block: 'min(_,_)',
           title: 'Get the smaller on two numbers'
-        }
+       }, {
+		   block: '_._',
+		   title: 'Call a function from inside of an object',
+		   id: 'dot'
+	   }
      ])
     }, {
       name: 'Sprites',
@@ -1545,12 +1557,14 @@ module.exports = {
     Pencil: {value: true, color: 'teal'}
   },
   PYTHON_FUNCTIONS: {
-//    '*.fd': {color: 'purple'}
+//    '*.fd': {color: 'purple'},
 //    '?.fd': {color: 'purple'}
     'fd': {color: 'lightblue', dropdown: [py_types.distances]},
     'bk': {color: 'lightblue', dropdown: [py_types.distances]},
     'rt': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
     'lt': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'ra': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
+    'la': {color: 'lightblue', dropdown: [py_types.angles, py_types.distances]},
     'speed': {color: 'lightblue', drown: [py_types.speeds]},
     'home': {color: 'lightblue'},
 	'pagexy': {color: 'lightblue'},
