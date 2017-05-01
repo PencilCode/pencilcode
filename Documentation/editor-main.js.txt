@@ -1,0 +1,7 @@
+'use strict' - 
+	forces strict usage, limits some common code bloopers by throwing exceptions 
+	Prevents use of "unsafe" actions via throwing exceptions
+	Disables confusing/poorly thought out features of JS
+	
+require('controller');
+	Starts the application by including the main file of Pencilcode. 
