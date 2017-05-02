@@ -8,6 +8,7 @@ var $        = require('jquery'),
 
 
 eval(see.scope('storage'));
+//Checks to see if there is a local backup of a file
 function hasBackup(filename) {
   try {
     if (!window.localStorage) return false;
@@ -16,14 +17,14 @@ function hasBackup(filename) {
     return false;
   }
 }
-
+//Checks to see if we are currently able to connect to the save server
 function isOnline() {
   // PhantomJS (headless testing) gets this wrong.
   // https://github.com/ariya/phantomjs/issues/10647
   return window.navigator.onLine ||
          null != window.navigator.userAgent.match(/PhantomJS/);
 }
-
+//Loads a local backup of a file
 function loadBackup(filename, annotation) {
   try {
     var result = JSON.parse(window.localStorage['backup:' + filename]);
@@ -35,7 +36,7 @@ function loadBackup(filename, annotation) {
     return { error: 'Backup load failed.', down: true };
   }
 }
-
+//Saves a local backup of a file
 function saveBackup(filename, msg) {
   try {
     if (!window.localStorage) return;
@@ -43,14 +44,14 @@ function saveBackup(filename, msg) {
     window.localStorage['backup:' + filename] = JSON.stringify(msg);
   } catch(e) { }
 }
-
+//Deletes a backup of a file
 function deleteBackup(filename) {
   try {
     if (!window.localStorage) return;
     delete window.localStorage['backup:' + filename];
   } catch(e) { }
 }
-
+//Deletes all backups that start with a specified prefix
 function deleteBackupPrefix(filename) {
   try {
     if (!window.localStorage) return;
@@ -70,7 +71,7 @@ function deleteBackupPrefix(filename) {
   } catch(e) {
   }
 }
-
+//Checks if we want to do backups before saving
 function isBackupPreferred(filename, m, preferUnsaved) {
   try {
     if (!window.localStorage) return false;
@@ -113,6 +114,7 @@ function networkErrorMessage(domain) {
 }
 
 window.pencilcode.storage = {
+	//Updates the set of users
   updateUserSet: function(prefix, set, cb) {
     prefix = prefix || '';
     if (set.hasOwnProperty(prefix)) {
@@ -414,6 +416,7 @@ window.pencilcode.storage = {
       });
     });
   },
+  //Moves a file between two locations (Generall to a new filename)
   moveFile: function(ownername, sourcefile, filename, key, copy, callback) {
     var payload = {
       source: ownername + '/' + sourcefile
@@ -438,6 +441,7 @@ window.pencilcode.storage = {
       });
     });
   },
+  //Sets a password for a user
   setPassKey: function(ownername, key, oldkey, callback) {
     $.post('//' + ownername + '.' + window.pencilcode.domain + '/save/',
         $.extend({ mode: 'setkey', data: key}, oldkey ? { key: oldkey } : {}),
@@ -451,11 +455,13 @@ window.pencilcode.storage = {
       });
     });
   },
+  //Deletes all backups from the browser
   deleteBackup: deleteBackup,
   deleteAllBackup: function() {
     deleteBackupPrefix('');
   },
   // TODO: cache-refreshing crawl.
+  //Currently does nothing
   recrawlCache: function() {
     // Load dirtree URL
     // Then backup all directories

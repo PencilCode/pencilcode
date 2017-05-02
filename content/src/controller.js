@@ -64,6 +64,7 @@ var model = window.pencilcode.model = {
   crossFrameContext: getCrossFrameContext()
 };
 
+//logs events to the internal event log
 function logEvent(name, data) {
   $.get('/log/' + name, data);
 }
@@ -133,11 +134,13 @@ function nosaveowner() {
   return model.ownername === 'frame';
 }
 
+//Determines if the current model can be saved
 function cansave() {
   return specialowner() || !model.username || model.tempThumbnail ||
       view.isPaneEditorDirty(paneatpos('left'));
 }
 
+//Updates the controls at the top of the screen based on what's currently going on
 function updateTopControls(addHistory) {
   var m = modelatpos('left');
   // Update visible URL and main title name.
@@ -280,11 +283,13 @@ function updateTopControls(addHistory) {
 // Set up some logging event handlers.
 //
 
+//logs an event when palettes get selected
 view.on('selectpalette', function(pane, palname) {
   if (!palname) { palname = 'default'; }
   logEvent('~selectpalette', {name: palname.replace(/\s/g, '').toLowerCase()});
 });
 
+//logs an event when blocks get picked up
 view.on('pickblock', function(pane, blockid) {
   logEvent('~pickblock', { id: blockid });
 });
@@ -294,6 +299,8 @@ view.on('pickblock', function(pane, blockid) {
 // an ID (as specified in updateTopControls() above) and
 // an event handler function
 //
+
+//view.on is from the view.js file, it sets up event listeners generally as on click functionality
 
 view.on('help', function() {
   view.flashNotification('<a href="//group.' +
@@ -473,6 +480,7 @@ view.on('changehtmlcss', function(pane) {
 
 view.on('run', runAction);
 
+//Runs the code in the editor pane
 function runAction() {
   var doc = view.getPaneEditorData(paneatpos('left'));
   if (!doc) {
@@ -647,11 +655,13 @@ guide.on('guideurl', function(guideurl) {
   readNewUrl.suppress = false;
 });
 
+//Creates a hash based on the guideurl passed in
 function guideHash(guideurl) {
   return guideurl ? '#guide=' + (/[&#%]/.test(guideurl) ?
       encodeURIComponent(guideurl) : encodeURI(guideurl)) : '';
 }
 
+//Updates the URL that's shown to the user
 function updateVisibleUrl(baseurl, guideurl, addHistory) {
   model.guideUrl = guideurl;
   view.setVisibleUrl(baseurl + guideHash(guideurl), addHistory);
@@ -781,6 +791,7 @@ view.on('splitscreen', function() {
 
 var overwriteProtected = true;
 
+//A function that shows an overwrite dialog. takes in two callback functions on whether "yes" or "no" is selected on the dialog
 function showOverwriteDialog(opts, yes, no){
 			if(opts === { }){
 		    var opts = {
@@ -805,6 +816,7 @@ function showOverwriteDialog(opts, yes, no){
 			view.showDialog(opts);
 }
 
+//The "base" save functino which calls other save functions in special cases
 function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   if (nosaveowner()) {
     return;
@@ -934,6 +946,7 @@ function saveAction(forceOverwrite, loginPrompt, doneCallback) {
   
 }
 
+//Creates a key based on the username and password passed in
 function keyFromPassword(username, p) {
   if (!p) { return ''; }
   if (/^[0-9]{3}$/.test(p)) { return p; }
@@ -945,6 +958,7 @@ function keyFromPassword(username, p) {
   return key;
 }
 
+//Used to check how complex a password is
 function letterComplexity(s) {
   var maxcount = 0, uniqcount = 0, dupcount = 0, last = null, count = {}, j, c;
   for (j = 0; j < s.length; ++j) {
@@ -961,6 +975,7 @@ function letterComplexity(s) {
   return uniqcount && (uniqcount / (maxcount + dupcount));
 }
 
+//A more specialized save function which is called when you are not in a user's saved file, or when you choose to switch users from a user's saved file
 function signUpAndSave(options) {
   if (!options) { options = {}; }
   var doc = view.getPaneEditorData(paneatpos('left'));
@@ -1296,6 +1311,7 @@ function signUpAndSave(options) {
   });
 }
 
+//A more specialized save function that coppies and saves the file off as a new file
 function saveAs() {
   if (!model.username) {
     signUpAndSave();
@@ -1397,6 +1413,7 @@ function saveAs() {
   });
 }
 
+//A more specialized save function which is called when you are in a user's saved file
 function logInAndSave(filename, newdata, forceOverwrite,
                       noteclean, loginPrompt, doneCallback) {
   if (!filename || !newdata || nosaveowner()) {
@@ -1453,6 +1470,7 @@ function logInAndSave(filename, newdata, forceOverwrite,
   });
 }
 
+//Checks to see if a special case needs to happen when saving (like if there is a newer save on the server or you don't have an active connection to the server and will only be backing up to local cookies)
 function handleSaveStatus(status, filename, noteclean) {
   if (status.newer) {
     view.flashNotification('Newer copy on network. ' +
@@ -1490,12 +1508,14 @@ function handleSaveStatus(status, filename, noteclean) {
   }
 }
 
+//Saves a cookie for the login information
 function saveLoginCookie() {
   cookie('login', (model.username || '') + ':' + (model.passkey || ''),
          { expires: 1, path: '/' });
 }
 
 var requestedBlockMode = null;
+//Changes the editor pane between text and block modes depending on what state they are set to
 function loadBlockMode() {
   var result = requestedBlockMode;
   if (result === null) {
@@ -1510,6 +1530,7 @@ function loadBlockMode() {
   return result;
 }
 
+//Updates the requested block mode to "on"
 function saveBlockMode(on) {
   requestedBlockMode = on;
   if (model.ownername != 'frame') {
@@ -1517,6 +1538,7 @@ function saveBlockMode(on) {
   }
 }
 
+//Loads the default metadata into the pane metadata
 function loadDefaultMeta() {
   if (model.ownername == 'frame') {
     return null;
@@ -1529,6 +1551,7 @@ function loadDefaultMeta() {
   return null;
 }
 
+//Updates the default metadata for loadDefaultMeta()
 function saveDefaultMeta(meta) {
   if (model.ownername == 'frame') {
     return;
@@ -1548,6 +1571,7 @@ function saveDefaultMeta(meta) {
   }
 }
 
+//Chooses a filename for new files based on what's saved in the directory
 function chooseNewFilename(dirlist) {
   if (!dirlist) { return 'unutitled'; }
   if (dirlist.length === 0) { return 'first';}
@@ -1565,6 +1589,7 @@ function chooseNewFilename(dirlist) {
 
 view.on('link', handleDirLink);
 
+//Handles links to direct files, loading them from the server and into the needful pane
 function handleDirLink(pane, linkname) {
   var base = model.pane[pane].filename;
   if (base === null) { return; }
@@ -1649,6 +1674,7 @@ view.on('done', function() {
   doneWithFile(modelatpos('left').filename);
 });
 
+//Appears to handle the "back" action... somehow...
 function doneWithFile(filename) {
   if (!filename || !model.ownername) {
     if (window.location.href ==
@@ -1765,6 +1791,7 @@ view.on('rename', function(newname) {
 
 view.on('popstate', readNewUrl);
 
+//Used to move a file (when in a user's saved file and logged out)
 function logInAndMove(filename, newfilename, completeRename) {
   if (!filename || !newfilename) {
     return;
@@ -1800,6 +1827,7 @@ function logInAndMove(filename, newfilename, completeRename) {
   });
 }
 
+//Notes if a file (at position) is unsaved
 function noteIfUnsaved(position) {
   var m = modelatpos(position).data;
   if (m && m.unsaved) {
@@ -1812,6 +1840,8 @@ function noteIfUnsaved(position) {
   }
 }
 
+//Switches where the panes are in the model by moving each one a step left
+//As there are 4 models, this means that back goes to right, right goes to center, center goes to left and left goes to back 
 function rotateModelLeft(addHistory) {
   debug.bindframe(null);
   view.rotateLeft();
@@ -1822,6 +1852,8 @@ function rotateModelLeft(addHistory) {
   updateTopControls(addHistory);
 }
 
+//Same as rotateModelLeft, but goes the other direction
+//Back goes to left, left goes to center, center goes to right, and right goes to back
 function rotateModelRight(addHistory) {
   debug.bindframe(null);
   view.rotateRight();
@@ -1831,17 +1863,20 @@ function rotateModelRight(addHistory) {
   updateTopControls(addHistory);
 }
 
+//Checks if the File passed in (candidate) is within the directory passed in (base)
 function isFileWithin(base, candidate) {
   if (base.length && !/\/%/.test(base)) { base += '/'; }
   return candidate.length > base.length &&
       candidate.indexOf(base) === 0;
 }
 
+//Checks for all possible cases of "false" that could be being passed around
 function falsish(s) {
   return !s || s == '0' || s == 'false' || s == 'none' || s == 'null' ||
          s == 'off' || s == 'no';
 }
 
+//Determines what should be going on when a new URL is loaded
 function readNewUrl(undo) {
   if (readNewUrl.suppress) {
     return;
@@ -2036,6 +2071,7 @@ function readNewUrl(undo) {
   loadFileIntoPosition('left', filename, isdir, isdir, afterLoad);
 }
 
+//Loads data for "left" panel from the network
 function directNetLoad() {
   var pos = 'left';
   var filename = modelatpos(pos).filename;
@@ -2048,10 +2084,12 @@ view.on('netload', directNetLoad);
 
 var loadNumber = 0;
 
+//Increments loadNumber
 function nextLoadNumber() {
   return ++loadNumber;
 }
 
+//Clears out a model at the passed in position
 function cancelAndClearPosition(pos) {
   debug.bindframe(null);
   view.clearPane(paneatpos(pos), false);
@@ -2063,6 +2101,7 @@ function cancelAndClearPosition(pos) {
   modelatpos(pos).running = false;
 }
 
+//Checks to see if we can use instruments on this browser
 function instrumentCode(code, language) {
   try {
     if (language === 'javascript') {
@@ -2096,6 +2135,7 @@ function instrumentCode(code, language) {
   return code;
 }
 
+//runs the code at the passed in position in a program pane
 function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {
@@ -2125,6 +2165,7 @@ function runCodeAtPosition(position, doc, filename, emptyOnly) {
   }, 1);
 }
 
+//Determines whether we are sorting the directory by date or not by default
 function defaultDirSortingByDate() {
   if (!specialowner()) return false;
   try {
@@ -2135,6 +2176,7 @@ function defaultDirSortingByDate() {
   }
 }
 
+//Sets what method we are by default sorting the directory by
 function setDefaultDirSortingByDate(f) {
   try {
     if (f) {
@@ -2146,6 +2188,7 @@ function setDefaultDirSortingByDate(f) {
   }
 }
 
+//Creates a new file into the position that's passed in (generally left)
 function createNewFileIntoPosition(position, filename, text, meta) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -2168,7 +2211,7 @@ function createNewFileIntoPosition(position, filename, text, meta) {
   logCodeEvent('new', filename, text, mode, view.getPaneEditorLanguage(pane));
 }
 
-
+//Loads a file into the passed in position (generally left)
 function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   var pane = paneatpos(position);
   var mpp = model.pane[pane];
@@ -2235,6 +2278,7 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   }
 };
 
+//Gives information needed to sort the items passed in by date
 function sortByDate(a, b) {
   if (b.mtime != a.mtime) {
     return b.mtime - a.mtime;
@@ -2242,6 +2286,7 @@ function sortByDate(a, b) {
   return sortByName(a, b);
 }
 
+//Gives the information to sort the items passed in by name
 function sortByName(a, b) {
   var aName = a.name.toLowerCase();
   var bName = b.name.toLowerCase();
@@ -2255,6 +2300,7 @@ function sortByName(a, b) {
   return 0;
 }
 
+//Renders the directory in the passed in position
 function renderDirectory(position) {
   cache.clear();
   var pane = paneatpos(position);
@@ -2265,12 +2311,13 @@ function renderDirectory(position) {
   updateTopControls(false);
 }
 
-
+//Updates the sorting of a directory (generally a rendered directory)
 function updateSortResults(pane) {
   view.setPaneLinks(pane,getUpdatedLinksArray(pane));
   updateTopControls(false);
 }
 
+//Updates the items in a directory during a search of said directory 
 function updateSearchResults(pane, search, cb) {
   search = search ? search.toLowerCase() : '';
   var mpp = model.pane[pane];
@@ -2316,6 +2363,7 @@ function updateSearchResults(pane, search, cb) {
   }
 }
 
+//Gets an array of links from the pane that's been passed in (generally a directory)
 function getUpdatedLinksArray(pane) {
   var mpp = model.pane[pane];
   var m = mpp.data;
@@ -2390,6 +2438,7 @@ function isEmptyDoc(doc) {
         (!doc.meta.css || !doc.data.css.trim()))));
 }
 
+//Shortens a passed in URL
 function shortenUrl(url, cb) {
   var reqObj = {
     dataType: 'json',
@@ -2420,6 +2469,7 @@ function shortenUrl(url, cb) {
   }
 }
 
+//Adds a cookie into the browser
 function cookie(key, value, options) {
   // write
   if (value !== undefined) {

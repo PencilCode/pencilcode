@@ -1,0 +1,7 @@
+This top section ("down to var model = window.pencilcode.model = {") is loading in all the other files of Pencilcode and getting ready for using them in the rest of the file.
+
+model is being built as a nulled out object which will later be filled out
+
+The rest of these functions will be commented inline, anything that should be noted across the entire file will be put in this file. 
+
+view.on is from the view.js file, it sets up event listeners generally as on click functionality
