@@ -1,14 +1,24 @@
 //////////////////////////////////////////////////////////////////////////r
 // ERROR MESSAGE ADVISOR SUPPORT
 ///////////////////////////////////////////////////////////////////////////
-
+/** Counts how many backslashes are in a line and returns the number found
+* @param {string} line
+* @param {int} offset
+* @return {int} returns the number of backslashes in the line starting offset from the begining of it
+*/
 function backslashCount(line, offset) {
   for (var j = offset - 1; j > 0; --j) {
     if (line.charAt(j) != '//') break;
   }
   return offset - j - 1;
 }
-
+/** Finds the matching quote for the quote that's passed in, starting at offset
+* @param {string} line
+* @param {char} quoteChar
+* @param {int} offset
+* @param {bool} backslashable
+* @return {int} returns the last position in line that is the first matching quote.
+*/
 function findMatchingQuote(line, quoteChar, offset, backslashable) {
   while (true) {
     var location = line.indexOf(quoteChar, offset);
@@ -21,7 +31,10 @@ function findMatchingQuote(line, quoteChar, offset, backslashable) {
   }
 }
 
-// Scan a program, locating
+/** Scan a program, locating the first mismatched quote within the lines passed in
+* @param {string[]} lines
+* @return {int} first line in lines that has a mismached quote
+**/
 function firstLineWithMismatchedQuote(lines) {
   var quoteChar = null;
   var quoteLine = -1;
@@ -63,6 +76,12 @@ function firstLineWithMismatchedQuote(lines) {
   return null;
 }
 
+/** Takes in an error message and provdes advice on how to fix the error
+* @param {string} msg
+* @param {int} line
+* @param {string} program
+* @return {undefined}
+**/
 function errorAdvice(msg, line, program) {
   var advice, m, msg, r;
   var lines = program.split('\n'), index = line - 1, text = '';

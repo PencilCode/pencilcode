@@ -1841,7 +1841,7 @@ function noteIfUnsaved(position) {
 }
 
 //Switches where the panes are in the model by moving each one a step left
-//As there are 4 models, this means that back goes to right, right goes to center, center goes to left and left goes to back 
+//As there are 3 models, this means that back goes to right, right goes to left and left goes to back 
 function rotateModelLeft(addHistory) {
   debug.bindframe(null);
   view.rotateLeft();
@@ -1853,7 +1853,7 @@ function rotateModelLeft(addHistory) {
 }
 
 //Same as rotateModelLeft, but goes the other direction
-//Back goes to left, left goes to center, center goes to right, and right goes to back
+//Back goes to left, left goes to right, and right goes to back
 function rotateModelRight(addHistory) {
   debug.bindframe(null);
   view.rotateRight();
@@ -2135,7 +2135,7 @@ function instrumentCode(code, language) {
   return code;
 }
 
-//runs the code at the passed in position in a program pane
+//runs the code at the passed in position in a program pane, internal function, called by other functions that are setup as callbacks on other actions
 function runCodeAtPosition(position, doc, filename, emptyOnly) {
   var m = modelatpos(position);
   if (!m.running) {

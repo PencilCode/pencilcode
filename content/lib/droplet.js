@@ -65885,6 +65885,7 @@ Editor.prototype.endDrag = function() {
       return x.type !== 'socketStart';
     });
   }
+  var val = this.draggingBlock.start.next._value;
   this.draggingBlock = null;
   this.draggingOffset = null;
   this.lastHighlight = null;

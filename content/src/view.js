@@ -13,6 +13,12 @@ var $              = require('jquery'),
     ZeroClipboard  = require('ZeroClipboard'),
     FontLoader     = require('FontLoader');
 
+/**
+* Takes in a string and makes it URL friendly
+*
+* @param {string} s
+* @returns {string} 
+*/
 
 function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
@@ -206,24 +212,44 @@ $(window).on('resize.editor', function() {
   $('.hpanel').trigger('panelsize');
 });
 
+/** Checks to see if subscribers exist
+* @returns {bool} whether there are or are not subscribers
+*/
 function hasSubscribers() {
   return state.subscribers.length > 0;
 }
 
+/** Pushes an event to all subscribers
+* @param {function} method
+* @param {array[arguments for method]} args
+* @param {string} requestid
+* @returns {undefined} 
+*/
 function publish(method, args, requestid){
   for (var j = 0; j < state.subscribers.length; ++j) {
     state.subscribers[j](method, args, requestid);
   }
 }
 
+/** Finds the paneId at Position
+* @param {string} position
+* @returns {string} The paneId at position
+*/
 function paneid(position) {
   return $('.' + position).find('.pane').attr('id');
 }
 
+/** Finds the position of paneId
+* @param {string} id
+* @returns {string} The position of paneId
+*/
 function panepos(id) {
   return $('#' + id).closest('.panebox').attr('class').replace(/\s|panebox/g, '');
 }
 
+/** Constructor for panes
+* @returns {object} a freshly initialized pane
+*/
 function initialPaneState() {
   return {
     editor: null,       // The ace editor instance.
@@ -238,6 +264,11 @@ function initialPaneState() {
   };
 }
 
+/** Adds a callback to a tag
+* @param {string} tag
+* @param {function} callback
+* @returns {undefined}
+*/
 function setOnCallback(tag, cb) {
   if (state.callbacks[tag] == null) {
     state.callbacks[tag] = [];
@@ -245,6 +276,11 @@ function setOnCallback(tag, cb) {
   state.callbacks[tag].push(cb);
 }
 
+/** Fires an event to all callbacks on a tag
+* @param {string} tag
+* @param {array[arguments to pass to all callbacks]} args
+* @returns {undefined}
+*/
 function fireEvent(tag, args) {
   if (tag in state.callbacks) {
     var cbs = state.callbacks[tag].slice();
@@ -259,6 +295,11 @@ function fireEvent(tag, args) {
   }
 }
 
+/** Changes the URL in the browser and optionally adds the change to browser history
+* @param {string} targetUrl
+* @param {bool} addToHistory
+* @returns {undefined}
+*/
 function setVisibleUrl(targetUrl, addToHistory) {
   var currentDepth = history.state && history.state.depth || 0;
   var currentUrl = history.state && history.state.current || null;
@@ -336,6 +377,10 @@ $('body').on('keydown', function(e) {
   }
 });
 
+/** Pushes keydown events to Editor when it doesn't have focus
+* @param {object} keydown_event
+* @returns {undefined}
+*/
 function forwardCommandToEditor(keydown_event) {
   // Only forward the command if an editor is present and it
   // does not already have focus.
@@ -365,6 +410,11 @@ $('#notification').on('click', 'a', function(e) {
   }
 });
 
+/** flashes a notification to the top of the screen and optionally starts a loading indicator
+* @param {string} text
+* @param {bool} loading
+* @returns {undefined}
+*/
 function flashNotification(text, loading) {
   var marker = Math.random();
   var hidefunc = function(e) {
@@ -393,6 +443,9 @@ function flashNotification(text, loading) {
   });
 }
 
+/** dismisses the visible notification at the top of the screen
+* @returns {undefined}
+*/
 function dismissNotification() {
   if ($('#notification').is(':visible')) {
     $('#notification').removeData('marker');
@@ -401,6 +454,10 @@ function dismissNotification() {
   }
 }
 
+/** Flashes the specified button
+* @param {string} id
+* @returns {undefined}
+*/
 function flashButton(id) {
   var button = $('#' + id).closest('button'),
       bg = button.css('backgroundColor'),
@@ -416,9 +473,11 @@ function flashButton(id) {
 ///////////////////////////////////////////////////////////////////////////
 // FILENAME AND RENAMING
 ///////////////////////////////////////////////////////////////////////////
-
-function selectEndOf(contentEditableElement)
-{
+/** Selects the end of an element
+* @param {object} contentEditableElement
+* @returns {undefined}
+*/
+function selectEndOf(contentEditableElement) {
   var range,selection;
   if (document.createRange) {
     range = document.createRange();
@@ -435,6 +494,12 @@ function selectEndOf(contentEditableElement)
   }
 }
 
+/** Selects characters in node that is range size starting charsFromBegin into the node
+* @param {int} range
+* @param {object} node
+* @param {int} charsFromBegin
+* @returns {undefined}
+*/
 function setRangeStart(range, node, charsFromBegin) {
   if (node.firstChild) {
     var count = 0;
@@ -454,6 +519,12 @@ function setRangeStart(range, node, charsFromBegin) {
   }
 }
 
+/** Selects characters in node that is range size starting charsFromEnd from the end of the node
+* @param {int} range
+* @param {object} node
+* @param {int} charsFromEnd
+* @returns {undefined}
+*/
 function setRangeEnd(range, node, charsFromEnd) {
   if (node.lastChild) {
     var count = 0;
@@ -473,6 +544,12 @@ function setRangeEnd(range, node, charsFromEnd) {
   }
 }
 
+/** Selects a characters in contentEditableElement between beginOffset and endOffset
+* @param {object} contentEditableElement
+* @param {int} beginOffset
+* @param {int} endOffset
+* @returns {undefined}
+*/
 function selectContentsOf(contentEditableElement, beginOffset, endOffset) {
   var range,selection;
   if (document.createRange) {
@@ -514,9 +591,13 @@ $('#filename').on('keypress keydown keyup input', function(e) {
   if (text == '') { sel.html('&nbsp;'); }
 });
 
-function fixTypedFilename(enteredtext) {
-  if (!enteredtext) { return enteredtext; }
-  return enteredtext.replace(/\s|\xa0|[^\w\/.-]/g, '')
+/** Removes characters from the string entered that are not allowed
+* @param {string} enteredText
+* @returns {string}
+*/
+function fixTypedFilename(enteredText) {
+  if (!enteredText) { return enteredText; }
+  return enteredText.replace(/\s|\xa0|[^\w\/.-]/g, '')
       .replace(/^\/*/, '').replace(/\/\/+/g, '/');
 }
 
@@ -548,6 +629,10 @@ $('#owner').on('click', function(e) {
   }
 });
 
+/** Updates the parent link of elt based on the filename
+* @param {object} elt
+* @returns {undefined}
+*/
 function fixParentLink(elt) {
   var filename = window.location.pathname;
   if (filename.indexOf('/') >= 0) {
@@ -613,6 +698,10 @@ $('#buttonbar').on('change', 'input[type=checkbox]', function(e) {
 
 // buttonlist should be
 // [{label:, id:, callback:, checkbox:, checked:, disabled:, title:}]
+/** Shows the specified buttons
+* @param {array} buttonList
+* @returns {undefined}
+*/
 function showButtons(buttonlist) {
   var bar = $('#buttonbar');
   var html = '';
@@ -666,6 +755,11 @@ function showButtons(buttonlist) {
   $('#buttonbar button.splitmenu li').tooltipster({position: 'left'});
 }
 
+/** Globally enables/disables the specified button whether it is shown or not
+* @param {string} id
+* @param {bool} enable
+* @returns {undefined}
+*/
 function enableButton(id, enable) {
   if (enable) {
     var inp = $('#' + id).removeAttr('disabled');
@@ -675,6 +769,9 @@ function enableButton(id, enable) {
 }
 
 // Centers the middle button div using javascript.
+/** Centers the middle button 
+* @returns {undefined}
+*/
 function centerMiddle() {
   var m = $('#middle');
   // Horizontal center taking into account the button width.
@@ -688,6 +785,10 @@ function centerMiddle() {
 
 $(window).on('resize.middlebutton', centerMiddle);
 
+/** Determines which middle button to show (including none)
+* @param {string} which
+* @returns {undefined}
+*/
 function showMiddleButton(which) {
   if (which == 'run') {
     var html,
@@ -733,7 +834,10 @@ function showMiddleButton(which) {
   $('#middle button').tooltipster();
 }
 
-// Show thumbnail under the save button.
+/** Shows thumbnail from imageDataUrl under the save button
+* @param {string} imageDataUrl
+* @returns {undefined}
+*/
 function flashThumbnail(imageDataUrl) {
   if (!imageDataUrl) { return; }
   // Destroy the original title tooltip once there is a thumbnail.
@@ -754,7 +858,10 @@ function flashThumbnail(imageDataUrl) {
 ///////////////////////////////////////////////////////////////////////////
 // SHARE DIALOG
 ///////////////////////////////////////////////////////////////////////////
-
+/** Shows the share dialog
+* @param {array} opts - an optional list of options that will be passed into the share dialog
+* @returns {undefined}
+*/
 function showShareDialog(opts) {
   if (!opts) {
     opts = { };
@@ -883,6 +990,10 @@ function showShareDialog(opts) {
   showDialog(opts);
 }
 
+/** Shows a generic dialog defined by opts
+* @param {array} opts - a NON-optional array of options that describes the dialog to be shown
+* @returns {undefined}
+*/
 function showDialog(opts) {
   var overlay = $('#overlay');
   if (!opts) { opts = {}; }
@@ -998,7 +1109,10 @@ function showDialog(opts) {
 ////////////////////////////////////////////////////////////////////////////
 // LOGIN DIALOG
 ///////////////////////////////////////////////////////////////////////////
-
+/** Shows the login dialog
+* @param {array} opts
+* @returns {undefined}
+*/
 function showLoginDialog(opts) {
   if (!opts)
     opts = { };
@@ -1086,10 +1200,14 @@ function showLoginDialog(opts) {
 ///////////////////////////////////////////////////////////////////////////
 // PANE MANAGEMENT
 ///////////////////////////////////////////////////////////////////////////
-
-function setPreviewMode(shown, noanimation) {
+/** Sets up a preview in a pane
+* @param {bool} shown
+* @param {bool} noAnimation
+* @returns {undefined}
+*/
+function setPreviewMode(shown, noAnimation) {
   var change = (shown != state.previewMode);
-  var delay = (noanimation || !change) ? 0 : 400;
+  var delay = (noAnimation || !change) ? 0 : 400;
   if (shown) {
     $('#middle').removeClass('rightedge');
     $('.right').animate({left: '50%', width: '50%'}, delay);
@@ -1112,10 +1230,17 @@ function setPreviewMode(shown, noanimation) {
   state.previewMode = shown;
 }
 
+/** returns a string that looks like this # + name + panebox
+* @param {string} name
+* @returns {string}
+*/
 function panelParts(name) {
   return '#' + name + 'panebox';
 }
 
+/** switches the three panes around in a leftwards manner
+* @returns {undefined}
+*/
 function rotateLeft() {
   var idb = paneid('back');
   var idl = paneid('left');
@@ -1133,6 +1258,9 @@ function rotateLeft() {
   setPrimaryFocus();
 }
 
+/** switches the three panes around in a rightwards manner
+* @returns {undefined}
+*/
 function rotateRight() {
   var idb = paneid('back');
   var idl = paneid('left');
@@ -1153,7 +1281,15 @@ function rotateRight() {
 ///////////////////////////////////////////////////////////////////////////
 // RUN PREVIEW PANE
 ///////////////////////////////////////////////////////////////////////////
-
+/** Sets the passed in pane to run passed in HTML code
+* @param {string} pane
+* @param {string} html
+* @param {string} filename
+* @param {string} targetUrl
+* @param {string} fullScreenLink
+* @param {bool} nocode
+* @returns {undefined}
+*/
 function setPaneRunHtml(
     pane, html, filename, targetUrl, fullScreenLink, nocode) {
   clearPane(pane);
@@ -1208,6 +1344,12 @@ function setPaneRunHtml(
   });
 }
 
+/** Evals the passed in code in the passed in pane
+* @param {string} pane
+* @param {string} code
+* @param {string} raw
+* @returns {undefined}
+*/
 function evalInRunningPane(pane, code, raw) {
   var paneState = state.pane[pane];
   if (!paneState.running) { return [null, 'error: not running (wrong state)']; }
@@ -1231,6 +1373,10 @@ function evalInRunningPane(pane, code, raw) {
   }
 }
 
+/** Hides the protractor on the passed in pane
+* @param {string} pane
+* @returns {undefined}
+*/
 function hideProtractor(pane) {
   var paneState = state.pane[pane];
   var preview = $('#' + pane + ' .preview');
@@ -1241,13 +1387,18 @@ function hideProtractor(pane) {
   }
 }
 
-// step is a record of the following form:
-//  startCoords:
-//    pageX:, pageY:, direction:, scale:
-//  endCoords:
-//    pageX:, pageY:, direction:, scale:
-//  command: "fd"
-//  args: [50]
+/** Shows the protractor on the passed in pane
+* @param {string} pane
+* @param {object} step - defined as followed
+* step is a record of the following form:
+*  startCoords:
+*    pageX:, pageY:, direction:, scale:
+*  endCoords:
+*    pageX:, pageY:, direction:, scale:
+*  command: "fd"
+*  args: [50]
+* @returns {undefined}
+*/
 function showProtractor(pane, step) {
   var paneState = state.pane[pane];
   if (!paneState.running) {
@@ -1269,6 +1420,11 @@ function showProtractor(pane, step) {
   labelStep(preview, step);
 }
 
+/** Labels the step distance on the protractor
+* @param {object} preview
+* @param {object} step
+* @returns {undefined}
+*/
 function labelStep(preview, step) {
   if (!step.startCoords) {
     return;
@@ -1347,6 +1503,13 @@ var getScrollbarWidth = function() {
   return width;
 };
 
+/** Sets up the link text in the directory
+* @param {string} pane
+* @param {string[]} links
+* @param {string} filename
+* @param {string} ownername
+* @returns {undefined}
+*/
 function setPaneLinkText(pane, links, filename, ownername) {
   clearPane(pane);
   var paneState = state.pane[pane];
@@ -1357,6 +1520,11 @@ function setPaneLinkText(pane, links, filename, ownername) {
   setVisibilityOfSearchTextField(pane);
 }
 
+/** Sets up the links in the directory
+* @param {string} pane
+* @param {string[]} links
+* @returns {undefined}
+*/
 function setPaneLinks(pane, links) {
   var paneState = state.pane[pane];
   paneState.links = links;
@@ -1375,6 +1543,10 @@ $(window).on('resize.listing', function() {
   }
 });
 
+/** Updates the links on the pane
+* @param {string} pane
+* @returns {undefined}
+*/
 function updatePaneLinks(pane) {
   var j, col, items, width, maxwidth, colcount, colsize, colnum,
       tightwidth, item, figure, thumbnail, directory, colsdone, list;
@@ -1492,6 +1664,10 @@ function updatePaneLinks(pane) {
     }
 })(jQuery);
 
+/** Sets whether the search field is visible or not
+* @param {string} pane
+* @returns {undefined}
+*/
 function setVisibilityOfSearchTextField(pane) {
   var directory = $('#'+pane).find('.directory');
   var panetitle = directory.parent().parent().find('.panetitle');
@@ -1515,6 +1691,10 @@ function setVisibilityOfSearchTextField(pane) {
   }
 }
 
+/** Gets the default thumbnail of the passed in type
+* @param {string} type
+* @returns {undefined}
+*/
 function getDefaultThumbnail(type) {
   var baseUrl = '//' + pencilcode.domain + '/image/';
   var mimeToFilename = {
@@ -1543,7 +1723,11 @@ function getDefaultThumbnail(type) {
 ///////////////////////////////////////////////////////////////////////////
 // ACE EDITOR SUPPORT
 ///////////////////////////////////////////////////////////////////////////
-
+/** Clears the passed in pane
+* @param {string} pane
+* @parame {bool} loading
+* @returns {undefined}
+*/
 function clearPane(pane, loading) {
   var paneState = state.pane[pane];
   if (paneState.dropletEditor && paneState.dropletEditor.destroy) {
@@ -1582,6 +1766,10 @@ function clearPane(pane, loading) {
   $('#' + pane + 'title_text').html('');
 }
 
+/** Determines the mode based on the passed in mime type
+* @param {string} mimeType
+* @returns {undefined}
+*/
 function modeForMimeType(mimeType) {
   if (!mimeType) {
     return 'ace/mode/text';
@@ -1605,6 +1793,10 @@ function modeForMimeType(mimeType) {
   return 'ace/mode/' + result;
 }
 
+/** Determines the droplet mode for passed in mime type
+* @param {string} mimeType
+* @returns {undefined}
+*/
 function dropletModeForMimeType(mimeType) {
   if (!mimeType) {
     return 'ace/mode/text';
@@ -1623,6 +1815,11 @@ function dropletModeForMimeType(mimeType) {
   return result;
 }
 
+/** Determines the palette for the passed in pane
+* @param {object} paneState
+* @param {string} selfname
+* @returns {undefined}
+*/
 function paletteForPane(paneState, selfname) {
   var mimeType = editorMimeType(paneState).replace(/;.*$/, ''),
       basePalette = paneState.palette;
@@ -1648,6 +1845,10 @@ function paletteForPane(paneState, selfname) {
   return [];
 }
 
+/** Determines the droplet options for passed in mime type
+* @param {string} mimeType
+* @returns {undefined}
+*/
 function dropletOptionsForMimeType(mimeType) {
   if (/x-python/.test(mimeType)) {
     return {
@@ -1667,10 +1868,18 @@ function dropletOptionsForMimeType(mimeType) {
   };
 }
 
+/** Determines a uniqueID for the passed in name
+* @param {string} name
+* @returns {undefined}
+*/
 function uniqueId(name) {
   return name + '_' + ('' + Math.random()).substr(2);
 }
 
+/** Updates the title of the passed in pane
+* @param {string} pane
+* @returns {string}
+*/
 function updatePaneTitle(pane) {
   var paneState = state.pane[pane];
   var label = '';
@@ -1746,6 +1955,9 @@ function updatePaneTitle(pane) {
   setVisibilityOfSearchTextField(pane);
 }
 
+/** gets the thumbnail to be shown
+* @returns {object} the thumbnail to be shown
+*/
 function getShowThumb() {
   var showThumb;
   try {
@@ -1762,6 +1974,10 @@ function getShowThumb() {
   return showThumb;
 }
 
+/** sets the thumbnail to be shown
+* @param {object} showThumb
+* @returns {undefined}
+*/
 function setShowThumb(showThumb) {
   try {
     window.localStorage.setItem('showThumb', JSON.stringify(showThumb));
@@ -1770,6 +1986,10 @@ function setShowThumb(showThumb) {
   }
 }
 
+/** determines if the thumbnail should be shown or not
+* @param {string} path
+* @returns {undefined}
+*/
 function shouldShowThumb(path) {
   var layers = path.match(/[^\/]+/g);
   if (!layers) { // Disable on user listing.
@@ -1795,6 +2015,11 @@ function shouldShowThumb(path) {
   }
 }
 
+/** Sets whether a path should show the thumbnail
+* @param {string} path
+* @param {bool} shouldShow
+* @returns {undefined}
+*/
 function setShouldShowThumb(path, shouldShow) {
   var layers = path.match(/[^\/]+/g);
   if (!layers) { // Do not allow setting on user listing.
@@ -1928,6 +2153,10 @@ $('.pane').on('click', '.blocktoggle', function(e) {
   setPaneEditorBlockMode(pane, true,$(this).attr('droplet-editor'));
 });
 
+/** Shows the editor language dialog for the passed in pane
+* @param {string} pane
+* @returns {undefined}
+*/
 function showPaneEditorLanguagesDialog(pane) {
   if (panepos(pane) != 'left') { return; }
   var paneState = state.pane[pane];
@@ -2096,6 +2325,11 @@ function showPaneEditorLanguagesDialog(pane) {
 
 }
 
+/** returns the library in the passed in meta that matches the passed in name
+* @param {object} meta
+* @param {string} name
+* @returns {object}
+*/
 function findLibrary(meta, name) {
   if (!meta.libs) return false;
   for (var j = 0; j < meta.libs.length; ++j) {
@@ -2104,6 +2338,12 @@ function findLibrary(meta, name) {
   return null;
 }
 
+/** Toggles whether the library is enabled or not
+* @param {object} meta
+* @param {object} obj
+* @param {bool} enable
+* @returns {undefined}
+*/
 function toggleLibrary(meta, obj, enable) {
   if (!meta.libs) { meta.libs = []; }
   var j;
@@ -2125,7 +2365,10 @@ function toggleLibrary(meta, obj, enable) {
   }
 }
 
-
+/** Normalizes the carriage returns in the passed in text
+* @param {string} text
+* @returns {undefined}
+*/
 function normalizeCarriageReturns(text) {
   var result = text.replace(/\r\n|\r/g, "\n");
   if (result.length && result.substr(result.length - 1) != '\n') {
@@ -2139,6 +2382,10 @@ function normalizeCarriageReturns(text) {
 // and not good for kids: it toggles between find and replace.
 // This function hacks the binding of repeated Ctrl-F so that it does
 // the safe and logical thing: it does repeated searches.
+/** Changes the ACE editor's default keybinding to make it better for kids`
+* @param {object} editor
+* @returns {undefined}
+*/
 function fixRepeatedCtrlFCommand(editor) {
   // ModifiedSearch creates and shows a SearchBox with a modified
   // when-open-keybinding.
@@ -2201,6 +2448,10 @@ function fixRepeatedCtrlFCommand(editor) {
   }])
 }
 
+/** Counts the number of lines and columns in the text
+* @param {string} text
+* @returns {object} rows/columns in the text
+*/
 function getTextRowsAndColumns(text) {
   var rawlines = text.split('\n');
   var columns = 0;
@@ -2213,6 +2464,11 @@ function getTextRowsAndColumns(text) {
   };
 }
 
+/** Changes the text in the passed in paneState
+* @param {object} paneState
+* @param {string} text
+* @returns {undefined}
+*/
 function changeEditorText(paneState, text) {
   if (!paneState.editor) {
     console.warn('changeEditorText without an editor');
@@ -2262,6 +2518,10 @@ function changeEditorText(paneState, text) {
   paneState.changeHandler();
 }
 
+/** Changes the editor mimeType to that of the passed in paneState
+* @param {object} paneState
+* @returns {undefined}
+*/
 function editorMimeType(paneState) {
   if (!paneState.mimeType) {
     return;
@@ -2272,6 +2532,10 @@ function editorMimeType(paneState) {
   return paneState.mimeType;
 }
 
+/** Checks to see if there are ay errors in the editor
+* @param {object} editor
+* @returns {bool}
+*/
 function editorHasAnyErrors(editor) {
   if (!editor || editor.currentlyUsingBlocks) return false;
   if (editor.aceEditor) { editor = editor.aceEditor; }
@@ -2283,6 +2547,10 @@ function editorHasAnyErrors(editor) {
   return false;
 }
 
+/** Sizes the HTML/CSS panes in the passed in pane
+* @param {string} pane
+* @returns {undefined}
+*/
 function sizeHtmlCssPanels(pane) {
   var box = $('#' + pane).find('.hpanelbox');
   var paneState = state.pane[pane];
@@ -2295,11 +2563,13 @@ function sizeHtmlCssPanels(pane) {
   setupHpanelBox(box);
 }
 
-// Initializes an (ACE) editor into a pane, using the given text and the
-// given filename.
-// @param pane the id of a pane - alpha, bravo or charlie.
-// @param text the initial text to edit.
-// @param filename the filename to use.
+/** Sets up the ACE editor into the passed in pane using the given text and filename
+* @param {string} pane, the id of a pane, alpha, bravo or charlie
+* @param {string} text, initial text to edit
+* @param {string} filename, filename to use
+* @param {bool} useblocks
+* @returns {undefined}
+*/
 function setPaneEditorData(pane, doc, filename, useblocks) {
   clearPane(pane);
   var text = normalizeCarriageReturns(doc.data);
@@ -2483,6 +2753,15 @@ function setPaneEditorData(pane, doc, filename, useblocks) {
   $('#overflow').scrollLeft(0);
 }
 
+/** Sets up subeditors in the passed in pane
+* @param {object} box
+* @param {string} pane
+* @param {object} paneState
+* @param {string} text
+* @param {string} htmlorcss
+* @param {bool} tearDown
+* @returns {undefined}
+*/
 function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   var id = uniqueId(htmlorcss + 'edit');
   box.find('.' + htmlorcss + 'mark').html(
@@ -2495,6 +2774,16 @@ function setupSubEditor(box, pane, paneState, text, htmlorcss, tearDown) {
   setupResizeHandler(container.parent(), editor);
 }
 
+/** Sets up Droplet sub editors in the passed in pane
+* @param {object} box
+* @param {string} pane
+* @param {object} paneState
+* @param {string} text
+* @param {string} htmlorcss
+* @param {bool} tearDown
+* @param {bool} useblocks
+* @returns {undefined}
+*/
 function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, useblocks) {
   var id = uniqueId(htmlorcss + 'edit');
   box.find('.' + htmlorcss + 'mark').html(
@@ -2549,6 +2838,13 @@ function setupDropletSubEditor(box, pane, paneState, text, htmlorcss, tearDown, 
   setupAceEditor(pane, container, aceEditor, "ace/mode/" + htmlorcss, text);
 }
 
+/** Tears down a SubEditor
+* @param {object} box
+* @param {string} pane
+* @param {object} paneState
+* @param {string} htmlorcss
+* @returns {undefined}
+*/
 function tearDownSubEditor(box, pane, paneState, htmlorcss) {
   if (paneState[htmlorcss + 'Editor']) {
     if (paneState[htmlorcss + 'Editor'].destroy)
@@ -2561,6 +2857,14 @@ function tearDownSubEditor(box, pane, paneState, htmlorcss) {
   }
 }
 
+/** Sets up an ACE Editor
+* @param {string} pane
+* @param {string} elt
+* @param {object} editor
+* @param {object} mode
+* @param {string} text
+* @returns {undefined}
+*/
 function setupAceEditor(pane, elt, editor, mode, text) {
   fixRepeatedCtrlFCommand(editor);
   editor.setTheme("ace/theme/chrome");
@@ -2739,10 +3043,19 @@ function setupAceEditor(pane, elt, editor, mode, text) {
   }
 }
 
+/** Checks whether the passed in mimeType supports using blocks
+* @param {string} mimeType
+* @returns {undefined}
+*/
 function mimeTypeSupportsBlocks(mimeType) {
   return /x-pencilcode|coffeescript|javascript|x-python|html/.test(mimeType);
 }
 
+/** Sets the language for the editor in the passed in pane
+* @param {string} pane
+* @param {object} type
+* @returns {undefined}
+*/
 function setPaneEditorLanguageType(pane, type) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
@@ -2759,6 +3072,12 @@ function setPaneEditorLanguageType(pane, type) {
   return true;
 }
 
+/** Sets the options for the blocks in the editor in the passed in pane
+* @param {string} pane
+* @param {object} pal
+* @param {object} modeOptions
+* @returns {undefined}
+*/
 function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return;
@@ -2773,6 +3092,12 @@ function setPaneEditorBlockOptions(pane, pal, modeOptions) {
   }
 }
 
+/** Sets whether the editor is using blocks or not
+* @param {string} pane
+* @param {bool} useblocks
+* @param {object} editor
+* @returns {undefined}
+*/
 function setPaneEditorBlockMode(pane, useblocks, editor) {
   function setMainEditorBlockMode(editor, useblocks) {
     if (editor.currentlyUsingBlocks == useblocks) return false;
@@ -2803,12 +3128,20 @@ function setPaneEditorBlockMode(pane, useblocks, editor) {
   return result;
 }
 
+/** Gets whether the pane's editor is using block mode or not
+* @param {string} pane
+* @returns {bool}
+*/
 function getPaneEditorBlockMode(pane) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return false;
   return paneState.dropletEditor.currentlyUsingBlocks;
 }
 
+/** Gets which language the pane's editor is currently using
+* @param {string} pane
+* @returns {string}
+*/
 function getPaneEditorLanguage(pane) {
   var paneState = state.pane[pane];
   if (!paneState.dropletEditor) return null;
@@ -2818,8 +3151,10 @@ function getPaneEditorLanguage(pane) {
       .replace(/\bx-/, '').replace(/;.*$/, '');
 }
 
-// Kids often have trouble figuring out how to add empty lines at the end.
-// So ensure there is always one empty line at the end of the document.
+/** Ensures there is always at least one empty line at the end of the document
+* @param {object} editor
+* @returns {undefined}
+*/
 function ensureEmptyLastLine(editor) {
   var session = editor.getSession(),
       lines = session.getLength(),
@@ -2837,6 +3172,9 @@ function ensureEmptyLastLine(editor) {
   }
 }
 
+/** Sets the primary focus
+* @returns {undefined}
+*/
 function setPrimaryFocus() {
   var pane = paneid('left');
   var paneState = state.pane[pane];
@@ -2859,6 +3197,11 @@ function setPrimaryFocus() {
   }
 }
 
+/** Sets whether a pane is read only or not
+* @param {string} pane
+* @param {bool} ro
+* @returns {undefined}
+*/
 function setPaneEditorReadOnly(pane, ro) {
   var paneState = state.pane[pane];
   var containers = [];
@@ -2885,6 +3228,11 @@ function setPaneEditorReadOnly(pane, ro) {
   }
 }
 
+/** checks whether two lines are the same while disregarding trailing spaces
+* @param {string} s1
+* @param {string} s2
+* @returns {bool}
+*/
 function sameDisregardingTrailingSpace(s1, s2) {
   if (s1 == s2) return true;
   if (s1.length == s2.length) return false;
@@ -2892,6 +3240,10 @@ function sameDisregardingTrailingSpace(s1, s2) {
   return false;
 }
 
+/** Checks whether the passed in pane is dirty or not
+* @param {string} pane
+* @returns {bool}
+*/
 function isPaneEditorDirty(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) { return false; }
@@ -2908,6 +3260,10 @@ function isPaneEditorDirty(pane) {
   return false;
 }
 
+/** Checks whether the passed in pane is empty or not
+* @param {string} pane
+* @returns {bool}
+*/
 function isPaneEditorEmpty(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) { return false; }
@@ -2926,6 +3282,10 @@ function isPaneEditorEmpty(pane) {
   return true;
 }
 
+/** Updates the meta of the paneState
+* @param {object} paneState
+* @returns {undefined}
+*/
 function updateMeta(paneState) {
   if (!paneState.htmlEditor && !paneState.cssEditor) {
     paneState.meta = filetype.effectiveMeta(paneState);
@@ -2938,6 +3298,11 @@ function updateMeta(paneState) {
     paneState.meta.css = paneState.cssEditor.getValue();
   }
 }
+
+/** Gets the editor data of the passed in pane
+* @param {string} pane
+* @returns {object} the data from the editor in the pane
+*/
 function getPaneEditorData(pane) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -2950,21 +3315,27 @@ function getPaneEditorData(pane) {
   return {data: text, mime: paneState.mimeType, meta: metaCopy };
 }
 
-// Marks a line of the editor using the given CSS class
-// (using 1-based line numbering).
-// Marks are cumulative.  To clear all marks of a given class,
-// call clearPaneEditorMarks.
-// The ACE editor uses an ID number to identify each highlighted line,
-// so to allow unhighlighting, we track the ID of every highlighted.
-// line inside the paneState marked data structure.  The structure
-// is organized as follows:
-// paneState.marked = {
-//   mark-css-class-name: {
-//     zero-based-line-number: ACE-highlighting-id,
-//     ... (one for each highlighted line)
-//   },
-//   (one for each CSS class used for highlighting)
-// }
+/** Marks the passed in line using the passed in CSS class
+* Marks a line of the editor using the given CSS class
+* (using 1-based line numbering).
+* Marks are cumulative.  To clear all marks of a given class,
+* call clearPaneEditorMarks.
+* The ACE editor uses an ID number to identify each highlighted line,
+* so to allow unhighlighting, we track the ID of every highlighted.
+* line inside the paneState marked data structure.  The structure
+* is organized as follows:
+* paneState.marked = {
+*   mark-css-class-name: {
+*     zero-based-line-number: ACE-highlighting-id,
+*     ... (one for each highlighted line)
+*  },
+*   (one for each CSS class used for highlighting)
+* }
+* @param {string} pane
+* @param {int} line
+* @param {string} markclass
+* @returns {undefined}
+*/
 function markPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -3012,8 +3383,14 @@ function markPaneEditorLine(pane, line, markclass) {
   }
 }
 
-// The inverse of markPaneEditorLine: clears a marked line by
-// looking up the ACE marked-line ID and unmarking it.
+/** Clears a marked line by looking up an ACE marked-line ID and unmarking it.
+* The inverse of markPaneEditorLine: clears a marked line by
+* looking up the ACE marked-line ID and unmarking it.
+* @param {string} pane
+* @param {int} line
+* @param {string} markclass
+* @returns {object} the data from the editor in the pane
+*/
 function clearPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -3039,8 +3416,13 @@ function clearPaneEditorLine(pane, line, markclass) {
   delete idMap[zline];
 }
 
-// Clears all marks of the given class.
-// If no markclass is passed, clears all marks of all classes.
+/** Clears all marks of the given class
+* Clears all marks of the given class.
+* If no markclass is passed, clears all marks of all classes.
+* @param {string} pane
+* @param {string} markclass
+* @returns {object} the data from the editor in the pane
+*/
 function clearPaneEditorMarks(pane, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
@@ -3069,6 +3451,11 @@ function clearPaneEditorMarks(pane, markclass) {
   paneState.dropletEditor.clearLineMarks(markclass);
 }
 
+/** Cleans up data and notes that it is cleaned
+* @param {string} pane
+* @param {object} data
+* @returns {undefined}
+*/
 function notePaneEditorCleanData(pane, data) {
   var text = normalizeCarriageReturns(data.data);
   var paneState = state.pane[pane];
@@ -3089,6 +3476,10 @@ function notePaneEditorCleanData(pane, data) {
   }
 }
 
+/** Notes that the line count of the editor is clean
+* @param {string} pane
+* @returns {undefined}
+*/
 function notePaneEditorCleanLineCount(pane) {
   var paneState = state.pane[pane];
   if (paneState.editor) {
@@ -3096,6 +3487,11 @@ function notePaneEditorCleanLineCount(pane) {
   }
 }
 
+/** Notes that a new filename has been assigned to a pane
+* @param {string} pane
+* @param {string} filename
+* @returns {undefined}
+*/
 function noteNewFilename(pane, filename) {
   var paneState = state.pane[pane];
   paneState.filename = filename;
@@ -3134,6 +3530,10 @@ var fontloader = new FontLoader(["Source Code Pro"], {
 });
 fontloader.loadFonts();
 
+/** Runs a callback when CodeFont is loaded
+* @param {function} callback
+* @returns {undefined}
+*/
 function whenCodeFontLoaded(callback) {
   if (codeFontLoaded) {
     callback.call();
@@ -3142,11 +3542,20 @@ function whenCodeFontLoaded(callback) {
   }
 }
 
+/** coppies the JSON from m
+* @param {JSON} m
+* @returns {undefined}
+*/
 function copyJSON(m) {
   if (m == null) { return null; }
   return JSON.parse(JSON.stringify(m));
 }
 
+/** sets up the resize header
+* @param {object} container
+* @param {object} editor
+* @returns {undefined}
+*/
 function setupResizeHandler(container, editor) {
   var needed = false;
   $(container).on('panelsize', function() {
@@ -3159,6 +3568,10 @@ function setupResizeHandler(container, editor) {
   });
 }
 
+/** sets up the HPanel Box
+* @param {object} box
+* @returns {undefined}
+*/
 function setupHpanelBox(box) {
   var hpb = $(box), minh = 29;
   function usePercentHeight(cur) {
