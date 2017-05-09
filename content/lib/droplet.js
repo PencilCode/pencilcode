@@ -63400,6 +63400,7 @@ hook('mousedown', 1, function(point, event, state) {
       this.dumpNodeForDebug(hitTestResult, line);
     }
     if (hitTestResult != null) {
+	  this.blockFrom = "editor";
       this.clickedBlock = hitTestResult;
       this.clickedBlockPaletteEntry = null;
       this.setCursor(this.clickedBlock.start.next);
@@ -63973,6 +63974,7 @@ hook('mousedown', 6, function(point, event, state) {
       entry = ref3[j];
       hitTestResult = this.hitTest(palettePoint, entry.block, this.paletteView);
       if (hitTestResult != null) {
+		this.blockFrom = "palette";
         this.clickedBlock = entry.block;
         this.clickedPoint = point;
         this.clickedBlockPaletteEntry = entry;
@@ -65880,6 +65882,33 @@ hook('mousedown', 10, function() {
 });
 
 Editor.prototype.endDrag = function() {
+  this.draggingBlock.start.next._value;
+  var WhereDropped = "Dropped into Palette, ";
+  if (this.lastHighlight == null) {
+	  WhereDropped = "Dropped into Palette, ";
+  }
+  else if (this.lastHighlight.type == "document") {
+	  WhereDropped = "Dropped into top of Editor, ";
+  }
+  else if (this.lastHighlight.type == "socket") {
+      WhereDropped = "Dropped into Socket, "
+  }
+  else {
+	  WhereDropped = "Dropped into Editor, ";
+  }
+  var node = this.draggingBlock.start;
+  var blockString = "[' "
+  while(node.next != null){
+    if(node.type === "text"){
+      blockString += node._value + " ";
+    }
+    node = node.next;
+  }
+  blockString += "'], " + WhereDropped;
+  //this.blockFrom = "palette";
+  blockString += "Taken from " + this.blockFrom;
+  console.log(blockString);
+  $.get('/log/' + "BlockDropped", blockString);
   if (this.cursorAtSocket()) {
     this.setCursor(this.cursor, function(x) {
       return x.type !== 'socketStart';
