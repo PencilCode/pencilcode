@@ -6,6 +6,11 @@ var NUM_ATTEMPTS = 3;
 
 // Public functions
 var thumbnail = {
+  /** Generates a thumbnail based off the passed in iframe and runs the passed in callback
+  * @param {object} iframe
+  * @param {function} callback
+  * @returns {undefined}
+  */
   generateThumbnailDataUrl: function(iframe, callback) {
     // Get the canvas inside the iframe.
     var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -83,6 +88,12 @@ var thumbnail = {
 }
 
 // Private functions
+/** Gets a URL for the image data 
+* @param {object} canvas
+* @param {int} offsetX
+* @param {int} offsetY
+* @returns {undefined}
+*/
 function getImageDataUrl(canvas, offsetX, offsetY) {
   var w = canvas.width;
   var h = canvas.height;

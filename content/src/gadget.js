@@ -5,6 +5,10 @@
 var $ = require('jquery');
 
 
+/** Creates a stylesheet entry
+* @param {string} item
+* @returns {undefined}
+*/
 function makesheet(item) {
   return $('<div></div>').css({
     position: 'fixed', top:0, left:0,
@@ -15,6 +19,10 @@ function makesheet(item) {
 $('body').on('click',
     '.gadget .topbar button, .gadget .topbar .closer', toggle);
 
+/** Toggles whether the gadget window is shown or not
+* @param {unused?} e
+* @returns {undefined}
+*/
 function toggle(e) {
   var $this = $(this).closest('.gadget'),
       $window = $(window);
@@ -124,6 +132,11 @@ $('body').on('expand', '.gadget', function(e) {
   }
 });
 
+/** Adds a gadget to the gadget window
+* @param {int} id
+* @param {object} opts
+* @returns {undefined}
+*/
 function addGadget(id, opts) {
   var result = $(
     '<div class="gadget"' +

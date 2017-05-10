@@ -15,9 +15,7 @@ var model = window.pencilcode.cache = {
   clear: clearCache
 };
 
-/**
- * Initialize the cache object to the given
- * name only if it's not available already.
+/** Initialize the cache object to the given name only if it's not available already.
  * 
  * @param {string} name
  * @returns {undefined}
@@ -28,8 +26,7 @@ function initializeCache(name) {
   }
 }
 
-/**
- * Delete the cache object mapped with the given name
+/** Delete the cache object mapped with the given name
  * 
  * @param {string} name
  * @returns {undefined}
@@ -38,16 +35,14 @@ function deleteCache(name) {
   delete cache[name];
 }
 
-/**
- * Ceear the complete cache
+/** Ceear the complete cache
  * @returns {undefined}
  */
 function clearCache(){
   cache = window.pencilcode.cacheObj = {};
 }
 
-/**
- * Return the cached value mapped with the given name and key
+/** Return the cached value mapped with the given name and key
  * 
  * @param {string} cacheName
  * @param {string} key
@@ -60,8 +55,7 @@ function get(cacheName, key) {
     return null;
 }
 
-/**
- * Save the given value mapped with the given name and key
+/** Save the given value mapped with the given name and key
  * 
  * @param {type} cacheName
  * @param {type} key

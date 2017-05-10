@@ -1,3 +1,5 @@
+/** Sets up the jquery turtle object for the program window
+*/
 (function(ww) {
   var script = document.currentScript || (function() {
      var scripts = document.getElementsByTagName("script");

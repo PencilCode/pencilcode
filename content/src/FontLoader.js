@@ -13,8 +13,8 @@ if (isIE) {
   }
 }
 
-/**
- * FontLoader detects when web fonts specified in the "fontFamiliesArray" array were loaded and rendered. Then it
+/**FontLoader detects when web fonts specified in the "fontFamiliesArray" array were loaded and rendered. 
+ *Then it
  * notifies the specified delegate object via "fontLoaded" and "fontsLoaded" methods when specific or all fonts were
  * loaded respectively. The use of this functions implies that the insertion of specified web fonts into the
  * document is done elsewhere.
@@ -275,9 +275,7 @@ FontLoader.prototype = {
   }
 };
 
-/**
- * Size object
- *
+/** Instantiates a Size object
  * @param width
  * @param height
  * @constructor
@@ -287,8 +285,7 @@ function Size(width, height) {
   this.height = height;
 }
 
-/**
- * Compares receiver object to passed in size object.
+/** Compares receiver object to passed in size object.
  *
  * @param otherSize
  * @returns {boolean}
@@ -297,8 +294,8 @@ Size.prototype.isEqual = function(otherSize) {
   return (this.width === otherSize.width && this.height === otherSize.height);
 };
 
-/**
- * SizeWatcher observes size of an element and notifies when its size is changed. It doesn't use any timeouts
+/** SizeWatcher observes size of an element and notifies when its size is changed. 
+ *It doesn't use any timeouts
  * to check the element size, when change in size occurs a callback method immediately invoked.
  *
  * To watch for element's size changes the element, and other required elements are appended to a container element

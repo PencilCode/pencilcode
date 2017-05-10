@@ -1,5 +1,9 @@
 (function(module, define) {
 
+/** Infers the script type based on the filename
+* @param {string} filename
+* @returns {object}
+*/
 function inferScriptType(filename) {
   var mime = mimeForFilename(filename);
   if (/^text\/x-pencilcode/.test(mime)) {
@@ -9,13 +13,16 @@ function inferScriptType(filename) {
   return mime.replace(/;.*$/, '');
 }
 
-// Scans for HTML HEAD content at the top, remembering the positions
-// after any start-tags seen and before any legal end-tags.
-// Returns {
-//   pos: { map of tagname -> [index, length] }
-//   hasbody: true if <body> tag starts the content.
-//   bodypos: index of the <body> tag or first content text.
-//
+/** Scans for HTML HEAD content at the top, remembering the positions
+*   after any start-tags seen and before any legal end-tags.
+*   Returns {
+*     pos: { map of tagname -> [index, length] }
+*     hasbody: true if <body> tag starts the content.
+*     bodypos: index of the <body> tag or first content text.
+*
+* @param {string} html
+* @returns {object}
+*/
 function scanHtmlTop(html) {
   var sofar = html, len, match, seen = {}, endpat, scanned = false,
       result = { pos: {} };
@@ -65,8 +72,15 @@ function scanHtmlTop(html) {
   }
 }
 
-// The job of this function is to take: HTML, CSS, and script content,
-// and merge them into one HTML file. (Changed signature to allow generalization of languages)
+/** The job of this function is to take: HTML, CSS, and script content,
+* and merge them into one HTML file. (Changed signature to allow generalization of languages)
+* @param {object} doc
+* @param {string} domain
+* @param {bool} pragmasOnly
+* @param {object} setupScript
+* @param {object} instrumeter
+* @returns {undefined}
+*/
 function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Construct the HTML for running a program.
   var meta = effectiveMeta(doc);
@@ -220,11 +234,25 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   return result;
 }
 
+/** Escapes out HTML in the passed in string
+* @param {string} s
+* @returns {undefined}
+*/
 function escapeHtml(s) {
   return ('' + s).replace(/"/g, '&quot;').replace(/</g, '&lt;')
                  .replace(/>/g, '&gt;').replace(/\&/g, '&amp;');
 }
 
+/** Modifies the passed in data to get ready to preview the data
+* @param {object} doc
+* @param {string} domain
+* @param {string} filename
+* @param {string} targetUrl
+* @param {bool} pragmasOnly
+* @param {object} sScript
+* @param {object} instrumenter
+* @returns {string}
+*/
 function modifyForPreview(doc, domain,
        filename, targetUrl, pragmasOnly, sScript, instrumenter) {
   var mimeType = mimeForFilename(filename), text = doc.data;
@@ -300,7 +328,10 @@ function modifyForPreview(doc, domain,
   return text;
 }
 
-
+/** Sets up a new mime based on the passed in filename
+* @param {string} filename
+* @returns {object}
+*/
 function mimeForFilename(filename) {
   var result = filename && filename.lastIndexOf('.') > 0 && {
     'jpg'  : 'image/jpeg',
@@ -331,6 +362,10 @@ function mimeForFilename(filename) {
   return result;
 }
 
+/** Sets up a new meta based on the input
+* @param {object} input
+* @returns {object}
+*/
 function effectiveMeta(input) {
   var doc;
   var meta;
@@ -370,6 +405,10 @@ function effectiveMeta(input) {
   return meta;
 }
 
+/** Checks to see if the passed in meta is the default meta
+* @param {object} meta
+* @returns {bool}
+*/
 function isDefaultMeta(meta) {
   if (meta == null) return true;
   if (JSON.stringify(effectiveMeta(meta)) ==

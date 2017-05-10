@@ -5,6 +5,11 @@ var $    = require('jquery'),
 var guideShown = false;
 var guideFrame = $('#guidepane iframe');
 
+/** Shows/hides the guide 
+* @param {bool} show
+* @param {bool} instant
+* @returns {undefined}
+*/
 function showGuide(show, instant) {
   if (show === undefined) { show = true; }
   if (show == guideShown) return;
@@ -14,12 +19,19 @@ function showGuide(show, instant) {
   guideShown = show;
 }
 
+/** Checks to see if the guide is visible
+* @returns {bool}
+*/
 function isGuideVisible() {
   return guideShown;
 }
 
 var allowedOrigins = {};
 
+/** Adds an allowed origin for the guide
+* @param {string} url
+* @returns {undefined}
+*/
 function addGuideOrigin(url) {
   var originmatch = /^(https?:\/\/[a-z0-9]+(?:[\.-][a-z0-9]+)*)(?:\/|$)/
         .exec(url);
@@ -28,12 +40,22 @@ function addGuideOrigin(url) {
   }
 }
 
+/** Sets the guide URL
+* @param {string} url
+* @returns {undefined}
+*/
 function setGuideUrl(url) {
   addGuideOrigin(url);
   guideFrame.attr('src', url);
 }
 
 var callbacks = {};
+
+/** Adds a callback to the specified event on the guide
+* @param {string} event
+* @param {function} fn
+* @returns {undefined}
+*/
 function setCallback(event, fn) {
   if (!callbacks.hasOwnProperty(event)) {
     callbacks[event] = [];
@@ -41,6 +63,11 @@ function setCallback(event, fn) {
   callbacks[event].push(fn);
 }
 
+/** Triggers an the passed in event to run all callbacks associated with it
+* @param {string} event
+* @param {[]} args
+* @returns {undefined}
+*/
 function triggerCallback(event, args) {
   var cbarray = callbacks[event];
   for (var j = 0; j < cbarray.length; ++j) {
