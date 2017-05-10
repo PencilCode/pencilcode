@@ -40,11 +40,18 @@ Error.stackTraceLimit = 20;
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
 // having to do with previous sessions are ignored.
-function bindframe(w, p) {
-  if (!targetWindow && !w || targetWindow === w) return;
+/** Resets the debugger state
+* Remembers the targetWindow and clears all logged debug records.
+* Calling bindframe also resets firstSessionId so that callbacks having to do with previous sessions are ignored
+* @param {object} Window
+* @param {object} Pane
+* @returns {undefined}
+*/
+function bindframe(Window, Pane) {
+  if (!targetWindow && !Window || targetWindow === Window) return;
   // Do not bind to nested subframes - only an immediate child frame.
-  if (targetWindow && p !== window) return;
-  targetWindow = w;
+  if (targetWindow && Pane !== window) return;
+  targetWindow = Window;
   cachedParseStack = {};
   debugRecordsByDebugId = {};
   debugRecordsByLineNo = {};
@@ -153,6 +160,9 @@ var debug = window.ide = {
 //////////////////////////////////////////////////////////////////////
 // STUCK PROGRAM SUPPORT
 //////////////////////////////////////////////////////////////////////
+/** Detects whether the running program is stuck and throws errors when a program is determined to be stuck
+* @returns {undefined}
+*/
 function detectStuckProgram() {
   stuckComplexity.lines += 1;
   if (stuckComplexity.lines % 100 != 1) return;
@@ -204,12 +214,30 @@ var showPopupErrorMessage = function (msg) {
   center.innerHTML = msg;
 }
 
+/** Reports SeeEval debug message
+* @param {Unused} method
+* @param {Unused} debugId
+* @param {Unused} length
+* @param {Unused} coordId
+* @param {Unused} elem
+* @param {Unused} args
+* @returns {undefined}
+*/
 function reportSeeeval(method, debugId, length, coordId, elem, args){
   currentDebugId += 1;
   record = {seeeval: true};
   debugRecordsByDebugId[currentDebugId] = record;
 }
 
+/** Reports appear debug message
+* @param {function} method
+* @param {int} debugId
+* @param {Unused} length
+* @param {int} coordId
+* @param {object} elem
+* @param {object[]} args
+* @returns {undefined}
+*/
 function reportAppear(method, debugId, length, coordId, elem, args){
   stuckComplexity.moves += 1;
   var recordD = debugRecordsByDebugId[debugId];
@@ -229,6 +257,15 @@ function reportAppear(method, debugId, length, coordId, elem, args){
   }
 }
 
+/** Reports SeeEval debug message
+* @param {function} method
+* @param {int} debugId
+* @param {Unused} length
+* @param {int} coordId
+* @param {object} elem
+* @param {Unused} args
+* @returns {undefined}
+*/
 function reportResolve(method, debugId, length, coordId, elem, args){
   var recordD = debugRecordsByDebugId[debugId];
   if (recordD) {
@@ -248,6 +285,10 @@ function reportResolve(method, debugId, length, coordId, elem, args){
 // The error event is triggered when an uncaught exception occurs.
 // The err object is an exception or an Event object corresponding
 // to the error.
+/** Reports the passed in error
+* @param {string/object} err
+* @returns {undefined}
+*/
 function reportError(err) {
   var line = editorLineNumberForError(err);
   var m = view.getPaneEditorData(view.paneid('left'));
@@ -256,13 +297,20 @@ function reportError(err) {
   showDebugMessage(advice.message);
 }
 
-function showDebugMessage(m) {
+/** Shows the passed in debug message
+* @param {string} message
+* @returns {undefined}
+*/
+function showDebugMessage(message) {
   var script = (
-    '(' + showPopupErrorMessage.toString() + '(' + JSON.stringify(m) + '));');
+    '(' + showPopupErrorMessage.toString() + '(' + JSON.stringify(message) + '));');
   view.evalInRunningPane(view.paneid('right'), script, true);
 }
 
-
+/** collects the coordinates of the passed in element
+* @param {object} elem
+* @returns {undefined}
+*/
 function collectCoords(elem) {
  try {
    // TODO: when the element is not a turtle with the standard
@@ -276,6 +324,10 @@ function collectCoords(elem) {
  }
 };
 
+/** Displays the protractor for the passed in record
+* @param {object} record
+* @returns {undefined}
+*/
 function displayProtractorForRecord(record) {
   // TODO: generalize this for turtles that are not in the main field.
   var origin = targetWindow.jQuery('#field').offset();
@@ -294,6 +346,10 @@ function displayProtractorForRecord(record) {
 // translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
 // (with each component optional).
 // This function quickly parses this form into a canonicalized object.
+/** parses the transform from the turtle into a canonicalized object
+* @param {string} transform
+* @returns {undefined}
+*/
 function parseTurtleTransform(transform) {
   if (transform === 'none') {
     return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
@@ -311,14 +367,20 @@ function parseTurtleTransform(transform) {
   return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
 }
 
-// Highlights the given line number as a line being traced.
+/** Highlights the given line number as a line being traced.
+* @param {int} line
+* @returns {undefined}
+*/
 function traceLine(line) {
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
 
-// Unhighlights the given line number as a line no longer being traced.
+/** Unhighlights the given line number as a line no longer being traced.
+* @param {int} line
+* @returns {undefined}
+*/
 function untraceLine(line) {
   view.clearPaneEditorLine(view.paneid('left'), line, 'debugtrace');
 }
@@ -335,6 +397,10 @@ function untraceLine(line) {
 //   },...
 // ]
 // Fields that are unknown are present but with value undefined or null.
+/** Parses an Error or ErrorEvent into a specified JSON structure
+* @param {string/object} err
+* @returns {undefined}
+*/
 function parsestack(err) {
   var parsed = [], lines, j, line;
   // This code currently only works on Chrome.
@@ -375,6 +441,10 @@ function parsestack(err) {
 
 // Returns the (1-based) line number for an error object, if any;
 // or returns null if none can be figured out.
+/** Returns a 1-based line number for an error object, returns null if not able to be figured out
+* @param {object} error
+* @returns {int}
+*/
 function editorLineNumberForError(error) {
   if (!error || !targetWindow) return null;
   if (!(error instanceof targetWindow.Error)) {
@@ -422,7 +492,6 @@ function editorLineNumberForError(error) {
 //////////////////////////////////////////////////////////////////////
 // PARSE ERROR HIGHLIGHTING
 //////////////////////////////////////////////////////////////////////
-
 view.on('parseerror', function(pane, err) {
   if (err.loc) {
     // The markPaneEditorLine function uses 1-based line numbering.
@@ -439,7 +508,6 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 // PARSE ERROR HIGHLIGHTING
 //////////////////////////////////////////////////////////////////////
-
 view.on('parseerror', function(pane, err) {
   if (err.loc) {
     // The markPaneEditorLine function uses 1-based line numbering.
@@ -485,6 +553,11 @@ view.on('icehover', function(pane, ev) {
   }
 });
 
+/** Converts a transform into a final coordinate after applying said transform onto the passed in origin
+* @param {object} origin
+* @param {objecr} astransform
+* @returns {object}
+*/
 function convertCoords(origin, astransform) {
   if (!origin) { return null; }
   if (!astransform || !astransform.transform) { return null; }
@@ -499,6 +572,10 @@ function convertCoords(origin, astransform) {
 }
 
 var lastRunTime = 0;
+/** Takes in a command to determine what the stopButton should do (currently only supports "flash" command)
+* @param {string} command
+* @returns {bool}
+*/
 function stopButton(command) {
   if (command === 'flash') {
     lastRunTime = +new Date;
@@ -522,6 +599,9 @@ function stopButton(command) {
   return stopButtonShown;
 }
 
+/** starts the process of polling the main debug window
+* @returns {undefined}
+*/
 function startPollingWindow() {
   if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
@@ -535,6 +615,9 @@ function startPollingWindow() {
   pollTimer = setTimeout(pollForStop, 100);
 }
 
+/** stops the process of polling the main debug window
+* @returns {undefined}
+*/
 function stopPollingWindow() {
   if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
   if (stopButtonShown) {
@@ -543,6 +626,9 @@ function stopPollingWindow() {
   }
 }
 
+/** Attempts to see if the main debug window is able to be stopped
+* @returns {undefined}
+*/
 function pollForStop() {
   pollTimer = null;
   if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||

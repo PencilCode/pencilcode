@@ -4,6 +4,10 @@
 // looking for object names and
 ///////////////////////////////////////////////////////////////////////////
 
+/** Scans multiline quotes and comments and omits those parts of the code in coffeescript code
+* @param {string} code
+* @returns {string} filtered code
+*/
 function stripCSMultiline(code) {
   // Really simple heuristic for coffeescript:
   // Just scan the multiline quote and comment delimeters, and
@@ -46,6 +50,10 @@ function stripCSMultiline(code) {
   return keep.join('');
 }
 
+/** Builds a list of objects in coffeescript code
+* @param {string} code
+* @returns {string[]} 
+*/
 function coffeeObjects(code) {
   code = stripCSMultiline(code);
   var lines = code.split('\n');
@@ -64,6 +72,10 @@ function coffeeObjects(code) {
   return result;
 }
 
+/** Builds a list of objects in JavaScript code
+* @param {string} code
+* @returns {string[]}
+*/
 function jsObjects(code) {
   var lines = code.split('\n');
   var result = [];
@@ -81,6 +93,11 @@ function jsObjects(code) {
   return result;
 }
 
+/** Runs coffeeObjects/jsObjects on the passed in code based on the passed in language
+* @param {string} language
+* @param {string} code
+* @returns {undefined}
+*/
 function scanObjects(language, code) {
   var objects;
   if (/coffee/.test(language)) {
