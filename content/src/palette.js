@@ -881,8 +881,14 @@ module.exports = {
         }, {
           block: "for i in x:\n  pass",
           title: 'Repeat something in a list called x'
+        },{
+          block: "for i in x:\n  pass\nelse:\n pass",
+          title: 'Repeat something in a list called x'
         }, {
           block: 'while x < 10:\n  x+=1',
+          title: 'Repeat while a condition is true'
+        },{
+          block: 'while x < 10:\n  x+=1\nelse:\n pass',
           title: 'Repeat while a condition is true'
         }, {
           block: 'if 0 == 0:\n  pass',
