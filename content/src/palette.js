@@ -1,3 +1,7 @@
+/** Filters the blocks based on the availability of features available in the browsers
+* @param {object[]} a
+* @returns {object[]}
+*/
 function filterblocks(a) {
   // Show 'say' block only on browsers that support speech synthesis.
   if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
@@ -19,8 +23,11 @@ function filterblocks(a) {
   });
 }
 
-// Recursive copy of a plain javascript object, while mapping
-// specified fields.
+/** Recursive copy of a javascript object while mapping specific fields
+* @param {object} obj
+* @param {object} map
+* @returns {object[]}
+*/
 function fieldmap(obj, map) {
   if (!obj || 'object' != typeof obj) {
     return obj;
@@ -44,6 +51,11 @@ function fieldmap(obj, map) {
   return result;
 }
 
+/** Expands the palette into a usable format for the rest of the tool
+* @param {object[]} palette
+* @param {string} thisname
+* @returns {object[]}
+*/
 function expand(palette, thisname) {
   var replacement = !thisname ? '' : (thisname + '.');
   function replacer(s) {

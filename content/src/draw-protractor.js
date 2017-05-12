@@ -8,6 +8,10 @@ var $   = require('jquery'),
 
 eval(see.scope('drawProtractor'));
 
+/** Turns v from any possible degree entered to 0-360 version of said degree measurement
+* @param {numeric} v
+* @returns {int}
+*/
 function to360(v) {
     while (v < 0) {
         v = 7200 - Math.abs(v);
@@ -15,6 +19,11 @@ function to360(v) {
     return v % 360;
 }
 
+/** Renders the protractor "step" onto "canvas"
+* @param {object} canvas
+* @parm {object} step
+* @returns {undefined}
+*/
 function renderProtractor(canvas, step) {
   var ctx = canvas[0].getContext('2d');
   ctx.resetTransform();
@@ -80,6 +89,16 @@ function renderProtractor(canvas, step) {
   ctx.restore();
 }
 
+/** Draws an arc-ed arrow based on the passed in data onto the canvas
+* @param {object} context
+* @param {numeric} cx
+* @param {numeric} cy
+* @param {numeric} radius
+* @param {numeric} fromangle
+* @param {numeric} toangle
+* @param {bool} ccw
+* @returns {undefined}
+*/
 function canvas_arc_arrow(context, cx, cy, radius, fromangle, toangle, ccw) {
   context.arc(cx, cy, radius, fromangle, toangle, ccw);
   var headx = cx + radius * Math.cos(toangle),
@@ -88,6 +107,14 @@ function canvas_arc_arrow(context, cx, cy, radius, fromangle, toangle, ccw) {
       headx, heady, toangle + (ccw ? -1 : 1) * Math.PI / 2, 10);
 }
 
+/** Draws a straight arrow based on the passed in data onto the canvas
+* @param {object} context
+* @param {numeric} fromx
+* @param {numeric} fromy
+* @param {numeric} tox
+* @param {numeric} toy
+* @returns {undefined}
+*/
 function canvas_straight_arrow(context, fromx, fromy, tox, toy){
   var headlen = 10;   // length of head in pixels
   var angle = Math.atan2(toy - fromy, tox - fromx);
@@ -96,6 +123,14 @@ function canvas_straight_arrow(context, fromx, fromy, tox, toy){
   canvas_arrow_head(context, tox, toy, angle, headlen);
 }
 
+/** Draws an arrow head onto the canvas based on the passed in data onto the canvas
+* @param {object} context
+* @param {numeric} x
+* @param {numeric} y
+* @param {numeric} angle
+* @param {numeric} headlen
+* @returns {undefined}
+*/
 function canvas_arrow_head(context, x, y, angle, headlen) {
   context.moveTo(x - headlen * Math.cos(angle - Math.PI/6),
                  y - headlen * Math.sin(angle - Math.PI/6));
@@ -104,16 +139,32 @@ function canvas_arrow_head(context, x, y, angle, headlen) {
                  y - headlen * Math.sin(angle + Math.PI/6));
 }
 
+/** Finds the distance between a and b
+* @param {numeric} a
+* @param {numeric} b
+* @returns {numeric}
+*/
 function pageDistance(a, b) {
   var dx = a.pageX - b.pageX,
       dy = a.pageY - b.pageY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+/** Turns the passed in direction into radians
+* @param {numeric} direction
+* @returns {numeric}
+*/
 function toCanvasRadians(direction) {
   return (((direction % 360) + 270 + 360) % 360) / 180 * Math.PI;
 }
 
+/** Draws a tick based on the data passed in onto the canvas
+* @param {object} ctx
+* @param {numeric} innerRadius
+* @param {numeric} outerRadius
+* @param {numeric} angleRadians
+* @returns {undefined}
+*/
 function drawTick(ctx, innerRadius, outerRadius, angleRadians) {
     // We treat angleRadians clockwise starting horizontal, pointing right
     // (i.e. pi/2 is straight down, pi is to the left, 3pi/2 is straight up).
@@ -122,6 +173,16 @@ function drawTick(ctx, innerRadius, outerRadius, angleRadians) {
     ctx.lineTo(c * outerRadius, s * outerRadius);
 }
 
+/** calls drawTick multiple times along an area based on the data passed in
+* @param {object} ctx
+* @param {numeric} startDegrees
+* @param {numeric} stepDegrees
+* @param {numeric} innerRadius
+* @param {numeric} outerRadius
+* @param {bool} skipMod
+* @param {bool} skipOffset
+* @returns {undefined}
+*/
 function drawTicks(ctx, startDegrees, stepDegrees,
                    innerRadius, outerRadius,
                    skipMod, skipOffset) {
@@ -144,6 +205,11 @@ function drawTicks(ctx, startDegrees, stepDegrees,
     ctx.stroke();
 }
 
+/** Draws axes at the passed in radius onto the canvas
+* @param {object} ctx
+* @param {numeric} radius
+* @returns {undefined}
+*/
 function drawAxes(ctx, radius) {
     ctx.strokeStyle = 'rgba(255, 128, 128, 0.5)';
     ctx.lineWidth = 1;
@@ -172,6 +238,14 @@ function drawAxes(ctx, radius) {
     ctx.stroke();
 }
 
+/** Draws the label on the outside of the protractor
+* @param {object} ctx
+* @param {numeric} radius
+* @param {string} label
+* @param {numeric} angle
+* @param {numeric} zeroAngle
+* @returns {undefined}
+*/
 function drawOuterLabel(ctx, radius, label, angle, zeroAngle) {
     angle = to360(angle);
 
@@ -200,6 +274,12 @@ function drawOuterLabel(ctx, radius, label, angle, zeroAngle) {
     ctx.restore();
 }
 
+/** Draws the protractor on the canvas
+* @param {object} ctx
+* @param {numeric} radius
+* @param {numeric} zeroAngle
+* @returns {int}
+*/
 function drawProtractor(ctx, radius, zeroAngle) {
     ctx.save();
 
