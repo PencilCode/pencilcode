@@ -87,6 +87,7 @@ var py_types = {
     sizes: ['10', '25', '50', '100'],
     scales: ['0.5', '2.0', '3.0'],
     speeds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'],
+	tickCount: ['None', '1', '5', '10' '15', '30', '60'],
    randarg: ['100', '[true, false]', 'normal', 'position', 'color'],
     colors: ['\'red\'', '\'orange\'', '\'yellow\'', '\'green\'', '\'blue\'', '\'purple\'', '\'black\'']
 };
@@ -911,6 +912,12 @@ module.exports = {
           block: "click (e) ->\n  ``",
           title: 'Do something when the mouse is clicked'*/
         }, {
+			block: 'forever(main)',
+			title: 'Runs the function forever as fast as it can'
+		}, {
+			block: 'tick(60, main)',
+			title: 'Runs the function the number of times per second passed in, call tick(None, main) to stop running it'
+		}, {
         block: 'def newfunction(x):\n fd(x)\n rt(90)',
         title: 'Define a new function'
         }, {
@@ -1625,6 +1632,7 @@ module.exports = {
 	'keydown': {color: 'orange'},
 	'click': { color: 'orange' },
 	'forever': { color: 'orange'},
+	'tick': {color: 'orange', dropdown: [py_types.tickCount]}
 	//Sprites
 	'Sprite' : {color:'teal'},
 	'Piano' : {color:'teal'},
