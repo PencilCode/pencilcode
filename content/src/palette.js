@@ -87,7 +87,7 @@ var py_types = {
     sizes: ['10', '25', '50', '100'],
     scales: ['0.5', '2.0', '3.0'],
     speeds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'],
-	tickCount: ['None', '1', '5', '10' '15', '30', '60'],
+	tickCount: ['None', '1', '5', '10', '15', '30', '60'],
    randarg: ['100', '[true, false]', 'normal', 'position', 'color'],
     colors: ['\'red\'', '\'orange\'', '\'yellow\'', '\'green\'', '\'blue\'', '\'purple\'', '\'black\'']
 };
@@ -1632,7 +1632,7 @@ module.exports = {
 	'keydown': {color: 'orange'},
 	'click': { color: 'orange' },
 	'forever': { color: 'orange'},
-	'tick': {color: 'orange', dropdown: [py_types.tickCount]}
+	'tick': {color: 'orange', dropdown: [py_types.tickCount]},
 	//Sprites
 	'Sprite' : {color:'teal'},
 	'Piano' : {color:'teal'},
