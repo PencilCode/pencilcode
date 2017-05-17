@@ -157,10 +157,15 @@ var $builtinmodule = function (name) {
 		return forever(function(){ Sk.misceval.callsim(func); } );
 	});
 	
+	mod.tick = new Sk.builtin.func(function (tps, func) {
+		Sk.builtin.pyCheckArgs("tick", arguments, 2, 2);
+		return tick(Sk.ffi.remapToJs(tps), function(){Sk.misceval.callsim(func)});
+	});
+	
 	mod.keydown = new Sk.builtin.func(function (sprite, key, func) {
        Sk.builtin.pyCheckArgs("keydown", arguments, 3, 3);
 	   if (sprite === Sk.builtin.none.none$) {
-            return keydown(Sk.ffi.remapToJs(key), Sk.misceval.callsim(func));
+            return keydown(Sk.ffi.remapToJs(key), function(){Sk.misceval.callsim(func)});
         }
        //return sprite.keydown(function () { Sk.misceval.callsim(key); });
     });

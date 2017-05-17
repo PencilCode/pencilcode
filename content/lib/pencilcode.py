@@ -378,6 +378,9 @@ def click(t):
 def forever(func):
 	pencilcode_internal.forever(func)
 	
+def tick(tps, func):
+	pencilcode_internal.tick(tps, func)
+	
 ######################
 ## 		Sprites	    ##
 ######################
