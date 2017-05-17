@@ -178,6 +178,11 @@ var $builtinmodule = function (name) {
        //return sprite.keyup(function () { Sk.misceval.callsim(key); });
     });
 	
+	mod.pressed = new Sk.builtin.func(function (key) {
+		Sk.builtin.pyCheckArgs("pressed", arguments, 1, 1);
+		return pressed(Sk.ffi.remapToJs(key));
+	});
+	
 	//Sound/////////////
 	mod.play = new Sk.builtin.func(function (sprite, note) {
        Sk.builtin.pyCheckArgs("play", arguments, 2, 2);
