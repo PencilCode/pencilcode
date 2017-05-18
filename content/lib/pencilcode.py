@@ -373,7 +373,7 @@ def keydown(func, key = None):
 	pencilcode_internal.keydown(None, key, func)
 	
 def pressed(key):
-	pencilcode_internal.pressed(key)
+	return pencilcode_internal.pressed(key)
 
 def click(t):
 	pencilcode_internal.click(None, t)

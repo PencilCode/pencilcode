@@ -180,7 +180,7 @@ var $builtinmodule = function (name) {
 	
 	mod.pressed = new Sk.builtin.func(function (key) {
 		Sk.builtin.pyCheckArgs("pressed", arguments, 1, 1);
-		return pressed(Sk.ffi.remapToJs(key));
+		return Sk.ffi.remapToPy(pressed(Sk.ffi.remapToJs(key)));
 	});
 	
 	//Sound/////////////
