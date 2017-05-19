@@ -17,6 +17,8 @@ var $builtinmodule = function (name) {
     // The doc string cannot be added in code as is usually done in Python, so we set it manually here.
     mod.__doc__ = "This module provides implemention of the Pencil Code internal functions in Python.";
 
+	mod.Window = window
+	
     // Sk.builtin.func creates a Python function out of a JS function
     mod.addalemon = new Sk.builtin.func(function (data) {
         // Check arguments: func name, arguments passed, min number, max number
@@ -477,13 +479,18 @@ var $builtinmodule = function (name) {
     mod.touches = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
-            return Sk.ffi.remap.Py(touches(Sk.ffi.remapToJs(obj)));
+            return Sk.ffi.remapToPy(touches(Sk.ffi.remapToJs(obj)));
         }
-       return Sk.ffi.remap.Py(sprite.touches(Sk.ffi.remapToJs(obj)));
+       return Sk.ffi.remapTOPy(sprite.touches(Sk.ffi.remapToJs(obj)));
     });
     
     mod.inside = new Sk.builtin.func(function (sprite, obj) {
         Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
+		if(Sk.ffi.remapToJs(obj) == "window")
+			if (sprite === Sk.builtin.none.none$) {
+				return Sk.ffi.remapToPy(inside(window));
+			}
+			return Sk.ffi.remapToPy(sprite.inside(window));
         if (sprite === Sk.builtin.none.none$) {
             return Sk.ffi.remap.Py(inside(Sk.ffi.remapToJs(obj)));
         }

@@ -7,6 +7,7 @@ color = 'color'
 colour = 'color'
 gray = 'gray'
 grey = 'gray'
+window = "window"
 
 # The SpriteObject class wraps a jQuery-turtle object so it can be used in Python.
 # This includes Turtle, Sprite, Piano, and Pencil objects.
@@ -109,20 +110,10 @@ class SpriteObject():
         pencilcode_internal.grow(self.jsSpriteObject,a)
     
     def pen(self, color=None, size=None):
-        if color is None:
-            pencilcode_internal.pen(self.jsSpriteObject,'black',1)
-        elif size is None:
-            pencilcode_internal.pen(self.jsSpriteObject,color,1)
-        else:
-            pencilcode_internal.pen(self.jsSpriteObject,color, size)
+		pencilcode_internal.pen(self.jsSpriteObject,color, size)
 
     def dot(self, color=None, size=None):
-        if color is None:
-            pencilcode_internal.dot(self.jsSpriteObject,'black',9)
-        elif size is None:
-            pencilcode_internal.dot(self.jsSpriteObject,color,9)
-        else:
-            pencilcode_internal.dot(self.jsSpriteObject,color,size)
+		pencilcode_internal.dot(self.jsSpriteObject,color,size)
 
     def arrow(self, color, size):
         pencilcode_internal.arrow(self.jsSpriteObject, color, size)	    
@@ -257,20 +248,10 @@ def img(pic):
 	return SpriteObject(pencilcode_internal.img(None, pic))
 
 def pen(color=None, size=None):
-	if color is None:
-		pencilcode_internal.pen(None,'black',1)
-	elif size is None:
-		pencilcode_internal.pen(None,color,1)
-	else:
-		pencilcode_internal.pen(None,color, size)
+	pencilcode_internal.pen(None,color, size)
 
 def dot(color=None, size=None):
-	if color is None:
-		pencilcode_internal.dot(None,'black',9)
-	elif size is None:
-		pencilcode_internal.dot(None,color,9)
-	else:
-		pencilcode_internal.dot(None,color,size)
+	pencilcode_internal.dot(None,color,size)
     
 def arrow(color, size):
     pencilcode_internal.arrow(None, color, size)
