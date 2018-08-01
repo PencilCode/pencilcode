@@ -112,6 +112,10 @@ window.pencilcode.view = {
     $('#' + pane + 'title_text').html(html);
   },
   clearPane: clearPane,
+  closePane: function (pane) {
+    clearPane(pane);
+    showMiddleButton(false);
+  },
   setPaneEditorData: setPaneEditorData,
   changePaneEditorText: function(pane, text) {
     return changeEditorText(state.pane[pane], text);
@@ -533,7 +537,7 @@ $('#filename').on('blur', function() {
   }
   if (fixedtext != state.nameText) {
     state.nameText = fixedtext;
-    fireEvent('rename', [fixedtext]);
+    fireEvent('renameOpenedFile', [fixedtext]);
   }
 });
 
@@ -1389,18 +1393,61 @@ function updatePaneLinks(pane) {
   }
   list = paneState.links;
   if (!list) { return; }
-  
+
   $('#' + pane).html('');
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
+
+  //TODO the right click menu of the opend directory
+  /*var menus=[
+        {
+          name: "new",
+          action: function () {
+            //TODO
+            console.log("directory new action");
+          },
+          options:[
+            {
+              name: "file",
+              action: function () {
+                console.log("directory - new file action");
+                //TODO
+              }
+            },
+            {
+              name: "folder",
+              action: function () {
+                console.log("directory - new folder action");
+                //TODO
+              }
+            }
+          ]
+        },
+        {
+          name: "download",
+          action: function () {
+            console.log("directory download action");
+            //TODO
+          }
+        },
+        {
+          name:"upload",
+          action: function () {
+            console.log("directory upload action");
+            //TODO
+          }
+        }
+      ];
+  directory.addRightClickMenu(menus);*/
 
   // width is full directory width minus padding minus scrollbar width.
   width = Math.floor(directory.width() - getScrollbarWidth());
   col = $('<div class="column"></div>').appendTo(directory);
   for (j = 0; j < list.length; j++) {
+    var itemDiv = $('<div/>' ,{ class: "item-div" }).appendTo(col);
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
       href: list[j].href
-    }).appendTo(col);
+    }).appendTo(itemDiv);
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
@@ -1411,14 +1458,159 @@ function updatePaneLinks(pane) {
         alt: list[j].name
       }).appendTo(figure);
       $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
+
+      //Right click menu is available only in grid view
+      //Add the right click menu for items and ignore the last item which is "Add New"
+      if (j != list.length-1) {
+        addRightClickMenuToItem(item, list[j], list, j, itemDiv);
+      }
     } else {
       $('<span/>', { text: list[j].name }).appendTo(figure);
     }
+    
+    function addRightClickMenuToItem (element, item, list, index, itemDiv) {
+      var itemContent = $(element).find('div');
+
+      function showItemRenameField () {
+        itemContent.find('.caption').remove();
+        $('<input/>').attr({ type: 'text', class: 'item-rename-text-field', value: item.name.replace('/', '') })
+        .on('focusout', function (evt) {
+          var newName = $(this).val();
+          var oldName = item.name;
+
+          setItemAsProcessing(true);
+          fireEvent('rename', [function (data) {
+            if (data.error) {
+              flashNotification(data.error);
+              closeItemRenameField();
+              setItemAsProcessing(false);
+            } else if (!data.processing) {
+              completeRenaming(data, function () {
+                flashNotification("Renamed to " + data.newName);
+                closeItemRenameField();
+                setItemAsProcessing(false);
+              });
+            }
+          }, newName, oldName, pane]);
+          closeItemRenameField();
+        })
+        .on('keypress', function (e) {
+          if (e.which >= 20 && e.which <= 127 && !/[-\._A-Za-z0-9]/.test(
+                String.fromCharCode(e.which))) {
+            console.log('keypress : false');
+            return false;
+          }
+          console.log('keypress : true');
+        })
+        .on('keyup blur', function (e) {
+          var val = $(this).val();
+          var fixed = fixTypedFilename(val);
+          if (fixed != val) {
+            $(this).val(fixed);
+          }
+          if (e.keyCode == 13) {
+            $(this).focusout();
+          }
+        })
+        .appendTo($('<div>', { class: "pencilcode-textfield" }).appendTo(itemContent))
+        .focus().select();
+        element.closeRightClickMenu();
+
+        function completeRenaming (data, callback) {
+          var isDir = item.name.indexOf('/');
+
+          item.name = data.newName + (isDir ? '/' : '');
+          item.link = data.newName;
+          item.href = data.href;
+
+          element.attr('href', item.href);
+          element.data('link', item.link);
+
+          callback && callback();
+        }
+
+        function closeItemRenameField () {
+          itemContent.find('.caption').remove();
+          itemContent.find('.item-rename-text-field').remove();
+          itemContent.append($('<span/>', { text: item.name, class:"caption" }));
+        }
+      }
+
+      function deleteItem (item) {
+        setItemAsProcessing (true);
+        fireEvent('delete', [function (data) {
+          if (data.error) {
+            flashNotification(data.error);
+            setItemAsProcessing (false);
+          } else {
+            flashNotification('Deleted ' + item.name);
+
+            list.splice(index,1);
+            updatePaneLinks(pane);
+          }
+        }, item.name, pane]);
+      }
+
+      function setItemAsProcessing (status) {
+        console.log('setItemAsProcessing : '+status);
+        if (status) {
+          if (!element.hasClass('item-precessing')) {
+            itemDiv.addClass("item-precessing");
+          }
+          if (element.find('.item-processing-animation').length == 0) {
+            itemDiv.append('<div class="item-processing-animation"> <i class="fa fa-spinner fa-pulse fa-5x"></i>  </div>');
+          }
+        } else {
+          itemDiv.removeClass("item-precessing");
+          itemDiv.find('.item-processing-animation').remove();
+        }
+      }
+
+      var menus=[
+            {
+              name: "rename",
+              action:function () {
+                console.log("rename action "+"["+item.name+"]");
+                showItemRenameField(item);
+              }
+            },
+            {
+              name: "delete",
+              action:function () {
+                console.log("delete action" + "[" + item.name + "]");
+                deleteItem(item);
+              }
+            }/*,
+            {
+              name:"download",
+              action:function(){
+                console.log("download action "+"["+item.name+"]");
+                //TODO
+              }
+            },
+            {
+              name:"move to",
+              action:function(){
+                console.log("move action"+"["+item.name+"]")
+                //TODO
+              },
+              //List of options TBD
+              options:[
+                {name:"share",action:function(){console.log("move action to share"+"["+item.name+"]")}},
+                {name:"test",action:function(){console.log("move action to test"+"["+item.name+"]")}},
+                {name:"dev",action:function(){console.log("move action to dev"+"["+item.name+"]")}}
+              ]
+            }*/
+          ];
+
+      element.addRightClickMenu(menus);
+    }
+    
     if (list[j].link) {
       item.data('link', list[j].link);
     }
   }
-  items = directory.find('.item');
+  items = directory.find('.item-div');
   maxwidth = 0;
   for (j = 0; j < items.length; j++) {
     maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
@@ -1483,14 +1675,16 @@ function updatePaneLinks(pane) {
       }
     }, 600);
   });
-  
+    
   setVisibilityOfSearchTextField(pane);
 }
 
 (function($) {
-    $.fn.hasScrollBar = function() {
+    $.fn.extend({
+      hasScrollBar : function() {
         return this.get(0) ? this.get(0).scrollHeight > this.innerHeight() : false;
-    }
+      }
+    });
 })(jQuery);
 
 function setVisibilityOfSearchTextField(pane) {

@@ -78,7 +78,8 @@
     "thumbnail": "./content/src/thumbnail.js",
     "tooltipster": "./content/lib/tooltipster/js/jquery.tooltipster.js",
     "view": "./content/src/view.js",
-    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js"
+    "ZeroClipboard": "./content/lib/zeroclipboard/ZeroClipboard.js",
+    "contextMenu": "./content/lib/pencilcode-contextmenu/src/dev/pencilcode-contextmenu.js"
   },
   "browserify": {
     "transform": [ "browserify-shim" ]
@@ -97,6 +98,10 @@
     "see": {
       "exports": "see",
       "depends": ["jquery:jQuery"]
+    },
+    "contextMenu": {
+      "exports": "$",
+      "depends": ["jquery"]
     }
   }
 }

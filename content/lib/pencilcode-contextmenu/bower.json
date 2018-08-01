@@ -1,0 +1,25 @@
+{
+  "name": "pencilcode-contextmenu",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Dinuka De Silva <dinuka.2013513@iit.ac.lk>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/Dinuka2013513/pencilcode",
+  "moduleType": [
+    "amd",
+    "globals"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "font-awesome": "~4.5.0"
+  }
+}

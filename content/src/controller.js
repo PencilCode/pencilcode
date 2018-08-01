@@ -14,7 +14,8 @@ var $                = require('jquery'),
     pencilTracer     = require('pencil-tracer'),
     icedCoffeeScript = require('iced-coffee-script'),
     drawProtractor   = require('draw-protractor'),
-    cache          = require('cache');
+    cache            = require('cache'),
+    contextMenu      = require('contextMenu');
 
 
 eval(see.scope('controller'));
@@ -1477,37 +1478,152 @@ function doneWithFile(filename) {
   }
 }
 
-view.on('rename', function(newname) {
-  var pp = paneatpos('left');
-  var mp = modelatpos('left');
-  if (mp.filename === newname || nosaveowner()) {
-    // Nothing to do
+view.on('delete', function (callback, filename, pane) {
+  var pp = pane ? pane : paneatpos('left');
+  var mp = modelatpos(posofpane(pp));
+  deleteFile((mp.filename ? mp.filename + '/' : '') + filename, callback);
+});
+
+function deleteFile (filename, callback) {
+  if (model.ownername) {
+    var userValidationError = false;
+    var validateUserLoginPopupCallback;
+    executeDeleteFile();
+
+    function executeDeleteFile () {
+      storage.deleteFile(model.ownername, filename, model.passkey, function (m) {
+        if (validateUserLoginPopupCallback) {
+          validateUserLoginPopupCallback(m)
+        }
+
+        if (m.needauth) {
+          /* Open the login popup only if it has closed
+          */
+          if (!validateUserLoginPopupCallback) {
+            requireLogin("Log in to delete " + filename, null, function (state, validateUserLoginPopup) {
+              validateUserLoginPopupCallback = validateUserLoginPopup;
+              executeDeleteFile(filename, callback);
+            });
+          }
+        } else if (m.error) {
+          callback(m);
+        } else {
+          // If there is a running on the right, bring it along
+          var rp = modelatpos('right');
+          if (rp.filename == filename) {
+            //Destroy the pane
+            view.closePane(paneatpos('right'));
+          }
+          callback(m);
+        }
+      });
+    }
+  }
+}
+
+view.on('rename', function (callback, newname, oldName, pane) {
+  var pp = pane ? pane : paneatpos('left');
+  var mp = modelatpos(posofpane(pp));
+  var oldFileName;
+  var newFileName;
+
+  if (!oldName) {
+    //Takes the currently opened filename as the old name if it has not provided
+    oldName = mp.filename;
+    oldFileName = mp.filename;
+    newFileName = newname;
+  } else {
+    oldFileName = (mp.filename ? mp.filename + '/' : '') + oldName;
+    newFileName = (mp.filename ? mp.filename + '/' : '') + newname;
+  }
+
+  var payload = {
+    mode: 'mv',
+    source: model.ownername + '/' + oldFileName
+  };
+
+  if (oldName === newname || nosaveowner()) {
+    callback({ processing: false, oldName: oldName });
     return;
   }
-  var oldMimeType = filetype.mimeForFilename(mp.filename);
+
+  var oldMimeType = filetype.mimeForFilename(oldName);
+
   // Error cases: go back to original name.
   // Can't rename the root (for now).
   // TODO: check for:
   // - moving directory inside itself
   // etc.
-  if (!mp.filename) {
-    view.setNameText(mp.filename);
+  if (!oldName) {
+    callback({ processing: false, oldName: oldName });
     return;
   }
-  function completeRename(newfile) {
-    view.flashNotification(
-        (newfile ? 'Using name ' : 'Renamed to ') + newname + '.');
+  if (model.passkey) {
+    payload.key = model.passkey;
+  }
+  // Don't attempt to rename files without an owner on disk.
+  // Otherwise, if the file is a directory or it is has an mtime,
+  // it exists on disk and so we first rename it on disk.
+  if (model.ownername && (mp.data.directory || mp.data.mtime)) {
+    if (mp.data.auth && !model.username) {
+      callback({ processing: true, oldName: oldName });
+      logInAndMove(oldFileName, newFileName, renameSuccess);
+    } else {
+      storage.moveFile(
+          model.ownername, oldFileName, newFileName, model.passkey, false,
+      function (m) {
+        if (m.needauth) {
+          callback({ processing: true, oldName: oldName });
+          logInAndMove(oldName, newname, callback);
+          return;
+        }
+        if (m.error) {
+          callback({ oldName: oldName, processing: false, error: m.error });
+        } else {
+          renameSuccess(m);
+        }
+      });
+    }
+  } else {
+    // No mtime means it's purely local - just rename in memory.
+    storage.deleteBackup(mp.filename);
+    renameSuccess({});
+  }
+
+  function renameSuccess (m) {
+    callback({ oldName: oldName, newName: newname, processing: false, saved: m.saved, href: "/edit/" + newFileName });
+  }
+});
+
+view.on('renameOpenedFile', function (newname) {
+  var pp = paneatpos('left');
+  var mp = modelatpos('left');
+
+  view.fireEvent('rename', [completeRename, newname]);
+
+  function completeRename(data, error) {
+    if (error) {
+      // Abort if there is an error.
+      view.flashNotification(error);
+      view.setNameText(data.oldName);
+      return;
+    }
+    if (data.processing) {
+      view.setNameText(data.oldName);
+      return;
+    }
+    view.flashNotification('Renamed to ' + data.newName + '.');
     // If there is a running on the right, bring it along
     var rp = modelatpos('right');
-    if (rp.running && rp.filename == mp.filename) {
-      rp.filename = newname;
+    if (rp.running && rp.filename == data.oldName) {
+      rp.filename = data.newName;
     }
-    mp.filename = newname;
-    view.noteNewFilename(pp, newname);
+    mp.filename = data.newName;
+    view.noteNewFilename(pp, data.newName);
     updateTopControls(false);
     view.setPrimaryFocus();
     var changed = view.isPaneEditorDirty(paneatpos('left')) ||
-        oldMimeType != filetype.mimeForFilename(newname);
+        oldMimeType != filetype.mimeForFilename(data.newName);
     if (changed && model.ownername && !nosaveowner() &&
         !view.isPaneEditorEmpty(paneatpos('left'))) {
       saveAction(true, 'Login to save', function() {
@@ -1520,43 +1636,6 @@ view.on('rename', function(newname) {
       });
     }
   }
-  var payload = {
-    source: model.ownername + '/' + mp.filename,
-    mode: 'mv'
-  };
-  if (model.passkey) {
-    payload.key = model.passkey;
-  }
-  // Don't attempt to rename files without an owner on disk.
-  // Otherwise, if the file is a directory or it is has an mtime,
-  // it exists on disk and so we first rename it on disk.
-  if (model.ownername && (mp.data.directory || mp.data.mtime)) {
-    if (mp.data.auth && !model.username) {
-      view.setNameText(mp.filename);
-      logInAndMove(mp.filename, newname, completeRename);
-    } else {
-      storage.moveFile(
-          model.ownername, mp.filename, newname, model.passkey, false,
-      function(m) {
-        if (m.needauth) {
-          view.setNameText(mp.filename);
-          logInAndMove(mp.filename, newname, completeRename);
-          return;
-        }
-        if (m.error) {
-          // Abort if there is an error.
-          view.flashNotification(m.error);
-          view.setNameText(mp.filename);
-        } else {
-          completeRename();
-        }
-      });
-    }
-  } else {
-    // No mtime means it's purely local - just rename in memory.
-    storage.deleteBackup(mp.filename);
-    completeRename(true);
-  }
 });
 
 view.on('popstate', readNewUrl);
@@ -1565,31 +1644,53 @@ function logInAndMove(filename, newfilename, completeRename) {
   if (!filename || !newfilename) {
     return;
   }
+
+  requireLogin('Log in to rename.', null, function(state) {
+    state.update({info: 'Renaming....', disable: true});
+    storage.moveFile(
+        model.ownername, filename, newfilename, model.passkey, false,
+    function(m) {
+      if (m.needauth) {
+        state.update({info: 'Wrong password.', disable: false});
+        return;
+      }
+      state.update({cancel: true});
+      if (m.error) {
+        completeRename({ oldName: filename, newName: newfilename, processing: false, error: m.error });
+      } else {
+        saveLoginCookie();
+        if (!specialowner()) {
+          cookie('recent', window.location.href,
+              { expires: 7, path: '/', domain: window.pencilcode.domain });
+        }
+        completeRename(m);
+      }
+    });
+  });
+}
+
+function requireLogin (promptMessage, validateCB, doneCB) {
   view.showLoginDialog({
-    prompt: 'Log in to rename.',
+    prompt: promptMessage,
     username: model.ownername,
-    validate: function(state) { return {}; },
+    validate: function(state) { 
+      validateCB && validateCB();
+      return {}; 
+    },
     done: function(state) {
       model.username = model.ownername;
       model.passkey = keyFromPassword(model.username, state.password);
-      state.update({info: 'Renaming....', disable: true});
-      storage.moveFile(
-          model.ownername, filename, newfilename, model.passkey, false,
-      function(m) {
+      
+      /* second callback is used to update the login popup
+        according to the user input for the password
+      */      
+      doneCB && doneCB(state, function (m) {
         if (m.needauth) {
           state.update({info: 'Wrong password.', disable: false});
-          return;
-        }
-        state.update({cancel: true});
-        if (m.error) {
-          view.flashNotification(m.error);
+          return false;
         } else {
-          saveLoginCookie();
-          if (!specialowner()) {
-            cookie('recent', window.location.href,
-                { expires: 7, path: '/', domain: window.pencilcode.domain });
-          }
-          completeRename();
+          state.update({cancel: true});
+          return true;
         }
       });
     }

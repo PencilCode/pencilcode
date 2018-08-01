@@ -852,6 +852,7 @@ body#pencildoc #diigolet-csm {
   color: #222;
   cursor: pointer;
   width: 154px;
+  position: relative;
   div {
     margin: 0px;
     max-height: 154px;
@@ -876,13 +877,14 @@ body#pencildoc #diigolet-csm {
       padding: 2px;
     }
   }
-  &:hover {
+  &:hover, &.right-click-active {
     text-decoration: underline;
     color: blue;
     div .thumbnail {
       padding: 0px;
       border-width: 2px;
       border-color: #1679FF;
+      /*box-shadow: 1px 1px 1px 1px rgb(168, 168, 168);*/
     }
     span:not(.caption) {
       display: table;
@@ -892,6 +894,33 @@ body#pencildoc #diigolet-csm {
       padding-right: 6px;
     }
   }
+}
+
+.directory .item-processing-animation {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(30, 144, 255, 0.54);
+  position: absolute;
+  z-index: 100;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: inset 0 0 10px 5px #fffde7;
+  color: #F5F5F5;
+  top: 0%;
+  i {
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+  }
+}
+
+.directory .item-div {
+    float: left;
+    clear: left;
+    width: 154px;
+    position: relative;
 }
 
 .directory .create {
@@ -1402,4 +1431,23 @@ body#pencildoc #diigolet-csm {
   margin: 0px;
   list-style: none;
   display: inline-flex;
+}
+
+.pencilcode-textfield {
+  position: relative;
+  color: #aaa;
+  font-size: 16px;
+  z-index: 3;
+}
+
+.pencilcode-textfield input[type="text"] {
+  width: 100%;
+  padding: 3px;
+  border-radius: 5px;
+  border-color: #1B78FE;
+  font-size: 20px;
+}
+
+.pencilcode-textfield input[type="text"]:focus {
+  color: dodgerblue;
 }

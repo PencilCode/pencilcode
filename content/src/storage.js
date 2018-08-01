@@ -355,6 +355,29 @@ window.pencilcode.storage = {
       });
     });
   },
+  deleteFile: function(ownername, filename, key, callback) {
+    var payload = {
+      mode: 'rmtree',
+      key: key
+    };
+    $.post('//' + ownername + '.' + window.pencilcode.domain + '/save/' +
+        filename, payload, function(m) {
+      var check;
+      if (m.error) {
+        // Pass errors on to calback.  Don't affect backup.
+      } else {
+        // On a successful move, just delete the backup of everything
+        // in the source area.  TODO: move the backup tree instead.
+        //deleteBackupPrefix(sourcefile);
+      }
+      callback && callback(m);
+    }, 'json').error(function() {
+      callback && callback({
+        error: networkErrorMessage(ownername + '.' + window.pencilcode.domain),
+        offline:true
+      });
+    });
+  },
   setPassKey: function(ownername, key, oldkey, callback) {
     $.post('//' + ownername + '.' + window.pencilcode.domain + '/save/',
         $.extend({ mode: 'setkey', data: key}, oldkey ? { key: oldkey } : {}),

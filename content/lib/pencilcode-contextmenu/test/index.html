@@ -1,0 +1,111 @@
+<html>
+	<head>
+		<title>Pencilcode Contextmenu Demo</title>
+		<script src="../bower_components/jquery/dist/jquery.js"></script>
+		<link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.css"></link>
+		<script src="../src/dev/pencilcode-contextmenu.js"></script>
+		<link rel="stylesheet" href="../src/dist/pencilcode-contextmenu.css"></link>
+	</head>
+
+	<body>
+		<div class="header">
+			<h1>Pencilcode Contextmenu Demo</h1>
+		</div>
+
+		<div class="content">
+
+			<div class="panel">
+				<div class="panel-title">Code</div>
+				<div class="panel-body">
+					<code>
+						var menus=[
+				            {
+				              name:"rename",
+				              action:function(){
+				                console.log("rename action ");
+				              }
+				            },
+				            {
+				              name:"delete",
+				              action:function(){
+				                console.log("delete action");
+				              }
+				            },
+				            {
+				              name:"download",
+				              action:function(){
+				                console.log("download action ");
+				              }
+				            },
+				            {
+				              name:"move to",
+				              action:function(){
+				                console.log("move action")
+				              },
+				              options:[
+				                {name:"share",action:function(){console.log("move action to share")}},
+				                {name:"test",action:function(){console.log("move action to test")}},
+				                {name:"dev",action:function(){console.log("move action to dev")}}
+				              ]
+				            }
+				          ];
+
+				      	$('demo').addRightClickMenu(menus);
+					</code>
+				</div>
+			</div>
+
+			<div class="panel">
+				<div class="panel-title">Preview</div>
+				<div class="panel-body">
+
+					<a id="demo">Right click here</a>
+					<script>
+						
+						$(function(){
+						    var menus=[
+					            {
+					              name:"rename",
+					              action:function(){
+					                console.log("rename action ");
+					              }
+					            },
+					            {
+					              name:"delete",
+					              action:function(){
+					                console.log("delete action");
+					              }
+					            },
+					            {
+					              name:"download",
+					              action:function(){
+					                console.log("download action ");
+					              }
+					            },
+					            {
+					              name:"move to",
+					              action:function(){
+					                console.log("move action")
+					              },
+					              options:[
+					                {name:"share",action:function(){console.log("move action to share")}},
+					                {name:"test",action:function(){console.log("move action to test")}},
+					                {name:"dev",action:function(){console.log("move action to dev")}}
+					              ]
+					            }
+					          ];
+
+					      	$('#demo').addRightClickMenu(menus);		
+
+
+      					});
+					</script>
+				</div>
+			</div>
+
+
+		</div>
+
+	</body>
+
+</html>
