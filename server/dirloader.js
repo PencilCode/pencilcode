@@ -86,7 +86,7 @@ exports.DirLoader.prototype = {
   // end, then calls the callback.
   rebuild: function(callback) {
     var batch = 32;             // Do work in 32 parallel async tasks.
-    var timeLimit = 60 * 1000;  // Timeout after 60 seconds.
+    var timeLimit = 300 * 1000; // Timeout after 300 seconds.
 
     // If requested a rebuild while a rebuild is in progress, just
     // queue up with the rebuild-in-progress.

@@ -8,11 +8,11 @@ var DirLoader = require('./dirloader').DirLoader;
 
 var globalDirCache = {};
 
-// Do not serve cached content older than 5 minutes.
-var maxDirCacheAge = 5 * 60 * 1000;
+// Do not serve cached content older than 20 minutes.
+var maxDirCacheAge = 20 * 60 * 1000;
 
-// Rebuild cache in background after serving data older than 1 minute.
-var autoRebuildCacheAge = 1 * 60 * 1000;
+// Rebuild cache in background after serving data older than 5 minutes.
+var autoRebuildCacheAge = 5 * 60 * 1000;
 
 // Serve at most 600 entries at a time from root directory or share site.
 var MAX_DIR_ENTRIES = 600;
