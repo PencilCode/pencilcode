@@ -173,6 +173,7 @@ $(function() {
   var usernames = {};
   $('#showlogin').css('opacity', 1);
   $('#user').on('change', validateUser);
+  setInterval(validateUser, 1000);
   $('#user').autocomplete({
     autoSelectFirst: true,
     triggerSelectOnValidInput: false,
