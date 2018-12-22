@@ -75,9 +75,9 @@ Contribute to the development of Pencil Code at
 <div class="loginblock">
 <label class="toggler">
 <span id=msg></span>&nbsp; <i class="fa fa-sign-in loginicon"></i> Login</ul></label>
-<label>Name: <input id=user></label>
-<label>Password: <input type=password id=pass></label>
-<label><button id=login disabled>Login <span id=asuser></span></button></label>
+<label>Name: <input id=user autocomplete=new-password></label>
+<label>Password: <input type=password id=pass autocomplete=new-password></label>
+<label><button id=login>Login <span id=asuser></span></button></label>
 </div>
 </div>
 <!-- end of overlay -->
@@ -204,7 +204,7 @@ $(function() {
     var user = $('#user').val().toLowerCase().trim();
     var found = usernames.hasOwnProperty(user);
     $('#asuser').text(found ? ' as ' + user : '');
-    $('#login').prop('disabled', !found);
+    // $('#login').prop('disabled', !found);
     return true;
   };
   function keyFromPassword(username, p) {
