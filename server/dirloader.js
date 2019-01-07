@@ -30,8 +30,8 @@ exports.DirLoader = function DirLoader(path) {
   this.rebuildMs = 0;
   // Configuration: do work in 64 parallel async tasks.
   this.batchSize = 64;
-  // Configuration: give up after 10 miutes
-  this.timeLimit = 10 * 60 * 1000;
+  // Configuration: give up after 10 seconds.
+  this.timeLimit = 10 * 1000;
 }
 
 // Encode the stat object for a file as a json record to be
@@ -108,7 +108,9 @@ exports.DirLoader.prototype = {
     // Set up an abort (signalled by timeout === true) after a few minutes.
     var timeout = setTimeout(function() {
       timeout = true;
-      notifyAll(false);
+      // notifyAll(false);
+      // On timeout, pretend that we succeeded: just serve up the stale cache
+      notifyAll(true);
     }, timeLimit);
 
     // Kick off an async readdir.
