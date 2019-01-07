@@ -99,12 +99,14 @@ exports.handleLoad = function(req, res, app, format) {
         if (isRootListing || isShareSite) {
           // Grab the dir cache object for this root directory path.
           var dircache = getDirCache(absfile);
-          if (dircache.age() > maxDirCacheAge) {
-            // A very-old or never-built cache must be rebuilt before serving.
-            dircache.rebuild(sendCachedResult);
-          } else if (prefix) {
+          if (prefix) {
             // When a specific prefix is requested, probe for an exact match.
+            // Note: do not require a rebuilt cache for this operation.
             dircache.update(prefix, sendCachedResult);
+          } else if (dircache.age() > maxDirCacheAge) {
+            // A very-old or never-built cache must be rebuilt before serving
+            // a complete listing.
+            dircache.rebuild(sendCachedResult);
           } else {
             // Fresh cache without prefix: just send the cached result.
             sendCachedResult(true);
