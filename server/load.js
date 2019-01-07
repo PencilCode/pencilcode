@@ -8,11 +8,11 @@ var DirLoader = require('./dirloader').DirLoader;
 
 var globalDirCache = {};
 
-// Do not serve cached content older than 20 minutes.
-var maxDirCacheAge = 20 * 60 * 1000;
+// Do not serve cached content older than 30 minutes.
+var maxDirCacheAge = 30 * 60 * 1000;
 
-// Rebuild cache in background after serving data older than 5 minutes.
-var autoRebuildCacheAge = 5 * 60 * 1000;
+// Rebuild cache in background after serving data older than a 2 minutes.
+var autoRebuildCacheAge = 2 * 60 * 1000;
 
 // Serve at most 600 entries at a time from root directory or share site.
 var MAX_DIR_ENTRIES = 600;
@@ -32,7 +32,8 @@ exports.handleLoad = function(req, res, app, format) {
   var user = res.locals.owner || '';
   var origfilename = filename;
   var prefix = utils.param(req, 'prefix', '');
-  var count = Math.max(utils.param(req, 'count', MAX_DIR_ENTRIES), MAX_DIR_ENTRIES);
+  var count = Math.min(utils.param(req, 'count', MAX_DIR_ENTRIES),
+                       MAX_DIR_ENTRIES);
 
   try {
     // Check if the request is for root listing or share site.
@@ -118,6 +119,8 @@ exports.handleLoad = function(req, res, app, format) {
               data = {
                 directory: dir,
                 list: dircache.readPrefix(prefix, count),
+                age: dircache.age(),
+                rebuildMs: dircache.rebuildMs,
                 auth: false
               };
               // If the cache was sort-of-old, kick off an early rebuild.
