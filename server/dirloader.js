@@ -28,6 +28,10 @@ exports.DirLoader = function DirLoader(path) {
   this.rebuildTime = 0;
   // How long did it take?
   this.rebuildMs = 0;
+  // Configuration: do work in 64 parallel async tasks.
+  this.batchSize = 64;
+  // Configuration: give up after 10 miutes
+  this.timeLimit = 10 * 60 * 1000;
 }
 
 // Encode the stat object for a file as a json record to be
@@ -85,8 +89,8 @@ exports.DirLoader.prototype = {
   // Async rebuild.  Does the work, then refreshes atomically at the
   // end, then calls the callback.
   rebuild: function(callback) {
-    var batch = 32;             // Do work in 32 parallel async tasks.
-    var timeLimit = 300 * 1000; // Timeout after 300 seconds.
+    var batch = this.batchSize;
+    var timeLimit = this.timeLimit;
 
     // If requested a rebuild while a rebuild is in progress, just
     // queue up with the rebuild-in-progress.
@@ -101,7 +105,7 @@ exports.DirLoader.prototype = {
     if (callback) { notify.push(callback); }
     var startTime = (new Date).getTime();
 
-    // Set up an abort (signalled by timeout === true) after 60 seconds.
+    // Set up an abort (signalled by timeout === true) after a few minutes.
     var timeout = setTimeout(function() {
       timeout = true;
       notifyAll(false);
