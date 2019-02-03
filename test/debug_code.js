@@ -2,7 +2,7 @@ var phantom = require('node-phantom-simple'),
     phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
+    one_step_timeout = 10000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
 
@@ -52,7 +52,8 @@ describe('code debugger', function() {
       assert.equal(status, 'success');
       asyncTest(_page, one_step_timeout, null, null, function() {
         // Poll until the element with class="editor" appears on the page.
-        if (!$('.editor').length) return;
+        if (document.querySelector('.editor') == null) return;
+        if (document.querySelector('.droplet-ace') == null) return;
         // Reach in and return the text that is shown within the editor.
         var ace_editor = ace.edit($('.droplet-ace')[0]);
         return {

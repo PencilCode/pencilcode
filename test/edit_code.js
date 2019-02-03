@@ -2,7 +2,7 @@ var phantom = require('node-phantom-simple'),
     phantomjs = require('phantomjs-prebuilt'),
     assert = require('assert'),
     testutil = require('./lib/testutil'),
-    one_step_timeout = 8000,
+    one_step_timeout = 10000,
     extended_timeout = 30000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
@@ -77,7 +77,8 @@ describe('code editor', function() {
         addEventListener('error', function(e) { window.lasterrorevent = e; });
       }, function() {
         // Poll until the element with class="editor" appears on the page.
-        if (!$('.editor').length) return;
+        if (document.querySelector('.editor') == null) return;
+        if (document.querySelector('.droplet-ace') == null) return;
         // Reach in and return the text that is shown within the editor.
         var ace_editor = ace.edit($('.droplet-ace')[0]);
         return {
@@ -408,6 +409,7 @@ describe('code editor', function() {
       simulate('mouseup', '.droplet-drag-cover',
         { location: '.droplet-main-scroller' })
     }, function() {
+      if (document.querySelector('.droplet-ace') == null) return;
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       // Return a ton of UI state.
       return {
