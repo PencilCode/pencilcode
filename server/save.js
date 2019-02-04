@@ -443,7 +443,7 @@ function doSetKey(user, oldkey, newkey, res, app) {
 
       for (var i = 0; i < keys.length; i++) {
         if (oldkey.indexOf(keys[i].substring(1)) == 0) {
-          fs.unlink(path.join(keydir, keys[i]));
+          fs.unlinkSync(path.join(keydir, keys[i]));
         }
       }
     }
