@@ -53,19 +53,15 @@ describe('html editor', function() {
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
-      _page.evaluate(function() {
-        // Inject a script that clears the login cookie for a clean start.
-        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        // And also clear localStorage for this site.
-        localStorage.clear();
-      }, function(err) {
-        assert.ifError(err);
-        done();
-      });
+      done();
     });
   });
   it('should flip into code mode', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
+      // Inject a script that clears the login cookie for a clean start.
+      document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      // And also clear localStorage for this site.
+      localStorage.clear();
       // Click on the "blocks" button
       var leftlink = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })

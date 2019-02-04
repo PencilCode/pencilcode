@@ -54,17 +54,20 @@ describe('code editor', function() {
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
-      _page.evaluate(function() {
-        // Inject a script that clears the login cookie for a clean start.
-        document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        // And also clear localStorage for this site.
-        localStorage.clear();
-      }, function(err) {
-        assert.ifError(err);
-        // Add a short delay before reloading new page, or else phantomjs
-        // often gets lost.
-        setTimeout(done, 100);
-      });
+      setTimeout(function() {
+        _page.evaluate(function() {
+          // Inject a script that clears the login cookie for a clean start.
+          document.cookie =
+            'login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+          // And also clear localStorage for this site.
+          localStorage.clear();
+        }, function(err) {
+          assert.ifError(err);
+          // Add a short delay before reloading new page, or else phantomjs
+          // often gets lost.
+          setTimeout(done, 500);
+        });
+      }, 500);
     });
   });
   it('should load code', function(done) {
@@ -73,23 +76,25 @@ describe('code editor', function() {
         function(err, status) {
       assert.ifError(err);
       assert.equal(status, 'success');
-      asyncTest(_page, one_step_timeout, null, function() {
-        addEventListener('error', function(e) { window.lasterrorevent = e; });
-      }, function() {
-        // Poll until the element with class="editor" appears on the page.
-        if (document.querySelector('.editor') == null) return;
-        if (document.querySelector('.droplet-ace') == null) return;
-        // Reach in and return the text that is shown within the editor.
-        var ace_editor = ace.edit($('.droplet-ace')[0]);
-        return {
-          text: ace_editor.getSession().getValue()
-        };
-      }, function(err, result) {
-        assert.ifError(err);
-        // The editor text should contain this line of code.
-        assert.ok(/pen red/.test(result.text));
-        done();
-      });
+      setTimeout(function() {
+        asyncTest(_page, one_step_timeout, null, function() {
+          addEventListener('error', function(e) { window.lasterrorevent = e; });
+        }, function() {
+          // Poll until the element with class="editor" appears on the page.
+          if (document.querySelector('.editor') == null) return;
+          if (document.querySelector('.droplet-ace') == null) return;
+          // Reach in and return the text that is shown within the editor.
+          var ace_editor = ace.edit($('.droplet-ace')[0]);
+          return {
+            text: ace_editor.getSession().getValue()
+          };
+        }, function(err, result) {
+          assert.ifError(err);
+          // The editor text should contain this line of code.
+          assert.ok(/pen red/.test(result.text));
+          done();
+        });
+      }, 500);
     });
   });
   it('should navigate to parent dir', function(done) {
