@@ -17,6 +17,9 @@ var autoRebuildCacheAge = 2 * 60 * 1000;
 // Serve at most 600 entries at a time from root directory or share site.
 var MAX_DIR_ENTRIES = 600;
 
+// Special share sites
+var SHARE_SITE = { share: true, gymstage: true };
+
 function getDirCache(dir) {
   var dircache = globalDirCache[dir]
   if (!dircache) {
@@ -38,7 +41,7 @@ exports.handleLoad = function(req, res, app, format) {
   try {
     // Check if the request is for root listing or share site.
     var isRootListing = !user && filename === '' && format === 'json';
-    var isShareSite = user === 'share' && filename === '' && format === 'json';
+    var isShareSite = SHARE_SITE[user] && filename === '' && format === 'json';
 
     // Validate username
     if (user) {
