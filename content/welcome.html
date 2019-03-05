@@ -10,6 +10,7 @@
 <link rel="icon" sizes="192x192" href="//<!--#echo var="site"-->/apple-touch-icon.png">
 <link rel="shortcut icon" sizes="16x16" href="//<!--#echo var="site"-->/favicon.ico" />
 <style>
+.loginblock button { min-width: 100%; }
 </style>
 <body>
 <div id="overlay">
@@ -218,6 +219,7 @@ $(function() {
     return key;
   }
   $('#login').on('click', tryLogin);
+  $('form.loginblock').on('submit', noSubmit);
   $('#pass,#user').on('keyup', function(e) {
     $('#msg').text('');
     if (e.which == 13) {
@@ -246,6 +248,9 @@ $(function() {
     }).fail(function() {
       $('#msg').text('Network error.');
     });
+  }
+  function noSubmit() {
+    return false;
   }
 })();
 
