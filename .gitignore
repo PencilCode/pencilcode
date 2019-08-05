@@ -12,4 +12,5 @@ content/editor.js
 content/turtlebits.js
 content/welcome.css
 content/worker.js
+content/.well-known
 .DS_Store
