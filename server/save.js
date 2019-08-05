@@ -294,7 +294,7 @@ exports.handleSave = function(req, res, app) {
       tryToMkdirsSync(absfile);
     }
 
-    var content = filemeta.printMetaString(data, meta);
+    var content = filemeta.printMetaString(data, meta, filetype.mimeForFilename(filename));
     fd = tryToWriteFileSync(absfile, content);
 
     // If thumbnail exists and it is valid, remove the data url header.
