@@ -18,13 +18,14 @@ describe('javascript editor', function() {
   it('should serve static editor HTML', function() {
     // Visit the website of the user "aaa."
     _driver.get('http://aaa.pencilcode.net.dev/edit/');
-    expect(_driver.getTitle()).to.eventually.equal('aaa');
-    return _driver.executeScript(function() {
+    expect(pollScript(_driver, function() {
+      if (!document.title) { return; }
       // Inject a script that clears the login cookie for a clean start.
       document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
       // And also clear localStorage for this site.
       localStorage.clear();
-    });
+      return document.title;
+    })).to.eventually.equal('aaa');
   });
 
   it('should open js palette with .js extension', function() {
@@ -33,6 +34,9 @@ describe('javascript editor', function() {
     expect(_driver.getTitle()).to.eventually.contain('test.js');
     _driver.findElement({css: '.left .panetitle a'}).click();
     expect(pollScript(_driver, function() {
+      if (document.querySelector('.droplet-hover-div.tooltipstered') == null) {
+        return;
+      }
       return $('.droplet-hover-div.tooltipstered').eq(0).tooltipster('content');
     })).to.eventually.equal('Move forward');
     return _driver;
@@ -42,6 +46,7 @@ describe('javascript editor', function() {
     // Navigate to see the editor for the program named "first".
     _driver.get('http://aaa.pencilcode.net.dev/edit/first');
     expect(pollScript(_driver, function() {
+      if (document.querySelector('.editor') == null) { return; }
       if (!$('.editor').length) return;
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       return ace_editor.getSession().getValue();

@@ -126,9 +126,7 @@ describe('filter textfield', function () {
               function () {
               },
               function () {
-                if (!$('.directory').length)
-                  return;
-
+                if (document.querySelector('.directory') == null) { return; }
                 var result = this;
                 result.filterBarIsDisplayed = $('input.search-toggle').is(':visible');
                 return result;

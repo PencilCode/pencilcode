@@ -37,7 +37,7 @@ describe('browse users in edit mode', function() {
 
   it('should have lots of users', function() {
     pollScript(_driver, function() {
-      if (!$('.directory').length) return;
+      if (document.querySelector('.directory') == null) return;
       var dirs = [];
       $('.directory a').each(function() { dirs.push($(this).text()); });
       return dirs.join(' ');
@@ -50,6 +50,7 @@ describe('browse users in edit mode', function() {
   it('should list users in alpha order', function() {
     pollScript(_driver, function() {
       var dirs = [];
+      if (document.querySelector('#byname') == null) return;
       $('#byname').click();
       $('.directory a').each(function() { dirs.push($(this).text()); });
       return dirs.join(' ');
@@ -63,6 +64,7 @@ describe('browse users in edit mode', function() {
   it('should list users in date order', function() {
     pollScript(_driver, function() {
       var dirs = [];
+      if (document.querySelector('#bydate') == null) return;
       $('#bydate').click();
       $('.directory a').each(function() { dirs.push($(this).text()); });
       var r = dirs.join(' ');

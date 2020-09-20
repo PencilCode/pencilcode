@@ -18,37 +18,36 @@ describe('python editor', function() {
   it('should serve static editor HTML', function() {
     // Visit the website of the user "aaa."
     _driver.get('http://aaa.pencilcode.net.dev/edit/');
-    expect(_driver.getTitle()).to.eventually.equal('aaa');
-    return _driver.executeScript(function() {
+    expect(pollScript(_driver, function() {
+      if (!document.title) { return; }
       // Inject a script that clears the login cookie for a clean start.
       document.cookie='login=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
       // And also clear localStorage for this site.
       localStorage.clear();
-    });
+      return document.title;
+    })).to.eventually.equal('aaa');
   });
 
   it('should open py palette with .py extension', function() {
     // Create a new file with an extension .py
     _driver.get('http://pencilcode.net.dev/edit/test.py');
-    _driver.executeScript(function() {
-      var leftlink = $('.panetitle').filter(
-          function() { return $(this).parent().position().left == 0; })
-          .find('a');
-      leftlink.click();
-     });
-     pollScript(_driver, function() {
-       // If tooltipster test isnt' ready, wait for it
-       if (!$('.droplet-hover-div.tooltipstered')) return;
-       return {
-         // Content of first palette block
-         text: $('.droplet-hover-div.tooltipstered').eq(0)
-               .tooltipster('content')
-        }
-      }).then(function(result) {
-        assert.equal(result.text, 'Import Functions on the pencilcode file');
-      });
-      return _driver;
+    expect(_driver.getTitle()).to.eventually.contain('test.py');
+    _driver.findElement({css: '.left .panetitle a'}).click();
+    pollScript(_driver, function() {
+      // If tooltipster test isnt' ready, wait for it
+      if (document.querySelector('.droplet-hover-div.tooltipstered') == null) {
+        return;
+      }
+      return {
+        // Content of first palette block
+        text: $('.droplet-hover-div.tooltipstered').eq(0)
+              .tooltipster('content')
+      }
+    }).then(function(result) {
+      assert.equal(result.text, 'Import Functions on the pencilcode file');
     });
+    return _driver;
+  });
 
   it('should load code', function() {
     // Navigate to see the editor for the program named "first".
@@ -62,7 +61,9 @@ describe('python editor', function() {
   });
   
   it('should be able to enter a python program', function() {
-    _driver.executeScript(function() {
+    pollScript(_driver, function() {
+      if (document.querySelector('.droplet-ace') == null) { return; }
+    }).then(function(result) {
       // Modify the text in the editor.
       var ace_editor = ace.edit($('.droplet-ace')[0]);
       $('.editor').mousedown();

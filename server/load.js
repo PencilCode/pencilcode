@@ -8,14 +8,17 @@ var DirLoader = require('./dirloader').DirLoader;
 
 var globalDirCache = {};
 
-// Do not serve cached content older than 5 minutes.
-var maxDirCacheAge = 5 * 60 * 1000;
+// Do not serve cached content older than 30 minutes.
+var maxDirCacheAge = 30 * 60 * 1000;
 
-// Rebuild cache in background after serving data older than 1 minute.
-var autoRebuildCacheAge = 1 * 60 * 1000;
+// Rebuild cache in background after serving data older than a 2 minutes.
+var autoRebuildCacheAge = 2 * 60 * 1000;
 
 // Serve at most 600 entries at a time from root directory or share site.
 var MAX_DIR_ENTRIES = 600;
+
+// Special share sites
+var SHARE_SITE = { share: true, gymstage: true };
 
 function getDirCache(dir) {
   var dircache = globalDirCache[dir]
@@ -32,12 +35,13 @@ exports.handleLoad = function(req, res, app, format) {
   var user = res.locals.owner || '';
   var origfilename = filename;
   var prefix = utils.param(req, 'prefix', '');
-  var count = Math.max(utils.param(req, 'count', MAX_DIR_ENTRIES), MAX_DIR_ENTRIES);
+  var count = Math.min(utils.param(req, 'count', MAX_DIR_ENTRIES),
+                       MAX_DIR_ENTRIES);
 
   try {
     // Check if the request is for root listing or share site.
     var isRootListing = !user && filename === '' && format === 'json';
-    var isShareSite = user === 'share' && filename === '' && format === 'json';
+    var isShareSite = SHARE_SITE[user] && filename === '' && format === 'json';
 
     // Validate username
     if (user) {
@@ -98,12 +102,14 @@ exports.handleLoad = function(req, res, app, format) {
         if (isRootListing || isShareSite) {
           // Grab the dir cache object for this root directory path.
           var dircache = getDirCache(absfile);
-          if (dircache.age() > maxDirCacheAge) {
-            // A very-old or never-built cache must be rebuilt before serving.
-            dircache.rebuild(sendCachedResult);
-          } else if (prefix) {
+          if (prefix) {
             // When a specific prefix is requested, probe for an exact match.
+            // Note: do not require a rebuilt cache for this operation.
             dircache.update(prefix, sendCachedResult);
+          } else if (dircache.age() > maxDirCacheAge) {
+            // A very-old or never-built cache must be rebuilt before serving
+            // a complete listing.
+            dircache.rebuild(sendCachedResult);
           } else {
             // Fresh cache without prefix: just send the cached result.
             sendCachedResult(true);
@@ -118,6 +124,8 @@ exports.handleLoad = function(req, res, app, format) {
               data = {
                 directory: dir,
                 list: dircache.readPrefix(prefix, count),
+                age: dircache.age(),
+                rebuildMs: dircache.rebuildMs,
                 auth: false
               };
               // If the cache was sort-of-old, kick off an early rebuild.

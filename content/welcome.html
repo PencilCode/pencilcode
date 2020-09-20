@@ -10,6 +10,7 @@
 <link rel="icon" sizes="192x192" href="//<!--#echo var="site"-->/apple-touch-icon.png">
 <link rel="shortcut icon" sizes="16x16" href="//<!--#echo var="site"-->/favicon.ico" />
 <style>
+.loginblock button { min-width: 100%; }
 </style>
 <body>
 <div id="overlay">
@@ -72,13 +73,13 @@ Contribute to the development of Pencil Code at
 <a href="mailto:info@pencilcode.net" target="_top"
 >info@pencilcode.net</a>.
 </div>
-<div class="loginblock">
+<form class="loginblock">
 <label class="toggler">
 <span id=msg></span>&nbsp; <i class="fa fa-sign-in loginicon"></i> Login</ul></label>
 <label>Name: <input id=user></label>
 <label>Password: <input type=password id=pass></label>
-<label><button id=login disabled>Login <span id=asuser></span></button></label>
-</div>
+<label><button id=login>Login <span id=asuser></span></button></label>
+</form>
 </div>
 <!-- end of overlay -->
 
@@ -173,6 +174,7 @@ $(function() {
   var usernames = {};
   $('#showlogin').css('opacity', 1);
   $('#user').on('change', validateUser);
+  setInterval(validateUser, 1000);
   $('#user').autocomplete({
     autoSelectFirst: true,
     triggerSelectOnValidInput: false,
@@ -203,7 +205,7 @@ $(function() {
     var user = $('#user').val().toLowerCase().trim();
     var found = usernames.hasOwnProperty(user);
     $('#asuser').text(found ? ' as ' + user : '');
-    $('#login').prop('disabled', !found);
+    // $('#login').prop('disabled', !found);
     return true;
   };
   function keyFromPassword(username, p) {
@@ -217,6 +219,7 @@ $(function() {
     return key;
   }
   $('#login').on('click', tryLogin);
+  $('form.loginblock').on('submit', noSubmit);
   $('#pass,#user').on('keyup', function(e) {
     $('#msg').text('');
     if (e.which == 13) {
@@ -234,7 +237,7 @@ $(function() {
     var key = keyFromPassword(user, $('#pass').val());
     $.getJSON('//' + user + '.' + location.hostname +
         '/save/?mode=setkey&key=' + key + '&data=' + key).done(function(resp) {
-      if (resp.keyset) {
+      if (resp.keyset || resp.keycleared) {
         window.location =
            '//' + user + '.' + location.hostname +
                 '/edit/#login=' + user + ':' + (key ? key : '');
@@ -245,6 +248,9 @@ $(function() {
     }).fail(function() {
       $('#msg').text('Network error.');
     });
+  }
+  function noSubmit() {
+    return false;
   }
 })();
 

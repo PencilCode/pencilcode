@@ -17,7 +17,7 @@ describe('proxy program', function() {
   it('should show create button when loading dir', function() {
     _driver.get('http://livetest.pencilcode.net.dev/edit/');
     pollScript(_driver, function() {
-      if (!$('.create').length) return;
+      if (document.querySelector('.create') == null) return;
       return {
         bt: $('#bravotitle').text()
       };
@@ -82,6 +82,7 @@ describe('proxy program', function() {
       leftlink.click();
     });
     pollScript(_driver, function() {
+      if (document.querySelector('.panetitle') == null) return;
       var lefttitle = $('.panetitle').filter(
           function() { return $(this).parent().position().left == 0; })
           .find('.panetitle-text');
@@ -151,10 +152,12 @@ describe('proxy program', function() {
   it('should be able to access off-domain image bits', function() {
     _driver.executeScript(function() {
       // Click on the triangle run button.
+      if (document.querySelector('#run') == null) return;
       $('#run').mousedown();
       $('#run').click();
     });
     pollScript(_driver, function() {
+      if (document.querySelector('.preview iframe') == null) return;
       try {
         // Wait for the preview frame to show
         if (!$('.preview iframe').length) return;

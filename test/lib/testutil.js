@@ -10,7 +10,11 @@ var chromeOpts = [
   '--disable-default-apps',
   '--host-resolver-rules=MAP *pencilcode.net.dev localhost:8193',
   '--allow-running-insecure-content',
-  '--ignore-certificate-errors=http://pencilcode.net.dev/'
+  '--ignore-certificate-errors', // '=http://pencilcode.net.dev/',
+  '--headless',
+  '--no-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-web-security',
 ];
 
 exports.startChrome = function() {
@@ -20,7 +24,7 @@ exports.startChrome = function() {
       withCapabilities(capabilities).
       build();
   driver.getWindowHandle()
-  driver.manage().timeouts().setScriptTimeout(one_step_timeout);
+  driver.manage().setTimeouts({script: one_step_timeout});
   return driver;
 }
 
@@ -29,6 +33,7 @@ exports.startChrome = function() {
 // when the predicate returns somthing non-false, the polling ends.
 exports.pollScript =
 function pollScript(driver, result) {
+  // console.log('polling ' + result);
   var s =
     'var ps_done = arguments[arguments.length - 1];' +
     'var ps_retry = (function() {' +
@@ -146,14 +151,14 @@ exports.defineSimulate = function(page) {
   page.evaluate(function() {
     window.simulate = function(type, target, options) {
       if ('string' == typeof(target)) {
-        target = $(target).get(0);
+        target = window.document.querySelector(target);
       }
       options = options || {};
       var pageX = pageY = clientX = clientY = dx = dy = 0;
       var location = options.location || target;
       if (location) {
         if ('string' == typeof(location)) {
-          location = $(location).get(0);
+          location = window.document.querySelector(location);
         }
         var gbcr = location.getBoundingClientRect();
             clientX = gbcr.left,

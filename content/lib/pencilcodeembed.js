@@ -164,6 +164,7 @@
       this.iframe = document.createElement('iframe');
       this.iframe.style.width = '100%';
       this.iframe.style.height = '100%';
+      this.iframe.setAttribute('allow', 'autoplay');
       this.div.appendChild(this.iframe);
 
       this.updatedCode = code;

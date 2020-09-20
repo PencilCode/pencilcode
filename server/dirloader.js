@@ -28,6 +28,12 @@ exports.DirLoader = function DirLoader(path) {
   this.rebuildTime = 0;
   // How long did it take?
   this.rebuildMs = 0;
+  // Configuration: do work in 64 parallel async tasks.
+  this.batchSize = 64;
+  // Configuration: one callback gives up after 10 seconds.
+  this.timeLimit = 10 * 1000;
+  // Configuration: the whole batch gives up after 10 minutes.
+  this.batchTimeLimit = 10 * 60 * 1000;
 }
 
 // Encode the stat object for a file as a json record to be
@@ -85,43 +91,126 @@ exports.DirLoader.prototype = {
   // Async rebuild.  Does the work, then refreshes atomically at the
   // end, then calls the callback.
   rebuild: function(callback) {
-    var batch = 32;             // Do work in 32 parallel async tasks.
-    var timeLimit = 60 * 1000;  // Timeout after 60 seconds.
+    var batch = this.batchSize;
+    var startTime = (new Date).getTime();
+    var expTime = startTime + this.timeLimit;
 
     // If requested a rebuild while a rebuild is in progress, just
     // queue up with the rebuild-in-progress.
     if (this.rebuilding) {
-      if (callback) { this.rebuilding.push(callback); }
+      if (callback) {
+        this.rebuilding.push({cb: callback, exp: expTime});
+      }
       return;
     }
 
     // We're the first: queue up our callback and note the start time.
     var self = this;
     var notify = self.rebuilding = [];
-    if (callback) { notify.push(callback); }
-    var startTime = (new Date).getTime();
+    var failTime = startTime + this.batchTimeLimit;
+    if (callback) { notify.push({cb: callback, exp: expTime}); }
 
-    // Set up an abort (signalled by timeout === true) after 60 seconds.
-    var timeout = setTimeout(function() {
-      timeout = true;
-      notifyAll(false);
-    }, timeLimit);
+    // When we need to abort early, we do the following incremental processing.
+    var dirlisted = null;
+    var list = [];
+    var map = {};
+    var timeout = null;
+
+    function newest(r1, r2) {
+      if (!r1) return r2;
+      if (!r2) return r1;
+      if (r2.mtime > r1.mtime) return r2;
+      return r1;
+    }
+
+    function mergeUpdate() {
+      // Before a dir listing, we have nothing to merge.
+      if (!dirlisted) {
+        return;
+      }
+      // After a dir listing, we can merge the lists.
+      var mergedlist = [];
+      var mergedmap = {};
+      for (var n of dirlisted) {
+        var latest = newest(map[n], self.map[n]);
+        if (latest) {
+          mergedmap[n] = latest;
+          mergedlist.push(latest);
+        }
+      }
+      // Do not delete records that are newer than startTime.
+      for (var rec of self.list) {
+        if (!(mergedmap.hasOwnProperty(rec.name)) && rec.mtime > startTime) {
+          mergedmap[n] = rec;
+          mergedlist.push(rec);
+        }
+      }
+      // Sort and commit the merged information.
+      mergedlist.sort(byMtime);
+      self.list = mergedlist;
+      self.map = mergedmap;
+    }
+
+    // Check for expired callbacks at timeLimit intervals.
+    function notifyExpiredCallbacks() {
+      if (notify !== self.rebuilding) {
+        clearInterval(timeout);
+        timeout = true;
+        return;
+      }
+      // Sweep up expried callbacks.
+      var now = (new Date).getTime()
+      var curNotify = notify.filter(r => r.exp <= now);
+      var newNotify = notify.filter(r => r.exp > now);
+      // If the whole batch is expired, sweep up all remaining callbacks.
+      if (now > failTime) {
+        curNotify = notify;
+        newNotify = null;
+        clearInterval(timeout);
+        timeout = true;
+      }
+      notify = self.rebuilding = newNotify;
+      mergeUpdate();
+      // Merge any updates processed so far, and notify about them.
+      if (curNotify.length) {
+        for (var cbr of curNotify) {
+          cbr.cb.call(null, true);
+        }
+      }
+    }
+    timeout = setInterval(notifyExpiredCallbacks, this.timeLimit);
+
+    // When work is done, stop timer and notify all callbacks right away.
+    function completeWork() {
+      clearInterval(timeout);
+      mergeUpdate();
+      self.rebuildTime = (new Date).getTime();
+      self.rebuildMs = self.rebuildTime - startTime;
+      notifyAll(true);
+    }
+    function notifyAll(ok) {
+      if (notify && notify === self.rebuilding) {
+        self.rebuilding = null;
+        while (notify.length) {
+          notify.pop().cb.call(null, ok);
+        }
+      }
+    }
 
     // Kick off an async readdir.
     fs.readdir(self.path, function(err, names) {
-      // On error, we notify false and finish up.
+      // On error, we notify and error right away and finish up.
       if (err) {
-        clearTimeout(timeout);
+        clearInterval(timeout);
+        timeout = true;
         notifyAll(false);
         return;
       }
 
       // Set up data structures to receive work in progress.
-      var list = [];
-      var map = {};
+      dirlisted = names;
       var next = 0;
       var inprogress = 0;
-      var finished = false;
 
       // Kick off parallel work tasks.
       while (inprogress < batch && next < names.length) {
@@ -162,29 +251,8 @@ exports.DirLoader.prototype = {
         });
       }
 
-      // When work is done, save it and notify callbacks.
-      function completeWork() {
-        if (!finished) {
-          finished = true;
-          clearTimeout(timeout);
-          list.sort(byMtime);
-          self.list = list;
-          self.map = map;
-          self.rebuildTime = (new Date).getTime();
-          self.rebuildMs = self.rebuildTime - startTime;
-          notifyAll(true);
-        }
-      }
     });
 
-    function notifyAll(ok) {
-      if (notify && notify === self.rebuilding) {
-        self.rebuilding = null;
-        while (notify.length) {
-          notify.pop().call(null, ok);
-        }
-      }
-    }
   },
 
   // Get the time since the last rebuildTime.

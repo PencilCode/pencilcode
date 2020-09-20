@@ -18,6 +18,12 @@ var delimiter = [
     start: "'''@META\n",
     end: "\nMETA@'''",
     escape: function(s) { return s.replace(/'''/g, "''\\'"); }
+  },
+  {
+    type: /\bhtml\b/i,
+    start: "<!--@META\n",
+    end: "\nMETA@-->",
+    escape: function(s) { return s.replace(/-->/g, "--\\u003E"); }
   }
 ];
 
@@ -50,7 +56,7 @@ function parseMetaString(buf) {
   return { data: str, meta: null };
 }
 
-function printMetaString(data, meta) {
+function printMetaString(data, meta, type) {
   if (meta == null &&
       (data.lastIndexOf('META@') == -1 || data.lastIndexOf('@META') == -1) &&
       /^[\0-\xff]*$/.test(data)) {
@@ -58,8 +64,11 @@ function printMetaString(data, meta) {
   }
   var d = delimiter[0];
   if (meta && meta.type) {
+    type = meta.type;
+  }
+  if (type) {
     for (var j = 1; j < delimiter.length; ++j) {
-      if (delimiter[j].type.test(meta.type)) { d = delimiter[j]; break; }
+      if (delimiter[j].type.test(type)) { d = delimiter[j]; break; }
     }
   }
   var enc = 'binary';
