@@ -29,19 +29,18 @@
     "parseurl": "latest",
     "seedrandom": "latest",
     "source-map": "latest",
-    "tamper": "latest"
+    "tamper": "latest",
+    "vlc": "0.0.4"
   },
   "devDependencies": {
     "browserify": "latest",
     "browserify-shim": "latest",
     "chai": "latest",
-    "grunt": "latest",
-    "mocha": "latest",
     "chai-as-promised": "latest",
-    "chromedriver": "latest",
-    "selenium-webdriver": "latest",
-    "grunt-browserify": "latest",
+    "chromedriver": "^85.0.1",
+    "grunt": "latest",
     "grunt-bowercopy": "latest",
+    "grunt-browserify": "latest",
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-contrib-copy": "latest",
@@ -52,8 +51,10 @@
     "grunt-express-server": "latest",
     "grunt-mocha-test": "latest",
     "grunt-string-replace": "latest",
+    "mocha": "latest",
     "node-phantom-simple": "latest",
     "phantomjs-prebuilt": "latest",
+    "selenium-webdriver": "^4.0.0-alpha.7",
     "watchify": "latest"
   },
   "browser": {

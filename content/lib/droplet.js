@@ -67543,7 +67543,7 @@ CATEGORIES = {
     color: 'purple'
   },
   returns: {
-    color: 'yellow'
+    color: 'green'
   },
   comments: {
     color: 'gray'
@@ -67558,7 +67558,7 @@ CATEGORIES = {
     color: 'teal'
   },
   assignments: {
-    color: 'blue'
+    color: 'lightgreen'
   },
   loops: {
     color: 'orange'
@@ -70131,7 +70131,7 @@ CATEGORIES = {
     color: 'teal'
   },
   assignments: {
-    color: 'blue'
+    color: 'green'
   },
   loops: {
     color: 'orange'

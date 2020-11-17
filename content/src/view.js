@@ -1853,7 +1853,7 @@ function dropletOptionsForMimeType(mimeType) {
   if (/x-python/.test(mimeType)) {
     return {
       functions: palette.PYTHON_FUNCTIONS//,
-//      categories: palette.PYTHON_CATEGORIES
+     // categories: palette.PYTHON_CATEGORIES//
     };
   }
   if (mimeType.match(/^text\/html\b/)) {

@@ -61,7 +61,7 @@ class SpriteObject():
         pencilcode_internal.jumpxy(self.jsSpriteObject, x, y)
     
     def pause(self, value):
-        pencilcode_internal.sleep(self.jsSpriteObject, value)
+        pencilcode_internal.pause(self.jsSpriteObject, value)
 	
     def getxy(self):
         return pencilcode_internal.getxy(self.jsSpriteObject)
@@ -105,7 +105,9 @@ class SpriteObject():
     	
     def box(self, a, b):
         pencilcode_internal.box(self.jsSpriteObject,a,b)
-    
+    def box(self, a):
+	pencilcode_internal.box(self.jsSpriteObject,a,10)
+
     def grow(self, a):
         pencilcode_internal.grow(self.jsSpriteObject,a)
     
@@ -124,8 +126,8 @@ class SpriteObject():
     def wear(self, name):
         pencilcode_internal.wear(self.jsSpriteObject,name)
     
-    def drawon(self, path):
-        pencilcode_internal.drawon(self.jsSpriteObject,path)
+    def drawon(self, canvas):
+        pencilcode_internal.drawon(self.jsSpriteObject,canvas)
         
     #def cell(self, rows, columns):
     #    pencilcode_internal.cell(self.jsSpriteObject, rows, columns)
@@ -136,10 +138,10 @@ class SpriteObject():
     def hidden(self):
         return pencilcode_internal.hidden(self.jsSpriteObject)
         
-    def touches(self):
+    def touches(self, obj):
         return pencilcode_internal.touches(self.jsSpriteObject, obj)
         
-    def inside(self):
+    def inside(self, obj):
         return pencilcode_internal.inside(self.jsSpriteObject, obj)
 
         
@@ -159,7 +161,9 @@ class SpriteObject():
     def say(self, a):
         pencilcode_internal.say(self.jsSpriteObject, a)
 
-
+    def audioplay(self, url):
+	player = pencilcode_internal.audioplay(self.jsSpriteObject, url)
+	
 # These commands act on the default turtle object (which is not wrapped.).
 
 ###################
@@ -211,7 +215,7 @@ def getxy():
 	return pencilcode_internal.getxy(None)
 	
 def pause(value):
-    pencilcode_internal.sleep(None, value)
+    pencilcode_internal.pause(None, value)
 
 ##################
 ## Art Commands ##
@@ -241,6 +245,9 @@ def pd():
 def box(a, b):
 	pencilcode_internal.box(None,a,b)
 
+def box(a):
+	pencilcode_internal.box(None,a,10)
+
 def grow(a):
 	pencilcode_internal.grow(None,a)
 	
@@ -262,8 +269,8 @@ def fill(color):
 def wear(name):
     pencilcode_internal.wear(None,name)
 
-def drawon(path):
-	pencilcode_internal.drawon(None,path)
+def drawon(canvas):
+	pencilcode_internal.drawon(None,canvas)
 	
 def shown():
     return pencilcode_internal.shown(None)
@@ -341,7 +348,8 @@ def silence():
 	
 def say(a):
 	pencilcode_internal.say(None, a)
-	
+def audioplay(url):
+	pencilcode_internal.audioplay(None, url)
 ######################
 ## Control Commands ##
 ######################

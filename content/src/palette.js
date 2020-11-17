@@ -816,7 +816,10 @@ module.exports = {
 	  {
 		  block: 'from pencilcode import *',
 		  title: 'Import Functions on the pencilcode file'
-	  }
+	  },{
+		block: 'import re',
+		title: 'Import Functions related to comparing strings'
+	}
 	  ])
 	}, {
       name: 'Move',
@@ -867,7 +870,10 @@ module.exports = {
         }, {
           block: 'jumpxy(30, 20)',
           title: 'Jump changing x and y without drawing'
-        }/* , {
+        }, {
+	block: 'pause(5)',
+	title: 'stop moveing for 5 seconds'
+	}/* , {
           block: 'pagexy()',
           title: 'Page (topleft-y-down {pageX:x, pageY:y}) coordinates'
         } */
@@ -892,6 +898,9 @@ module.exports = {
           block: 'while x < 10:\n  x+=1\nelse:\n pass',
           title: 'Repeat while a condition is true'
         }, {
+	block: 'break',
+	title: 'use in a for/while loop to break out of loop'
+	}, {
           block: 'if 0 == 0:\n  pass',
           title: 'Do something only if a condition is true'
         }, {
@@ -911,18 +920,36 @@ module.exports = {
         }, {
           block: "click (e) ->\n  ``",
           title: 'Do something when the mouse is clicked'*/
+     	}, {
+                        block: 'forever(lambda:\n fd(100))',
+                        title: 'Move forward forever'
         }, {
-			block: 'forever(main)',
-			title: 'Runs the function forever as fast as it can'
-		}, {
 			block: 'tick(60, main)',
 			title: 'Runs the function the number of times per second passed in, call tick(None, main) to stop running it'
-		}, {
-        block: 'def newfunction(x):\n fd(x)\n rt(90)',
-        title: 'Define a new function'
+	}, {
+          block: 'def buttonFunction():\n write(\'Button clicked\')',
+          title: 'Define a new function'
         }, {
-        block: 'newfunction(200)',
-        title: 'Use a custom function'
+          block: 'button(\'Write\', buttonFunction)',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+	block: 'keydown(lambda:\n write(\'Key pressed\'))',
+          title: 'Do something when a keyboard key is pressed'
+	}, {
+          block: 'def keydownFunction():\n write(\'Key pressed\')',
+          title: 'Define a new function'
+        }, {
+          block: 'keydown(keydownFunction, \'b\')',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: 'def clickFunction():\n fd(100)',
+          title: 'Define a new function'
+        }, {
+          block: 'click(clickFunction)',
+          title: 'Do something when a keyboard key is pressed'
+        }, {
+          block: 'click(lambda:\n fd(100))',
+          title: 'Move to a location when document is clicked'
         }
       ])
     }, {
@@ -987,10 +1014,10 @@ module.exports = {
           block: 'inside(t)',
           title: 'True if the turtle is encircled by obj'
         } */, {
-          block: 'drawon(\'s\')',
+          block: 'drawon(s)',
           title: 'Draw on sprite s'
         }, {
-          block: 'drawon(\'document\')',
+          block: 'drawon(document)',
           title: 'Draw on the document'
         }
       ])
@@ -1022,16 +1049,21 @@ module.exports = {
         }, {
           block: 'say(\'hello\')',
           title: 'Speak a word'
-        }
+        }, {
+	  block: 'audioplay("url")',
+	expansion: 'audioplay(\'https://upload.wikimedia.org/wikipedia/commons/1/11/06_-_Vivaldi_Summer_mvt_3_Presto_-_John_Harrison_violin.ogg\')' ,
+	  title: 'play an audio file'
+	}
       ])
     }, {
      name: 'Operators',
      color: 'lightgreen',
      blocks: filterblocks([
        {
-           block: 'x = 0;',
+           block: 'x = 0',
            title: 'Set a variable',
            id: 'assign'
+
        }, {
            block: 'x += 1',
            title: 'Increase a variable',
@@ -1085,10 +1117,33 @@ module.exports = {
           block: 'min(_,_)',
           title: 'Get the smaller on two numbers'
        }, {
+		block: 'max(_,_)',
+		title: 'Get the larger on two numbers'
+	}, {
+		block: 'abs(_)',
+		title: 'Get the absolute value of a number'
+
+	}, {
+		block: 'round(_)',
+		title: 'round a number to the nearest integer'
+	}, {
 		   block: '_._',
 		   title: 'Call a function from inside of an object',
 		   id: 'dot'
-	   }
+	   }, {
+        block: 'def newfunction(x):\n fd(x)\n rt(90)',
+        title: 'Define a new function'
+        }, {
+        block: 'newfunction(200)',
+        title: 'Use a custom function'
+        }, {
+	block: 'return _',
+	title: 'Use inside a newfunction return a value'
+	}, {
+	block: 're.findall("pattern", x)',
+	title: 'find all instances of a pattern in x'
+	}
+
      ])
     }, {
       name: 'Sprites',
@@ -1115,15 +1170,15 @@ module.exports = {
         }, {
           block: 'f = table(5, 5)',
           title: 'Outputs a table with m rows and n columns'
-        }//, {
-         // block: 'if @touches x:\n  ``',
-         // title: 'Do something only if touching the object x'
-       // }, {
-       //   block: 'if @inside window:\n  ``',
-       //   title: 'Do something only if inside the window'
-        //}
+        }, {
+          block: 'if touches(x):\n  pass',
+          title: 'Do something only if touching the object x'
+        }, {
+          block: 'if inside(window):\n  pass',
+          title: 'Do something only if inside the window'
+        },
 	  ])
-	}, {
+	 }, {
       name: 'Text',
       color: 'pink',
       blocks: filterblocks([
@@ -1146,12 +1201,18 @@ module.exports = {
 			block: 'label(\'Spot\')',
 			title: 'Prints label at turtle position'
 		},{
+			block: 'input()',
+			title: 'reads an input from console'
+		}
+
+
+/*	{
            block: 'read(\'TextToBeRead\')',
            title: 'Type a new line to the document'
         },{
            block: 'readnum(\'2016\')',
            title: 'Type a new line to the document'
-        }//,{ 
+        }*/	//,{
 		//	block: 'while True:\n  x=input("Enter number")\n  if x.isdigit():\n    break', 
 		//	title: 'Read numbers only'
 		//},{
@@ -1598,7 +1659,7 @@ module.exports = {
     'movexy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
     'jumpto': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
     'jumpxy': {color: 'lightblue', dropdown: [py_types.sdistances, py_types.sdistances]},
-	
+	'pause': {color: 'lightblue'},
     'pen': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
     'dot': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
 	'box': {color: 'purple', dropdown: [py_types.colors, py_types.sizes]},
@@ -1615,12 +1676,15 @@ module.exports = {
 	'arrow': {color: 'purple', dropdown: [py_types.colors]},
 	'shown': {color: 'purple'},
 	'hidden': {color: 'purple'},
-	'inside': {color: 'purple'},
+	'inside': {color: 'lightgreen'},
+	'touches': {color: 'lightgreen'},
+
 	//Sound
 	'play': {color: 'indigo'},
 	'tone': {color: 'indigo'},
 	'silence': {color: 'indigo'},
 	'say': {color: 'indigo'},
+	'audioplay': {color: 'indigo'},
 	//Control
 	'ht': {color: 'purple'},
     'cs': {color: 'purple'},
@@ -1633,6 +1697,12 @@ module.exports = {
 	'click': { color: 'orange' },
 	'forever': { color: 'orange'},
 	'tick': {color: 'orange', dropdown: [py_types.tickCount]},
+	'newfunction': {color: 'lightgreen'},
+	'min': {color: 'lightgreen'},
+	'max': {color: 'lightgreen'},
+	'abs': {color: 'lightgreen'},
+	'round': {color: 'lightgreen'},
+	're.findall': {color: 'lightgreen'},
 	//Sprites
 	'Sprite' : {color:'teal'},
 	'Piano' : {color:'teal'},
@@ -1649,7 +1719,8 @@ module.exports = {
 	'label' : {color: 'pink'},
 	'read': { color: 'pink' },
     'readnum': { color: 'pink' },
-
+	'len': {color:'lightgreen'},
+	'input': {color:'pink'},
  /*
     '?.slide': {color: 'lightblue', dropdown: [sdistances]},
     '?.fill': {color: 'purple', dropdown: [colors]},
@@ -1788,17 +1859,18 @@ module.exports = {
     conditionals: {color: 'orange'},
     value: {color: 'lightgreen'},
     command: {color: 'lightgreen'},
-    errors: {color: '#f00'}
+    errors: {color: '#f00'},
   },
 
 //  PYTHON_CATEGORIES: {
+
 //    functions: {color: 'lightgreen'},
 //    returns: {color: 'yellow'},
 //    comments: {color: 'gray'},
 //    arithmetic: {color: 'lightgreen'},
 //    logic: {color: 'lightgreen'},
 //    containers: {color: 'teal'},
-//    assignments: {color: 'lightgreen'},
+    assignments: {color: 'lightgreen'},
 //    loops: {color: 'orange'},
 //    conditionals: {color: 'orange'},
 //    value: {color: 'lightgreen'},
@@ -1815,3 +1887,4 @@ module.exports = {
     center: {category: 'grouping'}
   }
 };
+

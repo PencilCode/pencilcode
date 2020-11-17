@@ -23,7 +23,7 @@ exports.startChrome = function() {
   var driver = new selenium.Builder().
       withCapabilities(capabilities).
       build();
-  driver.getWindowHandle()
+  driver.getWindowHandle();
   driver.manage().setTimeouts({script: one_step_timeout});
   return driver;
 }
