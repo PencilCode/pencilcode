@@ -1,6 +1,7 @@
 var chromedriver = require('chromedriver'),
     selenium = require('selenium-webdriver');
 
+//const {Builder} = require('selenium-webdriver');
 var one_step_timeout = 8000;
 
 var chromeOpts = [
@@ -17,16 +18,17 @@ var chromeOpts = [
   '--disable-web-security',
 ];
 
-exports.startChrome = function() {
+exports.startChrome = (function myFunction() {
   var capabilities = selenium.Capabilities.chrome();
   capabilities.set('chromeOptions', {args: chromeOpts});
-  var driver = new selenium.Builder().
+  //let                   selenium.
+  var driver = new selenium.Builder().forBrowser('chrome').
       withCapabilities(capabilities).
       build();
-  driver.getWindowHandle()
+  driver.getWindowHandle();
   driver.manage().setTimeouts({script: one_step_timeout});
   return driver;
-}
+});
 
 // pollScript constructs a 100ms-repeating function in the selenium-based
 // browser.  As long as the predicate returns false, the polling continues;
