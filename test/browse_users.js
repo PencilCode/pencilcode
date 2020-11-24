@@ -13,9 +13,9 @@ describe('browse users in edit mode', function() {
     _driver = startChrome();
   });
   after(function() {
-   _driver.quit();
+    _driver.quit();
   });
-/*
+
   it('responds to a touch', function(done) {
     // Touch the "z" user so that it should be chronologically first.
     http.get({
@@ -29,13 +29,13 @@ describe('browse users in edit mode', function() {
     }).on('error', function(e) {
       console.log('error', e);
     });
-  });*/
-  
-  it('can open', function() {
-    return _driver.get('http://pencilcode.net.dev/edit/');
   });
 
-  /*it('should have lots of users', function() {
+  it('can open', function() {
+    return _driver.get('http://pencilcode.net.dev/edit/')
+  });
+
+  it('should have lots of users', function() {
     pollScript(_driver, function() {
       if (document.querySelector('.directory') == null) return;
       var dirs = [];
@@ -75,5 +75,5 @@ describe('browse users in edit mode', function() {
           .test(result));
     });
     return _driver;
-  });*/
+  });
 });

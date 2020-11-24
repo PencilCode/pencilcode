@@ -2185,10 +2185,7 @@ function showPaneEditorLanguagesDialog(pane) {
       'Coffeescript</label><br>' +
       '<label title="Use the Standard Web Language">' +
       '<input type="radio" value="text/javascript" name="lang"> ' +
-      'Javascript</label><br>' +
-	  '<label title="Use the Python Language">' +
-      '<input type="radio" value="text/x-python" name="lang"> ' +
-      'Python</label>' +
+      'Javascript</label>' +
       '</div>' +
       '<div style="padding:4px 5px 12px">' +
       '<label title="Edit Cascading Style Sheets">' +
