@@ -185,9 +185,9 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   var originalLanguage = null;
   var seeline = '\n\n';
   if (meta.type == "text/x-python") {
-    maintype = "text/x-python"
+    maintype = "text/x-python";
     seeline = '# Initialization / clearing goes here\n\n';
-    originalLanguage = 'python'
+    originalLanguage = 'python';
   }
   else {
     maintype = 'text/coffeescript';
@@ -209,8 +209,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
     var newText = instrumenter(text, originalLanguage);
     if (newText !== false) {
       text = newText;
-      maintype = 'text/javascript';
-      instrumented = true;
+	  instrumented = true;
+	  if(originalLanguage == 'python')
+		maintype = 'text/x-python';
+	  else
+		maintype = 'text/javascript';
     }
   }
   var mainscript = seeline;

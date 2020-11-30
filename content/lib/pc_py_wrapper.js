@@ -380,7 +380,7 @@ var $builtinmodule = function (name) {
     });
 	
 	mod.pu = new Sk.builtin.func(function (sprite) {
-        //Sk.builtin.pyCheckArgs("pu", arguments, 1, 1);
+        Sk.builtin.pyCheckArgs("pu", arguments, 1, 1);
         if (sprite === Sk.builtin.none.none$) {
             return pu();
         }
@@ -388,7 +388,7 @@ var $builtinmodule = function (name) {
     });
 	
 	mod.pd = new Sk.builtin.func(function (sprite) {
-        //Sk.builtin.pyCheckArgs("pd", arguments, 1, 1);
+        Sk.builtin.pyCheckArgs("pd", arguments, 1, 1);
         if (sprite === Sk.builtin.none.none$) {
             return pd();
         }
@@ -454,9 +454,9 @@ var $builtinmodule = function (name) {
 	mod.drawon = new Sk.builtin.func(function (sprite, canvas) {
         Sk.builtin.pyCheckArgs("drawon", arguments, 2, 2);
 		if (sprite === Sk.builtin.none.none$) {
-            return drawon(Sk.ffi.remapToJs(canvas));
+            return drawon(canvas);
         }
-       return sprite.drawon(Sk.ffi.remapToJs(canvas));
+       return sprite.drawon(canvas);
     });
     
     mod.arrow = new Sk.builtin.func(function (sprite, color, size) {
@@ -484,7 +484,7 @@ var $builtinmodule = function (name) {
     });
     
     mod.touches = new Sk.builtin.func(function (sprite, obj) {
-      //  Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
+      Sk.builtin.pyCheckArgs("touches", arguments, 2, 2);
         if (sprite === Sk.builtin.none.none$) {
             return Sk.ffi.remapToPy(touches(Sk.ffi.remapToJs(obj)));
         }
@@ -492,17 +492,17 @@ var $builtinmodule = function (name) {
     });
     
     mod.inside = new Sk.builtin.func(function (sprite, obj) {
-        //Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
-	//	if(Sk.ffi.remapToJs(obj).match("window")){
-	//		if (sprite === Sk.builtin.none.none$) {
-	//			return Sk.ffi.reampToPy(inside(window));
-	//		}
-	//		return Sk.ffi.remapToPy(sprite.inside(window));
-	//	}
+        Sk.builtin.pyCheckArgs("inside", arguments, 2, 2);
+		if(Sk.ffi.remapToJs(obj) == "window"){
+			if (sprite === Sk.builtin.none.none$) {
+				return Sk.ffi.remapToPy(inside(window));
+			}
+			return Sk.ffi.remapToPy(sprite.inside(window));
+		}
         if (sprite === Sk.builtin.none.none$) {
-            return Sk.ffi.remapToPy(inside(Sk.ffi.remapToJs(obj)));
+            return Sk.ffi.remapToPy(inside(obj));
         }
-       return Sk.ffi.remapToPy(sprite.inside(Sk.ffi.remapToJs(obj)));
+       return Sk.ffi.remapToPy(sprite.inside(obj));
     });    
     
 	//Operators

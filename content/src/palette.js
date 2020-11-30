@@ -1171,8 +1171,8 @@ module.exports = {
           block: 'f = table(5, 5)',
           title: 'Outputs a table with m rows and n columns'
         }, {
-          block: 'if touches(x):\n  pass',
-          title: 'Do something only if touching the object x'
+          block: 'if touches("green"):\n  pass',
+          title: 'Do something only if touching the color'
         }, {
           block: 'if inside(window):\n  pass',
           title: 'Do something only if inside the window'

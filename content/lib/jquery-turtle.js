@@ -3931,12 +3931,6 @@ function audioCurrentStartTime() {
 function midiToFrequency(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
-// plays sound from url
-function audioplay(url) {
-p = new Audio(url);
-p.play();
-return;
-}
 // Some constants.
 var noteNum =
     {C:0,D:2,E:4,F:5,G:7,A:9,B:11,c:12,d:14,e:16,f:17,g:19,a:21,b:23};

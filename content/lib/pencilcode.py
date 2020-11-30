@@ -127,7 +127,7 @@ class SpriteObject():
         pencilcode_internal.wear(self.jsSpriteObject,name)
     
     def drawon(self, canvas):
-        pencilcode_internal.drawon(self.jsSpriteObject,canvas)
+        pencilcode_internal.drawon(self.jsSpriteObject,canvas.jsSpriteObject)
         
     #def cell(self, rows, columns):
     #    pencilcode_internal.cell(self.jsSpriteObject, rows, columns)
@@ -142,9 +142,9 @@ class SpriteObject():
         return pencilcode_internal.touches(self.jsSpriteObject, obj)
         
     def inside(self, obj):
-        return pencilcode_internal.inside(self.jsSpriteObject, obj)
 
-        
+        return pencilcode_internal.inside(self.jsSpriteObject, obj if obj == window else obj.jsSpriteObject)
+
     ####################
     ## Sound Commands ##
     ####################
@@ -270,7 +270,7 @@ def wear(name):
     pencilcode_internal.wear(None,name)
 
 def drawon(canvas):
-	pencilcode_internal.drawon(None,canvas)
+	pencilcode_internal.drawon(None,canvas.jsSpriteObject)
 	
 def shown():
     return pencilcode_internal.shown(None)
@@ -282,8 +282,8 @@ def touches(obj):
     return pencilcode_internal.touches(None, obj)
     
 def inside(obj):
-    return pencilcode_internal.touches(None, obj)
-    
+
+	return pencilcode_internal.inside(None, obj if obj == window else obj.jsSpriteObject)
 ###################
 ## Text Commands ##
 ###################
