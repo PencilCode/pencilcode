@@ -185,7 +185,7 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   var originalLanguage = null;
   var seeline = '\n\n';
   if (meta.type == "text/x-python") {
-    maintype = "text/x-python";
+    maintype = 'text/x-python';
     seeline = '# Initialization / clearing goes here\n\n';
     originalLanguage = 'python';
   }
@@ -208,12 +208,14 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
     // Instruments the code for debugging, always producing javascript.
     var newText = instrumenter(text, originalLanguage);
     if (newText !== false) {
-      text = newText;
-	  instrumented = true;
-	  if(originalLanguage == 'python')
-		maintype = 'text/x-python';
-	  else
-		maintype = 'text/javascript';
+		text = newText;
+		instrumented = true;
+		if(originalLanguage == 'python') {
+			maintype = 'text/x-python';
+		}
+		else {
+			maintype = 'text/javascript';
+		}
     }
   }
   var mainscript = seeline;
@@ -387,8 +389,10 @@ function effectiveMeta(input) {
   if (meta && meta.type && meta.lib) { return meta; }
   meta = (meta && 'object' == typeof meta) ?
     JSON.parse(JSON.stringify(meta)) : {};
-	if(doc && doc.mimeType){
-		if (doc.mimeType.lastIndexOf('text/x-python', 0) === 0) {
+	//if(doc && doc.mimeType){
+	if(doc && doc.mimeType && doc.meta){
+		//if (doc.mimeType.lastIndexOf('text/x-python', 0) === 0) {
+		if (doc.meta.type == 'text/x-python') {
         meta.type = 'text/x-python';
         meta.libs = [{name: 'turtle', src: '//{site}/turtlebits.js'},
                      {name: 'skulpt.min', src: '//{site}/lib/skulpt.min.js'},
