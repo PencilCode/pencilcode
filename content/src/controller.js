@@ -14,7 +14,8 @@ var $                = require('jquery'),
     pencilTracer     = require('pencil-tracer'),
     icedCoffeeScript = require('iced-coffee-script'),
     drawProtractor   = require('draw-protractor'),
-    cache          = require('cache');
+    js2coffee        = require('js2coffee'),
+    cache            = require('cache');
 
 
 eval(see.scope('controller'));
@@ -1964,6 +1965,27 @@ function createNewFileIntoPosition(position, filename, text, meta) {
   logCodeEvent('new', filename, text, mode, view.getPaneEditorLanguage(pane));
 }
 
+
+function changeEditorLanguage(pane, lang) {
+  var mpp = model.pane[pane];
+  var text = view.getPaneEditorData(pane).data;
+  
+  try{
+    var result;
+    if(lang == 'text/javascript') {
+      result = icedCoffeeScript.compile(text, {bare: true});
+    } else if(lang == 'text/coffeescript') {
+      result = js2coffee.build(text).code;
+    }
+    view.changePaneEditorText(pane, result);
+  } catch(err) {
+  }
+  
+}
+
+view.on('editorLanguageChanged', function(pane, lang) {
+  changeEditorLanguage(pane, lang);
+});
 
 function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
   var pane = paneatpos(position);

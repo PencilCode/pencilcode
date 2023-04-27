@@ -2223,44 +2223,15 @@ function changeEditorText(paneState, text) {
   if (text.length && text.charAt(text.length - 1) != '\n') {
     text += '\n';
   }
-  paneState.changeHandler.suppressChange = true;
-  var saved = {}, editor = paneState.editor, session = editor.session;
-  saved.selection = session.selection.toJSON()
-  saved.atend = session.selection.getCursor().row >= session.getLength() - 1;
-  saved.folds = session.getAllFolds().map(function(fold) {
-    return {
-      start       : fold.start,
-      end         : fold.end,
-      placeholder : fold.placeholder
-    };
-  });
-  saved.scrollTop = session.getScrollTop()
-  saved.scrollLeft = session.getScrollLeft()
+  var editor = paneState.editor, session = editor.session;
+  
+  session.changeHandler.suppressChange = true;
 
   // Now set the text and restore everything.
   session.setValue(text);
 
-  session.selection.fromJSON(saved.selection);
-  try {
-    saved.folds.forEach(function(fold){
-      session.addFold(fold.placeholder,
-        ace.require('ace/range').Range.fromPoints(fold.start, fold.end));
-    });
-  } catch(e) { }
-
-  session.setScrollTop(saved.scrollTop);
-  session.setScrollLeft(saved.scrollLeft);
-
-  // If the cursor used to be at the end, keep it at the end.
-  if (session.selection.isEmpty() && saved.atend) {
-    session.selection.moveCursorTo(session.getLength() - 1, 0);
-  }
-
-  // TODO: detect the case where some text is added and we should
-  // scroll down to make the changes visible.
-
-  paneState.changeHandler.suppressChange = false;
-  paneState.changeHandler();
+  session.changeHandler.suppressChange = false;
+  session.changeHandler();
 }
 
 function editorMimeType(paneState) {
@@ -2666,6 +2637,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
     // Publish the update event for hosting frame.
     if (hasSubscribers()) publish('update', [session.getValue()]);
   });
+  editor.getSession().changeHandler = changeHandler;
   $(elt).data('changeHandler', changeHandler);
   editor.getSession().on('change', changeHandler);
   // Fold any blocks with a line that ends with "# fold" or "// fold"
@@ -2752,6 +2724,10 @@ function setPaneEditorLanguageType(pane, type) {
   paneState.dropletEditor.setMode(
       dropletModeForMimeType(type),
       dropletOptionsForMimeType(type));
+  
+  //Modify the code to the changed language
+  fireEvent('editorLanguageChanged',[pane,type]);
+  
   paneState.editor.getSession().setMode(modeForMimeType(type));
   paneState.meta = filetype.effectiveMeta(paneState.meta);
   paneState.meta.type = type;
