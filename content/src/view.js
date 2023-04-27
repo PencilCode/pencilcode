@@ -1394,13 +1394,25 @@ function updatePaneLinks(pane) {
   directory = $('<div class="directory"></div>').appendTo('#' + pane);
 
   // width is full directory width minus padding minus scrollbar width.
-  width = Math.floor(directory.width() - getScrollbarWidth());
+  width = Math.floor(directory.width() - getScrollbarWidth() - 1);
   col = $('<div class="column"></div>').appendTo(directory);
+  var colMinWidth = fwidth(col);
+
+  var colCount = Math.round(width / colMinWidth);
+  var rawCount = Math.floor(list.length / colCount) + ((list.length % colCount) > 0 ? 1 : 0);
+  for (var x = 1; x < colCount; x++) {
+    $('<div class="column"></div>').appendTo(directory);
+  }
+
+  var cols = $(directory).find('.column').css('width', (Math.floor(width * 100 / colCount) / 100) + "px");
+
   for (j = 0; j < list.length; j++) {
+    //Initialize the item and add it to the appropriate column
     item = $('<a/>', {
       class: 'item' + (list[j].href ? '' : ' create'),
       href: list[j].href
-    }).appendTo(col);
+    }).appendTo(cols.eq(Math.floor(j / rawCount)));
+
     figure = $('<div/>').appendTo(item);
     thumbnail = list[j].thumbnail;
     // Only show thumbs if it is a supported type, and showThumb is enabled.
@@ -1412,47 +1424,13 @@ function updatePaneLinks(pane) {
       }).appendTo(figure);
       $('<span/>', { text: list[j].name, class: 'caption' }).appendTo(figure);
     } else {
-      $('<span/>', { text: list[j].name }).appendTo(figure);
+      $('<span/>', { text: list[j].name, class: 'caption-normal' }).appendTo(figure);
     }
     if (list[j].link) {
       item.data('link', list[j].link);
     }
   }
-  items = directory.find('.item');
-  maxwidth = 0;
-  for (j = 0; j < items.length; j++) {
-    maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
-  }
-  colcount = Math.min(items.length, Math.floor(width / Math.max(1, maxwidth)));
-  colsize = items.length;
-  while (colcount < items.length) {
-    // Attempt shorter columns from colcount + 1 (or colsize - 1 if shorter).
-    colsize = Math.min(colsize - 1, Math.ceil(items.length / (colcount + 1)));
-    tightwidth = 0;
-    colsdone = 0;
-    j = 0;
-    for (colnum = 0; j < items.length; colnum++) {
-      maxwidth = 0;
-      for (j = colnum * colsize;
-           j < items.length && j < (colnum + 1) * colsize; j++) {
-        maxwidth = Math.max(maxwidth, Math.ceil(fwidth(items.get(j))));
-      }
-      tightwidth += maxwidth;
-      colsdone += 1;
-      if (tightwidth > width) { break; }
-    }
-    if (tightwidth > width) { break; }
-    colcount = colsdone;
-    if (colsize <= 1) { break; }
-  }
-  colsize = Math.ceil(items.length / colcount);
-  for (colnum = 1; colnum * colsize < items.length; colnum++) {
-    col = $('<div class="column"></div>').appendTo(directory);
-    for (j = colnum * colsize;
-         j < items.length && j < (colnum + 1) * colsize; j++) {
-      items.eq(j).appendTo(col);
-    }
-  }
+
   directory.on('click', '.item', function(e) {
     if (!e.shiftKey && !e.ctrlKey & !e.metaKey && !e.altKey) {
       var link = $(this).data('link');
