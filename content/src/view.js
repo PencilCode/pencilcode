@@ -852,6 +852,11 @@ function showShareDialog(opts) {
         this.scrollLeft = this.scrollWidth;
       }
     });
+    //It gets the email address of the user when an email button is clicked
+     dialog.find('button.ok').on('click', function() {
+      var getuseremail=prompt("Please enter your e-mail address", " ");
+      alert(getuseremail);
+    });
 
     var clipboardClient = new ZeroClipboard(dialog.find('button.copy'));
     var tooltipTimer = null;
