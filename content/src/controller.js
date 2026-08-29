@@ -334,7 +334,7 @@ view.on('share', function() {
   var shortfilename = modelatpos('left').filename.replace(/^.*\//, '');
   if (!shortfilename) { shortfilename = 'clip'; }
   var doc = view.getPaneEditorData(paneatpos('left'));
-  if (isEmptyDoc(doc)) { return; }
+  if(newdata.data===''){shareAction();}
   // First save if needed (including login user if necessary)
   if (view.isPaneEditorDirty(paneatpos('left'))) {
     saveAction(false, 'Log in to share', shareAction);
@@ -358,7 +358,7 @@ view.on('share', function() {
       // There is no editor on the left (or it is misbehaving) - do nothing.
       console.log("Nothing to share.");
       return;
-    } else if (doc.data !== '') { // If program is not empty, generate thumbnail.
+    } else if (doc.data !== '' || (newdata.data ==='' && window.downloadhtml!=='') || (newdata.data ==='' && window.downloadcss!=='')) { // If program is not empty, generate thumbnail.
       if (model.tempThumbnail) {
         postThumbnailGeneration(model.tempThumbnail);
       } else {

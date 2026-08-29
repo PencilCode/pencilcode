@@ -18,7 +18,8 @@ function htmlEscape(s) {
   return s.replace(/[<>&"]/g, function(c) {
     return c=='<'?'&lt;':c=='>'?'&gt;':c=='&'?'&amp;':'&quot;';});
 }
-
+var downloadhtml;
+var downloadcss;
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
 // Any of the three panes can show:
@@ -2936,9 +2937,11 @@ function updateMeta(paneState) {
   // Grab the html and the CSS from the editors.
   if (paneState.htmlEditor) {
     paneState.meta.html = paneState.htmlEditor.getValue();
+     window.downloadhtml=paneState.meta.html;
   }
   if (paneState.cssEditor) {
     paneState.meta.css = paneState.cssEditor.getValue();
+     window.downloadcss=paneState.meta.css;
   }
 }
 function getPaneEditorData(pane) {
