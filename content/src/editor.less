@@ -827,77 +827,78 @@ body#pencildoc #diigolet-csm {
   padding: 0
 }
 
-.directory {
-  height: 100%;
-  padding: 10px;
-  overflow: auto;
-  /*transition: padding 0.3s;*/
-}
-
 .directory-searchable{
   padding-top: 20px;
 }
 
-.directory .column {
-  display: inline-block;
-  float: left;
-  margin-top: 12px
-}
-
-.directory .item {
-  display: inline-block;
-  float: left;
-  clear: left;
-  text-decoration: none;
-  color: #222;
-  cursor: pointer;
-  width: 154px;
-  div {
-    margin: 0px;
-    max-height: 154px;
-    padding: 2px 0;
-    span {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .caption {
-      text-align: center;
-    }
-    .thumbnail {
-      background-color: #eeeeee;
-      width: 100px;
-      height: 100px;
-      margin-top: 16px;
-      margin-left: 27px;
-      border: 1px #ccc solid;
-      border-radius: 4px;
-      padding: 2px;
-    }
+.directory {
+  height: 100%;
+  overflow: auto;
+  .column {
+    display: inline-block;
+    float: left;
+    margin-top: 25px;
+    min-width: 104px;
+    width: 130px;
+    text-align: center;
   }
-  &:hover {
-    text-decoration: underline;
-    color: blue;
-    div .thumbnail {
-      padding: 0px;
-      border-width: 2px;
-      border-color: #1679FF;
+
+  .item {
+    display: inline-block;
+    clear: left;
+    text-decoration: none;
+    color: #222;
+    cursor: pointer;
+    width: 100px;
+    margin: 0 auto;
+    div {
+      margin: 0px;
+      max-height: 154px;
+      span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .caption {
+        text-align: center;
+        font-size: 23px;
+      }
+      .caption-normal {
+        text-align: left;
+        font-size: 23px;
+      }
+      .thumbnail {
+        background-color: #eeeeee;
+        width: 100px;
+        height: 100px;
+        border: 1px #ccc solid;
+        border-radius: 4px;
+      }
     }
-    span:not(.caption) {
-      display: table;
+    &:hover, &.right-click-active {
       text-decoration: underline;
-      position: relative;
-      background-color: #f5f5f5;
-      padding-right: 6px;
+      color: blue;
+      div .thumbnail {
+        padding: 0px;
+        border-width: 2px;
+        border-color: #1679FF;
+      }
+      span:not(.caption) {
+        display: table;
+        text-decoration: underline;
+        position: relative;
+        background-color: #f5f5f5;
+        padding-right: 6px;
+      }
     }
   }
-}
 
-.directory .create {
-  color: #1e90ff;
-  div .thumbnail {
-    border-style: dashed;
+  .create {
+    color: #1e90ff;
+    div .thumbnail {
+      border-style: dashed;
+    }
   }
 }
 
