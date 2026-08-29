@@ -170,7 +170,9 @@ function updateTopControls(addHistory) {
           label: 'Save',
           menu: [
             { id: 'save2', label: 'Save' },
-            { id: 'saveas', label: 'Copy and Save As...' }
+            { id: 'saveas', label: 'Copy and Save As...' },
+            { id: 'download',label: 'Save code on local machine'},
+            { id: 'download1', label: 'Download Html and Css'}
           ],
           disabled: !cansave(),
         }, {
@@ -522,6 +524,16 @@ $(window).on('beforeunload', function() {
     view.flashButton('save');
     return "There are unsaved changes."
   }
+});
+//Saves the Main code on our local machine
+view.on('download', function() {
+uriContent = "data:application/octet-stream," + encodeURIComponent("Main Code"+"\n\n"+newdata.data);
+window.open(uriContent, 'neuesDokument');
+});
+//Saves HTML and CSS on your local machine
+view.on('download1', function() {
+  urlContent = "data:application/octet-stream," + encodeURIComponent("HTML"+"\n\n"+window.downloadhtml+"\n\n"+"CSS"+"\n\n"+window.downloadcss);
+window.open(urlContent, 'neuesDokument');
 });
 
 view.on('logout', function() {
