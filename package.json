@@ -71,6 +71,7 @@
     "html2canvas": "./content/lib/html2canvas.js",
     "iced-coffee-script": "./content/lib/iced-coffee-script.js",
     "jquery": "./content/lib/jquery.js",
+    "js2coffee": "./content/lib/js2coffee.js",
     "palette": "./content/src/palette.js",
     "pencil-tracer": "./content/lib/pencil-tracer.js",
     "see": "./content/lib/see.js",

@@ -14,6 +14,7 @@
     "jquery": "latest",
     "jquery-deparam": "latest",
     "jquery-turtle": "PencilCode/jquery-turtle#master",
+    "js2coffee": "js2coffee/js2coffee#master",
     "lodash": "latest",
     "p5": "https://github.com/processing/p5.js/releases/download/0.4.6/p5.js",
     "pencil-tracer": "PencilCode/pencil-tracer#master",
